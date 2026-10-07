@@ -1,0 +1,25 @@
+{
+  "width": 820,
+  "height": 1180,
+  "overflow": false,
+  "minimumButtonHeight": 56,
+  "errors": [],
+  "audioErrors": [],
+  "mapPointer": {
+    "listener": {
+      "position": {
+        "x": -50,
+        "y": 6,
+        "z": -8
+      },
+      "forward": {
+        "x": 0,
+        "y": 0,
+        "z": -1
+      }
+    },
+    "uiX": -50,
+    "uiZ": -8
+  },
+  "passed": true
+}

@@ -1,0 +1,130 @@
+{
+  "checks": {
+    "tests": [
+      {
+        "name": "挂起时取消广播与队列",
+        "results": [
+          {
+            "cancelled": true
+          },
+          {
+            "cancelled": true
+          }
+        ],
+        "state": {
+          "loaded": true,
+          "progress": 1,
+          "unlocked": false,
+          "context": "suspended",
+          "muted": false,
+          "volume": 0.85,
+          "zone": "none",
+          "speed": 0,
+          "inside": true,
+          "braking": false,
+          "ducked": false,
+          "announcing": null,
+          "queued": 0,
+          "active": 0,
+          "assetCount": 103,
+          "mix": {
+            "ambience": 0.65,
+            "train": 0.8,
+            "sfx": 0.8,
+            "voice": 1
+          },
+          "errors": []
+        }
+      },
+      {
+        "name": "连续声、速度与重复帧调用",
+        "level": 0.040618426451338716,
+        "millisecondsFor10000StableCalls": 1.0999999940395355,
+        "state": {
+          "loaded": true,
+          "progress": 1,
+          "unlocked": true,
+          "context": "running",
+          "muted": false,
+          "volume": 0.85,
+          "zone": "train",
+          "speed": 0.7,
+          "inside": true,
+          "braking": false,
+          "ducked": false,
+          "announcing": null,
+          "queued": 0,
+          "active": 0,
+          "assetCount": 103,
+          "mix": {
+            "ambience": 0.65,
+            "train": 0.8,
+            "sfx": 0.8,
+            "voice": 1
+          },
+          "errors": []
+        }
+      },
+      {
+        "name": "外部听感、制动与关门音效",
+        "state": {
+          "loaded": true,
+          "progress": 1,
+          "unlocked": true,
+          "context": "running",
+          "muted": false,
+          "volume": 0.85,
+          "zone": "train",
+          "speed": 0.7,
+          "inside": false,
+          "braking": true,
+          "ducked": false,
+          "announcing": null,
+          "queued": 0,
+          "active": 1,
+          "assetCount": 103,
+          "mix": {
+            "ambience": 0.65,
+            "train": 0.8,
+            "sfx": 0.8,
+            "voice": 1
+          },
+          "errors": []
+        }
+      },
+      {
+        "name": "总输出静音",
+        "level": 0,
+        "muted": true
+      }
+    ],
+    "errors": []
+  },
+  "state": {
+    "loaded": true,
+    "progress": 1,
+    "unlocked": true,
+    "context": "running",
+    "muted": false,
+    "volume": 0.85,
+    "zone": "none",
+    "speed": 0,
+    "inside": false,
+    "braking": true,
+    "ducked": false,
+    "announcing": null,
+    "queued": 0,
+    "active": 0,
+    "assetCount": 103,
+    "mix": {
+      "ambience": 0.65,
+      "train": 0.8,
+      "sfx": 0.8,
+      "voice": 1
+    },
+    "errors": []
+  },
+  "pageErrors": [],
+  "overflow": false,
+  "minButtonHeight": 56
+}

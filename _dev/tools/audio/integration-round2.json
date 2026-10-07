@@ -1,0 +1,859 @@
+{
+  "platform": {
+    "stage": "waiting",
+    "origin": "gyq",
+    "destination": "dsk",
+    "current": "gyq",
+    "dir": 1,
+    "trackIdx": 0,
+    "door": {
+      "x": -6.1,
+      "side": -1,
+      "car": 2
+    },
+    "moving": false,
+    "pathIndex": 0,
+    "pathLength": 0,
+    "position": {
+      "x": -6.1,
+      "y": 2,
+      "z": 7.1
+    },
+    "camera": {
+      "yaw": -1.2606518788812044,
+      "pitch": -0.02149929508112959
+    },
+    "token": true,
+    "seated": false,
+    "trainAttached": false,
+    "doors": 0,
+    "alightDoors": 0,
+    "alightSide": 1,
+    "spanishLayout": true,
+    "speed": 0,
+    "seconds": 0.4,
+    "goal": "在线后等，列车就要来了",
+    "npc": {
+      "count": 60,
+      "visible": 59,
+      "walking": 38,
+      "seated": 0,
+      "drawCalls": 19
+    },
+    "npcPlayerRadius": 3.2,
+    "interaction": null,
+    "coinHeld": false,
+    "coinHistory": [],
+    "cameraAssist": "guided",
+    "doorAnimating": false,
+    "drawCalls": 108,
+    "triangles": 99796,
+    "fps": 20,
+    "pixelRatio": 1.5,
+    "modules": {
+      "world": true,
+      "audio": true,
+      "placeholder": false
+    },
+    "audio": {
+      "loaded": true,
+      "progress": 1,
+      "unlocked": true,
+      "needsGesture": false,
+      "context": "running",
+      "background": false,
+      "muted": false,
+      "volume": 0.85,
+      "zone": "platform",
+      "speed": 0,
+      "inside": false,
+      "braking": false,
+      "curve": 0,
+      "ducked": true,
+      "announcing": "platform",
+      "stationAnnouncing": null,
+      "stationAnnouncements": true,
+      "nextStationAnnouncementMs": null,
+      "queued": 0,
+      "active": 1,
+      "beds": 4,
+      "spatialSources": [
+        {
+          "id": "voice.platform.up.1.zh",
+          "position": {
+            "x": -60,
+            "y": 10,
+            "z": 5
+          }
+        }
+      ],
+      "listener": {
+        "position": {
+          "x": -6.1,
+          "y": 5.4,
+          "z": 7.1
+        },
+        "forward": {
+          "x": 0.9520694198670051,
+          "y": -0.02149763888649204,
+          "z": -0.3051256647291575
+        }
+      },
+      "assetCount": 119,
+      "decodedBytes": 75908220,
+      "sampleRate": 24000,
+      "decodeConcurrencyPeak": 2,
+      "audioSessionSupported": false,
+      "mix": {
+        "ambience": 0.65,
+        "train": 0.8,
+        "sfx": 0.8,
+        "voice": 1
+      },
+      "errors": []
+    },
+    "announcements": [
+      {
+        "key": "platform",
+        "station": "gyq",
+        "dir": 1
+      }
+    ],
+    "errors": [],
+    "notices": []
+  },
+  "approachStart": {
+    "stage": "approaching",
+    "origin": "gyq",
+    "destination": "dsk",
+    "current": "gyq",
+    "dir": 1,
+    "trackIdx": 0,
+    "door": {
+      "x": -6.1,
+      "side": -1,
+      "car": 2
+    },
+    "moving": false,
+    "pathIndex": 0,
+    "pathLength": 0,
+    "position": {
+      "x": -6.1,
+      "y": 2,
+      "z": 7.1
+    },
+    "camera": {
+      "yaw": -3.775624434975662,
+      "pitch": 0.13663316359825572
+    },
+    "token": true,
+    "seated": false,
+    "trainAttached": false,
+    "doors": 0,
+    "alightDoors": 0,
+    "alightSide": 1,
+    "spanishLayout": true,
+    "speed": 0,
+    "seconds": 0.1,
+    "goal": "看，车灯从隧道里过来了！",
+    "npc": {
+      "count": 60,
+      "visible": 59,
+      "walking": 38,
+      "seated": 0,
+      "drawCalls": 19
+    },
+    "npcPlayerRadius": 3.2,
+    "interaction": null,
+    "coinHeld": false,
+    "coinHistory": [],
+    "cameraAssist": "head-tracking",
+    "doorAnimating": false,
+    "drawCalls": 152,
+    "triangles": 199110,
+    "fps": 27,
+    "pixelRatio": 1.5,
+    "modules": {
+      "world": true,
+      "audio": true,
+      "placeholder": false
+    },
+    "audio": {
+      "loaded": true,
+      "progress": 1,
+      "unlocked": true,
+      "needsGesture": false,
+      "context": "running",
+      "background": false,
+      "muted": false,
+      "volume": 0.85,
+      "zone": "platform",
+      "speed": 0,
+      "inside": false,
+      "braking": false,
+      "curve": 0,
+      "ducked": false,
+      "announcing": null,
+      "stationAnnouncing": null,
+      "stationAnnouncements": true,
+      "nextStationAnnouncementMs": 67282.33056640625,
+      "queued": 0,
+      "active": 2,
+      "beds": 4,
+      "spatialSources": [
+        {
+          "id": "train.approach",
+          "sourceId": "approaching-train",
+          "position": {
+            "x": -292.11285400390625,
+            "y": 3.8499999046325684,
+            "z": 14.600000381469727
+          }
+        },
+        {
+          "id": "sfx.footstep3",
+          "sourceId": "npc-27",
+          "position": {
+            "x": -15.061102867126465,
+            "y": 2.0999999046325684,
+            "z": 4.144295692443848
+          }
+        }
+      ],
+      "listener": {
+        "position": {
+          "x": -6.1,
+          "y": 5.4,
+          "z": 7.1
+        },
+        "forward": {
+          "x": -0.5868767235620445,
+          "y": 0.13620843478036904,
+          "z": 0.7981371897335456
+        }
+      },
+      "assetCount": 119,
+      "decodedBytes": 75908220,
+      "sampleRate": 24000,
+      "decodeConcurrencyPeak": 2,
+      "audioSessionSupported": false,
+      "mix": {
+        "ambience": 0.65,
+        "train": 0.8,
+        "sfx": 0.8,
+        "voice": 1
+      },
+      "errors": []
+    },
+    "announcements": [
+      {
+        "key": "platform",
+        "station": "gyq",
+        "dir": 1
+      }
+    ],
+    "errors": [],
+    "notices": []
+  },
+  "boarding": {
+    "stage": "boarding",
+    "origin": "gyq",
+    "destination": "dsk",
+    "current": "gyq",
+    "dir": 1,
+    "trackIdx": 0,
+    "door": {
+      "x": -6.1,
+      "side": -1,
+      "car": 2
+    },
+    "moving": false,
+    "pathIndex": 0,
+    "pathLength": 0,
+    "position": {
+      "x": -6.1,
+      "y": 2,
+      "z": 7.1
+    },
+    "camera": {
+      "yaw": -3.141592653589539,
+      "pitch": -0.273008498358398
+    },
+    "token": true,
+    "seated": false,
+    "trainAttached": false,
+    "doors": 1,
+    "alightDoors": 1,
+    "alightSide": 1,
+    "spanishLayout": true,
+    "speed": 0,
+    "seconds": 121.7,
+    "goal": "轮到我们上车啦！",
+    "npc": {
+      "count": 60,
+      "visible": 60,
+      "walking": 34,
+      "seated": 0,
+      "drawCalls": 19
+    },
+    "npcPlayerRadius": 3.2,
+    "interaction": null,
+    "coinHeld": false,
+    "coinHistory": [],
+    "cameraAssist": null,
+    "doorAnimating": false,
+    "drawCalls": 149,
+    "triangles": 199100,
+    "fps": 20,
+    "pixelRatio": 1.5,
+    "modules": {
+      "world": true,
+      "audio": true,
+      "placeholder": false
+    },
+    "audio": {
+      "loaded": true,
+      "progress": 1,
+      "unlocked": true,
+      "needsGesture": false,
+      "context": "running",
+      "background": false,
+      "muted": false,
+      "volume": 0.85,
+      "zone": "platform",
+      "speed": 0,
+      "inside": false,
+      "braking": false,
+      "curve": 0,
+      "ducked": false,
+      "announcing": null,
+      "stationAnnouncing": null,
+      "stationAnnouncements": true,
+      "nextStationAnnouncementMs": 49511.377197265625,
+      "queued": 0,
+      "active": 0,
+      "beds": 4,
+      "spatialSources": [],
+      "listener": {
+        "position": {
+          "x": -6.1,
+          "y": 5.4,
+          "z": 7.1
+        },
+        "forward": {
+          "x": 2.447291274290097e-13,
+          "y": -0.2696297283739664,
+          "z": 0.9629640749150412
+        }
+      },
+      "assetCount": 119,
+      "decodedBytes": 75908220,
+      "sampleRate": 24000,
+      "decodeConcurrencyPeak": 2,
+      "audioSessionSupported": false,
+      "mix": {
+        "ambience": 0.65,
+        "train": 0.8,
+        "sfx": 0.8,
+        "voice": 1
+      },
+      "errors": []
+    },
+    "announcements": [
+      {
+        "key": "platform",
+        "station": "gyq",
+        "dir": 1
+      },
+      {
+        "key": "gap",
+        "station": "gyq",
+        "dir": 1
+      }
+    ],
+    "errors": [],
+    "notices": []
+  },
+  "riding": {
+    "stage": "riding",
+    "origin": "gyq",
+    "destination": "dsk",
+    "current": "gyq",
+    "dir": 1,
+    "trackIdx": 0,
+    "door": {
+      "x": -6.1,
+      "side": -1,
+      "car": 2
+    },
+    "moving": false,
+    "pathIndex": 0,
+    "pathLength": 0,
+    "position": {
+      "x": -6.1,
+      "y": 2,
+      "z": 14.6
+    },
+    "camera": {
+      "yaw": -1.5774564500041675,
+      "pitch": -0.06331170314013591
+    },
+    "token": true,
+    "seated": false,
+    "trainAttached": true,
+    "doors": 0,
+    "alightDoors": 0,
+    "alightSide": 1,
+    "spanishLayout": true,
+    "speed": 0.27315999999998597,
+    "seconds": 1.4,
+    "goal": "下一站：农讲所",
+    "npc": {
+      "count": 60,
+      "visible": 59,
+      "walking": 14,
+      "seated": 30,
+      "drawCalls": 19
+    },
+    "npcPlayerRadius": 1.65,
+    "interaction": null,
+    "coinHeld": false,
+    "coinHistory": [],
+    "cameraAssist": "guided",
+    "doorAnimating": false,
+    "drawCalls": 79,
+    "triangles": 174058,
+    "fps": 28,
+    "pixelRatio": 1.5,
+    "modules": {
+      "world": true,
+      "audio": true,
+      "placeholder": false
+    },
+    "audio": {
+      "loaded": true,
+      "progress": 1,
+      "unlocked": true,
+      "needsGesture": false,
+      "context": "running",
+      "background": false,
+      "muted": false,
+      "volume": 0.85,
+      "zone": "train",
+      "speed": 0.27315999999998597,
+      "inside": true,
+      "braking": false,
+      "curve": 0,
+      "ducked": true,
+      "announcing": "next",
+      "stationAnnouncing": null,
+      "stationAnnouncements": true,
+      "nextStationAnnouncementMs": null,
+      "queued": 0,
+      "active": 10,
+      "beds": 4,
+      "spatialSources": [
+        {
+          "id": "sfx.footstep4",
+          "sourceId": "npc-33",
+          "position": {
+            "x": -20.12993049621582,
+            "y": 2.0999999046325684,
+            "z": 13.399999618530273
+          }
+        },
+        {
+          "id": "sfx.footstep",
+          "sourceId": "npc-36",
+          "position": {
+            "x": -5.109355449676514,
+            "y": 2.0999999046325684,
+            "z": 13.138472557067871
+          }
+        },
+        {
+          "id": "sfx.footstep2",
+          "sourceId": "npc-40",
+          "position": {
+            "x": -21.02992820739746,
+            "y": 2.0999999046325684,
+            "z": 15.800000190734863
+          }
+        },
+        {
+          "id": "sfx.footstep3",
+          "sourceId": "npc-37",
+          "position": {
+            "x": -5.734485626220703,
+            "y": 2.0999999046325684,
+            "z": 16.20900535583496
+          }
+        },
+        {
+          "id": "sfx.footstep4",
+          "sourceId": "npc-34",
+          "position": {
+            "x": -14.733108520507812,
+            "y": 2.0999999046325684,
+            "z": 13.399999618530273
+          }
+        },
+        {
+          "id": "sfx.footstep",
+          "sourceId": "npc-38",
+          "position": {
+            "x": -11.20870304107666,
+            "y": 2.0999999046325684,
+            "z": 15.800000190734863
+          }
+        },
+        {
+          "id": "voice.destination.up.yue",
+          "position": {
+            "x": 3.9000000953674316,
+            "y": 8,
+            "z": 14.600000381469727
+          }
+        },
+        {
+          "id": "sfx.footstep2",
+          "sourceId": "npc-35",
+          "position": {
+            "x": -9.372535705566406,
+            "y": 2.0999999046325684,
+            "z": 13.399999618530273
+          }
+        },
+        {
+          "id": "sfx.footstep3",
+          "sourceId": "npc-39",
+          "position": {
+            "x": -16.209535598754883,
+            "y": 2.0999999046325684,
+            "z": 15.800000190734863
+          }
+        }
+      ],
+      "listener": {
+        "position": {
+          "x": -6.1,
+          "y": 5.4024016525576055,
+          "z": 14.609173338955587
+        },
+        "forward": {
+          "x": 0.9979743493899463,
+          "y": -0.06326941547582692,
+          "z": 0.006646730403794264
+        }
+      },
+      "assetCount": 119,
+      "decodedBytes": 75908220,
+      "sampleRate": 24000,
+      "decodeConcurrencyPeak": 2,
+      "audioSessionSupported": false,
+      "mix": {
+        "ambience": 0.65,
+        "train": 0.8,
+        "sfx": 0.8,
+        "voice": 1
+      },
+      "errors": []
+    },
+    "announcements": [
+      {
+        "key": "platform",
+        "station": "gyq",
+        "dir": 1
+      },
+      {
+        "key": "gap",
+        "station": "gyq",
+        "dir": 1
+      },
+      {
+        "key": "next",
+        "station": "njs",
+        "dir": 1
+      }
+    ],
+    "errors": [],
+    "notices": []
+  },
+  "final": {
+    "stage": "arrived",
+    "origin": "gyq",
+    "destination": "dsk",
+    "current": "njs",
+    "dir": 1,
+    "trackIdx": 0,
+    "door": {
+      "x": -6.1,
+      "side": -1,
+      "car": 2
+    },
+    "moving": false,
+    "pathIndex": 0,
+    "pathLength": 0,
+    "position": {
+      "x": -6.1,
+      "y": 2,
+      "z": 14.6
+    },
+    "camera": {
+      "yaw": -0.000008653233207953027,
+      "pitch": -0.11942861201853282
+    },
+    "token": true,
+    "seated": false,
+    "trainAttached": true,
+    "doors": 1,
+    "alightDoors": 0,
+    "alightSide": -1,
+    "spanishLayout": false,
+    "speed": 0,
+    "seconds": 47.8,
+    "goal": "农讲所到了！",
+    "npc": {
+      "count": 60,
+      "visible": 59,
+      "walking": 14,
+      "seated": 30,
+      "drawCalls": 19
+    },
+    "npcPlayerRadius": 1.65,
+    "interaction": null,
+    "coinHeld": false,
+    "coinHistory": [],
+    "cameraAssist": null,
+    "doorAnimating": false,
+    "drawCalls": 129,
+    "triangles": 190016,
+    "fps": 23,
+    "pixelRatio": 1.5,
+    "modules": {
+      "world": true,
+      "audio": true,
+      "placeholder": false
+    },
+    "audio": {
+      "loaded": true,
+      "progress": 1,
+      "unlocked": true,
+      "needsGesture": false,
+      "context": "running",
+      "background": false,
+      "muted": false,
+      "volume": 0.85,
+      "zone": "train",
+      "speed": 0,
+      "inside": true,
+      "braking": false,
+      "curve": 0,
+      "ducked": false,
+      "announcing": null,
+      "stationAnnouncing": null,
+      "stationAnnouncements": true,
+      "nextStationAnnouncementMs": null,
+      "queued": 0,
+      "active": 0,
+      "beds": 1,
+      "spatialSources": [],
+      "listener": {
+        "position": {
+          "x": -6.1,
+          "y": 5.4,
+          "z": 14.6
+        },
+        "forward": {
+          "x": 0.000008591595153825895,
+          "y": -0.11914490885529044,
+          "z": -0.9928768758612767
+        }
+      },
+      "assetCount": 119,
+      "decodedBytes": 75908220,
+      "sampleRate": 24000,
+      "decodeConcurrencyPeak": 2,
+      "audioSessionSupported": false,
+      "mix": {
+        "ambience": 0.65,
+        "train": 0.8,
+        "sfx": 0.8,
+        "voice": 1
+      },
+      "errors": []
+    },
+    "announcements": [
+      {
+        "key": "platform",
+        "station": "gyq",
+        "dir": 1
+      },
+      {
+        "key": "gap",
+        "station": "gyq",
+        "dir": 1
+      },
+      {
+        "key": "next",
+        "station": "njs",
+        "dir": 1
+      },
+      {
+        "key": "arrive",
+        "station": "njs",
+        "dir": 1
+      }
+    ],
+    "errors": [],
+    "notices": []
+  },
+  "cameraMatch": true,
+  "passed": true,
+  "finalRevision": {
+    "state": {
+      "stage": "boarding",
+      "origin": "gyq",
+      "destination": "dsk",
+      "current": "gyq",
+      "dir": 1,
+      "trackIdx": 0,
+      "door": {
+        "x": -6.1,
+        "side": -1,
+        "car": 2
+      },
+      "moving": false,
+      "pathIndex": 0,
+      "pathLength": 0,
+      "position": {
+        "x": -6.1,
+        "y": 2,
+        "z": 7.1
+      },
+      "camera": {
+        "yaw": -3.1242410458913996,
+        "pitch": -0.27194267968150904
+      },
+      "token": true,
+      "seated": false,
+      "trainAttached": false,
+      "doors": 0,
+      "alightDoors": 1,
+      "alightSide": 1,
+      "spanishLayout": true,
+      "speed": 0,
+      "seconds": 0,
+      "goal": "先下后上，等乘客走出来",
+      "npc": {
+        "count": 60,
+        "visible": 60,
+        "walking": 39,
+        "seated": 0,
+        "drawCalls": 19
+      },
+      "npcPlayerRadius": 3.2,
+      "interaction": null,
+      "coinHeld": false,
+      "coinHistory": [],
+      "cameraAssist": "guided",
+      "doorAnimating": false,
+      "drawCalls": 150,
+      "triangles": 205404,
+      "fps": 29,
+      "pixelRatio": 1.5,
+      "modules": {
+        "world": true,
+        "audio": true,
+        "placeholder": false
+      },
+      "audio": {
+        "loaded": true,
+        "progress": 1,
+        "unlocked": true,
+        "needsGesture": false,
+        "context": "running",
+        "background": false,
+        "muted": false,
+        "volume": 0.85,
+        "zone": "platform",
+        "speed": 0,
+        "inside": false,
+        "braking": false,
+        "curve": 0,
+        "ducked": true,
+        "announcing": "gap",
+        "stationAnnouncing": null,
+        "stationAnnouncements": true,
+        "nextStationAnnouncementMs": null,
+        "queued": 0,
+        "active": 3,
+        "retiringBeds": 0,
+        "beds": 4,
+        "spatialSources": [
+          {
+            "id": "voice.gap.yue",
+            "position": {
+              "x": -6.099999904632568,
+              "y": 10,
+              "z": 5
+            }
+          },
+          {
+            "id": "sfx.footstep4",
+            "sourceId": "npc-8",
+            "position": {
+              "x": -9.472968101501465,
+              "y": 2.0999999046325684,
+              "z": -6.099999904632568
+            }
+          },
+          {
+            "id": "sfx.footstep",
+            "sourceId": "npc-28",
+            "position": {
+              "x": -3.113016128540039,
+              "y": 2.0999999046325684,
+              "z": 5.951990127563477
+            }
+          }
+        ],
+        "listener": {
+          "position": {
+            "x": -6.1,
+            "y": 5.4,
+            "z": 7.1
+          },
+          "forward": {
+            "x": 0.016713113118035458,
+            "y": -0.26860323032651207,
+            "z": 0.9631059009828912
+          }
+        },
+        "assetCount": 119,
+        "decodedBytes": 75908220,
+        "sampleRate": 24000,
+        "decodeConcurrencyPeak": 2,
+        "audioSessionSupported": false,
+        "mix": {
+          "ambience": 0.65,
+          "train": 0.8,
+          "sfx": 0.8,
+          "voice": 1
+        },
+        "errors": []
+      },
+      "announcements": [
+        {
+          "key": "gap",
+          "station": "gyq",
+          "dir": 1
+        }
+      ],
+      "errors": [],
+      "notices": []
+    },
+    "latestLifecycle": true,
+    "level": 0.13203373293209583
+  }
+}

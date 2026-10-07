@@ -1,0 +1,479 @@
+{
+  "model": "qwen3-asr-flash",
+  "results": [
+    {
+      "id": "voice.next.gyq.zh",
+      "status": 200,
+      "expected": "下一站，公园前。",
+      "recognized": "下一站，公元前。"
+    },
+    {
+      "id": "voice.next.gyq.yue",
+      "status": 200,
+      "expected": "下一站，公园前。",
+      "recognized": "下一站公園前。"
+    },
+    {
+      "id": "voice.next.gyq.en",
+      "status": 200,
+      "expected": "The next station is Gongyuanqian.",
+      "recognized": "Next station is Gongnyeon Station."
+    },
+    {
+      "id": "voice.arrive.gyq.zh",
+      "status": 200,
+      "expected": "列车即将到达公园前站，请小心列车与站台之间的空隙。",
+      "recognized": "列车即将到达公园前站，请小心列车与站台之间的空隙。"
+    },
+    {
+      "id": "voice.arrive.gyq.yue",
+      "status": 200,
+      "expected": "列车即将到达公园前站，请小心列车同站台之间嘅空隙。",
+      "recognized": "列車即將到達公園前站，請小心列車同站台之間嘅空隙。"
+    },
+    {
+      "id": "voice.arrive.gyq.en",
+      "status": 200,
+      "expected": "The train is arriving at Gongyuanqian. Please mind the gap between the train and the platform.",
+      "recognized": "The train is arriving at Gongyuan Yan. Please mind the gap between the train and the platform."
+    },
+    {
+      "id": "voice.welcome.gyq.zh",
+      "status": 200,
+      "expected": "欢迎光临公园前站。请排队候车，先下后上。",
+      "recognized": "欢迎光临公园前站，请排队候车，先下后上。"
+    },
+    {
+      "id": "voice.welcome.gyq.yue",
+      "status": 200,
+      "expected": "欢迎光临公园前站。请排队候车，先落后上。",
+      "recognized": "歡迎光臨公園前站，請排隊候車，先落後上。"
+    },
+    {
+      "id": "voice.welcome.gyq.en",
+      "status": 200,
+      "expected": "Welcome to Gongyuanqian station. Please line up for the train. Let the passengers get off first before you get on.",
+      "recognized": "Welcome to Gongyuanqian Station. Please line up for the train. Let the passengers get off first before you get on."
+    },
+    {
+      "id": "voice.next.njs.zh",
+      "status": 200,
+      "expected": "下一站，农讲所。",
+      "recognized": "下一站农讲所。"
+    },
+    {
+      "id": "voice.next.njs.yue",
+      "status": 200,
+      "expected": "下一站，农讲所。",
+      "recognized": "下一站，龍崗所。"
+    },
+    {
+      "id": "voice.next.njs.en",
+      "status": 200,
+      "expected": "The next station is Peasant Movement Institute.",
+      "recognized": "The next station is Peasant Movement Institute."
+    },
+    {
+      "id": "voice.arrive.njs.zh",
+      "status": 200,
+      "expected": "列车即将到达农讲所站，请小心列车与站台之间的空隙。",
+      "recognized": "列车即将到达农讲所站，请小心列车与站台之间的空隙。"
+    },
+    {
+      "id": "voice.arrive.njs.yue",
+      "status": 200,
+      "expected": "列车即将到达农讲所站，请小心列车同站台之间嘅空隙。",
+      "recognized": "列車即將到達農講所站，請小心列車同站台之間嘅空隙。"
+    },
+    {
+      "id": "voice.arrive.njs.en",
+      "status": 200,
+      "expected": "The train is arriving at Peasant Movement Institute. Please mind the gap between the train and the platform.",
+      "recognized": "Train is arriving at peasant movement institute. Please mind the gap between the train and the platform."
+    },
+    {
+      "id": "voice.welcome.njs.zh",
+      "status": 200,
+      "expected": "欢迎光临农讲所站。请排队候车，先下后上。",
+      "recognized": "欢迎光临农讲所站，请排队候车，先下后上。"
+    },
+    {
+      "id": "voice.welcome.njs.yue",
+      "status": 200,
+      "expected": "欢迎光临农讲所站。请排队候车，先落后上。",
+      "recognized": "歡迎光臨農講所站，請排隊候車，先落後上。"
+    },
+    {
+      "id": "voice.welcome.njs.en",
+      "status": 200,
+      "expected": "Welcome to Peasant Movement Institute station. Please line up for the train. Let the passengers get off first before you get on.",
+      "recognized": "Welcome to Peasant Movement Institute Station. Please line up for the train. Let the passengers get off first before you get on."
+    },
+    {
+      "id": "voice.next.lsly.zh",
+      "status": 200,
+      "expected": "下一站，烈士陵园。",
+      "recognized": "下一站烈士陵园。"
+    },
+    {
+      "id": "voice.next.lsly.yue",
+      "status": 200,
+      "expected": "下一站，烈士陵园。",
+      "recognized": "下一站烈士陵園。"
+    },
+    {
+      "id": "voice.next.lsly.en",
+      "status": 200,
+      "expected": "The next station is Martyrs' Park.",
+      "recognized": "Next station is Martyrs Park."
+    },
+    {
+      "id": "voice.arrive.lsly.zh",
+      "status": 200,
+      "expected": "列车即将到达烈士陵园站，请小心列车与站台之间的空隙。",
+      "recognized": "列车即将到达烈士陵园站，请小心列车与站台之间的空隙。"
+    },
+    {
+      "id": "voice.arrive.lsly.yue",
+      "status": 200,
+      "expected": "列车即将到达烈士陵园站，请小心列车同站台之间嘅空隙。",
+      "recognized": "列車即將到達烈士陵園站，請小心列車同站台之間嘅空隙。"
+    },
+    {
+      "id": "voice.arrive.lsly.en",
+      "status": 200,
+      "expected": "The train is arriving at Martyrs' Park. Please mind the gap between the train and the platform.",
+      "recognized": "The train is arriving at Martyrs Park. Please mind the gap between the train and the platform."
+    },
+    {
+      "id": "voice.welcome.lsly.zh",
+      "status": 200,
+      "expected": "欢迎光临烈士陵园站。请排队候车，先下后上。",
+      "recognized": "欢迎光临烈士陵园站，请排队候车，先下后上。"
+    },
+    {
+      "id": "voice.welcome.lsly.yue",
+      "status": 200,
+      "expected": "欢迎光临烈士陵园站。请排队候车，先落后上。",
+      "recognized": "歡迎光臨烈士陵園站，請排隊候車，先落後上。"
+    },
+    {
+      "id": "voice.welcome.lsly.en",
+      "status": 200,
+      "expected": "Welcome to Martyrs' Park station. Please line up for the train. Let the passengers get off first before you get on.",
+      "recognized": "Welcome to Martyrs Park Station. Please line up for the train. Let the passengers get off first before you get on."
+    },
+    {
+      "id": "voice.next.dsk.zh",
+      "status": 200,
+      "expected": "下一站，东山口，可换乘六号线。",
+      "recognized": "下一站东山口，可换乘六号线。"
+    },
+    {
+      "id": "voice.next.dsk.yue",
+      "status": 200,
+      "expected": "下一站，东山口，可换乘六号线。",
+      "recognized": "下一站東山口，可換乘六號線。"
+    },
+    {
+      "id": "voice.next.dsk.en",
+      "status": 200,
+      "expected": "The next station is Dongshankou, the interchange with Line Six.",
+      "recognized": "The next station is Dongshankou, the interchange with Line Six."
+    },
+    {
+      "id": "voice.arrive.dsk.zh",
+      "status": 200,
+      "expected": "列车即将到达东山口站，请小心列车与站台之间的空隙。",
+      "recognized": "列车即将到达东山口站，请小心列车与站台之间的空隙。"
+    },
+    {
+      "id": "voice.arrive.dsk.yue",
+      "status": 200,
+      "expected": "列车即将到达东山口站，请小心列车同站台之间嘅空隙。",
+      "recognized": "列車即將到達東山口站，請小心列車同站台之間嘅空隙。"
+    },
+    {
+      "id": "voice.arrive.dsk.en",
+      "status": 200,
+      "expected": "The train is arriving at Dongshankou. Please mind the gap between the train and the platform.",
+      "recognized": "A train is arriving at Dongshankou. Please mind the gap between the train and the platform."
+    },
+    {
+      "id": "voice.welcome.dsk.zh",
+      "status": 200,
+      "expected": "欢迎光临东山口站。请排队候车，先下后上。",
+      "recognized": "欢迎光临东山口站，请排队候车，先下后上。"
+    },
+    {
+      "id": "voice.welcome.dsk.yue",
+      "status": 200,
+      "expected": "欢迎光临东山口站。请排队候车，先落后上。",
+      "recognized": "歡迎光臨東山口站，請排隊候車，先落後上。"
+    },
+    {
+      "id": "voice.welcome.dsk.en",
+      "status": 200,
+      "expected": "Welcome to Dongshankou station. Please line up for the train. Let the passengers get off first before you get on.",
+      "recognized": "Welcome to Dongshankou Station. Please line up for the train. Let the passengers get off first before you get on."
+    },
+    {
+      "id": "voice.destination.up.zh",
+      "status": 200,
+      "expected": "本次列车终点站为，广州东站。",
+      "recognized": "本次列车终点站为广州东站。"
+    },
+    {
+      "id": "voice.destination.up.yue",
+      "status": 200,
+      "expected": "本次列车终点站为，广州东站。",
+      "recognized": "本次列車終點站為廣州東站。"
+    },
+    {
+      "id": "voice.destination.up.en",
+      "status": 200,
+      "expected": "The destination of this train is Guangzhou East Railway Station.",
+      "recognized": "Destination of this train is Guangzhou East Railway Station."
+    },
+    {
+      "id": "voice.platform.up.1.zh",
+      "status": 200,
+      "expected": "一站台，广州东站方向列车即将进站。",
+      "recognized": "一站台，广州东站方向列车即将进站。"
+    },
+    {
+      "id": "voice.platform.up.1.yue",
+      "status": 200,
+      "expected": "一站台，广州东站方向列车即将进站。",
+      "recognized": "一站台，廣州東站方向列車即將進站。"
+    },
+    {
+      "id": "voice.platform.up.1.en",
+      "status": 200,
+      "expected": "The train bound for Guangzhou East Railway Station is approaching at Platform 1.",
+      "recognized": "The train bound for Guangzhou East Railway Station is approaching at Platform One."
+    },
+    {
+      "id": "voice.platform.up.2.zh",
+      "status": 200,
+      "expected": "二站台，广州东站方向列车即将进站。",
+      "recognized": "二站台广州东站方向列车即将进站。"
+    },
+    {
+      "id": "voice.platform.up.2.yue",
+      "status": 200,
+      "expected": "二站台，广州东站方向列车即将进站。",
+      "recognized": "二站台，廣州東站方向列車即將進站。"
+    },
+    {
+      "id": "voice.platform.up.2.en",
+      "status": 200,
+      "expected": "The train bound for Guangzhou East Railway Station is approaching at Platform 2.",
+      "recognized": "The train bound for Guangzhou East Railway Station is approaching at Platform Two."
+    },
+    {
+      "id": "voice.terminal.up.zh",
+      "status": 200,
+      "expected": "下一站是本次列车的终点站，广州东站。请全部乘客带齐行李物品在此站下车，欢迎再次乘坐广州地铁。",
+      "recognized": "下一站是本次列车的终点站，广州东站。请全部乘客带齐行李物品在此站下车，欢迎再次乘坐广州地铁。"
+    },
+    {
+      "id": "voice.terminal.up.yue",
+      "status": 200,
+      "expected": "下一站系本次列车嘅终点站，广州东站。请全部乘客带齐行李物品喺呢一站落车，欢迎再次乘坐广州地铁。",
+      "recognized": "下一站系本次列車嘅終點站，廣州東站。請全部乘客帶齊行李物品喺呢一站落車，歡迎再次乘坐廣州地鐵。"
+    },
+    {
+      "id": "voice.terminal.up.en",
+      "status": 200,
+      "expected": "The next station is Guangzhou East Railway Station, the terminal of this journey. Please take all your belongings and leave the train. Thank you for travelling on Guangzhou Metro.",
+      "recognized": "Next station is Guangzhou East Railway Station, the terminal of this journey. Please take all your belongings and leave the train. Thank you for traveling on Guangzhou Metro."
+    },
+    {
+      "id": "voice.destination.down.zh",
+      "status": 200,
+      "expected": "本次列车终点站为，西塱。",
+      "recognized": "本次列车终点站为西朗。"
+    },
+    {
+      "id": "voice.destination.down.yue",
+      "status": 200,
+      "expected": "本次列车终点站为，西塱。",
+      "recognized": "本次列車終點站為西朗。"
+    },
+    {
+      "id": "voice.destination.down.en",
+      "status": 200,
+      "expected": "The destination of this train is Xilang.",
+      "recognized": "Destination of this train is Zeeland."
+    },
+    {
+      "id": "voice.platform.down.1.zh",
+      "status": 200,
+      "expected": "一站台，西塱方向列车即将进站。",
+      "recognized": "一站台，西朗方向列车即将进站。"
+    },
+    {
+      "id": "voice.platform.down.1.yue",
+      "status": 200,
+      "expected": "一站台，西塱方向列车即将进站。",
+      "recognized": "一站台，西朗方向列車即將進站。"
+    },
+    {
+      "id": "voice.platform.down.1.en",
+      "status": 200,
+      "expected": "The train bound for Xilang is approaching at Platform 1.",
+      "recognized": "Train bound for Zheleznogorsk is approaching at platform one."
+    },
+    {
+      "id": "voice.platform.down.2.zh",
+      "status": 200,
+      "expected": "二站台，西塱方向列车即将进站。",
+      "recognized": "二站台，西朗方向列车即将进站。"
+    },
+    {
+      "id": "voice.platform.down.2.yue",
+      "status": 200,
+      "expected": "二站台，西塱方向列车即将进站。",
+      "recognized": "二站台，西朗方向列車即將進站。"
+    },
+    {
+      "id": "voice.platform.down.2.en",
+      "status": 200,
+      "expected": "The train bound for Xilang is approaching at Platform 2.",
+      "recognized": "The train bound for Zlang is approaching at platform two."
+    },
+    {
+      "id": "voice.terminal.down.zh",
+      "status": 200,
+      "expected": "下一站是本次列车的终点站，西塱。请全部乘客带齐行李物品在此站下车，欢迎再次乘坐广州地铁。",
+      "recognized": "下一站是本次列车的终点站西朗，请全部乘客带齐行李物品在此站下车，欢迎再次乘坐广州地铁。"
+    },
+    {
+      "id": "voice.terminal.down.yue",
+      "status": 200,
+      "expected": "下一站系本次列车嘅终点站，西塱。请全部乘客带齐行李物品喺呢一站落车，欢迎再次乘坐广州地铁。",
+      "recognized": "下一站系本次列車嘅終點站，西朗。請全部乘客帶齊行李物品喺呢一站落車，歡迎再次乘坐廣州地鐵。"
+    },
+    {
+      "id": "voice.terminal.down.en",
+      "status": 200,
+      "expected": "The next station is Xilang, the terminal of this journey. Please take all your belongings and leave the train. Thank you for travelling on Guangzhou Metro.",
+      "recognized": "The next station is Zilang, the terminal of this journey. Please take all your belongings and leave the train. Thank you for traveling on Guangzhou Metro."
+    },
+    {
+      "id": "voice.doorsClosing.zh",
+      "status": 200,
+      "expected": "车门即将关闭，请注意安全，谨防被夹。",
+      "recognized": "车门即将关闭，请注意安全，谨防被夹。"
+    },
+    {
+      "id": "voice.doorsClosing.yue",
+      "status": 200,
+      "expected": "车门即将关闭，请注意安全，谨防被夹。",
+      "recognized": "車門即將關閉，請注意安全，謹防被夾。"
+    },
+    {
+      "id": "voice.doorsClosing.en",
+      "status": 200,
+      "expected": "The doors are closing. Please stand clear of the doors.",
+      "recognized": "Doors are closing. Please stand clear of the doors."
+    },
+    {
+      "id": "voice.gap.zh",
+      "status": 200,
+      "expected": "请小心列车与站台之间的空隙。",
+      "recognized": "请小心列车与站台之间的空隙。"
+    },
+    {
+      "id": "voice.gap.yue",
+      "status": 200,
+      "expected": "请小心列车同站台之间嘅空隙。",
+      "recognized": "請小心列車同站台之間嘅空隙。"
+    },
+    {
+      "id": "voice.gap.en",
+      "status": 200,
+      "expected": "Please mind the gap between the train and the platform.",
+      "recognized": "Please mind the gap between the train and the platform."
+    },
+    {
+      "id": "voice.transfer.gyq.zh",
+      "status": 200,
+      "expected": "请从列车前进方向的右门下车，中部楼梯换乘二号线。",
+      "recognized": "请从列车前进方向的右门下车，中部楼梯换乘二号线。"
+    },
+    {
+      "id": "voice.transfer.gyq.yue",
+      "status": 200,
+      "expected": "请由列车前进方向嘅右门落车，中部楼梯换乘二号线。",
+      "recognized": "請由列車前進方向嘅右門落車，中部樓梯換乘二號線。"
+    },
+    {
+      "id": "voice.transfer.gyq.en",
+      "status": 200,
+      "expected": "Please exit the train to the right. To transfer to Line Two, please take the stairs in the middle of the platform.",
+      "recognized": "Please exit the train to the right. To transfer to Line Two, please take the stairs in the middle of the platform."
+    },
+    {
+      "id": "voice.transfer.dsk.zh",
+      "status": 200,
+      "expected": "可换乘六号线。",
+      "recognized": "可换乘六号线。"
+    },
+    {
+      "id": "voice.transfer.dsk.yue",
+      "status": 200,
+      "expected": "可换乘六号线。",
+      "recognized": "換乘六號線。"
+    },
+    {
+      "id": "voice.transfer.dsk.en",
+      "status": 200,
+      "expected": "The interchange with Line Six.",
+      "recognized": "Interchange with line six."
+    },
+    {
+      "id": "voice.exit.left.zh",
+      "status": 200,
+      "expected": "请从列车前进方向的左门下车。",
+      "recognized": "请从列车前进方向的左门下车。"
+    },
+    {
+      "id": "voice.exit.left.yue",
+      "status": 200,
+      "expected": "请由列车前进方向嘅左门落车。",
+      "recognized": "請由列車前進方向嘅左門落車。"
+    },
+    {
+      "id": "voice.exit.left.en",
+      "status": 200,
+      "expected": "Please exit the train to the left.",
+      "recognized": "Please exit the train to the left."
+    },
+    {
+      "id": "voice.exit.right.zh",
+      "status": 200,
+      "expected": "请从列车前进方向的右门下车。",
+      "recognized": "请从列车前进方向的右门下车。"
+    },
+    {
+      "id": "voice.exit.right.yue",
+      "status": 200,
+      "expected": "请由列车前进方向嘅右门落车。",
+      "recognized": "請由列車前進方向嘅右門落車。"
+    },
+    {
+      "id": "voice.exit.right.en",
+      "status": 200,
+      "expected": "Please exit the train to the right.",
+      "recognized": "Please exit the train to the right."
+    },
+    {
+      "id": "train.roll",
+      "status": 200,
+      "expected": "",
+      "recognized": "This is Penn Station."
+    }
+  ]
+}

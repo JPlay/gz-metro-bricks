@@ -1,0 +1,111 @@
+{
+  "expectedFault": "one synthetic 404 MP3 response",
+  "failureObserved": [
+    "音频加载失败：sfx/footstep.mp3"
+  ],
+  "recovered": {
+    "loaded": true,
+    "progress": 1,
+    "unlocked": false,
+    "needsGesture": true,
+    "context": "suspended",
+    "background": false,
+    "muted": false,
+    "volume": 0.85,
+    "zone": "none",
+    "speed": 0,
+    "inside": true,
+    "braking": false,
+    "curve": 0,
+    "ducked": false,
+    "announcing": null,
+    "stationAnnouncing": null,
+    "stationAnnouncements": true,
+    "nextStationAnnouncementMs": null,
+    "queued": 0,
+    "active": 0,
+    "retiringBeds": 0,
+    "beds": 0,
+    "spatialSources": [],
+    "listener": {
+      "position": {
+        "x": 0,
+        "y": 6,
+        "z": 0
+      },
+      "forward": {
+        "x": 0,
+        "y": 0,
+        "z": -1
+      }
+    },
+    "assetCount": 119,
+    "decodedBytes": 75908220,
+    "sampleRate": 24000,
+    "decodeConcurrencyPeak": 2,
+    "audioSessionSupported": false,
+    "mix": {
+      "ambience": 0.65,
+      "train": 0.8,
+      "sfx": 0.8,
+      "voice": 1
+    },
+    "errors": [
+      "音频加载失败：sfx/footstep.mp3"
+    ]
+  },
+  "passed": true,
+  "normalReload": {
+    "state": {
+      "loaded": true,
+      "progress": 1,
+      "unlocked": false,
+      "needsGesture": true,
+      "context": "suspended",
+      "background": false,
+      "muted": false,
+      "volume": 0.85,
+      "zone": "none",
+      "speed": 0,
+      "inside": true,
+      "braking": false,
+      "curve": 0,
+      "ducked": false,
+      "announcing": null,
+      "stationAnnouncing": null,
+      "stationAnnouncements": true,
+      "nextStationAnnouncementMs": null,
+      "queued": 0,
+      "active": 0,
+      "retiringBeds": 0,
+      "beds": 0,
+      "spatialSources": [],
+      "listener": {
+        "position": {
+          "x": 0,
+          "y": 6,
+          "z": 0
+        },
+        "forward": {
+          "x": 0,
+          "y": 0,
+          "z": -1
+        }
+      },
+      "assetCount": 119,
+      "decodedBytes": 75908220,
+      "sampleRate": 24000,
+      "decodeConcurrencyPeak": 2,
+      "audioSessionSupported": false,
+      "mix": {
+        "ambience": 0.65,
+        "train": 0.8,
+        "sfx": 0.8,
+        "voice": 1
+      },
+      "errors": []
+    },
+    "errors": [],
+    "faultHookPresent": false
+  }
+}

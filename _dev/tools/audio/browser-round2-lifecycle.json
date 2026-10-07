@@ -1,0 +1,173 @@
+{
+  "passed": true,
+  "assertions": {
+    "activeMute": true,
+    "rapidStop": true,
+    "paCancelled": true,
+    "quietResume": true,
+    "errors": true
+  },
+  "mix": {
+    "before": 0.0656214403269869,
+    "muted": 0,
+    "restored": 0.07890603613941254,
+    "rapidStop": {
+      "level": 0,
+      "state": {
+        "loaded": true,
+        "progress": 1,
+        "unlocked": true,
+        "needsGesture": false,
+        "context": "running",
+        "background": false,
+        "muted": false,
+        "volume": 0.85,
+        "zone": "none",
+        "speed": 0,
+        "inside": true,
+        "braking": false,
+        "curve": 0,
+        "ducked": false,
+        "announcing": null,
+        "stationAnnouncing": null,
+        "stationAnnouncements": false,
+        "nextStationAnnouncementMs": null,
+        "queued": 0,
+        "active": 0,
+        "retiringBeds": 0,
+        "beds": 0,
+        "spatialSources": [],
+        "listener": {
+          "position": {
+            "x": 0,
+            "y": 6,
+            "z": 0
+          },
+          "forward": {
+            "x": 0,
+            "y": 0,
+            "z": -1
+          }
+        },
+        "assetCount": 119,
+        "decodedBytes": 75908220,
+        "sampleRate": 24000,
+        "decodeConcurrencyPeak": 2,
+        "audioSessionSupported": false,
+        "mix": {
+          "ambience": 0.65,
+          "train": 0.8,
+          "sfx": 0.8,
+          "voice": 1
+        },
+        "errors": []
+      }
+    },
+    "paBefore": 0.00844814214378843,
+    "cancelled": {
+      "cancelled": true
+    },
+    "suspended": {
+      "loaded": true,
+      "progress": 1,
+      "unlocked": false,
+      "needsGesture": true,
+      "context": "suspended",
+      "background": false,
+      "muted": false,
+      "volume": 0.85,
+      "zone": "none",
+      "speed": 0,
+      "inside": true,
+      "braking": false,
+      "curve": 0,
+      "ducked": false,
+      "announcing": null,
+      "stationAnnouncing": null,
+      "stationAnnouncements": false,
+      "nextStationAnnouncementMs": null,
+      "queued": 0,
+      "active": 0,
+      "retiringBeds": 0,
+      "beds": 0,
+      "spatialSources": [],
+      "listener": {
+        "position": {
+          "x": 0,
+          "y": 6,
+          "z": 0
+        },
+        "forward": {
+          "x": 0,
+          "y": 0,
+          "z": -1
+        }
+      },
+      "assetCount": 119,
+      "decodedBytes": 75908220,
+      "sampleRate": 24000,
+      "decodeConcurrencyPeak": 2,
+      "audioSessionSupported": false,
+      "mix": {
+        "ambience": 0.65,
+        "train": 0.8,
+        "sfx": 0.8,
+        "voice": 1
+      },
+      "errors": []
+    }
+  },
+  "resumed": {
+    "level": 0,
+    "state": {
+      "loaded": true,
+      "progress": 1,
+      "unlocked": true,
+      "needsGesture": false,
+      "context": "running",
+      "background": false,
+      "muted": false,
+      "volume": 0.85,
+      "zone": "none",
+      "speed": 0,
+      "inside": true,
+      "braking": false,
+      "curve": 0,
+      "ducked": false,
+      "announcing": null,
+      "stationAnnouncing": null,
+      "stationAnnouncements": false,
+      "nextStationAnnouncementMs": null,
+      "queued": 0,
+      "active": 0,
+      "retiringBeds": 0,
+      "beds": 0,
+      "spatialSources": [],
+      "listener": {
+        "position": {
+          "x": 0,
+          "y": 6,
+          "z": 0
+        },
+        "forward": {
+          "x": 0,
+          "y": 0,
+          "z": -1
+        }
+      },
+      "assetCount": 119,
+      "decodedBytes": 75908220,
+      "sampleRate": 24000,
+      "decodeConcurrencyPeak": 2,
+      "audioSessionSupported": false,
+      "mix": {
+        "ambience": 0.65,
+        "train": 0.8,
+        "sfx": 0.8,
+        "voice": 1
+      },
+      "errors": []
+    },
+    "errors": []
+  }
+}
