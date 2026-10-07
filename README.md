@@ -6,7 +6,9 @@
 
 打开就能玩，不用安装任何东西，在 iPad 上用手指操作。
 
-**在线试玩：<https://jplay.github.io/gz-metro-bricks/>**（拼列车）· [直接去坐地铁](https://jplay.github.io/gz-metro-bricks/metro.html)
+**在线试玩：<https://gz-metro-bricks.pages.dev/>**（拼列车）· [直接去坐地铁](https://gz-metro-bricks.pages.dev/metro.html)
+
+备用地址：<https://jplay.github.io/gz-metro-bricks/>
 
 <p align="center">
   <img src="./assets/readme/shot-build.jpg" width="49%" alt="拼搭页：一步步把列车拼出来，下方列出这一步要用的零件">
