@@ -20,6 +20,8 @@ const B = window.BABYLON;
 export const YC = -6, HALL_X = 46, TUNNEL_X = 140, TRACK_OFF = 7.6, PSD_OFF = 6, WALL_OFF = 10.6;
 export const MAIN = { y: -12, zc: 14 }, GYQ2 = { y: -22, zc: 44 };
 export const SPAWN = { x: 0, y: 0, z: -48, yaw: 0 };
+/** 街面要留空的点：默认出生点、东山口截图取景点（tests/e2e/polish_shots.py 的 10b），半径 1.5 米内不放道具和行人 */
+export const STREET_CLEAR = [{ x: SPAWN.x, z: SPAWN.z, r: 1.5 }, { x: -6, z: -56, r: 1.5 }];
 // 每站一个很淡的主题色（柱子 / 墙面点缀），整体保持 1 号线车站的米白基调
 const THEMES = ['#F1E6D8', '#E3EEE6', '#E4EAF2', '#F2E4E8', '#EAE6F2', '#F5EDD6', '#E0EEEE', '#EFE8DE'];
 const FLOOR = hex('#E6E4DF'), WALLC = hex('#F4F2EE'), CEIL = hex('#F2F3F4'), STEEL = hex('#B9C0C8'), DARK = hex('#2F3338'), REVEAL = hex('#585E66');
@@ -109,7 +111,10 @@ export class Station {
     // 路灯、长椅、树、垃圾桶
     for (const x of [-9, 9]) for (const z of [-60, -46, -32, -18]) D.lamp(k, x, 0, z, x < 0 ? Math.PI / 2 : -Math.PI / 2);
     for (let x = -50; x <= 50; x += 14) if (Math.abs(x) > 6) D.lamp(k, x + 3, 0, -62.6, Math.PI);
-    D.bench(k, -8, 0, -52, Math.PI / 2); D.bench(k, 8, 0, -54, -Math.PI / 2); D.bin(k, -7.6, 0, -49, Math.PI / 2); D.bin(k, 7.6, 0, -57, -Math.PI / 2);
+    // 长椅、垃圾桶：避开出生点和东山口取景点（STREET_CLEAR），左侧长椅从 z=-52 挪到 -44（原位置正对东山口取景视线，和行人穿插）
+    const benches = [[-8, -44, Math.PI / 2], [8, -54, -Math.PI / 2]], bins = [[-7.6, -49, Math.PI / 2], [7.6, -57, -Math.PI / 2]];
+    for (const [x, z, r] of benches) D.bench(k, x, 0, z, r);
+    for (const [x, z, r] of bins) D.bin(k, x, 0, z, r);
     const treeSpots = [];
     for (let x = -52; x <= 52; x += 8) if (Math.abs(x) > 8) treeSpots.push([x + 1.5, -61.8, D.rnd() < 0.2 ? 1 : 0, 0.9]);
     for (let i = 0; i < 18; i++) { const sx = D.rnd() < 0.5 ? -1 : 1; treeSpots.push([sx * (16 + D.rnd() * 32), -10 + D.rnd() * 38]); }
@@ -124,11 +129,21 @@ export class Station {
     for (let i = 0; i < 5; i++) bld(-48 + i * 24, -86, 18, 6, 15 + (i * 4) % 12, bcol[(i + 2) % 7], { ...SHOPS[(i + 4) % SHOPS.length], n: [0, 1] });
     // 行人
     const C = this.crowd;
-    C.add(-2.6, 0, -44.5, Math.PI * 0.9, randomLook({}), 'wave');
-    for (let i = 0; i < 4; i++) C.add(-11 + D.rnd() * 6 + (i % 2) * 16, 0, -58 + D.rnd() * 10, D.rnd() * 6.28, randomLook({ phone: i % 2 === 0 }), i % 2 === 0 ? 'phone' : 'idle');
+    // 站着的行人不与出生点 / 取景点（各留 1.5 米）、长椅、垃圾桶、路灯和彼此穿插：随机位置被占就按固定顺序就近挪开（不额外消耗随机数）
+    const blocked = [...STREET_CLEAR.map(c => [c.x, c.z, c.r]), ...benches.map(([x, z]) => [x, z, 1.0]), ...bins.map(([x, z]) => [x, z, 0.45]),
+      ...[-60, -46].flatMap(z => [[-9, z, 0.3], [9, z, 0.3]])];
+    const free = (x, z) => blocked.every(([bx, bz, r]) => Math.hypot(x - bx, z - bz) >= r + 0.45);
+    const NUDGE = [[0, 0], [1.2, 0], [-1.2, 0], [0, 1.2], [0, -1.2], [1.2, 1.2], [-1.2, 1.2], [1.2, -1.2], [-1.2, -1.2], [2.4, 0], [-2.4, 0], [0, 2.4], [0, -2.4]];
+    const stand = (x, z, ry, look, mode) => {
+      const [dx, dz] = NUDGE.find(([dx, dz]) => free(x + dx, z + dz)) || [0, 0];
+      blocked.push([x + dx, z + dz, 0.7]); return C.add(x + dx, 0, z + dz, ry, look, mode);
+    };
+    stand(-2.6, -44.5, Math.PI * 0.9, randomLook({}), 'wave');
+    for (let i = 0; i < 4; i++) { const x = -11 + D.rnd() * 6 + (i % 2) * 16, z = -58 + D.rnd() * 10, ry = D.rnd() * 6.28; stand(x, z, ry, randomLook({ phone: i % 2 === 0 }), i % 2 === 0 ? 'phone' : 'idle'); }
     C.walker([[-30, -62.7], [30, -62.7]], 0, randomLook({}), 1.3);
     C.walker([[28, -61.4], [-28, -61.4]], 0, randomLook({ bag: 'backpack' }), 1.15);
-    C.walker([[-7.2, -40], [-7.2, -58], [-5.5, -58], [-5.5, -40]], 0, randomLook({}), 1.0);
+    // 左侧人行道绕圈的行人：原路线 x=-7.2/-5.5 正好穿过东山口取景点，外移到路灯和草地之间
+    C.walker([[-10.3, -40], [-10.3, -58], [-11.7, -58], [-11.7, -40]], 0, randomLook({}), 1.0);
     // 招牌站：地面地标
     const avoid = (x, z) => (sig === 'park' && x > 4 && x < 26 && z > -54 && z < -30) || (sig === 'park' && Math.hypot(x + 24, z + 40) < 7);
     if (sig === 'park') {
