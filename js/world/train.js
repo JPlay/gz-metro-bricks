@@ -209,7 +209,7 @@ export class Train {
     li.box(0, 1.0, -0.035, hw - 0.02, DOOR_H - 0.08, 0.04, IC, 0, 0, 0, 1, { ao: false });
     li.box(0, 0.55, -0.04, hw - 0.08, 0.08, 0.05, ID, 0, 0, 0, 1, { ao: false }); // 防撞条
     li.box(0, 1.05, -0.05, hw - 0.18, 0.05, 0.04, hex('#5A6168'), 0, 0, 0, 1, { ao: false }); // 拉手槽
-    this.innerMat = this.kit.M.metal.clone('trainDoorIn' + id); this.innerMat.metallic = 0.55; this.innerMat.roughness = 0.35; this.innerMat.albedoColor = B.Color3.FromHexString('#C8CED4').toLinearSpace();
+    this.innerMat = this.kit.M.metal.clone('trainDoorIn' + this.id); this.innerMat.metallic = 0.55; this.innerMat.roughness = 0.35; this.innerMat.albedoColor = B.Color3.FromHexString('#C8CED4').toLinearSpace();
     const mk = (g, name, mat) => { const m = g.toMesh(name, this.scene, mat, this.root); m.isVisible = false; return m; };
     this.leafSrc = [mk(lf, 'leafShell', this.shellMat), mk(lg, 'leafGlass', this.glassMat), mk(ll, 'leafLine', this.lineMat), mk(li, 'leafInner', this.innerMat)];
     this.leaves = { 1: [], '-1': [] }; this.doorCols = { 1: [], '-1': [] };
