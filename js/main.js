@@ -31,12 +31,12 @@ export async function start() {
   const progress = (f, msg) => { if (window.__loadUI) return window.__loadUI.set(f, msg); const b = document.getElementById('loadBar'), m = document.getElementById('loadMsg'); if (b) b.style.width = Math.max(3, Math.min(100, f * 100)).toFixed(1) + '%'; if (m && msg) m.textContent = msg; };
   // 让浏览器先把进度画出来再做下一段同步重活（搭车站会占住主线程 1–2 秒）
   const paint = () => new Promise(r => requestAnimationFrame(() => setTimeout(r, 0)));
-  progress(0.50, '正在准备材质…');
+  progress(0.50, '正在给车站刷油漆…');
   const M = mats(scene);
   const cam = new B.FreeCamera('cam', new B.Vector3(0, 2, -52), scene); cam.minZ = 0.08; cam.maxZ = 420; cam.fov = 0.92; cam.inputs.clear();
   const R = new Render(engine, scene, cam);
   mark('render');
-  progress(0.55, '正在搭建车站…');
+  progress(0.55, '正在铺轨道…');
   await paint();
 
   const events = new Events(), hud = new Hud(), input = new Input({
@@ -70,14 +70,14 @@ export async function start() {
     metro.attach(st);
     return st;
   }
-  mark('trains'); progress(0.62, '正在搭建车站…'); await paint();
+  mark('trains'); progress(0.62, '正在搭站台…'); await paint();
   // —— 开始位置：默认公园前站口外的街上
   if (CONFIG.start && STATIONS[CONFIG.start]) {
     const st = buildStation(CONFIG.start), P = st.platformFor(CONFIG.startLine) || st.platforms[0];
     player.spawn(20, P.y + 0.05, P.zc, Math.PI / 2);
   } else { buildStation('gyq'); player.spawn(SPAWN.x, SPAWN.y + 0.05, SPAWN.z, SPAWN.yaw); }
   mark('station');
-  progress(0.72, '正在准备贴图与着色…');
+  progress(0.72, '正在贴瓷砖、挂站牌…');
   await paint();
 
   // —— 事件 → 提示
@@ -158,7 +158,7 @@ export async function start() {
     while (performance.now() - readyAt < cap) {
       let ok = false; try { ok = scene.isReady(); } catch (_) {}
       const t = Math.min(1, (performance.now() - readyAt) / cap);
-      progress(0.72 + 0.22 * t, '正在准备贴图与着色…');
+      progress(0.72 + 0.22 * t, '正在贴瓷砖、挂站牌…');
       if (ok) return true;
       await new Promise(r => setTimeout(r, 100));
     }
@@ -166,14 +166,14 @@ export async function start() {
   };
   try { await waitReady(); } catch (_) {}
   mark('ready');
-  progress(0.95, '正在打光…');
+  progress(0.95, '正在点亮站厅…');
   R.refreshProbes();
   let nFrames = 0; scene.onAfterRenderObservable.add(() => { nFrames++; if (nFrames === 1) mark('frame1'); if (nFrames === 5) mark('frame5'); if (nFrames === 30) mark('frame30'); });
   engine.runRenderLoop(() => scene.render());
   // 等首帧出来再关加载页，进度走到 100%
   await new Promise(r => {
     const obs = scene.onAfterRenderObservable.add(() => {
-      if (nFrames >= 1) { scene.onAfterRenderObservable.remove(obs); progress(1, '准备好了！'); r(); }
+      if (nFrames >= 1) { scene.onAfterRenderObservable.remove(obs); progress(1, '列车到站啦，出发！'); r(); }
     });
     setTimeout(r, 2500);
   });
