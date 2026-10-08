@@ -187,7 +187,7 @@ def sky():
     W, H = 1024, 512
     y = np.linspace(0, 1, H)[:, None] * np.ones((1, W))
     # 天顶更深蓝，地平线仍偏浅，避免和楼房糊在一起
-    zen = np.array([0.18, 0.42, 0.82]); hor = np.array([0.62, 0.78, 0.96]); gnd = np.array([0.72, 0.84, 0.95])
+    zen = np.array([0.14, 0.36, 0.78]); hor = np.array([0.55, 0.74, 0.96]); gnd = np.array([0.68, 0.82, 0.94])
     t = np.clip(y / 0.5, 0, 1)
     col = zen[None, None] * (1 - t[..., None] ** 1.35) + hor[None, None] * (t[..., None] ** 1.35)
     col = np.where((y > 0.5)[..., None], gnd[None, None] * np.ones_like(col), col)
@@ -195,13 +195,13 @@ def sky():
     nn = noise(1024, 7, seed=11)[:512, :]
     n2 = noise(1024, 18, seed=12)[:512, :]
     n3 = noise(1024, 40, seed=13)[:512, :]
-    c = np.clip((nn * 0.7 + n2 * 0.35 + n3 * 0.12 - 0.52) * 2.2, 0, 1)
+    c = np.clip((nn * 0.75 + n2 * 0.4 + n3 * 0.15 - 0.48) * 2.6, 0, 1)
     band = np.clip(1 - np.abs(y - 0.30) / 0.24, 0, 1) ** 0.85 * np.clip((0.48 - y) * 10, 0, 1)
     c = (c * band) ** 0.9
     # 柔和白，略带一点暖边
     white = np.array([0.98, 0.99, 1.0])
     shade = 0.88 + 0.12 * np.clip(1 - n2, 0, 1)
-    col = col * (1 - c[..., None] * 0.92) + (white * shade[..., None]) * c[..., None] * 0.92
+    col = col * (1 - c[..., None] * 0.95) + (white * shade[..., None]) * c[..., None] * 0.95
     a = np.clip(col * 255, 0, 255).astype(np.uint8)
     Image.fromarray(a).save(os.path.join(OUT, 'sky.jpg'), quality=86, optimize=True, progressive=True)
 # ---------- 圆形柔和阴影（贴地）----------

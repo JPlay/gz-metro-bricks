@@ -51,11 +51,14 @@ export class Render {
     sun.diffuse = B.Color3.Lerp(new B.Color3(1.0, 0.95, 0.86), new B.Color3(1.0, 0.99, 0.96), f);
     const d = B.Vector3.Lerp(new B.Vector3(-0.42, -1, 0.55), new B.Vector3(-0.08, -1, 0.06), f).normalize(); sun.direction.copyFrom(d);
     s.environmentIntensity = lerp(1.0, 0.9, f);
-    if (f > 0.5 && !this.envIn) {
-      this.envIn = B.CubeTexture.CreateFromPrefilteredData(this._envInUrl, s); this.envIn.name = 'envIn';
-    }
+    if (f > 0.5) this.preloadIndoor();
     const want = f > 0.5 && this.envIn ? this.envIn : this.env; if (s.environmentTexture !== want) s.environmentTexture = want;
     this.sky.setEnabled(f < 0.98);
+  }
+  /** 室内影棚环境贴图：首屏之后空闲时再加载（不占加载时间） */
+  preloadIndoor() {
+    if (this.envIn) return;
+    this.envIn = B.CubeTexture.CreateFromPrefilteredData(this._envInUrl, this.scene); this.envIn.name = 'envIn';
   }
   update(dt, indoor, focus) {
     this.indoorTarget = indoor;

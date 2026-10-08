@@ -445,16 +445,18 @@ export class Station {
   escalatorBody(x0, y0, x1, y1, z0, z1) {
     const k = this.kit, P = k.solid, ang = Math.atan2(y1 - y0, x1 - x0), len = Math.hypot(x1 - x0, y1 - y0), mx = (x0 + x1) / 2, my = (y0 + y1) / 2, zc = (z0 + z1) / 2, w = z1 - z0;
     const SKIRT = hex('#E6EAEE'), POST = hex('#D5DAE0');
-    k.metal.box(mx, my - 0.5, zc, len, 0.9, w + 0.3, hex('#E8ECF0'), 0, 0, ang, 1, { ao: false }); // 桁架外包（浅不锈钢）
+    // 侧板用非金属浅灰（金属度 1 的材质在站厅环境里反射暗，看起来发黑）
+    P.box(mx, my - 0.5, zc, len, 0.9, w + 0.3, hex('#DDE2E7'), 0, 0, ang, 1, { ao: false }); // 桁架外包（浅灰）
     for (const e of [-1, 1]) {
       const ze = e < 0 ? z0 - 0.08 : z1 + 0.08;
-      k.metal.box(mx, my + 0.18, ze, len, 0.55, 0.07, SKIRT, 0, 0, ang, 1, { ao: false }); // 裙板（加高、浅灰，取代原先偏黑的侧板观感）
+      P.box(mx, my + 0.18, ze, len, 0.55, 0.07, SKIRT, 0, 0, ang, 1, { ao: false }); // 裙板（浅灰）
+      k.metal.box(mx, my + 0.47, ze, len, 0.04, 0.08, STEEL, 0, 0, ang, 1, { ao: false }); // 不锈钢压条
       k.glass.box(mx, my + 0.72, ze, len, 0.78, 0.025, hex('#E2F2FA'), 0, 0, ang);
       const hr = (x, h) => [x, y0 + (y1 - y0) * (x - x0) / (x1 - x0) + h, ze];
       // 扶手：黑色橡胶；端柱改不锈钢浅灰
       const A = [x0 - 1.2, y0 + 1.08, ze], A1 = [x0 + 0.3, y0 + 1.08, ze], B1 = [x1 - 0.3, y1 + 1.08, ze], Bb = [x1 + 1.2, y1 + 1.08, ze];
       P.path([A, A1, hr(x0 + 0.9, 1.08), hr(x1 - 0.9, 1.08), B1, Bb], 0.09, hex('#1E2125'), 8);
-      for (const [px, py, dd] of [[x0 - 1.2, y0, -1], [x1 + 1.2, y1, 1]]) { k.metal.cyl(px, py + 0.62, ze, 0.12, 0.9, POST, 10, 0, 0, 0, undefined, { ao: false }); k.metal.rbox(px - dd * 0.6, py, ze, 1.4, 0.95, 0.12, SKIRT, 0.04, 0, { ao: false }); k.glass.box(px - dd * 0.6, py + 0.6, ze, 1.3, 0.8, 0.02, hex('#E2F2FA')); }
+      for (const [px, py, dd] of [[x0 - 1.2, y0, -1], [x1 + 1.2, y1, 1]]) { P.cyl(px, py + 0.62, ze, 0.12, 0.9, POST, 10, 0, 0, 0, undefined, { ao: false }); P.rbox(px - dd * 0.6, py, ze, 1.4, 0.95, 0.12, SKIRT, 0.04, 0, { ao: false }); k.glass.box(px - dd * 0.6, py + 0.6, ze, 1.3, 0.8, 0.02, hex('#E2F2FA')); }
     }
     // 上下梳齿板 + 黄色警示
     for (const [xx, yy, dd] of [[x0 - 0.9, y0, -1], [x1 + 0.9, y1, 1]]) {

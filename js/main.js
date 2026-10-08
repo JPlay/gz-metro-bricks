@@ -178,6 +178,7 @@ export async function start() {
     setTimeout(r, 2500);
   });
   const loading = document.getElementById('loading'); loading.classList.add('done'); setTimeout(() => loading.remove(), 700);
+  setTimeout(() => R.preloadIndoor(), 1500);
 
   // —— 测试接口
   let inst = null; try { inst = new B.SceneInstrumentation(scene); inst.captureFrameTime = true; } catch (_) {}

@@ -206,10 +206,11 @@ export class Train {
     ll.box(0, 0.615, 0, hw, 0.33, 0.056, WHITE, 0, 0, 0, 1, { ao: false });
     // 车门内侧：不锈钢浅灰整扇盖住外壳/色带（局部 z 偏内侧，避免和外壳穿模看到黄色）
     const li = new Geo(), IC = hex('#C8CED4'), ID = hex('#9AA3AB');
-    li.box(0, 1.0, -0.035, hw - 0.02, DOOR_H - 0.08, 0.04, IC, 0, 0, 0, 1, { ao: false });
-    li.box(0, 0.55, -0.04, hw - 0.08, 0.08, 0.05, ID, 0, 0, 0, 1, { ao: false }); // 防撞条
-    li.box(0, 1.05, -0.05, hw - 0.18, 0.05, 0.04, hex('#5A6168'), 0, 0, 0, 1, { ao: false }); // 拉手槽
-    this.innerMat = this.kit.M.metal.clone('trainDoorIn' + this.id); this.innerMat.metallic = 0.55; this.innerMat.roughness = 0.35; this.innerMat.albedoColor = B.Color3.FromHexString('#C8CED4').toLinearSpace();
+    li.box(0, 1.0, 0, hw - 0.02, DOOR_H - 0.08, 0.05, IC, 0, 0, 0, 1, { ao: false });
+    li.box(0, 0.55, 0, hw - 0.08, 0.08, 0.06, ID, 0, 0, 0, 1, { ao: false }); // 防撞条
+    li.box(0, 1.05, 0, hw - 0.18, 0.05, 0.06, hex('#5A6168'), 0, 0, 0, 1, { ao: false }); // 拉手槽
+    this.innerMat = this.kit.M.metal.clone('trainDoorIn' + this.id); this.innerMat.metallic = 0.55; this.innerMat.roughness = 0.35;
+    this.innerMat.albedoColor = B.Color3.FromHexString('#C8CED4').toLinearSpace(); this.innerMat.backFaceCulling = false;
     const mk = (g, name, mat) => { const m = g.toMesh(name, this.scene, mat, this.root); m.isVisible = false; return m; };
     this.leafSrc = [mk(lf, 'leafShell', this.shellMat), mk(lg, 'leafGlass', this.glassMat), mk(ll, 'leafLine', this.lineMat), mk(li, 'leafInner', this.innerMat)];
     this.leaves = { 1: [], '-1': [] }; this.doorCols = { 1: [], '-1': [] };
@@ -273,7 +274,11 @@ export class Train {
   setDoors(sg, f) {
     this.open[sg] = f;
     const e = f * f * (3 - 2 * f), out = Math.min(1, f * 4);
-    for (const l of this.leaves[sg]) { const px = l.dx + l.lr * (DOOR_W / 4 + e * (DOOR_W / 2 - 0.02)), pz = l.sg * (1.5 + out * 0.06); l.set.forEach((m, i) => m.position.set(px, 0, i === 3 ? pz - l.sg * 0.02 : pz)); }
+    for (const l of this.leaves[sg]) {
+      const px = l.dx + l.lr * (DOOR_W / 4 + e * (DOOR_W / 2 - 0.02)), pz = l.sg * (1.5 + out * 0.06);
+      // i=3 内侧面板：往车厢中心偏（-sg），两侧门都盖住外壳黄漆
+      l.set.forEach((m, i) => m.position.set(px, 0, i === 3 ? pz - l.sg * 0.09 : pz));
+    }
     const closed = f < 0.7; for (const c of this.doorCols[sg]) c.checkCollisions = closed;
   }
   setPos(x, y, z) { this.prev.copyFrom(this.root.position); this.root.position.set(x, y, z); this.pos.copyFrom(this.root.position); }
