@@ -124,11 +124,14 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #1d2b3a; fon
 
 /* 竖屏：英文站名保留但缩小，按钮竖排，字幕更宽并避开摇杆 / 跳跃键 */
 @media (orientation: portrait) {
-  #where { max-width: calc(100vw - 130px); }
-  #where .name { font-size: 26px; }
+  #where { max-width: calc(100vw - 220px); }
+  #where .name { font-size: 24px; }
   #caption { max-width: 88vw; bottom: calc(190px + env(safe-area-inset-bottom)); }
-  .btn { width: 80px; height: 80px; }
-  #btns { flex-direction: column; }
+  /* 竖屏保持横排小按钮，避免盖住站口招牌右侧的 D 出口字母 */
+  #btns { flex-direction: row; gap: 8px; top: calc(8px + env(safe-area-inset-top)); right: calc(8px + env(safe-area-inset-right)); }
+  .btn { width: 64px; height: 64px; border-radius: 18px; }
+  .btn .ico { width: 28px; height: 28px; }
+  .btn .lbl { font-size: 11px; }
   #loading .title { font-size: 34px; }
   #loadFactBox { max-width: 86vw; }
 }
