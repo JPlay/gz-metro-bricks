@@ -89,7 +89,7 @@ export class Render {
   }
   /** 反射探针：每个车站静态渲染一次（站厅 / 站台各一个），带盒投影，给抛光地面做“镜面反射” */
   makeProbe(name, center, size, renderList, mat) {
-    const p = new B.ReflectionProbe(name, 128, this.scene, true, false);
+    const p = new B.ReflectionProbe(name, 256, this.scene, true, false);
     p.position.copyFrom(center); p.refreshRate = B.RenderTargetTexture.REFRESHRATE_RENDER_ONCE;
     renderList.forEach(m => p.renderList.push(m));
     p.cubeTexture.boundingBoxSize = size; p.cubeTexture.boundingBoxPosition = center.clone();
