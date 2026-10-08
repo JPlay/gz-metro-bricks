@@ -184,26 +184,37 @@ def facade():
     save('facade.jpg', arr)
 # ---------- 天空（等距柱状投影 1024×512）：更深的晴空蓝 + 几朵软白云 ----------
 def sky():
-    W, H = 1024, 512
-    y = np.linspace(0, 1, H)[:, None] * np.ones((1, W))
-    # 天顶更深蓝，地平线仍偏浅，避免和楼房糊在一起
-    zen = np.array([0.14, 0.36, 0.78]); hor = np.array([0.55, 0.74, 0.96]); gnd = np.array([0.68, 0.82, 0.94])
-    t = np.clip(y / 0.5, 0, 1)
-    col = zen[None, None] * (1 - t[..., None] ** 1.35) + hor[None, None] * (t[..., None] ** 1.35)
-    col = np.where((y > 0.5)[..., None], gnd[None, None] * np.ones_like(col), col)
-    # 软云：大团低频 + 一点中频，只在中上天空
-    nn = noise(1024, 7, seed=11)[:512, :]
-    n2 = noise(1024, 18, seed=12)[:512, :]
-    n3 = noise(1024, 40, seed=13)[:512, :]
-    c = np.clip((nn * 0.8 + n2 * 0.45 + n3 * 0.2 - 0.42) * 2.8, 0, 1)
-    band = np.clip(1 - np.abs(y - 0.28) / 0.28, 0, 1) ** 0.7 * np.clip((0.50 - y) * 8, 0, 1)
-    c = (c * band) ** 0.75
-    # 柔和白，略带一点暖边
-    white = np.array([0.98, 0.99, 1.0])
-    shade = 0.88 + 0.12 * np.clip(1 - n2, 0, 1)
-    col = col * (1 - c[..., None] * 0.95) + (white * shade[..., None]) * c[..., None] * 0.95
+    # 等距柱状投影：图像上边 = 天顶，中线 = 地平线（render.js 里以 invertY=false 加载，FIXED_EQUIRECTANGULAR 映射）。
+    # 行 y∈[0,0.5] 对应仰角 90°→0°：仰角 = (0.5 - y) × 180°。下半张在地面以下，几乎看不到，用地平线色填满。
+    W, H = 2048, 1024
+    y = (np.arange(H)[:, None] + 0.5) / H * np.ones((1, W))
+    elev = (0.5 - y) * 180.0
+    # 晴空蓝：天顶深蓝，地平线是干净的浅蓝（不发灰）。色调映射会压亮部，所以地平线也不能太接近白色
+    zen = np.array([0.15, 0.37, 0.80]); mid = np.array([0.30, 0.56, 0.91]); hor = np.array([0.54, 0.75, 0.96])
+    e = np.clip(elev / 90.0, 0, 1)[..., None]
+    t1 = np.clip(e / 0.35, 0, 1) ** 0.8          # 地平线 → 中空（0°–32°）
+    t2 = np.clip((e - 0.35) / 0.65, 0, 1) ** 0.9  # 中空 → 天顶
+    col = hor * (1 - t1) + mid * t1
+    col = col * (1 - t2) + zen * t2
+    # 软白云：横向拉长的大团（低频）+ 中频碎边，云团之间留出蓝天；只分布在仰角约 5°–55°，峰值约 25°（站在街上平视/抬头都看得见）
+    n = 2048
+    nn = noise(n, 16, seed=11, aniso=(1, 2.0))[:H, :]
+    n2 = noise(n, 40, seed=12, aniso=(1, 1.6))[:H, :]
+    n3 = noise(n, 70, seed=13)[:H, :]
+    n4 = noise(n, 170, seed=14)[:H, :]
+    f = nn * 0.75 + n2 * 0.4 + n3 * 0.18 + n4 * 0.08
+    f = (f - f.mean()) / (f.std() + 1e-9)
+    band = np.exp(-((elev - 25.0) / 18.0) ** 2) * np.clip((elev - 3.0) / 6.0, 0, 1)
+    c = np.clip((f - 0.05) * 2.0 + (band - 0.6) * 2.2, 0, 1) * np.clip(band * 1.6, 0, 1)
+    c = c ** 0.8
+    # 云的明暗：顶亮底略灰蓝，带一点体积感
+    white = np.array([1.0, 1.0, 1.0]); belly = np.array([0.86, 0.90, 0.97])
+    shade = np.clip(0.65 + (n2 - 0.5) * 1.2, 0, 1)[..., None]
+    cloud = white * shade + belly * (1 - shade)
+    col = col * (1 - c[..., None] * 0.95) + cloud * c[..., None] * 0.95
+    col = np.where((y > 0.5)[..., None], hor[None, None] * np.ones_like(col), col)
     a = np.clip(col * 255, 0, 255).astype(np.uint8)
-    Image.fromarray(a).save(os.path.join(OUT, 'sky.jpg'), quality=86, optimize=True, progressive=True)
+    Image.fromarray(a).save(os.path.join(OUT, 'sky.jpg'), quality=85, optimize=True, progressive=True)
 # ---------- 圆形柔和阴影（贴地）----------
 def blob():
     n = 128; y, x = np.mgrid[0:n, 0:n].astype(float); r = np.sqrt((x - n / 2 + .5) ** 2 + (y - n / 2 + .5) ** 2) / (n / 2)
@@ -211,5 +222,10 @@ def blob():
     img = np.zeros((n, n, 4), np.uint8); img[..., 3] = (a * 255).astype(np.uint8)
     Image.fromarray(img, 'RGBA').save(os.path.join(OUT, 'blob.png'), optimize=True)
 
-for f in [floor, tactile, ceiling, wall, steel, concrete, brick, asphalt, paving, grass, facade, sky, blob]:
+import sys
+ALL = [floor, tactile, ceiling, wall, steel, concrete, brick, asphalt, paving, grass, facade, sky, blob]
+# 可只生成部分贴图：python3 tools/textures/make_textures.py sky（sky 用固定种子，单独生成结果一致）
+want = set(sys.argv[1:])
+for f in ALL:
+    if want and f.__name__ not in want: continue
     f(); print('ok', f.__name__)

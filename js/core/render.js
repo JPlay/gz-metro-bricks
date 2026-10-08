@@ -34,7 +34,8 @@ export class Render {
     // 天空穹顶
     const sky = this.sky = B.MeshBuilder.CreateSphere('sky', { diameter: 800, segments: 16, sideOrientation: B.Mesh.BACKSIDE }, scene);
     const sm = new B.StandardMaterial('skyMat', scene); sm.disableLighting = true; sm.backFaceCulling = false; sm.fogEnabled = false;
-    const st = tex(scene, 'sky'); st.coordinatesMode = B.Texture.FIXED_EQUIRECTANGULAR_MODE; sm.emissiveTexture = st; sm.diffuseColor = new B.Color3(0, 0, 0); sm.specularColor = new B.Color3(0, 0, 0);
+    // 天空贴图上边 = 天顶、中线 = 地平线；FIXED_EQUIRECTANGULAR 下要 invertY=false 才是正的（否则云跑到地平线以下、看到的只有下半张的浅色）
+    const st = new B.Texture('assets/tex/sky.jpg', scene, false, false, B.Texture.TRILINEAR_SAMPLINGMODE); st.coordinatesMode = B.Texture.FIXED_EQUIRECTANGULAR_MODE; sm.emissiveTexture = st; sm.diffuseColor = new B.Color3(0, 0, 0); sm.specularColor = new B.Color3(0, 0, 0);
     sm.emissiveColor = new B.Color3(0, 0, 0); st.level = 1.0; // emissiveColor 与贴图相加，必须为黑
     sky.material = sm; sky.infiniteDistance = true; sky.isPickable = false; sky.applyFog = false;
     sky.renderingGroupId = 0;
