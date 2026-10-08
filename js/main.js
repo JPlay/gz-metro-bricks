@@ -28,13 +28,16 @@ export async function start() {
   const scene = new B.Scene(engine);
   scene.ambientColor = new B.Color3(0.35, 0.35, 0.38);
   scene.collisionsEnabled = true; scene.skipPointerMovePicking = true; scene.autoClear = true;
-  const progress = (f, msg) => { const b = document.getElementById('loadBar'), m = document.getElementById('loadMsg'); if (b) b.style.width = Math.max(3, Math.min(100, f * 100)).toFixed(1) + '%'; if (m && msg) m.textContent = msg; };
+  const progress = (f, msg) => { if (window.__loadUI) return window.__loadUI.set(f, msg); const b = document.getElementById('loadBar'), m = document.getElementById('loadMsg'); if (b) b.style.width = Math.max(3, Math.min(100, f * 100)).toFixed(1) + '%'; if (m && msg) m.textContent = msg; };
+  // 让浏览器先把进度画出来再做下一段同步重活（搭车站会占住主线程 1–2 秒）
+  const paint = () => new Promise(r => requestAnimationFrame(() => setTimeout(r, 0)));
   progress(0.50, '正在准备材质…');
   const M = mats(scene);
   const cam = new B.FreeCamera('cam', new B.Vector3(0, 2, -52), scene); cam.minZ = 0.08; cam.maxZ = 420; cam.fov = 0.92; cam.inputs.clear();
   const R = new Render(engine, scene, cam);
   mark('render');
   progress(0.55, '正在搭建车站…');
+  await paint();
 
   const events = new Events(), hud = new Hud(), input = new Input({
     surface: document.getElementById('touch'), stick: document.getElementById('stick'), hint: document.getElementById('stickHint'),
@@ -67,6 +70,7 @@ export async function start() {
     metro.attach(st);
     return st;
   }
+  mark('trains'); progress(0.62, '正在搭建车站…'); await paint();
   // —— 开始位置：默认公园前站口外的街上
   if (CONFIG.start && STATIONS[CONFIG.start]) {
     const st = buildStation(CONFIG.start), P = st.platformFor(CONFIG.startLine) || st.platforms[0];
@@ -74,6 +78,7 @@ export async function start() {
   } else { buildStation('gyq'); player.spawn(SPAWN.x, SPAWN.y + 0.05, SPAWN.z, SPAWN.yaw); }
   mark('station');
   progress(0.72, '正在准备贴图与着色…');
+  await paint();
 
   // —— 事件 → 提示
   const MVTXT = { penrose: '✨ 楼梯连成一圈了！', bridge: '✨ 桥自己拼起来了！', arches: '✨ 拱门对齐啦！' };

@@ -96,9 +96,30 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #1d2b3a; fon
 @keyframes bob { 50% { transform: translateY(-6px); } }
 #loading .title { font-size: 38px; font-weight: 600; letter-spacing: 4px; margin: 10px 0 2px; }
 #loading .sub { font-size: 15px; font-weight: 500; opacity: .6; letter-spacing: 2px; margin-bottom: 26px; }
-#loading .bar { width: 340px; max-width: 70vw; height: 8px; border-radius: 4px; background: rgba(255,255,255,.15); overflow: hidden; margin: 0 auto 14px; }
-#loading .bar i { display: block; height: 100%; width: 3%; border-radius: 4px; background: linear-gradient(90deg, #F3D03E, #00629B); transition: width .3s ease; }
+#loading .box { width: min(760px, 88vw); }
+/* 1 号线轨道进度条 */
+#loadTrack { position: relative; height: 56px; margin: 6px 24px 4px; }
+#loadTrack .rail { position: absolute; left: 0; right: 0; top: 34px; height: 8px; border-radius: 4px; background: rgba(255,255,255,.16); overflow: hidden; }
+#loadTrack .rail i { display: block; height: 100%; width: 0; background: var(--line); border-radius: 4px; box-shadow: 0 0 10px var(--line); }
+#loadDots { position: absolute; left: 0; right: 0; top: 38px; height: 0; }
+#loadDots .dot { position: absolute; top: 0; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; background: #2a3a4c; border: 2.5px solid rgba(255,255,255,.45); transition: background .3s, border-color .3s, transform .3s; }
+#loadDots .dot.end { width: 16px; height: 16px; margin: -8px 0 0 -8px; }
+#loadDots .dot.on { background: #fff; border-color: var(--line); transform: scale(1.15); box-shadow: 0 0 8px var(--line); }
+#loadDots .dot b { position: absolute; top: 18px; left: 50%; transform: translateX(-50%); white-space: nowrap; font-size: 14px; font-weight: 500; opacity: .75; }
+#loadTrain { position: absolute; top: 0; left: 0; width: 44px; height: 30px; margin-left: -22px; border-radius: 9px; background: var(--line); color: #3A3000; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,.35); animation: chug .5s ease-in-out infinite; }
+#loadTrain svg { width: 24px; height: 24px; }
+#loadTrain::after { content: ''; position: absolute; bottom: -6px; left: 50%; margin-left: -5px; border: 5px solid transparent; border-top-color: var(--line); border-bottom: 0; }
+@keyframes chug { 50% { transform: translateY(-2px); } }
+#loadTrack.plain #loadDots, #loadTrack.plain #loadTrain { display: none; }
+#loadStation { margin: 22px 0 6px; font-size: 26px; font-weight: 600; letter-spacing: 2px; color: #F3D03E; min-height: 34px; }
+#loadStation.pop { animation: stPop .3s ease-out; }
+@keyframes stPop { from { transform: scale(.85); opacity: .4; } to { transform: none; opacity: 1; } }
 #loadMsg { font-size: 16px; opacity: .8; }
+#loadFactBox { margin: 26px auto 0; max-width: 560px; min-height: 64px; padding: 12px 18px; border-radius: 16px; background: rgba(255,255,255,.08); display: flex; gap: 12px; align-items: center; text-align: left; }
+#loadFactBox .tag { flex: none; font-size: 13px; font-weight: 600; color: #3A3000; background: #F3D03E; border-radius: 8px; padding: 4px 8px; }
+#loadFact { font-size: 19px; line-height: 1.45; opacity: 0; transition: opacity .4s ease; }
+#loadFact.show { opacity: .95; }
 #loading.err #loadMsg { color: #ff8a80; opacity: 1; }
 
 /* 竖屏：英文站名保留但缩小，按钮竖排，字幕更宽并避开摇杆 / 跳跃键 */
@@ -108,4 +129,6 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #1d2b3a; fon
   #caption { max-width: 88vw; bottom: calc(190px + env(safe-area-inset-bottom)); }
   .btn { width: 80px; height: 80px; }
   #btns { flex-direction: column; }
+  #loading .title { font-size: 34px; }
+  #loadFactBox { max-width: 86vw; }
 }

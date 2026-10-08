@@ -52,11 +52,18 @@
     <svg class="logo"><use href="#i-metro"/></svg>
     <div class="title">坐地铁 · 广州</div>
     <div class="sub">Guangzhou Metro 3D</div>
-    <div class="bar"><i id="loadBar"></i></div>
+    <div id="loadTrack" style="--line:#F3D03E">
+      <div class="rail"><i id="loadBar"></i></div>
+      <div id="loadDots"></div>
+      <div id="loadTrain"><svg><use href="#i-metro"/></svg></div>
+    </div>
+    <div id="loadStation">西塱</div>
     <div id="loadMsg">正在加载 3D 引擎…</div>
+    <div id="loadFactBox"><span class="tag">地铁小知识</span><span id="loadFact"></span></div>
   </div>
 </div>
 
+<script src="js/loading.js"></script>
 <script src="js/boot.js"></script>
 </body>
 </html>

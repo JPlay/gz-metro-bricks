@@ -20,8 +20,8 @@
   window.__babylonVersion = VERSION;
   window.__babylonAttempts = [];
 
-  function setMsg(t) { if (msg) msg.textContent = t; }
-  function setBar(f) { if (bar) bar.style.width = Math.max(3, Math.min(100, f * 100)).toFixed(1) + '%'; }
+  function setMsg(t) { if (window.__loadUI) window.__loadUI.set(null, t); else if (msg) msg.textContent = t; }
+  function setBar(f) { if (window.__loadUI) window.__loadUI.set(f); else if (bar) bar.style.width = Math.max(3, Math.min(100, f * 100)).toFixed(1) + '%'; }
   function fail(t) { var l = document.getElementById('loading'); if (l) l.className = 'err'; setMsg(t); }
 
   function viaScriptTag(src) {
