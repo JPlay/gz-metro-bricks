@@ -33,7 +33,8 @@ export class Player {
   update(dt, inp, extra) {
     const look = 0.0048;
     this.yaw += inp.lx * look; this.pitch += inp.ly * look * 0.85;
-    const pmin = this.view === 'first' ? -1.35 : -0.55, pmax = this.view === 'first' ? 1.35 : 1.15;
+    // 第三人称俯仰夹在舒适跟随时：最高约 32°，避免被拖成接近垂直的顶视
+    const pmin = this.view === 'first' ? -1.35 : -0.35, pmax = this.view === 'first' ? 1.35 : 0.55;
     this.pitch = Math.max(pmin, Math.min(pmax, this.pitch));
     if (inp.pinch && this.view === 'third') this.dist = Math.max(1.8, Math.min(9, this.dist - inp.pinch * 0.02));
     // 水平速度
@@ -105,7 +106,7 @@ export class Player {
   toggleView() {
     this.view = this.view === 'first' ? 'third' : 'first';
     this.cam.fov = this.view === 'first' ? FOV_FIRST : FOV_THIRD;
-    if (this.view === 'third') this.pitch = Math.max(-0.4, Math.min(0.9, this.pitch + 0.15));
+    if (this.view === 'third') this.pitch = Math.max(-0.35, Math.min(0.55, this.pitch + 0.15));
     return this.view;
   }
 }
