@@ -10,7 +10,6 @@ import { Hud } from './ui/hud.js';
 import { Station, SPAWN, MAIN, GYQ2, YC } from './world/station.js';
 import { Player } from './game/player.js';
 import { Input, pressable } from './game/input.js';
-import { Footprints } from './game/footprints.js';
 import { Metro } from './game/service.js';
 import { mats } from './core/mats.js';
 import { Render } from './core/render.js';
@@ -41,9 +40,9 @@ export async function start() {
 
   const events = new Events(), hud = new Hud(), input = new Input({
     surface: document.getElementById('touch'), stick: document.getElementById('stick'), hint: document.getElementById('stickHint'),
-    onView: () => toggleView(), onFoot: () => toggleFoot(), onMute: () => toggleMute(), onJump: () => {}
+    onView: () => toggleView(), onMute: () => toggleMute(), onJump: () => {}
   });
-  const player = new Player(scene, M, cam), feet = new Footprints(scene);
+  const player = new Player(scene, M, cam);
   player.meshes().forEach(m => R.addShadowCaster(m));
   initCaptions();
   Audio.loadManifest().catch(e => console.warn('manifest', e));
@@ -66,7 +65,7 @@ export async function start() {
     if (byB.floor) R.makeProbe('probeHall', new B.Vector3(0, YC + 2.2, 3), new B.Vector3(36, 4.4, 46), list, byB.floor.material);
     if (byB['floor@P']) R.makeProbe('probeP', new B.Vector3(0, MAIN.y + 2.1, MAIN.zc), new B.Vector3(96, 4.2, 12), list, byB['floor@P'].material);
     if (byB['floor@P2']) R.makeProbe('probeP2', new B.Vector3(0, GYQ2.y + 2.1, GYQ2.zc), new B.Vector3(96, 4.2, 12), list, byB['floor@P2'].material);
-    G.station = st; G.code = code; G.welcomed = false; feet.clear();
+    G.station = st; G.code = code; G.welcomed = false;
     metro.attach(st);
     return st;
   }
@@ -89,10 +88,8 @@ export async function start() {
 
   // —— 按钮
   const toggleView = () => { const v = player.toggleView(); hud.setBtn('bView', v === 'first', v === 'first' ? 'eye1' : 'eye3', v === 'first' ? '第一人称' : '第三人称'); return v; };
-  const toggleFoot = () => { const on = feet.toggle(); hud.setBtn('bFoot', on); hud.toast(on ? '发光脚印：开' : '脚印：关', 1200); return on; };
   const toggleMute = () => { Audio.setMuted(!Audio.isMuted()); hud.setBtn('bMute', Audio.isMuted(), Audio.isMuted() ? 'mute' : 'sound', Audio.isMuted() ? '静音' : '声音'); return Audio.isMuted(); };
   pressable(document.getElementById('bView'), toggleView);
-  pressable(document.getElementById('bFoot'), toggleFoot);
   pressable(document.getElementById('bMute'), toggleMute);
   pressable(document.getElementById('bJump'), () => { input.jumpQueued = true; });
   hud.setBtn('bView', false, 'eye3', '第三人称');
@@ -134,9 +131,8 @@ export async function start() {
     const rl = metro.ride && metro.ride.train && G.aboard ? metro.ride : null;
     const line = rl ? rl.line : (G.zone.kind === 'platform' ? G.zone.P.line : STATIONS[G.code].lines[0]);
     hud.where(G.code, line, rl && rl.phase === 'cruise' ? rl.next : null);
-    // 脚步声 / 脚印
+    // 脚步声
     if (player.grounded && player.speed > 0.5 && !G.aboard) { stepAcc += player.speed * dt; if (stepAcc > 0.75) { stepAcc = 0; Audio.footstep(); } }
-    feet.update(dt, p, player.facing, player.grounded, player.moving && !G.aboard, cam.position);
     if (player.landed) { player.landed = false; Audio.sfx('footstep', { volume: 0.6, rate: 0.8 }); }
     // 掉出世界 → 回到站台 / 站口
     if (!G.inTunnel && p.y < -40) {
@@ -185,18 +181,16 @@ export async function start() {
   window.__game = {
     state: () => ({
       code: G.code, zone: G.zone.kind, pos: [player.position.x, player.position.y, player.position.z].map(v => +v.toFixed(2)), yaw: +player.yaw.toFixed(3), pitch: +player.pitch.toFixed(3),
-      view: player.view, grounded: player.grounded, foot: feet.on, footCount: feet.count(), footSnap: [feet.hits, feet.misses], aboard: !!G.aboard, inTunnel: G.inTunnel, fps: Math.round(engine.getFps()), avgFps: Math.round(G.fps), tier: G.tier,
+      view: player.view, grounded: player.grounded, aboard: !!G.aboard, inTunnel: G.inTunnel, fps: Math.round(engine.getFps()), avgFps: Math.round(G.fps), tier: G.tier,
       metro: metro.info(), mv: G.mv || 0, camPos: [cam.position.x, cam.position.y, cam.position.z].map(v => +v.toFixed(2)),
       babylon: { version: B.Engine.Version, source: window.__babylonSource, attempts: window.__babylonAttempts },
       drawCalls: (engine._drawCalls && engine._drawCalls.current) ?? null, activeMeshes: scene.getActiveMeshes().length, gates: G.station.gates.map(g => +g.f.toFixed(2)),
-      security: G.station.security.flash > 0, probes: R.probes.length, atlas: G.station.kit.atlas ? { y: G.station.kit.atlas.y + G.station.kit.atlas.row, overflow: G.station.kit.atlas.overflow } : null, audio: Audio.getState(),
-      // 街面引导箭头：从出生点 (0,0,-48) 指向站口（+z）；yaw=0 即世界 +z
-      guideArrow: { from: [SPAWN.x, SPAWN.z], toward: [0, -38], yaw: 0, tipSign: '+z' }
+      security: G.station.security.flash > 0, probes: R.probes.length, atlas: G.station.kit.atlas ? { y: G.station.kit.atlas.y + G.station.kit.atlas.row, overflow: G.station.kit.atlas.overflow } : null, audio: Audio.getState()
     }),
     teleport: (x, y, z, yaw) => player.spawn(x, y, z, yaw ?? player.yaw),
     setMove: (x, y, run) => { input.virtual = (x || y) ? { x, y, run } : null; },
     look: (dx, dy) => { input.look.x += dx; input.look.y += dy; },
-    jump: () => { input.jumpQueued = true; }, toggleView, toggleFoot, toggleMute,
+    jump: () => { input.jumpQueued = true; }, toggleView, toggleMute,
     autopilot: (pts, run) => new Promise(resolve => { G.auto = { pts, i: 0, time: 0, resolve, run }; }),
     call: (line, step) => metro.call(line, step), metro, player, scene, engine, events, render: R
   };

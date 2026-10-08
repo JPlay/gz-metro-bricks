@@ -66,14 +66,8 @@ async def main():
     await pg.screenshot(path=SHOT+'first-person.png', timeout=120000)
     box=await pg.locator('#bView').bounding_box(); await pg.touchscreen.tap(box['x']+40, box['y']+40); await asyncio.sleep(0.2)
     R['viewBack']=(await st(pg))['view']
-    # 脚印
-    R['footDefault']=s0['foot']
-    box=await pg.locator('#bFoot').bounding_box(); await pg.touchscreen.tap(box['x']+40, box['y']+40)
-    await pg.evaluate('__game.setMove(0,1,false)'); await asyncio.sleep(2.5); await until(pg, '__game.state().footCount >= 2', 25); await pg.evaluate('__game.setMove(0,0)')
-    s3=await st(pg); R['foot']={'on':s3['foot'],'count':s3['footCount']}
-    await pg.screenshot(path=SHOT+'_footprints.png', timeout=120000)
-    box=await pg.locator('#bFoot').bounding_box(); await pg.touchscreen.tap(box['x']+40, box['y']+40); await asyncio.sleep(0.2)
-    s4=await st(pg); R['footOff']={'on':s4['foot'],'count':s4['footCount']}
+    # 脚印系统已移除：右上角只剩视角 / 声音按钮
+    R['noFootBtn']=await pg.evaluate("!document.getElementById('bFoot') && !('toggleFoot' in __game) && !('footCount' in __game.state())")
     # 键盘
     p0=(await st(pg))['pos']; await pg.keyboard.down('KeyW'); await asyncio.sleep(0.8)
     await until(pg, 'Math.hypot(__game.player.position.x-(%f), __game.player.position.z-(%f)) > 0.5' % (p0[0], p0[2]), 20)
@@ -90,8 +84,8 @@ async def main():
     chk={'joystickMoves': R['joystick']['moved']>0.8, 'joystickNoLook': abs(R['joystick']['yawChange'])<1e-3 and abs(R['joystick']['pitchChange'])<1e-3,
          'mouseStickMoves': R['mouseStick']['moved']>0.5, 'mouseStickNoLook': abs(R['mouseStick']['yawChange'])<1e-3 and abs(R['mouseStick']['pitchChange'])<1e-3,
          'look': abs(R['look']['yaw1']-R['look']['yaw0'])>0.2, 'pinch': R['pinch']['dist1']>R['pinch']['dist0']+1, 'jump': R['jump']['peak']>0.5,
-         'view': R['view']=='first' and R['viewBack']=='third', 'footDefaultOff': R['footDefault'] is False, 'footOn': R['foot']['on'] and R['foot']['count']>0,
-         'footOff': (not R['footOff']['on']) and R['footOff']['count']==0, 'keysW': R['keys']['W_moved']>0.3, 'keyV': R['keys']['V']=='first',
+         'view': R['view']=='first' and R['viewBack']=='third', 'noFootBtn': R['noFootBtn'],
+         'keysW': R['keys']['W_moved']>0.3, 'keyV': R['keys']['V']=='first',
          'collision': R['collision_x']<59.9, 'noErrors': not R['errors']}
     print('CHECKS', chk, 'PASS' if all(chk.values()) else 'FAIL')
     await b.close()

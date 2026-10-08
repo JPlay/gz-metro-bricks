@@ -5,7 +5,7 @@
 ```bash
 pip install playwright && playwright install chromium
 python3 tests/e2e/smoke.py    'http://localhost:8123/?q=1'   # 能启动、无报错
-python3 tests/e2e/controls.py 'http://localhost:8123/?q=2'   # 摇杆、拖动转头、捏合、跳、视角、脚印、键盘、碰撞
+python3 tests/e2e/controls.py 'http://localhost:8123/?q=2'   # 摇杆、拖动转头、捏合、跳、视角、键盘、碰撞
 python3 tests/e2e/journey.py  'http://localhost:8123/?q=3'   # 完整旅程：进站→安检→闸机→站台→1 号线坐 2 站→坐回→换乘 2 号线坐 1 站
 python3 tests/e2e/shots.py    'http://localhost:8123/'       # 截图（含竖屏 834×1112）
 python3 tests/e2e/polish_shots.py 'http://localhost:8123/' /workspace/gz-shots-polish/after 1   # 视觉升级对比截图（12 个场景 + HUD 特写），并打印每张的绘制调用数

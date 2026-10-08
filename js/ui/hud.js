@@ -18,7 +18,7 @@ export class Hud {
     clearTimeout(this.toastT); clearTimeout(this.toastT2);
     this.toastT = setTimeout(() => { t.classList.add('out'); this.toastT2 = setTimeout(() => { t.hidden = true; }, 260); }, ms);
   }
-  /** ico = 图标符号名（eye1 / eye3 / foot / sound / mute） */
+  /** ico = 图标符号名（eye1 / eye3 / sound / mute） */
   setBtn(id, on, ico, lbl) {
     const b = $(id); b.classList.toggle('on', !!on);
     if (ico) b.querySelector('.ico use').setAttribute('href', '#i-' + ico);

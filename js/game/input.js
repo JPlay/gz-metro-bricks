@@ -3,10 +3,10 @@
  *   左边 45% 区域：按下的位置出现摇杆（鼠标和触摸一样），推得越远走得越快，推到边 = 跑；
  *   右边：单指/鼠标拖动转视角，双指捏合缩放（第三人称）；
  *   从摇杆开始的指针绝不会转视角（pointerId 只进 stick，不进 looks）；
- *   键盘：WASD/方向键 走，Shift 跑，空格 跳，V 切视角，F 脚印，M 静音；在右侧按下后可指针锁定转头。
+ *   键盘：WASD/方向键 走，Shift 跑，空格 跳，V 切视角，M 静音；在右侧按下后可指针锁定转头。
  */
 export class Input {
-  constructor({ surface, stick, hint, onView, onFoot, onMute, onJump }) {
+  constructor({ surface, stick, hint, onView, onMute, onJump }) {
     this.move = { x: 0, y: 0 }; this.run = false; this.look = { x: 0, y: 0 }; this.pinch = 0; this.jumpQueued = false;
     this.keys = {}; this.stickId = null; this.looks = new Map(); this.pinchDist = 0; this.virtual = null; this.used = false;
     this.stickEl = stick; this.hintEl = hint; this.R = 70;
@@ -19,7 +19,7 @@ export class Input {
     window.addEventListener('keydown', e => {
       if (e.repeat) return; this.keys[e.code] = true; this.used = true;
       if (e.code === 'Space') { this.jumpQueued = true; e.preventDefault(); }
-      if (e.code === 'KeyV') onView(); if (e.code === 'KeyF') onFoot(); if (e.code === 'KeyM') onMute();
+      if (e.code === 'KeyV') onView(); if (e.code === 'KeyM') onMute();
     });
     window.addEventListener('keyup', e => { this.keys[e.code] = false; });
     window.addEventListener('blur', () => { this.keys = {}; });
