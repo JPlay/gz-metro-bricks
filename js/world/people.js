@@ -83,8 +83,7 @@ function parts(L) {
   if (L.cap) {
     hd.ellipsoid(0, hy + hr * 0.12, -hr * 0.14, hr * 1.06, hr * 0.9, hr * 1.0, hc, 2);
     hd.ellipsoid(0, hy + hr * 0.4, -hr * 0.04, hr * 1.13, hr * 0.7, hr * 1.12, L.capCol, 2); // 帽冠完全盖住头发
-    hd.ellipsoid(0, hy + hr * 0.3, hr * 0.62, hr * 0.92, hr * 0.08, hr * 0.66, L.capCol, 2);  // 帽檐
-    hd.sphere(0, hy + hr * 1.08, -hr * 0.04, hr * 0.16, L.capCol, 1);
+    hd.ellipsoid(0, hy + hr * 0.28, hr * 0.55, hr * 0.88, hr * 0.07, hr * 0.55, L.capCol, 2);  // 帽檐（略收，避免顶视时像第二块红帽）
   } else {
     hd.ellipsoid(0, hy + hr * 0.17, -hr * 0.13, hr * 1.08, hr * 0.94, hr * 1.0, hc, 2);
     hd.ellipsoid(0, hy + hr * 0.3, hr * 0.22, hr * 0.92, hr * 0.32, hr * 0.5, hc, 2); // 刘海

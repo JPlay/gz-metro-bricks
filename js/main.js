@@ -20,6 +20,9 @@ const B = window.BABYLON;
 class Events { constructor() { this.h = {}; } on(n, f) { (this.h[n] = this.h[n] || []).push(f); } emit(n, d) { (this.h[n] || []).forEach(f => f(d)); } }
 
 export async function start() {
+  // 加载各阶段耗时（毫秒，相对页面导航开始），测试读 window.__loadT
+  const LT = window.__loadT = window.__loadT || {}; const mark = k => { LT[k] = Math.round(performance.now()); };
+  mark('mainStart');
   const canvas = document.getElementById('c');
   const engine = new B.Engine(canvas, true, { stencil: false, powerPreference: 'high-performance', audioEngine: false }, false);
   const scene = new B.Scene(engine);
@@ -30,6 +33,7 @@ export async function start() {
   const M = mats(scene);
   const cam = new B.FreeCamera('cam', new B.Vector3(0, 2, -52), scene); cam.minZ = 0.08; cam.maxZ = 420; cam.fov = 0.92; cam.inputs.clear();
   const R = new Render(engine, scene, cam);
+  mark('render');
 
   const events = new Events(), hud = new Hud(), input = new Input({
     surface: document.getElementById('touch'), stick: document.getElementById('stick'), hint: document.getElementById('stickHint'),
@@ -67,6 +71,7 @@ export async function start() {
     const st = buildStation(CONFIG.start), P = st.platformFor(CONFIG.startLine) || st.platforms[0];
     player.spawn(20, P.y + 0.05, P.zc, Math.PI / 2);
   } else { buildStation('gyq'); player.spawn(SPAWN.x, SPAWN.y + 0.05, SPAWN.z, SPAWN.yaw); }
+  mark('station');
 
   // —— 事件 → 提示
   const MVTXT = { penrose: '✨ 楼梯连成一圈了！', bridge: '✨ 桥自己拼起来了！', arches: '✨ 拱门对齐啦！' };
@@ -92,6 +97,7 @@ export async function start() {
   // —— 画质
   const applyQuality = () => { R.setTier(G.tier, CONFIG.qualityLevels); };
   applyQuality();
+  mark('quality');
   let fpsAcc = 0, fpsN = 0, fpsT = 0, lowCount = 0;
   window.addEventListener('resize', () => engine.resize());
 
@@ -141,8 +147,10 @@ export async function start() {
   // 等贴图 / 着色器准备好再渲染探针、淡出加载画面
   progress(0.95, '正在搭建车站…');
   try { await Promise.race([scene.whenReadyAsync(), new Promise(r => setTimeout(r, 8000))]); } catch (_) {}
+  mark('ready');
   progress(1, '准备好了！');
   R.refreshProbes();
+  let nFrames = 0; scene.onAfterRenderObservable.add(() => { nFrames++; if (nFrames === 1) mark('frame1'); if (nFrames === 5) mark('frame5'); if (nFrames === 30) mark('frame30'); });
   engine.runRenderLoop(() => scene.render());
   const loading = document.getElementById('loading'); loading.classList.add('done'); setTimeout(() => loading.remove(), 700);
 
@@ -155,7 +163,9 @@ export async function start() {
       metro: metro.info(), mv: G.mv || 0, camPos: [cam.position.x, cam.position.y, cam.position.z].map(v => +v.toFixed(2)),
       babylon: { version: B.Engine.Version, source: window.__babylonSource, attempts: window.__babylonAttempts },
       drawCalls: (engine._drawCalls && engine._drawCalls.current) ?? null, activeMeshes: scene.getActiveMeshes().length, gates: G.station.gates.map(g => +g.f.toFixed(2)),
-      security: G.station.security.flash > 0, probes: R.probes.length, atlas: G.station.kit.atlas ? { y: G.station.kit.atlas.y + G.station.kit.atlas.row, overflow: G.station.kit.atlas.overflow } : null, audio: Audio.getState()
+      security: G.station.security.flash > 0, probes: R.probes.length, atlas: G.station.kit.atlas ? { y: G.station.kit.atlas.y + G.station.kit.atlas.row, overflow: G.station.kit.atlas.overflow } : null, audio: Audio.getState(),
+      // 街面引导箭头：从出生点 (0,0,-48) 指向站口（+z）；yaw=0 即世界 +z
+      guideArrow: { from: [SPAWN.x, SPAWN.z], toward: [0, -38], yaw: 0, tipSign: '+z' }
     }),
     teleport: (x, y, z, yaw) => player.spawn(x, y, z, yaw ?? player.yaw),
     setMove: (x, y, run) => { input.virtual = (x || y) ? { x, y, run } : null; },

@@ -218,8 +218,8 @@ export class Station {
       k.g('pave').cyl(-26, 5.4, -36, 1.6, 2, hex('#E2D3B8'), 16);
     }
     for (const [x, z, kind, sc] of treeSpots) if (!avoid(x, z) && !(Math.abs(x) < 12 && z > -42 && z < -20)) { D.tree(k, x, 0, z, (sc || 0.85) + D.rnd() * 0.35, kind ?? (D.rnd() < 0.2 ? 2 : D.rnd() < 0.3 ? 1 : 0)); k.col(x, 1, z, 0.45, 2, 0.45); }
-    // 路面箭头：街口 → 站口
-    for (const z of [-47, -44, -41]) arrow(k, 0, 0.006, z, 0, '#FFFFFF');
+    // 路面箭头：街口 → 站口（a=0 指向 +z；出生点 z=-48、站口约 z=-38，故箭头朝站口）
+    for (const z of [-47, -44, -41]) arrow(k, 0, 0.02, z, 0, '#FFFFFF', 1.15);
   }
   /** 站口：钢结构玻璃雨棚 + 深灰门楣站名牌 + 立柱式站名标 */
   entrance() {
