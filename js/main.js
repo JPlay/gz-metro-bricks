@@ -149,11 +149,11 @@ export async function start() {
   // 等贴图 / 着色器：按真实剩余工作推进进度条（软件渲染下着色器编译很慢，不能卡在 95%）
   const readyAt = performance.now();
   const waitReady = async () => {
-    const cap = 6000;
+    const cap = 2500;
     while (performance.now() - readyAt < cap) {
       let ok = false; try { ok = scene.isReady(); } catch (_) {}
       const t = Math.min(1, (performance.now() - readyAt) / cap);
-      progress(0.72 + 0.22 * t, t < 0.5 ? '正在准备贴图与着色…' : '正在编译画面…');
+      progress(0.72 + 0.22 * t, '正在准备贴图与着色…');
       if (ok) return true;
       await new Promise(r => setTimeout(r, 100));
     }
