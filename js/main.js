@@ -7,12 +7,13 @@ import * as Audio from './audio/audio.js';
 import * as Ann from './audio/announcements.js';
 import { initCaptions } from './ui/captions.js';
 import { Hud } from './ui/hud.js';
-import { Station, SPAWN, MAIN } from './world/station.js';
+import { Station, SPAWN, MAIN, GYQ2, YC } from './world/station.js';
 import { Player } from './game/player.js';
 import { Input, pressable } from './game/input.js';
 import { Footprints } from './game/footprints.js';
 import { Metro } from './game/service.js';
 import { mats } from './core/mats.js';
+import { Render } from './core/render.js';
 import { STATIONS, LINES, nextStation } from './data/lines.js';
 const B = window.BABYLON;
 
@@ -22,20 +23,20 @@ export async function start() {
   const canvas = document.getElementById('c');
   const engine = new B.Engine(canvas, true, { stencil: false, powerPreference: 'high-performance', audioEngine: false }, false);
   const scene = new B.Scene(engine);
-  scene.clearColor = B.Color4.FromHexString('#9FD8F5FF'); scene.ambientColor = new B.Color3(0.35, 0.35, 0.38);
+  scene.ambientColor = new B.Color3(0.35, 0.35, 0.38);
   scene.collisionsEnabled = true; scene.skipPointerMovePicking = true; scene.autoClear = true;
+  const progress = (f, msg) => { const b = document.getElementById('loadBar'), m = document.getElementById('loadMsg'); if (b) b.style.width = Math.round(f * 100) + '%'; if (m && msg) m.textContent = msg; };
+  progress(0.91, '正在准备材质…');
   const M = mats(scene);
-  const cam = new B.FreeCamera('cam', new B.Vector3(0, 2, -52), scene); cam.minZ = 0.08; cam.maxZ = 420; cam.fov = 0.95; cam.inputs.clear();
-  const hemi = new B.HemisphericLight('hemi', new B.Vector3(0.2, 1, 0.1), scene); hemi.intensity = 0.72; hemi.groundColor = new B.Color3(0.78, 0.78, 0.8);
-  const sun = new B.DirectionalLight('sun', new B.Vector3(-0.35, -1, 0.45), scene); sun.intensity = 0.85; sun.shadowFrustumSize = 36; sun.shadowMinZ = 1; sun.shadowMaxZ = 80; sun.autoUpdateExtends = false;
-  const sg = new B.ShadowGenerator(1024, sun); sg.usePercentageCloserFiltering = true; sg.filteringQuality = B.ShadowGenerator.QUALITY_LOW; sg.bias = 0.004; sg.darkness = 0.35;
+  const cam = new B.FreeCamera('cam', new B.Vector3(0, 2, -52), scene); cam.minZ = 0.08; cam.maxZ = 420; cam.fov = 0.92; cam.inputs.clear();
+  const R = new Render(engine, scene, cam);
 
   const events = new Events(), hud = new Hud(), input = new Input({
     surface: document.getElementById('touch'), stick: document.getElementById('stick'), hint: document.getElementById('stickHint'),
     onView: () => toggleView(), onFoot: () => toggleFoot(), onMute: () => toggleMute(), onJump: () => {}
   });
   const player = new Player(scene, M, cam), feet = new Footprints(scene);
-  player.meshes().forEach(m => sg.addShadowCaster(m));
+  player.meshes().forEach(m => R.addShadowCaster(m));
   initCaptions();
   Audio.loadManifest().catch(e => console.warn('manifest', e));
 
@@ -44,13 +45,19 @@ export async function start() {
     player, Audio, events, buildStation: code => buildStation(code), onTunnel: v => { G.inTunnel = v; scene.fogMode = v ? B.Scene.FOGMODE_LINEAR : B.Scene.FOGMODE_NONE; },
     get zone() { return G.zone; }
   });
-  metro.trains.forEach(t => t.shadowMeshes.forEach(m => sg.addShadowCaster(m)));
+  metro.trains.forEach(t => t.shadowMeshes.forEach(m => R.addShadowCaster(m)));
   scene.fogColor = new B.Color3(0.08, 0.09, 0.11); scene.fogStart = 25; scene.fogEnd = 85;
 
   function buildStation(code) {
     if (G.station) G.station.dispose();
-    const st = new Station(scene, code, events);
-    st.kit.meshes.forEach(m => { m.receiveShadows = true; });
+    R.disposeProbes();
+    const st = new Station(scene, code, events, M);
+    st.kit.meshes.forEach(m => { m.receiveShadows = m.name !== 'glow' && m.name !== 'halo' && m.name !== 'shade'; });
+    // 抛光地面的反射探针（站厅 / 站台各一个，静态渲染一次，盒投影）
+    const list = st.probeMeshes(), byB = st.kit.byBucket;
+    if (byB.floor) R.makeProbe('probeHall', new B.Vector3(0, YC + 2.2, 3), new B.Vector3(36, 4.4, 46), list, byB.floor.material);
+    if (byB['floor@P']) R.makeProbe('probeP', new B.Vector3(0, MAIN.y + 2.1, MAIN.zc), new B.Vector3(96, 4.2, 12), list, byB['floor@P'].material);
+    if (byB['floor@P2']) R.makeProbe('probeP2', new B.Vector3(0, GYQ2.y + 2.1, GYQ2.zc), new B.Vector3(96, 4.2, 12), list, byB['floor@P2'].material);
     G.station = st; G.code = code; G.welcomed = false; feet.clear();
     metro.attach(st);
     return st;
@@ -69,24 +76,21 @@ export async function start() {
   events.on('ride', d => { if (d.phase === 'arrive') hud.toast(`到站：${STATIONS[d.to].zh}`, 2200); });
 
   // —— 按钮
-  const toggleView = () => { const v = player.toggleView(); hud.setBtn('bView', v === 'first', v === 'first' ? '👀' : '👁️', v === 'first' ? '第一人称' : '第三人称'); return v; };
-  const toggleFoot = () => { const on = feet.toggle(); hud.setBtn('bFoot', on); hud.toast(on ? '💡 发光脚印：开' : '脚印：关', 1200); return on; };
-  const toggleMute = () => { Audio.setMuted(!Audio.isMuted()); hud.setBtn('bMute', Audio.isMuted(), Audio.isMuted() ? '🔇' : '🔊'); return Audio.isMuted(); };
+  const toggleView = () => { const v = player.toggleView(); hud.setBtn('bView', v === 'first', v === 'first' ? 'eye1' : 'eye3', v === 'first' ? '第一人称' : '第三人称'); return v; };
+  const toggleFoot = () => { const on = feet.toggle(); hud.setBtn('bFoot', on); hud.toast(on ? '发光脚印：开' : '脚印：关', 1200); return on; };
+  const toggleMute = () => { Audio.setMuted(!Audio.isMuted()); hud.setBtn('bMute', Audio.isMuted(), Audio.isMuted() ? 'mute' : 'sound', Audio.isMuted() ? '静音' : '声音'); return Audio.isMuted(); };
   pressable(document.getElementById('bView'), toggleView);
   pressable(document.getElementById('bFoot'), toggleFoot);
   pressable(document.getElementById('bMute'), toggleMute);
   pressable(document.getElementById('bJump'), () => { input.jumpQueued = true; });
-  hud.setBtn('bView', false, '👁️', '第三人称');
+  hud.setBtn('bView', false, 'eye3', '第三人称');
   // iOS：第一次触摸时解锁音频（必须在手势事件里同步调用）
   let unlocked = false;
   const unlock = () => { if (unlocked) return; unlocked = true; Audio.unlock().then(ok => { if (!ok) unlocked = false; }); };
   ['pointerdown', 'touchend', 'click', 'keydown'].forEach(ev => document.addEventListener(ev, unlock, { capture: true, passive: true }));
 
   // —— 画质
-  const applyQuality = () => {
-    const q = CONFIG.qualityLevels[G.tier], dpr = window.devicePixelRatio || 1;
-    engine.setHardwareScalingLevel(1 / Math.min(dpr, q.scale)); sun.shadowEnabled = q.shadows;
-  };
+  const applyQuality = () => { R.setTier(G.tier, CONFIG.qualityLevels); };
   applyQuality();
   let fpsAcc = 0, fpsN = 0, fpsT = 0, lowCount = 0;
   window.addEventListener('resize', () => engine.resize());
@@ -108,7 +112,7 @@ export async function start() {
     player.update(dt, inp, conv ? { x: conv * dt, z: 0 } : null);
     metro.update(dt);
     player.updateCamera(dt, scene);
-    G.station.update(dt, player, cam, Audio);
+    G.station.update(dt, player, cam, Audio, metro);
     // 区域 / 环境声 / 欢迎广播
     const p = player.position, aboard = metro.trains.some(t => t.root.isEnabled() && t.contains(p));
     G.zone = G.inTunnel ? { kind: 'tunnel' } : G.station.zoneOf(p); G.aboard = aboard || G.inTunnel;
@@ -125,8 +129,8 @@ export async function start() {
     if (!G.inTunnel && p.y < -40) {
       const P = G.station.platforms[0]; player.spawn(20, P.y + 0.05, P.zc, Math.PI / 2); hud.toast('回到站台啦');
     }
-    // 阴影跟随玩家
-    sun.position.set(p.x + 14, p.y + 40, p.z - 18);
+    // 室内外灯光过渡 + 阴影跟随玩家
+    R.update(dt, G.zone.kind === 'street' && !G.inTunnel ? 0 : 1, p);
     // 帧率 → 自动降档
     fpsAcc += engine.getFps(); fpsN++; fpsT += dt;
     if (fpsT > 3) {
@@ -134,8 +138,13 @@ export async function start() {
       if (CONFIG.fixedQuality === null && G.fps < 45 && G.tier < 3) { if (++lowCount >= 2) { G.tier++; lowCount = 0; applyQuality(); } } else lowCount = 0;
     }
   });
+  // 等贴图 / 着色器准备好再渲染探针、淡出加载画面
+  progress(0.95, '正在搭建车站…');
+  try { await Promise.race([scene.whenReadyAsync(), new Promise(r => setTimeout(r, 8000))]); } catch (_) {}
+  progress(1, '准备好了！');
+  R.refreshProbes();
   engine.runRenderLoop(() => scene.render());
-  const loading = document.getElementById('loading'); loading.style.transition = 'opacity .4s'; loading.style.opacity = '0'; setTimeout(() => loading.remove(), 450);
+  const loading = document.getElementById('loading'); loading.classList.add('done'); setTimeout(() => loading.remove(), 700);
 
   // —— 测试接口
   let inst = null; try { inst = new B.SceneInstrumentation(scene); inst.captureFrameTime = true; } catch (_) {}
@@ -146,13 +155,13 @@ export async function start() {
       metro: metro.info(), mv: G.mv || 0, camPos: [cam.position.x, cam.position.y, cam.position.z].map(v => +v.toFixed(2)),
       babylon: { version: B.Engine.Version, source: window.__babylonSource, attempts: window.__babylonAttempts },
       drawCalls: (engine._drawCalls && engine._drawCalls.current) ?? null, activeMeshes: scene.getActiveMeshes().length, gates: G.station.gates.map(g => +g.f.toFixed(2)),
-      security: G.station.security.flash > 0, atlas: G.station.kit.atlas ? { y: G.station.kit.atlas.y + G.station.kit.atlas.row, overflow: G.station.kit.atlas.overflow } : null, audio: Audio.getState()
+      security: G.station.security.flash > 0, probes: R.probes.length, atlas: G.station.kit.atlas ? { y: G.station.kit.atlas.y + G.station.kit.atlas.row, overflow: G.station.kit.atlas.overflow } : null, audio: Audio.getState()
     }),
     teleport: (x, y, z, yaw) => player.spawn(x, y, z, yaw ?? player.yaw),
     setMove: (x, y, run) => { input.virtual = (x || y) ? { x, y, run } : null; },
     look: (dx, dy) => { input.look.x += dx; input.look.y += dy; },
     jump: () => { input.jumpQueued = true; }, toggleView, toggleFoot, toggleMute,
     autopilot: (pts, run) => new Promise(resolve => { G.auto = { pts, i: 0, time: 0, resolve, run }; }),
-    call: (line, step) => metro.call(line, step), metro, player, scene, engine, events
+    call: (line, step) => metro.call(line, step), metro, player, scene, engine, events, render: R
   };
 }

@@ -9,5 +9,10 @@ async def main():
     s=await st(pg); s.pop('audio'); print(s)
     await pg.screenshot(path='/workspace/gz-shots-3d/_smoke.png')
     print('ERRS', errs(logs)[:20]); print('LOGS', [l for l in logs if l[0]!='error'][:20])
+    # 视觉升级的基本检查：反射探针已建、标牌图集未溢出、绘制调用数在预算内、加载画面已移除
+    chk={'noErrors': not errs(logs), 'probes': (s.get('probes') or 0) >= 1, 'atlasOk': (s.get('atlas') or {}).get('overflow',0)==0,
+         'drawCallsOk': (s.get('drawCalls') or 0) < 150, 'loadingGone': await pg.evaluate('!document.getElementById("loading")'),
+         'svgIcons': await pg.evaluate('document.querySelectorAll(".btn svg use").length>=4')}
+    print('CHECKS', chk, 'PASS' if all(chk.values()) else 'FAIL')
     await b.close()
 asyncio.run(main())

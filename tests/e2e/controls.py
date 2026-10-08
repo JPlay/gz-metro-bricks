@@ -32,10 +32,15 @@ async def main():
     R['pinch']={'dist0':d0,'dist1':await pg.evaluate('__game.player.dist')}
     # 跳（点 JUMP 按钮）
     box=await pg.locator('#bJump').bounding_box()
-    ys=[]
+    # 软件渲染帧率很低，按帧记录最高点（不靠定时采样）
+    y0=(await st(pg))['pos'][1]
+    await pg.evaluate("window.__maxY=-99; window.__jo=__game.scene.onBeforeRenderObservable.add(()=>{window.__maxY=Math.max(window.__maxY,__game.player.position.y)})")
     await pg.touchscreen.tap(box['x']+box['width']/2, box['y']+box['height']/2)
-    for _ in range(8): ys.append((await st(pg))['pos'][1]); await asyncio.sleep(0.06)
-    R['jump']={'ys':ys,'peak':max(ys)-ys[0] if ys else 0, 'btnSize':[box['width'],box['height']]}
+    for _ in range(40):
+        await asyncio.sleep(0.25)
+        if await pg.evaluate('window.__maxY')-y0>0.5 and await pg.evaluate('__game.player.grounded'): break
+    peak=await pg.evaluate('window.__maxY')-y0; await pg.evaluate('__game.scene.onBeforeRenderObservable.remove(window.__jo)')
+    R['jump']={'peak':round(peak,2), 'btnSize':[box['width'],box['height']]}
     R['btnSizes']=await pg.evaluate("[...document.querySelectorAll('.btn')].map(b=>[b.id,b.getBoundingClientRect().width,b.getBoundingClientRect().height])")
     await asyncio.sleep(1)
     await pg.screenshot(path=SHOT+'third-person.png')
