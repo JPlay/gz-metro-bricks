@@ -49,7 +49,7 @@
             clearTimeout(stall);
             if (x.done) return res(new Blob(chunks, { type: 'text/javascript' }));
             chunks.push(x.value); got += x.value.length;
-            setBar(0.05 + 0.85 * Math.min(1, got / (total > got ? total : got * 1.15)));
+            setBar(0.05 + 0.40 * Math.min(1, got / (total > got ? total : got * 1.15)));
             stall = setTimeout(function () { ctrl.abort(); rej(new Error('stalled')); }, STALL_TIMEOUT);
             pump();
           }, function (e) { clearTimeout(stall); rej(e); });
@@ -69,7 +69,8 @@
     load(src, i).then(function () {
       window.__babylonSource = src.id;
       window.__babylonAttempts.push({ id: src.id, ok: true, ms: Math.round(performance.now() - t0) });
-      setBar(0.92); setMsg('正在搭建车站…');
+      (window.__loadT = window.__loadT || {}).babylon = Math.round(performance.now());
+      setBar(0.48); setMsg('正在启动游戏…');
       return import('./main.js').then(function (m) { return m.start(); });
     }, function (e) {
       window.__babylonAttempts.push({ id: src.id, ok: false, error: String(e && e.message || e), ms: Math.round(performance.now() - t0) });

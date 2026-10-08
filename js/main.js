@@ -28,12 +28,13 @@ export async function start() {
   const scene = new B.Scene(engine);
   scene.ambientColor = new B.Color3(0.35, 0.35, 0.38);
   scene.collisionsEnabled = true; scene.skipPointerMovePicking = true; scene.autoClear = true;
-  const progress = (f, msg) => { const b = document.getElementById('loadBar'), m = document.getElementById('loadMsg'); if (b) b.style.width = Math.round(f * 100) + '%'; if (m && msg) m.textContent = msg; };
-  progress(0.91, '正在准备材质…');
+  const progress = (f, msg) => { const b = document.getElementById('loadBar'), m = document.getElementById('loadMsg'); if (b) b.style.width = Math.max(3, Math.min(100, f * 100)).toFixed(1) + '%'; if (m && msg) m.textContent = msg; };
+  progress(0.50, '正在准备材质…');
   const M = mats(scene);
   const cam = new B.FreeCamera('cam', new B.Vector3(0, 2, -52), scene); cam.minZ = 0.08; cam.maxZ = 420; cam.fov = 0.92; cam.inputs.clear();
   const R = new Render(engine, scene, cam);
   mark('render');
+  progress(0.55, '正在搭建车站…');
 
   const events = new Events(), hud = new Hud(), input = new Input({
     surface: document.getElementById('touch'), stick: document.getElementById('stick'), hint: document.getElementById('stickHint'),
@@ -72,6 +73,7 @@ export async function start() {
     player.spawn(20, P.y + 0.05, P.zc, Math.PI / 2);
   } else { buildStation('gyq'); player.spawn(SPAWN.x, SPAWN.y + 0.05, SPAWN.z, SPAWN.yaw); }
   mark('station');
+  progress(0.72, '正在准备贴图与着色…');
 
   // —— 事件 → 提示
   const MVTXT = { penrose: '✨ 楼梯连成一圈了！', bridge: '✨ 桥自己拼起来了！', arches: '✨ 拱门对齐啦！' };
@@ -144,14 +146,32 @@ export async function start() {
       if (CONFIG.fixedQuality === null && G.fps < 45 && G.tier < 3) { if (++lowCount >= 2) { G.tier++; lowCount = 0; applyQuality(); } } else lowCount = 0;
     }
   });
-  // 等贴图 / 着色器准备好再渲染探针、淡出加载画面
-  progress(0.95, '正在搭建车站…');
-  try { await Promise.race([scene.whenReadyAsync(), new Promise(r => setTimeout(r, 8000))]); } catch (_) {}
+  // 等贴图 / 着色器：按真实剩余工作推进进度条（软件渲染下着色器编译很慢，不能卡在 95%）
+  const readyAt = performance.now();
+  const waitReady = async () => {
+    const cap = 6000;
+    while (performance.now() - readyAt < cap) {
+      let ok = false; try { ok = scene.isReady(); } catch (_) {}
+      const t = Math.min(1, (performance.now() - readyAt) / cap);
+      progress(0.72 + 0.22 * t, t < 0.5 ? '正在准备贴图与着色…' : '正在编译画面…');
+      if (ok) return true;
+      await new Promise(r => setTimeout(r, 100));
+    }
+    return false;
+  };
+  try { await waitReady(); } catch (_) {}
   mark('ready');
-  progress(1, '准备好了！');
+  progress(0.95, '正在打光…');
   R.refreshProbes();
   let nFrames = 0; scene.onAfterRenderObservable.add(() => { nFrames++; if (nFrames === 1) mark('frame1'); if (nFrames === 5) mark('frame5'); if (nFrames === 30) mark('frame30'); });
   engine.runRenderLoop(() => scene.render());
+  // 等首帧出来再关加载页，进度走到 100%
+  await new Promise(r => {
+    const obs = scene.onAfterRenderObservable.add(() => {
+      if (nFrames >= 1) { scene.onAfterRenderObservable.remove(obs); progress(1, '准备好了！'); r(); }
+    });
+    setTimeout(r, 2500);
+  });
   const loading = document.getElementById('loading'); loading.classList.add('done'); setTimeout(() => loading.remove(), 700);
 
   // —— 测试接口

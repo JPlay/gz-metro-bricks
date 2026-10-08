@@ -16,8 +16,8 @@ export class Render {
     scene.clearColor = new B.Color4(0.62, 0.78, 0.92, 1);
     const env = this.env = B.CubeTexture.CreateFromPrefilteredData('vendor/env/environmentSpecular.env', scene);
     env.name = 'env'; scene.environmentTexture = env; scene.environmentIntensity = 1.0;
-    // 室内用中性影棚环境（不锈钢 / 玻璃不会反射出户外的棕色地面）
-    const envIn = this.envIn = B.CubeTexture.CreateFromPrefilteredData('vendor/env/studio.env', scene); envIn.name = 'envIn';
+    // 室内影棚环境延迟到第一次进站再加载，缩短首屏
+    this.envIn = null; this._envInUrl = 'vendor/env/studio.env';
     const ip = scene.imageProcessingConfiguration;
     // 色调映射：Khronos PBR Neutral（比 ACES 更保色，线路色不发灰）+ 轻微提饱和度
     ip.toneMappingEnabled = true; ip.toneMappingType = B.ImageProcessingConfiguration.TONEMAPPING_KHR_PBR_NEUTRAL ?? B.ImageProcessingConfiguration.TONEMAPPING_ACES;
@@ -51,7 +51,10 @@ export class Render {
     sun.diffuse = B.Color3.Lerp(new B.Color3(1.0, 0.95, 0.86), new B.Color3(1.0, 0.99, 0.96), f);
     const d = B.Vector3.Lerp(new B.Vector3(-0.42, -1, 0.55), new B.Vector3(-0.08, -1, 0.06), f).normalize(); sun.direction.copyFrom(d);
     s.environmentIntensity = lerp(1.0, 0.9, f);
-    const want = f > 0.5 ? this.envIn : this.env; if (s.environmentTexture !== want) s.environmentTexture = want;
+    if (f > 0.5 && !this.envIn) {
+      this.envIn = B.CubeTexture.CreateFromPrefilteredData(this._envInUrl, s); this.envIn.name = 'envIn';
+    }
+    const want = f > 0.5 && this.envIn ? this.envIn : this.env; if (s.environmentTexture !== want) s.environmentTexture = want;
     this.sky.setEnabled(f < 0.98);
   }
   update(dt, indoor, focus) {
@@ -86,7 +89,7 @@ export class Render {
   }
   /** 反射探针：每个车站静态渲染一次（站厅 / 站台各一个），带盒投影，给抛光地面做“镜面反射” */
   makeProbe(name, center, size, renderList, mat) {
-    const p = new B.ReflectionProbe(name, 256, this.scene, true, false);
+    const p = new B.ReflectionProbe(name, 128, this.scene, true, false);
     p.position.copyFrom(center); p.refreshRate = B.RenderTargetTexture.REFRESHRATE_RENDER_ONCE;
     renderList.forEach(m => p.renderList.push(m));
     p.cubeTexture.boundingBoxSize = size; p.cubeTexture.boundingBoxPosition = center.clone();

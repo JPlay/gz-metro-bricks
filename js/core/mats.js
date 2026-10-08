@@ -61,6 +61,10 @@ export function mats(scene) {
   const blob = M.blob = new B.StandardMaterial('blob', scene);
   blob.diffuseColor = new B.Color3(0, 0, 0); blob.specularColor = new B.Color3(0, 0, 0); blob.disableLighting = true;
   blob.opacityTexture = tex(scene, 'blob', 'png'); blob.disableDepthWrite = true; blob.zOffset = -3; blob.alpha = 0.55;
+  // 只冻运行时参数不变的标准材质（PBR 会随画质档切换法线/探针，不能冻）
+  for (const k of ['glow', 'halo', 'shade', 'blob', 'ghost']) {
+    if (M[k] && M[k].freeze) try { M[k].freeze(); } catch (_) {}
+  }
   return M;
 }
 /** 法线贴图开关（低画质档关掉省带宽） */

@@ -43,11 +43,11 @@ async def main():
     R['jump']={'peak':round(peak,2), 'btnSize':[box['width'],box['height']]}
     R['btnSizes']=await pg.evaluate("[...document.querySelectorAll('.btn')].map(b=>[b.id,b.getBoundingClientRect().width,b.getBoundingClientRect().height])")
     await asyncio.sleep(1)
-    await pg.screenshot(path=SHOT+'third-person.png')
+    await pg.screenshot(path=SHOT+'third-person.png', timeout=120000)
     # 视角切换
     box=await pg.locator('#bView').bounding_box(); await pg.touchscreen.tap(box['x']+40, box['y']+40); await asyncio.sleep(0.5)
     R['view']=(await st(pg))['view']
-    await pg.screenshot(path=SHOT+'first-person.png')
+    await pg.screenshot(path=SHOT+'first-person.png', timeout=120000)
     box=await pg.locator('#bView').bounding_box(); await pg.touchscreen.tap(box['x']+40, box['y']+40); await asyncio.sleep(0.2)
     R['viewBack']=(await st(pg))['view']
     # 脚印
@@ -55,7 +55,7 @@ async def main():
     box=await pg.locator('#bFoot').bounding_box(); await pg.touchscreen.tap(box['x']+40, box['y']+40)
     await pg.evaluate('__game.setMove(0,1,false)'); await asyncio.sleep(2.5); await pg.evaluate('__game.setMove(0,0)')
     s3=await st(pg); R['foot']={'on':s3['foot'],'count':s3['footCount']}
-    await pg.screenshot(path=SHOT+'_footprints.png')
+    await pg.screenshot(path=SHOT+'_footprints.png', timeout=120000)
     box=await pg.locator('#bFoot').bounding_box(); await pg.touchscreen.tap(box['x']+40, box['y']+40); await asyncio.sleep(0.2)
     s4=await st(pg); R['footOff']={'on':s4['foot'],'count':s4['footCount']}
     # 键盘

@@ -3,7 +3,7 @@
  *   - 静态几何按材质分桶（paint/floor/wall/metal/glass/glow/…，见 core/mats.js），每桶最后合成 1 个网格；
  *     桶名可带后缀（如 'floor@P'）= 同一材质的独立副本（用于不同的反射探针）；
  *   - 碰撞体是不可见的方块（Babylon 内置碰撞），静态的冻结世界矩阵；
- *   - 标牌文字画在一张 2048² 的 DynamicTexture 图集上（广州地铁导向风格：深灰底白字、线路色编号、出口信息黄色），所有标牌合成 1 个网格。
+ *   - 标牌文字画在一张 2048×2560 的 DynamicTexture 图集上（广州地铁导向风格：深灰底白字、线路色编号、出口信息黄色），所有标牌合成 1 个网格。
  */
 import { Geo, hex } from '../core/geo.js';
 import { mats } from '../core/mats.js';
@@ -197,7 +197,7 @@ function fitText(c, txt, weight, size, font, maxW) {
 }
 class Atlas {
   constructor(scene) {
-    this.S = 2048; this.H = 3072; this.ppm = 112; this.overflow = 0; this.x = 0; this.y = 0; this.row = 0; this.scene = scene;
+    this.S = 2048; this.H = 2560; this.ppm = 100; this.overflow = 0; this.x = 0; this.y = 0; this.row = 0; this.scene = scene;
     this.tex = new B.DynamicTexture('signs', { width: this.S, height: this.H }, scene, true);
     this.tex.hasAlpha = false; this.tex.anisotropicFilteringLevel = 8; this.ctx = this.tex.getContext();
     this.ctx.fillStyle = SIGN.bg; this.ctx.fillRect(0, 0, this.S, this.H);
