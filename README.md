@@ -1,99 +1,109 @@
-<p align="center">
-  <img src="./assets/readme/hero.svg" width="100%" alt="积木小列车：用积木颗粒拼出的广州地铁 1 号线列车，途经公园前、农讲所、烈士陵园、东山口">
-</p>
+# 一号线 · 方块奇境（Line 1 · Shape City）
 
-一个给小朋友玩的网页玩具：照着一节广州地铁 1 号线的列车模型，在浏览器里用积木颗粒把它一块块拼出来；拼好之后，再以乘客的第一人称视角，从进站买票一直坐到出站。
+一款给孩子玩的网页小游戏：在柔和的几何方块城市里坐**广州地铁一号线**，每到一站就解一个“视错觉”小谜题，把小乘客送到站台门前，列车进站、开门、上车，伴着熟悉的**普通话 → 粤语 → 英语**报站驶向下一站。
 
-打开就能玩，不用安装任何东西，在 iPad 上用手指操作。
+画面风格参考《纪念碑谷》：粉彩配色、正等轴测正交相机、只在“看起来对齐”时才连通的错觉路径、可以拖动的旋转台 / 滑块 / 摇柄，以及安静从容的节奏。
 
-**在线试玩：<https://gz-metro-bricks.pages.dev/>**（拼列车）· [直接去坐地铁](https://gz-metro-bricks.pages.dev/metro.html)
+- 单页、零安装、零构建：原生 ES Modules + import map，three.js 固定在 `0.160.0`
+- 触屏优先，按 iPad Air 3（1112×834 CSS px，横屏）调校，竖屏也能正常游玩
+- 不需要识字：发光提示、小手动画、闲置 6 秒自动提示
 
-备用地址：<https://jplay.github.io/gz-metro-bricks/>
+## 怎么玩
 
-<p align="center">
-  <img src="./assets/readme/shot-build.jpg" width="49%" alt="拼搭页：一步步把列车拼出来，下方列出这一步要用的零件">
-  <img src="./assets/readme/shot-train.jpg" width="49%" alt="拼好的六节编组列车">
-</p>
-<p align="center">
-  <img src="./assets/readme/shot-concourse.jpg" width="49%" alt="乘车体验：站厅里过安检">
-  <img src="./assets/readme/shot-platform.jpg" width="49%" alt="乘车体验：在站台屏蔽门前候车">
-</p>
-<p align="center">
-  <img src="./assets/readme/shot-riding.jpg" width="49%" alt="乘车体验：坐在车厢里，门上方是线路图">
-  <img src="./assets/readme/shot-select.jpg" width="49%" alt="乘车体验：选择上车站和下车站">
-</p>
+1. 标题页点“出发”（这一下同时解锁 iOS 的声音）。
+2. 进入方块城：黄色高架环线上跑着一号线列车，四座小岛就是四个车站。点小岛或下方的车站卡片出发。
+3. 每一站：**点地面**让小乘客走过去（自动寻路），**拖动**发光的机关改变道路，走到闪光的站台门前，列车就会进站。
 
-## 这个项目的由来
+| 站 | 场景 | 谜题 |
+| --- | --- | --- |
+| 🌳 公园前 | 换乘枢纽 + 公园大树 | 拖动旋转桥，转 90° 接上对岸 |
+| 🏮 农讲所 | 红墙庭院 | 站上石板，拖动红灯笼把石板滑到对面 |
+| 🌺 烈士陵园 | 花园 + 纪念拱门 | 放下吊桥，桥头与高台在视觉上对齐即可走过（错觉路径） |
+| 🏡 东山口 | 洋楼屋顶 | 站上升降台，转动摇柄升到屋顶，再从“看起来相连”的屋顶走到站台 |
 
-2026 年国庆假期我们全家去广州玩，逛了广州地铁博物馆，里面展出了 1 号线从无到有的整个建造过程。巧的是，我们住的酒店就在 1 号线的农讲所站旁边，那几天出门几乎全靠 1 号线，坐的一直是这列漂亮的黄色地铁。我们在博物馆里把它的模型买了回来，小儿子特别喜欢。
+四站都完成后回到方块城，城市变换形状庆祝。
 
-他的这份喜欢给了我灵感：让 Claude 带着 Codex 干了几个小时，就做出了一个还不错的效果。小儿子足足玩了两天。前几天刚坐过的地铁、刚买回来的车，转眼出现在他自己专属的 iPad 里，还能亲手拼、亲自坐，他觉得非常神奇。里面有很多点子是他自己提的，我都加了进去，整个过程很有意思，所以想把它分享出来。
+## 本地运行
 
-页面算不上精良，但对一个 8 岁的孩子来说足够有趣。硬件要求也很低，我们用的是一台很老的 iPad Air 3，运行流畅。如果你家小朋友也喜欢地铁，可以直接拿去在本地跑起来。
-
-## 能玩什么
-
-**拼列车**（`index.html`）
-
-- 11 步把一节车从轮子拼到受电弓，再挂成 6 节编组；每一步积木从天上掉下来落位，并列出这一步要用的零件。
-- 拖动旋转、双指缩放，可以把整车“拆开看”。
-- 拼好后能开车、开门、开灯、升降受电弓、按住鸣笛、换车身颜色。
-
-**坐地铁**（`metro.html`）
-
-<p align="center">
-  <img src="./assets/readme/journey.svg" width="100%" alt="一次完整的乘车流程：进站、买票过闸、候车、乘车、出站">
-</p>
-
-- 四个真实车站：公园前、农讲所、烈士陵园、东山口，任选起点和终点，两个方向都能坐。
-- 亲手投币买绿色的单程票币，进站贴一下，出站投回去。
-- 站里和车里的积木小人会走动、排队、上下车。
-- 普通话、粤语、英语三语报站，加上站厅、站台、车厢的环境声。
-- 操作只有两种：点地上发光的脚印自动走过去，拖动屏幕转头看。
-
-## 怎么运行
-
-最省事的是直接打开上面的在线试玩链接。想在自己电脑上跑，需要通过一个本地网页服务打开（直接双击 `metro.html` 不行，音频加载需要 http）：
+不需要安装任何依赖，用任意静态服务器即可（ES Modules 不能用 `file://` 打开）：
 
 ```bash
-git clone https://github.com/JPlay/gz-metro-bricks.git
-cd gz-metro-bricks
-python3 -m http.server 8080
+python3 -m http.server 8000
+# 打开 http://localhost:8000/
 ```
 
-然后在浏览器打开 `http://localhost:8080`。
+URL 参数（调试用）：
 
-想在 iPad 上玩：让 iPad 和电脑连同一个 Wi-Fi，在 Safari 里打开 `http://<电脑的局域网 IP>:8080`，再用“添加到主屏幕”就能像 App 一样全屏打开。
+- `?q=0..3`：固定画质档位（0 = DPR 2 + 阴影，3 = DPR 1 无阴影）；不写则自动降档
+- `?three=jsdelivr|unpkg|vendor`：强制 three.js 来源
 
-网址后面加 `?perf=1` 会在角上显示帧率等性能数字。
+## 部署
 
-## 它是怎么做出来的
+纯静态文件，直接部署到 Cloudflare Pages / GitHub Pages 即可（根目录，不需要构建命令）。所有音频和资源都是同源文件；不使用 Google Fonts、统计脚本或其他第三方请求。
 
-- 起点是几张列车模型的照片和一段视频。车身按标准积木颗粒的比例（1 颗粒宽、3 层薄板等于 1 块砖高）重新设计，用 [three.js](https://threejs.org/) r128 渲染，全部是普通 `<script>`，没有构建步骤。
-- 乘车体验的车站是“缩约版”：四个站共用一套站体结构，换站名、主题色和地面地标；公园前按真实情况做了“右门下车、左门上车”。
-- 报站语音是用语音合成预先生成的音频文件，措辞参照了公开的 1 号线报站资料；环境声来自 CC0 录音加程序合成。
-- 整个项目由人提需求、AI 编码助手协作完成：一个助手负责统筹和验收，三个助手分别负责音频、场景、玩法。
+### three.js 加载回退链
 
-## 已知的不足
+`js/boot.js` 依次尝试（每个来源约 4 秒超时）：
 
-- 只在一台 iPad Air 3 上实际玩过，运行流畅；其他设备没有验证。
-- 穿模（镜头进墙、小人重叠之类）修过一轮，但最后一遍 12 条路线的完整检查没有跑完，仍可能遇到。
-- 语音是合成音色，不是广州地铁的官方录音；环境声也不是在广州现场录的。
-- 车站只做了 1 号线站台和站厅，换乘的 2 号线、6 号线没有建。
-- 旧版 iOS（16.0–16.3）打开侧边静音键时，网页可能完全没有声音。
+1. jsDelivr `cdn.jsdelivr.net/npm/three@0.160.0`
+2. unpkg `unpkg.com/three@0.160.0`
+3. 同源备份 `vendor/three/0.160.0/three.module.min.js`
 
-## 目录
+成功后生成 blob URL 并动态注入 import map，再加载 `js/main.js`。实际使用的来源记录在 `window.__threeSource`。
 
-```text
-index.html        拼列车
-metro.html        坐地铁
-js/metro/         乘车体验的各个模块（车站、列车、小人、音频、主流程）
-assets/audio/     报站语音、环境声、音效，来源见 assets/audio/CREDITS.md
-_dev/             各模块的独立演示页、接口说明和制作脚本
+## 目录结构
+
+```
+index.html              单页入口（HUD、标题、选站、字幕、提示层）
+css/app.css             粉彩 UI、圆形大按钮、竖屏适配
+js/boot.js              three.js CDN 回退加载器 + 动态 import map
+js/main.js              Game：状态机（标题 → 城市 → 行车 → 车站 → 行车 … → 庆祝）、灯光、进度存档
+js/core/                config 配置 · tween 缓动 · loop 主循环 · renderer 自适应画质 · camera 等轴测相机 · input 触摸/指针手势
+js/world/               blocks 圆角方块几何与材质 · pathgraph 路径图与 A* · mechanisms 旋转台/滑块/摇柄 · props 列车/轨道/树/拱门/洋楼等
+js/characters/          figure 小人模型 · walker 寻路行走 · passenger 小乘客 · npc 闲逛/排队 NPC
+js/scenes/              hub 方块城 · ride 行车 · station-base 车站通用流程 · station-*.js 四个车站谜题 · stations 车站表
+js/audio/               audio 音频引擎（PA 滤波混响、队列、打断、LRU、iOS 解锁、字幕事件）· announcements 报站逻辑 · webspeech 缺失语音回退 · ambience 环境声
+js/ui/                  i18n 三语文字 · captions 字幕 · hints 提示动画 · hud · title · station-picker
+assets/audio/           manifest.json + 语音（90 条）+ 音效 + 列车声 + 环境声，CREDITS.md 为来源说明
+tools/audio/            generate_voice.py 语音生成脚本（DashScope）
+vendor/three/0.160.0/   three.js 同源备份（MIT）
 ```
 
-## 许可与声明
+## 核心设计
 
-- 代码以 [MIT](./LICENSE) 许可开源。`three.min.js` 来自 three.js，同为 MIT 许可。
-- 音频素材的来源和许可见 [`assets/audio/CREDITS.md`](./assets/audio/CREDITS.md)。
-- 这是一个个人爱好项目，与广州地铁集团、乐高集团均无关联；“广州地铁”“LEGO/乐高”是各自权利人的商标。站名、线路等信息仅用于还原乘车场景。
+- **等轴测与错觉**：相机沿 (1,1,1) 方向正交投影，世界里相差 k·(1,1,1) 的点在屏幕上重合。每块可走地砖在四条边中点有“端口”；两个端口在屏幕上重合且朝向相反就连通——世界里也重合是普通连接，只在屏幕上重合就是**错觉连接**。机关转动、滑动结束后整张路径图重新计算。
+- **寻路**：A*（屏幕距离启发），行走时每一步都重新校验连接，机关动了会重新规划；站在机关上的小乘客会跟着机关一起移动。
+- **机关**：旋转台按屏幕角度拖动并吸附到 90°；滑块沿投影轴拖动；摇柄画圈驱动滑块（顺时针上升）。松手后带回弹缓动吸附。
+- **性能**：DPR 上限 2，帧率低于 48 时自动逐档降低（2 → 1.5 → 1.25 无阴影 → 1）；Lambert 材质、一盏平行光 + 半球光；阴影贴图只在场景变化时更新；无后期处理。
+
+## 报站语音
+
+沿用旧项目的方案：DashScope 预生成 mp3，顺序为普通话 → 粤语 → 英语，经过车站广播（PA）滤波与混响链播放，支持排队、优先级打断、LRU 缓存、iOS 首次手势解锁，并通过 `gz-audio-caption` 事件显示三语字幕。
+
+| 语言 | 模型 | 音色 |
+| --- | --- | --- |
+| 普通话 | qwen3-tts-instruct-flash（带 INSTRUCTION） | Serena |
+| 粤语 | qwen3-tts-flash | Kiki |
+| 英语 | qwen3-tts-flash | Jennifer |
+
+本版复用旧项目全部 90 条语音，没有新增语音。若以后新增报站：在 `tools/audio/generate_voice.py` 的任务列表里加条目，然后运行
+
+```bash
+DASHSCOPE_API_KEY=... python3 tools/audio/generate_voice.py            # 可选 DASHSCOPE_HOST，默认 dashscope.aliyuncs.com
+python3 tools/audio/generate_voice.py --only <id 片段>                  # 只生成部分
+python3 tools/audio/generate_voice.py --manifest-only                   # 只重写 manifest
+```
+
+**缺失语音的回退**：`js/core/config.js` 中 `VOICE_FALLBACK = 'webspeech' | 'caption'`（默认 `'webspeech'`）。只有在某条 mp3 缺失或加载失败时才会启用：`webspeech` 用旧版 `announce(zh, yue, en)` 的 Web Speech 逻辑朗读，`caption` 只静默显示三语字幕。静音状态下同样只显示字幕。
+
+## 已知限制
+
+- 需要支持 import map 的浏览器（iPadOS / Safari 16.4 及以上）；更旧的系统会显示提示页。
+- 只在桌面 Chromium（模拟 iPad 触屏）里做过自动化测试，尚未在真机 iPad 上验证手感与帧率。
+- 彭罗斯三角目前是方块城中央的雕塑，还不是可以行走的楼梯。
+- 未移植旧版的 HRTF 空间音频和车站安全广播调度器。
+- 谜题刻意设计得简单（每站一个机关），适合 6～9 岁；没有关卡编辑器。
+
+## 致谢与许可
+
+代码以 MIT 许可发布（见 `LICENSE`）。音频来源与许可见 `assets/audio/CREDITS.md`；three.js 为 MIT 许可（见 `vendor/three/0.160.0/LICENSE`）。
