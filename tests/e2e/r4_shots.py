@@ -52,9 +52,11 @@ async def main():
         await pg.evaluate('__game.player.yaw=Math.PI; __game.player.pitch=0.35; __game.player.dist=4.2'); await asyncio.sleep(1.2); await shot(pg, 'feet-flat-look-back')
         # 楼梯：站厅 → 站台楼梯（x 从 -1 往 15 下行，z 12.2–15.8）
         await pg.evaluate('__game.toggleFoot(); __game.toggleFoot()')
-        await pose(pg, -3.5, -5.95, 14, 1.5708, 0.2, 'third', 0.5)
-        await walk(pg, [[2, 14], [8.5, 14]]); await asyncio.sleep(0.3); await shot(pg, 'feet-stairs-walking-down')
-        await pg.evaluate('__game.player.yaw=-1.5708; __game.player.pitch=0.3'); await asyncio.sleep(1.2); await shot(pg, 'feet-stairs-look-back')
+        # 走楼梯左半边（z=13.2），避开 z=14 的中间扶手，脚印不被扶手挡住
+        await pose(pg, -3.5, -5.95, 13.2, 1.5708, 0.3, 'third', 0.5)
+        await walk(pg, [[2, 13.2], [6.5, 13.2]]); await asyncio.sleep(0.3); await shot(pg, 'feet-stairs-walking-down')
+        # 侧后方高处往回看：看脚印是不是一级一级贴在踏步面上
+        await pg.evaluate('__game.player.yaw=-2.2; __game.player.pitch=0.55; __game.player.dist=4.5'); await asyncio.sleep(1.2); await shot(pg, 'feet-stairs-look-back')
         R['feetY'] = await pg.evaluate('__game.scene.meshes.filter(m=>/^fp/.test(m.name)&&m.isEnabled()).map(m=>[+m.position.x.toFixed(2),+m.position.y.toFixed(3),+m.position.z.toFixed(2)])')
         print('feetY', R['feetY'], flush=True)
     R['errors'] = errs(logs)
