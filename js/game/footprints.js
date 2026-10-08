@@ -21,8 +21,9 @@ export class Footprints {
     this.scene = scene; this.on = false; this.pool = []; this.i = 0; this.side = 1; this.last = null;
     const src = this.src = B.MeshBuilder.CreateGround('foot', { width: 1, height: 1 }, scene);
     const m = new B.StandardMaterial('footMat', scene);
-    m.diffuseTexture = footTexture(scene); m.useAlphaFromDiffuseTexture = true; m.diffuseColor = B.Color3.FromHexString('#7CF7FF');
-    m.specularColor = new B.Color3(0, 0, 0); m.disableLighting = true; m.backFaceCulling = false; m.zOffset = -2;
+    m.diffuseTexture = footTexture(scene); m.useAlphaFromDiffuseTexture = true; m.diffuseColor = new B.Color3(0, 0, 0);
+    // disableLighting 时漫反射不出光，颜色全靠自发光（否则脚印是黑的）；形状和透明度来自贴图 alpha × 实例颜色 alpha
+    m.emissiveColor = B.Color3.FromHexString('#7CF7FF'); m.specularColor = new B.Color3(0, 0, 0); m.disableLighting = true; m.backFaceCulling = false; m.zOffset = -2;
     src.material = m; src.isVisible = false; src.isPickable = false; src.hasVertexAlpha = true; src.alphaIndex = 3;
     src.registerInstancedBuffer('color', 4); src.instancedBuffers.color = new B.Color4(1, 1, 1, ALPHA);
     for (let k = 0; k < 40; k++) {
