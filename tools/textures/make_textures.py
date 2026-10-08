@@ -195,9 +195,9 @@ def sky():
     nn = noise(1024, 7, seed=11)[:512, :]
     n2 = noise(1024, 18, seed=12)[:512, :]
     n3 = noise(1024, 40, seed=13)[:512, :]
-    c = np.clip((nn * 0.75 + n2 * 0.4 + n3 * 0.15 - 0.48) * 2.6, 0, 1)
-    band = np.clip(1 - np.abs(y - 0.30) / 0.24, 0, 1) ** 0.85 * np.clip((0.48 - y) * 10, 0, 1)
-    c = (c * band) ** 0.9
+    c = np.clip((nn * 0.8 + n2 * 0.45 + n3 * 0.2 - 0.42) * 2.8, 0, 1)
+    band = np.clip(1 - np.abs(y - 0.28) / 0.28, 0, 1) ** 0.7 * np.clip((0.50 - y) * 8, 0, 1)
+    c = (c * band) ** 0.75
     # 柔和白，略带一点暖边
     white = np.array([0.98, 0.99, 1.0])
     shade = 0.88 + 0.12 * np.clip(1 - n2, 0, 1)
