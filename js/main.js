@@ -136,7 +136,7 @@ export async function start() {
     hud.where(G.code, line, rl && rl.phase === 'cruise' ? rl.next : null);
     // 脚步声 / 脚印
     if (player.grounded && player.speed > 0.5 && !G.aboard) { stepAcc += player.speed * dt; if (stepAcc > 0.75) { stepAcc = 0; Audio.footstep(); } }
-    feet.update(dt, p, player.facing, player.grounded, player.moving && !G.aboard);
+    feet.update(dt, p, player.facing, player.grounded, player.moving && !G.aboard, cam.position);
     if (player.landed) { player.landed = false; Audio.sfx('footstep', { volume: 0.6, rate: 0.8 }); }
     // 掉出世界 → 回到站台 / 站口
     if (!G.inTunnel && p.y < -40) {
