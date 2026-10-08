@@ -30,8 +30,12 @@ export class Footprints {
       this.pool.push({ m: inst, life: 0 });
     }
     this.ray = new B.Ray(new B.Vector3(), new B.Vector3(0, -1, 0), 1.3);
-    // 只贴不透明、可见的场景表面（台阶、地面、扶梯踏板…），不贴人、玻璃、灯光晕、阴影片
-    this.pred = mesh => mesh.isEnabled() && mesh.isVisible && mesh.isPickable && !mesh.skeleton && mesh.name !== 'foot' && !/^(glass|glow|halo|shade|sky|kidBlob|npcBlob|signs)/.test(mesh.name) && !(mesh.material && mesh.material.alpha < 1);
+    // 只贴看得见的不透明场景表面（台阶、地面、扶梯踏板…），不贴人、玻璃、灯光晕、阴影片。
+    // 场景里的可见网格都设了 isPickable=false（只有隐形碰撞盒可拾取，而楼梯碰撞盒是斜坡），所以这里用自定义 predicate 直接测可见网格的三角形，
+    // 跳过碰撞盒，脚印才会落在真正的踏步面上。
+    this.pred = mesh => mesh.isEnabled() && mesh.isVisible && !(mesh.metadata && mesh.metadata.collider) && !mesh.skeleton && !mesh.infiniteDistance &&
+      !/^(foot|fp\d|glass|glow|halo|shade|sky|kidBlob|npcBlob|signs|player)/.test(mesh.name) && !(mesh.material && mesh.material.alpha < 1);
+    this.hits = 0; this.misses = 0;
   }
   toggle(v) { this.on = v === undefined ? !this.on : v; if (!this.on) this.clear(); return this.on; }
   clear() { this.pool.forEach(p => { p.life = 0; p.m.setEnabled(false); }); this.last = null; }
@@ -39,7 +43,8 @@ export class Footprints {
   groundAt(x, y, z) {
     this.ray.origin.set(x, y + 0.5, z);
     const hit = this.scene.pickWithRay(this.ray, this.pred);
-    return hit && hit.hit ? hit.pickedPoint.y : y;
+    if (hit && hit.hit) { this.hits++; return hit.pickedPoint.y; }
+    this.misses++; return y;
   }
   update(dt, pos, yaw, grounded, moving, camPos) {
     if (this.on && grounded && moving) {

@@ -18,7 +18,7 @@ async def pose(pg, x, y, z, yaw, pitch, v, settle=1.2, dist=4.2):
     await asyncio.sleep(settle)
 async def shot(pg, name):
     await pg.screenshot(path=OUT + name + '.png', timeout=180000)
-    s = await st(pg); R[name] = {'pos': s['pos'], 'yaw': s['yaw'], 'pitch': s['pitch'], 'view': s['view'], 'camPos': s['camPos'], 'footCount': s['footCount']}
+    s = await st(pg); R[name] = {'pos': s['pos'], 'yaw': s['yaw'], 'pitch': s['pitch'], 'view': s['view'], 'camPos': s['camPos'], 'footCount': s['footCount'], 'footSnap': s.get('footSnap')}
     print(name, json.dumps(R[name]), flush=True)
 def want(k): return ONLY is None or k in ONLY
 async def walk(pg, pts):

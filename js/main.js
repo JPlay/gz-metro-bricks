@@ -185,7 +185,7 @@ export async function start() {
   window.__game = {
     state: () => ({
       code: G.code, zone: G.zone.kind, pos: [player.position.x, player.position.y, player.position.z].map(v => +v.toFixed(2)), yaw: +player.yaw.toFixed(3), pitch: +player.pitch.toFixed(3),
-      view: player.view, grounded: player.grounded, foot: feet.on, footCount: feet.count(), aboard: !!G.aboard, inTunnel: G.inTunnel, fps: Math.round(engine.getFps()), avgFps: Math.round(G.fps), tier: G.tier,
+      view: player.view, grounded: player.grounded, foot: feet.on, footCount: feet.count(), footSnap: [feet.hits, feet.misses], aboard: !!G.aboard, inTunnel: G.inTunnel, fps: Math.round(engine.getFps()), avgFps: Math.round(G.fps), tier: G.tier,
       metro: metro.info(), mv: G.mv || 0, camPos: [cam.position.x, cam.position.y, cam.position.z].map(v => +v.toFixed(2)),
       babylon: { version: B.Engine.Version, source: window.__babylonSource, attempts: window.__babylonAttempts },
       drawCalls: (engine._drawCalls && engine._drawCalls.current) ?? null, activeMeshes: scene.getActiveMeshes().length, gates: G.station.gates.map(g => +g.f.toFixed(2)),
