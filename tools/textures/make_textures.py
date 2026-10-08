@@ -182,24 +182,28 @@ def facade():
                 d.ellipse([ax + 30, wy1 + 19, ax + 54, wy1 + 41], outline=(150, 150, 150), width=2)
     arr = np.asarray(img).astype(float) / 255 * (0.95 + 0.07 * noise(n, 30)[..., None])
     save('facade.jpg', arr)
-# ---------- 天空（等距柱状投影 1024×512）----------
+# ---------- 天空（等距柱状投影 1024×512）：更深的晴空蓝 + 几朵软白云 ----------
 def sky():
     W, H = 1024, 512
     y = np.linspace(0, 1, H)[:, None] * np.ones((1, W))
-    zen = np.array([0.30, 0.56, 0.90]); hor = np.array([0.80, 0.90, 0.98]); gnd = np.array([0.80, 0.89, 0.96])
+    # 天顶更深蓝，地平线仍偏浅，避免和楼房糊在一起
+    zen = np.array([0.18, 0.42, 0.82]); hor = np.array([0.62, 0.78, 0.96]); gnd = np.array([0.72, 0.84, 0.95])
     t = np.clip(y / 0.5, 0, 1)
-    col = zen[None, None] * (1 - t[..., None] ** 1.6) + hor[None, None] * (t[..., None] ** 1.6)
+    col = zen[None, None] * (1 - t[..., None] ** 1.35) + hor[None, None] * (t[..., None] ** 1.35)
     col = np.where((y > 0.5)[..., None], gnd[None, None] * np.ones_like(col), col)
-    # 云：上半部分
-    nn = noise(1024, 9, seed=3)[:512, :]
-    n2 = noise(1024, 30, seed=4)[:512, :]
-    c = np.clip((nn * 0.85 + n2 * 0.3 - 0.6) * 2.6, 0, 1)
-    band = np.clip(1 - np.abs(y - 0.36) / 0.2, 0, 1) ** 0.7 * np.clip((0.5 - y) * 12, 0, 1)
-    c = c * band
-    shade = 0.9 + 0.1 * np.clip(1 - n2, 0, 1)
-    col = col * (1 - c[..., None]) + (np.ones(3) * shade[..., None]) * c[..., None]
+    # 软云：大团低频 + 一点中频，只在中上天空
+    nn = noise(1024, 7, seed=11)[:512, :]
+    n2 = noise(1024, 18, seed=12)[:512, :]
+    n3 = noise(1024, 40, seed=13)[:512, :]
+    c = np.clip((nn * 0.7 + n2 * 0.35 + n3 * 0.12 - 0.52) * 2.2, 0, 1)
+    band = np.clip(1 - np.abs(y - 0.30) / 0.24, 0, 1) ** 0.85 * np.clip((0.48 - y) * 10, 0, 1)
+    c = (c * band) ** 0.9
+    # 柔和白，略带一点暖边
+    white = np.array([0.98, 0.99, 1.0])
+    shade = 0.88 + 0.12 * np.clip(1 - n2, 0, 1)
+    col = col * (1 - c[..., None] * 0.92) + (white * shade[..., None]) * c[..., None] * 0.92
     a = np.clip(col * 255, 0, 255).astype(np.uint8)
-    Image.fromarray(a).save(os.path.join(OUT, 'sky.jpg'), quality=84, optimize=True, progressive=True)
+    Image.fromarray(a).save(os.path.join(OUT, 'sky.jpg'), quality=86, optimize=True, progressive=True)
 # ---------- 圆形柔和阴影（贴地）----------
 def blob():
     n = 128; y, x = np.mgrid[0:n, 0:n].astype(float); r = np.sqrt((x - n / 2 + .5) ** 2 + (y - n / 2 + .5) ** 2) / (n / 2)
