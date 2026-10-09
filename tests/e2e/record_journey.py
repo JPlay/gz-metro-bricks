@@ -59,10 +59,10 @@ class Rec:
         t_end = time.time() + seconds; last = time.time()
         while time.time() < t_end:
             if step_game: await s.pg.evaluate(STEP, 1)
-            now = time.time(); await s.shot(max(DT, now - last)); last = now
+            now = time.time(); await s.shot(max(UI_HOLD, now - last)); last = now
     async def tap(s, sel):
         box = await s.pg.locator(sel).first.bounding_box(); await s.pg.touchscreen.tap(box['x'] + box['width'] / 2, box['y'] + box['height'] / 2)
-        last = time.time(); await s.pg.evaluate(STEP, 1); await s.shot(max(DT, time.time() - last))
+        last = time.time(); await s.pg.evaluate(STEP, 1); await s.shot(max(UI_HOLD, time.time() - last))
 def encode(rec, i0, i1, out):
     lst = FR + f'list_{i0}_{i1}.txt'
     with open(lst, 'w') as f:
@@ -72,7 +72,14 @@ def encode(rec, i0, i1, out):
     subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', lst, '-vf', f'fps={FPS},format=yuv420p', '-c:v', 'libx264', '-preset', 'slow', '-crf', '22',
                     '-movflags', '+faststart', '-r', str(FPS), out], check=True)
     log('encoded', out, os.path.getsize(out) // 1024, 'KB', f'{sum(rec.durs[i0:i1]):.1f}s')
+# 售票机 / 闸机界面帧至少停 0.6s：机器忙时一帧要截好几秒，按墙钟算出来的时长会让买票界面一闪而过
+UI_HOLD = 0.6
+class _Meta:
+    def __init__(s, d): s.durs = d['durs']
 async def main():
+    if os.environ.get('REENCODE') == '1':                                    # 只用已截好的帧重新编码（改了停留时长后用）
+        m = json.load(open(FR + 'meta.json')); R = _Meta(m)
+        encode(R, 0, len(R.durs), OUT + 'journey-ticket-to-line2.mp4'); encode(R, m['marks']['walk0'], m['marks']['walk1'], OUT + 'walk-l1-to-l2.mp4'); return
     shutil.rmtree(FR, ignore_errors=True); os.makedirs(FR)
     only_walk = os.environ.get('ONLY_WALK') == '1'
     async with async_playwright() as p:
@@ -128,4 +135,4 @@ async def main():
     json.dump({'durs': R.durs, 'marks': marks}, open(FR + 'meta.json', 'w'))
     if not only_walk: encode(R, 0, R.n, OUT + 'journey-ticket-to-line2.mp4')
     encode(R, marks['walk0'], marks['walk1'], OUT + 'walk-l1-to-l2.mp4')
-asyncio.run(main())
+if __name__ == '__main__': asyncio.run(main())
