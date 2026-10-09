@@ -1,112 +1,12 @@
 # 缺失的报站语音片段
 
-由 `node tools/audio/export_jobs.mjs` 生成。全网共需 407 条片段，已有 MP3 166 条，缺 241 条（普通话 80 / 粤语 80 / 英语 81）。
+由 `node tools/audio/export_jobs.mjs` 生成。全网共需 407 条片段，已有 MP3 266 条，缺 141 条（普通话 47 / 粤语 47 / 英语 47）。
 缺失片段在游戏里自动用 Web Speech 朗读（zh-CN → zh-HK（若有）→ en-US（若有），语速 0.95），并照常显示字幕。
 
 生成方法：设置环境变量 DASHSCOPE_API_KEY 后运行 `python3 tools/audio/generate_voice.py`（会读取 voice-jobs.json，只生成缺的）。
 
 | id | 语言 | 文本 |
 | --- | --- | --- |
-| voice.next.tyzx.en | en | The next station is Tiyu Zhongxin. |
-| voice.arrive.tyzx.zh | zh | 列车即将到达体育中心站，请小心列车与站台之间的空隙。 |
-| voice.arrive.tyzx.yue | yue | 列车即将到达体育中心站，请小心列车同站台之间嘅空隙。 |
-| voice.arrive.tyzx.en | en | The train is arriving at Tiyu Zhongxin. Please mind the gap between the train and the platform. |
-| voice.welcome.tyzx.zh | zh | 欢迎光临体育中心站。请排队候车，先下后上。 |
-| voice.welcome.tyzx.yue | yue | 欢迎光临体育中心站。请排队候车，先落后上。 |
-| voice.welcome.tyzx.en | en | Welcome to Tiyu Zhongxin station. Please line up for the train. Let the passengers get off first before you get on. |
-| voice.arrive.gzdz.zh | zh | 列车即将到达广州东站站，请小心列车与站台之间的空隙。 |
-| voice.arrive.gzdz.yue | yue | 列车即将到达广州东站站，请小心列车同站台之间嘅空隙。 |
-| voice.arrive.gzdz.en | en | The train is arriving at Guangzhou Dongzhan. Please mind the gap between the train and the platform. |
-| voice.welcome.gzdz.zh | zh | 欢迎光临广州东站站。请排队候车，先下后上。 |
-| voice.welcome.gzdz.yue | yue | 欢迎光临广州东站站。请排队候车，先落后上。 |
-| voice.welcome.gzdz.en | en | Welcome to Guangzhou Dongzhan station. Please line up for the train. Let the passengers get off first before you get on. |
-| voice.destination.l2n.zh | zh | 本次列车终点站为嘉禾望岗。 |
-| voice.destination.l2n.yue | yue | 本次列车终点站为嘉禾望岗。 |
-| voice.destination.l2n.en | en | The destination of this train is Jiahewanggang. |
-| voice.terminal.l2n.zh | zh | 下一站是本次列车的终点站，嘉禾望岗。请全部乘客带齐行李物品在此站下车，欢迎再次乘坐广州地铁。 |
-| voice.terminal.l2n.yue | yue | 下一站系本次列车嘅终点站，嘉禾望岗。请全部乘客带齐行李物品喺呢一站落车，欢迎再次乘坐广州地铁。 |
-| voice.terminal.l2n.en | en | The next station is Jiahewanggang, the terminal of this journey. Please take all your belongings and leave the train. Thank you for travelling on Guangzhou Metro. |
-| voice.platform.l2n.1.zh | zh | 一站台，嘉禾望岗方向列车即将进站。 |
-| voice.platform.l2n.1.yue | yue | 一站台，嘉禾望岗方向列车即将进站。 |
-| voice.platform.l2n.1.en | en | The train bound for Jiahewanggang is approaching at Platform 1. |
-| voice.platform.l2n.2.zh | zh | 二站台，嘉禾望岗方向列车即将进站。 |
-| voice.platform.l2n.2.yue | yue | 二站台，嘉禾望岗方向列车即将进站。 |
-| voice.platform.l2n.2.en | en | The train bound for Jiahewanggang is approaching at Platform 2. |
-| voice.destination.l2s.zh | zh | 本次列车终点站为广州南站。 |
-| voice.destination.l2s.yue | yue | 本次列车终点站为广州南站。 |
-| voice.destination.l2s.en | en | The destination of this train is Guangzhou Nanzhan. |
-| voice.terminal.l2s.zh | zh | 下一站是本次列车的终点站，广州南站。请全部乘客带齐行李物品在此站下车，欢迎再次乘坐广州地铁。 |
-| voice.terminal.l2s.yue | yue | 下一站系本次列车嘅终点站，广州南站。请全部乘客带齐行李物品喺呢一站落车，欢迎再次乘坐广州地铁。 |
-| voice.terminal.l2s.en | en | The next station is Guangzhou Nanzhan, the terminal of this journey. Please take all your belongings and leave the train. Thank you for travelling on Guangzhou Metro. |
-| voice.platform.l2s.1.zh | zh | 一站台，广州南站方向列车即将进站。 |
-| voice.platform.l2s.1.yue | yue | 一站台，广州南站方向列车即将进站。 |
-| voice.platform.l2s.1.en | en | The train bound for Guangzhou Nanzhan is approaching at Platform 1. |
-| voice.platform.l2s.2.zh | zh | 二站台，广州南站方向列车即将进站。 |
-| voice.platform.l2s.2.yue | yue | 二站台，广州南站方向列车即将进站。 |
-| voice.platform.l2s.2.en | en | The train bound for Guangzhou Nanzhan is approaching at Platform 2. |
-| voice.arrive.gznz.zh | zh | 列车即将到达广州南站站，请小心列车与站台之间的空隙。 |
-| voice.arrive.gznz.yue | yue | 列车即将到达广州南站站，请小心列车同站台之间嘅空隙。 |
-| voice.arrive.gznz.en | en | The train is arriving at Guangzhou Nanzhan. Please mind the gap between the train and the platform. |
-| voice.welcome.gznz.zh | zh | 欢迎光临广州南站站。请排队候车，先下后上。 |
-| voice.welcome.gznz.yue | yue | 欢迎光临广州南站站。请排队候车，先落后上。 |
-| voice.welcome.gznz.en | en | Welcome to Guangzhou Nanzhan station. Please line up for the train. Let the passengers get off first before you get on. |
-| voice.next.sb.zh | zh | 下一站，石壁，可换乘七号线。 |
-| voice.next.sb.yue | yue | 下一站，石壁，可换乘七号线。 |
-| voice.next.sb.en | en | The next station is Shibi, the interchange with Line Seven. |
-| voice.arrive.sb.zh | zh | 列车即将到达石壁站，请小心列车与站台之间的空隙。 |
-| voice.arrive.sb.yue | yue | 列车即将到达石壁站，请小心列车同站台之间嘅空隙。 |
-| voice.arrive.sb.en | en | The train is arriving at Shibi. Please mind the gap between the train and the platform. |
-| voice.welcome.sb.zh | zh | 欢迎光临石壁站。请排队候车，先下后上。 |
-| voice.welcome.sb.yue | yue | 欢迎光临石壁站。请排队候车，先落后上。 |
-| voice.welcome.sb.en | en | Welcome to Shibi station. Please line up for the train. Let the passengers get off first before you get on. |
-| voice.next.hj.zh | zh | 下一站，会江。 |
-| voice.next.hj.yue | yue | 下一站，会江。 |
-| voice.next.hj.en | en | The next station is Huijiang. |
-| voice.arrive.hj.zh | zh | 列车即将到达会江站，请小心列车与站台之间的空隙。 |
-| voice.arrive.hj.yue | yue | 列车即将到达会江站，请小心列车同站台之间嘅空隙。 |
-| voice.arrive.hj.en | en | The train is arriving at Huijiang. Please mind the gap between the train and the platform. |
-| voice.welcome.hj.zh | zh | 欢迎光临会江站。请排队候车，先下后上。 |
-| voice.welcome.hj.yue | yue | 欢迎光临会江站。请排队候车，先落后上。 |
-| voice.welcome.hj.en | en | Welcome to Huijiang station. Please line up for the train. Let the passengers get off first before you get on. |
-| voice.next.np.zh | zh | 下一站，南浦。 |
-| voice.next.np.yue | yue | 下一站，南浦。 |
-| voice.next.np.en | en | The next station is Nanpu. |
-| voice.arrive.np.zh | zh | 列车即将到达南浦站，请小心列车与站台之间的空隙。 |
-| voice.arrive.np.yue | yue | 列车即将到达南浦站，请小心列车同站台之间嘅空隙。 |
-| voice.arrive.np.en | en | The train is arriving at Nanpu. Please mind the gap between the train and the platform. |
-| voice.welcome.np.zh | zh | 欢迎光临南浦站。请排队候车，先下后上。 |
-| voice.welcome.np.yue | yue | 欢迎光临南浦站。请排队候车，先落后上。 |
-| voice.welcome.np.en | en | Welcome to Nanpu station. Please line up for the train. Let the passengers get off first before you get on. |
-| voice.next.lx.zh | zh | 下一站，洛溪。 |
-| voice.next.lx.yue | yue | 下一站，洛溪。 |
-| voice.next.lx.en | en | The next station is Luoxi. |
-| voice.arrive.lx.zh | zh | 列车即将到达洛溪站，请小心列车与站台之间的空隙。 |
-| voice.arrive.lx.yue | yue | 列车即将到达洛溪站，请小心列车同站台之间嘅空隙。 |
-| voice.arrive.lx.en | en | The train is arriving at Luoxi. Please mind the gap between the train and the platform. |
-| voice.welcome.lx.zh | zh | 欢迎光临洛溪站。请排队候车，先下后上。 |
-| voice.welcome.lx.yue | yue | 欢迎光临洛溪站。请排队候车，先落后上。 |
-| voice.welcome.lx.en | en | Welcome to Luoxi station. Please line up for the train. Let the passengers get off first before you get on. |
-| voice.next.nz.zh | zh | 下一站，南洲，可换乘广佛线。 |
-| voice.next.nz.yue | yue | 下一站，南洲，可换乘广佛线。 |
-| voice.next.nz.en | en | The next station is Nanzhou, the interchange with the Guangfo Line. |
-| voice.arrive.nz.zh | zh | 列车即将到达南洲站，请小心列车与站台之间的空隙。 |
-| voice.arrive.nz.yue | yue | 列车即将到达南洲站，请小心列车同站台之间嘅空隙。 |
-| voice.arrive.nz.en | en | The train is arriving at Nanzhou. Please mind the gap between the train and the platform. |
-| voice.welcome.nz.zh | zh | 欢迎光临南洲站。请排队候车，先下后上。 |
-| voice.welcome.nz.yue | yue | 欢迎光临南洲站。请排队候车，先落后上。 |
-| voice.welcome.nz.en | en | Welcome to Nanzhou station. Please line up for the train. Let the passengers get off first before you get on. |
-| voice.next.dxn.zh | zh | 下一站，东晓南，可换乘十号线。 |
-| voice.next.dxn.yue | yue | 下一站，东晓南，可换乘十号线。 |
-| voice.next.dxn.en | en | The next station is Dongxiaonan, the interchange with Line Ten. |
-| voice.arrive.dxn.zh | zh | 列车即将到达东晓南站，请小心列车与站台之间的空隙。 |
-| voice.arrive.dxn.yue | yue | 列车即将到达东晓南站，请小心列车同站台之间嘅空隙。 |
-| voice.arrive.dxn.en | en | The train is arriving at Dongxiaonan. Please mind the gap between the train and the platform. |
-| voice.welcome.dxn.zh | zh | 欢迎光临东晓南站。请排队候车，先下后上。 |
-| voice.welcome.dxn.yue | yue | 欢迎光临东晓南站。请排队候车，先落后上。 |
-| voice.welcome.dxn.en | en | Welcome to Dongxiaonan station. Please line up for the train. Let the passengers get off first before you get on. |
-| voice.next.jtl.zh | zh | 下一站，江泰路，可换乘十一号线。 |
-| voice.next.jtl.yue | yue | 下一站，江泰路，可换乘十一号线。 |
-| voice.next.jtl.en | en | The next station is Jiangtai Lu, the interchange with Line Eleven. |
 | voice.arrive.jtl.zh | zh | 列车即将到达江泰路站，请小心列车与站台之间的空隙。 |
 | voice.arrive.jtl.yue | yue | 列车即将到达江泰路站，请小心列车同站台之间嘅空隙。 |
 | voice.arrive.jtl.en | en | The train is arriving at Jiangtai Lu. Please mind the gap between the train and the platform. |
