@@ -26,7 +26,7 @@
  {
   "id": "voice.terminal.up.yue",
   "lang": "yue",
-  "text": "下一站系本次列车嘅终点站，广州东站。请全部乘客带齐行李物品喺呢一站落车，欢迎再次乘坐广州地铁。",
+  "text": "下一站系本次列车的终点站，广州东站。请全部乘客带齐行李物品在本站落车，欢迎再次乘坐广州地铁。",
   "file": "voice/terminal-up-yue.mp3"
  },
  {
@@ -98,7 +98,7 @@
  {
   "id": "voice.terminal.down.yue",
   "lang": "yue",
-  "text": "下一站系本次列车嘅终点站，西塱。请全部乘客带齐行李物品喺呢一站落车，欢迎再次乘坐广州地铁。",
+  "text": "下一站系本次列车的终点站，西塱。请全部乘客带齐行李物品在本站落车，欢迎再次乘坐广州地铁。",
   "file": "voice/terminal-down-yue.mp3"
  },
  {
@@ -152,7 +152,7 @@
  {
   "id": "voice.arrive.xl.yue",
   "lang": "yue",
-  "text": "列车即将到达西塱站，请小心列车同站台之间嘅空隙。",
+  "text": "列车即将到达西塱站，请小心列车同站台之间的空隙。",
   "file": "voice/arrive-xl-yue.mp3"
  },
  {
@@ -206,7 +206,7 @@
  {
   "id": "voice.arrive.kk.yue",
   "lang": "yue",
-  "text": "列车即将到达坑口站，请小心列车同站台之间嘅空隙。",
+  "text": "列车即将到达坑口站，请小心列车同站台之间的空隙。",
   "file": "voice/arrive-kk-yue.mp3"
  },
  {
@@ -260,7 +260,7 @@
  {
   "id": "voice.arrive.hdw.yue",
   "lang": "yue",
-  "text": "列车即将到达花地湾站，请小心列车同站台之间嘅空隙。",
+  "text": "列车即将到达花地湾站，请小心列车同站台之间的空隙。",
   "file": "voice/arrive-hdw-yue.mp3"
  },
  {
@@ -314,7 +314,7 @@
  {
   "id": "voice.arrive.fc.yue",
   "lang": "yue",
-  "text": "列车即将到达芳村站，请小心列车同站台之间嘅空隙。",
+  "text": "列车即将到达芳村站，请小心列车同站台之间的空隙。",
   "file": "voice/arrive-fc-yue.mp3"
  },
  {
@@ -368,7 +368,7 @@
  {
   "id": "voice.arrive.hs.yue",
   "lang": "yue",
-  "text": "列车即将到达黄沙站，请小心列车同站台之间嘅空隙。",
+  "text": "列车即将到达黄沙站，请小心列车同站台之间的空隙。",
   "file": "voice/arrive-hs-yue.mp3"
  },
  {
@@ -422,7 +422,7 @@
  {
   "id": "voice.arrive.csl.yue",
   "lang": "yue",
-  "text": "列车即将到达长寿路站，请小心列车同站台之间嘅空隙。",
+  "text": "列车即将到达长寿路站，请小心列车同站台之间的空隙。",
   "file": "voice/arrive-csl-yue.mp3"
  },
  {
@@ -476,7 +476,7 @@
  {
   "id": "voice.arrive.cjc.yue",
   "lang": "yue",
-  "text": "列车即将到达陈家祠站，请小心列车同站台之间嘅空隙。",
+  "text": "列车即将到达陈家祠站，请小心列车同站台之间的空隙。",
   "file": "voice/arrive-cjc-yue.mp3"
  },
  {
@@ -530,7 +530,7 @@
  {
   "id": "voice.arrive.xmk.yue",
   "lang": "yue",
-  "text": "列车即将到达西门口站，请小心列车同站台之间嘅空隙。",
+  "text": "列车即将到达西门口站，请小心列车同站台之间的空隙。",
   "file": "voice/arrive-xmk-yue.mp3"
  },
  {
@@ -584,7 +584,7 @@
  {
   "id": "voice.transfer.gyq.yue",
   "lang": "yue",
-  "text": "请由列车前进方向嘅右门落车，中部楼梯换乘二号线。",
+  "text": "请由列车前进方向的右门落车，中部楼梯换乘二号线。",
   "file": "voice/transfer-gyq-yue.mp3"
  },
  {
@@ -602,7 +602,7 @@
  {
   "id": "voice.arrive.gyq.yue",
   "lang": "yue",
-  "text": "列车即将到达公园前站，请小心列车同站台之间嘅空隙。",
+  "text": "列车即将到达公园前站，请小心列车同站台之间的空隙。",
   "file": "voice/arrive-gyq-yue.mp3"
  },
  {
@@ -656,7 +656,7 @@
  {
   "id": "voice.arrive.njs.yue",
   "lang": "yue",
-  "text": "列车即将到达农讲所站，请小心列车同站台之间嘅空隙。",
+  "text": "列车即将到达农讲所站，请小心列车同站台之间的空隙。",
   "file": "voice/arrive-njs-yue.mp3"
  },
  {
@@ -710,7 +710,7 @@
  {
   "id": "voice.arrive.lsly.yue",
   "lang": "yue",
-  "text": "列车即将到达烈士陵园站，请小心列车同站台之间嘅空隙。",
+  "text": "列车即将到达烈士陵园站，请小心列车同站台之间的空隙。",
   "file": "voice/arrive-lsly-yue.mp3"
  },
  {
@@ -764,7 +764,7 @@
  {
   "id": "voice.arrive.dsk.yue",
   "lang": "yue",
-  "text": "列车即将到达东山口站，请小心列车同站台之间嘅空隙。",
+  "text": "列车即将到达东山口站，请小心列车同站台之间的空隙。",
   "file": "voice/arrive-dsk-yue.mp3"
  },
  {
@@ -818,7 +818,7 @@
  {
   "id": "voice.arrive.yj.yue",
   "lang": "yue",
-  "text": "列车即将到达杨箕站，请小心列车同站台之间嘅空隙。",
+  "text": "列车即将到达杨箕站，请小心列车同站台之间的空隙。",
   "file": "voice/arrive-yj-yue.mp3"
  },
  {
@@ -872,7 +872,7 @@
  {
   "id": "voice.arrive.tyxl.yue",
   "lang": "yue",
-  "text": "列车即将到达体育西路站，请小心列车同站台之间嘅空隙。",
+  "text": "列车即将到达体育西路站，请小心列车同站台之间的空隙。",
   "file": "voice/arrive-tyxl-yue.mp3"
  },
  {
@@ -926,7 +926,7 @@
  {
   "id": "voice.arrive.tyzx.yue",
   "lang": "yue",
-  "text": "列车即将到达体育中心站，请小心列车同站台之间嘅空隙。",
+  "text": "列车即将到达体育中心站，请小心列车同站台之间的空隙。",
   "file": "voice/arrive-tyzx-yue.mp3"
  },
  {
@@ -962,7 +962,7 @@
  {
   "id": "voice.arrive.gzdz.yue",
   "lang": "yue",
-  "text": "列车即将到达广州东站，请小心列车同站台之间嘅空隙。",
+  "text": "列车即将到达广州东站，请小心列车同站台之间的空隙。",
   "file": "voice/arrive-gzdz-yue.mp3"
  },
  {
@@ -1016,7 +1016,7 @@
  {
   "id": "voice.terminal.l2n.yue",
   "lang": "yue",
-  "text": "下一站系本次列车嘅终点站，嘉禾望岗。请全部乘客带齐行李物品喺呢一站落车，欢迎再次乘坐广州地铁。",
+  "text": "下一站系本次列车的终点站，嘉禾望岗。请全部乘客带齐行李物品在本站落车，欢迎再次乘坐广州地铁。",
   "file": "voice/terminal-l2n-yue.mp3"
  },
  {
@@ -1088,7 +1088,7 @@
  {
   "id": "voice.terminal.l2s.yue",
   "lang": "yue",
-  "text": "下一站系本次列车嘅终点站，广州南站。请全部乘客带齐行李物品喺呢一站落车，欢迎再次乘坐广州地铁。",
+  "text": "下一站系本次列车的终点站，广州南站。请全部乘客带齐行李物品在本站落车，欢迎再次乘坐广州地铁。",
   "file": "voice/terminal-l2s-yue.mp3"
  },
  {
@@ -1142,7 +1142,7 @@
  {
   "id": "voice.arrive.gznz.yue",
   "lang": "yue",
-  "text": "列车即将到达广州南站，请小心列车同站台之间嘅空隙。",
+  "text": "列车即将到达广州南站，请小心列车同站台之间的空隙。",
   "file": "voice/arrive-gznz-yue.mp3"
  },
  {
@@ -1196,7 +1196,7 @@
  {
   "id": "voice.arrive.sb.yue",
   "lang": "yue",
-  "text": "列车即将到达石壁站，请小心列车同站台之间嘅空隙。",
+  "text": "列车即将到达石壁站，请小心列车同站台之间的空隙。",
   "file": "voice/arrive-sb-yue.mp3"
  },
  {
@@ -1250,7 +1250,7 @@
  {
   "id": "voice.arrive.hj.yue",
   "lang": "yue",
-  "text": "列车即将到达会江站，请小心列车同站台之间嘅空隙。",
+  "text": "列车即将到达会江站，请小心列车同站台之间的空隙。",
   "file": "voice/arrive-hj-yue.mp3"
  },
  {
@@ -1304,7 +1304,7 @@
  {
   "id": "voice.arrive.np.yue",
   "lang": "yue",
-  "text": "列车即将到达南浦站，请小心列车同站台之间嘅空隙。",
+  "text": "列车即将到达南浦站，请小心列车同站台之间的空隙。",
   "file": "voice/arrive-np-yue.mp3"
  },
  {
@@ -1358,7 +1358,7 @@
  {
   "id": "voice.arrive.lx.yue",
   "lang": "yue",
-  "text": "列车即将到达洛溪站，请小心列车同站台之间嘅空隙。",
+  "text": "列车即将到达洛溪站，请小心列车同站台之间的空隙。",
   "file": "voice/arrive-lx-yue.mp3"
  },
  {
@@ -1412,7 +1412,7 @@
  {
   "id": "voice.arrive.nz.yue",
   "lang": "yue",
-  "text": "列车即将到达南洲站，请小心列车同站台之间嘅空隙。",
+  "text": "列车即将到达南洲站，请小心列车同站台之间的空隙。",
   "file": "voice/arrive-nz-yue.mp3"
  },
  {
@@ -1466,7 +1466,7 @@
  {
   "id": "voice.arrive.dxn.yue",
   "lang": "yue",
-  "text": "列车即将到达东晓南站，请小心列车同站台之间嘅空隙。",
+  "text": "列车即将到达东晓南站，请小心列车同站台之间的空隙。",
   "file": "voice/arrive-dxn-yue.mp3"
  },
  {
@@ -1520,7 +1520,7 @@
  {
   "id": "voice.arrive.jtl.yue",
   "lang": "yue",
-  "text": "列车即将到达江泰路站，请小心列车同站台之间嘅空隙。",
+  "text": "列车即将到达江泰路站，请小心列车同站台之间的空隙。",
   "file": "voice/arrive-jtl-yue.mp3"
  },
  {
@@ -1574,7 +1574,7 @@
  {
   "id": "voice.arrive.cg.yue",
   "lang": "yue",
-  "text": "列车即将到达昌岗站，请小心列车同站台之间嘅空隙。",
+  "text": "列车即将到达昌岗站，请小心列车同站台之间的空隙。",
   "file": "voice/arrive-cg-yue.mp3"
  },
  {
@@ -1628,7 +1628,7 @@
  {
   "id": "voice.arrive.jnx.yue",
   "lang": "yue",
-  "text": "列车即将到达江南西站，请小心列车同站台之间嘅空隙。",
+  "text": "列车即将到达江南西站，请小心列车同站台之间的空隙。",
   "file": "voice/arrive-jnx-yue.mp3"
  },
  {
@@ -1682,7 +1682,7 @@
  {
   "id": "voice.arrive.seg.yue",
   "lang": "yue",
-  "text": "列车即将到达市二宫站，请小心列车同站台之间嘅空隙。",
+  "text": "列车即将到达市二宫站，请小心列车同站台之间的空隙。",
   "file": "voice/arrive-seg-yue.mp3"
  },
  {
@@ -1736,7 +1736,7 @@
  {
   "id": "voice.arrive.hzgc.yue",
   "lang": "yue",
-  "text": "列车即将到达海珠广场站，请小心列车同站台之间嘅空隙。",
+  "text": "列车即将到达海珠广场站，请小心列车同站台之间的空隙。",
   "file": "voice/arrive-hzgc-yue.mp3"
  },
  {
@@ -1808,7 +1808,7 @@
  {
   "id": "voice.arrive.jnt.yue",
   "lang": "yue",
-  "text": "列车即将到达纪念堂站，请小心列车同站台之间嘅空隙。",
+  "text": "列车即将到达纪念堂站，请小心列车同站台之间的空隙。",
   "file": "voice/arrive-jnt-yue.mp3"
  },
  {
@@ -1862,7 +1862,7 @@
  {
   "id": "voice.arrive.yxgy.yue",
   "lang": "yue",
-  "text": "列车即将到达越秀公园站，请小心列车同站台之间嘅空隙。",
+  "text": "列车即将到达越秀公园站，请小心列车同站台之间的空隙。",
   "file": "voice/arrive-yxgy-yue.mp3"
  },
  {
@@ -1916,7 +1916,7 @@
  {
   "id": "voice.arrive.gzhcz.yue",
   "lang": "yue",
-  "text": "列车即将到达广州火车站，请小心列车同站台之间嘅空隙。",
+  "text": "列车即将到达广州火车站，请小心列车同站台之间的空隙。",
   "file": "voice/arrive-gzhcz-yue.mp3"
  },
  {
@@ -1970,7 +1970,7 @@
  {
   "id": "voice.arrive.syl.yue",
   "lang": "yue",
-  "text": "列车即将到达三元里站，请小心列车同站台之间嘅空隙。",
+  "text": "列车即将到达三元里站，请小心列车同站台之间的空隙。",
   "file": "voice/arrive-syl-yue.mp3"
  },
  {
@@ -2024,7 +2024,7 @@
  {
   "id": "voice.arrive.fxgy.yue",
   "lang": "yue",
-  "text": "列车即将到达飞翔公园站，请小心列车同站台之间嘅空隙。",
+  "text": "列车即将到达飞翔公园站，请小心列车同站台之间的空隙。",
   "file": "voice/arrive-fxgy-yue.mp3"
  },
  {
@@ -2078,7 +2078,7 @@
  {
   "id": "voice.arrive.bygy.yue",
   "lang": "yue",
-  "text": "列车即将到达白云公园站，请小心列车同站台之间嘅空隙。",
+  "text": "列车即将到达白云公园站，请小心列车同站台之间的空隙。",
   "file": "voice/arrive-bygy-yue.mp3"
  },
  {
@@ -2132,7 +2132,7 @@
  {
   "id": "voice.arrive.bywhgc.yue",
   "lang": "yue",
-  "text": "列车即将到达白云文化广场站，请小心列车同站台之间嘅空隙。",
+  "text": "列车即将到达白云文化广场站，请小心列车同站台之间的空隙。",
   "file": "voice/arrive-bywhgc-yue.mp3"
  },
  {
@@ -2186,7 +2186,7 @@
  {
   "id": "voice.arrive.xg.yue",
   "lang": "yue",
-  "text": "列车即将到达萧岗站，请小心列车同站台之间嘅空隙。",
+  "text": "列车即将到达萧岗站，请小心列车同站台之间的空隙。",
   "file": "voice/arrive-xg-yue.mp3"
  },
  {
@@ -2240,7 +2240,7 @@
  {
   "id": "voice.arrive.jx.yue",
   "lang": "yue",
-  "text": "列车即将到达江夏站，请小心列车同站台之间嘅空隙。",
+  "text": "列车即将到达江夏站，请小心列车同站台之间的空隙。",
   "file": "voice/arrive-jx-yue.mp3"
  },
  {
@@ -2294,7 +2294,7 @@
  {
   "id": "voice.arrive.hb.yue",
   "lang": "yue",
-  "text": "列车即将到达黄边站，请小心列车同站台之间嘅空隙。",
+  "text": "列车即将到达黄边站，请小心列车同站台之间的空隙。",
   "file": "voice/arrive-hb-yue.mp3"
  },
  {
@@ -2330,7 +2330,7 @@
  {
   "id": "voice.arrive.jhwg.yue",
   "lang": "yue",
-  "text": "列车即将到达嘉禾望岗站，请小心列车同站台之间嘅空隙。",
+  "text": "列车即将到达嘉禾望岗站，请小心列车同站台之间的空隙。",
   "file": "voice/arrive-jhwg-yue.mp3"
  },
  {
@@ -2384,7 +2384,7 @@
  {
   "id": "voice.gap.yue",
   "lang": "yue",
-  "text": "请小心列车同站台之间嘅空隙。",
+  "text": "请小心列车同站台之间的空隙。",
   "file": "voice/gap-yue.mp3"
  },
  {
@@ -2402,7 +2402,7 @@
  {
   "id": "voice.safety.queue.yue",
   "lang": "yue",
-  "text": "请唔好行出黄色安全线，请按地面标识排队候车。",
+  "text": "请勿越出黄色安全线，请按地面标识排队候车。",
   "file": "voice/safety-queue-yue.mp3"
  },
  {
@@ -2414,7 +2414,7 @@
  {
   "id": "voice.safety.psd.yue",
   "lang": "yue",
-  "text": "请唔好用手或者身体挨住屏蔽门、安全门。",
+  "text": "请勿用手或者身体挨住屏蔽门、安全门。",
   "file": "voice/safety-psd-yue.mp3"
  },
  {
@@ -2426,7 +2426,7 @@
  {
   "id": "voice.safety.escalator.yue",
   "lang": "yue",
-  "text": "请企稳，握紧黑色扶手带，唔好喺扶梯口停留。",
+  "text": "请企稳，握紧黑色扶手带，请勿在扶梯口停留。",
   "file": "voice/safety-escalator-yue.mp3"
  },
  {
@@ -2438,7 +2438,7 @@
  {
   "id": "voice.safety.walk.yue",
   "lang": "yue",
-  "text": "喺车站行路请留意地面情况，唔好奔跑同追逐。",
+  "text": "在车站行路请留意地面情况，请勿奔跑同追逐。",
   "file": "voice/safety-walk-yue.mp3"
  }
 ]
