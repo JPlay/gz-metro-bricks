@@ -1,10 +1,12 @@
 /*
- * 玩家：圆润低多边形小朋友（蓝 T 恤、红帽子、小书包），骨骼蒙皮 + 程序化动画（待机 / 走 / 跑 / 跳）。
+ * 玩家：8 岁小男孩的玩具版（蜂蜜金锅盖头、粉镜片圆眼镜、灰 T 恤、星星阔腿裤、洞洞鞋、挂绳卡套、白书包，见 hero.js），
+ *   骨骼蒙皮 + 程序化动画（待机 / 走 / 跑 / 跳 / 坐 / 🤘打招呼 / “努力！”到站庆祝）。
  * 物理：Babylon 内置椭球碰撞 + 自己算重力/跳跃（与旧版一致）。
  * 第一人称：镜头在眼睛高度，走路时轻微头部起伏；第三人称：镜头在身后平滑跟随，射线检测防穿墙，双指捏合调距离。
  */
 import { CONFIG } from '../core/config.js';
-import { Person, randomLook, preseed, makeBlob } from '../world/people.js';
+import { makeBlob } from '../world/people.js';
+import { Hero } from './hero.js';
 const B = window.BABYLON;
 const EYE = 1.38, EYE_SIT = 1.1, SEAT_HIP = 0.55, FOV_FIRST = 1.0, FOV_THIRD = 0.92;
 
@@ -20,13 +22,13 @@ export class Player {
     this.buildModel(mats); camera.fov = FOV_THIRD;
   }
   buildModel(M) {
-    preseed(2024);
-    const look = randomLook({ kid: true, fem: false, top: '#3FA9F5', bottom: '#2F4C8C', shoes: '#F4F4F2', hair: '#3A2618', hairStyle: 'short', cap: true, capCol: '#E8453C', bag: 'backpack', bagCol: '#F5B841', shorts: true, longSleeve: false, glasses: false, scale: 1.04 });
-    this.person = new Person(this.scene, M.paint, look, { name: 'kid' });
+    this.person = new Hero(this.scene, M.paint, { name: 'kid' });
     this.model = this.person.mesh;
     // 脚下的圆形软阴影（实时阴影只在最高画质档开）
     this.blob = makeBlob(this.scene, M, 'kidBlob', 0.44, 0.78); this.groundY = 0;
   }
+  /** 到站下车庆祝：下次站定时（6 秒内）转向镜头，两只拳头举起“努力！” */
+  celebrate() { this.cheerPending = 6; }
   meshes() { return [this.person.mesh]; }
   /** 坐下：seat = 列车座位（局部 x、侧 sd）。髋部对齐座垫，与烘焙乘客同一公式：脚底 y = 0.55 − 髋高 */
   sit(train, seat) {
@@ -99,6 +101,10 @@ export class Player {
     this.walkPhase += dt * (this.speed * 2.6 + 0.001);
     let mode = !this.grounded && this.airTime > 0.08 ? 'jump' : this.speed > 4.4 ? 'run' : this.speed > 0.35 ? 'walk' : 'idle';
     // 打招呼：站着不动时转向对方、挥手（emote = { mode, yaw, t }，一走动就停）
+    if (this.cheerPending > 0) {
+      this.cheerPending -= dt;
+      if (mode === 'idle' && !(this.emote && this.emote.t > 0)) { this.cheerPending = 0; this.emote = { mode: 'cheer', yaw: this.view === 'third' ? this.yaw + Math.PI : this.facing, t: 2.4 }; }
+    }
     const em = this.emote;
     if (em && em.t > 0) { em.t -= dt; if (mode === 'idle') { mode = em.mode; let d = em.yaw - this.facing; d = Math.atan2(Math.sin(d), Math.cos(d)); this.facing += d * Math.min(1, dt * 8); } else em.t = 0; }
     this.person.animate(dt, { mode, speed: this.speed });

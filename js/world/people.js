@@ -185,11 +185,12 @@ export function makeBlob(scene, M, name = 'blob', r = 0.42, a = 0.78) {
 }
 /** 可动的人（1 个蒙皮网格） */
 export class Person {
-  constructor(scene, mat, look, { name = 'npc', parent } = {}) {
+  constructor(scene, mat, look, { name = 'npc', parent, build } = {}) {
     const L = this.look = look.fem !== undefined ? look : randomLook(look);
-    const defs = this.defs = boneDefs(L), restAbs = fk(defs);
+    // build = { defs(L), parts(L) }：给玩家主角用的自定义骨骼 / 几何（NPC 不传，走默认）
+    const defs = this.defs = build ? build.defs(L) : boneDefs(L), restAbs = fk(defs);
     const g = new Geo().withBones();
-    for (const { bone, g: pg } of parts(L)) { g.bone = bone; g.merge(pg, restAbs[bone]); }
+    for (const { bone, g: pg } of (build ? build.parts(L) : parts(L))) { g.bone = bone; g.merge(pg, restAbs[bone]); }
     const sk = this.skeleton = new B.Skeleton(name + 'Sk', name + 'Sk' + Math.random(), scene);
     const bones = this._b = [];
     defs.forEach(b => bones.push(new B.Bone(b.n, sk, b.p < 0 ? null : bones[b.p], B.Matrix.Translation(...b.o))));
