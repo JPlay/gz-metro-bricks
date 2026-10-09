@@ -93,7 +93,7 @@ function parts(L) {
     sp.box(0, d.torso * 0.62, d.chestD * 0.56, 0.05, d.torso * 0.5, 0.014, hex(L.tie), 0, 0, 0, 1, { ao: false });
     sp.box(0, d.torso * 0.88, d.chestD * 0.54, 0.06, 0.05, 0.02, hex(L.tie), 0, 0, 0, 1, { ao: false });
   } else if (prnd() < 0.5) sp.box(0, d.torso * 0.64, d.chestD * 0.52, d.chestW * 0.3, d.chestW * 0.2, 0.01, mix(top, [1, 1, 1], 0.32), 0, 0, 0, 1, { ao: false }); // 胸前图案
-  if (L.role === 'student') for (const sx of [-1, 1]) sp.box(sx * d.chestW * 0.98, d.torso * 0.5, 0, 0.012, d.torso * 0.9, 0.05, hex('#1F4E9C'), 0, 0, 0, 1, { ao: false }); // 校服侧边蓝条
+  if (L.role === 'student') for (const sx of [-1, 1]) sp.box(sx * d.chestW * 0.42, d.torso * 0.5, d.chestD * 0.5 + 0.004, 0.035, d.torso * 0.8, 0.01, hex('#1F4E9C'), 0, 0, 0, 1, { ao: false }); // 校服前襟两条蓝边（以前 x 用了整个胸宽，蓝条飘在身体外面）
   if (L.prop === 'camera') { // 胸前挂相机 + 背带
     sp.rbox(0, d.torso * 0.48, d.chestD * 0.62 + 0.04, 0.16, 0.1, 0.07, '#2B2D31', 0.02, 0, { ao: false });
     sp.cyl(0.02, d.torso * 0.48 + 0.05, d.chestD * 0.62 + 0.1, 0.07, 0.06, '#1B1D20', 12, 0, Math.PI / 2, 0);
