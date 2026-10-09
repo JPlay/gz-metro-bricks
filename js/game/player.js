@@ -6,7 +6,7 @@
 import { CONFIG } from '../core/config.js';
 import { Person, randomLook, preseed, makeBlob } from '../world/people.js';
 const B = window.BABYLON;
-const EYE = 1.38, FOV_FIRST = 1.0, FOV_THIRD = 0.92;
+const EYE = 1.38, EYE_SIT = 1.1, SEAT_HIP = 0.55, FOV_FIRST = 1.0, FOV_THIRD = 0.92;
 
 export class Player {
   constructor(scene, mats, camera) {
@@ -28,6 +28,25 @@ export class Player {
     this.blob = makeBlob(this.scene, M, 'kidBlob', 0.44, 0.78); this.groundY = 0;
   }
   meshes() { return [this.person.mesh]; }
+  /** 坐下：seat = 列车座位（局部 x、侧 sd）。髋部对齐座垫，与烘焙乘客同一公式：脚底 y = 0.55 − 髋高 */
+  sit(train, seat) {
+    this.seat = { train, seat }; this.vel.set(0, 0, 0); this.vy = 0; this.speed = 0;
+    this.facing = seat.sd > 0 ? Math.PI : 0; this.yaw = this.facing; this.pitch = this.view === 'first' ? 0.02 : 0.12;
+    this.placeSeat();
+  }
+  hipH() { return (this.person.look.kid ? 0.6 : 0.86) * this.person.look.scale; }
+  placeSeat() { const { train, seat } = this.seat, r = train.root.position; this.position.set(r.x + seat.x, r.y + SEAT_HIP - this.hipH(), r.z + seat.sd * 1.2); }
+  /** 贴回座位并同步模型 / 影子（列车移动之后也要调用一次，避免慢一帧） */
+  syncSeat() {
+    if (!this.seat) return;
+    this.placeSeat(); this.collider.computeWorldMatrix(true); this.groundY = this.position.y;
+    const p = this.position; this.model.position.set(p.x, p.y, p.z); this.model.rotation.y = this.facing;
+    this.blob.position.set(p.x, this.seat.train.root.position.y + 0.02, p.z); this.blob.scaling.set(0.8, 1, 0.8); this.blob.visibility = 0.55;
+  }
+  standUp() {
+    const { train, seat } = this.seat, r = train.root.position; this.seat = null;
+    this.position.set(r.x + seat.x, r.y + 0.05, r.z + seat.sd * 0.5); this.vy = 0; this.grounded = true; this.groundY = r.y; this.collider.computeWorldMatrix(true);
+  }
   spawn(x, y, z, yaw) { this.position.set(x, y, z); this.groundY = y; this.camY = this.eyeY = undefined; this.yaw = this.facing = yaw; this.vy = 0; this.pitch = 0.05; this.collider.computeWorldMatrix(true); }
   /** 主更新：inp = Input.read() 的结果，extra = 额外水平位移（扶梯） */
   update(dt, inp, extra) {
@@ -36,6 +55,15 @@ export class Player {
     // 第三人称俯仰夹在舒适跟随时：最高约 32°，避免被拖成接近垂直的顶视
     const pmin = this.view === 'first' ? -1.35 : -0.35, pmax = this.view === 'first' ? 1.35 : 0.55;
     this.pitch = Math.max(pmin, Math.min(pmax, this.pitch));
+    if (this.seat) {
+      // 坐着：不走、不受重力，每帧贴回座位（列车移动由 Metro 带着走）；跳键 = 起身
+      if (inp.jump && this.onStandRequest) this.onStandRequest();
+      else {
+        this.person.animate(dt, { mode: 'sit' }); this.grounded = true; this.moving = false; this.speed = 0; this.airTime = 0;
+        this.syncSeat();
+        return;
+      }
+    }
     if (inp.pinch && this.view === 'third') this.dist = Math.max(1.8, Math.min(9, this.dist - inp.pinch * 0.02));
     // 水平速度
     const mag = Math.min(1, Math.hypot(inp.mx, inp.my));
@@ -86,7 +114,10 @@ export class Player {
       const ph = this.person.phase || this.walkPhase, bob = Math.abs(Math.sin(ph)) * 0.035 * this.bobK, sway = Math.sin(ph) * 0.012 * this.bobK;
       this.eyeY = this.eyeY === undefined ? p.y : this.eyeY + (p.y - this.eyeY) * Math.min(1, dt * 18);
       if (Math.abs(this.eyeY - p.y) > 0.6) this.eyeY = p.y;
-      cam.position.set(p.x + Math.sin(this.yaw) * 0.12 + Math.cos(this.yaw) * sway, this.eyeY + EYE + bob, p.z + Math.cos(this.yaw) * 0.12 - Math.sin(this.yaw) * sway);
+      // 坐下时第一人称眼高 ≈ 车厢地板上 1.1m（从脚底基准换算：座面高 − 髋高 + 眼高）
+      const eye = this.seat ? EYE_SIT - SEAT_HIP + this.hipH() : EYE;
+      this.eyeOff = this.eyeOff === undefined ? eye : this.eyeOff + (eye - this.eyeOff) * Math.min(1, dt * 6);
+      cam.position.set(p.x + Math.sin(this.yaw) * 0.12 + Math.cos(this.yaw) * sway, this.eyeY + this.eyeOff + bob, p.z + Math.cos(this.yaw) * 0.12 - Math.sin(this.yaw) * sway);
       this.model.setEnabled(false); this.blob.setEnabled(true);
     } else {
       // 竖直方向平滑（上下楼梯 / 跳跃时镜头不抖），水平方向紧跟（坐车时不拖影）

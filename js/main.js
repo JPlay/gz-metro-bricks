@@ -12,6 +12,7 @@ import { Player } from './game/player.js';
 import { Input, pressable } from './game/input.js';
 import { Metro } from './game/service.js';
 import { Tickets } from './game/ticket.js';
+import { SeatCtl } from './game/seat.js';
 import { TvmPanel } from './ui/tvm.js';
 import { mats } from './core/mats.js';
 import { Render } from './core/render.js';
@@ -46,6 +47,8 @@ export async function start() {
   });
   const player = new Player(scene, M, cam);
   const tickets = new Tickets({ hud, Audio, events, panel: new TvmPanel({ Audio }), scene, cam });
+  const seats = new SeatCtl({ player, metro: null, Audio, events });
+  player.onStandRequest = () => seats.stand();
   player.meshes().forEach(m => R.addShadowCaster(m));
   initCaptions();
   Audio.loadManifest().catch(e => console.warn('manifest', e));
@@ -55,6 +58,7 @@ export async function start() {
     player, Audio, events, buildStation: code => buildStation(code), onTunnel: v => { G.inTunnel = v; scene.fogMode = v ? B.Scene.FOGMODE_LINEAR : B.Scene.FOGMODE_NONE; },
     get zone() { return G.zone; }
   });
+  seats.metro = metro;
   metro.trains.forEach(t => t.shadowMeshes.forEach(m => R.addShadowCaster(m)));
   scene.fogColor = new B.Color3(0.08, 0.09, 0.11); scene.fogStart = 25; scene.fogEnd = 85;
 
@@ -129,9 +133,12 @@ export async function start() {
     const conv = G.station.conveyor(player.position);
     player.update(dt, inp, conv ? { x: conv * dt, z: 0 } : null);
     metro.update(dt);
+    player.syncSeat();
     player.updateCamera(dt, scene);
     G.station.update(dt, player, cam, Audio, metro);
-    hud.action(tickets.update(dt, G.station, player));
+    // 动作按钮：车厢里优先“坐下 / 起身”，否则售票机 / 闸机
+    const seatAct = seats.update(), ticketAct = tickets.update(dt, G.station, player);
+    hud.action(seatAct || ticketAct);
     // 区域 / 环境声 / 欢迎广播
     const p = player.position, aboard = metro.trains.some(t => t.root.isEnabled() && t.contains(p));
     G.zone = G.inTunnel ? { kind: 'tunnel' } : G.station.zoneOf(p); G.aboard = aboard || G.inTunnel;
@@ -195,13 +202,13 @@ export async function start() {
       babylon: { version: B.Engine.Version, source: window.__babylonSource, attempts: window.__babylonAttempts },
       drawCalls: (engine._drawCalls && engine._drawCalls.current) ?? null, activeMeshes: scene.getActiveMeshes().length, gates: G.station.gates.map(g => +g.f.toFixed(2)),
       security: G.station.security.flash > 0, probes: R.probes.length, atlas: G.station.kit.atlas ? { y: G.station.kit.atlas.y + G.station.kit.atlas.row, overflow: G.station.kit.atlas.overflow } : null, audio: Audio.getState(),
-      ticket: tickets.info(), act: hud.act ? { id: hud.act.id, label: hud.act.label } : null
+      ticket: tickets.info(), seat: seats.info(), act: hud.act ? { id: hud.act.id, label: hud.act.label } : null
     }),
     teleport: (x, y, z, yaw) => player.spawn(x, y, z, yaw ?? player.yaw),
     setMove: (x, y, run) => { input.virtual = (x || y) ? { x, y, run } : null; },
     look: (dx, dy) => { input.look.x += dx; input.look.y += dy; },
     jump: () => { input.jumpQueued = true; }, toggleView, toggleMute,
     autopilot: (pts, run) => new Promise(resolve => { G.auto = { pts, i: 0, time: 0, resolve, run }; }),
-    call: (line, step) => metro.call(line, step), act: doAct, tickets, metro, player, scene, engine, events, render: R
+    call: (line, step) => metro.call(line, step), act: doAct, tickets, seats, metro, player, scene, engine, events, render: R
   };
 }

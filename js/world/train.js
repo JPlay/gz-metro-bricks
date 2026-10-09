@@ -60,6 +60,7 @@ export class Train {
   build() {
     const k = this.kit, P = k.solid, Mt = k.metal, Gl = k.glow, Gs = k.g('tglass'), Sh = k.g('shell'), Ln = k.g('line'), Ac = k.g('accent'), Se = k.g('seat'), Gloss = k.g('gloss');
     preseed(this.id * 31 + 5);
+    this.seats = []; const taken = [];
     const band = (x0, x1, y0, y1, side, geo = Sh) => { for (const c of clip(OUT, y0, y1, side)) geo.extrudeX(c, x0, x1, WHITE); };
     const ibandI = (x0, x1, y0, y1, side) => { for (const c of clip(INN, y0, y1, side)) P.extrudeX(c, x0, x1, INT, { flip: true }); };
     const lower = (x0, x1, yTop) => {
@@ -101,7 +102,9 @@ export class Train {
           Se.rbox((qa + qb) / 2, 0.41, sd * 1.17, qb - qa, 0.07, 0.46, WHITE, 0.03, 0, { ao: false, bevel: 0.025 });
           Se.box((qa + qb) / 2, 0.74, sd * 1.37, qb - qa, 0.56, 0.05, WHITE, 0, sd * 0.12, 0, 1, { ao: false });
           Mt.slab(qa + 0.05, qb - 0.05, 0.02, 0.41, sd * 1.05, sd * 1.4, STEEL, { ao: false });
-          const nSeat = Math.round((qb - qa) / 0.5); for (let q = 1; q < nSeat; q++) P.slab(qa + (qb - qa) * q / nSeat - 0.006, qa + (qb - qa) * q / nSeat + 0.006, 0.47, 0.475, sd * 0.97, sd * 1.36, hex('#2A2E33'), { ao: false });
+          const nSeat = Math.round((qb - qa) / 0.5);
+          for (let q = 0; q < nSeat; q++) this.seats.push({ x: qa + (qb - qa) * (q + 0.5) / nSeat, sd });
+          for (let q = 1; q < nSeat; q++) P.slab(qa + (qb - qa) * q / nSeat - 0.006, qa + (qb - qa) * q / nSeat + 0.006, 0.47, 0.475, sd * 0.97, sd * 1.36, hex('#2A2E33'), { ao: false });
           k.col((qa + qb) / 2, 0.25, sd * 1.2, qb - qa, 0.5, 0.5, { parent: this.root, dynamic: true });
           // 横杆 + 三角吊环
           Mt.tube([qa, 1.92, sd * 1.0], [qb, 1.92, sd * 1.0], 0.032, STEEL, 8);
@@ -149,8 +152,10 @@ export class Train {
       }
       // 坐着的乘客（烘焙进静态网格）
       // 髋关节对齐座面（座面顶 0.48）：bakePerson 的 y 是脚底基准，坐姿时髋关节在 y + hip×scale
-      for (let q = 0; q < 2; q++) { const sd = q ? 1 : -1, px = cx + (q ? 3 : -3.1), L = randomLook({ phone: q === 0 }), hip = (L.kid ? 0.6 : 0.86) * L.scale; bakePerson(P, px, 0.55 - hip, sd * 1.2, sd > 0 ? Math.PI : 0, L, q === 0 ? POSES.sitPhone : POSES.sit); }
+      for (let q = 0; q < 2; q++) { const sd = q ? 1 : -1, px = cx + (q ? 3 : -3.1), L = randomLook({ phone: q === 0 }), hip = (L.kid ? 0.6 : 0.86) * L.scale; taken.push({ x: px, sd }); bakePerson(P, px, 0.55 - hip, sd * 1.2, sd > 0 ? Math.PI : 0, L, q === 0 ? POSES.sitPhone : POSES.sit); }
     }
+    // 空座位：和烘焙乘客（肩宽约 0.5m）重叠的座位算有人
+    this.seats.forEach(st => { st.free = !taken.some(t => t.sd === st.sd && Math.abs(t.x - st.x) < 0.6); });
     // 车头（两端）：放样鼓形截面，前脸收窄 + 车顶下压；黑色面罩、挡风玻璃、前照灯、目的地屏
     for (const e of [-1, 1]) {
       const xe = e * HALF, L = 1.5, secs = [];

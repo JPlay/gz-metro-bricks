@@ -140,6 +140,7 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #1d2b3a; fon
 .btn.big.act { right: calc(176px + env(safe-area-inset-right)); color: #138a7c;
   background: radial-gradient(circle at 40% 30%, #ffffff, #dcf6f0 55%, #a7e2d5); }
 .btn.big.act .lbl { font-size: 21px; white-space: nowrap; }
+.btn.big.act[data-kind="sit"], .btn.big.act[data-kind="stand"] { color: #c2410c; background: radial-gradient(circle at 40% 30%, #ffffff, #fff0dc 55%, #ffd29e); }
 .btn.big.act.appear { animation: actIn .38s cubic-bezier(.2,1.5,.4,1); }
 .btn.big.act::before { content: ''; position: absolute; inset: -8px; border-radius: 50%; border: 3px solid rgba(255,255,255,.9); animation: actRing 1.8s ease-out infinite; pointer-events: none; }
 @keyframes actIn { from { transform: scale(.4); opacity: 0; } to { transform: none; opacity: 1; } }
