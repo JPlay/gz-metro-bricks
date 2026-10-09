@@ -343,3 +343,38 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #1d2b3a; fon
   #netmap .sheet { width: 98vw; height: 96vh; max-height: 96vh; padding: 10px 8px 8px; }
   #netmap .mapbox svg { width: 100%; height: 100%; }
 }
+
+/* 说话气泡（js/ui/bubbles.js）：白底圆角 + 小尾巴，粤语大字、普通话小字 */
+#bubbles { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
+.bubble { position: absolute; left: 0; top: 0; max-width: min(460px, 70vw); padding: 14px 24px 14px; border-radius: 26px; background: #fff; color: #1B2430;
+  box-shadow: 0 8px 22px rgba(10,30,60,.25); display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; animation: bubIn .3s cubic-bezier(.2,1.4,.4,1); will-change: transform; }
+.bubble .yue { font-size: 36px; font-weight: 800; line-height: 1.15; letter-spacing: 1px; }
+.bubble .zh { font-size: 21px; font-weight: 600; color: #5A6675; line-height: 1.2; }
+.bubble .tail { position: absolute; bottom: -13px; width: 0; height: 0; margin-left: -13px; border: 13px solid transparent; border-bottom: 0; border-top-color: #fff; filter: drop-shadow(0 3px 2px rgba(10,30,60,.12)); }
+.bubble.up .tail { bottom: auto; top: -13px; border: 13px solid transparent; border-top: 0; border-bottom-color: #fff; }
+.bubble.out { animation: bubOut .3s ease-in forwards; }
+.bubble.hide { visibility: hidden; }
+@keyframes bubIn { from { opacity: 0; scale: .6; } to { opacity: 1; scale: 1; } }
+@keyframes bubOut { to { opacity: 0; scale: .85; } }
+.bubble.way { max-width: min(560px, 86vw); padding: 16px 24px; align-items: stretch; text-align: left; gap: 8px; }
+.bubble.way .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 30px; font-weight: 800; line-height: 1.2; }
+.bubble.way .sub { font-size: 20px; font-weight: 600; color: #5A6675; margin: -4px 0 4px; }
+.bubble.way .ln { display: inline-flex; align-items: center; padding: 3px 14px; border-radius: 12px; font-size: 28px; font-weight: 800; }
+.bubble.way .st { color: #E2312A; }
+.bubble.way .xf { display: inline-block; padding: 2px 10px; border-radius: 10px; background: #1B2430; color: #fff; font-size: 24px; }
+
+/* 打招呼 / 问路按钮配色 */
+.btn.big.act[data-kind="greet"] { color: #d9480f; background: radial-gradient(circle at 40% 30%, #ffffff, #fff4e0 55%, #ffd8a8); }
+.btn.big.act[data-kind="ask"] { color: #1864ab; background: radial-gradient(circle at 40% 30%, #ffffff, #e3f0ff 55%, #b6d4fe); }
+/* 问路：选站面板（和全网图同一张图，点站就回答） */
+#askway { position: fixed; inset: 0; z-index: 6; display: flex; align-items: center; justify-content: center; background: rgba(12,22,34,.42); animation: nmIn .2s ease-out; }
+#askway .sheet { width: min(1120px, 96vw); height: 96vh; border-radius: 30px; padding: 12px 16px 16px; background: rgba(250,252,254,.94); color: var(--ink); display: flex; flex-direction: column; box-sizing: border-box; }
+#askway header { display: flex; align-items: center; gap: 14px; min-height: 76px; }
+#askway .ttl { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+#askway .ttl .who { font-size: 18px; font-weight: 700; color: #fff; background: #2A4F8A; padding: 4px 12px; border-radius: 10px; align-self: center; }
+#askway .ttl b { font-size: 34px; font-weight: 800; } #askway .ttl small { font-size: 20px; font-weight: 600; color: #6b7787; }
+#askway .x { margin-left: auto; width: 76px; height: 76px; border-radius: 50%; border: 0; background: rgba(20,40,60,.08); color: #34404f; display: flex; align-items: center; justify-content: center; }
+#askway .x .ico { width: 34px; height: 34px; }
+#askway .mapbox { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; touch-action: none; }
+#askway .mapbox svg { width: 100%; height: 100%; display: block; cursor: pointer; }
+@media (orientation: portrait) { #askway .sheet { width: 98vw; padding: 10px 8px 8px; } }

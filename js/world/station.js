@@ -13,7 +13,7 @@ import { LINES, STATIONS, OTHER_LINES, transfersAt, nextStation } from '../data/
 import { DOOR_XS } from './train.js';
 import * as D from './decor.js';
 import * as MV from './mv.js';
-import { Crowd, randomLook, preseed } from './people.js';
+import { Crowd, randomLook, preseed, archetypeLook } from './people.js';
 import { FONT, FONT_EN, roundRect } from './kit.js';
 import { drawLineCanvas, networkSVG } from '../ui/netmap.js';
 const B = window.BABYLON;
@@ -42,6 +42,8 @@ export function framesFor(code) {
   return s.lines.length > 1 ? [{ line: 1, ...MAIN }, { line: 2, ...GYQ2 }] : [{ line: s.lines[0], ...MAIN }];
 }
 export function badge(k) { return { line: k }; }
+/** 导向牌上的终点方向：本站往两头开的终点（终点站只剩一头） */
+export function termini(line, code) { return Object.values(LINES[line].dirs).filter(d => nextStation(line, code, d.step)).map(d => ({ zh: d.zh, en: d.en })); }
 function hashCode(s) { let h = 0; for (const ch of s) h = (h * 31 + ch.charCodeAt(0)) | 0; return Math.abs(h); }
 
 export class Station {
@@ -55,7 +57,7 @@ export class Station {
     this.platforms = framesFor(code).map(f => ({ ...f, sides: {
       A: { key: 'A', step: 1, trackZ: f.zc - TRACK_OFF, psdZ: f.zc - PSD_OFF, doorSg: 1, n: 1 },
       B: { key: 'B', step: -1, trackZ: f.zc + TRACK_OFF, psdZ: f.zc + PSD_OFF, doorSg: -1, n: 2 } } }));
-    this.gates = []; this.mv = []; this.escalators = []; this.psd = []; this.pids = [];
+    this.gates = []; this.mv = []; this.escalators = []; this.psd = []; this.pids = []; this.greeters = [];
     this.street(); this.passage(); this.concourse();
     this.platforms.forEach(p => this.platform(p));
     if (this.platforms.length > 1) this.transfer();
@@ -245,7 +247,8 @@ export class Station {
     k.glow.slab(-3.4, 3.4, 3.38, 3.4, -37.9, -26.5, LIGHT, { ao: false });
     const lines = s.lines.map(badge), exits = ['D'];
     k.sign(0, 4.85, -38.52, { kind: 'entrance', w: 9.4, h: 1.15, zh: s.zh + '站', en: s.en + ' Station', badges: lines, exits, face: Math.PI });
-    k.sign(0, 3.0, -37.6, { kind: 'dir', w: 3.2, h: 0.5, zh: '进站', en: 'Entrance', arrow: 'down', badges: [], face: Math.PI, hang: 3.4 });
+    // 站口导向牌（升级：大箭头 + 线路色块 + 大字，走到站口就看得到）
+    k.sign(0, 2.95, -37.6, { kind: 'way', w: 4.6, h: 0.85, zh: '进站', en: 'Entrance', arrow: 'down', badges: lines, face: Math.PI, hang: 3.6 });
     // 立柱式站名标（站口旁）
     const tx = 6.4, tz = -39.5;
     P.rbox(tx, 0, tz, 0.9, 4.4, 0.32, hex('#2A2D31'), 0.06, 0, { bevel: 0.02 });
@@ -331,10 +334,12 @@ export class Station {
     for (let x = 12; x <= 17.95; x += 1.45) k.metal.slab(x - 0.03, x + 0.03, y + 1.1, y + 2.5, -5.06, -4.94, STEEL, { ao: false });
     P.slab(12, 17.9, y + 2.5, y + 2.95, -9, -4.9, hex('#2A2D31'), { ao: false });
     k.glow.slab(12, 17.9, y + 2.5, y + 2.53, -9, -4.88, hex(lc), { ao: false });
-    this.crowd.add(15, y, -7, 0, randomLook({ uniform: { top: '#2A4F8A', bottom: '#1F2A3A', stripe: '#D52B1E' } }), 'idle');
+    // 客服中心的工作人员（问路）：站在柜台后面，玩家站到柜台前（askPoint）出现「问路」
+    this.staff = this.crowd.add(15, y, -7, 0, randomLook({ uniform: { top: '#2A4F8A', bottom: '#1F2A3A', stripe: '#D52B1E' } }), 'idle');
+    this.askPoint = { x: 15, y, z: -4.2 }; this.gatePoint = { x: 0, z: -2 }; this.stairPoint = { x: 0, z: 14 }; this.gateZ = -2;
     k.sign(15, y + 2.72, -4.86, { kind: 'dir', w: 4.6, h: 0.4, zh: '客服中心', en: 'Customer Service', face: 0, box: false });
-    // 客服中心前排队的乘客
-    this.crowd.add(14.2, y, -4.25, Math.PI, randomLook({ bag: 'shoulder' }), 'idle'); this.crowd.add(16.3, y, -3.9, Math.PI + 0.2, randomLook({ kid: true, scale: 0.95 }), 'idle'); this.crowd.add(12.6, y, -3.2, Math.PI - 0.5, randomLook({ phone: true }), 'phone');
+    // 客服中心前排队的乘客（让出柜台正中给玩家问路）
+    this.crowd.add(13.0, y, -4.25, Math.PI - 0.3, randomLook({ bag: 'shoulder' }), 'idle'); this.crowd.add(17.0, y, -3.9, Math.PI + 0.2, randomLook({ kid: true, scale: 0.95 }), 'idle'); this.crowd.add(12.0, y, -3.0, Math.PI - 0.5, randomLook({ phone: true }), 'phone');
     // —— 安检（z=-12）
     const zs = -12;
     k.rail(-18, zs, -4.7, zs, y); k.rail(-1.5, zs, -1.25, zs, y); k.rail(1.25, zs, 9, zs, y); k.rail(12, zs, 18, zs, y);
@@ -393,6 +398,8 @@ export class Station {
     this.gateScreensBuild(zg, y);
     k.sign(0, y + 3.55, zg - 0.5, { kind: 'dir', w: 6, h: 0.62, zh: '进站', en: 'Entrance', badges: L.map(badge), face: Math.PI, double: true, back: { kind: 'exit', zh: '出站', en: 'Exit' }, hang: CY });
     for (const z of [-8.5, -5.5]) arrow(k, 0, y + 0.006, z, 0, '#F2C230');
+    // 刚过闸机：往站台（线路色块 + 两头终点），背面是出站
+    k.sign(0, y + 3.35, 2.6, { kind: 'way', w: 8.2, h: 0.9, zh: '站台', en: 'Platforms', arrow: 'up', badges: L.map(badge), dirs: termini(L[0], this.code), face: Math.PI, double: true, back: { kind: 'exit', arrow: 'up', zh: '出站', en: 'Exit', exits: ['A', 'D'] }, hang: CY });
     // 盲道：通道口 → 闸机 → 楼梯口
     const T = k.g('tactile'), ty = y + 0.003, tc = hex('#F2C230');
     T.slab(5.85, 6.15, ty, ty + 0.006, -19.8, -12.6, tc, { ao: false }); T.slab(5.85, 6.15, ty, ty + 0.006, -11.4, -3.2, tc, { ao: false });
@@ -408,7 +415,8 @@ export class Station {
     }
     k.rail(-1, 9.85, 15, 9.85, y); k.rail(-1, 18.15, 15, 18.15, y); k.rail(15, 9.85, 15, 18.15, y);
     const destTxt = L.map(l => LINES[l].zh).join(' · ');
-    k.sign(-1.6, y + 3.4, 14, { kind: 'dir', w: 6.8, h: 0.66, zh: '往站台', en: 'To Platforms', badges: L.map(badge), arrow: 'down', face: -Math.PI / 2, double: true, back: { kind: 'exit', arrow: 'up', exits: ['A', 'D'] }, hang: CY });
+    // 下站台的楼梯 / 扶梯口：箭头往下 + 本线色块 + 两头终点
+    k.sign(-1.6, y + 3.35, 14, { kind: 'way', w: 7.6, h: 0.9, zh: '站台', en: 'Platforms', badges: [badge(L[0])], arrow: 'down', dirs: termini(L[0], this.code), face: -Math.PI / 2, double: true, back: { kind: 'exit', arrow: 'up', exits: ['A', 'D'] }, hang: CY });
     void destTxt;
     for (const [x, z, a] of [[-4, 2], [-4, 5.5], [-4, 9], [-3, 13.2, Math.PI / 2]]) arrow(k, x, y + 0.006, z, a || 0, '#F2C230');
     // 乘客（站着 / 看手机 / 走动）
@@ -417,6 +425,9 @@ export class Station {
     this.crowd.walker([[5, -10.5], [10, -10.5], [10, -4], [5, -4]], y, randomLook({}), 1.1);
     this.crowd.walker([[-15, 3], [-15, 22], [-8, 22], [-8, 3]], y, randomLook({ bag: 'backpack' }), 1.3);
     D.bin(k, 16.8, y, 24.6, Math.PI); D.bin(k, -16.8, y, -10, Math.PI / 2);
+    // 四种可以打招呼的路人：非付费区（阿婆、上班族）+ 付费区（学生、游客）
+    for (const [kind, x, z, ry, mode] of [['granny', -13, -7.5, Math.PI / 2 + 0.3, 'idle'], ['office', 4.6, -7.2, -Math.PI * 0.8, 'idle'], ['student', -7.5, 4, Math.PI / 2 + 0.4, 'idle'], ['tourist', 7.5, 4.5, -Math.PI / 2 - 0.3, 'idle']])
+      this.greeters.push({ kind, n: this.crowd.add(x, y, z, ry, archetypeLook(kind), mode) });
     // 广告灯箱（墙面）
     for (const [i, z] of [[0, 4], [1, 18]]) this.poster(17.97, y + 1.6, z, -Math.PI / 2, i);
     // 站厅西墙：大幅全网线路图（1 号线 + 2 号线，本站“你在这里”）
@@ -767,9 +778,13 @@ export class Station {
     for (const z of [18, 22, 36, 39]) arrow(k, -21.5, yc + 0.006, z, 0, c2);
     for (const [x, z] of [[12, 19], [6, 19], [0, 19], [-3.5, 14]]) arrow(k, x, y1 + 0.006, z, -Math.PI / 2, c2);
     for (const [x, z] of [[4, 43], [0, 43]]) arrow(k, x, y2 + 0.006, z, -Math.PI / 2, c1);
-    k.sign(-5.4, y1 + 3.3, 14, { kind: 'dir', w: 5.6, h: 0.62, zh: '换乘 2号线', en: 'Transfer to Line 2', badges: [badge(2)], arrow: 'down', face: Math.PI / 2, double: true, bar: c2, hang: y1 + 4.2 });
-    k.sign(-21.5, -14.75, 16.36, { kind: 'dir', w: 4.4, h: 0.55, zh: '换乘 2号线', en: 'Transfer to Line 2', badges: [badge(2)], face: 0, bar: c2 });
-    k.sign(-21.5, -14.75, 44.94, { kind: 'dir', w: 4.4, h: 0.55, zh: '换乘 1号线', en: 'Transfer to Line 1', badges: [badge(1)], face: Math.PI, bar: c1 });
+    // 1 号线站台上的换乘楼梯口：换乘 2 号线（两头终点）
+    k.sign(-5.4, y1 + 3.3, 14, { kind: 'way', w: 7.6, h: 0.85, zh: '换乘', en: 'Transfer', badges: [badge(2)], arrow: 'down', dirs: termini(2, 'gyq'), face: Math.PI / 2, double: true, bar: c2, hang: y1 + 4.2 });
+    // 换乘通道：入口、中段（过桥之后）各一块双面牌——往里走看到“换乘 2号线”，往回走看到“换乘 1号线”；通道尽头的墙上指向右手边下 2 号线站台的楼梯
+    for (const z of [17.2, 36]) k.sign(-21.5, -14.5, z, { kind: 'way', w: 4.6, h: 0.8, zh: '换乘', en: 'Line 2', badges: [badge(2)], arrow: 'up', face: Math.PI, bar: c2, double: true, back: { kind: 'way', zh: '换乘', en: 'Line 1', badges: [badge(1)], arrow: 'up', bar: c1 }, hang: -14.0 });
+    k.sign(-21.5, -14.9, 44.94, { kind: 'way', w: 4.6, h: 0.85, badges: [badge(2)], arrow: 'right', dirs: [{ zh: '2号线站台', en: 'Line 2' }], face: Math.PI, bar: c2 });
+    // 2 号线站台楼梯口（向东下行）：箭头往下 + 两头终点
+    k.sign(-18.75, -14.48, 43, { kind: 'way', w: 3.9, h: 0.78, badges: [badge(2)], arrow: 'down', dirs: termini(2, 'gyq'), face: -Math.PI / 2, bar: c2, hang: -14.0 });
     k.sign(-4.8, y2 + 3.3, 43, { kind: 'dir', w: 6.2, h: 0.62, zh: '换乘 1号线 · 出口', en: 'Line 1 · Exit', badges: [badge(1)], exits: ['A', 'D'], arrow: 'up', face: Math.PI / 2, double: true, bar: c1, hang: y2 + 4.2 });
   }
   /* ---------------- 每帧 ---------------- */

@@ -8,7 +8,7 @@
  */
 import { Kit, FONT, FONT_EN, roundRect } from './kit.js';
 import { Geo, hex, mix } from '../core/geo.js';
-import { bakePerson, randomLook, POSES, preseed } from './people.js';
+import { randomLook, preseed, Person } from './people.js';
 import { LINES, STATIONS } from '../data/lines.js';
 import { drawStrip, drawLcd, hotUV, STRIP_W, STRIP_H } from './routemap.js';
 const TEX_K = 0.75; // 车内两块屏贴图的缩放（见 build）
@@ -62,7 +62,7 @@ export class Train {
   build() {
     const k = this.kit, P = k.solid, Mt = k.metal, Gl = k.glow, Gs = k.g('tglass'), Sh = k.g('shell'), Ln = k.g('line'), Ac = k.g('accent'), Se = k.g('seat'), Gloss = k.g('gloss');
     preseed(this.id * 31 + 5);
-    this.seats = []; const taken = [];
+    this.seats = []; const taken = []; this.pax = [];
     const band = (x0, x1, y0, y1, side, geo = Sh) => { for (const c of clip(OUT, y0, y1, side)) geo.extrudeX(c, x0, x1, WHITE); };
     const ibandI = (x0, x1, y0, y1, side) => { for (const c of clip(INN, y0, y1, side)) P.extrudeX(c, x0, x1, INT, { flip: true }); };
     const lower = (x0, x1, yTop) => {
@@ -153,11 +153,17 @@ export class Train {
         Mt.slab(ga, gb, -0.2, 0.005, -0.85, 0.85, STEEL, { ao: false });
         for (const zz of [-1, 1]) k.col((ga + gb) / 2, 1.1, zz * 0.85, gb - ga + 0.1, 2.2, 0.1, { parent: this.root, dynamic: true });
       }
-      // 坐着的乘客（烘焙进静态网格）
-      // 髋关节对齐座面（座面顶 0.48）：bakePerson 的 y 是脚底基准，坐姿时髋关节在 y + hip×scale
-      for (let q = 0; q < 2; q++) { const sd = q ? 1 : -1, px = cx + (q ? 3 : -3.1), L = randomLook({ phone: q === 0 }), hip = (L.kid ? 0.6 : 0.86) * L.scale; taken.push({ x: px, sd }); bakePerson(P, px, 0.55 - hip, sd * 1.2, sd > 0 ? Math.PI : 0, L, q === 0 ? POSES.sitPhone : POSES.sit); }
+      // 坐着的乘客：可动的小人（坐着看手机 / 东张西望 / 两人聊天；玩家坐到旁边会转头点点头），每节车 2 个，中间那节多 1 个
+      // 髋关节对齐座面（座面顶 0.48）：y 是脚底基准，坐姿时髋关节在 y + hip×scale
+      for (let q = 0; q < 2; q++) { const sd = q ? 1 : -1, px = cx + (q ? 3 : -3.1), L = randomLook({ phone: q === 0 }), hip = (L.kid ? 0.6 : 0.86) * L.scale; taken.push({ x: px, sd });
+        const pp = new Person(this.scene, this.kit.M.paint, L, { name: 'pax', parent: this.root }); pp.mesh.position.set(px, 0.55 - hip, sd * 1.2); pp.mesh.rotation.y = sd > 0 ? Math.PI : 0;
+        pp.mode = q === 0 ? 'sitPhone' : 'sit'; pp.animate(0.016); this.pax.push({ p: pp, x: px, sd, seated: true }); }
+      // 中间那节：+z 侧坐着的那位旁边再坐一位，两人转头聊天
+      if (ci === 1) { const a = this.pax[this.pax.length - 1], L = randomLook({ bag: 'shoulder' }), hip = (L.kid ? 0.6 : 0.86) * L.scale, px = a.x + 0.56;
+        const pp = new Person(this.scene, this.kit.M.paint, L, { name: 'pax', parent: this.root }); pp.mesh.position.set(px, 0.55 - hip, 1.2); pp.mesh.rotation.y = Math.PI;
+        pp.mode = a.p.mode = 'sitChat'; pp.chatYaw = 0.75; a.p.chatYaw = -0.75; pp.t += 1.3; pp.animate(0.016); taken.push({ x: px, sd: 1 }); this.pax.push({ p: pp, x: px, sd: 1, seated: true }); }
     }
-    // 空座位：和烘焙乘客（肩宽约 0.5m）重叠的座位算有人
+    // 空座位：和坐着的乘客（肩宽约 0.5m）重叠的座位算有人
     this.seats.forEach(st => { st.free = !taken.some(t => t.sd === st.sd && Math.abs(t.x - st.x) < 0.6); });
     // 车头（两端）：放样鼓形截面，前脸收窄 + 车顶下压；黑色面罩、挡风玻璃、前照灯、目的地屏
     for (const e of [-1, 1]) {

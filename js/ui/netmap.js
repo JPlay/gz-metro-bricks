@@ -100,8 +100,8 @@ export function networkLayout(portrait = false) {
   const s2 = LINES[2].stations, g = s2.indexOf('gyq');
   s2.forEach((c, i) => { if (c === 'gyq') return; pos[c] = i > g ? [GX, 440 - (i - g - 1) * 38, 'l'] : [GX, 600 + (g - 1 - i) * 34, 'r']; });
   if (!portrait) return { pos, w: NW, h: NH, legend: [40, 40] };
-  for (const p of Object.values(pos)) { p[0] = 500 + (p[0] - GX) * 0.8; p[1] = 760 + (p[1] - GY) * 1.45; }
-  return { pos, w: 1040, h: 1500, legend: [700, 1060] };
+  for (const p of Object.values(pos)) { p[0] = p[0] - 100; p[1] = 760 + (p[1] - GY) * 1.45; }
+  return { pos, w: 1140, h: 1500, legend: [790, 1060] };
 }
 const YOU_AT = { hs: 'L', tyzx: 'B', gzdz: 'L' };
 /** 换乘其他线路的站：统一一种样式（白心 + 粗深色圈），不再按换乘线路上色 */
@@ -145,16 +145,26 @@ export function networkSVG(here, opts = {}) {
   }
   return s + '</svg>';
 }
+/** 全网图上离 (x, y)（svg 坐标）最近的车站；超过 r 返回 null（问路的选站面板用：点站名或圆点附近都算） */
+export function nearestStation(x, y, portrait, r = 80) {
+  const { pos } = networkLayout(portrait); let best = null, bd = r;
+  for (const [c, [px, py, side]] of Object.entries(pos)) {
+    // 站名在哪边就往哪边多算一点，点字也行
+    const lx = side === 'l' ? px - 60 : side === 'r' ? px + 60 : px, ly = side === 'a' ? py - 30 : side === 'b' ? py + 30 : py;
+    const d = Math.min(Math.hypot(x - px, y - py), Math.hypot(x - lx, y - ly)); if (d < bd) { bd = d; best = c; }
+  }
+  return best;
+}
 
 /** 地图里双指捏合缩放 + 单指拖动平移（1–4 倍），双击还原。box = 包着 svg 的容器；返回 reset() */
 export function panZoom(box) {
-  const pts = new Map(); let k = 1, tx = 0, ty = 0, start = null, lastTap = 0;
+  const pts = new Map(); let k = 1, tx = 0, ty = 0, start = null, lastTap = 0, tap = null;
   const el = () => box.firstElementChild;
   const apply = () => { const r = box.getBoundingClientRect(), mx = r.width * (k - 1) / 2, my = r.height * (k - 1) / 2; tx = Math.max(-mx, Math.min(mx, tx)); ty = Math.max(-my, Math.min(my, ty)); const e = el(); if (e) { e.style.transform = `translate(${tx}px,${ty}px) scale(${k})`; e.style.transformOrigin = 'center center'; } box.classList.toggle('zoomed', k > 1.01); };
   const snap = () => { const a = [...pts.values()]; if (!a.length) return null; const cx = a.reduce((s, p) => s + p.x, 0) / a.length, cy = a.reduce((s, p) => s + p.y, 0) / a.length; const d = a.length > 1 ? Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y) : 0; return { cx, cy, d, k, tx, ty }; };
   box.addEventListener('pointerdown', e => {
-    e.preventDefault(); box.setPointerCapture && box.setPointerCapture(e.pointerId); pts.set(e.pointerId, { x: e.clientX, y: e.clientY }); start = snap();
-    if (pts.size === 1) { const now = performance.now(); if (now - lastTap < 300) { k = 1; tx = ty = 0; apply(); } lastTap = now; }
+    e.preventDefault(); try { box.setPointerCapture(e.pointerId); } catch (_) {} pts.set(e.pointerId, { x: e.clientX, y: e.clientY }); start = snap();
+    if (pts.size === 1) { tap = { t: performance.now(), x: e.clientX, y: e.clientY }; } else tap = null;
   });
   box.addEventListener('pointermove', e => {
     if (!pts.has(e.pointerId)) return; pts.set(e.pointerId, { x: e.clientX, y: e.clientY }); const c = snap(); if (!c || !start) return;
@@ -165,7 +175,11 @@ export function panZoom(box) {
     } else { tx = start.tx + c.cx - start.cx; ty = start.ty + c.cy - start.cy; }
     apply();
   });
-  const up = e => { pts.delete(e.pointerId); start = snap(); };
+  // 双击还原：两次干脆的单指轻点（没拖动、没捏合）
+  const up = e => {
+    if (tap && pts.size === 1 && performance.now() - tap.t < 280 && Math.hypot(e.clientX - tap.x, e.clientY - tap.y) < 12) { const now = performance.now(); if (now - lastTap < 350) { k = 1; tx = ty = 0; apply(); lastTap = 0; } else lastTap = now; }
+    tap = null; pts.delete(e.pointerId); start = snap();
+  };
   box.addEventListener('pointerup', up); box.addEventListener('pointercancel', up);
   return { reset() { k = 1; tx = ty = 0; pts.clear(); apply(); }, set(nk, x = 0, y = 0) { k = nk; tx = x; ty = y; apply(); }, get scale() { return k; } };
 }

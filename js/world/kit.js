@@ -268,6 +268,29 @@ const PAINT = {
     textBlock(c, x, ph, avail, o.zh, o.en, fg, { align: o.align });
     if (tailArrow) drawArrow(c, pw - pad - bh, by, bh, arrow, fg);
   },
+  /**
+   * 导向牌（升级版，按广州地铁导向牌：深色底、白色中文大字 + 小英文、大箭头、线路色块、终点方向）：
+   *   [大箭头] [线路色块…] 主文字（中 / 英）| 往 终点A | 往 终点B（每个方向一格，中间细分隔线）
+   *   字少、字大：给 iPad 上走路时一眼看清。o.dirs = [{ zh, en, arrow? }]，o.bar = 左侧线路色竖条。
+   */
+  way(c, pw, ph, o) {
+    const fg = SIGN.white; c.fillStyle = o.bg || '#1F2226'; c.fillRect(0, 0, pw, ph);
+    if (o.bar) { c.fillStyle = o.bar; c.fillRect(0, 0, ph * 0.08, ph); }
+    const pad = ph * 0.14, bh = ph * 0.6, by = (ph - bh) / 2; let x = pad + (o.bar ? ph * 0.08 : 0);
+    if (o.arrow) { const ah = ph * 0.78; drawArrow(c, x, (ph - ah) / 2, ah, o.arrow, fg); x += ah + pad * 0.7; }
+    for (const b of o.badges || []) { x += drawBadge(c, x, by, bh, b) + pad * 0.5; }
+    const dirs = o.dirs || [], segW = dirs.length ? (o.zh ? (pw - x) * (dirs.length > 1 ? 0.62 : 0.5) : pw - x - pad * 0.5) : 0;
+    if (o.zh) { textBlock(c, x, ph, pw - x - segW - pad, o.zh, o.en, fg, { zhK: 0.46, enK: 0.2 }); }
+    const x0 = pw - segW, sw = segW / Math.max(1, dirs.length);
+    dirs.forEach((d, i) => {
+      const sx = x0 + i * sw;
+      if (o.zh || i > 0) { c.fillStyle = 'rgba(255,255,255,0.35)'; c.fillRect(sx, ph * 0.16, Math.max(2, ph * 0.02), ph * 0.68); }
+      let tx = sx + pad * 0.8;
+      if (d.arrow) { const ah = ph * 0.5; drawArrow(c, tx, (ph - ah) / 2, ah, d.arrow, fg); tx += ah + pad * 0.4; }
+      c.fillStyle = 'rgba(255,255,255,0.8)'; c.textBaseline = 'alphabetic'; const ws = ph * 0.26; c.font = `600 ${ws}px ${FONT}`; c.fillText('往', tx, ph * 0.5); const ww = c.measureText('往').width + ph * 0.08;
+      textBlock(c, tx + ww, ph, sx + sw - tx - ww - pad * 0.5, d.zh, d.en, fg, { zhK: 0.4, enK: 0.18 });
+    });
+  },
   /** 出口导向：深灰底，黄色字 + 黄色出口字母 */
   exit(c, pw, ph, o) { PAINT.dir(c, pw, ph, { ...o, fg: SIGN.exit, zh: o.zh || '出口', en: o.en || 'Exit' }); },
   /** 站名牌（站台墙 / 站厅）：浅色底，黑色大字站名，英文在下；底部线路色条；两侧前后站 */

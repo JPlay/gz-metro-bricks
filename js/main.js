@@ -13,6 +13,8 @@ import { Input, pressable } from './game/input.js';
 import { Metro } from './game/service.js';
 import { Tickets } from './game/ticket.js';
 import { SeatCtl } from './game/seat.js';
+import { Social } from './game/social.js';
+import { Bubbles } from './ui/bubbles.js';
 import { TvmPanel } from './ui/tvm.js';
 import { mats } from './core/mats.js';
 import { Render } from './core/render.js';
@@ -49,6 +51,7 @@ export async function start() {
   const player = new Player(scene, M, cam);
   const tickets = new Tickets({ hud, Audio, events, panel: new TvmPanel({ Audio }), scene, cam });
   const seats = new SeatCtl({ player, metro: null, Audio, events });
+  const bubbles = new Bubbles(scene, cam);
   player.onStandRequest = () => seats.stand();
   player.meshes().forEach(m => R.addShadowCaster(m));
   initCaptions();
@@ -60,6 +63,7 @@ export async function start() {
     get zone() { return G.zone; }
   });
   seats.metro = metro;
+  const social = new Social({ scene, player, bubbles, Audio, events, getStation: () => G.station, getCode: () => G.code, getMetro: () => metro });
   metro.trains.forEach(t => t.shadowMeshes.forEach(m => R.addShadowCaster(m)));
   scene.fogColor = new B.Color3(0.08, 0.09, 0.11); scene.fogStart = 25; scene.fogEnd = 85;
 
@@ -142,7 +146,7 @@ export async function start() {
       else if (a.time > 12) { input.virtual = null; G.auto = null; a.resolve({ ok: false, stuckAt: [p.x, p.y, p.z], target: t }); }
       else { player.yaw = Math.atan2(dx, dz); input.virtual = { x: 0, y: d < 1 ? 0.5 : 1, run: !!a.run && d > 2 }; }
     }
-    const inp = input.read();
+    const inp = input.read(), p0 = player.position;
     const conv = G.station.conveyor(player.position);
     player.update(dt, inp, conv ? { x: conv * dt, z: 0 } : null);
     metro.update(dt);
@@ -150,8 +154,11 @@ export async function start() {
     player.updateCamera(dt, scene);
     G.station.update(dt, player, cam, Audio, metro);
     // 动作按钮：车厢里优先“坐下 / 起身”，否则售票机 / 闸机
-    const seatAct = seats.update(), ticketAct = tickets.update(dt, G.station, player);
-    hud.action(seatAct || ticketAct);
+    const seatAct = seats.update(), ticketAct = tickets.update(dt, G.station, player), socialAct = social.update(dt);
+    hud.action(seatAct || ticketAct || socialAct);
+    // 车厢里的乘客动画（只动玩家所在 / 附近的车）
+    for (const t of metro.trains) if (t.root.isEnabled() && t.pax && Math.abs(t.root.position.x - p0.x) < 45 && Math.abs(t.root.position.y - p0.y) < 6) for (const q of t.pax) q.p.animate(dt);
+    bubbles.update(dt);
     // 坐着时藏起“跳”按钮（起身用右下角的“起身”）
     const seated = !!player.seat; if (seated !== G.jumpHidden) { G.jumpHidden = seated; document.getElementById('bJump').hidden = seated; }
     // 区域 / 环境声 / 欢迎广播
@@ -217,7 +224,7 @@ export async function start() {
       babylon: { version: B.Engine.Version, source: window.__babylonSource, attempts: window.__babylonAttempts },
       drawCalls: (engine._drawCalls && engine._drawCalls.current) ?? null, activeMeshes: scene.getActiveMeshes().length, gates: G.station.gates.map(g => +g.f.toFixed(2)),
       security: G.station.security.flash > 0, probes: R.probes.length, atlas: G.station.kit.atlas ? { y: G.station.kit.atlas.y + G.station.kit.atlas.row, overflow: G.station.kit.atlas.overflow } : null, audio: Audio.getState(),
-      ticket: tickets.info(), seat: seats.info(), mapOpen: !!G.mapOpen, act: hud.act ? { id: hud.act.id, label: hud.act.label } : null
+      ticket: tickets.info(), seat: seats.info(), social: social.info(), mapOpen: !!G.mapOpen, act: hud.act ? { id: hud.act.id, label: hud.act.label } : null
     }),
     teleport: (x, y, z, yaw) => player.spawn(x, y, z, yaw ?? player.yaw),
     setMove: (x, y, run) => { input.virtual = (x || y) ? { x, y, run } : null; },
@@ -226,6 +233,6 @@ export async function start() {
     autopilot: (pts, run) => new Promise(resolve => { G.auto = { pts, i: 0, time: 0, resolve, run }; }),
     call: (line, step) => metro.call(line, step), openMap, closeMap, mapZoom: mapPZ,
     // 测试：软件渲染只有几帧每秒，放宽单帧步长上限让游戏时间接近墙钟（默认 0.05）
-    setDtMax: v => { G.dtMax = v; }, act: doAct, tickets, seats, metro, player, scene, engine, events, render: R, get station() { return G.station; }
+    setDtMax: v => { G.dtMax = v; }, act: doAct, tickets, seats, social, bubbles, metro, player, scene, engine, events, render: R, get station() { return G.station; }
   };
 }

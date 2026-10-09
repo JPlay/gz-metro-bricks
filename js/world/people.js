@@ -26,9 +26,22 @@ export function randomLook(o = {}) {
     skirt: o.skirt ?? (fem && prnd() < 0.4), shorts: o.shorts ?? (!fem && prnd() < 0.25), longSleeve: o.longSleeve ?? prnd() < 0.35,
     bag: o.bag ?? (prnd() < 0.35 ? pick(['backpack', 'shoulder']) : null), bagCol: o.bagCol || pick(['#2B2D31', '#C0392B', '#F5B841', '#3E8EDE', '#7A4E36']),
     glasses: o.glasses ?? prnd() < 0.2, cap: o.cap || null, capCol: o.capCol || '#E8505B',
-    scale: o.scale || (0.94 + prnd() * 0.12), kid: !!o.kid, uniform: o.uniform || null, phone: !!o.phone
+    scale: o.scale || (0.94 + prnd() * 0.12), kid: !!o.kid, uniform: o.uniform || null, phone: !!o.phone,
+    prop: o.prop || null, tie: o.tie || null, collar: !!o.collar, hunch: o.hunch || 0, role: o.role || null, pattern: o.pattern || null
   };
 }
+/**
+ * 四种打招呼的路人（一眼能分清：轮廓 + 道具 + 衣服颜色都不一样，全部复用同一套小人，只多几块道具几何）：
+ *   阿婆：灰白发髻、碎花衫、微微驼背，左手挎一篮青菜；学生：蓝白校服（运动服款）、大书包、眼镜；
+ *   上班族：白衬衫 + 深色领带 + 深色西裤，右手提公文包；游客：橙色花衬衫、短裤、遮阳帽，胸前挂相机。
+ */
+export const ARCHETYPES = {
+  granny: { role: 'granny', fem: true, skin: '#E9C3A0', top: '#C8507A', pattern: '#F6D7E3', bottom: '#3B3F4A', hair: '#D9D6D0', hairStyle: 'bun', shoes: '#2B2D31', longSleeve: true, skirt: false, bag: null, glasses: false, scale: 0.9, hunch: 0.22, prop: 'basket' },
+  student: { role: 'student', fem: false, skin: '#F3CFAE', top: '#FFFFFF', bottom: '#1F4E9C', hair: '#1A1414', hairStyle: 'crop', shoes: '#F2F2F2', longSleeve: true, shorts: false, uniform: null, bag: 'backpack', bagCol: '#E8505B', glasses: true, scale: 0.9, collar: true, tie: '#1F4E9C' },
+  office: { role: 'office', fem: false, skin: '#EBC09A', top: '#F4F6F8', bottom: '#24324A', hair: '#2B1D16', hairStyle: 'side', shoes: '#2B2D31', longSleeve: true, shorts: false, bag: null, glasses: false, scale: 1.02, collar: true, tie: '#B3261E', prop: 'briefcase' },
+  tourist: { role: 'tourist', fem: true, skin: '#F6DAC0', top: '#F28C38', pattern: '#FFE08A', bottom: '#D9D4C7', hair: '#6B4528', hairStyle: 'pony', shoes: '#3E8EDE', longSleeve: false, skirt: false, shorts: true, bag: null, glasses: false, scale: 0.98, cap: true, capCol: '#F5F1E1', prop: 'camera' }
+};
+export function archetypeLook(kind) { return randomLook({ ...ARCHETYPES[kind] }); }
 /** 骨骼尺寸（成人 / 小孩） */
 function dims(L) {
   const k = L.kid;
@@ -72,7 +85,21 @@ function parts(L) {
     sp.ellipsoid(0, d.torso - 0.03, d.chestD * 0.32, 0.12, 0.08, 0.06, '#FFFFFF', 1);
     if (L.uniform.stripe) sp.box(0, d.torso * 0.55, d.chestD * 0.5, d.chestW * 0.95, 0.04, 0.02, L.uniform.stripe, 0, 0, 0, 1, { ao: false });
     sp.box(d.chestW * 0.22, d.torso * 0.72, d.chestD * 0.52, 0.07, 0.09, 0.012, '#E8EEF2', 0, 0, 0, 1, { ao: false });
+  } else if (L.pattern) { // 碎花 / 花衬衫：前后几朵小圆花
+    const pc = hex(L.pattern);
+    for (const [px, py] of [[-0.09, 0.62], [0.08, 0.74], [0.1, 0.5], [-0.07, 0.42], [0.0, 0.86], [-0.12, 0.8]]) for (const sz of [1, -1]) sp.ellipsoid(px * d.chestW / 0.38, d.torso * py, sz * d.chestD * 0.98, 0.028, 0.028, 0.012, pc, 1);
+  } else if (L.tie) { // 衬衫领 + 领带
+    sp.ellipsoid(0, d.torso - 0.03, d.chestD * 0.36, 0.13, 0.07, 0.06, '#FFFFFF', 1);
+    sp.box(0, d.torso * 0.62, d.chestD * 0.56, 0.05, d.torso * 0.5, 0.014, hex(L.tie), 0, 0, 0, 1, { ao: false });
+    sp.box(0, d.torso * 0.88, d.chestD * 0.54, 0.06, 0.05, 0.02, hex(L.tie), 0, 0, 0, 1, { ao: false });
   } else if (prnd() < 0.5) sp.box(0, d.torso * 0.64, d.chestD * 0.52, d.chestW * 0.3, d.chestW * 0.2, 0.01, mix(top, [1, 1, 1], 0.32), 0, 0, 0, 1, { ao: false }); // 胸前图案
+  if (L.role === 'student') for (const sx of [-1, 1]) sp.box(sx * d.chestW * 0.98, d.torso * 0.5, 0, 0.012, d.torso * 0.9, 0.05, hex('#1F4E9C'), 0, 0, 0, 1, { ao: false }); // 校服侧边蓝条
+  if (L.prop === 'camera') { // 胸前挂相机 + 背带
+    sp.rbox(0, d.torso * 0.48, d.chestD * 0.62 + 0.04, 0.16, 0.1, 0.07, '#2B2D31', 0.02, 0, { ao: false });
+    sp.cyl(0.02, d.torso * 0.48 + 0.05, d.chestD * 0.62 + 0.1, 0.07, 0.06, '#1B1D20', 12, 0, Math.PI / 2, 0);
+    sp.sphere(0.02, d.torso * 0.48 + 0.05, d.chestD * 0.62 + 0.135, 0.025, '#7FB8E8', 1);
+    for (const sx of [-1, 1]) sp.tube([sx * 0.07, d.torso * 0.5, d.chestD * 0.62], [sx * 0.11, d.torso * 0.98, d.chestD * 0.2], 0.012, '#2B2D31', 4);
+  }
   if (L.bag === 'backpack') { sp.rbox(0, d.torso * 0.18, -d.chestD * 0.55 - 0.06, d.chestW * 0.85, d.torso * 0.62, 0.14, L.bagCol, 0.05, 0, { ao: false, bevel: 0.03, bottom: true }); for (const sx of [-1, 1]) sp.tube([sx * d.chestW * 0.3, d.torso * 0.85, -d.chestD * 0.5], [sx * d.chestW * 0.3, d.torso * 0.85, d.chestD * 0.42], 0.035, L.bagCol, 6); }
   // 头
   const hd = P(2), hr = d.head, hy = d.neck + hr * 0.48;
@@ -112,6 +139,15 @@ function parts(L) {
     const fa = P(f); fa.tubeTaper([0, 0, 0], [0, -d.farm, 0], 0.095, 0.075, sleeve, 10);
     fa.ellipsoid(0, -d.farm - 0.04, 0.005, 0.085, 0.1, 0.06, skin, 2);
   }
+  if (L.prop === 'basket') { // 左手挎菜篮：竹篮 + 提手 + 青菜 / 一根红萝卜
+    const g = out.find(q => q.bone === 5).g, by = -d.farm - 0.2;
+    g.rbox(0, by - 0.1, 0.05, 0.3, 0.17, 0.2, '#C9A063', 0.04, 0, { ao: false, bottom: true });
+    for (let k = 0; k < 4; k++) g.slab(-0.152, 0.152, by - 0.09 + k * 0.035, by - 0.08 + k * 0.035, -0.052, 0.152, hex('#A8834A'), { ao: false });
+    g.tube([-0.12, by + 0.06, 0.05], [0, -d.farm - 0.02, 0.03], 0.014, '#8C6A38', 5); g.tube([0.12, by + 0.06, 0.05], [0, -d.farm - 0.02, 0.03], 0.014, '#8C6A38', 5);
+    for (const [vx, vz, c] of [[-0.08, 0.02, '#4FA34A'], [0.0, 0.08, '#6CC24A'], [0.08, 0.0, '#3E8E3E']]) g.ellipsoid(vx, by + 0.06, vz, 0.06, 0.09, 0.05, hex(c), 1);
+    g.tube([0.06, by + 0.02, 0.1], [0.13, by + 0.1, 0.13], 0.022, '#F28C38', 5);
+  }
+  if (L.prop === 'briefcase') { const g = out.find(q => q.bone === 6).g, by = -d.farm - 0.2; g.rbox(0, by - 0.14, 0.0, 0.08, 0.26, 0.36, '#4A3426', 0.03, 0, { ao: false, bottom: true }); g.tube([0, by + 0.12, -0.06], [0, by + 0.12, 0.06], 0.015, '#2B2D31', 5); g.box(0.042, by - 0.02, 0, 0.005, 0.03, 0.06, '#E0B84A', 0, 0, 0, 1, { ao: false }); }
   if (L.phone) out.find(q => q.bone === 6).g.rbox(0, -d.farm - 0.1, 0.035, 0.075, 0.14, 0.012, '#1B1D20', 0.01, 0, { ao: false });
   if (L.bag === 'shoulder') out.find(q => q.bone === 1).g.rbox(-d.chestW * 0.62, -0.12, 0.02, 0.08, 0.26, 0.3, L.bagCol, 0.05, 0, { ao: false, bottom: true });
   return out;
@@ -168,7 +204,7 @@ export class Person {
   /** 程序化动画。mode: idle | phone | wave | walk | run | jump | sit */
   animate(dt, o = {}) {
     this.t += dt; const t = this.t, mode = o.mode || this.mode, sp = o.speed ?? this.speed;
-    const breath = Math.sin(t * 1.7) * 0.025;
+    const breath = Math.sin(t * 1.7) * 0.025, hunch = this.look.hunch || 0;
     // 东张西望
     this.lookT -= dt; if (this.lookT < 0) { this.lookT = 2.5 + prnd() * 5; this.lookTarget = (prnd() - 0.5) * (mode === 'phone' ? 0.3 : 1.0); }
     this.lookYaw += (this.lookTarget - this.lookYaw) * Math.min(1, dt * 2.5);
@@ -190,7 +226,7 @@ export class Person {
       // 站立类
       for (const i of [7, 8, 9, 10, 0]) this.setBone(i, 0, 0, i === 7 ? 0.03 : i === 8 ? -0.03 : 0);
       this._b[1].setScale(new B.Vector3(1, 1 + breath * 0.4, 1 + breath * 0.6));
-      this.setBone(1, 0.02 + breath * 0.2, 0, 0);
+      this.setBone(1, 0.02 + breath * 0.2 + hunch, 0, 0);
       if (mode === 'phone') {
         this.setBone(2, 0.42, this.lookYaw * 0.3, 0); this.setBone(3, 0.05, 0, 0.12); this.setBone(5, -0.2, 0, 0);
         this.setBone(4, -0.35, -0.25, -0.15); this.setBone(6, -1.45, 0.35, 0);
@@ -198,16 +234,34 @@ export class Person {
         const w = Math.sin(t * 6) * 0.35;
         this.setBone(2, 0, this.lookYaw * 0.4, 0); this.setBone(3, 0, 0, 0.08); this.setBone(5, -0.15, 0, 0);
         this.setBone(4, 0, 0, -2.5 + w * 0.3); this.setBone(6, 0, 0, -0.5 + w);
-      } else if (mode === 'sit') {
+      } else if (mode === 'chat') {
+        // 聊天：边说边点头、一只手比划，偶尔笑得往后仰
+        const g = Math.sin(t * 2.3), n = Math.sin(t * 4.1) * 0.06;
+        this.setBone(2, -0.02 + n, this.lookYaw * 0.3, Math.sin(t * 0.9) * 0.05); this.setBone(3, 0.02, 0, 0.1); this.setBone(5, -0.2, 0, 0);
+        this.setBone(4, -0.55 - g * 0.18, 0.2, -0.25); this.setBone(6, -1.1 + g * 0.3, 0.3 * g, 0);
+      } else if (mode === 'point') {
+        // 指路：右臂伸直指向 o.pointYaw（相对身体朝向，弧度）
+        const py = this.pointYaw || 0;
+        this.setBone(2, 0.02, py * 0.6, 0); this.setBone(3, 0, 0, 0.08); this.setBone(5, -0.15, 0, 0);
+        this.setBone(4, -1.45, py, -0.05); this.setBone(6, -0.1, 0, 0);
+      } else if (mode === 'sit' || mode === 'sitPhone' || mode === 'sitChat') {
         this.setBone(7, -1.5, 0, 0.04); this.setBone(8, -1.5, 0, -0.04); this.setBone(9, 1.5, 0, 0); this.setBone(10, 1.5, 0, 0);
         this.setBone(3, -0.3, 0, 0.1); this.setBone(4, -0.3, 0, -0.1); this.setBone(5, -0.9, 0, 0); this.setBone(6, -0.9, 0, 0); this.setBone(2, 0.05, this.lookYaw, 0);
+        if (mode === 'sitPhone') { this.setBone(4, -0.35, 0, -0.15); this.setBone(6, -1.5 + Math.sin(t * 0.7) * 0.05, 0.3, 0); this.setBone(2, 0.38, this.lookYaw * 0.2, 0); }
+        if (mode === 'sitChat') { const g = Math.sin(t * 2.1); this.setBone(2, Math.sin(t * 3.7) * 0.06, (this.chatYaw || 0) + Math.sin(t * 0.6) * 0.1, 0); this.setBone(6, -1.2 + g * 0.25, 0.2 * g, 0); }
       } else {
         const sw = Math.sin(t * 1.1) * 0.03;
         this.setBone(2, -0.02, this.lookYaw, 0); this.setBone(3, sw, 0, 0.08); this.setBone(4, -sw, 0, -0.08); this.setBone(5, -0.15, 0, 0); this.setBone(6, -0.15, 0, 0);
       }
       this.hipBob = 0;
     }
+    // 叠加：点头（坐在旁边的人看你一眼、点点头）——头转向 nodYaw，上下点两下
+    if (this.nodT > 0) {
+      this.nodT -= dt; const k = Math.min(1, this.nodT / 0.3, (1.8 - this.nodT) / 0.3), ph = (1.8 - this.nodT) * 7;
+      this.setBone(2, Math.max(0, Math.sin(ph)) * 0.32 * k, (this.nodYaw || 0) * k, 0);
+    }
   }
+  nod(yaw) { this.nodT = 1.8; this.nodYaw = yaw; }
   dispose() { this.mesh.dispose(); this.skeleton.dispose(); }
 }
 
@@ -232,22 +286,43 @@ export class Crowd {
   /** 沿闭合路线走：pts = [[x,z],...] */
   walker(pts, y, look, speed = 1.25) {
     const n = this.add(pts[0][0], y, pts[0][1], 0, look, 'walk');
-    n.path = pts; n.i = 1; n.speed = speed; n.wait = 0; n.y = y; n.p.speed = speed;
+    n.path = pts; n.i = 1; n.speed = speed; n.wait = 0; n.y = y; n.p.speed = speed; n.bx = pts[0][0]; n.bz = pts[0][1]; n.off = 0; n.offWant = 0; n.sayCool = 0;
     return n;
   }
+  /** 临时动作：转身朝 yaw、做 mode（wave / point / chat…）dur 秒，之后慢慢转回原来的朝向和动作 */
+  act(n, mode, yaw, dur = 2.5, extra = {}) { n.act = { mode, yaw, t: dur, dur0: dur, ...extra }; if (n.ry0 === undefined) n.ry0 = n.p.mesh.rotation.y; }
+  turnTo(m, want, k) { let dr = want - m.rotation.y; dr = Math.atan2(Math.sin(dr), Math.cos(dr)); m.rotation.y += dr * Math.min(1, k); }
   update(dt, focus) {
     for (const n of this.list) {
       const m = n.p.mesh, d2 = focus ? (m.position.x - focus.x) ** 2 + (m.position.z - focus.z) ** 2 + ((m.position.y - focus.y) * 3) ** 2 : 0;
       const near = d2 < 45 * 45;
+      if (n.act) {
+        const a = n.act; a.t -= dt; this.turnTo(m, a.yaw, dt * 7); n.p.pointYaw = a.pointYaw || 0;
+        n.p.animate(dt, { mode: a.t > (a.pointAfter ? a.dur0 - a.pointAfter : 1e9) ? 'idle' : a.mode });
+        if (a.t <= 0) n.act = null;
+        continue;
+      }
+      if (n.ry0 !== undefined && !n.path) { this.turnTo(m, n.ry0, dt * 3); if (Math.abs(Math.atan2(Math.sin(n.ry0 - m.rotation.y), Math.cos(n.ry0 - m.rotation.y))) < 0.01) n.ry0 = undefined; }
       if (n.path) {
         if (n.wait > 0) { n.wait -= dt; if (near) n.p.animate(dt, { mode: 'idle' }); }
         else {
-          const t = n.path[n.i], dx = t[0] - m.position.x, dz = t[1] - m.position.z, d = Math.hypot(dx, dz);
+          const t = n.path[n.i], dx = t[0] - n.bx, dz = t[1] - n.bz, d = Math.hypot(dx, dz);
           if (d < 0.2) { n.i = (n.i + 1) % n.path.length; if (prnd() < 0.3) n.wait = 1 + prnd() * 2.5; }
           else {
-            const step = Math.min(d, n.speed * dt); m.position.x += dx / d * step; m.position.z += dz / d * step;
-            const want = Math.atan2(dx, dz); let dr = want - m.rotation.y; dr = Math.atan2(Math.sin(dr), Math.cos(dr)); m.rotation.y += dr * Math.min(1, dt * 6);
-            if (near) n.p.animate(dt, { mode: 'walk', speed: n.speed });
+            const fx = dx / d, fz = dz / d;
+            // 让路：玩家在前方 1.8m 以内（同一层）→ 往离玩家远的一侧横挪 0.9m，走过去再慢慢回到路线上
+            let want = 0;
+            if (focus && Math.abs(focus.y - n.y) < 1.5) {
+              const px = focus.x - n.bx, pz = focus.z - n.bz, ahead = px * fx + pz * fz, lat = px * fz - pz * fx;
+              if (ahead > -0.4 && ahead < 1.8 && Math.abs(lat - n.off) < 1.0) want = lat > n.off * 0.5 ? -0.9 : 0.9;
+            }
+            if (want && !n.offWant && n.sayCool <= 0 && this.onSidestep) { n.sayCool = 7; this.onSidestep(n); }
+            n.offWant = want; n.sayCool -= dt;
+            n.off += ((want || 0) - n.off) * Math.min(1, dt * (want ? 4 : 1.2));
+            const slow = want ? 0.6 : 1, step = Math.min(d, n.speed * slow * dt); n.bx += fx * step; n.bz += fz * step;
+            m.position.x = n.bx + fz * n.off; m.position.z = n.bz - fx * n.off;
+            this.turnTo(m, Math.atan2(fx, fz) + (want ? Math.sign(-want) * 0.0 : 0), dt * 6);
+            if (near) n.p.animate(dt, { mode: 'walk', speed: n.speed * slow });
           }
           m.position.y = n.y + (n.p.hipBob || 0) * 0.5;
           n.sh.position.x = m.position.x; n.sh.position.z = m.position.z;

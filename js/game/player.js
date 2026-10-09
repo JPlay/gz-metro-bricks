@@ -97,7 +97,10 @@ export class Player {
     }
     // 动画
     this.walkPhase += dt * (this.speed * 2.6 + 0.001);
-    const mode = !this.grounded && this.airTime > 0.08 ? 'jump' : this.speed > 4.4 ? 'run' : this.speed > 0.35 ? 'walk' : 'idle';
+    let mode = !this.grounded && this.airTime > 0.08 ? 'jump' : this.speed > 4.4 ? 'run' : this.speed > 0.35 ? 'walk' : 'idle';
+    // 打招呼：站着不动时转向对方、挥手（emote = { mode, yaw, t }，一走动就停）
+    const em = this.emote;
+    if (em && em.t > 0) { em.t -= dt; if (mode === 'idle') { mode = em.mode; let d = em.yaw - this.facing; d = Math.atan2(Math.sin(d), Math.cos(d)); this.facing += d * Math.min(1, dt * 8); } else em.t = 0; }
     this.person.animate(dt, { mode, speed: this.speed });
     if (this.grounded) this.groundY = p.y;
     this.model.position.set(p.x, p.y + (this.person.hipBob || 0) * 0.6, p.z); this.model.rotation.y = this.facing;
