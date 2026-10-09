@@ -13,6 +13,7 @@ import { LINES, STATIONS, OTHER_LINES, transfersAt, nextStation } from '../data/
 import { DOOR_XS } from './train.js';
 import * as D from './decor.js';
 import * as MV from './mv.js';
+import { flatBand, stairBand, bridgeStripe } from './wayfind.js';
 import { Crowd, randomLook, preseed, archetypeLook } from './people.js';
 import { FONT, FONT_EN, roundRect } from './kit.js';
 import { drawLineCanvas, networkSVG } from '../ui/netmap.js';
@@ -24,6 +25,8 @@ export const SPAWN = { x: 0, y: 0, z: -48, yaw: 0 };
 /** 售票机位置（站厅，安检和闸机之间） */
 export const TVM_XS = [-8.6, -7.4, -6.2], TVM_Z = -6.4;
 /** 街面要留空的点：默认出生点、东山口截图取景点（tests/e2e/polish_shots.py 的 10b），半径 1.5 米内不放道具和行人 */
+/** 换乘站站口 / 闸机前的提示牌（2 号线没有单独的入口） */
+const TRANSFER_HINT = { kind: 'way', w: 7.2, h: 0.62, zh: '换乘 2号线 请先进站，到 1号线站台换乘', en: 'Line 2: enter here, change at the Line 1 platform', badges: [{ line: 2 }], bar: '#00629B' };
 export const STREET_CLEAR = [{ x: SPAWN.x, z: SPAWN.z, r: 1.5 }, { x: -6, z: -56, r: 1.5 }];
 // 每站一个很淡的主题色（柱子 / 墙面点缀），整体保持 1 号线车站的米白基调
 const THEMES = ['#F1E6D8', '#E3EEE6', '#E4EAF2', '#F2E4E8', '#EAE6F2', '#F5EDD6', '#E0EEEE', '#EFE8DE'];
@@ -249,6 +252,8 @@ export class Station {
     k.sign(0, 4.85, -38.52, { kind: 'entrance', w: 9.4, h: 1.15, zh: s.zh + '站', en: s.en + ' Station', badges: lines, exits, face: Math.PI });
     // 站口导向牌（升级：大箭头 + 线路色块 + 大字，走到站口就看得到）
     k.sign(0, 2.95, -37.6, { kind: 'way', w: 4.6, h: 0.85, zh: '进站', en: 'Entrance', arrow: 'down', badges: lines, face: Math.PI, hang: 3.6 });
+    // 换乘站：2 号线没有单独的站口——挂在“进站”牌下面，免得在街上找 2 号线的入口
+    if (this.platforms.length > 1) k.sign(0, 2.16, -37.62, { ...TRANSFER_HINT, arrow: 'down', face: Math.PI, hang: 3.6 });
     // 立柱式站名标（站口旁）
     const tx = 6.4, tz = -39.5;
     P.rbox(tx, 0, tz, 0.9, 4.4, 0.32, hex('#2A2D31'), 0.06, 0, { bevel: 0.02 });
@@ -397,6 +402,8 @@ export class Station {
     }
     this.gateScreensBuild(zg, y);
     k.sign(0, y + 3.55, zg - 0.5, { kind: 'dir', w: 6, h: 0.62, zh: '进站', en: 'Entrance', badges: L.map(badge), face: Math.PI, double: true, back: { kind: 'exit', zh: '出站', en: 'Exit' }, hang: CY });
+    // 换乘站：闸机正上方“进站”牌下面再挂一块——2 号线也从这里进，到 1 号线站台换乘
+    if (this.platforms.length > 1) k.sign(0, y + 2.86, zg - 0.56, { ...TRANSFER_HINT, arrow: 'up', face: Math.PI, hang: CY });
     for (const z of [-8.5, -5.5]) arrow(k, 0, y + 0.006, z, 0, '#F2C230');
     // 刚过闸机：往站台（线路色块 + 两头终点），背面是出站
     k.sign(0, y + 3.35, 2.6, { kind: 'way', w: 8.2, h: 0.9, zh: '站台', en: 'Platforms', arrow: 'up', badges: L.map(badge), dirs: termini(L[0], this.code), face: Math.PI, double: true, back: { kind: 'exit', arrow: 'up', zh: '出站', en: 'Exit', exits: ['A', 'D'] }, hang: CY });
@@ -614,7 +621,8 @@ export class Station {
       for (const t of [a, b]) Pm.slab(x - 0.15, x + 0.15, y + 3.6, y + 4.8, t - 2.3, t + 2.3, hex('#5A6068'));
     }
     // 结构顶板（主站台中间被站厅地板盖住）+ 吊顶 + 灯带
-    const ceilHoles = isMain ? [[-18, 18, -100, 100]] : [[-19, -5.6, 41, 45]];
+    // 2 号线站台的结构顶板不能伸进换乘通道（以前在通道 z>33.4 那段地面上凸出 0.2m 深灰色板，盖住了地砖和地面引导带）
+    const ceilHoles = isMain ? [[-18, 18, -100, 100]] : [[-19, -5.6, 41, 45], [-24.3, -18.7, 33, 45.3]];
     k.floorWithHoles(-HALL_X, HALL_X, zc - WALL_OFF, zc + WALL_OFF, y + 4.8, y + 5.2, hex('#4E545B'), ceilHoles, true);
     k.floorWithHoles(-HALL_X, HALL_X, zc - PSD_OFF, zc + PSD_OFF, CY, CY + 0.06, CEIL, ceilHoleS, false, 'ceiling');
     for (const sz of [-1, 1]) {
@@ -775,10 +783,8 @@ export class Station {
     k.block(-5.9, -5.6, GYQ2.y + 4.8, -13.7, 40.7, 45.3, WALLC, false, 'wall'); // 竖井东头的墙（以前从楼梯往下看能看到天）
     this.lightStrip('x', -18.6, -6, 43, -14.02, 0.14, 0.8, 0.3);
     // 会自己拼起来的桥 + 通道里的路标
-    this.mv.push(MV.foldingBridge(k, -24, -19, 26, 33, yc));
-    for (const z of [18, 22, 36, 39]) arrow(k, -21.5, yc + 0.006, z, 0, c2);
-    for (const [x, z] of [[12, 19], [6, 19], [0, 19], [-3.5, 14]]) arrow(k, x, y1 + 0.006, z, -Math.PI / 2, c2);
-    for (const [x, z] of [[4, 43], [0, 43]]) arrow(k, x, y2 + 0.006, z, -Math.PI / 2, c1);
+    this.bridge = MV.foldingBridge(k, -24, -19, 26, 33, yc); this.mv.push(this.bridge);
+    // （以前这里是几个蓝 / 黄地面箭头，换成 transferWayfinding() 里连续的引导带）
     // 1 号线站台上的换乘楼梯口：换乘 2 号线（两头终点）
     k.sign(-5.4, y1 + 3.3, 14, { kind: 'way', w: 7.6, h: 0.85, zh: '换乘', en: 'Transfer', badges: [badge(2)], arrow: 'down', dirs: termini(2, 'gyq'), face: Math.PI / 2, double: true, bar: c2, hang: y1 + 4.2 });
     // 换乘通道：入口、中段（过桥之后）各一块双面牌——往里走看到“换乘 2号线”，往回走看到“换乘 1号线”；通道尽头的墙上指向右手边下 2 号线站台的楼梯
@@ -786,7 +792,53 @@ export class Station {
     k.sign(-21.5, -14.9, 44.94, { kind: 'way', w: 4.6, h: 0.85, badges: [badge(2)], arrow: 'right', dirs: [{ zh: '2号线站台', en: 'Line 2' }], face: Math.PI, bar: c2 });
     // 2 号线站台楼梯口（向东下行）：箭头往下 + 两头终点
     k.sign(-18.75, -14.48, 43, { kind: 'way', w: 3.9, h: 0.78, badges: [badge(2)], arrow: 'down', dirs: termini(2, 'gyq'), face: -Math.PI / 2, bar: c2, hang: -14.0 });
-    k.sign(-4.8, y2 + 3.3, 43, { kind: 'dir', w: 6.2, h: 0.62, zh: '换乘 1号线 · 出口', en: 'Line 1 · Exit', badges: [badge(1)], exits: ['A', 'D'], arrow: 'up', face: Math.PI / 2, double: true, bar: c1, hang: y2 + 4.2 });
+    // 正面（朝东）给往回走的人：换乘 1 号线 · 出口；背面（下楼梯到站台时正前方）：这里就是 2 号线站台 + 两头终点
+    k.sign(-4.8, y2 + 3.3, 43, { kind: 'dir', w: 6.2, h: 0.62, zh: '换乘 1号线 · 出口', en: 'Line 1 · Exit', badges: [badge(1)], exits: ['A', 'D'], arrow: 'up', face: Math.PI / 2, double: true, bar: c1, hang: y2 + 4.2,
+      back: { kind: 'way', w: 6.2, h: 0.62, zh: '2号线站台', en: 'Line 2', badges: [badge(2)], dirs: termini(2, 'gyq'), bar: c2 } });
+    this.transferWayfinding();
+  }
+  /**
+   * 公园前换乘导向（给第一次来的小朋友）：
+   *   - 1 号线站台：楼梯 / 两部扶梯下来正前方一块大蓝牌“换乘 2号线”（掉头箭头），沿站台再挂几块重复牌；
+   *   - 地面蓝色引导带（约 0.4m 宽 + 白色 V 形箭头）：每个楼梯 / 扶梯脚 → 站台北侧走道 → 换乘楼梯 → 通道（过桥）→ 2 号线楼梯 → 2 号线站台；
+   *   - 反方向（2 → 1）一条黄色引导带走在另一侧，2 号线站台上挂“换乘 1号线”重复牌。
+   * 色带走在各自前进方向的右手边：往 2 号线走的蓝带、往 1 号线走的黄带并排不重叠。
+   */
+  transferWayfinding() {
+    const k = this.kit, G = k.glow, y1 = MAIN.y, yc = -17, y2 = GYQ2.y, c2 = LINES[2].color, c1 = LINES[1].color, W2 = '#FFFFFF', D1 = '#3A2E00';
+    const zB = 14.7, zY = 13.3, xB = -20.8, xY = -22.2, zB2 = 42.3, zY2 = 43.7, NB = 18.6, TX = 17.4;
+    // —— 蓝：1 号线站台（楼梯脚 x≈15，扶梯脚 x≈16.8）→ 北侧走道 → 换乘楼梯口
+    for (const [x0, z] of [[15.3, 14], [16.4, 17.1], [16.4, 10.9]]) flatBand(G, [[x0, z], [TX, z]], y1, c2, W2, { start: 0.6 });
+    flatBand(G, [[TX, 10.9], [TX, NB], [-2.8, NB], [-2.8, zB], [-6, zB]], y1, c2, W2);
+    stairBand(G, -6, y1, -19.33, yc, zB, c2, W2);
+    flatBand(G, [[-19.33, zB], [xB, zB], [xB, 25.8]], yc, c2, W2);
+    flatBand(G, [[xB, 33.2], [xB, zB2], [-19, zB2]], yc, c2, W2);
+    stairBand(G, -19, yc, -5.67, y2, zB2, c2, W2);
+    flatBand(G, [[-5.67, zB2], [-1.2, zB2]], y2, c2, W2, { start: 0.6 });
+    // —— 黄：2 号线站台 → 楼梯 → 通道 → 换乘楼梯 → 1 号线站台
+    flatBand(G, [[-1.6, zY2], [-5.67, zY2]], y2, c1, D1, { start: 0.6 });
+    stairBand(G, -19, yc, -5.67, y2, zY2, c1, D1, { walkDir: -1 });
+    flatBand(G, [[-19, zY2], [xY, zY2], [xY, 33.2]], yc, c1, D1);
+    flatBand(G, [[xY, 25.8], [xY, zY], [-19.33, zY]], yc, c1, D1);
+    stairBand(G, -6, y1, -19.33, yc, zY, c1, D1, { walkDir: 1 });
+    flatBand(G, [[-6, zY], [-3.6, zY]], y1, c1, D1, { start: 0.6 });
+    // —— 桥：每块桥板上一段（桥板翻上来拼好时色带才连起来）
+    const br = this.bridge, dz = 7 / 6;
+    const src = bridgeStripe(this.scene, k.M.glow, k.root, dz, [{ dx: xB + 21.5, col: c2, chev: W2, dirZ: 1 }, { dx: xY + 21.5, col: c1, chev: D1, dirZ: -1 }]);
+    br.tiles.forEach((t, i) => { const inst = src.createInstance('bridgeStripe' + i); inst.parent = t.pivot; inst.position.set(0, 0, 0); });
+    // —— 1 号线站台的牌子
+    const W2B = { t: '2', bg: '#FFFFFF', fg: c2 }, big = { kind: 'way', bg: c2, zh: '换乘 2号线', en: 'Transfer to Line 2', badges: [W2B] };
+    // 楼梯 / 两部扶梯脚正前方（宽 6.4m 盖住 z 10.8~17.2 三条下来的路）：掉头箭头（往左拐、往回走，和地上的蓝带一致）
+    k.sign(20.6, y1 + 2.85, 14, { ...big, w: 6.4, h: 1.15, arrow: 'uturn', face: -Math.PI / 2, double: true, back: { ...big, w: 6.4, h: 1.15, arrow: 'upright' }, hang: y1 + 4.2 });
+    // 北侧走道上两块（往西走时正前方）
+    for (const x of [9, 2]) k.sign(x, y1 + 2.6, 19.0, { ...big, w: 1.7, h: 0.75, arrow: 'up', en: 'Line 2', face: Math.PI / 2, hang: y1 + 4.8 });
+    // 站台两头（下车的人）：往换乘楼梯
+    k.sign(36, y1 + 3.25, 14, { ...big, w: 4.4, h: 0.8, arrow: 'up', face: Math.PI / 2, hang: y1 + 4.2 });
+    k.sign(-27, y1 + 3.25, 14, { ...big, w: 4.4, h: 0.8, arrow: 'up', face: -Math.PI / 2, hang: y1 + 4.2 });
+    // —— 2 号线站台：换乘 1 号线（深色牌 + 黄色条，和 1 号线线路色一致）
+    const back1 = { kind: 'way', zh: '换乘 1号线', en: 'Transfer to Line 1', badges: [badge(1)], arrow: 'up', bar: c1 };
+    k.sign(20, y2 + 3.25, GYQ2.zc, { ...back1, w: 4.4, h: 0.8, face: Math.PI / 2, hang: y2 + 4.2 });
+    k.sign(-28, y2 + 3.25, GYQ2.zc, { ...back1, w: 4.4, h: 0.8, face: -Math.PI / 2, hang: y2 + 4.2 });
   }
   /* ---------------- 每帧 ---------------- */
   update(dt, player, cam, Audio, metro) {

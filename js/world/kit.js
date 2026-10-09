@@ -185,6 +185,12 @@ export function drawBadge(c, x, y, h, b, wFactor) {
 }
 /** 箭头（实心，粗杆） */
 export function drawArrow(c, x, y, s, dir, col) {
+  if (dir === 'uturn') { // 掉头（往左拐回去）：右边往上走、从上面绕到左边、往下指
+    c.save(); c.translate(x + s / 2, y + s / 2); const h = s / 2, r = h * 0.42, cy = -h * 0.28;
+    c.strokeStyle = col; c.lineWidth = h * 0.3; c.lineCap = 'butt'; c.beginPath(); c.moveTo(r, h * 0.95); c.lineTo(r, cy); c.arc(0, cy, r, 0, Math.PI, true); c.lineTo(-r, h * 0.2); c.stroke();
+    c.fillStyle = col; c.beginPath(); c.moveTo(-r - h * 0.42, h * 0.18); c.lineTo(-r + h * 0.42, h * 0.18); c.lineTo(-r, h * 0.98); c.closePath(); c.fill();
+    c.restore(); return;
+  }
   c.save(); c.translate(x + s / 2, y + s / 2); c.rotate({ right: 0, down: Math.PI / 2, left: Math.PI, up: -Math.PI / 2, upleft: -Math.PI * 0.75, upright: -Math.PI / 4 }[dir] || 0);
   c.fillStyle = col; c.beginPath();
   const h = s / 2; c.moveTo(h, 0); c.lineTo(h * 0.05, -h * 0.82); c.lineTo(h * 0.05, -h * 0.3); c.lineTo(-h * 0.92, -h * 0.3); c.lineTo(-h * 0.92, h * 0.3); c.lineTo(h * 0.05, h * 0.3); c.lineTo(h * 0.05, h * 0.82); c.closePath(); c.fill();
