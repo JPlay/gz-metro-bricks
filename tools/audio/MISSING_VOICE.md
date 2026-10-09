@@ -1,61 +1,12 @@
 # 缺失的报站语音片段
 
-由 `node tools/audio/export_jobs.mjs` 生成。全网共需 407 条片段，已有 MP3 305 条，缺 102 条（普通话 34 / 粤语 34 / 英语 34）。
+由 `node tools/audio/export_jobs.mjs` 生成。全网共需 407 条片段，已有 MP3 354 条，缺 53 条（普通话 17 / 粤语 18 / 英语 18）。
 缺失片段在游戏里自动用 Web Speech 朗读（zh-CN → zh-HK（若有）→ en-US（若有），语速 0.95），并照常显示字幕。
 
 生成方法：设置环境变量 DASHSCOPE_API_KEY 后运行 `python3 tools/audio/generate_voice.py`（会读取 voice-jobs.json，只生成缺的）。
 
 | id | 语言 | 文本 |
 | --- | --- | --- |
-| voice.arrive.hzgc.zh | zh | 列车即将到达海珠广场站，请小心列车与站台之间的空隙。 |
-| voice.arrive.hzgc.yue | yue | 列车即将到达海珠广场站，请小心列车同站台之间的空隙。 |
-| voice.arrive.hzgc.en | en | The train is arriving at Haizhu Guangchang. Please mind the gap between the train and the platform. |
-| voice.welcome.hzgc.zh | zh | 欢迎光临海珠广场站。请排队候车，先下后上。 |
-| voice.welcome.hzgc.yue | yue | 欢迎光临海珠广场站。请排队候车，先落后上。 |
-| voice.welcome.hzgc.en | en | Welcome to Haizhu Guangchang station. Please line up for the train. Let the passengers get off first before you get on. |
-| voice.next.jnt.zh | zh | 下一站，纪念堂。 |
-| voice.next.jnt.yue | yue | 下一站，纪念堂。 |
-| voice.next.jnt.en | en | The next station is Jiniantang. |
-| voice.arrive.jnt.zh | zh | 列车即将到达纪念堂站，请小心列车与站台之间的空隙。 |
-| voice.arrive.jnt.yue | yue | 列车即将到达纪念堂站，请小心列车同站台之间的空隙。 |
-| voice.arrive.jnt.en | en | The train is arriving at Jiniantang. Please mind the gap between the train and the platform. |
-| voice.welcome.jnt.zh | zh | 欢迎光临纪念堂站。请排队候车，先下后上。 |
-| voice.welcome.jnt.yue | yue | 欢迎光临纪念堂站。请排队候车，先落后上。 |
-| voice.welcome.jnt.en | en | Welcome to Jiniantang station. Please line up for the train. Let the passengers get off first before you get on. |
-| voice.next.yxgy.zh | zh | 下一站，越秀公园。 |
-| voice.next.yxgy.yue | yue | 下一站，越秀公园。 |
-| voice.next.yxgy.en | en | The next station is Yuexiu Gongyuan. |
-| voice.arrive.yxgy.zh | zh | 列车即将到达越秀公园站，请小心列车与站台之间的空隙。 |
-| voice.arrive.yxgy.yue | yue | 列车即将到达越秀公园站，请小心列车同站台之间的空隙。 |
-| voice.arrive.yxgy.en | en | The train is arriving at Yuexiu Gongyuan. Please mind the gap between the train and the platform. |
-| voice.welcome.yxgy.zh | zh | 欢迎光临越秀公园站。请排队候车，先下后上。 |
-| voice.welcome.yxgy.yue | yue | 欢迎光临越秀公园站。请排队候车，先落后上。 |
-| voice.welcome.yxgy.en | en | Welcome to Yuexiu Gongyuan station. Please line up for the train. Let the passengers get off first before you get on. |
-| voice.next.gzhcz.zh | zh | 下一站，广州火车站，可换乘五号线。 |
-| voice.next.gzhcz.yue | yue | 下一站，广州火车站，可换乘五号线。 |
-| voice.next.gzhcz.en | en | The next station is Guangzhou Huochezhan, the interchange with Line Five. |
-| voice.arrive.gzhcz.zh | zh | 列车即将到达广州火车站，请小心列车与站台之间的空隙。 |
-| voice.arrive.gzhcz.yue | yue | 列车即将到达广州火车站，请小心列车同站台之间的空隙。 |
-| voice.arrive.gzhcz.en | en | The train is arriving at Guangzhou Huochezhan. Please mind the gap between the train and the platform. |
-| voice.welcome.gzhcz.zh | zh | 欢迎光临广州火车站。请排队候车，先下后上。 |
-| voice.welcome.gzhcz.yue | yue | 欢迎光临广州火车站。请排队候车，先落后上。 |
-| voice.welcome.gzhcz.en | en | Welcome to Guangzhou Huochezhan. Please line up for the train. Let the passengers get off first before you get on. |
-| voice.next.syl.zh | zh | 下一站，三元里。 |
-| voice.next.syl.yue | yue | 下一站，三元里。 |
-| voice.next.syl.en | en | The next station is Sanyuanli. |
-| voice.arrive.syl.zh | zh | 列车即将到达三元里站，请小心列车与站台之间的空隙。 |
-| voice.arrive.syl.yue | yue | 列车即将到达三元里站，请小心列车同站台之间的空隙。 |
-| voice.arrive.syl.en | en | The train is arriving at Sanyuanli. Please mind the gap between the train and the platform. |
-| voice.welcome.syl.zh | zh | 欢迎光临三元里站。请排队候车，先下后上。 |
-| voice.welcome.syl.yue | yue | 欢迎光临三元里站。请排队候车，先落后上。 |
-| voice.welcome.syl.en | en | Welcome to Sanyuanli station. Please line up for the train. Let the passengers get off first before you get on. |
-| voice.next.fxgy.zh | zh | 下一站，飞翔公园。 |
-| voice.next.fxgy.yue | yue | 下一站，飞翔公园。 |
-| voice.next.fxgy.en | en | The next station is Feixiang Gongyuan. |
-| voice.arrive.fxgy.zh | zh | 列车即将到达飞翔公园站，请小心列车与站台之间的空隙。 |
-| voice.arrive.fxgy.yue | yue | 列车即将到达飞翔公园站，请小心列车同站台之间的空隙。 |
-| voice.arrive.fxgy.en | en | The train is arriving at Feixiang Gongyuan. Please mind the gap between the train and the platform. |
-| voice.welcome.fxgy.zh | zh | 欢迎光临飞翔公园站。请排队候车，先下后上。 |
 | voice.welcome.fxgy.yue | yue | 欢迎光临飞翔公园站。请排队候车，先落后上。 |
 | voice.welcome.fxgy.en | en | Welcome to Feixiang Gongyuan station. Please line up for the train. Let the passengers get off first before you get on. |
 | voice.next.bygy.zh | zh | 下一站，白云公园。 |
