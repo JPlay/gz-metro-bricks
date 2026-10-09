@@ -2,13 +2,13 @@
  {
   "id": "voice.destination.up.zh",
   "lang": "zh",
-  "text": "本次列车终点站为，广州东站。",
+  "text": "本次列车终点站为广州东站。",
   "file": "voice/destination-up-zh.mp3"
  },
  {
   "id": "voice.destination.up.yue",
   "lang": "yue",
-  "text": "本次列车终点站为，广州东站。",
+  "text": "本次列车终点站为广州东站。",
   "file": "voice/destination-up-yue.mp3"
  },
  {
@@ -74,13 +74,13 @@
  {
   "id": "voice.destination.down.zh",
   "lang": "zh",
-  "text": "本次列车终点站为，西塱。",
+  "text": "本次列车终点站为西塱。",
   "file": "voice/destination-down-zh.mp3"
  },
  {
   "id": "voice.destination.down.yue",
   "lang": "yue",
-  "text": "本次列车终点站为，西塱。",
+  "text": "本次列车终点站为西塱。",
   "file": "voice/destination-down-yue.mp3"
  },
  {
@@ -992,13 +992,13 @@
  {
   "id": "voice.destination.l2n.zh",
   "lang": "zh",
-  "text": "本次列车终点站为，嘉禾望岗。",
+  "text": "本次列车终点站为嘉禾望岗。",
   "file": "voice/destination-l2n-zh.mp3"
  },
  {
   "id": "voice.destination.l2n.yue",
   "lang": "yue",
-  "text": "本次列车终点站为，嘉禾望岗。",
+  "text": "本次列车终点站为嘉禾望岗。",
   "file": "voice/destination-l2n-yue.mp3"
  },
  {
@@ -1064,13 +1064,13 @@
  {
   "id": "voice.destination.l2s.zh",
   "lang": "zh",
-  "text": "本次列车终点站为，广州南站。",
+  "text": "本次列车终点站为广州南站。",
   "file": "voice/destination-l2s-zh.mp3"
  },
  {
   "id": "voice.destination.l2s.yue",
   "lang": "yue",
-  "text": "本次列车终点站为，广州南站。",
+  "text": "本次列车终点站为广州南站。",
   "file": "voice/destination-l2s-yue.mp3"
  },
  {

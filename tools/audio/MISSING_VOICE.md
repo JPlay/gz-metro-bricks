@@ -109,8 +109,8 @@
 | voice.welcome.gzdz.zh | zh | 欢迎光临广州东站站。请排队候车，先下后上。 |
 | voice.welcome.gzdz.yue | yue | 欢迎光临广州东站站。请排队候车，先落后上。 |
 | voice.welcome.gzdz.en | en | Welcome to Guangzhou East Railway Station station. Please line up for the train. Let the passengers get off first before you get on. |
-| voice.destination.l2n.zh | zh | 本次列车终点站为，嘉禾望岗。 |
-| voice.destination.l2n.yue | yue | 本次列车终点站为，嘉禾望岗。 |
+| voice.destination.l2n.zh | zh | 本次列车终点站为嘉禾望岗。 |
+| voice.destination.l2n.yue | yue | 本次列车终点站为嘉禾望岗。 |
 | voice.destination.l2n.en | en | The destination of this train is Jiahewanggang. |
 | voice.terminal.l2n.zh | zh | 下一站是本次列车的终点站，嘉禾望岗。请全部乘客带齐行李物品在此站下车，欢迎再次乘坐广州地铁。 |
 | voice.terminal.l2n.yue | yue | 下一站系本次列车嘅终点站，嘉禾望岗。请全部乘客带齐行李物品喺呢一站落车，欢迎再次乘坐广州地铁。 |
@@ -121,8 +121,8 @@
 | voice.platform.l2n.2.zh | zh | 二站台，嘉禾望岗方向列车即将进站。 |
 | voice.platform.l2n.2.yue | yue | 二站台，嘉禾望岗方向列车即将进站。 |
 | voice.platform.l2n.2.en | en | The train bound for Jiahewanggang is approaching at Platform 2. |
-| voice.destination.l2s.zh | zh | 本次列车终点站为，广州南站。 |
-| voice.destination.l2s.yue | yue | 本次列车终点站为，广州南站。 |
+| voice.destination.l2s.zh | zh | 本次列车终点站为广州南站。 |
+| voice.destination.l2s.yue | yue | 本次列车终点站为广州南站。 |
 | voice.destination.l2s.en | en | The destination of this train is Guangzhou South Railway Station. |
 | voice.terminal.l2s.zh | zh | 下一站是本次列车的终点站，广州南站。请全部乘客带齐行李物品在此站下车，欢迎再次乘坐广州地铁。 |
 | voice.terminal.l2s.yue | yue | 下一站系本次列车嘅终点站，广州南站。请全部乘客带齐行李物品喺呢一站落车，欢迎再次乘坐广州地铁。 |

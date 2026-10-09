@@ -231,9 +231,17 @@ export class Person {
         this.setBone(2, 0.42, this.lookYaw * 0.3, 0); this.setBone(3, 0.05, 0, 0.12); this.setBone(5, -0.2, 0, 0);
         this.setBone(4, -0.35, -0.25, -0.15); this.setBone(6, -1.45, 0.35, 0);
       } else if (mode === 'wave') {
-        const w = Math.sin(t * 6) * 0.35;
-        this.setBone(2, 0, this.lookYaw * 0.4, 0); this.setBone(3, 0, 0, 0.08); this.setBone(5, -0.15, 0, 0);
-        this.setBone(4, 0, 0, -2.5 + w * 0.3); this.setBone(6, 0, 0, -0.5 + w);
+        // 挥空着的那只手：公文包/手机在右手 → 挥左手；菜篮在左手 → 挥右手；胸前相机两手都空，默认挥右手
+        const w = Math.sin(t * 6) * 0.35, prop = this.look.prop;
+        const waveLeft = prop === 'briefcase' || this.look.phone;
+        this.setBone(2, 0, this.lookYaw * 0.4, 0);
+        if (waveLeft) {
+          this.setBone(4, 0, 0, -0.08); this.setBone(6, -0.15, 0, 0);
+          this.setBone(3, 0, 0, 2.5 - w * 0.3); this.setBone(5, 0, 0, 0.5 - w);
+        } else {
+          this.setBone(3, 0, 0, 0.08); this.setBone(5, -0.15, 0, 0);
+          this.setBone(4, 0, 0, -2.5 + w * 0.3); this.setBone(6, 0, 0, -0.5 + w);
+        }
       } else if (mode === 'chat') {
         // 聊天：边说边点头、一只手比划，偶尔笑得往后仰
         const g = Math.sin(t * 2.3), n = Math.sin(t * 4.1) * 0.06;

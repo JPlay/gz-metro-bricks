@@ -30,7 +30,7 @@ export function nextSegs(line, code) {
 }
 export function destinationSegs(line, dir) {
   const d = LINES[line].dirs[dir];
-  return seg('destination.' + dir, [`本次列车终点站为，${d.zh}。`, `本次列车终点站为，${d.zh}。`, `The destination of this train is ${d.en}.`]);
+  return seg('destination.' + dir, [`本次列车终点站为${d.zh}。`, `本次列车终点站为${d.zh}。`, `The destination of this train is ${d.en}.`]);
 }
 export function terminalSegs(line, dir) {
   const d = LINES[line].dirs[dir];

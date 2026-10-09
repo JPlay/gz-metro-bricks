@@ -27,7 +27,7 @@ for sid,zh,en in STATIONS:
     add('welcome.'+sid,[f'欢迎光临{zh}站。请排队候车，先下后上。',f'欢迎光临{zh}站。请排队候车，先落后上。',f'Welcome to {en} station. Please line up for the train. Let the passengers get off first before you get on.'],zh+' · 站台欢迎')
 
 for d,zh,en in [('up','广州东站','Guangzhou East Railway Station'),('down','西塱','Xilang')]:
-    add('destination.'+d,[f'本次列车终点站为，{zh}。',f'本次列车终点站为，{zh}。',f'The destination of this train is {en}.'],zh+' · 终点方向')
+    add('destination.'+d,[f'本次列车终点站为{zh}。',f'本次列车终点站为{zh}。',f'The destination of this train is {en}.'],zh+' · 终点方向')
     for platform in [1,2]:
         num=['一','二'][platform-1]
         add(f'platform.{d}.{platform}',[f'{num}站台，{zh}方向列车即将进站。',f'{num}站台，{zh}方向列车即将进站。',f'The train bound for {en} is approaching at Platform {platform}.'],f'{platform}站台 · '+zh+'方向')
