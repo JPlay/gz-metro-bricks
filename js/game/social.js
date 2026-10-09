@@ -8,7 +8,7 @@
  */
 import { LINES, STATIONS } from '../data/lines.js';
 import { routeTo } from '../data/route.js';
-import { networkSVG, nearestStation } from '../ui/netmap.js';
+import { networkSVG, nearestStation, svgMap } from '../ui/netmap.js';
 import { pressable } from './input.js';
 
 export const LINES_SAY = {
@@ -78,8 +78,8 @@ export class Social {
     box.addEventListener('pointerdown', e => { e.stopPropagation(); down = [e.clientX, e.clientY]; });
     box.addEventListener('pointerup', e => {
       e.stopPropagation(); if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 24) return; down = null;
-      const svg = box.querySelector('svg'), pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY; const q = pt.matrixTransform(svg.getScreenCTM().inverse());
-      const c = nearestStation(q.x, q.y, this.portrait); if (c) this.answer(c);
+      const [qx, qy] = svgMap(box.querySelector('svg')).toSvg(e.clientX, e.clientY);
+      const c = nearestStation(qx, qy, this.portrait); if (c) this.answer(c);
     });
     ['pointerdown', 'pointermove', 'pointerup', 'touchstart', 'click'].forEach(t => el.addEventListener(t, e => e.stopPropagation()));
   }

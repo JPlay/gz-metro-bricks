@@ -46,17 +46,22 @@ async def greet_part(pg):
         await tap(pg, '#bAct'); await asyncio.sleep(0.9)
         R['greet_' + k] = await pg.evaluate('__game.state().social.lastGreet')
         await bubble_ok(pg, 'b_' + k)
-        await shot(pg, f'6b-greet-{k}')
         R['npcWaving_' + k] = await pg.evaluate(f"(()=>{{const n=__game.station.greeters.find(g=>g.kind=='{k}').n; return !!n.act && n.act.mode=='wave';}})()")
+        await shot(pg, f'6b-greet-{k}')
         await pg.evaluate('__game.bubbles.clear()')
     # ③ 让路：站到走动路人的前方
     await pg.evaluate('__game.social.sidestepChance=1; __game.social.sayCool=0')
     w = await pg.evaluate("""(()=>{const n=__game.station.crowd.list.find(n=>n.path&&n.path[0][0]==5&&n.path[0][1]==-10.5); n.wait=0; n.sayCool=0; n.i=1; n.bx=5; n.bz=-10.5; n.off=0;
-      __game.teleport(7.6, -5.95, -10.5, -Math.PI/2); const p=__game.player; p.yaw=-Math.PI/2+0.9; p.pitch=0.12; p.dist=3.6; window.__w=n; return [n.bx,n.bz];})()""")
+      __game.teleport(7.6, -5.95, -10.5, -Math.PI/2); const p=__game.player; p.yaw=-Math.PI/2+1.35; p.pitch=0.15; p.dist=4.6; window.__w=n; return [n.bx,n.bz];})()""")
     R['sidestepSaid'] = await until(pg, '__game.state().social.count.excuse>0', 30)
     await until(pg, 'Math.abs(__w.off)>0.5', 6)
     R['sideOff'] = await pg.evaluate('+__w.off.toFixed(2)')
+    await pg.evaluate('__game.setDtMax && __game.setDtMax(0.0001)')  # 冻住画面再拍（路人别走出镜头）
+    # 镜头对准让路的人（第三人称，从玩家身后斜着看过去）
+    R['walkerAt'] = await pg.evaluate("""(()=>{const m=__w.p.mesh.position, p=__game.player; p.yaw=Math.atan2(m.x-p.position.x, m.z-p.position.z)+0.5; p.pitch=0.12; p.dist=3.6; p.camDist=3.6; return [+m.x.toFixed(2), +m.z.toFixed(2)];})()""")
+    await asyncio.sleep(1.5)
     await bubble_ok(pg, 'b_excuse')
+    R['excuseInfo'] = await pg.evaluate('__game.bubbles.info()')
     await shot(pg, '6c-sidestep-excuse')
 async def seat_part(pg):
     SLOT = "__game.metro.slots.find(s=>s.line==1&&s.step==1)"
@@ -77,13 +82,14 @@ async def seat_part(pg):
 async def ask_part(pg):
     await pg.evaluate('__game.teleport(15,-5.95,-3.9,Math.PI)'); await asyncio.sleep(0.8)
     R['actAsk'] = await until(pg, "(__game.state().act||{}).id=='ask'", 15)
-    await pg.evaluate('__game.player.yaw=Math.PI-0.75; __game.player.pitch=0.12; __game.player.dist=3.4')
+    await pg.evaluate(f'__game.player.yaw=Math.PI-{0.75 if W > H else 0.35}; __game.player.pitch=0.12; __game.player.dist=3.4')  # 竖屏视野窄：多转一点，让工作人员入镜
     for dest, name in [('xl', 'line1'), ('yxgy', 'line2-transfer')]:
         await tap(pg, '#bAct'); await until(pg, '__game.state().social.pickerOpen', 10); await asyncio.sleep(0.6)
         if name == 'line1': await shot(pg, f'7a-ask-picker-{TAG}')
         # 点地图上的车站（站点圆点的屏幕坐标）
-        xy = await pg.evaluate(f"""(async()=>{{const {{networkLayout}}=await import('/js/ui/netmap.js'); const svg=document.querySelector('#askway svg'); const [x,y]=networkLayout(innerHeight>innerWidth).pos['{dest}'];
-          const p=svg.createSVGPoint(); p.x=x; p.y=y; const q=p.matrixTransform(svg.getScreenCTM()); return [q.x,q.y];}})()""")
+        xy = await pg.evaluate(f"""(async()=>{{const {{networkLayout, svgMap}}=await import('/js/ui/netmap.js'); const svg=document.querySelector('#askway .mapbox svg'); const [x,y]=networkLayout(innerHeight>innerWidth).pos['{dest}'];
+          return svgMap(svg).toClient(x,y);}})()""")
+        R['click_' + name] = xy
         await pg.mouse.click(xy[0], xy[1]); await asyncio.sleep(1.2)
         R['answer_' + name] = await pg.evaluate('__game.state().social.lastAnswer')
         await bubble_ok(pg, 'b_' + name)

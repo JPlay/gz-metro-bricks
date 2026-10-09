@@ -772,6 +772,7 @@ export class Station {
     k.stairs('x', -19, yc, -5.67, y2, 41, 45, y2, FLOOR);
     k.block(-19, -5.6, GYQ2.y + 4.8, -14, 40.7, 41, WALLC, false, 'wall'); k.block(-19, -5.6, GYQ2.y + 4.8, -14, 45, 45.3, WALLC, false, 'wall');
     k.block(-19, -5.6, -14, -13.7, 40.7, 45.3, hex('#4E545B'));
+    k.block(-5.9, -5.6, GYQ2.y + 4.8, -13.7, 40.7, 45.3, WALLC, false, 'wall'); // 竖井东头的墙（以前从楼梯往下看能看到天）
     this.lightStrip('x', -18.6, -6, 43, -14.02, 0.14, 0.8, 0.3);
     // 会自己拼起来的桥 + 通道里的路标
     this.mv.push(MV.foldingBridge(k, -24, -19, 26, 33, yc));

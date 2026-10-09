@@ -9,7 +9,8 @@ OUT = (sys.argv[2] if len(sys.argv) > 2 else '/workspace/gz-shots-3d/').rstrip('
 LINE = int(os.environ.get('LINE', '1')); STEP = int(os.environ.get('STEP', '1'))
 os.makedirs(OUT, exist_ok=True); T0 = time.time(); R = {}
 def log(*a): print(f'[{time.time() - T0:6.1f}s]', *a, flush=True)
-async def shot(pg, name): await pg.screenshot(path=OUT + name + '.png', timeout=180000); log('shot', name)
+SUF = os.environ.get('SUFFIX', '')
+async def shot(pg, name): name += SUF; await pg.screenshot(path=OUT + name + '.png', timeout=180000); log('shot', name)
 async def until(pg, js, t=120):
     for _ in range(int(t / 0.25)):
         if await pg.evaluate(js): return True

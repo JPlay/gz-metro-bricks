@@ -312,8 +312,8 @@ const PAINT = {
     const blockW = Math.max(zw, ew), x0 = (pw - blockW) / 2 + bw / 2;
     bx = x0 - bw - main * 0.04;
     for (const b of o.badges || []) { drawBadge(c, bx, main * 0.17, bh, b, 0.95); bx += bh * 0.95 + main * 0.06; }
-    c.fillStyle = ink; c.font = `700 ${zs}px ${FONT}`; c.fillText(o.zh, x0 + (blockW - zw) / 2, main * 0.6);
-    c.font = `500 ${main * 0.17 * Math.min(1, avail / Math.max(1, ew))}px ${FONT_EN}`; c.fillStyle = '#3A3F45'; c.fillText(o.en || '', x0 + (blockW - ew) / 2, main * 0.86);
+    c.fillStyle = ink; c.font = `700 ${zs}px ${FONT}`; c.textBaseline = 'middle'; c.fillText(o.zh, x0 + (blockW - zw) / 2, main * 0.4);
+    c.font = `500 ${main * 0.17 * Math.min(1, avail / Math.max(1, ew))}px ${FONT_EN}`; c.fillStyle = '#3A3F45'; c.fillText(o.en || '', x0 + (blockW - ew) / 2, main * 0.83); c.textBaseline = 'alphabetic'; // 中英分开放（以前中文基线太低，拼音压在字上）
     // 前后站
     const small = (txt, en, x, alignR) => {
       c.fillStyle = '#4A5058'; c.textAlign = alignR ? 'right' : 'left';

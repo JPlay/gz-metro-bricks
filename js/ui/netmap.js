@@ -145,6 +145,12 @@ export function networkSVG(here, opts = {}) {
   }
   return s + '</svg>';
 }
+/** 屏幕坐标 ↔ svg 坐标（viewBox + 默认 xMidYMid meet；不用 getScreenCTM，某些浏览器在缩放 / 弹窗里会算错） */
+export function svgMap(svg) {
+  const r = svg.getBoundingClientRect(), vb = svg.viewBox.baseVal, k = Math.min(r.width / vb.width, r.height / vb.height);
+  const ox = r.left + (r.width - vb.width * k) / 2, oy = r.top + (r.height - vb.height * k) / 2;
+  return { toSvg: (x, y) => [(x - ox) / k, (y - oy) / k], toClient: (x, y) => [ox + x * k, oy + y * k] };
+}
 /** 全网图上离 (x, y)（svg 坐标）最近的车站；超过 r 返回 null（问路的选站面板用：点站名或圆点附近都算） */
 export function nearestStation(x, y, portrait, r = 80) {
   const { pos } = networkLayout(portrait); let best = null, bd = r;

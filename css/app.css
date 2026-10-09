@@ -346,14 +346,15 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #1d2b3a; fon
 
 /* 说话气泡（js/ui/bubbles.js）：白底圆角 + 小尾巴，粤语大字、普通话小字 */
 #bubbles { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
-.bubble { position: absolute; left: 0; top: 0; max-width: min(460px, 70vw); padding: 14px 24px 14px; border-radius: 26px; background: #fff; color: #1B2430;
+.bubble { position: absolute; left: 0; top: 0; max-width: min(560px, 80vw); padding: 14px 24px 14px; border-radius: 26px; background: #fff; color: #1B2430;
   box-shadow: 0 8px 22px rgba(10,30,60,.25); display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; animation: bubIn .3s cubic-bezier(.2,1.4,.4,1); will-change: transform; }
-.bubble .yue { font-size: 36px; font-weight: 800; line-height: 1.15; letter-spacing: 1px; }
+.bubble .yue { font-size: 36px; font-weight: 800; line-height: 1.15; letter-spacing: 1px; text-wrap: balance; }
 .bubble .zh { font-size: 21px; font-weight: 600; color: #5A6675; line-height: 1.2; }
 .bubble .tail { position: absolute; bottom: -13px; width: 0; height: 0; margin-left: -13px; border: 13px solid transparent; border-bottom: 0; border-top-color: #fff; filter: drop-shadow(0 3px 2px rgba(10,30,60,.12)); }
 .bubble.up .tail { bottom: auto; top: -13px; border: 13px solid transparent; border-top: 0; border-bottom-color: #fff; }
 .bubble.out { animation: bubOut .3s ease-in forwards; }
 .bubble.hide { visibility: hidden; }
+.bubble.notail .tail { display: none; }
 @keyframes bubIn { from { opacity: 0; scale: .6; } to { opacity: 1; scale: 1; } }
 @keyframes bubOut { to { opacity: 0; scale: .85; } }
 .bubble.way { max-width: min(560px, 86vw); padding: 16px 24px; align-items: stretch; text-align: left; gap: 8px; }

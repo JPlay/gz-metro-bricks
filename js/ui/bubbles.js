@@ -24,11 +24,16 @@ export class Bubbles {
   drop(b) { const i = this.list.indexOf(b); if (i >= 0) this.list.splice(i, 1); b.el.classList.add('out'); setTimeout(() => b.el.remove(), 320); }
   clear() { [...this.list].forEach(b => this.drop(b)); }
   /** 安全区：上面避开 HUD 顶栏，下面避开大按钮 / 摇杆提示（底部 ~210px） */
-  safe() { const W = innerWidth, H = innerHeight; return { l: 12, r: W - 12, t: 112, b: H - 214 }; }
+  safe() {
+    const W = innerWidth, H = innerHeight;
+    // 顶上：左上角站名牌、右上角按钮一排的下沿再留一点
+    const top = ['where', 'btns'].map(id => document.getElementById(id)).filter(e => e && !e.hidden && e.getClientRects().length).reduce((m, e) => Math.max(m, e.getBoundingClientRect().bottom + 16), 112);
+    return { l: 12, r: W - 12, t: top, b: H - 214 };
+  }
   place(b) {
     const W = innerWidth, H = innerHeight, p = b.who.pos();
     const v = B.Vector3.Project(p, B.Matrix.IdentityReadOnly, this.scene.getTransformMatrix(), this.cam.viewport.toGlobal(W, H));
-    const behind = v.z < 0 || v.z > 1;
+    const behind = v.z < 0 || v.z > 1, off = v.x < 0 || v.x > W || v.y < 0 || v.y > H;
     const w = b.el.offsetWidth, h = b.el.offsetHeight, S = this.safe();
     let x = v.x - w / 2, y = v.y - h - 18;
     x = Math.max(S.l, Math.min(S.r - w, x)); y = Math.max(S.t, Math.min(S.b - h, y));
@@ -39,7 +44,7 @@ export class Bubbles {
     // 尾巴：指向说话的人（水平方向贴着人，夹在气泡里）；人在气泡上方（被安全区往下推）时尾巴放到顶上
     const tx = Math.max(22, Math.min(w - 22, v.x - x)), up = !behind && v.y < y;
     b.el.classList.toggle('up', up); b.el.querySelector('.tail').style.left = tx.toFixed(1) + 'px';
-    b.el.classList.toggle('hide', behind);
+    b.el.classList.toggle('hide', behind); b.el.classList.toggle('notail', off); // 人在画面外：气泡留着，但不指错方向
     b.sx = x; b.sy = y; b.vx = v.x; b.vy = v.y;
   }
   update(dt) { for (const b of [...this.list]) { b.t -= dt; if (b.t <= 0) this.drop(b); else this.place(b); } }
