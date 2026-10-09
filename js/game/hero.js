@@ -13,12 +13,12 @@ import { Person, boneDefs } from '../world/people.js';
 const B = window.BABYLON;
 
 export const HERO_LOOK = {
-  fem: false, kid: true, skin: '#F7DDCB', top: '#CDCED0', bottom: '#86C6D8', hair: '#C6A578', shoes: '#E6E8EA',
+  fem: false, kid: true, skin: '#F7DDCB', top: '#CDCED0', bottom: '#86C6D8', hair: '#CF9C58', shoes: '#E6E8EA',
   hairStyle: 'bowl', skirt: false, shorts: false, longSleeve: false, bag: 'backpack', bagCol: '#F4F4F0', glasses: true,
   cap: null, scale: 0.9, uniform: null, phone: false, prop: null, tie: null, collar: false, hunch: 0, role: 'hero', pattern: null
 };
 const COL = {
-  hair: hex('#C6A578'), hairDark: hex('#AE8D62'), hairHi: hex('#D6BB90'),
+  hair: hex('#CF9C58'), hairDark: hex('#B07E44'), hairHi: hex('#E2B676'),
   shirt: hex('#CDCED0'), shirtDark: hex('#B7B9BC'), pants: hex('#86C6D8'), pantsDark: hex('#74B4C8'), star: hex('#FBFCFD'),
   clog: hex('#E6E8EA'), clogSole: hex('#CDD1D6'), hole: hex('#8E959D'), lanyard: hex('#86C3EA'), lanyardHi: hex('#FFFFFF'),
   bag: hex('#F4F4F0'), bagDark: hex('#DCDDD8'), eye: hex('#2A2522'), mouth: hex('#D08A80'),
@@ -55,6 +55,40 @@ function starsOnLeg(g, y0, len, r0, r1, spots, sr) {
   }
 }
 
+const smooth = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+/**
+ * 锅盖头发壳（头骨骼局部坐标）：椭球面从头顶往下长到“下沿”，下沿高度随方位角变化——
+ *   正前方 = 眉毛（平直一刀切的厚刘海），两侧 = 耳朵中间（盖住耳朵上半），后脑 = 发际线；
+ *   下沿有一圈向里收的厚度（看得出是一层厚头发，不是帽子），越往下越蓬；顶点色做发丝明暗 + 头顶高光。
+ */
+function bowlCut(g, hr, hy) {
+  const cx = 0, cy = hy + hr * 0.06, cz = -hr * 0.05, Rx = hr * 0.61, Ry = hr * 0.6, Rz = hr * 0.62;
+  const front = hy + hr * 0.13, side = hy - hr * 0.07, back = hy - hr * 0.3;
+  const edgeY = th => { const a = Math.abs(Math.atan2(Math.sin(th), Math.cos(th))); return front + (side - front) * smooth(0.55, 1.25, a) + (back - side) * smooth(1.6, 2.6, a); };
+  const NT = 56, NP = 14, k0 = g.p.length / 3, W = NT + 1;
+  const col = (th, f, y) => {
+    const strand = 0.965 + 0.035 * Math.sin(th * 46 + f * 3), lowDark = 1 - 0.14 * f * f;
+    const hi = Math.max(0, 1 - Math.hypot((y - (hy + hr * 0.42)) / (hr * 0.16), Math.atan2(Math.sin(th), Math.cos(th)) / 0.9)) * 0.5;
+    return mix(COL.hair, COL.hairHi, hi).map(c => c * strand * lowDark);
+  };
+  const ring = [];
+  for (let j = 0; j <= NP; j++) for (let i = 0; i <= NT; i++) {
+    const th = i / NT * Math.PI * 2, f = j / NP, pm = Math.acos(Math.max(-1, Math.min(1, (edgeY(th) - cy) / Ry))), ph = pm * f;
+    const puff = 1 + 0.07 * Math.pow(f, 2.2);
+    const x = cx + Rx * puff * Math.sin(ph) * Math.sin(th), y = cy + Ry * Math.cos(ph), z = cz + Rz * puff * Math.sin(ph) * Math.cos(th);
+    const n = new B.Vector3((x - cx) / (Rx * Rx), (y - cy) / (Ry * Ry), (z - cz) / (Rz * Rz)).normalize();
+    g.push(x, y, z, n.x, n.y, n.z, col(th, f, y));
+    if (j === NP) ring.push([x, y, z, th]);
+  }
+  for (let j = 0; j < NP; j++) for (let i = 0; i < NT; i++) { const a = k0 + j * W + i, b = a + W; g.i.push(a, a + 1, b, a + 1, b + 1, b); }
+  // 下沿厚度：外沿 → 向里 0.07hr 的内沿（法线朝下），再往上折进去一点
+  const k1 = g.p.length / 3, dark = COL.hairDark;
+  for (const [x, y, z] of ring) g.push(x, y, z, 0, -1, 0, dark);
+  for (const [x, y, z] of ring) { const dx = x - cx, dz = z - cz, l = Math.hypot(dx, dz) || 1; g.push(x - dx / l * hr * 0.075, y + hr * 0.005, z - dz / l * hr * 0.075, 0, -1, 0, dark); }
+  for (const [x, y, z] of ring) { const dx = x - cx, dz = z - cz, l = Math.hypot(dx, dz) || 1; g.push(x - dx / l * hr * 0.09, y + hr * 0.08, z - dz / l * hr * 0.09, -dx / l, 0, -dz / l, dark); }
+  for (let r = 0; r < 2; r++) for (let i = 0; i < NT; i++) { const a = k1 + r * W + i, b = a + W; g.i.push(a, b, a + 1, a + 1, b, b + 1, a, a + 1, b, a + 1, b + 1, b); } // 双面，哪个角度看下沿都实
+}
+
 function heroParts(L) {
   const d = D, out = [];
   const P = bone => { const g = new Geo(); out.push({ bone, g }); return g; };
@@ -64,13 +98,17 @@ function heroParts(L) {
                     [[0.1, 0.22], [-1.1, 0.5], [1.4, 0.62], [2.6, 0.28], [-2.4, 0.72], [0.7, 0.88], [-0.4, 0.58], [3.6, 0.15]]];
   [[7, 9, -1], [8, 10, 1]].forEach(([t, s, sx], li) => {
     const th = P(t);
-    th.tubeTaper([0, 0.03, 0], [0, -d.thigh, 0], 0.175, 0.165, COL.pants, 12);
-    th.sphere(0, -d.thigh, 0, 0.165, COL.pants, 1);
-    starsOnLeg(th, 0.0, d.thigh * 0.95, 0.0875, 0.083, legSpots[li].slice(0, 4).map(([a, f]) => [a * sx, f]), 0.026);
-    const sh = P(s);
-    sh.tubeTaper([0, 0, 0], [0, -d.shin + 0.085, 0], 0.168, 0.158, COL.pants, 12);
-    sh.tubeTaper([0, -d.shin + 0.09, 0], [0, -d.shin + 0.055, 0], 0.158, 0.13, COL.pantsDark, 12); // 收口的裤脚
-    starsOnLeg(sh, -0.02, d.shin - 0.12, 0.084, 0.079, legSpots[li].slice(4).map(([a, f]) => [a * sx, f]), 0.025);
+    // 灯笼阔腿裤：大腿到小腿越来越鼓，脚踝处收口
+    th.tubeTaper([0, 0.03, 0], [0, -d.thigh, 0], 0.19, 0.215, COL.pants, 14);
+    th.sphere(0, -d.thigh, 0, 0.215, COL.pants, 2);
+    starsOnLeg(th, 0.0, d.thigh * 0.95, 0.095, 0.107, legSpots[li].slice(0, 4).map(([a, f]) => [a * sx, f]), 0.027);
+    const sh = P(s), s1 = -d.shin * 0.45, s2 = -d.shin + 0.085;
+    sh.tubeTaper([0, 0, 0], [0, s1, 0], 0.215, 0.225, COL.pants, 14);
+    sh.sphere(0, s1, 0, 0.225, COL.pants, 2, 0.5);
+    sh.tubeTaper([0, s1, 0], [0, s2, 0], 0.225, 0.165, COL.pants, 14);
+    sh.tubeTaper([0, s2 + 0.005, 0], [0, -d.shin + 0.05, 0], 0.165, 0.118, COL.pantsDark, 14); // 收口的裤脚
+    starsOnLeg(sh, -0.02, -s1 - 0.03, 0.108, 0.112, legSpots[li].slice(4, 6).map(([a, f]) => [a * sx, f]), 0.027);
+    starsOnLeg(sh, s1 - 0.01, s1 - s2 - 0.03, 0.111, 0.085, legSpots[li].slice(6).map(([a, f]) => [a * sx, f * 0.7]), 0.024);
     sh.tubeTaper([0, -d.shin + 0.06, 0], [0, -d.shin + 0.02, 0], 0.07, 0.065, skin, 8); // 脚踝
     // 洞洞鞋：厚鞋底 + 圆鼓鞋头 + 鞋面几个小圆洞 + 后跟带
     const fy = -d.shin - 0.005;
@@ -82,8 +120,8 @@ function heroParts(L) {
   });
   // —— 髋：高腰、宽松的裤腰 ——
   const hp = P(0);
-  hp.ellipsoid(0, 0.0, 0, d.chestW * 1.02, 0.22, d.chestD * 1.12, COL.pants, 2);
-  for (const [a, y] of [[0.5, 0.02], [-0.7, -0.03], [2.6, 0.0], [-2.4, 0.03]]) star(hp, [Math.sin(a) * d.chestW * 0.5, y, Math.cos(a) * d.chestD * 0.55], [Math.sin(a), 0, Math.cos(a)], [0, 1, 0], 0.024, COL.star);
+  hp.ellipsoid(0, -0.02, 0, d.chestW * 1.12, 0.24, d.chestD * 1.25, COL.pants, 2);
+  for (const [a, y] of [[0.5, 0.02], [-0.7, -0.03], [2.6, 0.0], [-2.4, 0.03]]) star(hp, [Math.sin(a) * d.chestW * 0.555, y - 0.02, Math.cos(a) * d.chestD * 0.62], [Math.sin(a), 0, Math.cos(a)], [0, 1, 0], 0.024, COL.star);
   // —— 躯干：浅麻灰圆领 T 恤（略宽松、下摆盖住裤腰）——
   const sp = P(1), tr = d.torso;
   sp.tubeTaper([0, -0.04, 0], [0, tr * 0.62, 0], d.chestW * 0.9, d.chestW * 0.98, COL.shirt, 14);
@@ -111,11 +149,8 @@ function heroParts(L) {
   hd.tubeTaper([0, -0.02, 0], [0, d.neck + 0.03, 0], 0.085, 0.075, skin, 8);
   hd.ellipsoid(0, hy, 0.005, hr, hr * 1.04, hr * 0.98, skin, 5);
   for (const sx of [-1, 1]) hd.ellipsoid(sx * hr * 0.49, hy - hr * 0.06, -hr * 0.02, hr * 0.12, hr * 0.2, hr * 0.14, mix(skin, hex('#F0A8A0'), 0.25), 1); // 耳朵
-  // 锅盖头：头顶 + 两侧 / 后脑一圈齐耳 + 前面齐眉厚刘海
-  hd.ellipsoid(0, hy + hr * 0.17, -hr * 0.1, hr * 1.13, hr * 0.98, hr * 1.12, H, 4);
-  hd.ellipsoid(0, hy - hr * 0.04, -hr * 0.2, hr * 1.1, hr * 0.78, hr * 0.92, COL.hairDark, 2);
-  hd.ellipsoid(0, hy + hr * 0.27, hr * 0.15, hr * 1.06, hr * 0.36, hr * 0.68, H, 4); // 厚刘海（齐眉）
-  hd.ellipsoid(0, hy + hr * 0.36, hr * 0.12, hr * 0.8, hr * 0.28, hr * 0.6, COL.hairHi, 2); // 头顶高光
+  // 锅盖头：一整块“碗”形发壳——齐眉一刀切的厚刘海、两侧盖住耳朵上半、后面到发际；下摆略外翻更蓬
+  bowlCut(hd, hr, hy);
   // 五官：眯眯的小眼睛、小鼻子、粉嘴、腮红（眉毛藏在刘海下面）
   const fz = hr * 0.47;
   for (const sx of [-1, 1]) {
@@ -142,24 +177,30 @@ function heroParts(L) {
 /** 眼镜：透明镜框 + 淡粉色半透明镜片（顶点透明度），绑在头骨骼上 */
 function glassesGeo(restHead) {
   const g = new Geo().withBones(); g.bone = 2;
-  const hr = D.head, hy = D.neck + hr * 0.48, z = hr * 0.535, ly = hy + hr * 0.01, rx = hr * 0.155, ry = hr * 0.115;
-  const lens = [1.0, 0.84, 0.86], frame = [1.0, 0.95, 0.95], LA = 0.2, FA = 0.5;
-  const add = (fn) => { const t = new Geo(); fn(t); return t; };
-  const part = add(t => {
-    for (const sx of [-1, 1]) {
-      const cx = sx * hr * 0.19;
-      // 镜片：扁平椭圆片（半透明淡粉）
-      const k = t.p.length / 3; t.push(cx, ly, z, 0, 0, 1, lens, LA);
-      const n = 20; for (let i = 0; i <= n; i++) { const a = i / n * Math.PI * 2; t.push(cx + Math.cos(a) * rx, ly + Math.sin(a) * ry, z - Math.abs(Math.cos(a)) * 0.006 * sx * sx, 0, 0, 1, lens, LA); }
-      for (let i = 0; i < n; i++) t.i.push(k, k + 1 + i, k + 2 + i, k, k + 2 + i, k + 1 + i);
-      // 镜框：一圈细圆管（近乎透明的乳白）
-      const ring = []; for (let i = 0; i <= n; i++) { const a = i / n * Math.PI * 2; ring.push([cx + Math.cos(a) * rx, ly + Math.sin(a) * ry, z - Math.abs(Math.cos(a)) * 0.006]); }
-      const f0 = t.p.length / 3; for (let q = 0; q < ring.length - 1; q++) t.tube(ring[q], ring[q + 1], 0.009, frame, 6); for (let q = f0; q < t.p.length / 3; q++) t.c[q * 4 + 3] = FA;
-      const f1 = t.p.length / 3; t.tube([sx * (hr * 0.19 + rx), ly + ry * 0.3, z - 0.006], [sx * hr * 0.5, ly + ry * 0.4, -hr * 0.05], 0.008, frame, 5); for (let q = f1; q < t.p.length / 3; q++) t.c[q * 4 + 3] = FA;
+  const hr = D.head, hy = D.neck + hr * 0.48, z = hr * 0.505, ly = hy + hr * 0.01, rx = hr * 0.155, ry = hr * 0.115;
+  const lens = [1.0, 0.7, 0.76], frame = [0.97, 0.93, 0.94], LA = 0.3, FA = 0.38, FR = 0.0026, n = 40, curve = 0.007;
+  const t = new Geo();
+  // 光滑细框：沿椭圆扫一圈小圆截面，共享顶点 + 平滑法线（不分段、不起棱）
+  const rim = (cx, sx) => {
+    const k = t.p.length / 3, m = 8;
+    for (let i = 0; i <= n; i++) {
+      const a = i / n * Math.PI * 2, ca = Math.cos(a), sa = Math.sin(a);
+      const C = [cx + ca * rx, ly + sa * ry, z - ca * ca * curve], N = new B.Vector3(ca / rx, sa / ry, 0).normalize();
+      for (let j = 0; j <= m; j++) { const b = j / m * Math.PI * 2, nx = N.x * Math.cos(b), ny = N.y * Math.cos(b), nz = Math.sin(b); t.push(C[0] + nx * FR, C[1] + ny * FR, C[2] + nz * FR, nx, ny, nz, frame, FA); }
     }
-    const f2 = t.p.length / 3; t.tube([-hr * 0.19 + rx, ly + ry * 0.35, z + 0.002], [hr * 0.19 - rx, ly + ry * 0.35, z + 0.002], 0.009, frame, 5); for (let q = f2; q < t.p.length / 3; q++) t.c[q * 4 + 3] = FA;
-  });
-  g.merge(part, restHead);
+    for (let i = 0; i < n; i++) for (let j = 0; j < m; j++) { const a = k + i * (m + 1) + j, b = a + m + 1; t.i.push(a, b, a + 1, a + 1, b, b + 1); }
+  };
+  for (const sx of [-1, 1]) {
+    const cx = sx * hr * 0.19;
+    // 镜片：微弯的椭圆片（半透明粉）
+    const k = t.p.length / 3; t.push(cx, ly, z, 0, 0, 1, lens, LA);
+    for (let i = 0; i <= n; i++) { const a = i / n * Math.PI * 2; t.push(cx + Math.cos(a) * rx, ly + Math.sin(a) * ry, z - Math.cos(a) ** 2 * curve, -Math.cos(a) * 0.15 * sx * 0, 0, 1, lens, LA); }
+    for (let i = 0; i < n; i++) t.i.push(k, k + 1 + i, k + 2 + i, k, k + 2 + i, k + 1 + i);
+    rim(cx, sx);
+    const f1 = t.p.length / 3; t.tube([sx * (hr * 0.19 + rx), ly + ry * 0.2, z - curve], [sx * hr * 0.5, ly + ry * 0.35, -hr * 0.04], 0.005, frame, 8); for (let q = f1; q < t.p.length / 3; q++) t.c[q * 4 + 3] = FA;
+  }
+  const f2 = t.p.length / 3; t.tube([-hr * 0.19 + rx, ly + ry * 0.3, z + 0.001], [hr * 0.19 - rx, ly + ry * 0.3, z + 0.001], 0.005, frame, 8); for (let q = f2; q < t.p.length / 3; q++) t.c[q * 4 + 3] = FA;
+  g.merge(t, restHead);
   return g;
 }
 let lensMat = null;
