@@ -429,9 +429,10 @@ export class Station {
     // 墙上大站名
     k.sign(-17.95, y + 3.5, 12, { kind: 'name', w: 9, h: 1.45, zh: s.zh, en: s.en, badges: L.map(badge), lineColor: lc, face: Math.PI / 2 });
   }
-  /** 墙上的全网线路图：和 HUD 地图同一张 SVG（墙上版，不带动画），画进 2048×1668 动态贴图；外面一圈不锈钢框 */
+  /** 墙上的全网线路图：和 HUD 地图同一张 SVG（墙上版，不带动画），画进 1536×1251 动态贴图；外面一圈不锈钢框 */
   wallMapBuild(x, y, zc) {
-    const W = 2048, H = 1668, w = 4.4, h = w * H / W, y0 = y + 0.55, z0 = zc - w / 2, z1 = zc + w / 2;
+    // 贴图 1536×1251（原 2048×1668）：4.4m 宽的图在 3m 外约占 1500px，再大屏幕也显示不出来；带 mipmap，远看不闪
+    const W = 1536, H = 1251, w = 4.4, h = w * 1668 / 2048, y0 = y + 0.55, z0 = zc - w / 2, z1 = zc + w / 2;
     this.kit.metal.box(x - 0.05, y0 + h / 2, zc, 0.06, h + 0.14, w + 0.14, STEEL, 0, 0, 0, 1, { ao: false });
     const tex = new B.DynamicTexture('wallMap', { width: W, height: H }, this.scene, true), c = tex.getContext();
     tex.anisotropicFilteringLevel = 8; c.fillStyle = '#FFFFFF'; c.fillRect(0, 0, W, H); tex.update(true);

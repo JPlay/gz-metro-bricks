@@ -17,7 +17,7 @@ import { TvmPanel } from './ui/tvm.js';
 import { mats } from './core/mats.js';
 import { Render } from './core/render.js';
 import { STATIONS, LINES, nextStation } from './data/lines.js';
-import { networkSVG } from './ui/netmap.js';
+import { networkSVG, panZoom } from './ui/netmap.js';
 const B = window.BABYLON;
 
 class Events { constructor() { this.h = {}; } on(n, f) { (this.h[n] = this.h[n] || []).push(f); } emit(n, d) { (this.h[n] || []).forEach(f => f(d)); } }
@@ -100,7 +100,11 @@ export async function start() {
   const toggleMute = () => { Audio.setMuted(!Audio.isMuted()); hud.setBtn('bMute', Audio.isMuted(), Audio.isMuted() ? 'mute' : 'sound', Audio.isMuted() ? '静音' : '声音'); return Audio.isMuted(); };
   // 地图按钮：全屏全网线路图，当前站有脉动的“你在这里”
   const mapEl = document.getElementById('netmap');
-  const openMap = () => { mapEl.querySelector('.mapbox').innerHTML = networkSVG(G.code); mapEl.classList.remove('out'); mapEl.hidden = false; G.mapOpen = true; Audio.blip && Audio.blip('tap'); };
+  // 竖屏用竖版布局（铺满宽度）；地图里可以双指缩放、单指拖动，双击还原
+  const mapBox = mapEl.querySelector('.mapbox'), mapPZ = panZoom(mapBox);
+  const drawMap = () => { G.mapPortrait = innerHeight > innerWidth; mapBox.innerHTML = networkSVG(G.code, { portrait: G.mapPortrait }); mapPZ.reset(); };
+  const openMap = () => { drawMap(); mapEl.classList.remove('out'); mapEl.hidden = false; G.mapOpen = true; Audio.blip && Audio.blip('tap'); };
+  window.addEventListener('resize', () => { if (G.mapOpen && G.mapPortrait !== (innerHeight > innerWidth)) drawMap(); });
   const closeMap = () => { if (!G.mapOpen) return; G.mapOpen = false; mapEl.classList.add('out'); setTimeout(() => { if (!G.mapOpen) mapEl.hidden = true; }, 200); };
   pressable(document.getElementById('bMap'), () => G.mapOpen ? closeMap() : openMap());
   mapEl.addEventListener('pointerdown', e => { e.stopPropagation(); if (e.target.closest('.x') || e.target === mapEl) { e.preventDefault(); closeMap(); } });
@@ -148,6 +152,8 @@ export async function start() {
     // 动作按钮：车厢里优先“坐下 / 起身”，否则售票机 / 闸机
     const seatAct = seats.update(), ticketAct = tickets.update(dt, G.station, player);
     hud.action(seatAct || ticketAct);
+    // 坐着时藏起“跳”按钮（起身用右下角的“起身”）
+    const seated = !!player.seat; if (seated !== G.jumpHidden) { G.jumpHidden = seated; document.getElementById('bJump').hidden = seated; }
     // 区域 / 环境声 / 欢迎广播
     const p = player.position, aboard = metro.trains.some(t => t.root.isEnabled() && t.contains(p));
     G.zone = G.inTunnel ? { kind: 'tunnel' } : G.station.zoneOf(p); G.aboard = aboard || G.inTunnel;
@@ -218,7 +224,7 @@ export async function start() {
     look: (dx, dy) => { input.look.x += dx; input.look.y += dy; },
     jump: () => { input.jumpQueued = true; }, toggleView, toggleMute,
     autopilot: (pts, run) => new Promise(resolve => { G.auto = { pts, i: 0, time: 0, resolve, run }; }),
-    call: (line, step) => metro.call(line, step), openMap, closeMap,
+    call: (line, step) => metro.call(line, step), openMap, closeMap, mapZoom: mapPZ,
     // 测试：软件渲染只有几帧每秒，放宽单帧步长上限让游戏时间接近墙钟（默认 0.05）
     setDtMax: v => { G.dtMax = v; }, act: doAct, tickets, seats, metro, player, scene, engine, events, render: R, get station() { return G.station; }
   };

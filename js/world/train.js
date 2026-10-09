@@ -11,6 +11,7 @@ import { Geo, hex, mix } from '../core/geo.js';
 import { bakePerson, randomLook, POSES, preseed } from './people.js';
 import { LINES, STATIONS } from '../data/lines.js';
 import { drawStrip, drawLcd, hotUV, STRIP_W, STRIP_H } from './routemap.js';
+const TEX_K = 0.75; // 车内两块屏贴图的缩放（见 build）
 const B = window.BABYLON;
 
 export const CAR_X = [-18.6, 0, 18.6], DOOR_DX = [-6, 0, 6], HALF = 27.9, DOOR_W = 1.4, DOOR_H = 2.0;
@@ -114,7 +115,8 @@ export class Train {
             for (const [p1, p2] of [[[hx - 0.07, 1.62, sd], [hx + 0.07, 1.62, sd]], [[hx - 0.07, 1.62, sd], [hx, 1.72, sd]], [[hx + 0.07, 1.62, sd], [hx, 1.72, sd]]]) P.tube(p1, p2, 0.025, hex('#F2C230'), 5);
           }
           // 座椅两端的立柱
-          for (const qx of [qa - 0.1, qb + 0.1]) Mt.tube([qx, 0, sd * 1.12], [qx, 2.3, sd * 1.12], 0.038, STEEL, 8);
+          // 立柱上端弯进横杆（不再通到车顶）：门上方线路图左端的“1号线”色块不会被立柱挡住
+          for (const [qx, qe] of [[qa - 0.1, qa], [qb + 0.1, qb]]) { Mt.tube([qx, 0, sd * 1.12], [qx, 1.76, sd * 1.12], 0.038, STEEL, 8); Mt.tube([qx, 1.76, sd * 1.12], [qx + (qe - qx) * 0.45, 1.88, sd * 1.06], 0.038, STEEL, 8); Mt.tube([qx + (qe - qx) * 0.45, 1.88, sd * 1.06], [qe, 1.92, sd * 1.0], 0.036, STEEL, 8); }
         }
       }
       for (const d of doors) {
@@ -233,8 +235,10 @@ export class Train {
     // 车内两块“屏”+ 车头目的地屏，都是动态贴图，只在换站时重画（见 routemap.js）：
     //   条形线路图（门上方，两侧每个门一块，2048×256）；LCD（两门之间吊在过道上方，双面，1024×384）+ 车头目的地屏共用一张 1024×512
     const emis = (name, tex) => { const m = new B.StandardMaterial(name + this.id, this.scene); m.diffuseColor = new B.Color3(0, 0, 0); m.specularColor = new B.Color3(0, 0, 0); m.emissiveTexture = tex; m.disableLighting = true; m.backFaceCulling = false; return m; };
-    this.stripTex = new B.DynamicTexture('strip' + this.id, { width: STRIP_W, height: STRIP_H }, this.scene, true); this.stripTex.anisotropicFilteringLevel = 8;
-    this.mapTex = new B.DynamicTexture('map' + this.id, { width: 1024, height: 512 }, this.scene, true); this.mapTex.anisotropicFilteringLevel = 8;
+    // 贴图按屏幕上实际能看到的像素定尺寸：线路图 2.86m 宽，过道对面坐着看约 2.5m 远 ≈ 1200px → 1536×192（画布坐标仍按 2048×256 画，缩放 0.75）；
+    // LCD 0.8m 宽 ≈ 600px → 768×384。都带 mipmap。
+    this.stripTex = new B.DynamicTexture('strip' + this.id, { width: STRIP_W * TEX_K, height: STRIP_H * TEX_K }, this.scene, true); this.stripTex.anisotropicFilteringLevel = 8;
+    this.mapTex = new B.DynamicTexture('map' + this.id, { width: 1024 * TEX_K, height: 512 * TEX_K }, this.scene, true); this.mapTex.anisotropicFilteringLevel = 8;
     this.stripMat = emis('stripMat', this.stripTex); this.mapMat = emis('mapMat', this.mapTex);
     const mkMesh = (name, mat) => { const o = { p: [], u: [], i: [] }; o.quad = (pts, u0, u1, v0, v1) => { const b0 = o.p.length / 3; pts.forEach(q => o.p.push(...q)); o.u.push(u0, v0, u1, v0, u1, v1, u0, v1); o.i.push(b0, b0 + 1, b0 + 2, b0, b0 + 2, b0 + 3); };
       o.done = () => { const m = new B.Mesh(name, this.scene), vd = new B.VertexData(); vd.positions = o.p; vd.uvs = o.u; vd.indices = o.i; vd.normals = o.p.map((_, i) => i % 3 === 1 ? 1 : 0); vd.applyToMesh(m); m.material = mat; m.parent = this.root; m.isPickable = false; return m; }; return o; };
@@ -282,7 +286,7 @@ export class Train {
     const key = [line, code, step, nextCode, moving].join(); if (key === this.mapKey) return; this.mapKey = key;
     this.mapInfo = { line, code, step, next: nextCode, moving, hot: moving && nextCode ? nextCode : code };
     const L = LINES[line];
-    drawStrip(this.stripTex.getContext(), line, code, step, moving, nextCode); this.stripTex.update(true);
+    { const sc = this.stripTex.getContext(); sc.save(); sc.setTransform(TEX_K, 0, 0, TEX_K, 0, 0); drawStrip(sc, line, code, step, moving, nextCode); sc.restore(); } this.stripTex.update(true);
     // 光圈挪到高亮站：贴图 (u,v) → 每块线路图上的位置，往车厢里浮 1.5cm
     const { u, v } = hotUV(line, code, step, moving, nextCode), pos = [], r = 0.085;
     for (const q of this.stripQuads) {
@@ -294,13 +298,13 @@ export class Train {
     }
     this.hotGlow.updateVerticesData(B.VertexBuffer.PositionKind, pos); this.hotGlow.refreshBoundingInfo();
     // LCD（贴图上 3/4）+ 车头目的地屏（上 1/4：黑底，橙色 LED 字）
-    const c = this.mapTex.getContext();
+    const c = this.mapTex.getContext(); c.save(); c.setTransform(TEX_K, 0, 0, TEX_K, 0, 0);
     c.save(); c.translate(0, 128); drawLcd(c, line, code, step, moving, nextCode); c.restore();
     const dir = Object.values(L.dirs).find(d => d.step === step) || Object.values(L.dirs)[0], H = 128;
     c.fillStyle = '#0A0B0C'; c.fillRect(0, 0, 1024, H);
     c.fillStyle = L.color; roundRect(c, 14, 20, 100, 88, 12); c.fill(); c.fillStyle = L.ink; c.font = `700 70px ${FONT_EN}`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(String(line), 64, 68);
     c.fillStyle = '#FFB547'; c.font = `700 64px ${FONT}`; c.textAlign = 'left'; c.fillText(dir.zh, 140, 52); c.font = `600 28px ${FONT_EN}`; c.fillText(dir.en, 142, 104);
-    this.mapTex.update(true);
+    c.restore(); this.mapTex.update(true);
     this.mapDraws = (this.mapDraws || 0) + 1;
   }
   /** 打开 / 关闭某一侧车门（sg=+1 局部 +z 侧），f: 0 关 … 1 开（缓动：先外摆再滑开） */

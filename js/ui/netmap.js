@@ -2,7 +2,7 @@
  * 线路图（共用）：售票机屏幕上的单线“蛇形”线路图（SVG，可点选；Canvas 版画在 3D 售票机屏幕上）、游戏票价。
  * 全网图（networkSVG）：HUD 地图按钮全屏打开，站厅墙上也挂一张。
  * 站名和站序全部来自 js/data/lines.js；线路色 1 号线 #F3D03E、2 号线 #00629B。
- * 换乘站（1、2 号线都有的站，目前只有公园前）画成双色圆环；“你在这里”大而亮，带呼吸光圈。
+ * 换乘站：公园前（1↔2）画成 1 号线黄 + 2 号线蓝的双色圆环；能换乘其他线路的站统一画白心粗深色圈（图例“可以换乘其他线路”）；“你在这里”大而亮，带呼吸光圈。
  */
 import { LINES, STATIONS, OTHER_LINES } from '../data/lines.js';
 
@@ -85,7 +85,7 @@ export function drawLineCanvas(c, line, here, x, y, w, h) {
 
 /* ---------- 全网图（1 号线 + 2 号线；HUD 地图按钮全屏打开，站厅墙上也挂一张） ----------
  * 示意图，不按真实比例：2 号线南北竖直穿过公园前，1 号线东西向（西段在黄沙拐向南到西塱，东段在体育中心拐向北到广州东站）。
- * 站序全部来自 lines.js；换乘站（公园前 1↔2）画大双色环，有其他已开通换乘线路的站画小双色环（内圈 = 换乘线色）。
+ * 站序全部来自 lines.js；换乘站（公园前 1↔2）画大双色环，有其他已开通换乘线路的站统一画白心粗深色圈。
  */
 const NW = 1240, NH = 1010, GX = 600, GY = 520;
 const L1_POS = {   // 1 号线：[x, y, 标签位置 a=上 b=下 l=左 r=右]
@@ -93,24 +93,30 @@ const L1_POS = {   // 1 号线：[x, y, 标签位置 a=上 b=下 l=左 r=右]
   csl: [360, GY, 'a'], cjc: [440, GY, 'a'], xmk: [520, GY, 'a'], gyq: [GX, GY, 'x'],
   njs: [680, GY, 'b'], lsly: [760, GY, 'a'], dsk: [840, GY, 'b'], yj: [920, GY, 'a'], tyxl: [1000, GY, 'b'], tyzx: [1080, GY, 'r'], gzdz: [1080, 420, 'r']
 };
-export function networkLayout() {
+/** portrait = 竖屏版：同一张示意图横向收窄、纵向拉长（2 号线南北向更舒展），铺满竖屏宽度；图例挪到右下空白处 */
+export function networkLayout(portrait = false) {
   const pos = {};
-  LINES[1].stations.forEach(c => { pos[c] = L1_POS[c]; });
+  LINES[1].stations.forEach(c => { pos[c] = L1_POS[c].slice(); });
   const s2 = LINES[2].stations, g = s2.indexOf('gyq');
   s2.forEach((c, i) => { if (c === 'gyq') return; pos[c] = i > g ? [GX, 440 - (i - g - 1) * 38, 'l'] : [GX, 600 + (g - 1 - i) * 34, 'r']; });
-  return { pos, w: NW, h: NH };
+  if (!portrait) return { pos, w: NW, h: NH, legend: [40, 40] };
+  for (const p of Object.values(pos)) { p[0] = 500 + (p[0] - GX) * 0.8; p[1] = 760 + (p[1] - GY) * 1.45; }
+  return { pos, w: 1040, h: 1500, legend: [700, 1060] };
 }
 const YOU_AT = { hs: 'L', tyzx: 'B', gzdz: 'L' };
+/** 换乘其他线路的站：统一一种样式（白心 + 粗深色圈），不再按换乘线路上色 */
+export const XRING = '#1B2430', XR = 14, XW = 7;
 const OTHER = c => STATIONS[c].x.map(k => OTHER_LINES[k]).filter(Boolean);
 /** 全网图 SVG；here = 当前站（脉动的“你在这里”），opts.wall = 墙上版（不要动画，字更粗） */
 export function networkSVG(here, opts = {}) {
-  const { pos, w, h } = networkLayout(), F = 'font-family="PingFang SC,Hiragino Sans GB,Noto Sans CJK SC,Noto Sans SC,Microsoft YaHei,sans-serif"';
+  const { pos, w, h, legend: [gx, gy] } = networkLayout(!!opts.portrait), F = 'font-family="PingFang SC,Hiragino Sans GB,Noto Sans CJK SC,Noto Sans SC,Microsoft YaHei,sans-serif"';
   let s = `<svg class="netmap" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg" ${F}>`;
   s += `<rect width="${w}" height="${h}" rx="28" fill="#FFFFFF"/>`;
-  // 标题 + 图例
-  s += `<text x="40" y="66" font-size="40" font-weight="800" fill="#1B2430">广州地铁</text><text x="40" y="100" font-size="20" font-weight="600" fill="#6B7787" font-family="Helvetica Neue,Arial,sans-serif">Guangzhou Metro</text>`;
-  [1, 2].forEach((l, i) => { const L = LINES[l], y = 140 + i * 56; s += `<rect x="40" y="${y}" width="74" height="40" rx="12" fill="${L.color}"/><text x="77" y="${y + 30}" font-size="28" font-weight="800" fill="${L.ink}" text-anchor="middle">${l}</text><text x="126" y="${y + 30}" font-size="26" font-weight="700" fill="#1B2430">${L.zh}</text>`; });
-  s += `<circle cx="62" cy="276" r="16" fill="#fff" stroke="${LINES[1].color}" stroke-width="7"/><circle cx="62" cy="276" r="7" fill="#fff" stroke="${LINES[2].color}" stroke-width="5"/><text x="92" y="285" font-size="24" font-weight="600" fill="#34404F">换乘站</text>`;
+  // 标题 + 图例（换乘站只有两种样式：公园前 1↔2 双色环；其他站能换乘别的线路 = 白心粗深色圈）
+  s += `<text x="${gx}" y="${gy + 26}" font-size="40" font-weight="800" fill="#1B2430">广州地铁</text><text x="${gx}" y="${gy + 60}" font-size="20" font-weight="600" fill="#6B7787" font-family="Helvetica Neue,Arial,sans-serif">Guangzhou Metro</text>`;
+  [1, 2].forEach((l, i) => { const L = LINES[l], y = gy + 100 + i * 56; s += `<rect x="${gx}" y="${y}" width="74" height="40" rx="12" fill="${L.color}"/><text x="${gx + 37}" y="${y + 30}" font-size="28" font-weight="800" fill="${L.ink}" text-anchor="middle">${l}</text><text x="${gx + 86}" y="${y + 30}" font-size="26" font-weight="700" fill="#1B2430">${L.zh}</text>`; });
+  s += `<circle cx="${gx + 22}" cy="${gy + 240}" r="18" fill="#fff" stroke="${LINES[1].color}" stroke-width="8"/><circle cx="${gx + 22}" cy="${gy + 240}" r="8" fill="#fff" stroke="${LINES[2].color}" stroke-width="6"/><text x="${gx + 52}" y="${gy + 249}" font-size="23" font-weight="700" fill="#34404F">1号线和2号线在这里换乘</text>`;
+  s += `<circle cx="${gx + 22}" cy="${gy + 290}" r="${XR}" fill="#fff" stroke="${XRING}" stroke-width="${XW}"/><text x="${gx + 52}" y="${gy + 299}" font-size="23" font-weight="700" fill="#34404F">可以换乘其他线路</text>`;
   // 线
   for (const l of [1, 2]) {
     const pts = LINES[l].stations.map(c => pos[c]);
@@ -120,7 +126,7 @@ export function networkSVG(here, opts = {}) {
   for (const [c, [x, y, side]] of Object.entries(pos)) {
     const S = STATIONS[c], both = S.lines.length > 1, oth = OTHER(c), me = c === here, l = S.lines[0];
     if (both) s += `<circle cx="${x}" cy="${y}" r="27" fill="#fff" stroke="${LINES[1].color}" stroke-width="11"/><circle cx="${x}" cy="${y}" r="13" fill="#fff" stroke="${LINES[2].color}" stroke-width="8"/>`;
-    else if (oth.length) s += `<circle cx="${x}" cy="${y}" r="15" fill="#fff" stroke="${LINES[l].color}" stroke-width="7"/><circle cx="${x}" cy="${y}" r="6.5" fill="#fff" stroke="${oth[0].color}" stroke-width="5"/>`;
+    else if (oth.length) s += `<circle cx="${x}" cy="${y}" r="${XR}" fill="#fff" stroke="${XRING}" stroke-width="${XW}"/>`;
     else s += `<circle cx="${x}" cy="${y}" r="10" fill="#fff" stroke="${LINES[l].color}" stroke-width="6"/>`;
     const fs = me ? 30 : both ? 30 : 25, fw = me || both ? 800 : 600, col = me ? '#E2312A' : '#1B2430';
     let tx = x, ty = y + 9, anc = 'middle';
@@ -138,4 +144,28 @@ export function networkSVG(here, opts = {}) {
     s += `<circle class="here" cx="${x}" cy="${y}" r="${opts.wall ? 20 : 16}" fill="#FF5A4E" stroke="#fff" stroke-width="5"/>`;
   }
   return s + '</svg>';
+}
+
+/** 地图里双指捏合缩放 + 单指拖动平移（1–4 倍），双击还原。box = 包着 svg 的容器；返回 reset() */
+export function panZoom(box) {
+  const pts = new Map(); let k = 1, tx = 0, ty = 0, start = null, lastTap = 0;
+  const el = () => box.firstElementChild;
+  const apply = () => { const r = box.getBoundingClientRect(), mx = r.width * (k - 1) / 2, my = r.height * (k - 1) / 2; tx = Math.max(-mx, Math.min(mx, tx)); ty = Math.max(-my, Math.min(my, ty)); const e = el(); if (e) { e.style.transform = `translate(${tx}px,${ty}px) scale(${k})`; e.style.transformOrigin = 'center center'; } box.classList.toggle('zoomed', k > 1.01); };
+  const snap = () => { const a = [...pts.values()]; if (!a.length) return null; const cx = a.reduce((s, p) => s + p.x, 0) / a.length, cy = a.reduce((s, p) => s + p.y, 0) / a.length; const d = a.length > 1 ? Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y) : 0; return { cx, cy, d, k, tx, ty }; };
+  box.addEventListener('pointerdown', e => {
+    e.preventDefault(); box.setPointerCapture && box.setPointerCapture(e.pointerId); pts.set(e.pointerId, { x: e.clientX, y: e.clientY }); start = snap();
+    if (pts.size === 1) { const now = performance.now(); if (now - lastTap < 300) { k = 1; tx = ty = 0; apply(); } lastTap = now; }
+  });
+  box.addEventListener('pointermove', e => {
+    if (!pts.has(e.pointerId)) return; pts.set(e.pointerId, { x: e.clientX, y: e.clientY }); const c = snap(); if (!c || !start) return;
+    if (pts.size > 1 && start.d > 10) {
+      const r = box.getBoundingClientRect(), ox = start.cx - (r.left + r.width / 2), oy = start.cy - (r.top + r.height / 2);
+      const nk = Math.max(1, Math.min(4, start.k * c.d / start.d)), f = nk / start.k;
+      k = nk; tx = ox - (ox - start.tx) * f + (c.cx - start.cx); ty = oy - (oy - start.ty) * f + (c.cy - start.cy);
+    } else { tx = start.tx + c.cx - start.cx; ty = start.ty + c.cy - start.cy; }
+    apply();
+  });
+  const up = e => { pts.delete(e.pointerId); start = snap(); };
+  box.addEventListener('pointerup', up); box.addEventListener('pointercancel', up);
+  return { reset() { k = 1; tx = ty = 0; pts.clear(); apply(); }, set(nk, x = 0, y = 0) { k = nk; tx = x; ty = y; apply(); }, get scale() { return k; } };
 }

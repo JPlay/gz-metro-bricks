@@ -334,12 +334,12 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #1d2b3a; fon
 #netmap .ttl b { font-weight: 800; } #netmap .ttl small { font-size: 20px; font-weight: 600; color: var(--sub, #6b7787); }
 #netmap .x { margin-left: auto; width: 76px; height: 76px; border-radius: 50%; border: 0; background: rgba(20,40,60,.08); color: #34404f; display: flex; align-items: center; justify-content: center; pointer-events: auto; }
 #netmap .x .ico { width: 34px; height: 34px; } #netmap .x.press { transform: scale(.88); }
-#netmap .mapbox { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; }
-#netmap .mapbox svg { width: 100%; height: 100%; display: block; }
+#netmap .mapbox { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; touch-action: none; border-radius: 22px; }
+#netmap .mapbox svg { width: 100%; height: 100%; display: block; will-change: transform; }
 .netmap .pulse { transform-box: fill-box; transform-origin: center; animation: hereBreath 1.6s ease-out infinite; }
 .netmap .here { transform-box: fill-box; transform-origin: center; animation: hereDot 1.6s ease-in-out infinite; }
 @keyframes hereDot { 50% { transform: scale(1.25); } }
 @media (orientation: portrait) {
-  #netmap .sheet { height: auto; max-height: 92vh; }
-  #netmap .mapbox svg { height: auto; }
+  #netmap .sheet { width: 98vw; height: 96vh; max-height: 96vh; padding: 10px 8px 8px; }
+  #netmap .mapbox svg { width: 100%; height: 100%; }
 }

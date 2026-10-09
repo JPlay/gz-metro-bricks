@@ -1,6 +1,6 @@
 /*
  * 车厢里的两块“屏”（画在 Canvas 动态贴图上，只在换站时重画）：
- *   ① 门上方的条形线路图（2048×256）：本线全部车站按行进方向从左到右排开（站名竖排），
+ *   ① 门上方的条形线路图（画布坐标 2048×256，贴图 1536×192）：线路色块 + 往哪儿开放在右端大箭头后面；本线全部车站按行进方向从左到右排开（站名竖排），
  *      已经过的站变灰，当前 / 下一站大而亮（呼吸光圈是另一块叠在上面的发光小片，见 train.js），
  *      还没到的线段上有白色小箭头，右端一个大箭头指向终点；换乘站画成双色圆环（本线色 + 换乘线色）。
  *   ② 车厢 LCD（1024×384）：「下一站 / Next」或「到站 / Arriving」+ 大号中文站名 + 英文站名。
@@ -12,13 +12,15 @@ import { FONT, FONT_EN, roundRect } from './kit.js';
 export const STRIP_W = 2048, STRIP_H = 256, LCD_W = 1024, LCD_H = 384;
 export const HOT = '#FF5A4E';            // 当前 / 下一站（和 HUD、售票机上的“你在这里”同一种红）
 const GREY = '#C3C9D0', GREY_TXT = '#9BA4AF', INK = '#1B1D20';
-const X0 = 360, X1 = 1990, LY = 58;      // 线段从 X0 到 X1，线的高度 LY（画布坐标，y 向下）
+// 线路色块（“1号线 往 广州东站”）放在右端、紧跟大箭头：左端正对车门中间的立柱，从过道看会被挡住
+const X0 = 70, X1 = 1650, LY = 58, BX = 1728;      // 线段从 X0 到 X1，线的高度 LY（画布坐标，y 向下）；BX = 色块左边
 
-/** 换乘环的第二种颜色：1/2 号线互换，否则用第一条已开通的其他线路 */
+/** 换乘环的第二种颜色：1/2 号线互换（公园前），其他已开通线路统一深色 */
 export function transferColor(code, line) {
   const s = STATIONS[code], o = s.lines.find(l => l !== line);
   if (o) return LINES[o].color;
-  const x = s.x.find(k => OTHER_LINES[k]); return x !== undefined ? OTHER_LINES[x].color : null;
+  // 能换乘其他线路：和全网图同一种样式（深色内圈），不按换乘线路上色
+  return s.x.some(k => OTHER_LINES[k]) ? '#1B2430' : null;
 }
 /** 行进方向排好的站序（step=+1 原序，-1 倒序）、高亮站的下标、已经过的站数 */
 export function stripModel(line, code, step, moving, nextCode) {
@@ -40,12 +42,13 @@ export function drawStrip(c, line, code, step, moving, nextCode) {
   c.fillStyle = '#2A2E33'; c.fillRect(0, 0, W, H);                       // 黑色边框
   c.fillStyle = '#FBFBF8'; roundRect(c, 8, 8, W - 16, H - 16, 18); c.fill();
   // 左边：线路色块（大号线路号 + 往哪儿开）
-  c.fillStyle = L.color; roundRect(c, 20, 20, 300, H - 40, 20); c.fill();
+  c.fillStyle = L.color; roundRect(c, BX, 20, 300, H - 40, 20); c.fill();
   c.fillStyle = L.ink; c.textAlign = 'center'; c.textBaseline = 'alphabetic';
-  c.font = `800 92px ${FONT_EN}`; c.fillText(String(L.id), 92, 112); c.font = `700 46px ${FONT}`; c.fillText('号线', 200, 106);
+  c.font = `800 92px ${FONT_EN}`; c.fillText(String(L.id), BX + 72, 112); c.font = `700 46px ${FONT}`; c.fillText('号线', BX + 180, 106);
   const dz = dir.zh, fz = dz.length > 4 ? 40 : 48;
-  c.font = `700 ${fz}px ${FONT}`; c.fillText('往 ' + dz, 170, 178);
-  c.font = `600 22px ${FONT_EN}`; c.fillText(dir.en.length > 22 ? dir.en.replace(' Railway Station', '') : dir.en, 170, 214);
+  c.font = `700 ${fz}px ${FONT}`; c.fillText('往 ' + dz, BX + 150, 178);
+  let fe = 24; c.font = `600 ${fe}px ${FONT_EN}`; while (c.measureText(dir.en).width > 270 && fe > 14) { fe -= 1; c.font = `600 ${fe}px ${FONT_EN}`; }
+  c.fillText(dir.en, BX + 150, 214);
   // 线段：经过的灰，没到的线路色
   const xs = ord.map((_, k) => stationX(k, n));
   c.lineCap = 'round';
