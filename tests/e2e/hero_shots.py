@@ -37,7 +37,7 @@ async def main():
     if want('02-street-back'): await cam(pg, 3.1416, 0.15, 3.0, 0.75); await shot(pg, '02-street-back')
     if want('03-street-34-closeup'): await cam(pg, 0.75, 0.1, 1.6, 0.95, 0.7); await shot(pg, '03-street-34-closeup')
     if want('04-portrait'): await cam(pg, 0.12, 0.04, 0.9, 1.12, 0.6); await shot(pg, '04-portrait')
-    if want('05-glasses-closeup'): await cam(pg, 0.25, 0.02, 0.5, 1.12, 0.55); await shot(pg, '05-glasses-closeup')
+    if want('05-glasses-closeup'): await cam(pg, 0.3, 0.03, 0.8, 1.1, 0.5); await shot(pg, '05-glasses-closeup')
     if want('06-greet-rock'):
         await pg.evaluate('__game.player.emote={mode:"wave",yaw:__game.player.facing,t:30}')
         await cam(pg, -0.35, 0.08, 2.2, 0.8); await shot(pg, '06-greet-rock', 1.5)
