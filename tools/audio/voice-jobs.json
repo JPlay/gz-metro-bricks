@@ -956,13 +956,13 @@
  {
   "id": "voice.arrive.gzdz.zh",
   "lang": "zh",
-  "text": "列车即将到达广州东站站，请小心列车与站台之间的空隙。",
+  "text": "列车即将到达广州东站，请小心列车与站台之间的空隙。",
   "file": "voice/arrive-gzdz-zh.mp3"
  },
  {
   "id": "voice.arrive.gzdz.yue",
   "lang": "yue",
-  "text": "列车即将到达广州东站站，请小心列车同站台之间嘅空隙。",
+  "text": "列车即将到达广州东站，请小心列车同站台之间嘅空隙。",
   "file": "voice/arrive-gzdz-yue.mp3"
  },
  {
@@ -974,19 +974,19 @@
  {
   "id": "voice.welcome.gzdz.zh",
   "lang": "zh",
-  "text": "欢迎光临广州东站站。请排队候车，先下后上。",
+  "text": "欢迎光临广州东站。请排队候车，先下后上。",
   "file": "voice/welcome-gzdz-zh.mp3"
  },
  {
   "id": "voice.welcome.gzdz.yue",
   "lang": "yue",
-  "text": "欢迎光临广州东站站。请排队候车，先落后上。",
+  "text": "欢迎光临广州东站。请排队候车，先落后上。",
   "file": "voice/welcome-gzdz-yue.mp3"
  },
  {
   "id": "voice.welcome.gzdz.en",
   "lang": "en",
-  "text": "Welcome to Guangzhou Dongzhan station. Please line up for the train. Let the passengers get off first before you get on.",
+  "text": "Welcome to Guangzhou Dongzhan. Please line up for the train. Let the passengers get off first before you get on.",
   "file": "voice/welcome-gzdz-en.mp3"
  },
  {
@@ -1136,13 +1136,13 @@
  {
   "id": "voice.arrive.gznz.zh",
   "lang": "zh",
-  "text": "列车即将到达广州南站站，请小心列车与站台之间的空隙。",
+  "text": "列车即将到达广州南站，请小心列车与站台之间的空隙。",
   "file": "voice/arrive-gznz-zh.mp3"
  },
  {
   "id": "voice.arrive.gznz.yue",
   "lang": "yue",
-  "text": "列车即将到达广州南站站，请小心列车同站台之间嘅空隙。",
+  "text": "列车即将到达广州南站，请小心列车同站台之间嘅空隙。",
   "file": "voice/arrive-gznz-yue.mp3"
  },
  {
@@ -1154,19 +1154,19 @@
  {
   "id": "voice.welcome.gznz.zh",
   "lang": "zh",
-  "text": "欢迎光临广州南站站。请排队候车，先下后上。",
+  "text": "欢迎光临广州南站。请排队候车，先下后上。",
   "file": "voice/welcome-gznz-zh.mp3"
  },
  {
   "id": "voice.welcome.gznz.yue",
   "lang": "yue",
-  "text": "欢迎光临广州南站站。请排队候车，先落后上。",
+  "text": "欢迎光临广州南站。请排队候车，先落后上。",
   "file": "voice/welcome-gznz-yue.mp3"
  },
  {
   "id": "voice.welcome.gznz.en",
   "lang": "en",
-  "text": "Welcome to Guangzhou Nanzhan station. Please line up for the train. Let the passengers get off first before you get on.",
+  "text": "Welcome to Guangzhou Nanzhan. Please line up for the train. Let the passengers get off first before you get on.",
   "file": "voice/welcome-gznz-en.mp3"
  },
  {
@@ -1778,7 +1778,7 @@
  {
   "id": "voice.transfer.gyq2.en",
   "lang": "en",
-  "text": "The interchange with Line One.",
+  "text": "You can transfer to Line One.",
   "file": "voice/transfer-gyq2-en.mp3"
  },
  {
@@ -1910,13 +1910,13 @@
  {
   "id": "voice.arrive.gzhcz.zh",
   "lang": "zh",
-  "text": "列车即将到达广州火车站站，请小心列车与站台之间的空隙。",
+  "text": "列车即将到达广州火车站，请小心列车与站台之间的空隙。",
   "file": "voice/arrive-gzhcz-zh.mp3"
  },
  {
   "id": "voice.arrive.gzhcz.yue",
   "lang": "yue",
-  "text": "列车即将到达广州火车站站，请小心列车同站台之间嘅空隙。",
+  "text": "列车即将到达广州火车站，请小心列车同站台之间嘅空隙。",
   "file": "voice/arrive-gzhcz-yue.mp3"
  },
  {
@@ -1928,19 +1928,19 @@
  {
   "id": "voice.welcome.gzhcz.zh",
   "lang": "zh",
-  "text": "欢迎光临广州火车站站。请排队候车，先下后上。",
+  "text": "欢迎光临广州火车站。请排队候车，先下后上。",
   "file": "voice/welcome-gzhcz-zh.mp3"
  },
  {
   "id": "voice.welcome.gzhcz.yue",
   "lang": "yue",
-  "text": "欢迎光临广州火车站站。请排队候车，先落后上。",
+  "text": "欢迎光临广州火车站。请排队候车，先落后上。",
   "file": "voice/welcome-gzhcz-yue.mp3"
  },
  {
   "id": "voice.welcome.gzhcz.en",
   "lang": "en",
-  "text": "Welcome to Guangzhou Huochezhan station. Please line up for the train. Let the passengers get off first before you get on.",
+  "text": "Welcome to Guangzhou Huochezhan. Please line up for the train. Let the passengers get off first before you get on.",
   "file": "voice/welcome-gzhcz-en.mp3"
  },
  {

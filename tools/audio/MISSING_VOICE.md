@@ -34,12 +34,12 @@
 | voice.next.gzhcz.zh | zh | 下一站，广州火车站，可换乘五号线。 |
 | voice.next.gzhcz.yue | yue | 下一站，广州火车站，可换乘五号线。 |
 | voice.next.gzhcz.en | en | The next station is Guangzhou Huochezhan, the interchange with Line Five. |
-| voice.arrive.gzhcz.zh | zh | 列车即将到达广州火车站站，请小心列车与站台之间的空隙。 |
-| voice.arrive.gzhcz.yue | yue | 列车即将到达广州火车站站，请小心列车同站台之间嘅空隙。 |
+| voice.arrive.gzhcz.zh | zh | 列车即将到达广州火车站，请小心列车与站台之间的空隙。 |
+| voice.arrive.gzhcz.yue | yue | 列车即将到达广州火车站，请小心列车同站台之间嘅空隙。 |
 | voice.arrive.gzhcz.en | en | The train is arriving at Guangzhou Huochezhan. Please mind the gap between the train and the platform. |
-| voice.welcome.gzhcz.zh | zh | 欢迎光临广州火车站站。请排队候车，先下后上。 |
-| voice.welcome.gzhcz.yue | yue | 欢迎光临广州火车站站。请排队候车，先落后上。 |
-| voice.welcome.gzhcz.en | en | Welcome to Guangzhou Huochezhan station. Please line up for the train. Let the passengers get off first before you get on. |
+| voice.welcome.gzhcz.zh | zh | 欢迎光临广州火车站。请排队候车，先下后上。 |
+| voice.welcome.gzhcz.yue | yue | 欢迎光临广州火车站。请排队候车，先落后上。 |
+| voice.welcome.gzhcz.en | en | Welcome to Guangzhou Huochezhan. Please line up for the train. Let the passengers get off first before you get on. |
 | voice.next.syl.zh | zh | 下一站，三元里。 |
 | voice.next.syl.yue | yue | 下一站，三元里。 |
 | voice.next.syl.en | en | The next station is Sanyuanli. |
