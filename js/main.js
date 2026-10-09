@@ -120,7 +120,7 @@ export async function start() {
   // —— 主循环
   let stepAcc = 0;
   scene.onBeforeRenderObservable.add(() => {
-    const dt = Math.min(0.05, engine.getDeltaTime() / 1000);
+    const dt = Math.min(G.dtMax || 0.05, engine.getDeltaTime() / 1000);
     // 自动驾驶（测试用）
     if (G.auto) {
       const a = G.auto, t = a.pts[a.i], p = player.position, dx = t[0] - p.x, dz = t[1] - p.z, d = Math.hypot(dx, dz);
@@ -209,6 +209,8 @@ export async function start() {
     look: (dx, dy) => { input.look.x += dx; input.look.y += dy; },
     jump: () => { input.jumpQueued = true; }, toggleView, toggleMute,
     autopilot: (pts, run) => new Promise(resolve => { G.auto = { pts, i: 0, time: 0, resolve, run }; }),
-    call: (line, step) => metro.call(line, step), act: doAct, tickets, seats, metro, player, scene, engine, events, render: R
+    call: (line, step) => metro.call(line, step),
+    // 测试：软件渲染只有几帧每秒，放宽单帧步长上限让游戏时间接近墙钟（默认 0.05）
+    setDtMax: v => { G.dtMax = v; }, act: doAct, tickets, seats, metro, player, scene, engine, events, render: R
   };
 }

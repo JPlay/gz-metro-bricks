@@ -59,6 +59,7 @@ async def buy(pg, R):
     await pg.evaluate("(()=>{const P=__game.tickets.panel; P.timers.forEach(clearTimeout); P.timers=[];})()")
     await pg.evaluate("document.querySelector('#tvm .drop').classList.add('dropping')"); await freeze(pg, 330)
     await shot(pg, '1f-token-falling')
+    await pg.evaluate("__game.tickets.panel.landed()")   # 票落进取票槽：标题变“出票成功”
     await freeze(pg, 650); await shot(pg, '1g-token-bounce')
     await pg.evaluate("document.querySelector('#tvm .drop').classList.add('shining')"); await freeze(pg, 0)
     await pg.evaluate("document.querySelectorAll('#tvm .tokwrap .glint, #tvm .tokwrap').forEach(e=>e.getAnimations({subtree:true}).forEach(a=>{a.pause(); a.currentTime = a.animationName=='tokDrop'?1150: 360;}))")

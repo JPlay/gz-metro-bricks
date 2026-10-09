@@ -9,10 +9,11 @@ python3 tests/e2e/controls.py 'http://localhost:8123/?q=2'   # 摇杆、拖动�
 python3 tests/e2e/journey.py  'http://localhost:8123/?q=3'   # 完整旅程：进站→安检→售票机买单程票→刷票过闸机→站台→1 号线坐 2 站→坐回→换乘 2 号线坐 1 站
 python3 tests/e2e/ticket.py   'http://localhost:8123/?q=2' <截图目录>   # 没票刷不开闸机 → 买票（选站/投币/出票）→ 刷票进站 → 出站回收单程票 → 羊城通；PART=tvm 只跑售票机面板
 python3 tests/e2e/seat.py     'http://localhost:8123/?q=2' <截图目录>   # 车厢里坐下：髋部在座垫上、第一人称眼高降低、开车/到站一直坐着、起身
+python3 tests/e2e/ticket_ui.py 'http://localhost:8123/?q=2' <截图目录> [w h] [后缀]   # 售票 UI 小修快速检查（不走完整流程）：提示箭头指向售票机、选中站青绿色、“出票成功”、羊城通说明不断行；ONLY=hint / ONLY=card 只跑一部分
 python3 tests/e2e/drawcalls.py 'http://localhost:8123/' 1   # 几个固定机位的绘制调用数（街面 / 站厅 / 站台 / 车厢）
 python3 tests/e2e/shots.py    'http://localhost:8123/'       # 截图（含竖屏 834×1112）
 python3 tests/e2e/polish_shots.py 'http://localhost:8123/' /workspace/gz-shots-polish/after 1   # 视觉升级对比截图（12 个场景 + HUD 特写），并打印每张的绘制调用数
 ```
 
-测试通过 `window.__game`（见 `js/main.js`）读取状态、设置虚拟摇杆和自动走路；触屏操作用 CDP 触摸事件真实模拟。
+测试通过 `window.__game`（见 `js/main.js`）读取状态、设置虚拟摇杆和自动走路；`__game.setDtMax(0.25)` 放宽单帧步长上限（默认 0.05 秒），软件渲染 4 fps 时游戏时间也接近墙钟，等车不会慢 5 倍；触屏操作用 CDP 触摸事件真实模拟。
 软件渲染下帧率只有个位数到二十几，不代表 iPad 上的表现。截图默认写到 `/workspace/gz-shots-3d/`，可传第二个参数修改。

@@ -24,6 +24,8 @@ export function fareFor(a, b) {
   return n <= 3 ? 2 : n <= 6 ? 3 : n <= 9 ? 4 : n <= 13 ? 5 : n <= 18 ? 6 : 7;
 }
 export const isTransfer = c => STATIONS[c].lines.length > 1;
+/** 售票机上选中的目的地颜色：单程票的青绿色（“你的票去这里”），和线路色、红色的“你在这里”都不一样 */
+export const SEL = '#1AA39B';
 const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
 /** 名字太长（5 个字以上）就拆两行 */
 export function wrapName(zh) { if (zh.length <= 4) return [zh]; const h = Math.ceil(zh.length / 2); return [zh.slice(0, h), zh.slice(h)]; }
@@ -50,11 +52,14 @@ export function lineSVG(line, { here, sel } = {}) {
     const isHere = p.code === here, isSel = p.code === sel, tr = isTransfer(p.code), nm = wrapName(STATIONS[p.code].zh);
     s += `<g class="st${isHere ? ' here' : ''}${isSel ? ' sel' : ''}" data-code="${p.code}">`;
     s += `<rect class="hit" x="${p.x - DX / 2}" y="${p.y - 46}" width="${DX}" height="${ROW_H - 18}" rx="18"/>`;
-    if (isSel) s += `<circle class="glow" cx="${p.x}" cy="${p.y}" r="34"/>`;
+    if (isSel) s += `<circle class="glow" cx="${p.x}" cy="${p.y}" r="36"/>`;
     if (isHere) s += `<circle class="pulse" cx="${p.x}" cy="${p.y}" r="26"/>`;
-    if (tr) s += `<circle cx="${p.x}" cy="${p.y}" r="${isHere || isSel ? 25 : 21}" fill="#fff" stroke="${LINES[1].color}" stroke-width="9"/><circle cx="${p.x}" cy="${p.y}" r="${isHere || isSel ? 14 : 11}" fill="${isSel ? L.color : '#fff'}" stroke="${LINES[2].color}" stroke-width="6"/>`;
-    else s += `<circle class="dot" cx="${p.x}" cy="${p.y}" r="${isHere || isSel ? 22 : 15}" fill="${isSel ? L.color : isHere ? '#FF5A4E' : '#fff'}" stroke="${isHere ? '#fff' : L.color}" stroke-width="${isHere ? 6 : 7}"/>`;
+    // 选中的目的地：白心 + 粗的单程票青绿圈（SEL）+ 名字青绿底白字，和红色实心的“你在这里”区分开
+    if (isSel) s += `<circle class="dot" cx="${p.x}" cy="${p.y}" r="24" fill="#fff" stroke="${SEL}" stroke-width="10"/>` + (tr ? `<circle cx="${p.x}" cy="${p.y}" r="9" fill="#fff" stroke="${LINES[2].color}" stroke-width="5"/>` : '');
+    else if (tr) s += `<circle cx="${p.x}" cy="${p.y}" r="${isHere ? 25 : 21}" fill="#fff" stroke="${LINES[1].color}" stroke-width="9"/><circle cx="${p.x}" cy="${p.y}" r="${isHere ? 14 : 11}" fill="#fff" stroke="${LINES[2].color}" stroke-width="6"/>`;
+    else s += `<circle class="dot" cx="${p.x}" cy="${p.y}" r="${isHere ? 22 : 15}" fill="${isHere ? '#FF5A4E' : '#fff'}" stroke="${isHere ? '#fff' : L.color}" stroke-width="${isHere ? 6 : 7}"/>`;
     const fy = p.y + 58, fs = isHere || isSel ? 31 : 27;
+    if (isSel) { const lw = Math.max(...nm.map(t => t.length)) * fs + 22; s += `<rect class="selbg" x="${p.x - lw / 2}" y="${fy - fs - 4}" width="${lw}" height="${nm.length * (fs + 3) + 14}" rx="14" fill="${SEL}"/>`; }
     nm.forEach((t, j) => { s += `<text class="nm" x="${p.x}" y="${fy + j * (fs + 3)}" font-size="${fs}" text-anchor="middle">${esc(t)}</text>`; });
     if (isHere) s += `<g class="youare"><rect x="${p.x - 62}" y="${p.y - 78}" width="124" height="38" rx="19"/><text x="${p.x}" y="${p.y - 51}" text-anchor="middle">你在这里</text></g>`;
     if (tr && !isHere) s += `<text class="xfer" x="${p.x}" y="${p.y - 32}" text-anchor="middle">换乘</text>`;
@@ -77,3 +82,4 @@ export function drawLineCanvas(c, line, here, x, y, w, h) {
     wrapName(STATIONS[p.code].zh).forEach((t, j) => c.fillText(t, px, py + (56 + j * 30) * k));
   });
 }
+

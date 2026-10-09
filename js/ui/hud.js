@@ -47,7 +47,10 @@ export class Hud {
     const el = $('hint');
     if (!h) { if (!el.hidden && !el.classList.contains('out')) { el.classList.add('out'); clearTimeout(this.hintT); this.hintT = setTimeout(() => { el.hidden = true; }, 250); } return; }
     if (el.hidden || el.classList.contains('out')) { clearTimeout(this.hintT); el.classList.remove('out'); el.hidden = false; }
-    el.querySelector('.arr').style.transform = `rotate(${h.angle}rad)`;
+    const a = Math.atan2(Math.sin(h.angle), Math.cos(h.angle)); // 归一到 (-π, π]
+    el.querySelector('.arr').style.transform = `rotate(${a.toFixed(3)}rad)`;
+    const t = Math.abs(a) > 2.2 ? '售票机在你身后' : a > 0.5 ? '售票机在右边' : a < -0.5 ? '售票机在左边' : '售票机在前面';
+    const d = el.querySelector('.dir'); if (d.textContent !== t) d.textContent = t; this.hintAngle = a;
   }
   /** ico = 图标符号名（eye1 / eye3 / sound / mute） */
   setBtn(id, on, ico, lbl) {

@@ -25,7 +25,11 @@ export class Tickets {
       this.hintT -= dt;
       const n = this.nearestTvm(st, p);
       if (this.hintT <= 0 || !n || this.inv) { this.hintT = 0; this.hud.hint(null); }
-      else this.hud.hint({ angle: Math.atan2(n.t.front.x - p.x, n.t.front.z - p.z) - player.yaw });
+      else {
+        // 相对镜头朝向（第一 / 第三人称都对）：0 = 正前方，正 = 右边；每帧更新
+        const c = this.cam.position, f = this.cam.getDirection(B.Axis.Z), t = n.t.front;
+        this.hud.hint({ angle: Math.atan2(t.x - c.x, t.z - c.z) - Math.atan2(f.x, f.z) });
+      }
     }
     if (this.panel.isOpen || Math.abs(p.y - YC) > 1.2) return null;
     const n = this.nearestTvm(st, p);

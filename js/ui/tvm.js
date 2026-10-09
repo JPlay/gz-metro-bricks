@@ -75,9 +75,9 @@ export class TvmPanel {
       const ch = this.paid - this.fare;
       body = `<div class="drop"><div class="mach"><div class="scr">出票中…</div><div class="mouth"></div><div class="tray">${ch > 0 ? `<div class="change">${'<i class="c"></i>'.repeat(Math.min(ch, 4))}</div>` : ''}
         <div class="tokwrap" data-act="take">${TOKEN_HTML}<s class="glint"></s></div></div><div class="traylbl">取票 · 找零</div></div>
-        <div class="msg"><b>拿好你的单程票！</b><span>去 ${S[this.sel].zh} · 进站时在闸机上刷一下</span>${ch > 0 ? `<em>找零 ${ch} 元</em>` : ''}</div></div>`;
+        <div class="msg"><b>拿好你的单程票！</b><span>去 ${S[this.sel].zh} · <span class="nw">进站时在闸机上刷一下</span></span>${ch > 0 ? `<em>找零 ${ch} 元</em>` : ''}</div></div>`;
     } else if (this.step === 'card') {
-      body = `<div class="cardstep"><div class="bigcard">${CARD_HTML}</div><div class="msg"><b>羊城通</b><span>可以一直用，进站、出站都在闸机上刷一下</span></div>
+      body = `<div class="cardstep"><div class="bigcard">${CARD_HTML}</div><div class="msg"><b>羊城通</b><span>可以一直用，<span class="nw">进站、出站</span>都<span class="nw">在闸机上刷一下</span></span></div>
         <button class="go" data-act="takecard">${ico('card')}带上羊城通</button></div>`;
     }
     this.el.innerHTML = `<div class="sheet glass">${head}<main>${body}</main></div>`;
@@ -106,10 +106,15 @@ export class TvmPanel {
     // 出票机内部“咔嗒”→ 单程票掉进取票槽（弹两下）→ 闪一下光 → 自动飞进背包
     this.later(250, () => this.Audio.blip('whirr'));
     this.later(700, () => { this.el.querySelector('.drop')?.classList.add('dropping'); });
-    this.later(1150, () => this.Audio.blip('drop'));
+    this.later(1150, () => this.landed());
     this.later(1550, () => this.Audio.blip('clink'));
     this.later(1950, () => { this.Audio.blip('sparkle'); this.el.querySelector('.drop')?.classList.add('shining'); });
     this.later(3300, () => this.flyToken());
+  }
+  /** 单程票落进取票槽：屏幕标题从“出票中…”变成“出票成功” */
+  landed() {
+    this.Audio.blip('drop');
+    const t = this.el.querySelector('.drop .scr'); if (t) { t.textContent = '出票成功'; t.classList.add('ok'); }
   }
   flyToken() {
     if (this.step !== 'drop' || this.flown) return; this.flown = true;

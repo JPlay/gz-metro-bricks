@@ -174,7 +174,11 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #1d2b3a; fon
 #hint .txt { display: flex; flex-direction: column; gap: 2px; }
 #hint .txt b { font-size: 30px; font-weight: 700; color: #2a3240; letter-spacing: 1px; }
 #hint .dir { display: flex; align-items: center; gap: 6px; font-size: 19px; font-weight: 600; color: #4d5b6c; }
-#hint .arr { width: 30px; height: 30px; color: #1E9E8F; transition: transform .2s ease-out; }
+/* 指向售票机的大箭头：每帧按售票机相对镜头朝向的方向转（0 = 正前方，指向上；指向下 = 在身后） */
+#hint .dirarr { display: flex; align-items: center; justify-content: center; width: 72px; height: 72px; border-radius: 50%; background: #E3F6F2; flex: none; }
+#hint .dirarr .ico { width: 54px; height: 54px; color: #1E9E8F; }
+.nw { white-space: nowrap; }
+#tvm .mach .scr.ok { background: linear-gradient(#2fb36a, #1d8f50); }
 
 .flyitem { position: fixed; z-index: 30; pointer-events: none; }
 .flyitem > .tok, .flyitem > .ycard { width: 100%; height: 100%; }
@@ -215,13 +219,14 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #1d2b3a; fon
 .linemap .st .hit { fill: transparent; }
 .linemap .nm { fill: #1B2430; font-weight: 600; font-family: var(--font); }
 .linemap .st.sel .nm, .linemap .st.here .nm { font-weight: 800; fill: #0b0f14; }
+.linemap .st.sel .nm { fill: #fff; font-weight: 900; }
 .linemap .xfer { font-size: 19px; font-weight: 700; fill: #5d6b7e; font-family: var(--font); }
 .linemap .youare rect { fill: #FF5A4E; } .linemap .youare text { fill: #fff; font-size: 22px; font-weight: 800; font-family: var(--font); }
 .linemap .pulse { fill: none; stroke: #FF5A4E; stroke-width: 6; transform-box: fill-box; transform-origin: center; animation: hereBreath 1.6s ease-out infinite; }
-.linemap .glow { fill: var(--lc); opacity: .45; transform-box: fill-box; transform-origin: center; animation: selGlow 1.2s ease-in-out infinite alternate; }
+.linemap .glow { fill: #1AA39B; opacity: .3; transform-box: fill-box; transform-origin: center; animation: selGlow 1.2s ease-in-out infinite alternate; }
 .linemap .st.sel .dot, .linemap .st.sel circle:not(.glow) { filter: drop-shadow(0 0 6px rgba(255,255,255,.9)); }
 @keyframes hereBreath { 0% { transform: scale(.9); opacity: .9; } 100% { transform: scale(1.9); opacity: 0; } }
-@keyframes selGlow { from { transform: scale(.85); opacity: .35; } to { transform: scale(1.2); opacity: .6; } }
+@keyframes selGlow { from { transform: scale(.85); opacity: .18; } to { transform: scale(1.2); opacity: .38; } }
 #tvm .bar { margin-top: 12px; min-height: 92px; border-radius: 24px; background: #EEF2F6; display: flex; align-items: center; gap: 22px; padding: 8px 10px 8px 26px; }
 #tvm .bar .dest { display: flex; align-items: baseline; gap: 8px; font-size: 22px; font-weight: 700; }
 #tvm .bar .dest b { font-size: 38px; font-weight: 800; color: #0b0f14; }
