@@ -312,8 +312,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 1.704,
-      "bytes": 13869
+      "duration": 2.04,
+      "bytes": 16556
     },
     {
       "id": "voice.next.gyq.yue",
@@ -325,8 +325,8 @@
       "model": "cosyvoice-v3-flash",
       "voice": "longjiayi_v3",
       "language_type": "Chinese",
-      "duration": 2.04,
-      "bytes": 16557
+      "duration": 2.232,
+      "bytes": 18092
     },
     {
       "id": "voice.next.gyq.en",
@@ -338,8 +338,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 2.424,
-      "bytes": 19629
+      "duration": 2.088,
+      "bytes": 16940
     },
     {
       "id": "voice.arrive.gyq.zh",
@@ -351,8 +351,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 5.472,
-      "bytes": 44013
+      "duration": 5.616,
+      "bytes": 45164
     },
     {
       "id": "voice.arrive.gyq.yue",
@@ -377,8 +377,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 5.472,
-      "bytes": 44013
+      "duration": 5.28,
+      "bytes": 42476
     },
     {
       "id": "voice.welcome.gyq.zh",
@@ -390,8 +390,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 3.792,
-      "bytes": 30573
+      "duration": 4.752,
+      "bytes": 38252
     },
     {
       "id": "voice.welcome.gyq.yue",
@@ -403,8 +403,8 @@
       "model": "cosyvoice-v3-flash",
       "voice": "longjiayi_v3",
       "language_type": "Chinese",
-      "duration": 4.344,
-      "bytes": 34989
+      "duration": 5.064,
+      "bytes": 40748
     },
     {
       "id": "voice.welcome.gyq.en",
@@ -416,8 +416,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 6.744,
-      "bytes": 54189
+      "duration": 6.6,
+      "bytes": 53036
     },
     {
       "id": "voice.next.njs.zh",
@@ -429,8 +429,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 1.944,
-      "bytes": 15789
+      "duration": 2.16,
+      "bytes": 17516
     },
     {
       "id": "voice.next.njs.yue",
@@ -442,8 +442,8 @@
       "model": "cosyvoice-v3-flash",
       "voice": "longjiayi_v3",
       "language_type": "Chinese",
-      "duration": 2.352,
-      "bytes": 19053
+      "duration": 2.304,
+      "bytes": 18668
     },
     {
       "id": "voice.next.njs.en",
@@ -455,8 +455,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 2.568,
-      "bytes": 20780
+      "duration": 2.112,
+      "bytes": 17132
     },
     {
       "id": "voice.arrive.njs.zh",
@@ -468,8 +468,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 4.584,
-      "bytes": 36909
+      "duration": 5.808,
+      "bytes": 46700
     },
     {
       "id": "voice.arrive.njs.yue",
@@ -494,8 +494,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 4.656,
-      "bytes": 37484
+      "duration": 5.208,
+      "bytes": 41900
     },
     {
       "id": "voice.welcome.njs.zh",
@@ -507,8 +507,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 4.152,
-      "bytes": 33453
+      "duration": 4.488,
+      "bytes": 36140
     },
     {
       "id": "voice.welcome.njs.yue",
@@ -520,8 +520,8 @@
       "model": "cosyvoice-v3-flash",
       "voice": "longjiayi_v3",
       "language_type": "Chinese",
-      "duration": 5.304,
-      "bytes": 42669
+      "duration": 5.256,
+      "bytes": 42284
     },
     {
       "id": "voice.welcome.njs.en",
@@ -533,8 +533,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 6.672,
-      "bytes": 53612
+      "duration": 6.6,
+      "bytes": 53036
     },
     {
       "id": "voice.next.lsly.zh",
@@ -546,8 +546,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 2.112,
-      "bytes": 17133
+      "duration": 2.16,
+      "bytes": 17516
     },
     {
       "id": "voice.next.lsly.yue",
@@ -559,8 +559,8 @@
       "model": "cosyvoice-v3-flash",
       "voice": "longjiayi_v3",
       "language_type": "Chinese",
-      "duration": 2.112,
-      "bytes": 17133
+      "duration": 2.304,
+      "bytes": 18668
     },
     {
       "id": "voice.next.lsly.en",
@@ -572,8 +572,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 2.184,
-      "bytes": 17708
+      "duration": 2.616,
+      "bytes": 21164
     },
     {
       "id": "voice.arrive.lsly.zh",
@@ -585,8 +585,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 5.472,
-      "bytes": 44013
+      "duration": 5.832,
+      "bytes": 46892
     },
     {
       "id": "voice.arrive.lsly.yue",
@@ -611,8 +611,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 6.504,
-      "bytes": 52268
+      "duration": 5.856,
+      "bytes": 47084
     },
     {
       "id": "voice.welcome.lsly.zh",
@@ -624,8 +624,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 3.456,
-      "bytes": 27885
+      "duration": 5.04,
+      "bytes": 40556
     },
     {
       "id": "voice.welcome.lsly.yue",
@@ -637,8 +637,8 @@
       "model": "cosyvoice-v3-flash",
       "voice": "longjiayi_v3",
       "language_type": "Chinese",
-      "duration": 4.032,
-      "bytes": 32493
+      "duration": 5.136,
+      "bytes": 41324
     },
     {
       "id": "voice.welcome.lsly.en",
@@ -650,8 +650,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 6.576,
-      "bytes": 52844
+      "duration": 7.32,
+      "bytes": 58796
     },
     {
       "id": "voice.next.dsk.zh",
@@ -663,8 +663,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 3.144,
-      "bytes": 25389
+      "duration": 3.792,
+      "bytes": 30572
     },
     {
       "id": "voice.next.dsk.yue",
@@ -676,8 +676,8 @@
       "model": "cosyvoice-v3-flash",
       "voice": "longjiayi_v3",
       "language_type": "Chinese",
-      "duration": 3.96,
-      "bytes": 31917
+      "duration": 3.504,
+      "bytes": 28268
     },
     {
       "id": "voice.next.dsk.en",
@@ -689,8 +689,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 4.032,
-      "bytes": 32493
+      "duration": 4.248,
+      "bytes": 34220
     },
     {
       "id": "voice.arrive.dsk.zh",
@@ -702,8 +702,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 5.304,
-      "bytes": 42669
+      "duration": 5.76,
+      "bytes": 46316
     },
     {
       "id": "voice.arrive.dsk.yue",
@@ -728,8 +728,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 6.336,
-      "bytes": 50925
+      "duration": 4.968,
+      "bytes": 39980
     },
     {
       "id": "voice.welcome.dsk.zh",
@@ -741,8 +741,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 4.104,
-      "bytes": 33069
+      "duration": 5.016,
+      "bytes": 40364
     },
     {
       "id": "voice.welcome.dsk.yue",
@@ -754,8 +754,8 @@
       "model": "cosyvoice-v3-flash",
       "voice": "longjiayi_v3",
       "language_type": "Chinese",
-      "duration": 4.824,
-      "bytes": 38829
+      "duration": 5.136,
+      "bytes": 41324
     },
     {
       "id": "voice.welcome.dsk.en",
@@ -767,8 +767,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 5.448,
-      "bytes": 43821
+      "duration": 6.72,
+      "bytes": 53996
     },
     {
       "id": "voice.destination.up.zh",
@@ -780,8 +780,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 2.256,
-      "bytes": 18284
+      "duration": 3.072,
+      "bytes": 24812
     },
     {
       "id": "voice.destination.up.yue",
@@ -793,8 +793,8 @@
       "model": "cosyvoice-v3-flash",
       "voice": "longjiayi_v3",
       "language_type": "Chinese",
-      "duration": 2.664,
-      "bytes": 21548
+      "duration": 3.096,
+      "bytes": 25004
     },
     {
       "id": "voice.destination.up.en",
@@ -806,8 +806,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 3.696,
-      "bytes": 29804
+      "duration": 3.24,
+      "bytes": 26156
     },
     {
       "id": "voice.platform.up.1.zh",
@@ -819,8 +819,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 4.104,
-      "bytes": 33069
+      "duration": 3.864,
+      "bytes": 31148
     },
     {
       "id": "voice.platform.up.1.yue",
@@ -832,8 +832,8 @@
       "model": "cosyvoice-v3-flash",
       "voice": "longjiayi_v3",
       "language_type": "Chinese",
-      "duration": 3.696,
-      "bytes": 29805
+      "duration": 4.2,
+      "bytes": 33836
     },
     {
       "id": "voice.platform.up.1.en",
@@ -845,8 +845,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 4.176,
-      "bytes": 33644
+      "duration": 4.008,
+      "bytes": 32300
     },
     {
       "id": "voice.platform.up.2.zh",
@@ -858,8 +858,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 3.456,
-      "bytes": 27885
+      "duration": 4.056,
+      "bytes": 32684
     },
     {
       "id": "voice.platform.up.2.yue",
@@ -871,8 +871,8 @@
       "model": "cosyvoice-v3-flash",
       "voice": "longjiayi_v3",
       "language_type": "Chinese",
-      "duration": 4.104,
-      "bytes": 33069
+      "duration": 4.608,
+      "bytes": 37100
     },
     {
       "id": "voice.platform.up.2.en",
@@ -884,8 +884,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 3.696,
-      "bytes": 29804
+      "duration": 4.032,
+      "bytes": 32492
     },
     {
       "id": "voice.terminal.up.zh",
@@ -897,8 +897,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 10.032,
-      "bytes": 80493
+      "duration": 11.664,
+      "bytes": 93548
     },
     {
       "id": "voice.terminal.up.yue",
@@ -923,8 +923,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 7.848,
-      "bytes": 63020
+      "duration": 9.12,
+      "bytes": 73196
     },
     {
       "id": "voice.destination.down.zh",
@@ -936,8 +936,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 1.944,
-      "bytes": 15788
+      "duration": 2.688,
+      "bytes": 21740
     },
     {
       "id": "voice.destination.down.yue",
@@ -949,8 +949,8 @@
       "model": "cosyvoice-v3-flash",
       "voice": "longjiayi_v3",
       "language_type": "Chinese",
-      "duration": 2.256,
-      "bytes": 18284
+      "duration": 2.928,
+      "bytes": 23660
     },
     {
       "id": "voice.destination.down.en",
@@ -962,8 +962,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 2.328,
-      "bytes": 18861
+      "duration": 2.376,
+      "bytes": 19244
     },
     {
       "id": "voice.platform.down.1.zh",
@@ -975,8 +975,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 2.904,
-      "bytes": 23469
+      "duration": 3.36,
+      "bytes": 27116
     },
     {
       "id": "voice.platform.down.1.yue",
@@ -5160,6 +5160,695 @@
       "language_type": "Chinese",
       "duration": 5.256,
       "bytes": 42284
+    },
+    {
+      "id": "voice.welcome.fxgy.yue",
+      "file": "voice/welcome-fxgy-yue.mp3",
+      "group": "voice",
+      "label": "welcome.fxgy.yue",
+      "lang": "yue",
+      "text": "欢迎光临飞翔公园站。请排队候车，先落后上。",
+      "model": "cosyvoice-v3-flash",
+      "voice": "longjiayi_v3",
+      "language_type": "Chinese",
+      "duration": 4.872,
+      "bytes": 39212
+    },
+    {
+      "id": "voice.welcome.fxgy.en",
+      "file": "voice/welcome-fxgy-en.mp3",
+      "group": "voice",
+      "label": "welcome.fxgy.en",
+      "lang": "en",
+      "text": "Welcome to Feixiang Gongyuan station. Please line up for the train. Let the passengers get off first before you get on.",
+      "model": "cosyvoice-v2",
+      "voice": "longxiaobai_v2",
+      "language_type": "English",
+      "duration": 6.6,
+      "bytes": 53036
+    },
+    {
+      "id": "voice.next.bygy.zh",
+      "file": "voice/next-bygy-zh.mp3",
+      "group": "voice",
+      "label": "next.bygy.zh",
+      "lang": "zh",
+      "text": "下一站，白云公园。",
+      "model": "cosyvoice-v2",
+      "voice": "longxiaobai_v2",
+      "language_type": "Chinese",
+      "duration": 2.16,
+      "bytes": 17516
+    },
+    {
+      "id": "voice.next.bygy.yue",
+      "file": "voice/next-bygy-yue.mp3",
+      "group": "voice",
+      "label": "next.bygy.yue",
+      "lang": "yue",
+      "text": "下一站，白云公园。",
+      "model": "cosyvoice-v3-flash",
+      "voice": "longjiayi_v3",
+      "language_type": "Chinese",
+      "duration": 2.52,
+      "bytes": 20396
+    },
+    {
+      "id": "voice.next.bygy.en",
+      "file": "voice/next-bygy-en.mp3",
+      "group": "voice",
+      "label": "next.bygy.en",
+      "lang": "en",
+      "text": "The next station is Baiyun Gongyuan.",
+      "model": "cosyvoice-v2",
+      "voice": "longxiaobai_v2",
+      "language_type": "English",
+      "duration": 2.448,
+      "bytes": 19820
+    },
+    {
+      "id": "voice.arrive.bygy.zh",
+      "file": "voice/arrive-bygy-zh.mp3",
+      "group": "voice",
+      "label": "arrive.bygy.zh",
+      "lang": "zh",
+      "text": "列车即将到达白云公园站，请小心列车与站台之间的空隙。",
+      "model": "cosyvoice-v2",
+      "voice": "longxiaobai_v2",
+      "language_type": "Chinese",
+      "duration": 5.664,
+      "bytes": 45548
+    },
+    {
+      "id": "voice.arrive.bygy.yue",
+      "file": "voice/arrive-bygy-yue.mp3",
+      "group": "voice",
+      "label": "arrive.bygy.yue",
+      "lang": "yue",
+      "text": "列车即将到达白云公园站，请小心列车同站台之间的空隙。",
+      "model": "cosyvoice-v3-flash",
+      "voice": "longjiayi_v3",
+      "language_type": "Chinese",
+      "duration": 6.048,
+      "bytes": 48620
+    },
+    {
+      "id": "voice.arrive.bygy.en",
+      "file": "voice/arrive-bygy-en.mp3",
+      "group": "voice",
+      "label": "arrive.bygy.en",
+      "lang": "en",
+      "text": "The train is arriving at Baiyun Gongyuan. Please mind the gap between the train and the platform.",
+      "model": "cosyvoice-v2",
+      "voice": "longxiaobai_v2",
+      "language_type": "English",
+      "duration": 5.496,
+      "bytes": 44204
+    },
+    {
+      "id": "voice.welcome.bygy.zh",
+      "file": "voice/welcome-bygy-zh.mp3",
+      "group": "voice",
+      "label": "welcome.bygy.zh",
+      "lang": "zh",
+      "text": "欢迎光临白云公园站。请排队候车，先下后上。",
+      "model": "cosyvoice-v2",
+      "voice": "longxiaobai_v2",
+      "language_type": "Chinese",
+      "duration": 5.328,
+      "bytes": 42860
+    },
+    {
+      "id": "voice.welcome.bygy.yue",
+      "file": "voice/welcome-bygy-yue.mp3",
+      "group": "voice",
+      "label": "welcome.bygy.yue",
+      "lang": "yue",
+      "text": "欢迎光临白云公园站。请排队候车，先落后上。",
+      "model": "cosyvoice-v3-flash",
+      "voice": "longjiayi_v3",
+      "language_type": "Chinese",
+      "duration": 5.088,
+      "bytes": 40940
+    },
+    {
+      "id": "voice.welcome.bygy.en",
+      "file": "voice/welcome-bygy-en.mp3",
+      "group": "voice",
+      "label": "welcome.bygy.en",
+      "lang": "en",
+      "text": "Welcome to Baiyun Gongyuan station. Please line up for the train. Let the passengers get off first before you get on.",
+      "model": "cosyvoice-v2",
+      "voice": "longxiaobai_v2",
+      "language_type": "English",
+      "duration": 6.768,
+      "bytes": 54380
+    },
+    {
+      "id": "voice.next.bywhgc.zh",
+      "file": "voice/next-bywhgc-zh.mp3",
+      "group": "voice",
+      "label": "next.bywhgc.zh",
+      "lang": "zh",
+      "text": "下一站，白云文化广场，可换乘十二号线。",
+      "model": "cosyvoice-v2",
+      "voice": "longxiaobai_v2",
+      "language_type": "Chinese",
+      "duration": 4.608,
+      "bytes": 37100
+    },
+    {
+      "id": "voice.next.bywhgc.yue",
+      "file": "voice/next-bywhgc-yue.mp3",
+      "group": "voice",
+      "label": "next.bywhgc.yue",
+      "lang": "yue",
+      "text": "下一站，白云文化广场，可换乘十二号线。",
+      "model": "cosyvoice-v3-flash",
+      "voice": "longjiayi_v3",
+      "language_type": "Chinese",
+      "duration": 4.848,
+      "bytes": 39020
+    },
+    {
+      "id": "voice.next.bywhgc.en",
+      "file": "voice/next-bywhgc-en.mp3",
+      "group": "voice",
+      "label": "next.bywhgc.en",
+      "lang": "en",
+      "text": "The next station is Baiyun Wenhua Guangchang, the interchange with Line Twelve.",
+      "model": "cosyvoice-v2",
+      "voice": "longxiaobai_v2",
+      "language_type": "English",
+      "duration": 5.28,
+      "bytes": 42476
+    },
+    {
+      "id": "voice.arrive.bywhgc.zh",
+      "file": "voice/arrive-bywhgc-zh.mp3",
+      "group": "voice",
+      "label": "arrive.bywhgc.zh",
+      "lang": "zh",
+      "text": "列车即将到达白云文化广场站，请小心列车与站台之间的空隙。",
+      "model": "cosyvoice-v2",
+      "voice": "longxiaobai_v2",
+      "language_type": "Chinese",
+      "duration": 6.024,
+      "bytes": 48428
+    },
+    {
+      "id": "voice.arrive.bywhgc.yue",
+      "file": "voice/arrive-bywhgc-yue.mp3",
+      "group": "voice",
+      "label": "arrive.bywhgc.yue",
+      "lang": "yue",
+      "text": "列车即将到达白云文化广场站，请小心列车同站台之间的空隙。",
+      "model": "cosyvoice-v3-flash",
+      "voice": "longjiayi_v3",
+      "language_type": "Chinese",
+      "duration": 6.288,
+      "bytes": 50540
+    },
+    {
+      "id": "voice.arrive.bywhgc.en",
+      "file": "voice/arrive-bywhgc-en.mp3",
+      "group": "voice",
+      "label": "arrive.bywhgc.en",
+      "lang": "en",
+      "text": "The train is arriving at Baiyun Wenhua Guangchang. Please mind the gap between the train and the platform.",
+      "model": "cosyvoice-v2",
+      "voice": "longxiaobai_v2",
+      "language_type": "English",
+      "duration": 5.808,
+      "bytes": 46700
+    },
+    {
+      "id": "voice.welcome.bywhgc.zh",
+      "file": "voice/welcome-bywhgc-zh.mp3",
+      "group": "voice",
+      "label": "welcome.bywhgc.zh",
+      "lang": "zh",
+      "text": "欢迎光临白云文化广场站。请排队候车，先下后上。",
+      "model": "cosyvoice-v2",
+      "voice": "longxiaobai_v2",
+      "language_type": "Chinese",
+      "duration": 5.136,
+      "bytes": 41324
+    },
+    {
+      "id": "voice.welcome.bywhgc.yue",
+      "file": "voice/welcome-bywhgc-yue.mp3",
+      "group": "voice",
+      "label": "welcome.bywhgc.yue",
+      "lang": "yue",
+      "text": "欢迎光临白云文化广场站。请排队候车，先落后上。",
+      "model": "cosyvoice-v3-flash",
+      "voice": "longjiayi_v3",
+      "language_type": "Chinese",
+      "duration": 5.376,
+      "bytes": 43244
+    },
+    {
+      "id": "voice.welcome.bywhgc.en",
+      "file": "voice/welcome-bywhgc-en.mp3",
+      "group": "voice",
+      "label": "welcome.bywhgc.en",
+      "lang": "en",
+      "text": "Welcome to Baiyun Wenhua Guangchang station. Please line up for the train. Let the passengers get off first before you get on.",
+      "model": "cosyvoice-v2",
+      "voice": "longxiaobai_v2",
+      "language_type": "English",
+      "duration": 7.656,
+      "bytes": 61484
+    },
+    {
+      "id": "voice.next.xg.zh",
+      "file": "voice/next-xg-zh.mp3",
+      "group": "voice",
+      "label": "next.xg.zh",
+      "lang": "zh",
+      "text": "下一站，萧岗。",
+      "model": "cosyvoice-v2",
+      "voice": "longxiaobai_v2",
+      "language_type": "Chinese",
+      "duration": 1.752,
+      "bytes": 14252
+    },
+    {
+      "id": "voice.next.xg.yue",
+      "file": "voice/next-xg-yue.mp3",
+      "group": "voice",
+      "label": "next.xg.yue",
+      "lang": "yue",
+      "text": "下一站，萧岗。",
+      "model": "cosyvoice-v3-flash",
+      "voice": "longjiayi_v3",
+      "language_type": "Chinese",
+      "duration": 1.992,
+      "bytes": 16172
+    },
+    {
+      "id": "voice.next.xg.en",
+      "file": "voice/next-xg-en.mp3",
+      "group": "voice",
+      "label": "next.xg.en",
+      "lang": "en",
+      "text": "The next station is Xiaogang.",
+      "model": "cosyvoice-v2",
+      "voice": "longxiaobai_v2",
+      "language_type": "English",
+      "duration": 1.992,
+      "bytes": 16172
+    },
+    {
+      "id": "voice.arrive.xg.zh",
+      "file": "voice/arrive-xg-zh.mp3",
+      "group": "voice",
+      "label": "arrive.xg.zh",
+      "lang": "zh",
+      "text": "列车即将到达萧岗站，请小心列车与站台之间的空隙。",
+      "model": "cosyvoice-v2",
+      "voice": "longxiaobai_v2",
+      "language_type": "Chinese",
+      "duration": 6.24,
+      "bytes": 50156
+    },
+    {
+      "id": "voice.arrive.xg.yue",
+      "file": "voice/arrive-xg-yue.mp3",
+      "group": "voice",
+      "label": "arrive.xg.yue",
+      "lang": "yue",
+      "text": "列车即将到达萧岗站，请小心列车同站台之间的空隙。",
+      "model": "cosyvoice-v3-flash",
+      "voice": "longjiayi_v3",
+      "language_type": "Chinese",
+      "duration": 5.496,
+      "bytes": 44204
+    },
+    {
+      "id": "voice.arrive.xg.en",
+      "file": "voice/arrive-xg-en.mp3",
+      "group": "voice",
+      "label": "arrive.xg.en",
+      "lang": "en",
+      "text": "The train is arriving at Xiaogang. Please mind the gap between the train and the platform.",
+      "model": "cosyvoice-v2",
+      "voice": "longxiaobai_v2",
+      "language_type": "English",
+      "duration": 5.568,
+      "bytes": 44780
+    },
+    {
+      "id": "voice.welcome.xg.zh",
+      "file": "voice/welcome-xg-zh.mp3",
+      "group": "voice",
+      "label": "welcome.xg.zh",
+      "lang": "zh",
+      "text": "欢迎光临萧岗站。请排队候车，先下后上。",
+      "model": "cosyvoice-v2",
+      "voice": "longxiaobai_v2",
+      "language_type": "Chinese",
+      "duration": 4.176,
+      "bytes": 33644
+    },
+    {
+      "id": "voice.welcome.xg.yue",
+      "file": "voice/welcome-xg-yue.mp3",
+      "group": "voice",
+      "label": "welcome.xg.yue",
+      "lang": "yue",
+      "text": "欢迎光临萧岗站。请排队候车，先落后上。",
+      "model": "cosyvoice-v3-flash",
+      "voice": "longjiayi_v3",
+      "language_type": "Chinese",
+      "duration": 5.016,
+      "bytes": 40364
+    },
+    {
+      "id": "voice.welcome.xg.en",
+      "file": "voice/welcome-xg-en.mp3",
+      "group": "voice",
+      "label": "welcome.xg.en",
+      "lang": "en",
+      "text": "Welcome to Xiaogang station. Please line up for the train. Let the passengers get off first before you get on.",
+      "model": "cosyvoice-v2",
+      "voice": "longxiaobai_v2",
+      "language_type": "English",
+      "duration": 6.12,
+      "bytes": 49196
+    },
+    {
+      "id": "voice.next.jx.zh",
+      "file": "voice/next-jx-zh.mp3",
+      "group": "voice",
+      "label": "next.jx.zh",
+      "lang": "zh",
+      "text": "下一站，江夏。",
+      "model": "cosyvoice-v2",
+      "voice": "longxiaobai_v2",
+      "language_type": "Chinese",
+      "duration": 1.8,
+      "bytes": 14636
+    },
+    {
+      "id": "voice.next.jx.yue",
+      "file": "voice/next-jx-yue.mp3",
+      "group": "voice",
+      "label": "next.jx.yue",
+      "lang": "yue",
+      "text": "下一站，江夏。",
+      "model": "cosyvoice-v3-flash",
+      "voice": "longjiayi_v3",
+      "language_type": "Chinese",
+      "duration": 1.968,
+      "bytes": 15980
+    },
+    {
+      "id": "voice.next.jx.en",
+      "file": "voice/next-jx-en.mp3",
+      "group": "voice",
+      "label": "next.jx.en",
+      "lang": "en",
+      "text": "The next station is Jiangxia.",
+      "model": "cosyvoice-v2",
+      "voice": "longxiaobai_v2",
+      "language_type": "English",
+      "duration": 2.136,
+      "bytes": 17324
+    },
+    {
+      "id": "voice.arrive.jx.zh",
+      "file": "voice/arrive-jx-zh.mp3",
+      "group": "voice",
+      "label": "arrive.jx.zh",
+      "lang": "zh",
+      "text": "列车即将到达江夏站，请小心列车与站台之间的空隙。",
+      "model": "cosyvoice-v2",
+      "voice": "longxiaobai_v2",
+      "language_type": "Chinese",
+      "duration": 6.552,
+      "bytes": 52652
+    },
+    {
+      "id": "voice.arrive.jx.yue",
+      "file": "voice/arrive-jx-yue.mp3",
+      "group": "voice",
+      "label": "arrive.jx.yue",
+      "lang": "yue",
+      "text": "列车即将到达江夏站，请小心列车同站台之间的空隙。",
+      "model": "cosyvoice-v3-flash",
+      "voice": "longjiayi_v3",
+      "language_type": "Chinese",
+      "duration": 5.736,
+      "bytes": 46124
+    },
+    {
+      "id": "voice.arrive.jx.en",
+      "file": "voice/arrive-jx-en.mp3",
+      "group": "voice",
+      "label": "arrive.jx.en",
+      "lang": "en",
+      "text": "The train is arriving at Jiangxia. Please mind the gap between the train and the platform.",
+      "model": "cosyvoice-v2",
+      "voice": "longxiaobai_v2",
+      "language_type": "English",
+      "duration": 4.896,
+      "bytes": 39404
+    },
+    {
+      "id": "voice.welcome.jx.zh",
+      "file": "voice/welcome-jx-zh.mp3",
+      "group": "voice",
+      "label": "welcome.jx.zh",
+      "lang": "zh",
+      "text": "欢迎光临江夏站。请排队候车，先下后上。",
+      "model": "cosyvoice-v2",
+      "voice": "longxiaobai_v2",
+      "language_type": "Chinese",
+      "duration": 4.536,
+      "bytes": 36524
+    },
+    {
+      "id": "voice.welcome.jx.yue",
+      "file": "voice/welcome-jx-yue.mp3",
+      "group": "voice",
+      "label": "welcome.jx.yue",
+      "lang": "yue",
+      "text": "欢迎光临江夏站。请排队候车，先落后上。",
+      "model": "cosyvoice-v3-flash",
+      "voice": "longjiayi_v3",
+      "language_type": "Chinese",
+      "duration": 4.56,
+      "bytes": 36716
+    },
+    {
+      "id": "voice.welcome.jx.en",
+      "file": "voice/welcome-jx-en.mp3",
+      "group": "voice",
+      "label": "welcome.jx.en",
+      "lang": "en",
+      "text": "Welcome to Jiangxia station. Please line up for the train. Let the passengers get off first before you get on.",
+      "model": "cosyvoice-v2",
+      "voice": "longxiaobai_v2",
+      "language_type": "English",
+      "duration": 6.336,
+      "bytes": 50924
+    },
+    {
+      "id": "voice.next.hb.zh",
+      "file": "voice/next-hb-zh.mp3",
+      "group": "voice",
+      "label": "next.hb.zh",
+      "lang": "zh",
+      "text": "下一站，黄边。",
+      "model": "cosyvoice-v2",
+      "voice": "longxiaobai_v2",
+      "language_type": "Chinese",
+      "duration": 1.656,
+      "bytes": 13484
+    },
+    {
+      "id": "voice.next.hb.yue",
+      "file": "voice/next-hb-yue.mp3",
+      "group": "voice",
+      "label": "next.hb.yue",
+      "lang": "yue",
+      "text": "下一站，黄边。",
+      "model": "cosyvoice-v3-flash",
+      "voice": "longjiayi_v3",
+      "language_type": "Chinese",
+      "duration": 1.896,
+      "bytes": 15404
+    },
+    {
+      "id": "voice.next.hb.en",
+      "file": "voice/next-hb-en.mp3",
+      "group": "voice",
+      "label": "next.hb.en",
+      "lang": "en",
+      "text": "The next station is Huangbian.",
+      "model": "cosyvoice-v2",
+      "voice": "longxiaobai_v2",
+      "language_type": "English",
+      "duration": 2.088,
+      "bytes": 16940
+    },
+    {
+      "id": "voice.arrive.hb.zh",
+      "file": "voice/arrive-hb-zh.mp3",
+      "group": "voice",
+      "label": "arrive.hb.zh",
+      "lang": "zh",
+      "text": "列车即将到达黄边站，请小心列车与站台之间的空隙。",
+      "model": "cosyvoice-v2",
+      "voice": "longxiaobai_v2",
+      "language_type": "Chinese",
+      "duration": 5.688,
+      "bytes": 45740
+    },
+    {
+      "id": "voice.arrive.hb.yue",
+      "file": "voice/arrive-hb-yue.mp3",
+      "group": "voice",
+      "label": "arrive.hb.yue",
+      "lang": "yue",
+      "text": "列车即将到达黄边站，请小心列车同站台之间的空隙。",
+      "model": "cosyvoice-v3-flash",
+      "voice": "longjiayi_v3",
+      "language_type": "Chinese",
+      "duration": 5.4,
+      "bytes": 43436
+    },
+    {
+      "id": "voice.arrive.hb.en",
+      "file": "voice/arrive-hb-en.mp3",
+      "group": "voice",
+      "label": "arrive.hb.en",
+      "lang": "en",
+      "text": "The train is arriving at Huangbian. Please mind the gap between the train and the platform.",
+      "model": "cosyvoice-v2",
+      "voice": "longxiaobai_v2",
+      "language_type": "English",
+      "duration": 4.68,
+      "bytes": 37676
+    },
+    {
+      "id": "voice.welcome.hb.zh",
+      "file": "voice/welcome-hb-zh.mp3",
+      "group": "voice",
+      "label": "welcome.hb.zh",
+      "lang": "zh",
+      "text": "欢迎光临黄边站。请排队候车，先下后上。",
+      "model": "cosyvoice-v2",
+      "voice": "longxiaobai_v2",
+      "language_type": "Chinese",
+      "duration": 4.704,
+      "bytes": 37868
+    },
+    {
+      "id": "voice.welcome.hb.yue",
+      "file": "voice/welcome-hb-yue.mp3",
+      "group": "voice",
+      "label": "welcome.hb.yue",
+      "lang": "yue",
+      "text": "欢迎光临黄边站。请排队候车，先落后上。",
+      "model": "cosyvoice-v3-flash",
+      "voice": "longjiayi_v3",
+      "language_type": "Chinese",
+      "duration": 4.08,
+      "bytes": 32876
+    },
+    {
+      "id": "voice.welcome.hb.en",
+      "file": "voice/welcome-hb-en.mp3",
+      "group": "voice",
+      "label": "welcome.hb.en",
+      "lang": "en",
+      "text": "Welcome to Huangbian station. Please line up for the train. Let the passengers get off first before you get on.",
+      "model": "cosyvoice-v2",
+      "voice": "longxiaobai_v2",
+      "language_type": "English",
+      "duration": 6.456,
+      "bytes": 51884
+    },
+    {
+      "id": "voice.arrive.jhwg.zh",
+      "file": "voice/arrive-jhwg-zh.mp3",
+      "group": "voice",
+      "label": "arrive.jhwg.zh",
+      "lang": "zh",
+      "text": "列车即将到达嘉禾望岗站，请小心列车与站台之间的空隙。",
+      "model": "cosyvoice-v2",
+      "voice": "longxiaobai_v2",
+      "language_type": "Chinese",
+      "duration": 6.264,
+      "bytes": 50348
+    },
+    {
+      "id": "voice.arrive.jhwg.yue",
+      "file": "voice/arrive-jhwg-yue.mp3",
+      "group": "voice",
+      "label": "arrive.jhwg.yue",
+      "lang": "yue",
+      "text": "列车即将到达嘉禾望岗站，请小心列车同站台之间的空隙。",
+      "model": "cosyvoice-v3-flash",
+      "voice": "longjiayi_v3",
+      "language_type": "Chinese",
+      "duration": 5.64,
+      "bytes": 45356
+    },
+    {
+      "id": "voice.arrive.jhwg.en",
+      "file": "voice/arrive-jhwg-en.mp3",
+      "group": "voice",
+      "label": "arrive.jhwg.en",
+      "lang": "en",
+      "text": "The train is arriving at Jiahewanggang. Please mind the gap between the train and the platform.",
+      "model": "cosyvoice-v2",
+      "voice": "longxiaobai_v2",
+      "language_type": "English",
+      "duration": 5.256,
+      "bytes": 42284
+    },
+    {
+      "id": "voice.welcome.jhwg.zh",
+      "file": "voice/welcome-jhwg-zh.mp3",
+      "group": "voice",
+      "label": "welcome.jhwg.zh",
+      "lang": "zh",
+      "text": "欢迎光临嘉禾望岗站。请排队候车，先下后上。",
+      "model": "cosyvoice-v2",
+      "voice": "longxiaobai_v2",
+      "language_type": "Chinese",
+      "duration": 5.496,
+      "bytes": 44204
+    },
+    {
+      "id": "voice.welcome.jhwg.yue",
+      "file": "voice/welcome-jhwg-yue.mp3",
+      "group": "voice",
+      "label": "welcome.jhwg.yue",
+      "lang": "yue",
+      "text": "欢迎光临嘉禾望岗站。请排队候车，先落后上。",
+      "model": "cosyvoice-v3-flash",
+      "voice": "longjiayi_v3",
+      "language_type": "Chinese",
+      "duration": 4.776,
+      "bytes": 38444
+    },
+    {
+      "id": "voice.welcome.jhwg.en",
+      "file": "voice/welcome-jhwg-en.mp3",
+      "group": "voice",
+      "label": "welcome.jhwg.en",
+      "lang": "en",
+      "text": "Welcome to Jiahewanggang station. Please line up for the train. Let the passengers get off first before you get on.",
+      "model": "cosyvoice-v2",
+      "voice": "longxiaobai_v2",
+      "language_type": "English",
+      "duration": 6.768,
+      "bytes": 54380
     }
   ],
   "routes": {
