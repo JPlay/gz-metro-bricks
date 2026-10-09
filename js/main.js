@@ -100,7 +100,7 @@ export async function start() {
   events.on('gate', d => { if (d.beep) hud.toast('闸机开啦 ✔'); });
   events.on('security', () => hud.toast('安检通过 ✔ 嘀！'));
   events.on('mv', d => { hud.toast(MVTXT[d.kind] || '✨', 2400); Audio.blip && Audio.blip('goal'); G.mv = (G.mv || 0) + 1; });
-  events.on('ride', d => { if (d.phase === 'arrive') hud.toast(`到站：${STATIONS[d.to].zh}`, 2200); });
+  events.on('ride', d => { if (d.phase === 'arrive') { hud.toast(`到站：${STATIONS[d.to].zh}`, 2200); G.arrived = true; } });
 
   // —— 按钮
   const toggleView = () => { const v = player.toggleView(); hud.setBtn('bView', v === 'first', v === 'first' ? 'eye1' : 'eye3', v === 'first' ? '第一人称' : '第三人称'); return v; };
@@ -167,6 +167,9 @@ export async function start() {
     // 区域 / 环境声 / 欢迎广播
     const p = player.position, aboard = metro.trains.some(t => t.root.isEnabled() && t.contains(p));
     G.zone = G.inTunnel ? { kind: 'tunnel' } : G.station.zoneOf(p); G.aboard = aboard || G.inTunnel;
+    // 坐车到站、走出车厢 → 主角庆祝一下（两只拳头举起“努力！”）
+    if (G.wasAboard && !G.aboard && G.arrived) { G.arrived = false; player.celebrate(); }
+    G.wasAboard = G.aboard;
     Audio.setZone(G.aboard ? 'train' : ({ street: 'street', platform: 'platform' }[G.zone.kind] || 'concourse'));
     if (G.zone.kind === 'platform' && !G.welcomed && !G.aboard) { G.welcomed = true; if (!Audio.isAnnouncing()) Ann.welcome(G.code); }
     const rl = metro.ride && metro.ride.train && G.aboard ? metro.ride : null;
