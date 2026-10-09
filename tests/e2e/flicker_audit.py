@@ -31,7 +31,15 @@ POSES = [  # 名字, x, y(脚), z, yaw, pitch, 镜头距离
     ('j-l2-stair-mid', -12, ys2(-12) + 0.05, 43.0, H, 0.25, 4.2),
     ('k-l2-platform-far-back', 30, y2 + 0.05, 43.7, -H, 0.08, 4.2),
     ('l-l2-shot11', 2, y2 + 0.05, 43.7, -H, 0.12, 4.2),
+    # 第 3 轮：小美指出的点（视频 walk 0:09-0:13 / 0:25-0:28 的机位）
+    ('m-transfer-stairtop-look-down', -4.5, y1 + 0.05, 14.7, -H, 0.3, 4.2),
+    ('n-transfer-stair-upper', -8, ys1(-8) + 0.05, 14.7, -H, 0.25, 4.2),
+    ('o-transfer-stair-lower', -15, ys1(-15) + 0.05, 14.7, -H, 0.25, 4.2),
+    ('p-l2-stair-lower-curve', -9, ys2(-9) + 0.05, 42.3, H, 0.25, 4.2),
+    ('q-l2-curve-near', -3, y2 + 0.05, 42.3, H, 0.3, 4.2),
+    ('r-l2-curve-from-east', 8, y2 + 0.05, 44.4, -H, 0.25, 4.2),
 ]
+if os.environ.get('ONLY'): POSES = [q for q in POSES if q[0][0] in os.environ['ONLY']]
 PATH = [(16, y1, 14), (17.4, y1, 18.6), (8, y1, 18.6), (-2.8, y1, 16), (-5, y1, 14.7), (-9, ys1(-9), 14), (-15, ys1(-15), 14), (-19, yc, 14),
         (-21.5, yc, 15), (-21.5, yc, 20), (-21.5, yc, 29.5), (-21.5, yc, 38), (-21.5, yc, 43), (-18, ys2(-18), 43), (-12, ys2(-12), 43), (-7, ys2(-7), 43), (-3, y2, 43), (2, y2, 43.7)]
 JS_PREP = """
@@ -98,8 +106,10 @@ async def main():
             hm = np.clip(d * 4, 0, 255).astype(np.uint8); Image.fromarray(hm).save(f'{OUT}{name}-{tag}-diff.png')
         await pg.evaluate(JS_RESUME)
         R['poses'][name] = res; log(name, res)
-    await pg.evaluate('__game.engine.stopRenderLoop()')
-    R['camclip'] = await pg.evaluate(JS_CAMCLIP, [PATH]); await pg.evaluate(JS_RESUME)
+    if os.environ.get('NOCLIP') == '1': R['camclip'] = []
+    else:
+      await pg.evaluate('__game.engine.stopRenderLoop()')
+      R["camclip"] = await pg.evaluate(JS_CAMCLIP, [PATH]); await pg.evaluate(JS_RESUME)
     log('camclip', len(R['camclip']))
     R['errors'] = errs(logs)
     json.dump(R, open(OUT + 'audit.json', 'w'), ensure_ascii=False, indent=1)

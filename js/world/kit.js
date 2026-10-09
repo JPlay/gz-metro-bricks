@@ -142,7 +142,7 @@ export class Kit {
       const mat = bucketMat(s, this.M, name), alpha = name === 'shade' || name === 'halo';
       const m = g.toMesh(name, s, mat, this.root, { alpha });
       if (name === 'glass') m.alphaIndex = 10; if (name === 'shade') m.alphaIndex = 1; if (name === 'halo') m.alphaIndex = 20;
-      m.receiveShadows = !alpha && name !== 'glow';
+      m.receiveShadows = !alpha && name !== 'glow' && name !== 'band';
       this.byBucket[name] = m; out.push(m);
     }
     if (this.atlas) { const m = this.atlas.finish(this.root); this.byBucket.signs = m; out.push(m); }

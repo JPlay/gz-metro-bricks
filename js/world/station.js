@@ -811,7 +811,7 @@ export class Station {
    * 色带走在各自前进方向的右手边：往 2 号线走的蓝带、往 1 号线走的黄带并排不重叠。
    */
   transferWayfinding() {
-    const k = this.kit, G = k.glow, y1 = MAIN.y, yc = -17, y2 = GYQ2.y, c2 = LINES[2].color, c1 = LINES[1].color, W2 = '#FFFFFF', D1 = '#3A2E00';
+    const k = this.kit, G = k.g('band'), y1 = MAIN.y, yc = -17, y2 = GYQ2.y, c2 = LINES[2].color, c1 = LINES[1].color, W2 = '#FFFFFF', D1 = '#3A2E00';
     const zB = 14.7, zY = 13.3, xB = -20.8, xY = -22.2, zB2 = 42.3, zY2 = 43.7, NB = 18.6, TX = 17.4;
     // —— 蓝：1 号线站台（楼梯脚 x≈15，扶梯脚 x≈16.8）→ 北侧走道 → 换乘楼梯口
     for (const [x0, z] of [[15.3, 14], [16.4, 17.1], [16.4, 10.9]]) flatBand(G, [[x0, z], [TX, z]], y1, c2, W2, { start: 0.6 });
@@ -831,7 +831,7 @@ export class Station {
     flatBand(G, [[-6, zY], [-3.6, zY]], y1, c1, D1, { start: 0.6 });
     // —— 桥：每块桥板上一段（桥板翻上来拼好时色带才连起来）
     const br = this.bridge, dz = 7 / 6;
-    const src = bridgeStripe(this.scene, k.M.glow, k.root, dz, [{ dx: xB + 21.5, col: c2, chev: W2, dirZ: 1 }, { dx: xY + 21.5, col: c1, chev: D1, dirZ: -1 }]);
+    const src = bridgeStripe(this.scene, k.M.band, k.root, dz, [{ dx: xB + 21.5, col: c2, chev: W2, dirZ: 1 }, { dx: xY + 21.5, col: c1, chev: D1, dirZ: -1 }]);
     br.tiles.forEach((t, i) => { const inst = src.createInstance('bridgeStripe' + i); inst.parent = t.pivot; inst.position.set(0, 0, 0); });
     // —— 1 号线站台的牌子
     const W2B = { t: '2', bg: '#FFFFFF', fg: c2 }, big = { kind: 'way', bg: c2, zh: '换乘 2号线', en: 'Transfer to Line 2', badges: [W2B] };

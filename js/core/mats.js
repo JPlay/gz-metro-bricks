@@ -52,6 +52,9 @@ export function mats(scene) {
   glow.diffuseColor = new B.Color3(0, 0, 0); glow.specularColor = new B.Color3(0, 0, 0); glow.emissiveColor = new B.Color3(1, 1, 1); glow.disableLighting = true;
   // 发光件基本都是贴在面上的薄片（灯带、屏幕、地面引导带）：加一点多边形偏移，低精度深度（iPad）下也压得住底下的面
   glow.zOffset = -1; glow.zOffsetUnits = -2;
+  // 换乘地面引导带 + V 形箭头单独一个材质：偏移比贴地暗影（shade，zOffset −2、不写深度）更强。
+  //   以前和灯带共用 glow（−1）：掠射角下暗影的斜率偏移比引导带还大，暗影一片片“盖”到色带上，走动时像闪
+  const band = M.band = glow.clone('band'); band.zOffset = -4; band.zOffsetUnits = -4;
   const halo = M.halo = new B.StandardMaterial('halo', scene);
   halo.diffuseColor = new B.Color3(0, 0, 0); halo.specularColor = new B.Color3(0, 0, 0); halo.emissiveColor = new B.Color3(1, 1, 1); halo.disableLighting = true;
   halo.alphaMode = B.Engine.ALPHA_ADD; halo.alpha = 0.999; halo.backFaceCulling = false; halo.disableDepthWrite = true;
@@ -64,7 +67,7 @@ export function mats(scene) {
   blob.diffuseColor = new B.Color3(0, 0, 0); blob.specularColor = new B.Color3(0, 0, 0); blob.disableLighting = true;
   blob.opacityTexture = tex(scene, 'blob', 'png'); blob.disableDepthWrite = true; blob.zOffset = -3; blob.alpha = 0.55;
   // 只冻运行时参数不变的标准材质（PBR 会随画质档切换法线/探针，不能冻）
-  for (const k of ['glow', 'halo', 'shade', 'blob', 'ghost']) {
+  for (const k of ['glow', 'band', 'halo', 'shade', 'blob', 'ghost']) {
     if (M[k] && M[k].freeze) try { M[k].freeze(); } catch (_) {}
   }
   return M;

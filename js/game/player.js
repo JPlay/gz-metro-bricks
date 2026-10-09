@@ -52,7 +52,7 @@ export class Player {
   spawn(x, y, z, yaw) { this.position.set(x, y, z); this.groundY = y; this.camY = this.eyeY = undefined; this.yaw = this.facing = yaw; this.vy = 0; this.pitch = 0.05; this.collider.computeWorldMatrix(true); }
   /** 主更新：inp = Input.read() 的结果，extra = 额外水平位移（扶梯） */
   update(dt, inp, extra) {
-    const look = 0.0048;
+    const look = 0.0048; this._dt = dt;
     this.yaw += inp.lx * look; this.pitch += inp.ly * look * 0.85;
     // 第三人称俯仰夹在舒适跟随时：最高约 32°，避免被拖成接近垂直的顶视
     const pmin = this.view === 'first' ? -1.35 : -0.35, pmax = this.view === 'first' ? 1.35 : 0.55;
@@ -111,7 +111,26 @@ export class Player {
     if (this.grounded) this.groundY = p.y;
     this.model.position.set(p.x, p.y + (this.person.hipBob || 0) * 0.6, p.z); this.model.rotation.y = this.facing;
     const air = Math.max(0, p.y - this.groundY), bs = Math.max(0.45, 1 - air * 0.25);
-    this.blob.position.set(p.x, this.groundY + 0.02, p.z); this.blob.scaling.set(bs, 1, bs); this.blob.visibility = Math.max(0.3, 1 - air * 0.3);
+    this.placeBlob(p, bs, Math.max(0.3, 1 - air * 0.3));
+  }
+  /**
+   * 脚下圆影：向下打一条射线落到实际地面上（以前固定在“最后着地高度”，楼梯上是一块水平的圆片悬在台阶上）。
+   * 楼梯的碰撞体是一块斜板（比踏步面高出 0~1 级），碰到斜面时再向下打可见的地面网格，影子落在脚下那级踏面上并缩小一点。
+   */
+  placeBlob(p, bs, vis) {
+    const sc = this.scene, o = new B.Vector3(p.x, p.y + 0.5, p.z), down = new B.Vector3(0, -1, 0);
+    let y = this.groundY, k = 1;
+    const h = sc.pickWithRay(new B.Ray(o, down, 8), this._colPred || (this._colPred = m => m.checkCollisions && m.isEnabled() && m !== this.collider));
+    if (h && h.hit) {
+      y = h.pickedPoint.y;
+      const n = h.getNormal(true);
+      if (n && Math.abs(n.y) < 0.985) {
+        const h2 = sc.pickWithRay(new B.Ray(o, down, 8), this._floorPred || (this._floorPred = m => m.isEnabled() && /^floor/.test(m.name)));
+        if (h2 && h2.hit && h2.pickedPoint.y > y - 0.4) { y = h2.pickedPoint.y; k = 0.72; }
+      }
+    }
+    this.blobY = this.blobY === undefined || Math.abs(this.blobY - y) > 0.5 ? y : this.blobY + (y - this.blobY) * Math.min(1, (this._dt || 0.016) * 20);
+    this.blob.position.set(p.x, this.blobY + 0.02, p.z); this.blob.scaling.set(bs * k, 1, bs * k); this.blob.visibility = vis;
   }
   /** 镜头：每帧在玩家更新之后调用 */
   updateCamera(dt, scene) {
@@ -133,24 +152,48 @@ export class Player {
       this.camY = this.camY === undefined ? p.y : this.camY + (p.y - this.camY) * Math.min(1, dt * 7);
       if (Math.abs(this.camY - p.y) > 2) this.camY = p.y;
       const target = new B.Vector3(p.x, this.camY + 1.25, p.z);
+      // 镜头的障碍物：碰撞体 + 标牌（吊牌没有碰撞体，以前从换乘楼梯脚进通道时镜头直接钻进通道口的吊牌，上半屏一片黑）
+      const pred = this._camPred || (this._camPred = m => m.isEnabled() && m !== this.collider && (m.checkCollisions || m.name === 'signs'));
       const ray = new B.Ray(target, fwd.scale(-1), this.dist + 0.3);
-      const hit = scene.pickWithRay(ray, m => m.checkCollisions && m.isEnabled() && m !== this.collider);
+      const hit = scene.pickWithRay(ray, pred);
       let want = this.dist; if (hit && hit.hit) want = Math.max(0.35, hit.distance - 0.3);
-      this.camDist = want < this.camDist ? want : this.camDist + (want - this.camDist) * Math.min(1, dt * 4);
+      // 拉近要立刻（不然穿墙），拉远平滑；界面（售票机等）关掉后的恢复也走这条平滑
+      this.camDist = want < this.camDist ? want : this.camDist + (want - this.camDist) * Math.min(1, dt * 2.5);
       cam.position.copyFrom(target.subtract(fwd.scale(this.camDist)));
       // 镜头离天花板 / 两侧墙至少留 0.3m：上面那条射线只管镜头身后，贴着吊顶或侧墙滑动时近裁剪面会切进去（看到墙外 / 楼上）
-      const pred = m => m.checkCollisions && m.isEnabled() && m !== this.collider, CL = 0.3;
+      const CL = 0.3, up = new B.Vector3(0, 1, 0);
       const rx = Math.cos(this.yaw), rz = -Math.sin(this.yaw);
-      for (const [dx, dy, dz] of [[0, 1, 0], [rx, 0, rz], [-rx, 0, -rz]]) {
+      for (const [dx, dy, dz] of [[rx, 0, rz], [-rx, 0, -rz]]) {
         const dir = new B.Vector3(dx, dy, dz), h = scene.pickWithRay(new B.Ray(cam.position, dir, CL), pred);
         if (h && h.hit) cam.position.subtractInPlace(dir.scale(CL - h.distance));
       }
-      this.model.setEnabled(this.camDist > 0.8);
+      // 低矮处（换乘通道、楼梯口、吊牌下）：镜头高度封顶 = 上方最近的天花 / 吊牌底 − 0.35m。
+      //   从玩家头顶、镜头所在点、镜头前后 0.8m 各向上打一条射线取最低（起点都用“没进墙”的高度：头 / 镜头本身，
+      //   不能用头的高度去镜头那里打——下楼梯时镜头身后的楼梯比头还高，会从楼梯板下面打到楼梯底面，把镜头压进楼梯里），
+      //   封顶值下降快（提前看到前方的低顶）、回升慢，再用头顶和镜头点的实际值硬卡一次，任何时候都不会进到天花板里
+      const ceilAt = (x, y0, z) => { const h = scene.pickWithRay(new B.Ray(new B.Vector3(x, y0, z), up, 4), pred); return h && h.hit && h.distance > 0.02 ? y0 + h.distance : Infinity; };
+      const fx = Math.sin(this.yaw), fz = Math.cos(this.yaw), cx = cam.position.x, cy = cam.position.y, cz = cam.position.z;
+      const hard = Math.min(ceilAt(p.x, target.y, p.z), ceilAt(cx, cy, cz)) - 0.35;
+      const soft = Math.min(hard, ceilAt(cx + fx * 0.8, cy, cz + fz * 0.8) - 0.35, ceilAt(cx - fx * 0.8, cy, cz - fz * 0.8) - 0.35);
+      const tgtCap = Math.max(target.y - 0.2, soft);
+      if (this.camCap === undefined || !isFinite(this.camCap) || !isFinite(tgtCap)) this.camCap = tgtCap;
+      else this.camCap += (tgtCap - this.camCap) * Math.min(1, dt * (tgtCap < this.camCap ? 9 : 2.5));
+      const cap = Math.min(this.camCap, Math.max(target.y - 0.2, hard));
+      if (cam.position.y > cap) cam.position.y = cap;
+      // 镜头压低后仍对准玩家（只改看的俯仰，不改玩家设定的 pitch）
+      const hd = Math.hypot(target.x - cam.position.x, target.z - cam.position.z);
+      this.aimPitch = hd > 0.4 ? Math.atan2(cam.position.y - target.y, hd) : this.pitch;
+      // 镜头离主角身体（脚底到头顶这根竖线）太近：0.8m 内渐隐，0.5m 内整个藏起来（以前会看到脸和头发的内侧）
+      const ay = Math.min(p.y + 1.45, Math.max(p.y + 0.1, cam.position.y));
+      const dBody = Math.hypot(cam.position.x - p.x, cam.position.y - ay, cam.position.z - p.z);
+      const f = Math.max(0, Math.min(1, (dBody - 0.5) / 0.3));
+      this.model.setEnabled(f > 0.02);
+      if (f !== this._heroFade) { this._heroFade = f; for (const m of [this.model, ...this.model.getChildMeshes()]) m.visibility = f; }
       this.blob.setEnabled(true);
     }
     // 近裁剪面随镜头调整：第三人称镜头离墙至少 0.3m（见上面的射线），0.25 不会切进墙；第一人称眼睛离墙可能只有 0.18m，用 0.1
-    const nz = this.view === 'first' || this.camDist < 0.8 ? 0.1 : 0.25; if (cam.minZ !== nz) cam.minZ = nz;
-    cam.rotation.set(this.pitch, this.yaw, 0);
+    const nz = this.view === 'first' || this.camDist < 0.8 ? 0.1 : 0.25; if (this.view === 'first') this.aimPitch = undefined; if (cam.minZ !== nz) cam.minZ = nz;
+    cam.rotation.set(this.view === 'first' || this.aimPitch === undefined ? this.pitch : this.aimPitch, this.yaw, 0);
   }
   toggleView() {
     this.view = this.view === 'first' ? 'third' : 'first';
