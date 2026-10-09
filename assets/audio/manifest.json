@@ -988,8 +988,8 @@
       "model": "cosyvoice-v3-flash",
       "voice": "longjiayi_v3",
       "language_type": "Chinese",
-      "duration": 3.552,
-      "bytes": 28653
+      "duration": 3.648,
+      "bytes": 29420
     },
     {
       "id": "voice.platform.down.1.en",
@@ -1001,8 +1001,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 3.216,
-      "bytes": 25965
+      "duration": 3.24,
+      "bytes": 26156
     },
     {
       "id": "voice.platform.down.2.zh",
@@ -1014,8 +1014,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 3.144,
-      "bytes": 25389
+      "duration": 3.936,
+      "bytes": 31724
     },
     {
       "id": "voice.platform.down.2.yue",
@@ -1027,8 +1027,8 @@
       "model": "cosyvoice-v3-flash",
       "voice": "longjiayi_v3",
       "language_type": "Chinese",
-      "duration": 3.144,
-      "bytes": 25389
+      "duration": 3.96,
+      "bytes": 31916
     },
     {
       "id": "voice.platform.down.2.en",
@@ -1040,8 +1040,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 4.104,
-      "bytes": 33069
+      "duration": 3.792,
+      "bytes": 30572
     },
     {
       "id": "voice.terminal.down.zh",
@@ -1053,8 +1053,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 8.256,
-      "bytes": 66285
+      "duration": 11.04,
+      "bytes": 88556
     },
     {
       "id": "voice.terminal.down.yue",
@@ -1079,8 +1079,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 9.048,
-      "bytes": 72621
+      "duration": 8.616,
+      "bytes": 69164
     },
     {
       "id": "voice.doorsClosing.zh",
@@ -1092,8 +1092,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 4.104,
-      "bytes": 33069
+      "duration": 3.864,
+      "bytes": 31148
     },
     {
       "id": "voice.doorsClosing.yue",
@@ -1105,8 +1105,8 @@
       "model": "cosyvoice-v3-flash",
       "voice": "longjiayi_v3",
       "language_type": "Chinese",
-      "duration": 4.584,
-      "bytes": 36909
+      "duration": 4.608,
+      "bytes": 37100
     },
     {
       "id": "voice.doorsClosing.en",
@@ -1118,8 +1118,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 3.696,
-      "bytes": 29805
+      "duration": 3.216,
+      "bytes": 25964
     },
     {
       "id": "voice.gap.zh",
@@ -1131,8 +1131,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 2.496,
-      "bytes": 20205
+      "duration": 3.144,
+      "bytes": 25388
     },
     {
       "id": "voice.gap.yue",
@@ -1157,8 +1157,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 2.808,
-      "bytes": 22701
+      "duration": 2.952,
+      "bytes": 23852
     },
     {
       "id": "voice.transfer.gyq.zh",
@@ -1170,8 +1170,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 5.136,
-      "bytes": 41325
+      "duration": 6.072,
+      "bytes": 48812
     },
     {
       "id": "voice.transfer.gyq.yue",
@@ -1196,8 +1196,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 5.856,
-      "bytes": 47085
+      "duration": 6.648,
+      "bytes": 53420
     },
     {
       "id": "voice.transfer.dsk.zh",
@@ -1209,8 +1209,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 1.224,
-      "bytes": 10029
+      "duration": 1.968,
+      "bytes": 15980
     },
     {
       "id": "voice.transfer.dsk.yue",
@@ -1222,8 +1222,8 @@
       "model": "cosyvoice-v3-flash",
       "voice": "longjiayi_v3",
       "language_type": "Chinese",
-      "duration": 1.392,
-      "bytes": 11373
+      "duration": 1.896,
+      "bytes": 15404
     },
     {
       "id": "voice.transfer.dsk.en",
@@ -1248,8 +1248,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 2.568,
-      "bytes": 20781
+      "duration": 3.408,
+      "bytes": 27500
     },
     {
       "id": "voice.exit.left.yue",
@@ -1274,8 +1274,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 1.776,
-      "bytes": 14445
+      "duration": 2.04,
+      "bytes": 16556
     },
     {
       "id": "voice.exit.right.zh",
@@ -1287,8 +1287,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 2.904,
-      "bytes": 23469
+      "duration": 3.384,
+      "bytes": 27308
     },
     {
       "id": "voice.exit.right.yue",
@@ -1313,8 +1313,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 1.728,
-      "bytes": 14061
+      "duration": 2.04,
+      "bytes": 16556
     },
     {
       "id": "voice.safety.escalator.zh",
@@ -1334,8 +1334,8 @@
       "wordingEvidence": "historical PA wording documented in 2017 news; still consistent with operator safety guide",
       "source": "https://apppax.gzmtr.cn/DNSFile/wechat/guide/ccaq_index.html",
       "translation": false,
-      "duration": 5.712,
-      "bytes": 45933
+      "duration": 5.592,
+      "bytes": 44972
     },
     {
       "id": "voice.safety.escalator.yue",
@@ -1376,8 +1376,8 @@
       "wordingEvidence": "operator safety guide, escalator general guidance 1",
       "source": "https://apppax.gzmtr.cn/DNSFile/wechat/guide/ccaq_index.html",
       "translation": false,
-      "duration": 2.016,
-      "bytes": 16365
+      "duration": 3.288,
+      "bytes": 26540
     },
     {
       "id": "voice.safety.care.yue",
@@ -1417,8 +1417,8 @@
       "wordingEvidence": "operator safety guide, station passage 4",
       "source": "https://apppax.gzmtr.cn/DNSFile/wechat/guide/ccaq_index.html",
       "translation": false,
-      "duration": 4.104,
-      "bytes": 33069
+      "duration": 5.184,
+      "bytes": 41708
     },
     {
       "id": "voice.safety.walk.yue",
@@ -1457,8 +1457,8 @@
       "wordingEvidence": "historical staff PA wording documented in 2017 news; operator guide waiting 2",
       "source": "https://apppax.gzmtr.cn/DNSFile/wechat/guide/ccaq_index.html",
       "translation": false,
-      "duration": 4.584,
-      "bytes": 36909
+      "duration": 5.808,
+      "bytes": 46700
     },
     {
       "id": "voice.safety.queue.yue",
@@ -1497,8 +1497,8 @@
       "wordingEvidence": "operator safety guide, waiting 3; slash rendered as spoken punctuation",
       "source": "https://apppax.gzmtr.cn/DNSFile/wechat/guide/ccaq_index.html",
       "translation": false,
-      "duration": 4.992,
-      "bytes": 40173
+      "duration": 3.96,
+      "bytes": 31916
     },
     {
       "id": "voice.safety.psd.yue",
@@ -1537,8 +1537,8 @@
       "wordingEvidence": "operator safety guide, boarding 1",
       "source": "https://apppax.gzmtr.cn/DNSFile/wechat/guide/ccaq_index.html",
       "translation": false,
-      "duration": 2.496,
-      "bytes": 20205
+      "duration": 3.408,
+      "bytes": 27500
     },
     {
       "id": "voice.safety.lights.yue",
@@ -1570,8 +1570,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 4.488,
-      "bytes": 36140
+      "duration": 5.784,
+      "bytes": 46508
     },
     {
       "id": "voice.arrive.xl.yue",
@@ -1596,8 +1596,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 4.728,
-      "bytes": 38060
+      "duration": 4.848,
+      "bytes": 39020
     },
     {
       "id": "voice.welcome.xl.zh",
@@ -1609,8 +1609,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 4.656,
-      "bytes": 37484
+      "duration": 4.32,
+      "bytes": 34796
     },
     {
       "id": "voice.welcome.xl.yue",
@@ -1622,8 +1622,8 @@
       "model": "cosyvoice-v3-flash",
       "voice": "longjiayi_v3",
       "language_type": "Chinese",
-      "duration": 4.248,
-      "bytes": 34220
+      "duration": 4.896,
+      "bytes": 39404
     },
     {
       "id": "voice.welcome.xl.en",
@@ -1635,8 +1635,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 6.192,
-      "bytes": 49772
+      "duration": 6.0,
+      "bytes": 48236
     },
     {
       "id": "voice.next.kk.zh",
@@ -1648,8 +1648,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 1.128,
-      "bytes": 9260
+      "duration": 2.016,
+      "bytes": 16364
     },
     {
       "id": "voice.next.kk.yue",
@@ -1661,8 +1661,8 @@
       "model": "cosyvoice-v3-flash",
       "voice": "longjiayi_v3",
       "language_type": "Chinese",
-      "duration": 2.184,
-      "bytes": 17708
+      "duration": 2.064,
+      "bytes": 16748
     },
     {
       "id": "voice.next.kk.en",
@@ -1674,8 +1674,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 1.392,
-      "bytes": 11372
+      "duration": 1.968,
+      "bytes": 15980
     },
     {
       "id": "voice.arrive.kk.zh",
@@ -1687,8 +1687,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 4.992,
-      "bytes": 40172
+      "duration": 5.664,
+      "bytes": 45548
     },
     {
       "id": "voice.arrive.kk.yue",
@@ -1713,8 +1713,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 4.344,
-      "bytes": 34988
+      "duration": 4.44,
+      "bytes": 35756
     },
     {
       "id": "voice.welcome.kk.zh",
@@ -1726,8 +1726,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 3.768,
-      "bytes": 30380
+      "duration": 4.968,
+      "bytes": 39980
     },
     {
       "id": "voice.welcome.kk.yue",
@@ -1739,8 +1739,8 @@
       "model": "cosyvoice-v3-flash",
       "voice": "longjiayi_v3",
       "language_type": "Chinese",
-      "duration": 3.552,
-      "bytes": 28652
+      "duration": 4.584,
+      "bytes": 36908
     },
     {
       "id": "voice.welcome.kk.en",
@@ -1752,8 +1752,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 5.472,
-      "bytes": 44012
+      "duration": 6.36,
+      "bytes": 51116
     },
     {
       "id": "voice.next.hdw.zh",
@@ -1765,8 +1765,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 1.224,
-      "bytes": 10028
+      "duration": 2.04,
+      "bytes": 16556
     },
     {
       "id": "voice.next.hdw.yue",
@@ -1778,8 +1778,8 @@
       "model": "cosyvoice-v3-flash",
       "voice": "longjiayi_v3",
       "language_type": "Chinese",
-      "duration": 1.8,
-      "bytes": 14636
+      "duration": 2.232,
+      "bytes": 18092
     },
     {
       "id": "voice.next.hdw.en",
@@ -1791,8 +1791,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 1.704,
-      "bytes": 13868
+      "duration": 2.04,
+      "bytes": 16556
     },
     {
       "id": "voice.arrive.hdw.zh",
@@ -1804,8 +1804,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 5.376,
-      "bytes": 43244
+      "duration": 5.184,
+      "bytes": 41708
     },
     {
       "id": "voice.arrive.hdw.yue",
@@ -1830,8 +1830,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 5.064,
-      "bytes": 40748
+      "duration": 4.776,
+      "bytes": 38444
     },
     {
       "id": "voice.welcome.hdw.zh",
@@ -1843,8 +1843,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 4.584,
-      "bytes": 36908
+      "duration": 5.232,
+      "bytes": 42092
     },
     {
       "id": "voice.welcome.hdw.yue",
@@ -1856,8 +1856,8 @@
       "model": "cosyvoice-v3-flash",
       "voice": "longjiayi_v3",
       "language_type": "Chinese",
-      "duration": 5.784,
-      "bytes": 46508
+      "duration": 4.992,
+      "bytes": 40172
     },
     {
       "id": "voice.welcome.hdw.en",
@@ -1869,8 +1869,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 4.512,
-      "bytes": 36332
+      "duration": 6.792,
+      "bytes": 54572
     },
     {
       "id": "voice.next.fc.zh",
@@ -1882,8 +1882,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 3.456,
-      "bytes": 27884
+      "duration": 4.92,
+      "bytes": 39596
     },
     {
       "id": "voice.next.fc.yue",
@@ -1895,8 +1895,8 @@
       "model": "cosyvoice-v3-flash",
       "voice": "longjiayi_v3",
       "language_type": "Chinese",
-      "duration": 5.784,
-      "bytes": 46508
+      "duration": 5.328,
+      "bytes": 42860
     },
     {
       "id": "voice.next.fc.en",
@@ -1908,8 +1908,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 5.064,
-      "bytes": 40748
+      "duration": 5.208,
+      "bytes": 41900
     },
     {
       "id": "voice.arrive.fc.zh",
@@ -1921,8 +1921,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 4.416,
-      "bytes": 35564
+      "duration": 4.8,
+      "bytes": 38636
     },
     {
       "id": "voice.arrive.fc.yue",
@@ -1947,8 +1947,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 5.712,
-      "bytes": 45932
+      "duration": 4.8,
+      "bytes": 38636
     },
     {
       "id": "voice.welcome.fc.zh",
@@ -1960,8 +1960,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 3.936,
-      "bytes": 31724
+      "duration": 4.488,
+      "bytes": 36140
     },
     {
       "id": "voice.welcome.fc.yue",
@@ -1973,8 +1973,8 @@
       "model": "cosyvoice-v3-flash",
       "voice": "longjiayi_v3",
       "language_type": "Chinese",
-      "duration": 4.104,
-      "bytes": 33068
+      "duration": 4.416,
+      "bytes": 35564
     },
     {
       "id": "voice.welcome.fc.en",
@@ -1986,8 +1986,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 5.136,
-      "bytes": 41324
+      "duration": 6.12,
+      "bytes": 49196
     },
     {
       "id": "voice.next.hs.zh",
@@ -1999,8 +1999,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 2.496,
-      "bytes": 20204
+      "duration": 3.792,
+      "bytes": 30572
     },
     {
       "id": "voice.next.hs.yue",
@@ -2012,8 +2012,8 @@
       "model": "cosyvoice-v3-flash",
       "voice": "longjiayi_v3",
       "language_type": "Chinese",
-      "duration": 3.216,
-      "bytes": 25964
+      "duration": 3.6,
+      "bytes": 29036
     },
     {
       "id": "voice.next.hs.en",
@@ -2025,8 +2025,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 4.008,
-      "bytes": 32300
+      "duration": 3.888,
+      "bytes": 31340
     },
     {
       "id": "voice.arrive.hs.zh",
@@ -2038,8 +2038,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 5.064,
-      "bytes": 40748
+      "duration": 5.88,
+      "bytes": 47276
     },
     {
       "id": "voice.arrive.hs.yue",
@@ -2064,8 +2064,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 4.824,
-      "bytes": 38828
+      "duration": 5.016,
+      "bytes": 40364
     },
     {
       "id": "voice.welcome.hs.zh",
@@ -2077,8 +2077,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 4.008,
-      "bytes": 32300
+      "duration": 5.376,
+      "bytes": 43244
     },
     {
       "id": "voice.welcome.hs.yue",
@@ -2090,8 +2090,8 @@
       "model": "cosyvoice-v3-flash",
       "voice": "longjiayi_v3",
       "language_type": "Chinese",
-      "duration": 4.416,
-      "bytes": 35564
+      "duration": 4.824,
+      "bytes": 38828
     },
     {
       "id": "voice.welcome.hs.en",
@@ -2103,8 +2103,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 6.096,
-      "bytes": 49004
+      "duration": 6.816,
+      "bytes": 54764
     },
     {
       "id": "voice.next.csl.zh",
@@ -2116,8 +2116,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 1.464,
-      "bytes": 11948
+      "duration": 2.064,
+      "bytes": 16748
     },
     {
       "id": "voice.next.csl.yue",
@@ -2129,8 +2129,8 @@
       "model": "cosyvoice-v3-flash",
       "voice": "longjiayi_v3",
       "language_type": "Chinese",
-      "duration": 2.112,
-      "bytes": 17132
+      "duration": 2.544,
+      "bytes": 20588
     },
     {
       "id": "voice.next.csl.en",
@@ -2142,8 +2142,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 2.328,
-      "bytes": 18860
+      "duration": 2.52,
+      "bytes": 20396
     },
     {
       "id": "voice.arrive.csl.zh",
@@ -2155,8 +2155,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 4.92,
-      "bytes": 39596
+      "duration": 5.304,
+      "bytes": 42668
     },
     {
       "id": "voice.arrive.csl.yue",
@@ -2181,8 +2181,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 5.544,
-      "bytes": 44588
+      "duration": 5.616,
+      "bytes": 45164
     },
     {
       "id": "voice.welcome.csl.zh",
@@ -2194,8 +2194,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 4.512,
-      "bytes": 36332
+      "duration": 5.16,
+      "bytes": 41516
     },
     {
       "id": "voice.welcome.csl.yue",
@@ -2207,8 +2207,8 @@
       "model": "cosyvoice-v3-flash",
       "voice": "longjiayi_v3",
       "language_type": "Chinese",
-      "duration": 4.488,
-      "bytes": 36140
+      "duration": 4.896,
+      "bytes": 39404
     },
     {
       "id": "voice.welcome.csl.en",
@@ -2220,8 +2220,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 5.928,
-      "bytes": 47660
+      "duration": 6.768,
+      "bytes": 54380
     },
     {
       "id": "voice.next.cjc.zh",
@@ -2233,8 +2233,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 3.216,
-      "bytes": 25964
+      "duration": 4.32,
+      "bytes": 34796
     },
     {
       "id": "voice.next.cjc.yue",
@@ -2246,8 +2246,8 @@
       "model": "cosyvoice-v3-flash",
       "voice": "longjiayi_v3",
       "language_type": "Chinese",
-      "duration": 3.792,
-      "bytes": 30572
+      "duration": 3.984,
+      "bytes": 32108
     },
     {
       "id": "voice.next.cjc.en",
@@ -2259,8 +2259,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 2.976,
-      "bytes": 24044
+      "duration": 4.08,
+      "bytes": 32876
     },
     {
       "id": "voice.arrive.cjc.zh",
@@ -2272,8 +2272,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 5.208,
-      "bytes": 41900
+      "duration": 5.4,
+      "bytes": 43436
     },
     {
       "id": "voice.arrive.cjc.yue",
@@ -2298,8 +2298,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 5.856,
-      "bytes": 47084
+      "duration": 5.448,
+      "bytes": 43820
     },
     {
       "id": "voice.welcome.cjc.zh",
@@ -2311,8 +2311,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 3.936,
-      "bytes": 31724
+      "duration": 5.04,
+      "bytes": 40556
     },
     {
       "id": "voice.welcome.cjc.yue",
@@ -2324,8 +2324,8 @@
       "model": "cosyvoice-v3-flash",
       "voice": "longjiayi_v3",
       "language_type": "Chinese",
-      "duration": 3.864,
-      "bytes": 31148
+      "duration": 4.656,
+      "bytes": 37484
     },
     {
       "id": "voice.welcome.cjc.en",
@@ -2337,8 +2337,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 8.904,
-      "bytes": 71468
+      "duration": 6.528,
+      "bytes": 52460
     },
     {
       "id": "voice.next.xmk.zh",
@@ -2350,8 +2350,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 2.088,
-      "bytes": 16940
+      "duration": 2.544,
+      "bytes": 20588
     },
     {
       "id": "voice.next.xmk.yue",
@@ -2363,8 +2363,8 @@
       "model": "cosyvoice-v3-flash",
       "voice": "longjiayi_v3",
       "language_type": "Chinese",
-      "duration": 1.8,
-      "bytes": 14636
+      "duration": 2.112,
+      "bytes": 17132
     },
     {
       "id": "voice.next.xmk.en",
@@ -2376,8 +2376,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 1.536,
-      "bytes": 12524
+      "duration": 1.8,
+      "bytes": 14636
     },
     {
       "id": "voice.arrive.xmk.zh",
@@ -2389,8 +2389,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 5.064,
-      "bytes": 40748
+      "duration": 5.88,
+      "bytes": 47276
     },
     {
       "id": "voice.arrive.xmk.yue",
@@ -2415,8 +2415,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 4.824,
-      "bytes": 38828
+      "duration": 5.016,
+      "bytes": 40364
     },
     {
       "id": "voice.welcome.xmk.zh",
@@ -2428,8 +2428,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 4.176,
-      "bytes": 33644
+      "duration": 4.536,
+      "bytes": 36524
     },
     {
       "id": "voice.welcome.xmk.yue",
@@ -2441,8 +2441,8 @@
       "model": "cosyvoice-v3-flash",
       "voice": "longjiayi_v3",
       "language_type": "Chinese",
-      "duration": 4.176,
-      "bytes": 33644
+      "duration": 4.488,
+      "bytes": 36140
     },
     {
       "id": "voice.welcome.xmk.en",
@@ -2454,8 +2454,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 6.096,
-      "bytes": 49004
+      "duration": 6.648,
+      "bytes": 53420
     },
     {
       "id": "voice.next.yj.zh",
@@ -2467,8 +2467,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 2.808,
-      "bytes": 22700
+      "duration": 3.36,
+      "bytes": 27116
     },
     {
       "id": "voice.next.yj.yue",
@@ -2480,8 +2480,8 @@
       "model": "cosyvoice-v3-flash",
       "voice": "longjiayi_v3",
       "language_type": "Chinese",
-      "duration": 2.832,
-      "bytes": 22892
+      "duration": 3.744,
+      "bytes": 30188
     },
     {
       "id": "voice.next.yj.en",
@@ -2493,8 +2493,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 3.216,
-      "bytes": 25964
+      "duration": 3.96,
+      "bytes": 31916
     },
     {
       "id": "voice.arrive.yj.zh",
@@ -2506,8 +2506,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 4.344,
-      "bytes": 34988
+      "duration": 5.88,
+      "bytes": 47276
     },
     {
       "id": "voice.arrive.yj.yue",
@@ -2532,8 +2532,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 4.656,
-      "bytes": 37484
+      "duration": 4.92,
+      "bytes": 39596
     },
     {
       "id": "voice.welcome.yj.zh",
@@ -2545,8 +2545,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 3.192,
-      "bytes": 25772
+      "duration": 4.464,
+      "bytes": 35948
     },
     {
       "id": "voice.welcome.yj.yue",
@@ -2558,8 +2558,8 @@
       "model": "cosyvoice-v3-flash",
       "voice": "longjiayi_v3",
       "language_type": "Chinese",
-      "duration": 4.488,
-      "bytes": 36140
+      "duration": 4.416,
+      "bytes": 35564
     },
     {
       "id": "voice.welcome.yj.en",
@@ -2571,8 +2571,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 5.064,
-      "bytes": 40748
+      "duration": 6.168,
+      "bytes": 49580
     },
     {
       "id": "voice.next.tyxl.zh",
@@ -2584,8 +2584,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 4.032,
-      "bytes": 32492
+      "duration": 3.96,
+      "bytes": 31916
     },
     {
       "id": "voice.next.tyxl.yue",
@@ -2597,8 +2597,8 @@
       "model": "cosyvoice-v3-flash",
       "voice": "longjiayi_v3",
       "language_type": "Chinese",
-      "duration": 3.792,
-      "bytes": 30572
+      "duration": 3.888,
+      "bytes": 31340
     },
     {
       "id": "voice.next.tyxl.en",
@@ -2610,8 +2610,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 3.84,
-      "bytes": 30956
+      "duration": 4.488,
+      "bytes": 36140
     },
     {
       "id": "voice.arrive.tyxl.zh",
@@ -2623,8 +2623,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 4.896,
-      "bytes": 39404
+      "duration": 5.856,
+      "bytes": 47084
     },
     {
       "id": "voice.arrive.tyxl.yue",
@@ -2649,8 +2649,8 @@
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 6.168,
-      "bytes": 49580
+      "duration": 5.88,
+      "bytes": 47276
     },
     {
       "id": "voice.welcome.tyxl.zh",
