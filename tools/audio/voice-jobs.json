@@ -14,7 +14,7 @@
  {
   "id": "voice.destination.up.en",
   "lang": "en",
-  "text": "The destination of this train is Guangzhou East Railway Station.",
+  "text": "The destination of this train is Guangzhou Dongzhan.",
   "file": "voice/destination-up-en.mp3"
  },
  {
@@ -32,7 +32,7 @@
  {
   "id": "voice.terminal.up.en",
   "lang": "en",
-  "text": "The next station is Guangzhou East Railway Station, the terminal of this journey. Please take all your belongings and leave the train. Thank you for travelling on Guangzhou Metro.",
+  "text": "The next station is Guangzhou Dongzhan, the terminal of this journey. Please take all your belongings and leave the train. Thank you for travelling on Guangzhou Metro.",
   "file": "voice/terminal-up-en.mp3"
  },
  {
@@ -50,7 +50,7 @@
  {
   "id": "voice.platform.up.1.en",
   "lang": "en",
-  "text": "The train bound for Guangzhou East Railway Station is approaching at Platform 1.",
+  "text": "The train bound for Guangzhou Dongzhan is approaching at Platform 1.",
   "file": "voice/platform-up-1-en.mp3"
  },
  {
@@ -68,7 +68,7 @@
  {
   "id": "voice.platform.up.2.en",
   "lang": "en",
-  "text": "The train bound for Guangzhou East Railway Station is approaching at Platform 2.",
+  "text": "The train bound for Guangzhou Dongzhan is approaching at Platform 2.",
   "file": "voice/platform-up-2-en.mp3"
  },
  {
@@ -464,7 +464,7 @@
  {
   "id": "voice.next.cjc.en",
   "lang": "en",
-  "text": "The next station is Chen Clan Academy, the interchange with Line Eight.",
+  "text": "The next station is Chenjiaci, the interchange with Line Eight.",
   "file": "voice/next-cjc-en.mp3"
  },
  {
@@ -482,7 +482,7 @@
  {
   "id": "voice.arrive.cjc.en",
   "lang": "en",
-  "text": "The train is arriving at Chen Clan Academy. Please mind the gap between the train and the platform.",
+  "text": "The train is arriving at Chenjiaci. Please mind the gap between the train and the platform.",
   "file": "voice/arrive-cjc-en.mp3"
  },
  {
@@ -500,7 +500,7 @@
  {
   "id": "voice.welcome.cjc.en",
   "lang": "en",
-  "text": "Welcome to Chen Clan Academy station. Please line up for the train. Let the passengers get off first before you get on.",
+  "text": "Welcome to Chenjiaci station. Please line up for the train. Let the passengers get off first before you get on.",
   "file": "voice/welcome-cjc-en.mp3"
  },
  {
@@ -644,7 +644,7 @@
  {
   "id": "voice.next.njs.en",
   "lang": "en",
-  "text": "The next station is Peasant Movement Institute.",
+  "text": "The next station is Nongjiangsuo.",
   "file": "voice/next-njs-en.mp3"
  },
  {
@@ -662,7 +662,7 @@
  {
   "id": "voice.arrive.njs.en",
   "lang": "en",
-  "text": "The train is arriving at Peasant Movement Institute. Please mind the gap between the train and the platform.",
+  "text": "The train is arriving at Nongjiangsuo. Please mind the gap between the train and the platform.",
   "file": "voice/arrive-njs-en.mp3"
  },
  {
@@ -680,7 +680,7 @@
  {
   "id": "voice.welcome.njs.en",
   "lang": "en",
-  "text": "Welcome to Peasant Movement Institute station. Please line up for the train. Let the passengers get off first before you get on.",
+  "text": "Welcome to Nongjiangsuo station. Please line up for the train. Let the passengers get off first before you get on.",
   "file": "voice/welcome-njs-en.mp3"
  },
  {
@@ -698,7 +698,7 @@
  {
   "id": "voice.next.lsly.en",
   "lang": "en",
-  "text": "The next station is Martyrs' Park.",
+  "text": "The next station is Lieshi Lingyuan.",
   "file": "voice/next-lsly-en.mp3"
  },
  {
@@ -716,7 +716,7 @@
  {
   "id": "voice.arrive.lsly.en",
   "lang": "en",
-  "text": "The train is arriving at Martyrs' Park. Please mind the gap between the train and the platform.",
+  "text": "The train is arriving at Lieshi Lingyuan. Please mind the gap between the train and the platform.",
   "file": "voice/arrive-lsly-en.mp3"
  },
  {
@@ -734,7 +734,7 @@
  {
   "id": "voice.welcome.lsly.en",
   "lang": "en",
-  "text": "Welcome to Martyrs' Park station. Please line up for the train. Let the passengers get off first before you get on.",
+  "text": "Welcome to Lieshi Lingyuan station. Please line up for the train. Let the passengers get off first before you get on.",
   "file": "voice/welcome-lsly-en.mp3"
  },
  {
@@ -914,7 +914,7 @@
  {
   "id": "voice.next.tyzx.en",
   "lang": "en",
-  "text": "The next station is Tianhe Sports Center.",
+  "text": "The next station is Tiyu Zhongxin.",
   "file": "voice/next-tyzx-en.mp3"
  },
  {
@@ -932,7 +932,7 @@
  {
   "id": "voice.arrive.tyzx.en",
   "lang": "en",
-  "text": "The train is arriving at Tianhe Sports Center. Please mind the gap between the train and the platform.",
+  "text": "The train is arriving at Tiyu Zhongxin. Please mind the gap between the train and the platform.",
   "file": "voice/arrive-tyzx-en.mp3"
  },
  {
@@ -950,7 +950,7 @@
  {
   "id": "voice.welcome.tyzx.en",
   "lang": "en",
-  "text": "Welcome to Tianhe Sports Center station. Please line up for the train. Let the passengers get off first before you get on.",
+  "text": "Welcome to Tiyu Zhongxin station. Please line up for the train. Let the passengers get off first before you get on.",
   "file": "voice/welcome-tyzx-en.mp3"
  },
  {
@@ -968,7 +968,7 @@
  {
   "id": "voice.arrive.gzdz.en",
   "lang": "en",
-  "text": "The train is arriving at Guangzhou East Railway Station. Please mind the gap between the train and the platform.",
+  "text": "The train is arriving at Guangzhou Dongzhan. Please mind the gap between the train and the platform.",
   "file": "voice/arrive-gzdz-en.mp3"
  },
  {
@@ -986,7 +986,7 @@
  {
   "id": "voice.welcome.gzdz.en",
   "lang": "en",
-  "text": "Welcome to Guangzhou East Railway Station station. Please line up for the train. Let the passengers get off first before you get on.",
+  "text": "Welcome to Guangzhou Dongzhan station. Please line up for the train. Let the passengers get off first before you get on.",
   "file": "voice/welcome-gzdz-en.mp3"
  },
  {
@@ -1076,7 +1076,7 @@
  {
   "id": "voice.destination.l2s.en",
   "lang": "en",
-  "text": "The destination of this train is Guangzhou South Railway Station.",
+  "text": "The destination of this train is Guangzhou Nanzhan.",
   "file": "voice/destination-l2s-en.mp3"
  },
  {
@@ -1094,7 +1094,7 @@
  {
   "id": "voice.terminal.l2s.en",
   "lang": "en",
-  "text": "The next station is Guangzhou South Railway Station, the terminal of this journey. Please take all your belongings and leave the train. Thank you for travelling on Guangzhou Metro.",
+  "text": "The next station is Guangzhou Nanzhan, the terminal of this journey. Please take all your belongings and leave the train. Thank you for travelling on Guangzhou Metro.",
   "file": "voice/terminal-l2s-en.mp3"
  },
  {
@@ -1112,7 +1112,7 @@
  {
   "id": "voice.platform.l2s.1.en",
   "lang": "en",
-  "text": "The train bound for Guangzhou South Railway Station is approaching at Platform 1.",
+  "text": "The train bound for Guangzhou Nanzhan is approaching at Platform 1.",
   "file": "voice/platform-l2s-1-en.mp3"
  },
  {
@@ -1130,7 +1130,7 @@
  {
   "id": "voice.platform.l2s.2.en",
   "lang": "en",
-  "text": "The train bound for Guangzhou South Railway Station is approaching at Platform 2.",
+  "text": "The train bound for Guangzhou Nanzhan is approaching at Platform 2.",
   "file": "voice/platform-l2s-2-en.mp3"
  },
  {
@@ -1148,7 +1148,7 @@
  {
   "id": "voice.arrive.gznz.en",
   "lang": "en",
-  "text": "The train is arriving at Guangzhou South Railway Station. Please mind the gap between the train and the platform.",
+  "text": "The train is arriving at Guangzhou Nanzhan. Please mind the gap between the train and the platform.",
   "file": "voice/arrive-gznz-en.mp3"
  },
  {
@@ -1166,7 +1166,7 @@
  {
   "id": "voice.welcome.gznz.en",
   "lang": "en",
-  "text": "Welcome to Guangzhou South Railway Station station. Please line up for the train. Let the passengers get off first before you get on.",
+  "text": "Welcome to Guangzhou Nanzhan station. Please line up for the train. Let the passengers get off first before you get on.",
   "file": "voice/welcome-gznz-en.mp3"
  },
  {
@@ -1454,7 +1454,7 @@
  {
   "id": "voice.next.dxn.en",
   "lang": "en",
-  "text": "The next station is Dongxiao South, the interchange with Line Ten.",
+  "text": "The next station is Dongxiaonan, the interchange with Line Ten.",
   "file": "voice/next-dxn-en.mp3"
  },
  {
@@ -1472,7 +1472,7 @@
  {
   "id": "voice.arrive.dxn.en",
   "lang": "en",
-  "text": "The train is arriving at Dongxiao South. Please mind the gap between the train and the platform.",
+  "text": "The train is arriving at Dongxiaonan. Please mind the gap between the train and the platform.",
   "file": "voice/arrive-dxn-en.mp3"
  },
  {
@@ -1490,7 +1490,7 @@
  {
   "id": "voice.welcome.dxn.en",
   "lang": "en",
-  "text": "Welcome to Dongxiao South station. Please line up for the train. Let the passengers get off first before you get on.",
+  "text": "Welcome to Dongxiaonan station. Please line up for the train. Let the passengers get off first before you get on.",
   "file": "voice/welcome-dxn-en.mp3"
  },
  {
@@ -1508,7 +1508,7 @@
  {
   "id": "voice.next.jtl.en",
   "lang": "en",
-  "text": "The next station is Jiangtai Road, the interchange with Line Eleven.",
+  "text": "The next station is Jiangtai Lu, the interchange with Line Eleven.",
   "file": "voice/next-jtl-en.mp3"
  },
  {
@@ -1526,7 +1526,7 @@
  {
   "id": "voice.arrive.jtl.en",
   "lang": "en",
-  "text": "The train is arriving at Jiangtai Road. Please mind the gap between the train and the platform.",
+  "text": "The train is arriving at Jiangtai Lu. Please mind the gap between the train and the platform.",
   "file": "voice/arrive-jtl-en.mp3"
  },
  {
@@ -1544,7 +1544,7 @@
  {
   "id": "voice.welcome.jtl.en",
   "lang": "en",
-  "text": "Welcome to Jiangtai Road station. Please line up for the train. Let the passengers get off first before you get on.",
+  "text": "Welcome to Jiangtai Lu station. Please line up for the train. Let the passengers get off first before you get on.",
   "file": "voice/welcome-jtl-en.mp3"
  },
  {
@@ -1670,7 +1670,7 @@
  {
   "id": "voice.next.seg.en",
   "lang": "en",
-  "text": "The next station is The 2nd Workers' Cultural Palace.",
+  "text": "The next station is Shi'ergong.",
   "file": "voice/next-seg-en.mp3"
  },
  {
@@ -1688,7 +1688,7 @@
  {
   "id": "voice.arrive.seg.en",
   "lang": "en",
-  "text": "The train is arriving at The 2nd Workers' Cultural Palace. Please mind the gap between the train and the platform.",
+  "text": "The train is arriving at Shi'ergong. Please mind the gap between the train and the platform.",
   "file": "voice/arrive-seg-en.mp3"
  },
  {
@@ -1706,7 +1706,7 @@
  {
   "id": "voice.welcome.seg.en",
   "lang": "en",
-  "text": "Welcome to The 2nd Workers' Cultural Palace station. Please line up for the train. Let the passengers get off first before you get on.",
+  "text": "Welcome to Shi'ergong station. Please line up for the train. Let the passengers get off first before you get on.",
   "file": "voice/welcome-seg-en.mp3"
  },
  {
@@ -1724,7 +1724,7 @@
  {
   "id": "voice.next.hzgc.en",
   "lang": "en",
-  "text": "The next station is Haizhu Square, the interchange with Line Six.",
+  "text": "The next station is Haizhu Guangchang, the interchange with Line Six.",
   "file": "voice/next-hzgc-en.mp3"
  },
  {
@@ -1742,7 +1742,7 @@
  {
   "id": "voice.arrive.hzgc.en",
   "lang": "en",
-  "text": "The train is arriving at Haizhu Square. Please mind the gap between the train and the platform.",
+  "text": "The train is arriving at Haizhu Guangchang. Please mind the gap between the train and the platform.",
   "file": "voice/arrive-hzgc-en.mp3"
  },
  {
@@ -1760,7 +1760,7 @@
  {
   "id": "voice.welcome.hzgc.en",
   "lang": "en",
-  "text": "Welcome to Haizhu Square station. Please line up for the train. Let the passengers get off first before you get on.",
+  "text": "Welcome to Haizhu Guangchang station. Please line up for the train. Let the passengers get off first before you get on.",
   "file": "voice/welcome-hzgc-en.mp3"
  },
  {
@@ -1796,7 +1796,7 @@
  {
   "id": "voice.next.jnt.en",
   "lang": "en",
-  "text": "The next station is Sun Yat-sen Memorial Hall.",
+  "text": "The next station is Jiniantang.",
   "file": "voice/next-jnt-en.mp3"
  },
  {
@@ -1814,7 +1814,7 @@
  {
   "id": "voice.arrive.jnt.en",
   "lang": "en",
-  "text": "The train is arriving at Sun Yat-sen Memorial Hall. Please mind the gap between the train and the platform.",
+  "text": "The train is arriving at Jiniantang. Please mind the gap between the train and the platform.",
   "file": "voice/arrive-jnt-en.mp3"
  },
  {
@@ -1832,7 +1832,7 @@
  {
   "id": "voice.welcome.jnt.en",
   "lang": "en",
-  "text": "Welcome to Sun Yat-sen Memorial Hall station. Please line up for the train. Let the passengers get off first before you get on.",
+  "text": "Welcome to Jiniantang station. Please line up for the train. Let the passengers get off first before you get on.",
   "file": "voice/welcome-jnt-en.mp3"
  },
  {
@@ -1850,7 +1850,7 @@
  {
   "id": "voice.next.yxgy.en",
   "lang": "en",
-  "text": "The next station is Yuexiu Park.",
+  "text": "The next station is Yuexiu Gongyuan.",
   "file": "voice/next-yxgy-en.mp3"
  },
  {
@@ -1868,7 +1868,7 @@
  {
   "id": "voice.arrive.yxgy.en",
   "lang": "en",
-  "text": "The train is arriving at Yuexiu Park. Please mind the gap between the train and the platform.",
+  "text": "The train is arriving at Yuexiu Gongyuan. Please mind the gap between the train and the platform.",
   "file": "voice/arrive-yxgy-en.mp3"
  },
  {
@@ -1886,7 +1886,7 @@
  {
   "id": "voice.welcome.yxgy.en",
   "lang": "en",
-  "text": "Welcome to Yuexiu Park station. Please line up for the train. Let the passengers get off first before you get on.",
+  "text": "Welcome to Yuexiu Gongyuan station. Please line up for the train. Let the passengers get off first before you get on.",
   "file": "voice/welcome-yxgy-en.mp3"
  },
  {
@@ -1904,7 +1904,7 @@
  {
   "id": "voice.next.gzhcz.en",
   "lang": "en",
-  "text": "The next station is Guangzhou Railway Station, the interchange with Line Five.",
+  "text": "The next station is Guangzhou Huochezhan, the interchange with Line Five.",
   "file": "voice/next-gzhcz-en.mp3"
  },
  {
@@ -1922,7 +1922,7 @@
  {
   "id": "voice.arrive.gzhcz.en",
   "lang": "en",
-  "text": "The train is arriving at Guangzhou Railway Station. Please mind the gap between the train and the platform.",
+  "text": "The train is arriving at Guangzhou Huochezhan. Please mind the gap between the train and the platform.",
   "file": "voice/arrive-gzhcz-en.mp3"
  },
  {
@@ -1940,7 +1940,7 @@
  {
   "id": "voice.welcome.gzhcz.en",
   "lang": "en",
-  "text": "Welcome to Guangzhou Railway Station station. Please line up for the train. Let the passengers get off first before you get on.",
+  "text": "Welcome to Guangzhou Huochezhan station. Please line up for the train. Let the passengers get off first before you get on.",
   "file": "voice/welcome-gzhcz-en.mp3"
  },
  {
@@ -2012,7 +2012,7 @@
  {
   "id": "voice.next.fxgy.en",
   "lang": "en",
-  "text": "The next station is Feixiang Park.",
+  "text": "The next station is Feixiang Gongyuan.",
   "file": "voice/next-fxgy-en.mp3"
  },
  {
@@ -2030,7 +2030,7 @@
  {
   "id": "voice.arrive.fxgy.en",
   "lang": "en",
-  "text": "The train is arriving at Feixiang Park. Please mind the gap between the train and the platform.",
+  "text": "The train is arriving at Feixiang Gongyuan. Please mind the gap between the train and the platform.",
   "file": "voice/arrive-fxgy-en.mp3"
  },
  {
@@ -2048,7 +2048,7 @@
  {
   "id": "voice.welcome.fxgy.en",
   "lang": "en",
-  "text": "Welcome to Feixiang Park station. Please line up for the train. Let the passengers get off first before you get on.",
+  "text": "Welcome to Feixiang Gongyuan station. Please line up for the train. Let the passengers get off first before you get on.",
   "file": "voice/welcome-fxgy-en.mp3"
  },
  {
@@ -2066,7 +2066,7 @@
  {
   "id": "voice.next.bygy.en",
   "lang": "en",
-  "text": "The next station is Baiyun Park.",
+  "text": "The next station is Baiyun Gongyuan.",
   "file": "voice/next-bygy-en.mp3"
  },
  {
@@ -2084,7 +2084,7 @@
  {
   "id": "voice.arrive.bygy.en",
   "lang": "en",
-  "text": "The train is arriving at Baiyun Park. Please mind the gap between the train and the platform.",
+  "text": "The train is arriving at Baiyun Gongyuan. Please mind the gap between the train and the platform.",
   "file": "voice/arrive-bygy-en.mp3"
  },
  {
@@ -2102,7 +2102,7 @@
  {
   "id": "voice.welcome.bygy.en",
   "lang": "en",
-  "text": "Welcome to Baiyun Park station. Please line up for the train. Let the passengers get off first before you get on.",
+  "text": "Welcome to Baiyun Gongyuan station. Please line up for the train. Let the passengers get off first before you get on.",
   "file": "voice/welcome-bygy-en.mp3"
  },
  {
@@ -2120,7 +2120,7 @@
  {
   "id": "voice.next.bywhgc.en",
   "lang": "en",
-  "text": "The next station is Baiyun Culture Square, the interchange with Line Twelve.",
+  "text": "The next station is Baiyun Wenhua Guangchang, the interchange with Line Twelve.",
   "file": "voice/next-bywhgc-en.mp3"
  },
  {
@@ -2138,7 +2138,7 @@
  {
   "id": "voice.arrive.bywhgc.en",
   "lang": "en",
-  "text": "The train is arriving at Baiyun Culture Square. Please mind the gap between the train and the platform.",
+  "text": "The train is arriving at Baiyun Wenhua Guangchang. Please mind the gap between the train and the platform.",
   "file": "voice/arrive-bywhgc-en.mp3"
  },
  {
@@ -2156,7 +2156,7 @@
  {
   "id": "voice.welcome.bywhgc.en",
   "lang": "en",
-  "text": "Welcome to Baiyun Culture Square station. Please line up for the train. Let the passengers get off first before you get on.",
+  "text": "Welcome to Baiyun Wenhua Guangchang station. Please line up for the train. Let the passengers get off first before you get on.",
   "file": "voice/welcome-bywhgc-en.mp3"
  },
  {

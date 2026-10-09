@@ -60,9 +60,10 @@ for key,zh,yue,label,zones,evidence in SAFETY:
 # 新网络（1、2 号线全部车站）的片段由 js/data/phrases.js 导出：node tools/audio/export_jobs.mjs → voice-jobs.json
 EXTRA=ROOT/'tools/audio/voice-jobs.json'
 if EXTRA.exists():
-    known={j['id'] for j in JOBS}
+    known={j['id']:j for j in JOBS}
     for j in json.loads(EXTRA.read_text()):
-        if j['id'] in known: continue
+        # phrases.js 是文字的唯一来源：同 id 的旧片段（如英文站名改用拼音）按导出的文字重新生成
+        if j['id'] in known: known[j['id']]['text']=j['text']; continue
         model,voice,language=LANGS[j['lang']]
         JOBS.append({'id':j['id'],'file':j['file'],'group':'voice','label':j['id'][6:],'lang':j['lang'],'text':j['text'],'model':model,'voice':voice,'language_type':language})
 
