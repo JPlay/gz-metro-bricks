@@ -8,8 +8,10 @@ URL = sys.argv[1] if len(sys.argv) > 1 else 'http://localhost:8123/?q=2'
 OUT = (sys.argv[2] if len(sys.argv) > 2 else '/workspace/gz-shots-3d/').rstrip('/') + '/'
 os.makedirs(OUT, exist_ok=True)
 R = {}
+T0 = time.time()
+def log(*a): print(f'[{time.time() - T0:6.1f}s]', *a, flush=True)
 async def shot(pg, name):
-    await pg.screenshot(path=OUT + name + '.png', timeout=180000); print('shot', name, flush=True)
+    await pg.screenshot(path=OUT + name + '.png', timeout=180000); log('shot', name)
 async def tap(pg, sel):
     box = await pg.locator(sel).first.bounding_box()
     await pg.touchscreen.tap(box['x'] + box['width'] / 2, box['y'] + box['height'] / 2)
@@ -31,12 +33,17 @@ async def main():
   async with async_playwright() as p:
     b, pg, logs = await open_game(p, URL)
     await asyncio.sleep(1.5); await pg.touchscreen.tap(1112 * 0.7, 834 * 0.4)
-    await pg.evaluate("window.__gt===undefined && (window.__gt=0, __game.scene.onBeforeRenderObservable.add(()=>{ window.__gt += Math.min(0.05, __game.engine.getDeltaTime()/1000); }))")
+    await pg.evaluate("window.__gt===undefined && (window.__gt=0, __game.scene.onBeforeRenderObservable.add(()=>{ window.__gt += Math.min(0.25, __game.engine.getDeltaTime()/1000); }))")
+    # 软件渲染约 4 fps：把单帧步长上限放宽到 0.25s，游戏时间≈墙钟（默认 0.05 会让一趟车慢 5 倍）
+    await pg.evaluate('__game.setDtMax(0.25)'); log('loaded')
     await pg.evaluate('__game.teleport(24.6,-11.95,9.6,Math.PI)')
     for _ in range(600):
         await pg.evaluate('__game.call(1,1)')
         if await pg.evaluate(SLOT + ".state=='dwell'"): break
         await asyncio.sleep(0.5)
+    log('train dwell', await pg.evaluate(SLOT + '.state'))
+    # 截图很慢（单张 30–60 秒）：先让车门一直开着，摆好机位、截完图再放车走
+    await pg.evaluate(SLOT + '.t = 1e4')
     # 选一个靠近 0 号车中门的空座位（-z 一侧），站到它前面的过道上
     seat = await pg.evaluate(f"""(()=>{{const t={SLOT}.train, r=t.root.position;
       const s=t.seats.filter(s=>s.free&&s.sd<0).sort((a,b)=>Math.abs(a.x-1.2)-Math.abs(b.x-1.2))[0];
@@ -55,16 +62,21 @@ async def main():
     R['clearOfBaked'] = await pg.evaluate(f"""(()=>{{const t={SLOT}.train, s=__game.player.seat.seat;
       return t.seats.filter(o=>!o.free&&o.sd===s.sd).every(o=>Math.abs(o.x-s.x)>=0.45);}})()""")
     # 侧面（第三人称，镜头沿车厢方向）
-    await pg.evaluate('__game.player.yaw=__game.player.facing-Math.PI/2+0.5; __game.player.pitch=0.22; __game.player.dist=3.0'); await asyncio.sleep(1.5)
+    # 和 2a 同一个机位（过道上、略朝座位那侧），看侧面坐姿
+    await pg.evaluate('__game.player.yaw=Math.PI/2+0.5; __game.player.pitch=0.22; __game.player.dist=3.0'); await asyncio.sleep(1.5)
     await shot(pg, '2b-seat-sitting-side')
-    # 第一人称：对面车窗 + 门上线路图
-    await pg.evaluate('__game.toggleView()'); await pg.evaluate('__game.player.yaw=__game.player.facing+0.55; __game.player.pitch=-0.22'); await asyncio.sleep(1.5)
+    # 第一人称：对面车窗（看得到站台）+ 左前方车门上方的线路图
+    await pg.evaluate('__game.toggleView()'); await pg.evaluate('__game.player.yaw=__game.player.facing-0.2; __game.player.pitch=-0.24'); await asyncio.sleep(1.5)
     s = await st(pg); R['eyeFirst'] = round(s['camPos'][1] - (await pg.evaluate(SLOT + '.train.root.position.y')), 2)
     await shot(pg, '2c-seat-first-person-window-map')
     # 一直坐着：关门开车 → 进隧道 → 到下一站
+    await pg.evaluate(SLOT + '.t = 1')
     R['departed'] = await gwait(pg, "__game.state().metro.ride!==null", 40)
+    log('departed', R['departed'])
     R['seatedWhileMoving'] = await pg.evaluate('__game.state().seat.seated')
-    R['arrived'] = await gwait(pg, "(()=>{const s=__game.state(); return !s.metro.ride && s.code!='gyq'})()", 120)
+    # 到下一站停稳开门（坐着时 metro.ride 一直不为空——人还在车上——所以不能拿 ride==null 当“到站”，旧写法会一直等到超时）
+    R['arrived'] = await gwait(pg, "(()=>{const s=__game.state(); return s.code!='gyq' && !s.inTunnel && s.metro.slots.some(o=>o.line==1&&o.step==1&&o.state=='dwell')})()", 120)
+    log('arrived', R['arrived'])
     s = await st(pg); R['arrivedAt'] = s['code']; R['seatedAfterArrive'] = s['seat']['seated']
     await gwait(pg, 'false', 3); R['stillSeated'] = (await st(pg))['seat']['seated']
     # 起身
