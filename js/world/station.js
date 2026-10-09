@@ -14,12 +14,15 @@ import { DOOR_XS } from './train.js';
 import * as D from './decor.js';
 import * as MV from './mv.js';
 import { Crowd, randomLook, preseed } from './people.js';
-import { FONT, FONT_EN } from './kit.js';
+import { FONT, FONT_EN, roundRect } from './kit.js';
+import { drawLineCanvas } from '../ui/netmap.js';
 const B = window.BABYLON;
 
 export const YC = -6, HALL_X = 46, TUNNEL_X = 140, TRACK_OFF = 7.6, PSD_OFF = 6, WALL_OFF = 10.6;
 export const MAIN = { y: -12, zc: 14 }, GYQ2 = { y: -22, zc: 44 };
 export const SPAWN = { x: 0, y: 0, z: -48, yaw: 0 };
+/** 售票机位置（站厅，安检和闸机之间） */
+export const TVM_XS = [-8.6, -7.4, -6.2], TVM_Z = -6.4;
 /** 街面要留空的点：默认出生点、东山口截图取景点（tests/e2e/polish_shots.py 的 10b），半径 1.5 米内不放道具和行人 */
 export const STREET_CLEAR = [{ x: SPAWN.x, z: SPAWN.z, r: 1.5 }, { x: -6, z: -56, r: 1.5 }];
 // 每站一个很淡的主题色（柱子 / 墙面点缀），整体保持 1 号线车站的米白基调
@@ -319,8 +322,10 @@ export class Station {
     }
     D.cctv(k, -9.6, CY, -15.6, 0.8); D.cctv(k, 9.6, CY, -15.6, -0.8); D.cctv(k, 0, CY, 9.4, Math.PI); D.cctv(k, -11.6, CY, 5.4, 2.5);
     // 售票机 + 客服中心
-    for (let i = 0; i < 4; i++) { const z = -17 + i * 1.3; D.tvm(k, -17.5, y, z, Math.PI / 2); k.col(-17.5, y + 0.95, z, 0.62, 1.9, 0.95); }
-    k.sign(-17.94, y + 2.75, -15.05, { kind: 'dir', w: 4.0, h: 0.55, zh: '自动售票', en: 'Ticket Machines', face: Math.PI / 2 });
+    // 自动售票机：安检之后、闸机之前一排 3 台，正面朝安检方向（走过来就能看到屏幕）
+    this.tvms = TVM_XS.map(x => { const scr = D.ticketMachine(k, x, y, TVM_Z); k.col(x, y + 0.95, TVM_Z, 0.92, 1.9, 0.6); return { x, z: TVM_Z, y, front: { x, z: TVM_Z - 0.95 }, scr }; });
+    k.sign((TVM_XS[0] + TVM_XS[2]) / 2, y + 3.2, TVM_Z - 0.1, { kind: 'dir', w: 3.8, h: 0.55, zh: '自动售票', en: 'Ticket Machines', face: Math.PI, hang: CY });
+    this.tvmScreensBuild();
     k.block(12, 17.9, y, y + 1.05, -9, -5, '#ECEAE6', true, 'wall'); k.metal.slab(12, 17.9, y + 1.05, y + 1.1, -9.05, -4.9, STEEL, { ao: false });
     k.glass.slab(12, 17.9, y + 1.1, y + 2.5, -5.03, -4.97, hex('#D6ECF7'));
     for (let x = 12; x <= 17.95; x += 1.45) k.metal.slab(x - 0.03, x + 0.03, y + 1.1, y + 2.5, -5.06, -4.94, STEEL, { ao: false });
@@ -385,6 +390,7 @@ export class Station {
       const col = k.col(lx, y + 0.8, zg, 1.1, 1.6, 0.25, { dynamic: false });
       this.gates.push({ x: lx, z: zg, y, f: 0, open: false, flaps, col, t: 0 });
     }
+    this.gateScreensBuild(zg, y);
     k.sign(0, y + 3.55, zg - 0.5, { kind: 'dir', w: 6, h: 0.62, zh: '进站', en: 'Entrance', badges: L.map(badge), face: Math.PI, double: true, back: { kind: 'exit', zh: '出站', en: 'Exit' }, hang: CY });
     for (const z of [-8.5, -5.5]) arrow(k, 0, y + 0.006, z, 0, '#F2C230');
     // 盲道：通道口 → 闸机 → 楼梯口
@@ -421,6 +427,59 @@ export class Station {
     // 墙上大站名
     k.sign(-17.95, y + 3.5, 12, { kind: 'name', w: 9, h: 1.45, zh: s.zh, en: s.en, badges: L.map(badge), lineColor: lc, face: Math.PI / 2 });
   }
+  /** 售票机屏幕：一张共享贴图（本站所在线路的小线路图 + “请选择目的地”），每台一块 */
+  tvmScreensBuild() {
+    const tex = new B.DynamicTexture('tvmScr', { width: 512, height: 384 }, this.scene, true), c = tex.getContext(), line = this.s.lines[0];
+    c.fillStyle = '#F4F7FA'; c.fillRect(0, 0, 512, 384);
+    c.fillStyle = '#1E6FB8'; c.fillRect(0, 0, 512, 60); c.fillStyle = '#fff'; c.font = `600 30px ${FONT}`; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillText('请选择目的地', 20, 31);
+    c.font = `500 18px ${FONT_EN}`; c.textAlign = 'right'; c.fillText('Select destination', 494, 32);
+    drawLineCanvas(c, line, this.code, 12, 70, 488, 236);
+    [['单程票', '#1E9E8F'], ['羊城通', '#E2725B']].forEach(([t, col], i) => { c.fillStyle = col; roundRect(c, 28 + i * 236, 314, 220, 56, 14); c.fill(); c.fillStyle = '#fff'; c.font = `600 28px ${FONT}`; c.textAlign = 'center'; c.fillText(t, 138 + i * 236, 343); });
+    tex.update(true);
+    const mat = new B.StandardMaterial('tvmScrMat', this.scene); mat.diffuseColor = new B.Color3(0, 0, 0); mat.specularColor = new B.Color3(0, 0, 0); mat.emissiveTexture = tex; mat.disableLighting = true;
+    const g = new Geo();
+    for (const t of this.tvms) { const r = t.scr; g.quad([r.x - r.w / 2, r.y - r.h / 2, r.z], [r.x + r.w / 2, r.y - r.h / 2, r.z], [r.x + r.w / 2, r.y + r.h / 2, r.z], [r.x - r.w / 2, r.y + r.h / 2, r.z], [1, 1, 1]); }
+    g.u = []; for (let i = 0; i < g.p.length / 3; i++) { const q = i % 4; g.u.push(q === 0 || q === 3 ? 0 : 1, q < 2 ? 0 : 1); }
+    const m = g.toMesh('tvmScreens', this.scene, mat, this.kit.root); m.isPickable = false;
+    this.tvmScr = { tex, mat, mesh: m };
+  }
+  /** 闸机通行屏：每条通道两块（进站面在右侧机柜、出站面在另一侧机柜），共用一张 5 格贴图；状态 idle / ok（绿箭头）/ no（柔和红叉） */
+  gateScreensBuild(zg, y) {
+    const k = this.kit, n = this.gates.length, tex = new B.DynamicTexture('gateScr', { width: 128 * n, height: 128 }, this.scene, false);
+    const mat = new B.StandardMaterial('gateScrMat', this.scene); mat.diffuseColor = new B.Color3(0, 0, 0); mat.specularColor = new B.Color3(0, 0, 0); mat.emissiveTexture = tex; mat.disableLighting = true; mat.backFaceCulling = false;
+    const g = new Geo(), H = hex('#1E2328'), y0 = y + 1.12, y1 = y + 1.38, lean = 0.1, hw = 0.16;
+    this.gates.forEach((gt, i) => {
+      for (const sd of [-1, 1]) {
+        const cx = gt.x - sd * 1 + sd * 0.02, z0 = zg + sd * 0.3, z1 = z0 - sd * lean;
+        // sd=-1：进站面（在通道右侧机柜上，朝 -z）；sd=+1：出站面（朝 +z）
+        const q = sd < 0 ? [[cx - hw, y0, z0], [cx + hw, y0, z0], [cx + hw, y1, z1], [cx - hw, y1, z1]] : [[cx + hw, y0, z0], [cx - hw, y0, z0], [cx - hw, y1, z1], [cx + hw, y1, z1]];
+        g.quad(...q, [1, 1, 1]);
+        k.solid.box(cx, (y0 + y1) / 2, (z0 + z1) / 2 - sd * 0.03, hw * 2 + 0.05, y1 - y0 + 0.05, 0.04, H, 0, -sd * Math.atan2(lean, y1 - y0), 0, 1, { ao: false });
+        k.metal.box(cx, y + 1.08, z0 - sd * 0.03, 0.05, 0.1, 0.05, STEEL, 0, 0, 0, 1, { ao: false });
+      }
+    });
+    g.u = []; for (let i = 0; i < g.p.length / 3; i++) { const q = i % 4, cell = Math.floor(i / 8); g.u.push((cell + (q === 0 || q === 3 ? 0.02 : 0.98)) / n, q < 2 ? 0 : 1); }
+    const m = g.toMesh('gateScreens', this.scene, mat, k.root); m.isPickable = false;
+    this.gateScr = { tex, mat, mesh: m, state: [] };
+    for (let i = 0; i < n; i++) this.setGateScreen(i, 'idle');
+  }
+  setGateScreen(i, state) {
+    const S = this.gateScr; if (!S || S.state[i] === state) return; S.state[i] = state;
+    const c = S.tex.getContext(), x = i * 128;
+    c.fillStyle = '#0D1520'; c.fillRect(x, 0, 128, 128);
+    c.lineCap = 'round'; c.lineJoin = 'round';
+    if (state === 'ok') {
+      c.fillStyle = '#3DDC84'; c.beginPath(); c.moveTo(x + 64, 14); c.lineTo(x + 108, 62); c.lineTo(x + 80, 62); c.lineTo(x + 80, 114); c.lineTo(x + 48, 114); c.lineTo(x + 48, 62); c.lineTo(x + 20, 62); c.closePath(); c.fill();
+    } else if (state === 'no') {
+      c.strokeStyle = '#FF7A7A'; c.lineWidth = 20; c.beginPath(); c.moveTo(x + 34, 34); c.lineTo(x + 94, 94); c.moveTo(x + 94, 34); c.lineTo(x + 34, 94); c.stroke();
+    } else {
+      c.fillStyle = '#5AB0FF'; roundRect(c, x + 30, 26, 68, 46, 8); c.fill(); c.fillStyle = '#0D1520'; c.fillRect(x + 30, 38, 68, 8);
+      c.fillStyle = '#DDE6F0'; c.font = `600 22px ${FONT}`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('请刷卡', x + 64, 100);
+    }
+    S.tex.update(false);
+  }
+  /** 打开某条通道（刷卡 / 出站），dur 秒后自动关（人在通道里会一直开着） */
+  openGate(i, dur = 3, beep = true) { const g = this.gates[i]; g.t = Math.max(g.t, dur); g.beep = beep; }
   poster(x, y, z, face, i) {
     const k = this.kit, ad = ADS[Math.floor(Math.abs(i)) % ADS.length], nx = Math.sin(face), nz = Math.cos(face);
     k.sign(x + nx * 0.06, y, z + nz * 0.06, { kind: 'poster', w: 3.6, h: 1.9, ...ad, face });
@@ -699,16 +758,22 @@ export class Station {
   /* ---------------- 每帧 ---------------- */
   update(dt, player, cam, Audio, metro) {
     const p = player.position;
-    for (const g of this.gates) {
-      const near = Math.abs(p.x - g.x) < 0.75 && Math.abs(p.z - g.z) < 2.0 && Math.abs(p.y - g.y) < 1.5;
-      if (near) g.t = 0.8; else g.t -= dt;
+    const pol = this.ticketPolicy;
+    this.gates.forEach((g, i) => {
+      const lane = Math.abs(p.x - g.x) < 0.75 && Math.abs(p.z - g.z) < 2.0 && Math.abs(p.y - g.y) < 1.5;
+      // 出站方向（付费区一侧）：身上没有票卡就直接放行（从站台开始玩、或者测试传送进来都不会被关住）
+      if (lane && p.z > g.z + 0.3 && (!pol || pol.autoOut())) { if (g.t < 0.8) { g.t = 0.8; g.beep = true; } }
+      // 已经打开的通道：人还在通道里就不关
+      if (g.t > 0 && lane && Math.abs(p.z - g.z) < 1.3) g.t = Math.max(g.t, 0.6);
+      g.t -= dt;
       const want = g.t > 0;
-      if (want && !g.open) { g.open = true; Audio.sfx('gateBeep'); setTimeout(() => Audio.sfx('gateOpen', { volume: 0.7 }), 120); this.events.emit('gate', { x: g.x }); }
+      if (want && !g.open) { g.open = true; if (g.beep) Audio.sfx('gateBeep'); setTimeout(() => Audio.sfx('gateOpen', { volume: 0.7 }), 120); this.events.emit('gate', { x: g.x, i, beep: g.beep }); g.beep = true; }
       if (!want && g.open) g.open = false;
       g.f += ((g.open ? 1 : 0) - g.f) * Math.min(1, dt * 9);
       g.flaps.forEach(fl => { fl.pv.rotation.y = fl.sd * g.f * Math.PI / 2; });
       g.col.checkCollisions = g.f < 0.6;
-    }
+      if (g.scrT > 0) { g.scrT -= dt; if (g.scrT <= 0) this.setGateScreen(i, 'idle'); }
+    });
     const sc = this.security; sc.cool -= dt; sc.flash -= dt;
     if (Math.abs(p.x) < 0.95 && Math.abs(p.z - sc.z) < 0.45 && Math.abs(p.y - sc.y) < 1.5 && sc.cool <= 0) {
       sc.cool = 2.5; sc.flash = 1.6; sc.belt = 4; Audio.sfx('securityBeep'); this.events.emit('security', {});
@@ -743,7 +808,7 @@ export class Station {
   platformFor(line) { return this.platforms.find(p => p.line === line); }
   /** 反射探针用的静态网格（不含地面本身） */
   probeMeshes() { return this.kit.meshes.filter(m => !m.name.startsWith('floor') && m.name !== 'shade' && m.name !== 'halo'); }
-  dispose() { this.crowd.dispose(); this.pids.forEach(p => { p.tex.dispose(); p.mat.dispose(); }); this.kit.dispose(); }
+  dispose() { this.crowd.dispose(); this.pids.forEach(p => { p.tex.dispose(); p.mat.dispose(); }); for (const o of [this.tvmScr, this.gateScr]) if (o) { o.tex.dispose(); o.mat.dispose(); } this.kit.dispose(); }
 }
 
 /** 地面箭头（油漆） */

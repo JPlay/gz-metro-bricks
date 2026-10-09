@@ -47,6 +47,22 @@ async def transfer(pg):
     s=await st(pg); R['l2platform']=[s['zone'], s['pos']]; log('L2', s['pos'], s['zone'])
     R['board3']=await board(pg,2,1,[[6,39.6],[6,36.6]],[6,40.5])
     R['l2stop']=await ride_to(pg,'jnt')
+async def tap(pg, sel):
+    box=await pg.locator(sel).first.bounding_box(); await pg.touchscreen.tap(box['x']+box['width']/2, box['y']+box['height']/2)
+async def buy_ticket(pg, code):
+    await auto(pg, [[-3,-8],[-7.4,-7.6]]); await pg.evaluate('__game.player.yaw=0')
+    await wait(pg, "(__game.state().act||{}).id=='buy'", 10); await tap(pg, '#bAct')
+    await wait(pg, '__game.state().ticket.panel.open', 10, wall=60)
+    await tap(pg, f'#tvm .st[data-code="{code}"] .hit'); await asyncio.sleep(0.3); await tap(pg, '#tvm .go')
+    await wait(pg, "__game.state().ticket.panel.step=='pay'", 10, wall=60)
+    fare=(await st(pg))['ticket']['panel']['fare']
+    for _ in range(fare):
+        await tap(pg, '#tvm .coin1'); await asyncio.sleep(0.8)
+    # 出票动画是真实时间（约 3.5 秒），等面板自己关掉
+    for _ in range(60):
+        if not await pg.evaluate('__game.state().ticket.panel.open'): break
+        await asyncio.sleep(0.5)
+    inv=(await st(pg))['ticket']['inv']; log('ticket', inv); return bool(inv) and inv['to']==code
 async def main():
   async with async_playwright() as p:
     b,pg,logs=await open_game(p,URL)
@@ -61,8 +77,12 @@ async def main():
     await auto(pg, [[0,-30],[0,-20],[0,-14]])
     await auto(pg, [[0,-10]]); s=await st(pg); R['security']=s['security'] or s['audio']['log']['played'][-3:]
     log('security flash', s['security'], [x for x in s['audio']['log']['played'] if 'ecurity' in str(x)][-1:])
-    # 2. 闸机
-    await auto(pg, [[0,-3.2]]); await wait(pg, 'Math.max(...__game.state().gates)>0.5', 1); s=await st(pg); R['gateOpen']=max(s['gates']); log('gates', s['gates'])
+    # 2. 售票机买一张去烈士陵园的单程票（选站 → 投币 → 出票进背包）
+    R['ticket']=await buy_ticket(pg, 'lsly')
+    # 3. 闸机：走到通道前，点“刷票”
+    await auto(pg, [[-7.4,-8.2],[-4,-8.2],[0,-3.4]])
+    await wait(pg, "(__game.state().act||{}).id=='tapIn'", 10); await tap(pg, '#bAct')
+    R['gateOpen']=await wait(pg, 'Math.max(...__game.state().gates)>0.5', 10); s=await st(pg); log('gates', s['gates'], s['ticket']['inv'])
     await auto(pg, [[0,2],[-2.5,8],[-2.5,14],[16,14],[20,12.5]])
     s=await st(pg); R['platform']=s['zone']; log('platform', s['pos'], s['zone'])
     # 3. 1 号线往广州东站，坐 2 站：公园前 → 农讲所 → 烈士陵园
@@ -84,7 +104,7 @@ async def main():
     R['mv']=s['mv']; R['errors']=errs(logs); R['avgFps']=s['avgFps']; R['gameSeconds']=round(await gt(pg),1)
     await pg.screenshot(path=SHOT+'_j_end.png')
     print(json.dumps(R, ensure_ascii=False, indent=1, default=str))
-    keys=['board1','tunnel','stop1','stop2','board2','back1','back2','board3','l2stop']
+    keys=['ticket','gateOpen','board1','tunnel','stop1','stop2','board2','back1','back2','board3','l2stop']
     bad=[k for k in keys if not R.get(k)]
     print('JOURNEY', 'PASS' if not bad and R.get('platform')=='platform' and R.get('offAt')=='lsly' else 'FAIL', bad, flush=True)
     await b.close()

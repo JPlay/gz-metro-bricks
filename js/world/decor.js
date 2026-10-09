@@ -84,17 +84,38 @@ export function cctv(k, x, y, z, ry = 0) {
   k.solid.rbox(x + Math.sin(ry) * 0.1, y - 0.32, z + Math.cos(ry) * 0.1, 0.13, 0.12, 0.32, hex('#EEF0F2'), 0.04, ry, { ao: false, bottom: true });
   k.solid.box(x + Math.sin(ry) * 0.27, y - 0.26, z + Math.cos(ry) * 0.27, 0.11, 0.07, 0.03, DARK, ry, 0, 0, 1, { ao: false });
 }
-/** 自动售票机：深灰机身 + 大触摸屏 */
-export function tvm(k, x, y, z, ry = 0) {
-  const c = Math.cos(ry), s = Math.sin(ry), fx = Math.sin(ry), fz = Math.cos(ry);
-  k.solid.rbox(x, y, z, 0.95, 1.9, 0.62, hex('#3C434B'), 0.06, ry, { bevel: 0.02 });
-  k.metal.box(x + fx * 0.315, y + 1.25, z + fz * 0.315, 0.86, 0.62, 0.012, STEEL, ry, 0, 0, 1, { ao: false });
-  k.glow.box(x + fx * 0.323, y + 1.27, z + fz * 0.323, 0.62, 0.42, 0.005, hex('#BFE3FF'), ry);
-  k.glow.box(x + fx * 0.326, y + 1.37, z + fz * 0.326, 0.62, 0.08, 0.004, hex('#2F7FD0'), ry);
-  k.solid.box(x + fx * 0.32, y + 0.82, z + fz * 0.32, 0.5, 0.12, 0.03, hex('#1E2328'), ry, 0, 0, 1, { ao: false });
-  k.glow.box(x + fx * 0.336, y + 0.82, z + fz * 0.336, 0.08, 0.05, 0.004, hex('#FFC72C'), ry);
-  k.solid.box(x + fx * 0.32, y + 0.45, z + fz * 0.32, 0.4, 0.16, 0.04, hex('#1E2328'), ry, 0, 0, 1, { ao: false });
-  k.shade.shadeStrip(x - c * 0.5 + fx * 0.31, z + s * 0.5 + fz * 0.31, x + c * 0.5 + fx * 0.31, z - s * 0.5 + fz * 0.31, y + 0.01, fx, fz, 0.5, 0.3);
+/**
+ * 自动售票机（参照广州地铁站厅的售票机）：浅灰机身 + 深色面板，左上大触摸屏（屏幕是单独的贴图网格，见 Station.tvmScreens），
+ * 右侧投币口（黄灯框）、纸币口（绿灯框）、羊城通读卡区（蓝灯），下方出票 / 找零口（暖白灯 + 标签）。
+ * 正面朝 -z（面向从安检走过来的乘客）。返回屏幕中心（世界坐标），供贴图网格使用。
+ */
+export function ticketMachine(k, x, y, z) {
+  const P = k.solid, zf = z - 0.3, FAS = hex('#2B3138'), SLOT = hex('#0E1114');
+  P.rbox(x, y, z, 0.92, 1.86, 0.6, hex('#DCE1E6'), 0.05, 0, { bevel: 0.025 });
+  P.rbox(x, y + 1.86, z, 0.96, 0.07, 0.64, hex('#2F353C'), 0.035, 0, { ao: false });
+  P.box(x, y + 1.33, zf - 0.006, 0.86, 0.94, 0.02, FAS, 0, 0, 0, 1, { ao: false });          // 上部深色面板
+  k.metal.box(x, y + 0.5, zf - 0.006, 0.86, 0.66, 0.02, STEEL, 0, 0, 0, 1, { ao: false });   // 下部不锈钢面板
+  P.box(x, y + 0.08, zf - 0.01, 0.88, 0.16, 0.02, hex('#3A4048'), 0, 0, 0, 1, { ao: false });   // 踢脚
+  // 屏幕边框（屏幕贴图另做）
+  P.box(x - 0.1, y + 1.3, zf - 0.018, 0.6, 0.48, 0.012, hex('#15191E'), 0, 0, 0, 1, { ao: false });
+  // 投币口：黑色竖缝 + 黄色灯框
+  k.glow.box(x + 0.31, y + 1.44, zf - 0.019, 0.1, 0.17, 0.004, hex('#FFC72C'));
+  P.box(x + 0.31, y + 1.44, zf - 0.024, 0.035, 0.12, 0.006, SLOT, 0, 0, 0, 1, { ao: false });
+  // 纸币口：横缝 + 绿色灯框
+  k.glow.box(x + 0.31, y + 1.22, zf - 0.019, 0.17, 0.07, 0.004, hex('#3DDC84'));
+  P.box(x + 0.31, y + 1.22, zf - 0.024, 0.13, 0.025, 0.006, SLOT, 0, 0, 0, 1, { ao: false });
+  // 羊城通读卡区
+  k.glow.box(x + 0.31, y + 1.03, zf - 0.019, 0.14, 0.11, 0.004, hex('#5AB0FF'));
+  P.box(x + 0.31, y + 1.03, zf - 0.023, 0.1, 0.07, 0.005, hex('#1E3A5A'), 0, 0, 0, 1, { ao: false });
+  // 出票 / 找零口：凹槽 + 暖白灯条
+  P.box(x, y + 0.48, zf - 0.03, 0.4, 0.17, 0.03, SLOT, 0, 0, 0, 1, { ao: false });
+  k.glow.box(x, y + 0.575, zf - 0.04, 0.4, 0.018, 0.012, hex('#FFF1D0'));
+  P.box(x, y + 0.4, zf - 0.07, 0.42, 0.02, 0.1, hex('#3A4048'), 0, 0, 0, 1, { ao: false });
+  k.sign(x, y + 0.7, zf - 0.02, { kind: 'plain', w: 0.4, h: 0.07, bg: '#2B3138', fg: '#FFFFFF', zh: '取票 · 找零', face: Math.PI, align: 'center', box: false });
+  k.sign(x, y + 1.705, zf - 0.02, { kind: 'plain', w: 0.84, h: 0.12, bg: '#1E6FB8', fg: '#FFFFFF', zh: '自动售票', en: 'Tickets', face: Math.PI, align: 'center', box: false });
+  k.shade.shadeStrip(x - 0.5, zf, x + 0.5, zf, y + 0.01, 0, -1, 0.5, 0.3);
+  k.shade.shadeBlob(x, z, 0.6, 0.42, y + 0.008, 0.28);
+  return { x: x - 0.1, y: y + 1.3, z: zf - 0.026, w: 0.56, h: 0.42 };
 }
 /** 楼房：立面贴图 + 底商（玻璃橱窗 + 店招）+ 屋顶女儿墙、空调外机 */
 export function building(k, x, z, w, d, h, col, shop) {

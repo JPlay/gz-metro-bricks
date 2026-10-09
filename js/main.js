@@ -11,6 +11,8 @@ import { Station, SPAWN, MAIN, GYQ2, YC } from './world/station.js';
 import { Player } from './game/player.js';
 import { Input, pressable } from './game/input.js';
 import { Metro } from './game/service.js';
+import { Tickets } from './game/ticket.js';
+import { TvmPanel } from './ui/tvm.js';
 import { mats } from './core/mats.js';
 import { Render } from './core/render.js';
 import { STATIONS, LINES, nextStation } from './data/lines.js';
@@ -43,6 +45,7 @@ export async function start() {
     onView: () => toggleView(), onMute: () => toggleMute(), onJump: () => {}
   });
   const player = new Player(scene, M, cam);
+  const tickets = new Tickets({ hud, Audio, events, panel: new TvmPanel({ Audio }), scene, cam });
   player.meshes().forEach(m => R.addShadowCaster(m));
   initCaptions();
   Audio.loadManifest().catch(e => console.warn('manifest', e));
@@ -65,6 +68,7 @@ export async function start() {
     if (byB.floor) R.makeProbe('probeHall', new B.Vector3(0, YC + 2.2, 3), new B.Vector3(36, 4.4, 46), list, byB.floor.material);
     if (byB['floor@P']) R.makeProbe('probeP', new B.Vector3(0, MAIN.y + 2.1, MAIN.zc), new B.Vector3(96, 4.2, 12), list, byB['floor@P'].material);
     if (byB['floor@P2']) R.makeProbe('probeP2', new B.Vector3(0, GYQ2.y + 2.1, GYQ2.zc), new B.Vector3(96, 4.2, 12), list, byB['floor@P2'].material);
+    st.ticketPolicy = tickets;
     G.station = st; G.code = code; G.welcomed = false;
     metro.attach(st);
     return st;
@@ -81,7 +85,7 @@ export async function start() {
 
   // —— 事件 → 提示
   const MVTXT = { penrose: '✨ 楼梯连成一圈了！', bridge: '✨ 桥自己拼起来了！', arches: '✨ 拱门对齐啦！' };
-  events.on('gate', () => hud.toast('闸机开啦 ✔'));
+  events.on('gate', d => { if (d.beep) hud.toast('闸机开啦 ✔'); });
   events.on('security', () => hud.toast('安检通过 ✔ 嘀！'));
   events.on('mv', d => { hud.toast(MVTXT[d.kind] || '✨', 2400); Audio.blip && Audio.blip('goal'); G.mv = (G.mv || 0) + 1; });
   events.on('ride', d => { if (d.phase === 'arrive') hud.toast(`到站：${STATIONS[d.to].zh}`, 2200); });
@@ -92,6 +96,10 @@ export async function start() {
   pressable(document.getElementById('bView'), toggleView);
   pressable(document.getElementById('bMute'), toggleMute);
   pressable(document.getElementById('bJump'), () => { input.jumpQueued = true; });
+  // 动作大按钮（买票 / 刷卡 / 坐下 / 起身）；键盘 E
+  const doAct = () => { const a = hud.act; if (a && a.run) { a.run(); hud.actKey = null; } };
+  pressable(document.getElementById('bAct'), doAct);
+  window.addEventListener('keydown', e => { if (e.code === 'KeyE' && !e.repeat) doAct(); });
   hud.setBtn('bView', false, 'eye3', '第三人称');
   // iOS：第一次触摸时解锁音频（必须在手势事件里同步调用）
   let unlocked = false;
@@ -123,6 +131,7 @@ export async function start() {
     metro.update(dt);
     player.updateCamera(dt, scene);
     G.station.update(dt, player, cam, Audio, metro);
+    hud.action(tickets.update(dt, G.station, player));
     // 区域 / 环境声 / 欢迎广播
     const p = player.position, aboard = metro.trains.some(t => t.root.isEnabled() && t.contains(p));
     G.zone = G.inTunnel ? { kind: 'tunnel' } : G.station.zoneOf(p); G.aboard = aboard || G.inTunnel;
@@ -185,13 +194,14 @@ export async function start() {
       metro: metro.info(), mv: G.mv || 0, camPos: [cam.position.x, cam.position.y, cam.position.z].map(v => +v.toFixed(2)),
       babylon: { version: B.Engine.Version, source: window.__babylonSource, attempts: window.__babylonAttempts },
       drawCalls: (engine._drawCalls && engine._drawCalls.current) ?? null, activeMeshes: scene.getActiveMeshes().length, gates: G.station.gates.map(g => +g.f.toFixed(2)),
-      security: G.station.security.flash > 0, probes: R.probes.length, atlas: G.station.kit.atlas ? { y: G.station.kit.atlas.y + G.station.kit.atlas.row, overflow: G.station.kit.atlas.overflow } : null, audio: Audio.getState()
+      security: G.station.security.flash > 0, probes: R.probes.length, atlas: G.station.kit.atlas ? { y: G.station.kit.atlas.y + G.station.kit.atlas.row, overflow: G.station.kit.atlas.overflow } : null, audio: Audio.getState(),
+      ticket: tickets.info(), act: hud.act ? { id: hud.act.id, label: hud.act.label } : null
     }),
     teleport: (x, y, z, yaw) => player.spawn(x, y, z, yaw ?? player.yaw),
     setMove: (x, y, run) => { input.virtual = (x || y) ? { x, y, run } : null; },
     look: (dx, dy) => { input.look.x += dx; input.look.y += dy; },
     jump: () => { input.jumpQueued = true; }, toggleView, toggleMute,
     autopilot: (pts, run) => new Promise(resolve => { G.auto = { pts, i: 0, time: 0, resolve, run }; }),
-    call: (line, step) => metro.call(line, step), metro, player, scene, engine, events, render: R
+    call: (line, step) => metro.call(line, step), act: doAct, tickets, metro, player, scene, engine, events, render: R
   };
 }
