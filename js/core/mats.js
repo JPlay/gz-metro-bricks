@@ -50,6 +50,8 @@ export function mats(scene) {
   glass.useRadianceOverAlpha = true; glass.useSpecularOverAlpha = true; glass.backFaceCulling = false; glass.environmentIntensity = 1.0; glass.maxSimultaneousLights = 2;
   const glow = M.glow = new B.StandardMaterial('glow', scene);
   glow.diffuseColor = new B.Color3(0, 0, 0); glow.specularColor = new B.Color3(0, 0, 0); glow.emissiveColor = new B.Color3(1, 1, 1); glow.disableLighting = true;
+  // 发光件基本都是贴在面上的薄片（灯带、屏幕、地面引导带）：加一点多边形偏移，低精度深度（iPad）下也压得住底下的面
+  glow.zOffset = -1; glow.zOffsetUnits = -2;
   const halo = M.halo = new B.StandardMaterial('halo', scene);
   halo.diffuseColor = new B.Color3(0, 0, 0); halo.specularColor = new B.Color3(0, 0, 0); halo.emissiveColor = new B.Color3(1, 1, 1); halo.disableLighting = true;
   halo.alphaMode = B.Engine.ALPHA_ADD; halo.alpha = 0.999; halo.backFaceCulling = false; halo.disableDepthWrite = true;

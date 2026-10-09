@@ -4,13 +4,13 @@ import asyncio, sys, os, json, time, math
 sys.path.insert(0, os.path.dirname(__file__))
 from common import *
 URL = sys.argv[1] if len(sys.argv) > 1 else 'http://localhost:8123/?q=2'
-OUT = (sys.argv[2] if len(sys.argv) > 2 else '/workspace/gz-shots-polish/transfer-r1/').rstrip('/') + '/'
+OUT = (sys.argv[2] if len(sys.argv) > 2 else '/workspace/gz-shots-polish/transfer-r2/').rstrip('/') + '/'
 ONLY = os.environ.get('ONLY'); os.makedirs(OUT, exist_ok=True); T0 = time.time()
 def log(*a): print(f'[{time.time() - T0:6.1f}s]', *a, flush=True)
 H = math.pi / 2
 SPOTS = [  # 名字, x, y(脚), z, yaw, view, 竖屏?
-    ('01-street-entrance', 0, 0.05, -47, 0, 'third', False),
-    ('02-before-gates', 0, -5.95, -9.5, 0, 'third', False),
+    ('01-street-entrance', 0, 0.05, -47, 0, 'third', True),
+    ('02-before-gates', 0, -5.95, -9.5, 0, 'third', True),
     ('03-l1-stair-foot', 16.0, -11.95, 13.1, H, 'third', True),
     ('04-l1-down-escalator-foot', 16.9, -11.95, 17.1, H, 'third', False),
     ('05-l1-north-walkway', 13.5, -11.95, 18.6, -H, 'third', False),
@@ -19,7 +19,7 @@ SPOTS = [  # 名字, x, y(脚), z, yaw, view, 竖屏?
     ('08-corridor-bridge', -20.8, -16.95, 19.5, 0, 'third', False),
     ('09-corridor-l2-stair-head', -21.0, -16.95, 39.5, 0, 'third', False),
     ('10-l2-platform-arrival', -5.2, -21.95, 42.3, H, 'third', True),
-    ('11-rev-l2-to-l1', 2, -21.95, 43.7, -H, 'third', False),
+    ('11-rev-l2-to-l1', 2, -21.95, 43.7, -H, 'third', True),
     ('12-rev-corridor-south', -22.2, -16.95, 40, math.pi, 'third', False),
 ]
 async def main():

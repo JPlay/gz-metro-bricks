@@ -1,13 +1,14 @@
 /*
  * 换乘地面引导带（公园前 1↔2 号线）：约 0.4m 宽的线路色色带 + 每隔一段的白色 / 深色 V 形箭头。
  *   - 全部写进现有的 glow 桶（不受光照，颜色就是线路色本色），不新增绘制调用；
- *   - 色带抬高 1~2cm（顶面 y+0.02，箭头 y+0.026），比地砖、盲道（+0.006）、暗影（+0.008）都高，不会 z-fighting；
+ *   - 色带抬高（底 y+0.012、顶面 y+0.035，箭头再高 1.5cm 在 y+0.05）：iPad 深度精度低，1~2cm / 6mm 的间隔在远处会闪；
+ *     glow 材质另有多边形偏移（mats.js），比地砖、盲道（+0.006）、暗影（+0.008）、地面光斑都高出一截；
  *   - 楼梯段逐级贴在踏步面上（与 kit.stairs 的踏步划分一致）；
  *   - 自拼桥那一段由 bridgeStripe() 生成一块小网格，实例挂在每块桥板上，桥拼好时色带才连起来。
  */
 import { Geo, hex } from '../core/geo.js';
 const B = window.BABYLON;
-export const BAND_W = 0.4, BAND_TOP = 0.02, CHEV_Y = 0.026;
+export const BAND_W = 0.4, BAND_BOT = 0.012, BAND_TOP = 0.035, CHEV_Y = 0.05;
 
 /** 一个 V 形箭头（两条斜带），中心 (x,z)，指向 (fx,fz)，尺寸 s（米） */
 function chevron(G, x, y, z, fx, fz, s, col) {
@@ -30,7 +31,7 @@ export function flatBand(G, pts, y, col, chevCol, { every = 1.6, w = BAND_W, sta
     const [x0, z0] = pts[i], [x1, z1] = pts[i + 1], L = Math.hypot(x1 - x0, z1 - z0); if (L < 1e-3) continue;
     const fx = (x1 - x0) / L, fz = (z1 - z0) / L, h = w / 2;
     // 只支持横平竖直的段；两端各延长半个带宽，拐角处补满
-    G.slab(Math.min(x0, x1) - h, Math.max(x0, x1) + h, y + 0.008, y + BAND_TOP, Math.min(z0, z1) - h, Math.max(z0, z1) + h, c, { ao: false });
+    G.slab(Math.min(x0, x1) - h, Math.max(x0, x1) + h, y + BAND_BOT, y + BAND_TOP, Math.min(z0, z1) - h, Math.max(z0, z1) + h, c, { ao: false });
     for (let d = Math.min(start, L / 2), e = Math.max(L - 0.3, d); d <= e; d += every) chevron(G, x0 + fx * d, y + CHEV_Y, z0 + fz * d, fx, fz, w * 0.9, cc);
   }
 }
@@ -44,7 +45,7 @@ export function stairBand(G, a, ya, b, yb, zc, col, chevCol, { w = BAND_W, walkD
     const top = visual ? ya + dy * (k + 1) / n : ya + dy * (k + (dy < 0 ? 1 : 0)) / n;
     // 踏步前缘的深色防滑条留出来（0.08m），色带只贴在踏面上
     const e0 = Math.min(s0, s1) + 0.02, e1 = Math.max(s0, s1) - 0.09;
-    G.slab(e0, e1, top + 0.008, top + BAND_TOP, zc - h, zc + h, c, { ao: false });
+    G.slab(e0, e1, top + BAND_BOT, top + BAND_TOP, zc - h, zc + h, c, { ao: false });
     if (k % every === 2) chevron(G, (e0 + e1) / 2, top + CHEV_Y, zc, fx, 0, Math.min(w * 0.9, Math.abs(e1 - e0) * 1.6), cc);
   }
 }
@@ -52,8 +53,9 @@ export function stairBand(G, a, ya, b, yb, zc, col, chevCol, { w = BAND_W, walkD
 export function bridgeStripe(scene, mat, parent, dz, lanes) {
   const G = new Geo();
   for (const ln of lanes) {
-    G.slab(ln.dx - BAND_W / 2, ln.dx + BAND_W / 2, 0.15, 0.15 + BAND_TOP - 0.004, 0.03, dz - 0.03, hex(ln.col), { ao: false });
-    chevron(G, ln.dx, 0.15 + CHEV_Y - 0.004, dz / 2, 0, ln.dirZ, BAND_W * 0.9, hex(ln.chev));
+    // 桥板顶面在本地 y=0.15：色带底面离开桥板顶面（以前底面与桥板顶面共面，远处看像两层在抢）
+    G.slab(ln.dx - BAND_W / 2, ln.dx + BAND_W / 2, 0.15 + BAND_BOT, 0.15 + BAND_TOP, 0.03, dz - 0.03, hex(ln.col), { ao: false });
+    chevron(G, ln.dx, 0.15 + CHEV_Y, dz / 2, 0, ln.dirZ, BAND_W * 0.9, hex(ln.chev));
   }
   const m = G.toMesh('bridgeStripe', scene, mat, parent); m.isVisible = false;
   return m;

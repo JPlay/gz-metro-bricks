@@ -126,8 +126,9 @@ export class Kit {
     this.atlas.quad(x, y, z, o.w, o.h, a, uv);
     if (o.double) this.atlas.quad(x - nx * d, y, z - nz * d, o.w, o.h, a + Math.PI, o.back ? this.atlas.draw({ w: o.w, h: o.h, ...o.back }) : uv);
     if (o.box !== false) {
+      // 牌面离边框正面 2.3cm（以前只有 1cm：iPad 的深度精度下 8~10m 外牌面和边框抢深度，字闪成碎片）；双面牌两面都一样
       const fc = hex(o.kind === 'name' || o.kind === 'poster' ? '#C9CED4' : SIGN.frame);
-      this.solid.box(x - nx * d / 2, y, z - nz * d / 2, o.w + 0.06, o.h + 0.06, d - 0.01, fc, a, 0, 0, 1, { ao: false });
+      this.solid.box(x - nx * d / 2, y, z - nz * d / 2, o.w + 0.06, o.h + 0.06, d - 0.03, fc, a, 0, 0, 1, { ao: false });
     }
     if (o.hang !== undefined) {
       const rx = -nz, rz = nx, top = o.hang, cy = y + o.h / 2;
@@ -228,7 +229,7 @@ class Atlas {
   /** face：正面法线 = (sin a, 0, cos a)；文字从观看者的左往右 */
   quad(x, y, z, w, h, a, uv) {
     const nx = Math.sin(a), nz = Math.cos(a), rx = -nz, rz = nx, base = this.p.length / 3;
-    const ox = x + nx * 0.005, oz = z + nz * 0.005;
+    const ox = x + nx * 0.008, oz = z + nz * 0.008;
     const P = [[-w / 2, -h / 2], [w / 2, -h / 2], [w / 2, h / 2], [-w / 2, h / 2]];
     P.forEach(([u, v]) => this.p.push(ox + rx * u, y + v, oz + rz * u));
     this.uv.push(uv.u0, uv.v0, uv.u1, uv.v0, uv.u1, uv.v1, uv.u0, uv.v1);
@@ -283,6 +284,14 @@ const PAINT = {
     const fg = SIGN.white; c.fillStyle = o.bg || '#1F2226'; c.fillRect(0, 0, pw, ph);
     if (o.bar) { c.fillStyle = o.bar; c.fillRect(0, 0, ph * 0.08, ph); }
     const pad = ph * 0.14, bh = ph * 0.6, by = (ph - bh) / 2; let x = pad + (o.bar ? ph * 0.08 : 0);
+    // o.center：箭头 + 线路色块 + 文字整组居中（宽牌子在竖屏下两头会被切掉，内容放中间更容易整块看到）
+    if (o.center && !(o.dirs || []).length && o.zh) {
+      const aw = o.arrow ? ph * 0.78 + pad * 0.7 : 0;
+      const bw = (o.badges || []).reduce((sum, b) => { const t = String(lineBadgeInfo(b).t); return sum + bh * (t.length > 2 ? 1.5 : t.length > 1 ? 1.12 : 0.92) + pad * 0.5; }, 0);
+      c.font = `600 ${ph * (o.en ? 0.46 : 0.575)}px ${FONT}`; const zw = c.measureText(o.zh).width;
+      c.font = `500 ${ph * 0.2}px ${FONT_EN}`; const ew = c.measureText(o.en || '').width;
+      x = Math.max(x, (pw - (aw + bw + Math.max(zw, ew))) / 2);
+    }
     if (o.arrow) { const ah = ph * 0.78; drawArrow(c, x, (ph - ah) / 2, ah, o.arrow, fg); x += ah + pad * 0.7; }
     for (const b of o.badges || []) { x += drawBadge(c, x, by, bh, b) + pad * 0.5; }
     const dirs = o.dirs || [], segW = dirs.length ? (o.zh ? (pw - x) * (dirs.length > 1 ? 0.62 : 0.5) : pw - x - pad * 0.5) : 0;

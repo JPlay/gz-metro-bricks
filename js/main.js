@@ -29,8 +29,11 @@ export async function start() {
   const LT = window.__loadT = window.__loadT || {}; const mark = k => { LT[k] = Math.round(performance.now()); };
   mark('mainStart');
   const canvas = document.getElementById('c');
-  const engine = new B.Engine(canvas, true, { stencil: false, powerPreference: 'high-performance', audioEngine: false }, false);
+  // stencil: true —— iOS Safari 在 stencil:false 时默认帧缓冲往往只给 16 位深度（远处地面引导带 / 贴墙牌子闪烁、穿模的主因）；要 stencil 才会分配 D24S8
+  const engine = new B.Engine(canvas, true, { stencil: true, depth: true, powerPreference: 'high-performance', audioEngine: false }, false);
   const scene = new B.Scene(engine);
+  // 默认帧缓冲的深度位数（建好引擎、还没画任何东西时读一次；测试和真机排查用）
+  const DEPTH_BITS = (() => { try { return engine._gl.getParameter(engine._gl.DEPTH_BITS); } catch (_) { return null; } })(), depthBits = () => DEPTH_BITS;
   scene.ambientColor = new B.Color3(0.35, 0.35, 0.38);
   scene.collisionsEnabled = true; scene.skipPointerMovePicking = true; scene.autoClear = true;
   const progress = (f, msg) => { if (window.__loadUI) return window.__loadUI.set(f, msg); const b = document.getElementById('loadBar'), m = document.getElementById('loadMsg'); if (b) b.style.width = Math.max(3, Math.min(100, f * 100)).toFixed(1) + '%'; if (m && msg) m.textContent = msg; };
@@ -38,7 +41,7 @@ export async function start() {
   const paint = () => new Promise(r => requestAnimationFrame(() => setTimeout(r, 0)));
   progress(0.50, '正在给车站刷油漆…');
   const M = mats(scene);
-  const cam = new B.FreeCamera('cam', new B.Vector3(0, 2, -52), scene); cam.minZ = 0.08; cam.maxZ = 420; cam.fov = 0.92; cam.inputs.clear();
+  const cam = new B.FreeCamera('cam', new B.Vector3(0, 2, -52), scene); cam.minZ = 0.25; cam.maxZ = 420; // 近裁剪面：第三人称 0.25（深度精度 ≈ 距离² / 近裁剪面，比 0.08 好 3 倍），第一人称 / 镜头贴近时在 Player.updateCamera 里降到 0.1 cam.fov = 0.92; cam.inputs.clear();
   const R = new Render(engine, scene, cam);
   mark('render');
   progress(0.55, '正在铺轨道…');
@@ -222,7 +225,7 @@ export async function start() {
       view: player.view, grounded: player.grounded, aboard: !!G.aboard, inTunnel: G.inTunnel, fps: Math.round(engine.getFps()), avgFps: Math.round(G.fps), tier: G.tier,
       metro: metro.info(), mv: G.mv || 0, camPos: [cam.position.x, cam.position.y, cam.position.z].map(v => +v.toFixed(2)),
       babylon: { version: B.Engine.Version, source: window.__babylonSource, attempts: window.__babylonAttempts },
-      drawCalls: (engine._drawCalls && engine._drawCalls.current) ?? null, activeMeshes: scene.getActiveMeshes().length, gates: G.station.gates.map(g => +g.f.toFixed(2)),
+      drawCalls: (engine._drawCalls && engine._drawCalls.current) ?? null, activeMeshes: scene.getActiveMeshes().length, depthBits: depthBits(), minZ: cam.minZ, gates: G.station.gates.map(g => +g.f.toFixed(2)),
       security: G.station.security.flash > 0, probes: R.probes.length, atlas: G.station.kit.atlas ? { y: G.station.kit.atlas.y + G.station.kit.atlas.row, overflow: G.station.kit.atlas.overflow } : null, audio: Audio.getState(),
       ticket: tickets.info(), seat: seats.info(), social: social.info(), mapOpen: !!G.mapOpen, act: hud.act ? { id: hud.act.id, label: hud.act.label } : null
     }),

@@ -132,9 +132,18 @@ export class Player {
       let want = this.dist; if (hit && hit.hit) want = Math.max(0.35, hit.distance - 0.3);
       this.camDist = want < this.camDist ? want : this.camDist + (want - this.camDist) * Math.min(1, dt * 4);
       cam.position.copyFrom(target.subtract(fwd.scale(this.camDist)));
+      // 镜头离天花板 / 两侧墙至少留 0.3m：上面那条射线只管镜头身后，贴着吊顶或侧墙滑动时近裁剪面会切进去（看到墙外 / 楼上）
+      const pred = m => m.checkCollisions && m.isEnabled() && m !== this.collider, CL = 0.3;
+      const rx = Math.cos(this.yaw), rz = -Math.sin(this.yaw);
+      for (const [dx, dy, dz] of [[0, 1, 0], [rx, 0, rz], [-rx, 0, -rz]]) {
+        const dir = new B.Vector3(dx, dy, dz), h = scene.pickWithRay(new B.Ray(cam.position, dir, CL), pred);
+        if (h && h.hit) cam.position.subtractInPlace(dir.scale(CL - h.distance));
+      }
       this.model.setEnabled(this.camDist > 0.8);
       this.blob.setEnabled(true);
     }
+    // 近裁剪面随镜头调整：第三人称镜头离墙至少 0.3m（见上面的射线），0.25 不会切进墙；第一人称眼睛离墙可能只有 0.18m，用 0.1
+    const nz = this.view === 'first' || this.camDist < 0.8 ? 0.1 : 0.25; if (cam.minZ !== nz) cam.minZ = nz;
     cam.rotation.set(this.pitch, this.yaw, 0);
   }
   toggleView() {
