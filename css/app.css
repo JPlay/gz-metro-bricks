@@ -322,3 +322,24 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #1d2b3a; fon
   #tvm .drop { flex-direction: column; gap: 22px; }
   #tvm .bar { flex-wrap: wrap; }
 }
+
+/* 全网线路图（HUD 地图按钮打开，全屏） */
+#netmap { position: fixed; inset: 0; z-index: 6; display: flex; align-items: center; justify-content: center; background: rgba(12,22,34,.42); padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); animation: nmIn .2s ease-out; }
+@keyframes nmIn { from { opacity: 0; } } @keyframes nmOut { to { opacity: 0; } }
+#netmap.out { animation: nmOut .2s ease-in forwards; }
+#netmap .sheet { width: min(1120px, 96vw); height: 96vh; max-height: 96vh; border-radius: 30px; padding: 12px 16px 16px; background: rgba(250,252,254,.9); color: var(--ink); display: flex; flex-direction: column; box-sizing: border-box; }
+#netmap header { display: flex; align-items: center; gap: 14px; min-height: 64px; }
+#netmap .ttl { display: flex; align-items: center; gap: 12px; font-size: 30px; }
+#netmap .ttl .ico { width: 40px; height: 40px; color: #34404f; }
+#netmap .ttl b { font-weight: 800; } #netmap .ttl small { font-size: 20px; font-weight: 600; color: var(--sub, #6b7787); }
+#netmap .x { margin-left: auto; width: 76px; height: 76px; border-radius: 50%; border: 0; background: rgba(20,40,60,.08); color: #34404f; display: flex; align-items: center; justify-content: center; pointer-events: auto; }
+#netmap .x .ico { width: 34px; height: 34px; } #netmap .x.press { transform: scale(.88); }
+#netmap .mapbox { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; }
+#netmap .mapbox svg { width: 100%; height: 100%; display: block; }
+.netmap .pulse { transform-box: fill-box; transform-origin: center; animation: hereBreath 1.6s ease-out infinite; }
+.netmap .here { transform-box: fill-box; transform-origin: center; animation: hereDot 1.6s ease-in-out infinite; }
+@keyframes hereDot { 50% { transform: scale(1.25); } }
+@media (orientation: portrait) {
+  #netmap .sheet { height: auto; max-height: 92vh; }
+  #netmap .mapbox svg { height: auto; }
+}

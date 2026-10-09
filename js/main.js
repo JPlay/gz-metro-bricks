@@ -17,6 +17,7 @@ import { TvmPanel } from './ui/tvm.js';
 import { mats } from './core/mats.js';
 import { Render } from './core/render.js';
 import { STATIONS, LINES, nextStation } from './data/lines.js';
+import { networkSVG } from './ui/netmap.js';
 const B = window.BABYLON;
 
 class Events { constructor() { this.h = {}; } on(n, f) { (this.h[n] = this.h[n] || []).push(f); } emit(n, d) { (this.h[n] || []).forEach(f => f(d)); } }
@@ -97,6 +98,14 @@ export async function start() {
   // —— 按钮
   const toggleView = () => { const v = player.toggleView(); hud.setBtn('bView', v === 'first', v === 'first' ? 'eye1' : 'eye3', v === 'first' ? '第一人称' : '第三人称'); return v; };
   const toggleMute = () => { Audio.setMuted(!Audio.isMuted()); hud.setBtn('bMute', Audio.isMuted(), Audio.isMuted() ? 'mute' : 'sound', Audio.isMuted() ? '静音' : '声音'); return Audio.isMuted(); };
+  // 地图按钮：全屏全网线路图，当前站有脉动的“你在这里”
+  const mapEl = document.getElementById('netmap');
+  const openMap = () => { mapEl.querySelector('.mapbox').innerHTML = networkSVG(G.code); mapEl.classList.remove('out'); mapEl.hidden = false; G.mapOpen = true; Audio.blip && Audio.blip('tap'); };
+  const closeMap = () => { if (!G.mapOpen) return; G.mapOpen = false; mapEl.classList.add('out'); setTimeout(() => { if (!G.mapOpen) mapEl.hidden = true; }, 200); };
+  pressable(document.getElementById('bMap'), () => G.mapOpen ? closeMap() : openMap());
+  mapEl.addEventListener('pointerdown', e => { e.stopPropagation(); if (e.target.closest('.x') || e.target === mapEl) { e.preventDefault(); closeMap(); } });
+  ['pointermove', 'pointerup', 'click', 'touchstart'].forEach(t => mapEl.addEventListener(t, e => e.stopPropagation()));
+  window.addEventListener('keydown', e => { if (e.code === 'Escape') closeMap(); });
   pressable(document.getElementById('bView'), toggleView);
   pressable(document.getElementById('bMute'), toggleMute);
   pressable(document.getElementById('bJump'), () => { input.jumpQueued = true; });
@@ -202,15 +211,15 @@ export async function start() {
       babylon: { version: B.Engine.Version, source: window.__babylonSource, attempts: window.__babylonAttempts },
       drawCalls: (engine._drawCalls && engine._drawCalls.current) ?? null, activeMeshes: scene.getActiveMeshes().length, gates: G.station.gates.map(g => +g.f.toFixed(2)),
       security: G.station.security.flash > 0, probes: R.probes.length, atlas: G.station.kit.atlas ? { y: G.station.kit.atlas.y + G.station.kit.atlas.row, overflow: G.station.kit.atlas.overflow } : null, audio: Audio.getState(),
-      ticket: tickets.info(), seat: seats.info(), act: hud.act ? { id: hud.act.id, label: hud.act.label } : null
+      ticket: tickets.info(), seat: seats.info(), mapOpen: !!G.mapOpen, act: hud.act ? { id: hud.act.id, label: hud.act.label } : null
     }),
     teleport: (x, y, z, yaw) => player.spawn(x, y, z, yaw ?? player.yaw),
     setMove: (x, y, run) => { input.virtual = (x || y) ? { x, y, run } : null; },
     look: (dx, dy) => { input.look.x += dx; input.look.y += dy; },
     jump: () => { input.jumpQueued = true; }, toggleView, toggleMute,
     autopilot: (pts, run) => new Promise(resolve => { G.auto = { pts, i: 0, time: 0, resolve, run }; }),
-    call: (line, step) => metro.call(line, step),
+    call: (line, step) => metro.call(line, step), openMap, closeMap,
     // 测试：软件渲染只有几帧每秒，放宽单帧步长上限让游戏时间接近墙钟（默认 0.05）
-    setDtMax: v => { G.dtMax = v; }, act: doAct, tickets, seats, metro, player, scene, engine, events, render: R
+    setDtMax: v => { G.dtMax = v; }, act: doAct, tickets, seats, metro, player, scene, engine, events, render: R, get station() { return G.station; }
   };
 }

@@ -1,10 +1,10 @@
 /*
  * 线路图（共用）：售票机屏幕上的单线“蛇形”线路图（SVG，可点选；Canvas 版画在 3D 售票机屏幕上）、游戏票价。
- * （全网图还没做。）
+ * 全网图（networkSVG）：HUD 地图按钮全屏打开，站厅墙上也挂一张。
  * 站名和站序全部来自 js/data/lines.js；线路色 1 号线 #F3D03E、2 号线 #00629B。
  * 换乘站（1、2 号线都有的站，目前只有公园前）画成双色圆环；“你在这里”大而亮，带呼吸光圈。
  */
-import { LINES, STATIONS } from '../data/lines.js';
+import { LINES, STATIONS, OTHER_LINES } from '../data/lines.js';
 
 export const GYQ = 'gyq';
 /** 两站之间的站数（同线直接数；跨线经 1/2 号线的换乘站） */
@@ -83,3 +83,59 @@ export function drawLineCanvas(c, line, here, x, y, w, h) {
   });
 }
 
+/* ---------- 全网图（1 号线 + 2 号线；HUD 地图按钮全屏打开，站厅墙上也挂一张） ----------
+ * 示意图，不按真实比例：2 号线南北竖直穿过公园前，1 号线东西向（西段在黄沙拐向南到西塱，东段在体育中心拐向北到广州东站）。
+ * 站序全部来自 lines.js；换乘站（公园前 1↔2）画大双色环，有其他已开通换乘线路的站画小双色环（内圈 = 换乘线色）。
+ */
+const NW = 1240, NH = 1010, GX = 600, GY = 520;
+const L1_POS = {   // 1 号线：[x, y, 标签位置 a=上 b=下 l=左 r=右]
+  xl: [280, 820, 'l'], kk: [280, 745, 'l'], hdw: [280, 670, 'l'], fc: [280, 595, 'l'], hs: [280, GY, 'a'],
+  csl: [360, GY, 'a'], cjc: [440, GY, 'a'], xmk: [520, GY, 'a'], gyq: [GX, GY, 'x'],
+  njs: [680, GY, 'b'], lsly: [760, GY, 'a'], dsk: [840, GY, 'b'], yj: [920, GY, 'a'], tyxl: [1000, GY, 'b'], tyzx: [1080, GY, 'r'], gzdz: [1080, 420, 'r']
+};
+export function networkLayout() {
+  const pos = {};
+  LINES[1].stations.forEach(c => { pos[c] = L1_POS[c]; });
+  const s2 = LINES[2].stations, g = s2.indexOf('gyq');
+  s2.forEach((c, i) => { if (c === 'gyq') return; pos[c] = i > g ? [GX, 440 - (i - g - 1) * 38, 'l'] : [GX, 600 + (g - 1 - i) * 34, 'r']; });
+  return { pos, w: NW, h: NH };
+}
+const YOU_AT = { hs: 'L', tyzx: 'B', gzdz: 'L' };
+const OTHER = c => STATIONS[c].x.map(k => OTHER_LINES[k]).filter(Boolean);
+/** 全网图 SVG；here = 当前站（脉动的“你在这里”），opts.wall = 墙上版（不要动画，字更粗） */
+export function networkSVG(here, opts = {}) {
+  const { pos, w, h } = networkLayout(), F = 'font-family="PingFang SC,Hiragino Sans GB,Noto Sans CJK SC,Noto Sans SC,Microsoft YaHei,sans-serif"';
+  let s = `<svg class="netmap" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg" ${F}>`;
+  s += `<rect width="${w}" height="${h}" rx="28" fill="#FFFFFF"/>`;
+  // 标题 + 图例
+  s += `<text x="40" y="66" font-size="40" font-weight="800" fill="#1B2430">广州地铁</text><text x="40" y="100" font-size="20" font-weight="600" fill="#6B7787" font-family="Helvetica Neue,Arial,sans-serif">Guangzhou Metro</text>`;
+  [1, 2].forEach((l, i) => { const L = LINES[l], y = 140 + i * 56; s += `<rect x="40" y="${y}" width="74" height="40" rx="12" fill="${L.color}"/><text x="77" y="${y + 30}" font-size="28" font-weight="800" fill="${L.ink}" text-anchor="middle">${l}</text><text x="126" y="${y + 30}" font-size="26" font-weight="700" fill="#1B2430">${L.zh}</text>`; });
+  s += `<circle cx="62" cy="276" r="16" fill="#fff" stroke="${LINES[1].color}" stroke-width="7"/><circle cx="62" cy="276" r="7" fill="#fff" stroke="${LINES[2].color}" stroke-width="5"/><text x="92" y="285" font-size="24" font-weight="600" fill="#34404F">换乘站</text>`;
+  // 线
+  for (const l of [1, 2]) {
+    const pts = LINES[l].stations.map(c => pos[c]);
+    s += `<polyline points="${pts.map(p => p[0] + ',' + p[1]).join(' ')}" fill="none" stroke="${LINES[l].color}" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>`;
+  }
+  // 站点 + 站名
+  for (const [c, [x, y, side]] of Object.entries(pos)) {
+    const S = STATIONS[c], both = S.lines.length > 1, oth = OTHER(c), me = c === here, l = S.lines[0];
+    if (both) s += `<circle cx="${x}" cy="${y}" r="27" fill="#fff" stroke="${LINES[1].color}" stroke-width="11"/><circle cx="${x}" cy="${y}" r="13" fill="#fff" stroke="${LINES[2].color}" stroke-width="8"/>`;
+    else if (oth.length) s += `<circle cx="${x}" cy="${y}" r="15" fill="#fff" stroke="${LINES[l].color}" stroke-width="7"/><circle cx="${x}" cy="${y}" r="6.5" fill="#fff" stroke="${oth[0].color}" stroke-width="5"/>`;
+    else s += `<circle cx="${x}" cy="${y}" r="10" fill="#fff" stroke="${LINES[l].color}" stroke-width="6"/>`;
+    const fs = me ? 30 : both ? 30 : 25, fw = me || both ? 800 : 600, col = me ? '#E2312A' : '#1B2430';
+    let tx = x, ty = y + 9, anc = 'middle';
+    if (side === 'a') ty = y - 26; else if (side === 'b') ty = y + 44; else if (side === 'l') { tx = x - 24; anc = 'end'; } else if (side === 'r') { tx = x + 24; anc = 'start'; } else { tx = x - 30; ty = y + 54; anc = 'end'; }
+    s += `<text x="${tx}" y="${ty}" font-size="${fs}" font-weight="${fw}" fill="${col}" text-anchor="${anc}" paint-order="stroke" stroke="#fff" stroke-width="6" stroke-linejoin="round">${esc(S.zh)}</text>`;
+  }
+  // 你在这里：红点 + 脉动圈 + 标签
+  if (here && pos[here]) {
+    const [x, y] = pos[here];
+    if (!opts.wall) s += `<circle class="pulse" cx="${x}" cy="${y}" r="30" fill="none" stroke="#FF5A4E" stroke-width="8"/>`;
+    // 标签放在站名的另一侧（不盖住站名）；几个拐角站单独指定
+    const side = YOU_AT[here] || { l: 'R', r: 'L', a: 'B', b: 'U', x: 'UR' }[pos[here][2]];
+    const [dx, dy] = { R: [128, 0], L: [-128, 0], B: [0, 74], U: [0, -70], UR: [140, -96] }[side], lx = x + dx, ly = y + dy;
+    s += `<g class="youare"><line x1="${x}" y1="${y}" x2="${lx}" y2="${ly}" stroke="#FF5A4E" stroke-width="5"/><rect x="${lx - 78}" y="${ly - 25}" width="156" height="50" rx="25" fill="#FF5A4E" stroke="#fff" stroke-width="4"/><text x="${lx}" y="${ly + 10}" font-size="28" font-weight="800" fill="#fff" text-anchor="middle">你在这里</text></g>`;
+    s += `<circle class="here" cx="${x}" cy="${y}" r="${opts.wall ? 20 : 16}" fill="#FF5A4E" stroke="#fff" stroke-width="5"/>`;
+  }
+  return s + '</svg>';
+}

@@ -11,6 +11,7 @@ python3 tests/e2e/ticket.py   'http://localhost:8123/?q=2' <截图目录>   # �
 python3 tests/e2e/seat.py     'http://localhost:8123/?q=2' <截图目录>   # 车厢里坐下：髋部在座垫上、第一人称眼高降低、开车/到站一直坐着、起身
 python3 tests/e2e/ticket_ui.py 'http://localhost:8123/?q=2' <截图目录> [w h] [后缀]   # 售票 UI 小修快速检查（不走完整流程）：提示箭头指向售票机、选中站青绿色、“出票成功”、羊城通说明不断行；ONLY=hint / ONLY=card 只跑一部分
 python3 tests/e2e/routemap.py 'http://localhost:8123/?q=2&start=gyq&line=1' <截图目录>   # 车厢门上条形线路图 + 过道 LCD：停站高亮本站 / “到站”，开出后高亮下一站 / “下一站”，贴图只在换站时重画一次
+python3 tests/e2e/netmap.py   'http://localhost:8123/?q=2' <截图目录> [w h]   # HUD「地图」按钮 → 全屏全网图（39 个车站、线路色、你在这里）→ 关闭；右上角三个按钮一排不重叠；横屏再看站厅西墙大幅线路图（CLOSE=1 加一张近景）
 python3 tests/e2e/drawcalls.py 'http://localhost:8123/' 1   # 几个固定机位的绘制调用数（街面 / 站厅 / 站台 / 车厢）
 python3 tests/e2e/shots.py    'http://localhost:8123/'       # 截图（含竖屏 834×1112）
 python3 tests/e2e/polish_shots.py 'http://localhost:8123/' /workspace/gz-shots-polish/after 1   # 视觉升级对比截图（12 个场景 + HUD 特写），并打印每张的绘制调用数

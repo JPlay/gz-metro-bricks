@@ -15,7 +15,7 @@ import * as D from './decor.js';
 import * as MV from './mv.js';
 import { Crowd, randomLook, preseed } from './people.js';
 import { FONT, FONT_EN, roundRect } from './kit.js';
-import { drawLineCanvas } from '../ui/netmap.js';
+import { drawLineCanvas, networkSVG } from '../ui/netmap.js';
 const B = window.BABYLON;
 
 export const YC = -6, HALL_X = 46, TUNNEL_X = 140, TRACK_OFF = 7.6, PSD_OFF = 6, WALL_OFF = 10.6;
@@ -419,6 +419,8 @@ export class Station {
     D.bin(k, 16.8, y, 24.6, Math.PI); D.bin(k, -16.8, y, -10, Math.PI / 2);
     // 广告灯箱（墙面）
     for (const [i, z] of [[0, 4], [1, 18]]) this.poster(17.97, y + 1.6, z, -Math.PI / 2, i);
+    // 站厅西墙：大幅全网线路图（1 号线 + 2 号线，本站“你在这里”）
+    this.wallMapBuild(-17.9, y, 1.2);
     // 招牌站：站厅装饰
     if (sig === 'memorial') MV.perspectiveArches(k, -9, 2, 1, y, '#F2E6D8', '#E07A5F', 6);
     if (sig === 'redwall') for (const z of [-16, -7, 5, 20]) for (const sx of [-1, 1]) { k.glow.ellipsoid(sx * 10, CY - 0.7, z, 0.7, 0.85, 0.7, hex('#FF5C4D'), 2); P.cyl(sx * 10, CY - 0.22, z, 0.36, 0.1, hex('#E0A63A'), 10); P.cyl(sx * 10, CY - 0.11, z, 0.02, 0.22, DARK, 4); }
@@ -426,6 +428,20 @@ export class Station {
     if (sig === 'park') k.sign(17.95, y + 1.6, 11, { kind: 'poster', w: 6, h: 2.2, zh: '公园前 · 人民公园', en: "People's Park", c1: '#3E8F4E', c2: '#8FCB7A', face: -Math.PI / 2 });
     // 墙上大站名
     k.sign(-17.95, y + 3.5, 12, { kind: 'name', w: 9, h: 1.45, zh: s.zh, en: s.en, badges: L.map(badge), lineColor: lc, face: Math.PI / 2 });
+  }
+  /** 墙上的全网线路图：和 HUD 地图同一张 SVG（墙上版，不带动画），画进 2048×1668 动态贴图；外面一圈不锈钢框 */
+  wallMapBuild(x, y, zc) {
+    const W = 2048, H = 1668, w = 4.4, h = w * H / W, y0 = y + 0.55, z0 = zc - w / 2, z1 = zc + w / 2;
+    this.kit.metal.box(x - 0.05, y0 + h / 2, zc, 0.06, h + 0.14, w + 0.14, STEEL, 0, 0, 0, 1, { ao: false });
+    const tex = new B.DynamicTexture('wallMap', { width: W, height: H }, this.scene, true), c = tex.getContext();
+    tex.anisotropicFilteringLevel = 8; c.fillStyle = '#FFFFFF'; c.fillRect(0, 0, W, H); tex.update(true);
+    const mat = new B.StandardMaterial('wallMapMat', this.scene); mat.diffuseColor = new B.Color3(0, 0, 0); mat.specularColor = new B.Color3(0, 0, 0); mat.emissiveTexture = tex; mat.disableLighting = true; mat.backFaceCulling = false;
+    const g = new Geo(); g.quad([x, y0, z0], [x, y0, z1], [x, y0 + h, z1], [x, y0 + h, z0], [1, 1, 1]); g.u = [0, 0, 1, 0, 1, 1, 0, 1];
+    const m = g.toMesh('wallMap', this.scene, mat, this.kit.root); m.isPickable = false;
+    this.wallMap = { tex, mat, mesh: m, ready: false };
+    const img = new Image();
+    img.onload = () => { if (this.wallMap?.tex !== tex) return; c.drawImage(img, 0, 0, W, H); tex.update(true); this.wallMap.ready = true; };
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(networkSVG(this.code, { wall: true }).replace('<svg ', `<svg width="${W}" height="${H}" `));
   }
   /** 售票机屏幕：一张共享贴图（本站所在线路的小线路图 + “请选择目的地”），每台一块 */
   tvmScreensBuild() {
@@ -808,7 +824,7 @@ export class Station {
   platformFor(line) { return this.platforms.find(p => p.line === line); }
   /** 反射探针用的静态网格（不含地面本身） */
   probeMeshes() { return this.kit.meshes.filter(m => !m.name.startsWith('floor') && m.name !== 'shade' && m.name !== 'halo'); }
-  dispose() { this.crowd.dispose(); this.pids.forEach(p => { p.tex.dispose(); p.mat.dispose(); }); for (const o of [this.tvmScr, this.gateScr]) if (o) { o.tex.dispose(); o.mat.dispose(); } this.kit.dispose(); }
+  dispose() { this.crowd.dispose(); this.pids.forEach(p => { p.tex.dispose(); p.mat.dispose(); }); for (const o of [this.tvmScr, this.gateScr, this.wallMap]) if (o) { o.tex.dispose(); o.mat.dispose(); } this.wallMap = null; this.kit.dispose(); }
 }
 
 /** 地面箭头（油漆） */
