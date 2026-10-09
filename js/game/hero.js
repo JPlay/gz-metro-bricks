@@ -103,12 +103,12 @@ function heroParts(L) {
     th.sphere(0, -d.thigh, 0, 0.215, COL.pants, 2);
     starsOnLeg(th, 0.0, d.thigh * 0.95, 0.095, 0.107, legSpots[li].slice(0, 4).map(([a, f]) => [a * sx, f]), 0.027);
     const sh = P(s), s1 = -d.shin * 0.45, s2 = -d.shin + 0.085;
-    sh.tubeTaper([0, 0, 0], [0, s1, 0], 0.215, 0.225, COL.pants, 14);
-    sh.sphere(0, s1, 0, 0.225, COL.pants, 2, 0.5);
-    sh.tubeTaper([0, s1, 0], [0, s2, 0], 0.225, 0.165, COL.pants, 14);
-    sh.tubeTaper([0, s2 + 0.005, 0], [0, -d.shin + 0.05, 0], 0.165, 0.118, COL.pantsDark, 14); // 收口的裤脚
-    starsOnLeg(sh, -0.02, -s1 - 0.03, 0.108, 0.112, legSpots[li].slice(4, 6).map(([a, f]) => [a * sx, f]), 0.027);
-    starsOnLeg(sh, s1 - 0.01, s1 - s2 - 0.03, 0.111, 0.085, legSpots[li].slice(6).map(([a, f]) => [a * sx, f * 0.7]), 0.024);
+    sh.tubeTaper([0, 0, 0], [0, s1, 0], 0.215, 0.245, COL.pants, 14);
+    sh.sphere(0, s1, 0, 0.245, COL.pants, 2, 0.5);
+    sh.tubeTaper([0, s1, 0], [0, s2, 0], 0.245, 0.15, COL.pants, 14);
+    sh.tubeTaper([0, s2 + 0.005, 0], [0, -d.shin + 0.05, 0], 0.15, 0.108, COL.pantsDark, 14); // 收口的裤脚
+    starsOnLeg(sh, -0.02, -s1 - 0.03, 0.108, 0.122, legSpots[li].slice(4, 6).map(([a, f]) => [a * sx, f]), 0.027);
+    starsOnLeg(sh, s1 - 0.01, s1 - s2 - 0.03, 0.122, 0.078, legSpots[li].slice(6).map(([a, f]) => [a * sx, f * 0.7]), 0.024);
     sh.tubeTaper([0, -d.shin + 0.06, 0], [0, -d.shin + 0.02, 0], 0.07, 0.065, skin, 8); // 脚踝
     // 洞洞鞋：厚鞋底 + 圆鼓鞋头 + 鞋面几个小圆洞 + 后跟带
     const fy = -d.shin - 0.005;
@@ -177,8 +177,8 @@ function heroParts(L) {
 /** 眼镜：透明镜框 + 淡粉色半透明镜片（顶点透明度），绑在头骨骼上 */
 function glassesGeo(restHead) {
   const g = new Geo().withBones(); g.bone = 2;
-  const hr = D.head, hy = D.neck + hr * 0.48, z = hr * 0.505, ly = hy + hr * 0.01, rx = hr * 0.155, ry = hr * 0.115;
-  const lens = [1.0, 0.7, 0.76], frame = [0.97, 0.93, 0.94], LA = 0.3, FA = 0.38, FR = 0.0026, n = 40, curve = 0.007;
+  const hr = D.head, hy = D.neck + hr * 0.48, z = hr * 0.53, ly = hy + hr * 0.01, rx = hr * 0.155, ry = hr * 0.115;
+  const lens = [1.0, 0.7, 0.76], frame = [0.97, 0.93, 0.94], LA = 0.3, FA = 0.38, FR = 0.0026, n = 40, curve = 0.004;
   const t = new Geo();
   // 光滑细框：沿椭圆扫一圈小圆截面，共享顶点 + 平滑法线（不分段、不起棱）
   const rim = (cx, sx) => {
