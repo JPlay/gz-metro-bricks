@@ -87,6 +87,7 @@ export class Metro {
           this.doors(s, Math.max(0, s.t) / 1.6);
           if (s.t <= 0) {
             this.doors(s, 0); s.state = 'departing'; s.u = 0;
+            if (nx) tr.setMap(s.line, this.station.code, s.step, nx, true); // 关门开出：线路图高亮下一站，LCD“下一站”
             if (aboard && nx) { this.legs++; Ann.depart(s.line, nx, dirKey(s.line, s.step), s.step, this.legs === 1 || this.ride?.line !== s.line); A.sfx('train.tractionStart', { volume: 0.7 }); this.ride = { train: tr, line: s.line, step: s.step, phase: 'out', slot: s, next: nx }; }
           }
           break;

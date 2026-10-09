@@ -2,7 +2,7 @@
  * 地铁列车：3 节编组（游戏里缩短了；每节 18m，每侧 3 对门），参照广州地铁 1 号线 A1 / 2 号线 A4·A8：
  *   鼓形车身截面（侧墙微外鼓、圆弧车顶）、黑色车头面罩 + 大挡风玻璃 + 前照灯 + 目的地显示屏、
  *   腰带（1 号线 A1：黄色车身 + 红色腰带；2 号线：香槟色车身 + 蓝色腰带），车顶空调和受电弓；
- *   车内：不锈钢纵向座椅、立柱 + 横杆 + 三角吊环、双排顶灯带、门上方动态线路图、贯通道。
+ *   车内：不锈钢纵向座椅、立柱 + 横杆 + 三角吊环、双排顶灯带、门上方条形线路图 + 过道上方吊装 LCD（routemap.js）、贯通道。
  * 局部坐标：x 沿车长，y=0 为车厢地板顶面（与站台面齐平），z 横向（±1.5）。
  * 车门是实例（车门壳 / 玻璃 / 色带三组），开关门用缓动曲线；碰撞体随车移动。
  */
@@ -10,6 +10,7 @@ import { Kit, FONT, FONT_EN, roundRect } from './kit.js';
 import { Geo, hex, mix } from '../core/geo.js';
 import { bakePerson, randomLook, POSES, preseed } from './people.js';
 import { LINES, STATIONS } from '../data/lines.js';
+import { drawStrip, drawLcd, hotUV, STRIP_W, STRIP_H } from './routemap.js';
 const B = window.BABYLON;
 
 export const CAR_X = [-18.6, 0, 18.6], DOOR_DX = [-6, 0, 6], HALF = 27.9, DOOR_W = 1.4, DOOR_H = 2.0;
@@ -199,6 +200,11 @@ export class Train {
     k.col(0, -0.15, 0, HALF * 2, 0.3, 2.9, { parent: this.root, dynamic: true, name: 'trainFloor' });
     k.col(0, 2.6, 0, HALF * 2, 0.3, 3.0, { parent: this.root, dynamic: true });
     // 材质：桶 → 专用材质
+    // 过道上方 LCD 的黑色外壳 + 吊杆（屏幕本身是 build 末尾的动态贴图网格）
+    for (const cx of CAR_X) for (const d of [-3, 3]) {
+      const x = cx + d; P.box(x, 2.13, 0, 0.056, 0.34, 0.84, DARK, 0, 0, 0, 1, { ao: false });
+      for (const z of [-0.3, 0.3]) Mt.tube([x, 2.28, z], [x, 2.36, z], 0.012, STEEL, 5);
+    }
     const meshes = k.finish(false), by = k.byBucket;
     if (by.shell) by.shell.material = this.shellMat; if (by.line) by.line.material = this.lineMat; if (by.accent) by.accent.material = this.accentMat; if (by.seat) by.seat.material = this.seatMat; if (by.tglass) by.tglass.material = this.glassMat; if (by.metal) by.metal.material = this.steelMat;
     meshes.forEach(m => { m.alwaysSelectAsActiveMesh = false; });
@@ -224,21 +230,40 @@ export class Train {
       this.doorCols[sg].push(k.col(dx, 1.0, sg * 1.47, DOOR_W, 2.0, 0.12, { parent: this.root, dynamic: true, name: 'door' }));
     }
     this.setDoors(1, 0); this.setDoors(-1, 0);
-    // 线路图（门上方，车内两侧）+ 车头目的地屏：同一张动态贴图（上半 = 线路图，下半 = 目的地）
-    this.mapTex = new B.DynamicTexture('map' + this.id, { width: 1024, height: 256 }, this.scene, true);
-    this.mapMat = new B.StandardMaterial('mapMat' + this.id, this.scene);
-    this.mapMat.diffuseColor = new B.Color3(0, 0, 0); this.mapMat.specularColor = new B.Color3(0, 0, 0); this.mapMat.emissiveTexture = this.mapTex; this.mapMat.disableLighting = true; this.mapMat.backFaceCulling = false;
-    const mp = [], mu = [], mi = [];
-    const quadUV = (pts, v0, v1) => { const b0 = mp.length / 3; pts.forEach(p => mp.push(...p)); mu.push(0, v0, 1, v0, 1, v1, 0, v1); mi.push(b0, b0 + 1, b0 + 2, b0, b0 + 2, b0 + 3); };
-    for (const sg of [-1, 1]) for (const dx of DOOR_XS) {
-      const z = sg * 1.36, w = 1.3, y0 = 2.04, y1 = 2.28;
-      const xa = dx + (sg > 0 ? -w / 2 : w / 2), xb = dx - (sg > 0 ? -w / 2 : w / 2);
-      quadUV([[xa, y0, z], [xb, y0, z], [xb, y1, z], [xa, y1, z]], 0, 0.5);
-      P.slab(Math.min(xa, xb) - 0.04, Math.max(xa, xb) + 0.04, y0 - 0.04, y1 + 0.04, z - 0.01 * sg, z + 0.02 * sg, DARK, { ao: false });
+    // 车内两块“屏”+ 车头目的地屏，都是动态贴图，只在换站时重画（见 routemap.js）：
+    //   条形线路图（门上方，两侧每个门一块，2048×256）；LCD（两门之间吊在过道上方，双面，1024×384）+ 车头目的地屏共用一张 1024×512
+    const emis = (name, tex) => { const m = new B.StandardMaterial(name + this.id, this.scene); m.diffuseColor = new B.Color3(0, 0, 0); m.specularColor = new B.Color3(0, 0, 0); m.emissiveTexture = tex; m.disableLighting = true; m.backFaceCulling = false; return m; };
+    this.stripTex = new B.DynamicTexture('strip' + this.id, { width: STRIP_W, height: STRIP_H }, this.scene, true); this.stripTex.anisotropicFilteringLevel = 8;
+    this.mapTex = new B.DynamicTexture('map' + this.id, { width: 1024, height: 512 }, this.scene, true); this.mapTex.anisotropicFilteringLevel = 8;
+    this.stripMat = emis('stripMat', this.stripTex); this.mapMat = emis('mapMat', this.mapTex);
+    const mkMesh = (name, mat) => { const o = { p: [], u: [], i: [] }; o.quad = (pts, u0, u1, v0, v1) => { const b0 = o.p.length / 3; pts.forEach(q => o.p.push(...q)); o.u.push(u0, v0, u1, v0, u1, v1, u0, v1); o.i.push(b0, b0 + 1, b0 + 2, b0, b0 + 2, b0 + 3); };
+      o.done = () => { const m = new B.Mesh(name, this.scene), vd = new B.VertexData(); vd.positions = o.p; vd.uvs = o.u; vd.indices = o.i; vd.normals = o.p.map((_, i) => i % 3 === 1 ? 1 : 0); vd.applyToMesh(m); m.material = mat; m.parent = this.root; m.isPickable = false; return m; }; return o; };
+    // 斜贴在窗上方的侧墙 / 顶板弧面上（下沿 z=1.385,y=2.03 → 上沿 z=1.12,y=2.27），坐着抬头正好看到
+    const ZB = 1.385, YB = 2.03, ZT = 1.12, YT = 2.27;
+    const panel = (o, sg, xc, w, hFrac, uv) => { const xa = xc + (sg > 0 ? -w / 2 : w / 2), xb = xc - (sg > 0 ? -w / 2 : w / 2), zt = ZB + (ZT - ZB) * hFrac, yt = YB + (YT - YB) * hFrac;
+      const q = [[xa, YB, sg * ZB], [xb, YB, sg * ZB], [xb, yt, sg * zt], [xa, yt, sg * zt]]; o.quad(q, ...uv); return q; };
+    const strip = mkMesh('trainStrip', this.stripMat), lcd = mkMesh('trainLcd', this.mapMat);
+    this.stripQuads = [];
+    for (const sg of [-1, 1]) for (const dx of DOOR_XS) this.stripQuads.push(panel(strip, sg, dx, 2.86, 1, [0, 1, 0, 1]));
+    // LCD：吊在过道正上方（两门之间），双面，朝车厢前后——侧墙窗上方会被横杆挡住
+    for (const cx of CAR_X) for (const d of [-3, 3]) {
+      const x = cx + d, w = 0.8, y0 = 1.98, y1 = 2.28, t = 0.03;
+      lcd.quad([[x + t, y0, -w / 2], [x + t, y0, w / 2], [x + t, y1, w / 2], [x + t, y1, -w / 2]], 0, 1, 0, 0.75);
+      lcd.quad([[x - t, y0, w / 2], [x - t, y0, -w / 2], [x - t, y1, -w / 2], [x - t, y1, w / 2]], 0, 1, 0, 0.75);
     }
-    for (const e of [-1, 1]) { const fx = this['frontX' + (e > 0 ? 'P' : 'N')] + e * 0.05; quadUV(e < 0 ? [[fx, 2.08, 0.75], [fx, 2.08, -0.75], [fx + 0.03, 2.3, -0.75], [fx + 0.03, 2.3, 0.75]] : [[fx, 2.08, -0.75], [fx, 2.08, 0.75], [fx - 0.03, 2.3, 0.75], [fx - 0.03, 2.3, -0.75]], 0.5, 1); }
-    const mm = new B.Mesh('trainMap', this.scene), vd = new B.VertexData(); vd.positions = mp; vd.uvs = mu; vd.indices = mi; vd.normals = mp.map((_, i) => i % 3 === 1 ? 1 : 0); vd.applyToMesh(mm);
-    mm.material = this.mapMat; mm.parent = this.root; mm.isPickable = false;
+    for (const e of [-1, 1]) { const fx = this['frontX' + (e > 0 ? 'P' : 'N')] + e * 0.05; lcd.quad(e < 0 ? [[fx, 2.08, 0.75], [fx, 2.08, -0.75], [fx + 0.03, 2.3, -0.75], [fx + 0.03, 2.3, 0.75]] : [[fx, 2.08, -0.75], [fx, 2.08, 0.75], [fx - 0.03, 2.3, 0.75], [fx - 0.03, 2.3, -0.75]], 0, 1, 0.75, 1); }
+    strip.done(); lcd.done();
+    // 当前 / 下一站的呼吸光圈：每块线路图上叠一片发光小方片（一个网格，换站时挪位置，每帧只改透明度）
+    const gt = new B.DynamicTexture('hotGlow' + this.id, { width: 128, height: 128 }, this.scene, false), gc = gt.getContext(), rg = gc.createRadialGradient(64, 64, 6, 64, 64, 62);
+    rg.addColorStop(0, 'rgba(255,255,255,1)'); rg.addColorStop(0.3, 'rgba(255,120,100,0.9)'); rg.addColorStop(1, 'rgba(255,90,78,0)'); gc.fillStyle = rg; gc.fillRect(0, 0, 128, 128); gt.update(); gt.hasAlpha = true;
+    const gm = new B.StandardMaterial('hotGlowMat' + this.id, this.scene); gm.diffuseColor = new B.Color3(0, 0, 0); gm.specularColor = new B.Color3(0, 0, 0); gm.emissiveTexture = gt; gm.opacityTexture = gt; gm.disableLighting = true; gm.backFaceCulling = false; gm.alphaMode = B.Constants.ALPHA_ADD;
+    const glow = mkMesh('trainHotGlow', gm); this.stripQuads.forEach(() => glow.quad([[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]], 0, 1, 0, 1));
+    this.hotGlow = glow.done(); this.hotGlow.setVerticesData(B.VertexBuffer.PositionKind, glow.p, true); this.hotGlow.alphaIndex = 10; this.hotGlowMat = gm; this.glowT = 0;
+    this.scene.onBeforeRenderObservable.add(() => {
+      if (!this.root.isEnabled() || !this.mapKey) return;
+      this.glowT += Math.min(0.1, this.scene.getEngine().getDeltaTime() / 1000);
+      gm.alpha = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(this.glowT * Math.PI * 2 / 1.8));   // 1.8 秒一呼一吸
+    });
     this.shadowMeshes = [this.body, by.line, by.paint].filter(Boolean);
   }
   setLine(line) {
@@ -249,31 +274,34 @@ export class Train {
     this.shellMat.albedoColor = lin(BODY[line] || BODY[1]);
     this.seatMat.albedoColor = lin(LINES[line].color);
   }
-  /** 线路图：当前站 code、行进方向 step（+1/-1）、nextCode 正驶向的站；下半张画车头目的地屏 */
-  setMap(line, code, step, nextCode) {
-    const L = LINES[line], st = L.stations, i = st.indexOf(code), c = this.mapTex.getContext(), W = 1024, H = 128, Y = 128;
-    // —— 上半：门上方动态线路图
-    c.fillStyle = '#FBFBFA'; c.fillRect(0, Y, W, H);
-    c.fillStyle = L.color; c.fillRect(0, Y, 150, H); c.fillStyle = L.ink; c.font = `700 44px ${FONT}`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(L.zh, 75, Y + 50);
-    c.font = `600 22px ${FONT_EN}`; c.fillText(L.en, 75, Y + 96);
-    const win = 7, half = 3; let a = Math.max(0, Math.min(st.length - win, i - (step > 0 ? 2 : half + 1))); const vis = st.slice(a, a + win);
-    const ordered = step > 0 ? vis : vis.slice().reverse(), x0 = 200, dx = (W - x0 - 60) / (win - 1);
-    c.fillStyle = L.color; c.fillRect(x0, Y + 56, dx * (ordered.length - 1), 12);
-    ordered.forEach((code2, kk) => {
-      const x = x0 + kk * dx, idx = st.indexOf(code2), passed = step > 0 ? idx < i : idx > i, here = code2 === code, nxt = code2 === nextCode;
-      if (passed) { c.fillStyle = '#C8CED6'; c.fillRect(x, Y + 56, dx, 12); }
-      c.beginPath(); c.arc(x, Y + 62, here || nxt ? 16 : 11, 0, Math.PI * 2); c.fillStyle = passed ? '#C8CED6' : (nxt ? '#FF5A4E' : (here ? '#26C281' : '#FFFFFF')); c.fill();
-      c.lineWidth = 5; c.strokeStyle = passed ? '#B8BFC8' : L.color; c.stroke();
-      c.fillStyle = passed ? '#9AA3AE' : '#1B1D20'; c.font = `${here || nxt ? 700 : 500} ${here || nxt ? 26 : 22}px ${FONT}`; c.textAlign = 'center'; c.textBaseline = 'alphabetic';
-      c.fillText(STATIONS[code2].zh, x, Y + 32); if (STATIONS[code2].x.length || STATIONS[code2].lines.length > 1) { c.fillStyle = '#7A8594'; c.font = `500 15px ${FONT}`; c.fillText('换乘', x, Y + 108); }
-    });
-    c.fillStyle = '#1B1D20'; c.beginPath(); const ax = W - 22; if (step > 0) { c.moveTo(ax + 12, Y + 62); c.lineTo(ax - 10, Y + 46); c.lineTo(ax - 10, Y + 78); } else { c.moveTo(ax - 12, Y + 62); c.lineTo(ax + 10, Y + 46); c.lineTo(ax + 10, Y + 78); } c.fill();
-    // —— 下半：车头目的地屏（黑底，橙色 LED 字）
-    const dir = Object.values(L.dirs).find(d => d.step === step) || Object.values(L.dirs)[0];
-    c.fillStyle = '#0A0B0C'; c.fillRect(0, 0, W, H);
+  /**
+   * 换站时调用：线路图 + 车厢 LCD + 车头目的地屏。code = 当前站（停站 / 进站时）或刚开出的站，
+   * moving = 已关门开出（高亮下一站 nextCode，LCD 显示“下一站”），否则高亮本站、LCD 显示“到站”。同样的参数不重画。
+   */
+  setMap(line, code, step, nextCode, moving = false) {
+    const key = [line, code, step, nextCode, moving].join(); if (key === this.mapKey) return; this.mapKey = key;
+    this.mapInfo = { line, code, step, next: nextCode, moving, hot: moving && nextCode ? nextCode : code };
+    const L = LINES[line];
+    drawStrip(this.stripTex.getContext(), line, code, step, moving, nextCode); this.stripTex.update(true);
+    // 光圈挪到高亮站：贴图 (u,v) → 每块线路图上的位置，往车厢里浮 1.5cm
+    const { u, v } = hotUV(line, code, step, moving, nextCode), pos = [], r = 0.085;
+    for (const q of this.stripQuads) {
+      const P = k => q[0][k] + (q[1][k] - q[0][k]) * u + (q[3][k] - q[0][k]) * v, c = [P(0), P(1), P(2)], sg = Math.sign(q[0][2]);
+      const ex = [q[1][0] - q[0][0], 0, 0], len = Math.abs(ex[0]), ux = ex[0] / len;
+      const vy = [q[3][0] - q[0][0], q[3][1] - q[0][1], q[3][2] - q[0][2]], vl = Math.hypot(...vy), vu = vy.map(t => t / vl);
+      c[2] -= sg * 0.015;
+      pos.push(c[0] - ux * r, c[1] - vu[1] * r, c[2] - vu[2] * r, c[0] + ux * r, c[1] - vu[1] * r, c[2] - vu[2] * r, c[0] + ux * r, c[1] + vu[1] * r, c[2] + vu[2] * r, c[0] - ux * r, c[1] + vu[1] * r, c[2] + vu[2] * r);
+    }
+    this.hotGlow.updateVerticesData(B.VertexBuffer.PositionKind, pos); this.hotGlow.refreshBoundingInfo();
+    // LCD（贴图上 3/4）+ 车头目的地屏（上 1/4：黑底，橙色 LED 字）
+    const c = this.mapTex.getContext();
+    c.save(); c.translate(0, 128); drawLcd(c, line, code, step, moving, nextCode); c.restore();
+    const dir = Object.values(L.dirs).find(d => d.step === step) || Object.values(L.dirs)[0], H = 128;
+    c.fillStyle = '#0A0B0C'; c.fillRect(0, 0, 1024, H);
     c.fillStyle = L.color; roundRect(c, 14, 20, 100, 88, 12); c.fill(); c.fillStyle = L.ink; c.font = `700 70px ${FONT_EN}`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(String(line), 64, 68);
     c.fillStyle = '#FFB547'; c.font = `700 64px ${FONT}`; c.textAlign = 'left'; c.fillText(dir.zh, 140, 52); c.font = `600 28px ${FONT_EN}`; c.fillText(dir.en, 142, 104);
     this.mapTex.update(true);
+    this.mapDraws = (this.mapDraws || 0) + 1;
   }
   /** 打开 / 关闭某一侧车门（sg=+1 局部 +z 侧），f: 0 关 … 1 开（缓动：先外摆再滑开） */
   setDoors(sg, f) {
