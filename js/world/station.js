@@ -132,8 +132,8 @@ export class Station {
     // 边界
     k.colSlab(-61, -60, 0, 8, ZS, ZN); k.colSlab(XE, XE + 1, 0, 8, ZS, ZN); k.colSlab(-60, XE, 0, 8, ZS - 1, ZS); k.colSlab(-60, XE, 0, 8, ZN, ZN + 1);
     this.entrance();
-    // 盲道：街口 → 站口
-    k.g('tactile').slab(-0.15 + 2.2, 0.15 + 2.2, 0, 0.012, -62, -38.6, hex('#F2C230'), { ao: false });
+    // 盲道：沿人行道方向（平行于马路）铺一条，像真实街道那样；不再从站口斜指向景点（不做“引导线”）
+    k.g('tactile').slab(-12.6, 12.6, 0, 0.012, -61.75, -61.45, hex('#F2C230'), { ao: false });
     // 路灯、长椅、树、垃圾桶
     for (const x of [-9, 9]) for (const z of [-60, -46, -32, -18]) D.lamp(k, x, 0, z, x < 0 ? Math.PI / 2 : -Math.PI / 2);
     for (let x = -50; x <= XE - 10; x += 14) if (Math.abs(x) > 6 && !(sig === 'sysy' && Math.abs(x + 3 - GATE.x) < 15) && !(sig === 'redwall' && Math.abs(x + 3 - NJS.ax) < 7) && !(sig === 'clan' && x + 3 > CJC.x0 - 3 && x + 3 < CJC.x1 + 3)) D.lamp(k, x + 3, 0, -62.6, Math.PI);
