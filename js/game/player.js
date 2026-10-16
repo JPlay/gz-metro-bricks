@@ -50,7 +50,7 @@ export class Player {
   }
   standUp() {
     const { train, seat } = this.seat, r = train.root.position; this.seat = null; this.lying = false; this.model.rotation.x = 0;
-    if (seat.world) { this.position.set(seat.wx + Math.sin(seat.face) * 0.5, seat.wy + 0.05, seat.wz + Math.cos(seat.face) * 0.5); this.groundY = seat.wy; }
+    if (seat.world) { this.position.set(seat.wx + Math.sin(seat.face) * (seat.out || 0.5), seat.wy + 0.05, seat.wz + Math.cos(seat.face) * (seat.out || 0.5)); this.groundY = seat.wy; }
     else { this.position.set(r.x + seat.x, r.y + 0.05, r.z + seat.sd * 0.5); this.groundY = r.y; }
     this.vy = 0; this.grounded = true; this.collider.computeWorldMatrix(true);
   }

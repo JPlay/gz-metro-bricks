@@ -48,18 +48,23 @@ async def main():
     await view(pg,'third'); await auto(pg,[[HX+6.5,0],[HX+3.2,0]]); await look(pg,-math.pi/2,0.04); await shot(pg,'03-corridor',1.0)
     R['plates']=[r['n'] for r in (await H(pg))['interior']['rooms']]
     # 6. 302 双床房：走近门自己开，进去
-    R['intoRoom']=await auto(pg,[[HX-4,0],[HX-4,2.3],[HX-3.0,3.9]]); h=await H(pg); R['where']=h['where']; R['doorOpen']=[r['open'] for r in h['interior']['rooms']]
+    await auto(pg,[[HX-4,0],[HX-4,1.6]]); await asyncio.sleep(1.0); R['doorOpen']=[r['open'] for r in (await H(pg))['interior']['rooms']]
+    R['intoRoom']=await auto(pg,[[HX-4,2.3],[HX-3.0,3.9]]); h=await H(pg); R['where']=h['where']
     await pose(pg,HX-2.5,4.55,3.7,-0.78,0.22,'first',1.2); await shot(pg,'04-twin-room')
     # 7. 坐床 → 躺下 → 坐起来 → 起身
     await pose(pg,HX-3.6,4.55,4.25,-math.pi/2,0.1,'third',0.8)
     s=await st(pg); R['actBed']=s['act']; await pg.evaluate('__game.act()'); await wait(pg,"__game.state().seat.seated",5)
-    R['seatBed']=(await st(pg))['seat']; R['lieBtn']=(await H(pg))['lieBtn']
+    await asyncio.sleep(0.6); R['seatBed']=(await st(pg))['seat']; R['lieBtn']=(await H(pg))['lieBtn']
     await pg.evaluate("__game.hotel.toggleLie()"); await asyncio.sleep(0.8); R['lying']=(await H(pg))['lying']
     await look(pg,-2.5,0.62); await shot(pg,'x2-lying',1.0)
     await pg.evaluate("__game.hotel.toggleLie()"); await asyncio.sleep(0.4); R['satUp']=not (await H(pg))['lying']
     await pg.evaluate('__game.act()'); await asyncio.sleep(0.6); R['stood']=not (await st(pg))['seat']['seated']
+    # 7b. 301 大床房：门也会开，床能坐
+    await auto(pg,[[HX-3.4,3.0],[HX-4,1.6],[HX-4,0],[HX+0.2,0],[HX+0.2,1.6]]); await asyncio.sleep(1.0); R['kingDoor']=(await H(pg))['interior']['rooms'][0]['open']
+    k=[x for x in (await H(pg))['interior']['seats'] if x['bed']=='king']; R['kingSeats']=len(k)
+    if k: await pose(pg,k[0]['x']+0.5*math.sin(k[0]['face']),4.55,k[0]['z']+0.5*math.cos(k[0]['face']),k[0]['face']+math.pi,0.1,'third',0.8); R['kingAct']=(await st(pg))['act']
     # 8. 回走廊，坐电梯下大堂
-    await auto(pg,[[HX-3.4,3.0],[HX-4,1.6],[HX-4,0],[HX+6.9,-0.2]]); await pg.evaluate('__game.hotel.call()')
+    await auto(pg,[[HX+0.2,1.6],[HX+0.2,0],[HX+6.9,-0.2]]); await pg.evaluate('__game.hotel.call()')
     await wait(pg,LIFT+".state=='open'",30); await auto(pg,[[HX+9.5,0]]); await pg.evaluate('__game.hotel.press(1)')
     R['rode1']=await wait(pg,LIFT+".floor==1 && "+LIFT+".state=='open'",30); R['posLobby']=(await st(pg))['pos']
     # 9. 楼梯 1F → 2F → 3F
@@ -72,13 +77,15 @@ async def main():
     # 10. 电梯下楼，出门
     await pg.evaluate('__game.hotel.call()'); await wait(pg,LIFT+".state=='open'",30); await auto(pg,[[HX+9.5,0]]); await pg.evaluate('__game.hotel.press(1)')
     await wait(pg,LIFT+".floor==1 && "+LIFT+".state=='open'",30)
-    await auto(pg,[[HX+6.6,0],[HX+0,-3],[HX+0,-6.2]])
-    R['out']=await wait(pg,"!__game.state().hotel.inside",6); s=await st(pg); R['outPos']=s['pos']; R['outZone']=s['zone']
+    await auto(pg,[[HX+6.6,0],[HX+0.5,-3],[HX+0,-6.4]])
+    R['out']=await wait(pg,"!__game.state().hotel.inside",6)
+    if not R['out']:   # 偶尔被跟着的弟弟挡一下：侧一步再出门
+      R['exitBlockedAt']=(await st(pg))['pos']; await auto(pg,[[HX+0.6,-4.0],[HX-0.4,-6.4]]); R['out']=await wait(pg,"!__game.state().hotel.inside",6); s=await st(pg); R['outPos']=s['pos']; R['outZone']=s['zone']
     R['errors']=errs(logs)[:5]
     R['overBudget']=[k for k,v in R['perf'].items() if not k.startswith('x') and (v['draws']>BUDGET['draws'] or v['tris']>BUDGET['tris'])]
     print(json.dumps(R, ensure_ascii=False, indent=1, default=str))
     ok=R['entered'] and R['zone']=='hall' and (R['actLift'] or {}).get('label')=='按电梯' and R['liftOpen'] and R['inLift'] and R['panel'] and R['rode3'] and R['floorAfterRide']==3 \
-       and R['plates'][0].startswith('3') and R['where']=='room' and max(R['doorOpen'])>0.7 and (R['actBed'] or {}).get('label')=='坐下' and R['seatBed'].get('seated') and R['lieBtn'] \
+       and R['plates'][0].startswith('3') and R['where']=='room' and max(R['doorOpen'])>0.7 and R['kingDoor']>0.7 and R['kingSeats']>=1 and (R.get('kingAct') or {}).get('label')=='坐下' and (R['actBed'] or {}).get('label')=='坐下' and R['seatBed'].get('seated') and R['lieBtn'] \
        and R['lying'] and R['satUp'] and R['stood'] and R['rode1'] and abs(R['stairs2F'][0]-4.5)<0.3 and R['stairs2F'][1]==2 and abs(R['stairs3F'][0]-4.5)<0.4 and R['stairs3F'][1]==3 \
        and R['out'] and R['outZone']=='street' and not R['overBudget'] and not R['errors']
     print('HOTEL', 'PASS' if ok else 'FAIL', flush=True)

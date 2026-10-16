@@ -188,7 +188,7 @@ export class HotelInterior {
         P.slab(X(Math.min(bx, bx + dir * 0.1)), X(Math.max(bx, bx + dir * 0.1)), y0, y0 + 1.25, za - 0.1, zb + 0.1, C.brown, { aoTop: true });   // 软包床头
         k.colSlab(X(xa), X(xb), y0, y0 + 0.55, za, zb);
         const face = dir > 0 ? Math.PI / 2 : -Math.PI / 2, fx = ft - dir * 0.28, lx = ft - dir * 0.12;
-        this.seats.push({ wx: X(fx), wy: y0, wz: bz, face, free: true, world: true, id: this.seats.length, bed: r.kind, room: r.n,
+        this.seats.push({ wx: X(fx), wy: y0, wz: bz, face, free: true, world: true, out: 0.8, id: this.seats.length, bed: r.kind, room: r.n,
           lie: { x: X(lx), y: y0 + 0.5 + 0.14, z: bz, yaw: face } });
       };
       const lamp = (x, z) => { P.slab(X(x - 0.25), X(x + 0.25), y0, y0 + 0.5, z - 0.22, z + 0.22, C.wood, { aoTop: true }); k.colSlab(X(x - 0.25), X(x + 0.25), y0, y0 + 0.5, z - 0.22, z + 0.22); P.cyl(X(x), y0 + 0.62, z, 0.08, 0.24, C.gold, 8); G.cyl(X(x), y0 + 0.82, z, 0.32, 0.22, hex('#FFE3B0'), 12, 0, 0, 0, 0.22); };
@@ -229,9 +229,9 @@ export class HotelInterior {
     };
     const flights = (kk, base) => {
       const P = kk.solid;
-      kk.stairs('z', S.zA, base, S.zB, base + FY / 2, S.el[0], S.el[1], base, col, { rails: false });
+      kk.stairs('z', S.zA, base, S.zB, base + FY / 2, X(S.el[0]), X(S.el[1]), base, col, { rails: false });
       P.slab(X(S.x0), X(S.x1), base + FY / 2 - 0.12, base + FY / 2, S.zB, S.z1, C.stair, { ao: false }); kk.colSlab(X(S.x0), X(S.x1), base + FY / 2 - 0.3, base + FY / 2, S.zB, S.z1);
-      kk.stairs('z', S.zB, base + FY / 2, S.zA, base + FY, S.wl[0], S.wl[1], base + FY / 2, col, { rails: false });
+      kk.stairs('z', S.zB, base + FY / 2, S.zA, base + FY, X(S.wl[0]), X(S.wl[1]), base + FY / 2, col, { rails: false });
       // 中间的井：两道栏杆（斜）+ 平台口的一小段
       for (const [x, ya, yb] of [[S.el[0] - 0.05, base, base + FY / 2], [S.wl[1] + 0.05, base + FY, base + FY / 2]]) {
         const A = [X(x), ya + 0.95, S.zA], Bp = [X(x), yb + 0.95, S.zB];
