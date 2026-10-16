@@ -18,11 +18,11 @@ const C = {
   plaster: hex('#E9E4D8'), granite: hex('#CFCBC2'), tile: hex('#5F6E62'), red: hex('#8E2A1E'), glass: hex('#DDEFF5')
 };
 /** 金漆木雕（梁 / 屏门）：深底 + 金色卷草、人物剪影 */
-function paintCarving(c, pw, ph, s = 1) {
+function paintCarving(c, pw, ph, s = 1, sparse = false) {
   c.fillStyle = '#3B2216'; c.fillRect(0, 0, pw, ph);
   const g = c.createLinearGradient(0, 0, 0, ph); g.addColorStop(0, '#F2D07A'); g.addColorStop(1, '#B8862E'); c.strokeStyle = g; c.fillStyle = g;
   c.lineWidth = Math.max(2, ph * 0.04); c.strokeRect(ph * 0.05, ph * 0.05, pw - ph * 0.1, ph - ph * 0.1);
-  const n = Math.max(1, Math.round(pw / ph)), cw = pw / n;
+  const n = Math.max(1, Math.round(pw / ph * (sparse ? 0.5 : 1))), cw = pw / n;   // sparse：挂落上的卷草纹减半
   for (let i = 0; i < n; i++) {
     const x = i * cw + cw / 2, y = ph / 2, r = Math.min(cw, ph) * 0.32;
     c.beginPath(); for (let k = 0; k < 24; k++) { const a = k / 24 * Math.PI * 4, rr = r * (0.3 + 0.7 * k / 24); c.lineTo(x + Math.cos(a + i + s) * rr, y + Math.sin(a + i + s) * rr * 0.8); } c.stroke();
@@ -30,27 +30,22 @@ function paintCarving(c, pw, ph, s = 1) {
   }
 }
 /** 屏门：一扇高木门，上半格心（冰裂 / 方格）、中间绦环板（木雕）、下半裙板 */
-function paintScreen(c, pw, ph, s = 1) {
-  c.fillStyle = '#4A2A1A'; c.fillRect(0, 0, pw, ph);
-  c.strokeStyle = '#C99A3E'; c.lineWidth = Math.max(2, pw * 0.03);
+function paintScreen(c, pw, ph, s = 1, light = false) {   // light：后面聚贤堂的屏门，浅木色、格子稀一点，和前排分开
+  c.fillStyle = light ? '#9A6B43' : '#4A2A1A'; c.fillRect(0, 0, pw, ph);
+  c.strokeStyle = light ? '#5E3A22' : '#C99A3E'; c.lineWidth = Math.max(2, pw * 0.03);
   const m = pw * 0.08; c.strokeRect(m, m, pw - 2 * m, ph - 2 * m);
   const y1 = ph * 0.6; c.strokeRect(m * 1.6, m * 1.6, pw - m * 3.2, y1 - m * 2.2);
-  for (let i = 1; i < 5; i++) { const x = m * 1.6 + (pw - m * 3.2) * i / 5; c.beginPath(); c.moveTo(x, m * 1.6); c.lineTo(x, y1 - m * 0.6); c.stroke(); }
-  for (let j = 1; j < 9; j++) { const y = m * 1.6 + (y1 - m * 2.2) * j / 9; c.beginPath(); c.moveTo(m * 1.6, y); c.lineTo(pw - m * 1.6, y); c.stroke(); }
+  const nx = light ? 3 : 5, ny = light ? 5 : 9;
+  for (let i = 1; i < nx; i++) { const x = m * 1.6 + (pw - m * 3.2) * i / nx; c.beginPath(); c.moveTo(x, m * 1.6); c.lineTo(x, y1 - m * 0.6); c.stroke(); }
+  for (let j = 1; j < ny; j++) { const y = m * 1.6 + (y1 - m * 2.2) * j / ny; c.beginPath(); c.moveTo(m * 1.6, y); c.lineTo(pw - m * 1.6, y); c.stroke(); }
+  if (light) { c.strokeRect(m * 1.6, y1 + m * 0.2, pw - m * 3.2, ph * 0.12); c.strokeRect(m * 1.6, ph * 0.76, pw - m * 3.2, ph * 0.18); return; }
   c.save(); c.translate(m * 1.6, y1 + m * 0.2); paintCarving(c, pw - m * 3.2, ph * 0.12, s); c.restore();
   c.save(); c.translate(m * 1.6, ph * 0.76); paintCarving(c, pw - m * 3.2, ph * 0.18, s + 1); c.restore();
 }
 function paintSky(c, pw, ph) { const g = c.createLinearGradient(0, 0, 0, ph); g.addColorStop(0, '#8FC3EA'); g.addColorStop(1, '#D8ECF8'); c.fillStyle = g; c.fillRect(0, 0, pw, ph); c.fillStyle = 'rgba(255,255,255,0.85)'; for (const [x, y, r] of [[0.2, 0.4, 0.1], [0.28, 0.38, 0.08], [0.7, 0.6, 0.12], [0.78, 0.58, 0.09]]) { c.beginPath(); c.arc(x * pw, y * ph, r * pw, 0, Math.PI * 2); c.fill(); } }
-function paintCase(c, pw, ph, s) {   // 展柜里的东西：广彩瓷瓶 / 陶塑公仔
+function paintCase(c, pw, ph) {   // 展柜背板：深红绒 + 一圈细金线（不再画平面的瓶子剪影，字移到柜前的牌子上）
   c.fillStyle = '#5A1E1A'; c.fillRect(0, 0, pw, ph);
-  const cols = s ? ['#C2412D', '#2E7D5B', '#E0A82E'] : ['#1F5FA0', '#C2412D', '#2E7D5B'];
-  for (let i = 0; i < 3; i++) {
-    const x = pw * (0.2 + i * 0.3), w = pw * 0.18, h = ph * (0.55 + (i % 2) * 0.2), y = ph * 0.92 - h;
-    c.fillStyle = s ? '#F7F1E1' : cols[i]; c.beginPath(); c.moveTo(x - w * 0.25, y); c.quadraticCurveTo(x - w * 0.9, y + h * 0.55, x - w * 0.35, y + h); c.lineTo(x + w * 0.35, y + h); c.quadraticCurveTo(x + w * 0.9, y + h * 0.55, x + w * 0.25, y); c.closePath(); c.fill();
-    c.fillStyle = cols[(i + 1) % 3]; c.fillRect(x - w * 0.42, y + h * 0.42, w * 0.84, h * 0.12);
-    c.fillStyle = '#D4A84A'; c.fillRect(x - w * 0.3, y, w * 0.6, h * 0.05);
-  }
-  c.fillStyle = '#E8C26A'; c.font = `700 ${ph * 0.1}px sans-serif`; c.textAlign = 'center'; c.textBaseline = 'top'; c.fillText(s ? '石湾陶塑' : '广彩瓷器 · 石湾陶塑', pw / 2, ph * 0.03);
+  c.strokeStyle = 'rgba(212,168,74,0.55)'; c.lineWidth = Math.max(2, ph * 0.015); c.strokeRect(ph * 0.04, ph * 0.04, pw - ph * 0.08, ph - ph * 0.08);
 }
 
 export class ClanInterior {
@@ -68,6 +63,7 @@ export class ClanInterior {
     // 图集里每种花样只画一次，多处复用（屏门 / 雕梁）
     const uvScreen = atlas.draw(1, 4, (c, pw, ph) => paintScreen(c, pw, ph, 1), 64), uvScreen2 = atlas.draw(1, 4, (c, pw, ph) => paintScreen(c, pw, ph, 2), 64);
     const uvBeam = atlas.draw(16, 0.6, (c, pw, ph) => paintCarving(c, pw, ph, 1), 60), uvBeam2 = atlas.draw(8, 0.3, (c, pw, ph) => paintCarving(c, pw, ph, 4), 60);
+    const uvScreenL = atlas.draw(1, 4, (c, pw, ph) => paintScreen(c, pw, ph, 3, true), 48), uvGua = atlas.draw(8, 0.3, (c, pw, ph) => paintCarving(c, pw, ph, 4, true), 60);
     const Q = (x, y, z, w, h, a, uv) => atlas.quad(x, y, z, w, h, a, uv);
     // 地面：大块花岗石
     for (let x = -W; x < W; x += 1.2) for (let z = 0; z < D; z += 1.2) P.slab(X(x), X(Math.min(W, x + 1.2)), -0.1, 0, z, Math.min(D, z + 1.2), ((x / 1.2 + z / 1.2) | 0) % 2 ? C.floor : C.floor2, { ao: false });
@@ -97,7 +93,7 @@ export class ClanInterior {
       for (const [xa, xb] of [[-W, -6.2], [-6.2, -2.0], [-2.0, 2.0], [2.0, 6.2], [6.2, W]]) {
         const w = xb - xa - 0.5, xm = (xa + xb) / 2;
         P.slab(X(xm - w / 2), X(xm + w / 2), 4.48, 4.56, z - 0.06, z + 0.06, C.wood, { ao: false });
-        Q(X(xm), 4.78, z - 0.07, w, 0.42, Math.PI, uvBeam2); Q(X(xm), 4.78, z + 0.07, w, 0.42, 0, uvBeam2);
+        Q(X(xm), 4.78, z - 0.07, w, 0.42, Math.PI, uvGua); Q(X(xm), 4.78, z + 0.07, w, 0.42, 0, uvGua);
       }
     }
     for (let z = -0.2; z <= D + 0.2; z += 0.8) P.slab(X(-W), X(W), 6.9 + 0.4 * Math.sin(Math.PI * z / D), 7.02 + 0.4 * Math.sin(Math.PI * z / D), z - 0.06, z + 0.06, C.wood2, { ao: false });
@@ -120,7 +116,7 @@ export class ClanInterior {
     for (const s of [-1, 1]) { wall(s * W - (s > 0 ? 0 : 0.4), s * W + (s > 0 ? 0.4 : 0), 0, 5.2, D, TZ); for (let z = D + 1.5; z < TZ - 0.5; z += 2.2) P.cyl(X(s * (W - 1.4)), 1.9, z, 0.3, 3.8, C.wood, 8); P.slab(X(s > 0 ? W - 2.0 : -W), X(s > 0 ? W : -W + 2.0), 3.8, 4.0, D, TZ, C.wood2, { ao: false }); }
     wall(-W, W, 0, 0.6, TZ, TZ + 0.6, C.granite);   // 聚贤堂台基（挡住）
     P.slab(X(-W), X(W), 0.6, 6.4, TZ + 0.6, TZ + 0.9, C.wood2, { ao: false }); k.colSlab(X(-W), X(W), 0, 6.4, TZ + 0.3, TZ + 0.9);
-    for (let i = 0; i < 10; i++) { const x = -W + 0.85 + i * (2 * W - 1.7) / 9; Q(X(x), 3.2, TZ + 0.58, 1.5, 5.0, Math.PI, i % 2 ? uvScreen : uvScreen2); }
+    for (let i = 0; i < 10; i++) { const x = -W + 0.85 + i * (2 * W - 1.7) / 9; Q(X(x), 3.2, TZ + 0.58, 1.5, 5.0, Math.PI, uvScreenL); }
     P.slab(X(-W - 0.5), X(W + 0.5), 6.4, 6.8, TZ - 0.4, TZ + 1.0, hex('#4E5C51'), { ao: false });
     P.box(X(0), 7.6, TZ + 1.4, 2 * W + 1, 0.2, 3.2, C.tile, 0, -0.55, 0, 1, { ao: false });
     Q(X(0), 9.1, TZ + 2.4, 2 * W - 1, 1.4, Math.PI, atlas.draw(2 * W - 1, 1.4, (c, pw, ph) => paintCeramicRidge(c, pw, ph, 7), 62));
@@ -133,7 +129,11 @@ export class ClanInterior {
     for (const s of [-1, 1]) {
       const x = s * (W - 0.9), z = 5.0;
       P.slab(X(x - 0.6), X(x + 0.6), 0, 0.8, z - 1.2, z + 1.2, C.wood2, { aoTop: true }); k.colSlab(X(x - 0.6), X(x + 0.6), 0, 1.8, z - 1.2, z + 1.2);
-      atlas.sign(X(x + s * 0.56), 1.27, z, 2.3, 0.9, s > 0 ? -Math.PI / 2 : Math.PI / 2, (c, pw, ph) => paintCase(c, pw, ph, s > 0 ? 1 : 0));
+      atlas.sign(X(x + s * 0.56), 1.27, z, 2.3, 0.9, s > 0 ? -Math.PI / 2 : Math.PI / 2, (c, pw, ph) => paintCase(c, pw, ph));
+      // 柜前沿的小铜牌（面向大厅中间）
+      atlas.sign(X(x - s * 0.62), 0.6, z, 1.5, 0.26, s > 0 ? -Math.PI / 2 : Math.PI / 2, (c, pw, ph) => {
+        c.fillStyle = '#B08A4A'; c.fillRect(0, 0, pw, ph); c.fillStyle = '#2A1810'; c.fillRect(ph * 0.08, ph * 0.08, pw - ph * 0.16, ph - ph * 0.16);
+        c.fillStyle = '#E8C26A'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `700 ${ph * 0.5}px sans-serif`; c.fillText(s > 0 ? '石湾陶塑' : '广彩瓷器 · 石湾陶塑', pw / 2, ph * 0.54); });
       // 玻璃：几乎透明（单独的 glass@case 材质，finish 后调 alpha），细铜框；顶上深木盖板 + 下面暖色小射灯
       const Gc = k.g('glass@case'), F = hex('#B08A4A'), y0 = 0.8, y1 = 1.75;
       Gc.slab(X(x - 0.6), X(x + 0.6), y0, y1, z - 1.2, z + 1.2, C.glass);
