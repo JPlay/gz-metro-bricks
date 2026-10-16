@@ -2560,5 +2560,23 @@
     "style": "cosy",
     "model": "cosyvoice-v2",
     "voice": "longxiaobai_v2"
+  },
+  "voice.visit.jnt.yue": {
+    "fp": "748345576c8239ff063abae0e30fb8c59c934bb41a0392eb72abea05f639e889",
+    "style": "cosy",
+    "model": "cosyvoice-v3-flash",
+    "voice": "longjiayi_v3"
+  },
+  "voice.visit.jnt.zh": {
+    "fp": "9a1dadc0a7d3e7de8db864847da38c28159f2da33339230b915f5ae308e22994",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.visit.jnt.en": {
+    "fp": "365a866534782b561388a1b4c062bb2bfb4192a66897b75f52fcfc9a42d27199",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
   }
 }

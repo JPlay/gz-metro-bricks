@@ -4,6 +4,7 @@
  * 新增车站 / 2 号线方向沿用同一句式，暂无 MP3 时由 Web Speech 按 text 朗读（见 js/audio/audio.js）。
  */
 import { LINES, STATIONS, OTHER_LINES, isTerminal, transfersAt } from './lines.js';
+import { VISITS, visitTexts } from './visits.js';
 
 export const LANGS = ['zh', 'yue', 'en'];
 const LEGACY = new Set(['gyq', 'njs', 'lsly', 'dsk']);
@@ -22,16 +23,9 @@ function stationTexts(code, line) {
   return { zh: s.zh, en: s.en, xs };
 }
 /** 下一站（不含终点方向） */
-/** 景点提示：前往中山纪念堂的乘客，请在纪念堂站下车（2 号线纪念堂站的“下一站”和“到站”都会接这一句） */
-export const ATTRACTION = { jnt: ['前往中山纪念堂的乘客，请在纪念堂站下车。', '前往中山纪念堂嘅乘客，请喺纪念堂站落车。', 'Passengers for the Sun Yat-sen Memorial Hall, please get off at Jiniantang station.'] };
-export const attractionSegs = code => ATTRACTION[code] ? seg('attraction.' + code, ATTRACTION[code]) : [];
-/** 到站时（车门开之前）：景点从哪个出口出站 */
-export const ATTRACTION_EXIT = { jnt: ['前往中山纪念堂的乘客，请从C出口出站。', '前往中山纪念堂嘅乘客，请喺C出口出站。', 'Passengers for the Sun Yat-sen Memorial Hall, please leave the station by Exit C.'] };
-export const attractionExitSegs = code => ATTRACTION_EXIT[code] ? seg('attraction-exit.' + code, ATTRACTION_EXIT[code]) : [];
-/** 出站后一句轻提示（只用普通话，短） */
-export const HINTS = { 'sysy.street': ['出站往左走，沿着马路走到中山纪念堂的大门。', null, null] };
-export const hintSegs = k => HINTS[k] ? seg('hint.' + k, HINTS[k]) : [];
-export function nextSegs(line, code) { return [...nextSegs0(line, code), ...attractionSegs(code)]; }
+/** 景点：下一站报站后接一句“X 站附近有……，欢迎下车游玩，请从 C 出口出站”（js/data/visits.js） */
+export const visitSegs = code => { const s = STATIONS[code], t = s && visitTexts(code, zhStn(s.zh), enStn(s)); return t ? seg('visit.' + code, t) : []; };
+export function nextSegs(line, code) { return [...nextSegs0(line, code), ...visitSegs(code)]; }
 function nextSegs0(line, code) {
   if (code === 'gyq') return [...seg('next.gyq', ['下一站，公园前。', '下一站，公园前。', 'The next station is Gongyuanqian.']),
     ...(line === 1 ? seg('transfer.gyq', ['请从列车前进方向的右门下车，中部楼梯换乘二号线。', '请由列车前进方向的右门落车，中部楼梯换乘二号线。', 'Please exit the train to the right. To transfer to Line Two, please take the stairs in the middle of the platform.'])
@@ -54,11 +48,11 @@ export function terminalSegs(line, dir) {
 /** 列车开出后：（首程带终点方向）+ 下一站 / 终点站 */
 export function departSegs(line, nextCode, dir, step, withDestination) {
   const head = withDestination ? destinationSegs(line, dir) : [];
-  return isTerminal(line, nextCode, step) ? [...head, ...terminalSegs(line, dir)] : [...head, ...nextSegs(line, nextCode)];
+  return isTerminal(line, nextCode, step) ? [...head, ...terminalSegs(line, dir), ...visitSegs(nextCode)] : [...head, ...nextSegs(line, nextCode)];
 }
 export function arriveSegs(code) {
   const s = STATIONS[code];
-  return [...seg('arrive.' + code, [`列车即将到达${zhStn(s.zh)}，请小心列车与站台之间的空隙。`, `列车即将到达${zhStn(s.zh)}，请小心列车同站台之间的空隙。`, `The train is arriving at ${s.en}. Please mind the gap between the train and the platform.`]), ...attractionExitSegs(code)];
+  return [...seg('arrive.' + code, [`列车即将到达${zhStn(s.zh)}，请小心列车与站台之间的空隙。`, `列车即将到达${zhStn(s.zh)}，请小心列车同站台之间的空隙。`, `The train is arriving at ${s.en}. Please mind the gap between the train and the platform.`])];
 }
 export function welcomeSegs(code) {
   const s = STATIONS[code];
@@ -84,9 +78,9 @@ export function allJobs() {
   for (const [id, L] of Object.entries(LINES)) {
     const line = +id;
     for (const dir of Object.keys(L.dirs)) { add(destinationSegs(line, dir)); add(terminalSegs(line, dir)); add(platformSegs(line, dir, 1)); add(platformSegs(line, dir, 2)); }
-    L.stations.forEach((c, i) => { if (i > 0 && i < L.stations.length - 1) add(nextSegs(line, c)); add(arriveSegs(c)); add(welcomeSegs(c)); });
+    L.stations.forEach((c, i) => { if (i > 0 && i < L.stations.length - 1) add(nextSegs(line, c)); add(arriveSegs(c)); add(welcomeSegs(c)); add(visitSegs(c)); });
   }
-  add(doorsClosingSegs()); add(gapSegs()); Object.keys(HINTS).forEach(k => add(hintSegs(k))); Object.keys(SAFETY).forEach(k => add(safetySegs(k)));
+  add(doorsClosingSegs()); add(gapSegs()); Object.keys(SAFETY).forEach(k => add(safetySegs(k)));
   return [...out.values()].map(s => ({ ...s, file: 'voice/' + s.id.slice(6).replace(/\./g, '-') + '.mp3' }));
 }
 export { LEGACY };

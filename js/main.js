@@ -20,7 +20,7 @@ import { mats } from './core/mats.js';
 import { Render } from './core/render.js';
 import { STATIONS, LINES, nextStation } from './data/lines.js';
 import { networkSVG, panZoom } from './ui/netmap.js';
-import { Mission, GOAL } from './game/mission.js';
+import { Discovery } from './game/discovery.js';
 import { installBrother } from './game/brother-main.js';
 const B = window.BABYLON;
 
@@ -69,7 +69,7 @@ export async function start() {
     get zone() { return G.zone; }
   });
   seats.metro = metro;
-  const mission = new Mission({ hud, Audio, player, tickets, events });
+  const discovery = new Discovery({ Audio, player, events });
   const social = new Social({ scene, player, bubbles, Audio, events, getStation: () => G.station, getCode: () => G.code, getMetro: () => metro });
   metro.trains.forEach(t => t.shadowMeshes.forEach(m => R.addShadowCaster(m)));
   scene.fogColor = new B.Color3(0.08, 0.09, 0.11); scene.fogStart = 25; scene.fogEnd = 85;
@@ -113,7 +113,7 @@ export async function start() {
   const mapEl = document.getElementById('netmap');
   // 竖屏用竖版布局（铺满宽度）；地图里可以双指缩放、单指拖动，双击还原
   const mapBox = mapEl.querySelector('.mapbox'), mapPZ = panZoom(mapBox);
-  const drawMap = () => { G.mapPortrait = innerHeight > innerWidth; mapBox.innerHTML = networkSVG(G.code, { portrait: G.mapPortrait, dest: GOAL.code }); mapPZ.reset(); };
+  const drawMap = () => { G.mapPortrait = innerHeight > innerWidth; mapBox.innerHTML = networkSVG(G.code, { portrait: G.mapPortrait }); mapPZ.reset(); };
   const openMap = () => { drawMap(); mapEl.classList.remove('out'); mapEl.hidden = false; G.mapOpen = true; Audio.blip && Audio.blip('tap'); };
   window.addEventListener('resize', () => { if (G.mapOpen && G.mapPortrait !== (innerHeight > innerWidth)) drawMap(); });
   const closeMap = () => { if (!G.mapOpen) return; G.mapOpen = false; mapEl.classList.add('out'); setTimeout(() => { if (!G.mapOpen) mapEl.hidden = true; }, 200); };
@@ -149,7 +149,8 @@ export async function start() {
     if (G.auto) {
       const a = G.auto, t = a.pts[a.i], p = player.position, dx = t[0] - p.x, dz = t[1] - p.z, d = Math.hypot(dx, dz);
       a.time += dt;
-      if (d < 0.35) { a.i++; a.time = 0; if (a.i >= a.pts.length) { input.virtual = null; G.auto = null; a.resolve({ ok: true }); } }
+      if (player.frame) { input.virtual = null; G.auto = null; a.resolve({ ok: true, framed: true }); }  // 到达机位接管镜头时停下
+      else if (d < 0.35) { a.i++; a.time = 0; if (a.i >= a.pts.length) { input.virtual = null; G.auto = null; a.resolve({ ok: true }); } }
       else if (a.time > 12) { input.virtual = null; G.auto = null; a.resolve({ ok: false, stuckAt: [p.x, p.y, p.z], target: t }); }
       else { player.yaw = Math.atan2(dx, dz); input.virtual = { x: 0, y: d < 1 ? 0.5 : 1, run: !!a.run && d > 2 }; }
     }
@@ -179,7 +180,7 @@ export async function start() {
     const rl = metro.ride && metro.ride.train && G.aboard ? metro.ride : null;
     const line = rl ? rl.line : (G.zone.kind === 'platform' ? G.zone.P.line : STATIONS[G.code].lines[0]);
     hud.where(G.code, line, rl && rl.phase === 'cruise' ? rl.next : null);
-    mission.update({ code: G.code, zone: G.zone, aboard: G.aboard, ride: rl, station: G.station, dt });
+    discovery.update({ code: G.code, zone: G.zone, station: G.station, dt });
     // 脚步声
     if (player.grounded && player.speed > 0.5 && !G.aboard) { stepAcc += player.speed * dt; if (stepAcc > 0.75) { stepAcc = 0; Audio.footstep(); } }
     if (player.landed) { player.landed = false; Audio.sfx('footstep', { volume: 0.6, rate: 0.8 }); }
@@ -237,7 +238,7 @@ export async function start() {
       babylon: { version: B.Engine.Version, source: window.__babylonSource, attempts: window.__babylonAttempts },
       drawCalls: (engine._drawCalls && engine._drawCalls.current) ?? null, activeMeshes: scene.getActiveMeshes().length, depthBits: depthBits(), minZ: cam.minZ, gates: G.station.gates.map(g => +g.f.toFixed(2)),
       security: G.station.security.flash > 0, probes: R.probes.length, atlas: G.station.kit.atlas ? { y: G.station.kit.atlas.y + G.station.kit.atlas.row, overflow: G.station.kit.atlas.overflow } : null, audio: Audio.getState(),
-      ticket: tickets.info(), seat: seats.info(), social: social.info(), mission: mission.info(), hall: G.station && G.station.interior ? G.station.interior.info() : null, mapOpen: !!G.mapOpen, act: hud.act ? { id: hud.act.id, label: hud.act.label } : null
+      ticket: tickets.info(), seat: seats.info(), social: social.info(), discover: discovery.info(), hall: G.station && G.station.interior ? G.station.interior.info() : null, mapOpen: !!G.mapOpen, act: hud.act ? { id: hud.act.id, label: hud.act.label } : null
     }),
     teleport: (x, y, z, yaw) => player.spawn(x, y, z, yaw ?? player.yaw),
     setMove: (x, y, run) => { input.virtual = (x || y) ? { x, y, run } : null; },
@@ -246,6 +247,6 @@ export async function start() {
     autopilot: (pts, run) => new Promise(resolve => { G.auto = { pts, i: 0, time: 0, resolve, run }; }),
     call: (line, step) => metro.call(line, step), openMap, closeMap, mapZoom: mapPZ,
     // 测试：软件渲染只有几帧每秒，放宽单帧步长上限让游戏时间接近墙钟（默认 0.05）
-    setDtMax: v => { G.dtMax = v; }, act: doAct, brother, tickets, seats, social, mission, bubbles, metro, player, scene, engine, events, render: R, get station() { return G.station; }
+    setDtMax: v => { G.dtMax = v; }, act: doAct, brother, tickets, seats, social, discovery, bubbles, metro, player, scene, engine, events, render: R, get station() { return G.station; }
   };
 }

@@ -381,18 +381,6 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #1d2b3a; fon
 @media (orientation: portrait) { #askway .sheet { width: 98vw; padding: 10px 8px 8px; } }
 
 /* 小任务：去中山纪念堂（左上角任务卡 + 到达卡） */
-#goal { position: absolute; left: calc(14px + env(safe-area-inset-left)); top: calc(102px + env(safe-area-inset-top)); display: flex; align-items: center; gap: 12px; padding: 9px 20px 9px 9px; border-radius: 20px; max-width: 470px; }
-#next:not([hidden]) ~ #goal { top: calc(170px + env(safe-area-inset-top)); }
-#goal canvas { flex: none; width: 52px; height: 52px; border-radius: 12px; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.12); }
-#goal .t { display: flex; flex-direction: column; min-width: 0; line-height: 1.2; }
-#goal b { font-size: 24px; font-weight: 800; color: #1F5BB0; letter-spacing: 1px; }
-#goal b::before { content: '🎯 '; }
-#goal .step { font-size: 21px; font-weight: 700; color: #15191f; }
-#goal { transition: opacity .5s ease, transform .5s ease; }
-#goal.gone { opacity: 0; transform: translateY(-12px); pointer-events: none; }
-#goal.bump { animation: gpop .4s cubic-bezier(.2,.9,.3,1.3); }
-#goal.done b::before { content: '🎉 '; }
-#goal.done { background: rgba(255,233,150,.92); }
 #goalCard { position: fixed; inset: 0; z-index: 7; display: flex; align-items: center; justify-content: center; background: rgba(10,20,40,.28); pointer-events: auto; animation: fade-in .25s ease-out; }
 #goalCard.out { animation: gfade .22s ease-in forwards; }
 #goalCard .sheet { position: relative; width: min(560px, 90vw); padding: 26px 30px 24px; border-radius: 32px; text-align: center; animation: gpop .45s cubic-bezier(.2,.9,.3,1.35); background: rgba(255,255,255,.94); }
@@ -415,6 +403,5 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #1d2b3a; fon
 #goalCard .burst i:nth-child(8) { --dx: 168px; --dy: -96px; }
 @keyframes burst { from { transform: translate(0,0) rotate(0); opacity: 1; } to { transform: translate(var(--dx), var(--dy)) rotate(260deg); opacity: 0; } }
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
-@media (orientation: portrait) { #goal { max-width: calc(100vw - 30px); } #goal b { font-size: 21px; } #goal .step { font-size: 19px; } }
 @keyframes gpop { from { transform: scale(.86); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 @keyframes gfade { to { opacity: 0; } }

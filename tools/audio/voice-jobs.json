@@ -1800,22 +1800,22 @@
   "file": "voice/next-jnt-en.mp3"
  },
  {
-  "id": "voice.attraction.jnt.zh",
+  "id": "voice.visit.jnt.zh",
   "lang": "zh",
-  "text": "前往中山纪念堂的乘客，请在纪念堂站下车。",
-  "file": "voice/attraction-jnt-zh.mp3"
+  "text": "纪念堂站附近有中山纪念堂，欢迎下车游玩，请从C出口出站。",
+  "file": "voice/visit-jnt-zh.mp3"
  },
  {
-  "id": "voice.attraction.jnt.yue",
+  "id": "voice.visit.jnt.yue",
   "lang": "yue",
-  "text": "前往中山纪念堂嘅乘客，请喺纪念堂站落车。",
-  "file": "voice/attraction-jnt-yue.mp3"
+  "text": "纪念堂站附近有中山纪念堂，欢迎落车游玩，请喺C出口出站。",
+  "file": "voice/visit-jnt-yue.mp3"
  },
  {
-  "id": "voice.attraction.jnt.en",
+  "id": "voice.visit.jnt.en",
   "lang": "en",
-  "text": "Passengers for the Sun Yat-sen Memorial Hall, please get off at Jiniantang station.",
-  "file": "voice/attraction-jnt-en.mp3"
+  "text": "Jiniantang station is near the Sun Yat-sen Memorial Hall. You are welcome to get off and visit. Please use Exit C.",
+  "file": "voice/visit-jnt-en.mp3"
  },
  {
   "id": "voice.arrive.jnt.zh",
@@ -1834,24 +1834,6 @@
   "lang": "en",
   "text": "The train is arriving at Jiniantang. Please mind the gap between the train and the platform.",
   "file": "voice/arrive-jnt-en.mp3"
- },
- {
-  "id": "voice.attraction-exit.jnt.zh",
-  "lang": "zh",
-  "text": "前往中山纪念堂的乘客，请从C出口出站。",
-  "file": "voice/attraction-exit-jnt-zh.mp3"
- },
- {
-  "id": "voice.attraction-exit.jnt.yue",
-  "lang": "yue",
-  "text": "前往中山纪念堂嘅乘客，请喺C出口出站。",
-  "file": "voice/attraction-exit-jnt-yue.mp3"
- },
- {
-  "id": "voice.attraction-exit.jnt.en",
-  "lang": "en",
-  "text": "Passengers for the Sun Yat-sen Memorial Hall, please leave the station by Exit C.",
-  "file": "voice/attraction-exit-jnt-en.mp3"
  },
  {
   "id": "voice.welcome.jnt.zh",
@@ -2428,12 +2410,6 @@
   "lang": "en",
   "text": "Please mind the gap between the train and the platform.",
   "file": "voice/gap-en.mp3"
- },
- {
-  "id": "voice.hint.sysy.street.zh",
-  "lang": "zh",
-  "text": "出站往左走，沿着马路走到中山纪念堂的大门。",
-  "file": "voice/hint-sysy-street-zh.mp3"
  },
  {
   "id": "voice.safety.queue.zh",

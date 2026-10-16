@@ -8,6 +8,7 @@
  */
 import { LINES, STATIONS, OTHER_LINES } from '../data/lines.js';
 import { FONT, FONT_EN, roundRect, drawHallIcon } from './kit.js';
+import { VISITS, visitBanner } from '../data/visits.js';
 
 export const STRIP_W = 2048, STRIP_H = 256, LCD_W = 1024, LCD_H = 384;
 export const HOT = '#FF5A4E';            // 当前 / 下一站（和 HUD、售票机上的“你在这里”同一种红）
@@ -102,8 +103,8 @@ export function drawLcd(c, line, code, step, moving, nextCode) {
   c.font = `800 58px ${FONT}`; c.fillText(tag[0], 56, 74); const tw = c.measureText(tag[0]).width;
   c.font = `700 36px ${FONT_EN}`; c.fillText(tag[1], 56 + tw + 22, 78);
   c.textAlign = 'right'; c.font = `800 44px ${FONT}`; c.fillText(L.zh, W - 56, 74);
-  // 景点站（纪念堂）：站名小一点，下面加一条黄色提示——下一站时“…请在纪念堂站下车”，到站时“…请从 C 出口出站”
-  const A = S.attraction, nameY = A ? 214 : 268, enY = A ? 262 : 338;
+  // 有景点的站：站名小一点，下面加一条黄色提示“本站可前往：中山纪念堂（C 出口）”，与报站“X 站附近有……”同步
+  const A = VISITS[show] ? visitBanner(show) : '', nameY = A ? 214 : 268, enY = A ? 262 : 338;
   // 中间：大号中文站名 + 英文
   const fz = A ? 112 : S.zh.length >= 5 ? 128 : 150;
   c.fillStyle = '#FFFFFF'; c.textAlign = 'center'; c.textBaseline = 'alphabetic'; c.font = `800 ${fz}px ${FONT}`;
@@ -113,7 +114,7 @@ export function drawLcd(c, line, code, step, moving, nextCode) {
   if (A) {
     c.fillStyle = '#FFC72C'; roundRect(c, 30, 282, W - 60, 76, 16); c.fill();
     c.fillStyle = '#1B1D20'; c.textAlign = 'center'; c.textBaseline = 'middle';
-    let fs = 44; const t = moving && nextCode ? `前往${A.zh}的乘客，请在${S.zh}站下车` : `前往${A.zh}的乘客，请从 ${A.exit} 出口出站`; c.font = `800 ${fs}px ${FONT}`; while (c.measureText(t).width > W - 100 && fs > 26) { fs -= 2; c.font = `800 ${fs}px ${FONT}`; }
+    let fs = 44; const t = A; c.font = `800 ${fs}px ${FONT}`; while (c.measureText(t).width > W - 100 && fs > 26) { fs -= 2; c.font = `800 ${fs}px ${FONT}`; }
     c.fillText(t, W / 2, 322); c.textBaseline = 'alphabetic';
   }
 }

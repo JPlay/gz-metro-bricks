@@ -871,20 +871,13 @@ export class Station {
   /** 中山纪念堂导向牌的内容（kind 'hall'：箭头 + 纪念堂小图标 + 大字 + 黄色出口字母） */
   hallSign(arrow, o = {}) { const A = this.s.attraction; return { kind: 'hall', arrow, zh: A.zh, en: A.en, exit: A.exit, ...o }; }
   /**
-   * 纪念堂站 → 中山纪念堂（给 8 岁小朋友，一路跟着绿色引导带 + 白色箭头走）：
-   *   站台（两头 / 西侧走道）→ 楼梯 → 站厅 → 出站闸机 → C 出口通道楼梯 → 街面 → 路口指路牌 → 前广场 → 正门台阶前的金色到达圈。
-   *   导向牌都带纪念堂小图标 + “中山纪念堂 C出口”；色带用 kit 的 band 材质（和换乘引导带同一套防闪烁做法）。
+   * 纪念堂站里真实的“中山纪念堂 C出口”导向牌（带纪念堂小图标）+ 海报；不再有任务 / 地面引导带。
    */
   sysyWayfinding() {
     const k = this.kit, G = k.g('band'), y1 = MAIN.y, y = YC, CY = y + 4.4, GR = '#1FA35B', W = '#FFFFFF', A = this.s.attraction;
     // （r3：去掉地面绿色引导带，改用站内真实导向牌 +“请从 C 出口出站”广播 + 出站后一句提示）
-    // —— 到达圈（金色圆环，贴在广场上）
-    const ring = (cx, cz, r0, r1, yy, col) => { const c = hex(col), n = 40; for (let i = 0; i < n; i++) { const a0 = i / n * Math.PI * 2, a1 = (i + 1) / n * Math.PI * 2, p = (a, r) => [cx + Math.cos(a) * r, yy, cz + Math.sin(a) * r]; G.quad(p(a0, r0), p(a1, r0), p(a1, r1), p(a0, r1), c); G.quad(p(a0, r1), p(a1, r1), p(a1, r0), p(a0, r0), c); } };
+    // 到达区（不画任何标记：走到纪念堂台阶前自然触发“努力！”+ 小知识卡）
     this.goal = { x: HALL_DOOR.x, z: HALL_DOOR.z, zone: HALL_DOOR.zone };
-    ring(this.goal.x, this.goal.z, 1.05, 1.35, 0.056 + 0.03, '#F2C230'); ring(this.goal.x, this.goal.z, 0.55, 0.7, 0.056 + 0.03, '#F2C230');
-    // 漂在到达圈上方的金色菱形（每帧转、上下浮；到达后藏起来）
-    const gem = new Geo(); gem.cyl(0, 0.3, 0, 0.6, 0.6, hex('#FFD34D'), 4, 0, 0, 0, 0.0); gem.cyl(0, -0.25, 0, 0.0001, 0.5, hex('#F2B321'), 4, 0, 0, 0, 0.6);
-    this.goalGem = gem.toMesh('goalGem', this.scene, k.M.glow, k.root); this.goalGem.position.set(this.goal.x, 3.2, this.goal.z); this.goalGem.isPickable = false;
     // —— 导向牌
     const hs = (a, o) => this.hallSign(a, o);
     // 站台两头（下车的人）+ 西侧走道（往东走时正前方）
@@ -930,7 +923,6 @@ export class Station {
     }
     for (const m of this.mv) m.update(dt, cam, this.events, player);
     if (this.park) this.sysyUpdate(dt, player, cam);
-    if (this.goalGem && this.goalGem.isEnabled()) { this.gemT = (this.gemT || 0) + dt; this.goalGem.rotation.y = this.gemT * 1.6; this.goalGem.position.y = 3.2 + Math.sin(this.gemT * 2.2) * 0.25; }
     this.crowd.update(dt, p);
     for (const pd of this.pids) { pd.t -= dt; if (pd.t <= 0) { pd.t = 1; this.drawPids(pd, metro); } }
   }
