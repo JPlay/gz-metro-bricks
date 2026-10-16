@@ -33,7 +33,7 @@ export class Player {
   /** 坐下：seat = 列车座位（局部 x、侧 sd）。髋部对齐座垫，与烘焙乘客同一公式：脚底 y = 0.55 − 髋高 */
   sit(train, seat) {
     this.seat = { train, seat }; this.vel.set(0, 0, 0); this.vy = 0; this.speed = 0;
-    this.facing = seat.world ? seat.face : seat.sd > 0 ? Math.PI : 0; this.yaw = this.facing; this.pitch = this.view === 'first' ? 0.02 : 0.12;
+    this.facing = seat.world ? seat.face : seat.sd > 0 ? Math.PI : 0; this.yaw = this.facing; this.pitch = this.view === 'first' ? 0.02 : seat.world ? 0.5 : 0.12;   // 大会堂座位：镜头抬高越过前排椅背，看到主角和舞台
     this.placeSeat();
   }
   hipH() { return (this.person.look.kid ? 0.6 : 0.86) * this.person.look.scale; }
@@ -57,7 +57,7 @@ export class Player {
     const look = 0.0048; this._dt = dt;
     this.yaw += inp.lx * look; this.pitch += inp.ly * look * 0.85;
     // 第三人称俯仰夹在舒适跟随时：最高约 32°，避免被拖成接近垂直的顶视
-    const pmin = this.view === 'first' ? -1.35 : -0.35, pmax = this.view === 'first' ? 1.35 : 0.55;
+    const pmin = this.view === 'first' ? -1.35 : -0.35, pmax = this.view === 'first' ? 1.35 : this.seat && this.seat.seat.world ? 0.85 : 0.55;   // 大会堂座位上可以再俯一点，越过前排椅背
     this.pitch = Math.max(pmin, Math.min(pmax, this.pitch));
     if (this.seat) {
       // 坐着：不走、不受重力，每帧贴回座位（列车移动由 Metro 带着走）；跳键 = 起身
@@ -199,8 +199,9 @@ export class Player {
       const F = this.frame;
       if (F) {
         const sy = Math.sin(this.yaw), cy = Math.cos(this.yaw);
-        cam.position.set(p.x - sy * F.dist, p.y + F.h, p.z - cy * F.dist);
-        const lx = p.x + sy * F.ahead, lz = p.z + cy * F.ahead, ly = p.y + F.lookY;
+        if (F.at) cam.position.set(F.at.x, p.y + F.h, F.at.z); else cam.position.set(p.x - sy * F.dist, p.y + F.h, p.z - cy * F.dist);
+        const lx = F.look ? F.look.x : p.x + sy * F.ahead, lz = F.look ? F.look.z : p.z + cy * F.ahead, ly = p.y + F.lookY;
+        if (F.look) this.yaw = Math.atan2(lx - cam.position.x, lz - cam.position.z);
         this.aimPitch = Math.atan2(cam.position.y - ly, Math.hypot(lx - cam.position.x, lz - cam.position.z));
         if (this._heroFade !== 1) { this._heroFade = 1; this.model.setEnabled(true); for (const m of [this.model, ...this.model.getChildMeshes()]) m.visibility = 1; }
       }

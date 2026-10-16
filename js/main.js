@@ -177,7 +177,12 @@ export async function start() {
     // 坐车到站、走出车厢 → 主角庆祝一下（两只拳头举起“努力！”）
     if (G.wasAboard && !G.aboard && G.arrived) { G.arrived = false; player.celebrate(); }
     G.wasAboard = G.aboard;
-    Audio.setZone(G.aboard ? 'train' : ({ street: 'street', platform: 'platform' }[G.zone.kind] || 'concourse'));
+    // 纪念堂大会堂 / 店里：没有车站环境声（广播本身由下面“出了车站”那行停掉）
+    const inHall = G.zone.kind === 'hall';
+    // 一上车：站台上的进站 / 欢迎 / 安全广播不再继续在车厢里响
+    if (G.aboard && !G.annAboard) Audio.cancelKeys(['platform', 'welcome', 'safety']);
+    G.annAboard = G.aboard;
+    Audio.setZone(inHall ? 'none' : G.aboard ? 'train' : ({ street: 'street', platform: 'platform' }[G.zone.kind] || 'concourse'));
     if (G.zone.kind === 'platform' && !G.welcomed && !G.aboard) { G.welcomed = true; if (!Audio.isAnnouncing()) Ann.welcome(G.code); }
     // 出了车站（街面 / 纪念堂大会堂）：站内广播（欢迎 / 进站 / 关门）和字幕立刻停，不再跟着人走到街上
     if ((G.zone.kind === 'street' || G.zone.kind === 'hall') && !G.aboard && Audio.isAnnouncing()) Audio.cancelAnnouncements();

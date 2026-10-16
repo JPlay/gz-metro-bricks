@@ -168,7 +168,19 @@ function grounds(k) {
   lawn(PARK.x0 + 5, X0 - 31, -1.4, PARK.z1 - 5); lawn(X0 + 31, PARK.x1 - 5, -1.4, PARK.z1 - 5);
   lawn(X0 - 24, X0 + 24, Z0 + 31, PARK.z1 - 5);
   // 草坪边上的小花带（靠大道一侧）
-  for (const sx of [-1, 1]) for (let z = -54.5, i = 0; z < -11.5; z += 1.1, i++) P.sphere(AX + sx * (6.0 + (i % 2 ? 0.16 : -0.16)), 0.36, z, 0.32, hex(i % 3 === 2 ? '#F2B33D' : '#E8443A'), 1);
+  // 大道两边的长条花坛：花岗岩矮边 + 深色泥土 + 外侧一道修剪整齐的矮绿篱，里面两排小花（红 / 黄 / 粉一段一段换色）
+  const FL = ['#E8443A', '#F2B33D', '#EF6FA0', '#E8443A', '#FFFFFF'];
+  for (const sx of [-1, 1]) {
+    const xi = AX + sx * 5.35, xo = AX + sx * 6.9, xa = Math.min(xi, xo), xb = Math.max(xi, xo), z0 = -54.6, z1 = -11.4;
+    Pv.slab(xa - 0.12, xb + 0.12, 0, 0.32, z0 - 0.12, z1 + 0.12, C.granite, { ao: true });
+    P.slab(xa, xb, 0.32, 0.36, z0, z1, hex('#5B4632'), { ao: false });
+    k.colSlab(xa - 0.12, xb + 0.12, 0, 0.72, z0 - 0.12, z1 + 0.12);
+    P.slab(sx > 0 ? xb - 0.42 : xa, sx > 0 ? xb : xa + 0.42, 0.36, 0.72, z0, z1, hex('#3E7A3C'), { ao: true });
+    for (let z = z0 + 0.3, i = 0; z < z1 - 0.2; z += 0.42, i++) {
+      const c = hex(FL[Math.floor(i / 6) % FL.length]);
+      for (const [o, dz] of [[0.35, 0], [0.8, 0.21]]) P.box(xi + sx * o, 0.47, z + dz, 0.26, 0.2, 0.26, c, 0, 0.6, 0, 1, { ao: false });
+    }
+  }
   // 榕树 / 白兰（低面数），沿围栏内侧和纪念堂两侧
   const trees = [];
   for (let z = -50; z <= 58; z += 12) trees.push([PARK.x0 + 3.2, z, 1.25], [PARK.x1 - 3.2, z + 6, 1.25]);

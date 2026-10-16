@@ -167,7 +167,7 @@ function stopBeds() {
   Object.keys(loops).forEach(n => retire(loops, n, true));
   retired.splice(0).forEach(it => { try { it.source.stop(); } catch (_) {} });
 }
-const ZONE_LEVEL = { street: 0.35, concourse: 0.6, platform: 0.7, train: 0.85 };
+const ZONE_LEVEL = { street: 0.35, concourse: 0.6, platform: 0.7, train: 0.85 };   // 'none'：没有环境声（纪念堂大会堂里）
 function updateZone() {
   if (!canPlay()) return;
   Object.keys(ambient).forEach(n => { if (n !== zone) retire(ambient, n); });
@@ -306,6 +306,19 @@ export function cancelAnnouncements() {
   WebSpeech.cancel();
   if (ctx) resetPA();
   caption(null);
+}
+/** 只取消某几类广播（例如上车后站台的进站 / 欢迎广播不该继续在车厢里响）；其余排队的照常播 */
+export function cancelKeys(keys) {
+  const ks = new Set(keys), keep = [];
+  queue.splice(0).forEach(q => { if (ks.has(q.key)) q.resolve({ cancelled: true }); else keep.push(q); });
+  if (current && ks.has(current.key)) {
+    epoch++;
+    active.slice().forEach(a => { if (a.kind === 'voice') { try { a.source.stop(); } catch (_) {} a.finish(); } });
+    if (sleepToken && sleepToken.cancel) sleepToken.cancel();
+    WebSpeech.cancel(); if (ctx) resetPA(); caption(null);
+  }
+  keep.forEach(q => { q.epoch = epoch; queue.push(q); });
+  if (keep.length) pump();
 }
 export function isAnnouncing() { return pumping || queue.length > 0; }
 

@@ -17,6 +17,15 @@ Q=sys.argv[3] if len(sys.argv)>3 else '1'
 # 预算 = 现有站厅（公园前站厅闸机机位，a904278，q=1，同一测法）的最大值
 BUDGET={'draws':66,'tris':186754}
 R={'perf':{}}
+
+BTNS_JS = """(()=>{const vw=innerWidth,vh=innerHeight,out=[];
+for(const b of document.querySelectorAll('#hud button, #btns > *')){if(b.hidden||b.offsetParent===null)continue;const r=b.getBoundingClientRect();if(r.width<2)continue;
+out.push({id:b.id||b.className,lbl:(b.querySelector('.lbl')||b).textContent.trim(),x:r.left,y:r.top,w:r.width,h:r.height});}
+const bad=[];for(const a of out){if(a.x<0||a.y<0||a.x+a.w>vw+0.5||a.y+a.h>vh+0.5)bad.push('off:'+a.id);}
+for(let i=0;i<out.length;i++)for(let j=i+1;j<out.length;j++){const a=out[i],b=out[j];const ox=Math.min(a.x+a.w,b.x+b.w)-Math.max(a.x,b.x),oy=Math.min(a.y+a.h,b.y+b.h)-Math.max(a.y,b.y);if(ox>1&&oy>1)bad.push('overlap:'+a.id+'/'+b.id);}
+return {list:out.map(b=>b.id+':'+b.lbl),bad};})()"""
+async def btns(pg): return await pg.evaluate(BTNS_JS)
+
 async def view(pg, v):
     if await pg.evaluate('__game.player.view')!=v: await pg.evaluate('__game.toggleView()')
 async def shot(pg, name, settle=1.2):
@@ -99,14 +108,15 @@ async def main():
     # 坐下（后排一个空座，用原来的“坐下”按钮）
     sx=await pg.evaluate("(()=>{const s=__game.station.interior.seats.find(s=>s.wy==0&&s.wz<0&&Math.abs(s.wx-600)>3&&Math.abs(s.wx-600)<5);return [s.wx,s.wz,s.face]})()")
     await pose(pg, sx[0]+0.3*math.sin(sx[2]),0.05, sx[1]+0.3*math.cos(sx[2]), sx[2], 0.1)
-    R['actSit']=(await st(pg))['act']; await pg.evaluate('__game.act()'); await asyncio.sleep(0.8)
-    R['seat']=(await st(pg))['seat']; await shot(pg,'07-seated',0.8)
+    await wait(pg, "!!__game.state().act", 5)
+    R['actSit']=(await st(pg))['act']; R['btnSit']=await btns(pg); await pg.evaluate('__game.act()'); await wait(pg, "!!__game.state().seat.seated", 5); await asyncio.sleep(0.8)
+    R['seat']=(await st(pg))['seat']; R['btnSeated']=await btns(pg); await shot(pg,'07-seated',0.8)
     await pg.evaluate('__game.act()'); await asyncio.sleep(0.5); R['stood']=not (await st(pg))['seat'].get('seated')
     # 9. 走楼梯上二楼楼座（西侧楼梯 → 桥 → 楼座门 → 走道），第一人称往下看
     await pose(pg,600,0.05,-20.5,-math.pi/2,0,'third',0.6)
-    R['stairs']=await auto(pg, [[597.4,-20.5],[589.4,-20.5],[588.9,-18.0],[600,-17.9],[600,-16.2],[600,-12.6]])
+    R['stairs']=await auto(pg, [[597.4,-20.5],[589.4,-20.5],[588.9,-18.0],[600,-17.9],[600,-16.2],[600,-12.45]])
     s=await st(pg); R['balcony']=s['pos']
-    await view(pg,'first'); await look(pg,0,0.32); await shot(pg,'08-balcony-down',1.2)
+    await view(pg,'first'); await look(pg,0,0.5); await shot(pg,'08-balcony-down',1.2)
     # 10. 出门回街面
     await pose(pg,600,0.05,-21.5,math.pi,0,'third',0.5)
     await pg.evaluate('__game.setMove(0,1)'); await wait(pg, "__game.state().zone!='hall'", 6); await pg.evaluate('__game.setMove(0,0)')
@@ -118,8 +128,10 @@ async def main():
     ok=R['noChip'] and R['noMapDest'] and R['board'] and R['arriving'] and R['noPlatformAnnInCar'] and len(R['visitAnn'])>=3 and R['offAt'][0]=='jnt' and not R['offAt'][2] \
        and R['street'][0]=='street' and R['noStreetHint'] and R['arrived'] and R['framed'] and R['cheer'] and R['cardSoon'] and R['cardClosed'] \
        and R['entered'] and (R['seat'] or {}).get('hall') and R['stood'] and R['balcony'][1]>4 and R['out'][0]!='hall' \
+       and 'bAct:坐下' in R['btnSit']['list'] and 'bAct:起身' in R['btnSeated']['list'] and not any('点菜' in x for x in R['btnSeated']['list']) \
+       and not R['btnSit']['bad'] and not R['btnSeated']['bad'] \
        and not R['overBudget'] and not R['errors']
     print('SYSY', 'PASS' if ok else 'FAIL', flush=True)
     await b.close()
     if not ok: sys.exit(1)
-asyncio.run(main())
+if __name__ == "__main__": asyncio.run(main())

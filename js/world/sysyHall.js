@@ -101,8 +101,8 @@ export class HallInterior {
       flat(BAL.d0, BAL.front, BAL.y); flat(BAL.d1, BAL.wall + 0.3, BAL.top);
       { const dz = BAL.d1 - BAL.front, dy = BAL.top - BAL.y, L = Math.hypot(dz, dy), a = Math.atan2(dy, dz), t = 0.3, dm = (BAL.front + BAL.d1) / 2, ym = (BAL.y + BAL.top) / 2;
         const [cx, cz] = pt(th, dm + Math.sin(a) * t / 2, 0); k.col(O + cx, ym - Math.cos(a) * t / 2, cz, len(BAL.d1), t, L, { ry, rx: -a }); }
-      // 栏板：红色 + 金色扶手（挡住，不会掉下去）
-      { const [cx, cz] = pt(th, BAL.d0 + 0.1, 0), L = 2 * BAL.d0 * T + 0.2; P.box(O + cx, BAL.y + 0.45, cz, L, 0.9, 0.2, C.red, ry, 0, 0, 1, { ao: false }); P.box(O + cx, BAL.y + 0.93, cz, L + 0.05, 0.08, 0.28, C.gold, ry, 0, 0, 1, { ao: false }); k.col(O + cx, BAL.y + 0.7, cz, L, 1.4, 0.3, { ry });
+      // 栏板：红色 + 金色扶手，0.75m 高（小朋友站在栏板后能看到楼下；碰撞体比栏板高，不会掉下去）
+      { const [cx, cz] = pt(th, BAL.d0 + 0.1, 0), L = 2 * BAL.d0 * T + 0.2; P.box(O + cx, BAL.y + 0.35, cz, L, 0.7, 0.2, C.red, ry, 0, 0, 1, { ao: false }); P.box(O + cx, BAL.y + 0.73, cz, L + 0.05, 0.08, 0.28, C.gold, ry, 0, 0, 1, { ao: false }); k.col(O + cx, BAL.y + 0.7, cz, L, 1.4, 0.3, { ry });
         P.box(O + cx - nx * 0.11, BAL.y - 0.1, cz - nz * 0.11, L, 0.5, 0.03, C.gold, ry, 0, 0, 1, { ao: false }); }
       // 楼座两头（西、东）的栏板
       const endS = Math.abs(th + Math.PI / 4) < 1e-3 ? 1 : (Math.abs(th - 1.25 * Math.PI) < 1e-3 || Math.abs(th + 0.75 * Math.PI) < 1e-3) ? -1 : 0;
@@ -133,7 +133,7 @@ export class HallInterior {
     const g = new Geo(), o = { ao: false };
     g.box(0, 0.24, -0.06, 0.12, 0.48, 0.34, C.dark, 0, 0, 0, 1, o);
     g.box(0, 0.47, 0.02, 0.52, 0.1, 0.46, C.seat, 0, 0, 0, 1, o);
-    g.box(0, 0.82, -0.22, 0.52, 0.66, 0.09, C.seat2, 0, -0.14, 0, 1, o);
+    g.box(0, 0.74, -0.22, 0.52, 0.5, 0.09, C.seat2, 0, -0.14, 0, 1, o);   // 靠背矮一点（顶 ≈ 1.0m）：坐着时身后镜头能看到主角的肩和头
     const mesh = g.toMesh('hallSeats', this.scene, M.paint, this.kit.root);
     const buf = new Float32Array(this.seats.length * 16), m = new B.Matrix(), q = new B.Quaternion(), s = new B.Vector3(1, 1, 1), t = new B.Vector3();
     this.seats.forEach((st, i) => { B.Quaternion.RotationYawPitchRollToRef(st.face, 0, 0, q); t.set(st.wx, st.wy, st.wz); B.Matrix.ComposeToRef(s, q, t, m); m.copyToArray(buf, i * 16); });
