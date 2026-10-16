@@ -30,10 +30,65 @@ const C = {
 };
 
 export function buildNjs(k) {
+  NPCS.length = 0;
   institute(k);
   wenming(k);
   hotel(k);
-  return { institute: NJS, street: WM };
+  return { institute: NJS, street: WM, npcs: NPCS };
+}
+
+/** 文明路上的食客：[x, y, z, ry, mode, look] —— 站台里 station.js 用 Crowd 放 */
+const NPCS = [];
+/** 文明路主角铺：糖水铺（红底金字大招牌、暖光店面、门口玻璃展示柜上摆一碗碗糖水；门前塑料凳 + 矮桌） */
+function heroShop(k, x, zf, zb, n) {
+  const P = k.solid, G = k.glow, face = n > 0 ? 0 : Math.PI, zs = zb + n * 0.02;
+  // 店面：暖光 + 深红门框 + 门
+  G.box(x + 2, 1.5, zs, 3.2, 2.6, 0.04, hex('#FFD9A0')); P.box(x + 2, 2.95, zs + n * 0.03, 3.6, 0.3, 0.06, hex('#8E1E1E'));
+  for (const dx of [0.2, 3.8]) P.box(x + dx, 1.5, zs + n * 0.03, 0.2, 3.0, 0.06, hex('#8E1E1E'));
+  // 大招牌：整开间宽、红底金字（挂在骑楼口，比别家大）
+  const paint = (c, pw, ph) => { c.fillStyle = '#B3171B'; c.fillRect(0, 0, pw, ph); c.strokeStyle = '#F2C45A'; c.lineWidth = ph * 0.06; c.strokeRect(ph * 0.06, ph * 0.06, pw - ph * 0.12, ph - ph * 0.12);
+    const g = c.createLinearGradient(0, 0, 0, ph); g.addColorStop(0, '#FFE9A8'); g.addColorStop(1, '#E0A93A'); c.fillStyle = g; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.font = `900 ${ph * 0.56}px ${FONT}`; c.fillText('老广糖水铺', pw / 2, ph * 0.42); c.font = `700 ${ph * 0.18}px ${FONT}`; c.fillText('双皮奶 · 姜撞奶 · 红豆沙 · 芝麻糊', pw / 2, ph * 0.8); };
+  k.sign(x + 2, 3.05, zf + n * 0.08, { kind: 'custom', key: 'heroTs', paint, w: 3.9, h: 1.05, face });
+  for (const dx of [0.35, 3.65]) G.sphere(x + dx, 2.3, zf + n * 0.3, 0.42, hex('#FF3B30'), 1, 1.25);   // 两个红灯笼
+  // 柱边挑出来的竖招牌（两面都有），沿街老远就能看到
+  P.box(x + 0.25, 3.3, zf + n * 0.55, 0.06, 0.06, 1.1, hex('#2B2B2B'));
+  k.sign(x + 0.25, 2.2, zf + n * 0.75, { kind: 'plain', vert: true, w: 0.62, h: 2.0, bg: '#B3171B', fg: '#F7D27A', zh: '糖水', face: Math.PI / 2, double: true });
+  // 门口玻璃展示柜：木底座 + 玻璃罩，柜面上一排糖水碗
+  const zc = zb + n * 0.55, bowls = ['#FFF6E6', '#7A2E2E', '#2B2B2B', '#F2D16B', '#F5E6C8', '#C65B7C'];
+  P.box(x + 2, 0.45, zc, 2.6, 0.9, 0.7, hex('#6B3A22')); k.col(x + 2, 0.5, zc, 2.6, 1.0, 0.7);
+  k.g('glass').box(x + 2, 1.15, zc, 2.6, 0.5, 0.7, hex('#DDF0F8'));
+  bowls.forEach((col, i) => { const bx = x + 0.95 + i * 0.42; P.cyl(bx, 0.95, zc, 0.2, 0.12, hex('#FFFFFF'), 10, 0, 0, 0, 0.3); P.cyl(bx, 1.015, zc, 0.24, 0.02, hex(col), 10); });
+  k.sign(x + 2, 0.55, zc + n * 0.36, { kind: 'plain', w: 1.8, h: 0.3, bg: '#B3171B', fg: '#FFE7A8', zh: '招牌糖水 ¥12 起', face, align: 'center', box: false });
+  // 街边：两张矮桌 + 塑料凳，桌上有碗；两个人坐着吃，两个人在展示柜前排队
+  const zt = zf + n * 1.7;
+  [[x + 1.0, '#E8443A'], [x + 3.4, '#1F6FB2']].forEach(([tx, sc], ti) => {
+    P.box(tx, 0.28, zt, 0.75, 0.04, 0.75, hex('#F4F1EA')); for (const [a, b] of [[-0.3, -0.3], [0.3, -0.3], [-0.3, 0.3], [0.3, 0.3]]) P.box(tx + a, 0.13, zt + b, 0.04, 0.26, 0.04, hex('#B9C0C8'));
+    k.col(tx, 0.3, zt, 0.75, 0.6, 0.75);
+    for (const s2 of [-1, 1]) { P.cyl(tx + s2 * 0.62, 0.2, zt, 0.34, 0.4, hex(sc), 8, 0, 0, 0, 0.3); }
+    for (const s2 of [-1, 1]) P.cyl(tx + s2 * 0.18, 0.34, zt, 0.14, 0.09, hex('#FFFFFF'), 10, 0, 0, 0, 0.22);
+    NPCS.push({ x: tx - 0.62, seatY: 0.4, z: zt, ry: Math.PI / 2, mode: 'sit', look: ti ? { kid: true, scale: 0.9 } : {} });
+    if (ti === 0) NPCS.push({ x: tx + 0.62, seatY: 0.4, z: zt, ry: -Math.PI / 2, mode: 'sitChat', look: { fem: true } });
+  });
+  NPCS.push({ x: x + 1.6, y: 0, z: zc + n * 0.9, ry: n > 0 ? Math.PI : 0, mode: 'idle', look: { bag: 'shoulder' } });
+  NPCS.push({ x: x + 2.7, y: 0, z: zc + n * 1.6, ry: n > 0 ? Math.PI : 0.2, mode: 'phone', look: { phone: true } });
+}
+/** 街尾正对着街的骑楼：d = 立面朝向（+1 朝 +x） */
+function endQilou(k, x, d, z0, z1) {
+  const P = k.solid, G = k.glow, fx = x + d * 0.5, c = hex('#EED9BE'), white = C.white, H = 11.6;
+  P.slab(x - 0.5, x + 0.5, 0, H, z0, z1, c, { aoTop: true }); k.colSlab(x - 0.5, x + 0.5, 0, H, z0, z1);
+  const w = (z1 - z0) / 3;
+  for (let i = 0; i < 3; i++) {
+    const za = z0 + i * w + 0.35, zb2 = z0 + (i + 1) * w - 0.35;
+    P.slab(Math.min(fx, fx + d * 0.03), Math.max(fx, fx + d * 0.03), 0, 3.0, za, zb2, hex('#5A4636'), { ao: false });   // 拱下的暗廊
+    G.slab(Math.min(fx, fx + d * 0.04), Math.max(fx, fx + d * 0.04), 0.4, 2.4, za + 0.4, zb2 - 0.4, hex('#F7D9A8'));     // 廊里店面的暖光
+    for (let j = 0; j < 8; j++) { const u0 = j / 8, u1 = (j + 1) / 8, um = (u0 + u1) / 2, ya = 3.0 + 0.5 * Math.sqrt(Math.max(0, 1 - (2 * um - 1) ** 2)); P.slab(Math.min(fx, fx + d * 0.05), Math.max(fx, fx + d * 0.05), 2.9, ya + 0.02, za + (zb2 - za) * u0, za + (zb2 - za) * u1, hex('#5A4636'), { ao: false }); }
+    for (let f = 0; f < 2; f++) for (const t of [0.3, 0.7]) { const zm = za + (zb2 - za) * t, y = 5.2 + f * 3.0; P.slab(Math.min(fx, fx + d * 0.06), Math.max(fx, fx + d * 0.06), y - 0.9, y + 0.9, zm - 0.55, zm + 0.55, white, { ao: false }); P.slab(Math.min(fx, fx + d * 0.08), Math.max(fx, fx + d * 0.08), y - 0.75, y + 0.75, zm - 0.4, zm + 0.4, hex(f ? '#4A6E8A' : '#3E7B58'), { ao: false }); }
+  }
+  for (let i = 0; i <= 3; i++) { const zc = z0 + i * w; P.slab(Math.min(fx, fx + d * 0.5), Math.max(fx, fx + d * 0.5), 0, 3.6, zc - 0.3, zc + 0.3, white, { ao: true }); }
+  P.slab(Math.min(fx, fx + d * 0.12), Math.max(fx, fx + d * 0.12), 3.6, 3.85, z0, z1, white, { ao: false });
+  P.box(x + d * 0.6, H + 0.8, (z0 + z1) / 2, 0.3, 1.6, 4.0, c, 0, 0, 0, 1, { ao: false }); P.slab(Math.min(fx, fx + d * 0.15), Math.max(fx, fx + d * 0.15), H - 0.3, H, z0, z1, white, { ao: false });
+  k.sign(fx + d * 0.13, 4.5, (z0 + z1) / 2, { kind: 'plain', w: 4.4, h: 0.7, bg: '#7E2418', fg: '#FFE7A8', zh: '文明路 · 骑楼老街', face: d > 0 ? Math.PI / 2 : -Math.PI / 2, align: 'center', box: false });
 }
 
 /** 农讲所旧址 */
@@ -54,15 +109,18 @@ function institute(k) {
   wall(x0, A - 5, zf - 0.4, zf + 0.4); wall(A + 5, x1, zf - 0.4, zf + 0.4);
   wall(x0 - 0.4, x0 + 0.4, zf, zb); wall(x1 - 0.4, x1 + 0.4, zf, zb); wall(x0, x1, zb - 0.4, zb + 0.4);
   // 棂星门：三间六柱花岗石牌坊（中间宽）
+  // 细长光面花岗石柱（中间两根更高）+ 小云纹柱头；额枋细；中间开间比两边高
   const px = [-4.6, -3.0, -1.4, 1.4, 3.0, 4.6];
   for (const dx of px) {
-    Pv.box(A + dx, 3.1, zf, 0.56, 6.2, 0.56, C.granite, 0, 0, 0, 1, { ao: true }); k.col(A + dx, 3.1, zf, 0.56, 6.2, 0.56);
-    Pv.box(A + dx, 0.45, zf, 0.9, 0.9, 1.3, C.stone2, 0, 0, 0, 1, { ao: true });           // 抱鼓石底座
-    P.sphere(A + dx, 6.45, zf, 0.7, C.granite, 1, 1.3);                                    // 柱头云罐
+    const mid = Math.abs(dx) < 2, h = mid ? 7.0 : 5.6;
+    P.cyl(A + dx, h / 2, zf, 0.3, h, C.granite, 12); k.col(A + dx, h / 2, zf, 0.32, h, 0.32);
+    Pv.box(A + dx, 0.3, zf, 0.5, 0.6, 0.8, C.stone2, 0, 0, 0, 1, { ao: true });                    // 夹杆石
+    P.cyl(A + dx, h + 0.06, zf, 0.4, 0.12, C.granite, 12);                                       // 柱顶托
+    P.sphere(A + dx, h + 0.3, zf, 0.36, C.stone, 1, 0.9); for (const s2 of [-1, 1]) P.sphere(A + dx + s2 * 0.16, h + 0.22, zf, 0.2, C.stone, 1, 0.8);   // 云纹柱头（三团）
   }
-  for (const [a, b, y] of [[-4.9, -1.1, 4.4], [1.1, 4.9, 4.4], [-1.7, 1.7, 5.3]]) { Pv.slab(A + a, A + b, y, y + 0.45, zf - 0.22, zf + 0.22, C.granite, { ao: false }); Pv.slab(A + a, A + b, y - 0.9, y - 0.6, zf - 0.18, zf + 0.18, C.granite, { ao: false }); }
-  for (const [a, b, y] of [[-4.9, -1.1, 3.7], [1.1, 4.9, 3.7], [-1.7, 1.7, 4.6]]) Pv.slab(A + a + 0.3, A + b - 0.3, y - 0.12, y + 0.3, zf - 0.12, zf + 0.12, C.stone, { ao: false });
-  k.sign(A, 4.57, zf - 0.24, { kind: 'plain', w: 2.6, h: 0.42, bg: '#CFC9BC', fg: '#7E2418', zh: '棂星门', face: Math.PI, align: 'center', box: false });
+  for (const [a, b, y] of [[-4.75, -1.25, 4.5], [1.25, 4.75, 4.5], [-1.55, 1.55, 6.0]]) { Pv.slab(A + a, A + b, y, y + 0.24, zf - 0.13, zf + 0.13, C.granite, { ao: false }); Pv.slab(A + a, A + b, y - 0.75, y - 0.57, zf - 0.11, zf + 0.11, C.granite, { ao: false }); }
+  for (const [a, b, y] of [[-4.75, -1.25, 3.93], [1.25, 4.75, 3.93], [-1.55, 1.55, 5.43]]) Pv.slab(A + a + 0.25, A + b - 0.25, y, y + 0.36, zf - 0.07, zf + 0.07, C.stone, { ao: false });
+  k.sign(A, 5.6, zf - 0.1, { kind: 'plain', w: 2.4, h: 0.36, bg: '#CFC9BC', fg: '#7E2418', zh: '棂星门', face: Math.PI, align: 'center', box: false });
   // 门口的牌子（真实的是大门边的黑底金字竖牌）
   k.sign(A - 6.6, 2.4, zf - 0.42, { kind: 'plain', vert: true, w: 0.7, h: 3.4, bg: '#2A1A14', fg: '#F2C94C', zh: '农民运动讲习所旧址', face: Math.PI });
   k.sign(A + 7.4, 1.5, zf - 0.6, { kind: 'plain', w: 2.6, h: 1.25, bg: '#FFF7E8', fg: '#7E2418', zh: '这里原来是番禺学宫（孔庙），1926 年毛泽东在这里办农民运动讲习所', face: Math.PI, align: 'left' });
@@ -88,7 +146,7 @@ function institute(k) {
   for (const z of [gz0 + 0.8, gz1 - 0.8]) for (const s of [-1, 1]) P.box(A + s * 2, 2.3, z, 0.12, 3.7, 0.2, C.redD);
   P.slab(A - 9.6, A + 9.6, 4.6, 5.0, gz0, gz1, C.yel2, { ao: false });
   hipRoof(k, A - 10.6, A + 10.6, gz0 - 1.0, gz1 + 1.0, 5.0, 2.2, 3.4, 2.0, C.yel, C.yel2, C.ridge, C.green);
-  k.sign(A, 4.1, gz0 + 0.74, { kind: 'plain', w: 2.6, h: 0.6, bg: '#2A1A14', fg: '#F2C94C', zh: '大成门', face: Math.PI, align: 'center' });
+  k.sign(A, 3.95, gz0 - 0.1, { kind: 'plain', w: 7.2, h: 1.1, bg: '#FFFFFF', fg: '#111111', zh: '农民运动讲习所旧址', face: Math.PI, align: 'center' });
   // 东西廊庑：红柱长廊 + 黄瓦单坡
   for (const s of [-1, 1]) {
     const xi = A + s * 12.6, xo = A + s * 16.6, xa = Math.min(xi, xo), xb = Math.max(xi, xo);
@@ -126,7 +184,7 @@ function wenming(k) {
   // 两排骑楼：每开间 4m；首层廊下 2.6m 深可以走；德政中路口（北排）留空
   const COLS = ['#F2E3C6', '#E8D2C2', '#DCE7E0', '#F3DCD2', '#E4E0EC', '#F5EBD0', '#D9E4EE', '#EFD9C4'];
   const SHOPS = [
-    ['糖水铺', '#C0392B'], null, ['姜撞奶', '#B5651D'], ['龟苓膏', '#3B3B3B'], ['芒果甜品', '#E3A400'], ['杨枝甘露', '#E07B39'],
+    ['绿豆沙', '#3F8A45'], ['杨枝甘露', '#E07B39'], ['姜撞奶', '#B5651D'], ['龟苓膏', '#3B3B3B'], ['芒果甜品', '#E3A400'], ['双皮奶', '#B08A5A'],
     ['肠粉', '#2E8B57'], ['牛杂', '#8E3B2B'], ['鸡蛋仔', '#C74B7A'], ['炖品', '#5B4B8A'], ['云吞面', '#1F7A8C'], ['豆花', '#3C7DBF'],
     ['烧腊', '#A93226'], ['凉茶', '#5D6D3E'], ['菠萝包', '#D4A017'], ['艇仔粥', '#2471A3']
   ];
@@ -144,15 +202,20 @@ function wenming(k) {
       const fa = Math.min(zf, zb), fb = Math.max(zf, zb);
       P.slab(x, x + 4, 3.6, H, fa, fb, c, { aoTop: true });
       // 骑楼柱（开间两边）
-      P.box(x + 0.3, 1.8, zf - n * 0.3, 0.5, 3.6, 0.5, c, 0, 0, 0, 1, { ao: true }); k.col(x + 0.3, 1.8, zf - n * 0.3, 0.5, 3.6, 0.5);
+      // 骑楼：开间两边白柱 + 柱间弧形拱券 + 廊下白天花和吸顶灯（连续柱廊，人行道在楼下）
+      const zc0 = zf - n * 0.28;
+      for (const cx of [x + 0.25, x + 3.75]) { P.box(cx, 1.8, zc0, 0.5, 3.6, 0.5, C.white, 0, 0, 0, 1, { ao: true }); P.box(cx, 0.22, zc0, 0.62, 0.44, 0.62, c, 0, 0, 0, 1, { ao: false }); k.col(cx, 1.8, zc0, 0.5, 3.6, 0.5); }
+      for (let i = 0; i < 8; i++) { const u0 = i / 8, u1 = (i + 1) / 8, um = (u0 + u1) / 2, ya = 2.75 + 0.6 * Math.sqrt(Math.max(0, 1 - (2 * um - 1) ** 2)); P.slab(x + 0.5 + 3.0 * u0, x + 0.5 + 3.0 * u1, ya, 3.6, Math.min(zf, zf - n * 0.5), Math.max(zf, zf - n * 0.5), C.white, { ao: false }); }
+      P.slab(x, x + 4, 3.48, 3.6, Math.min(zf, zb), Math.max(zf, zb), C.white, { ao: false });
+      k.glow.cyl(x + 2, 3.46, (zf + zb) / 2, 0.36, 0.03, hex('#FFF1D6'), 10);
       // 店面玻璃 + 门；空铺位（留给以后的糖水店）= 拉下的卷闸门 + 空白招牌
-      const zs = zb + n * 0.02, sh = SHOPS[si++ % SHOPS.length];
+      const zs = zb + n * 0.02, hero = n < 0 && si === 5, sh = hero ? null : SHOPS[si % SHOPS.length]; si++;
       if (sh) { k.g('glass').box(x + 2, 1.5, zs, 3.0, 2.4, 0.05, hex('#7FA8C0')); P.box(x + 2, 1.35, zs + n * 0.02, 1.0, 2.2, 0.04, hex('#5A3A22')); }
-      else { P.box(x + 2, 1.4, zs, 3.4, 2.8, 0.06, hex('#B9BEC4'), 0, 0, 0, 1, { ao: false }); for (let j = 0; j < 9; j++) P.box(x + 2, 0.2 + j * 0.3, zs + n * 0.035, 3.4, 0.03, 0.02, hex('#9CA2A8'), 0, 0, 0, 1, { ao: false }); }
+      else heroShop(k, x, zf, zb, n);
       // 骑楼口的招牌（横匾）
       const sz = zf + n * 0.05, face = n > 0 ? 0 : Math.PI;
       if (sh) k.sign(x + 2, 3.15, sz, { kind: 'plain', w: 3.3, h: 0.62, bg: sh[1], fg: '#FFF6DC', zh: sh[0], face, align: 'center' });
-      else { P.box(x + 2, 3.15, sz, 3.3, 0.62, 0.04, hex('#F4EFE4'), 0, 0, 0, 1, { ao: false }); this_empty.push([x + 2, zf]); }
+      else this_empty.push([x + 2, zf]);
       // 楼上：每层两扇窗（白窗套 + 绿百叶）+ 腰线
       for (let f = 0; f < floors; f++) {
         const y = 3.6 + f * 3.0 + 1.6, zw = zf + n * 0.03;
@@ -182,12 +245,13 @@ function wenming(k) {
     for (const s of [-1, 1]) P.box(cx + s * 4.1, 6.5, z, 0.5, 0.3, 0.3, tile, 0, 0, s * 0.5);
     k.sign(cx, 5.1, z, { kind: 'plain', w: 5.2, h: 0.95, bg: '#B4412E', fg: '#FFE7A8', zh: '文明路 · 糖水街', en: 'Wenming Road Desserts', face: Math.PI, align: 'center', double: true }); }
   // 街两端封住（看起来像街继续延伸：远处一排低楼）
-  for (const x of [W.x0 - 0.5, W.x1 + 0.5]) { P.slab(x - 0.5, x + 0.5, 0, 9, W.zS, W.zN, hex('#E3DCCF'), { aoTop: true }); k.colSlab(x - 0.5, x + 0.5, 0, 9, W.zS, W.zN); }
+  // 街尾：一栋正对着街的骑楼（三个拱券柱廊 + 两层窗 + 山花），不是一堵平墙
+  for (const [x, d] of [[W.x0 - 0.5, 1], [W.x1 + 0.5, -1]]) endQilou(k, x, d, W.zS, W.zN);
   // 小吃车（街心，一字排开，留出走路的位置）
   const STALLS = [['鸡蛋仔', '#F2C230'], ['烤肠', '#E8443A'], ['碗仔翅', '#8E5A2B'], ['糖葱饼', '#F28CB1'], ['钵仔糕', '#5FB4DA'], ['咖喱鱼蛋', '#E3A400']];
   const zc = (W.zN + W.zS) / 2;
   STALLS.forEach(([name, col], i) => {
-    const x = W.x0 + 10 + i * 17 + (i >= 3 ? 6 : 0), z = zc + (i % 2 ? 1.6 : -1.6), ry = 0;
+    const x = W.x0 + 10 + i * 17 + (i >= 3 ? 6 : 0), z = zc + (i % 2 ? -1.6 : 1.6), ry = 0;
     P.slab(x - 1.1, x + 1.1, 0.35, 1.15, z - 0.6, z + 0.6, hex('#F4F1EA'), { aoTop: true }); k.colSlab(x - 1.2, x + 1.2, 0, 1.2, z - 0.7, z + 0.7);
     P.slab(x - 1.12, x + 1.12, 1.15, 1.22, z - 0.62, z + 0.62, hex('#B9C0C8'), { ao: false });
     for (const s of [-1, 1]) P.cyl(x + s * 0.8, 0.22, z + 0.62, 0.42, 0.08, C.dark, 10, 0, Math.PI / 2, 0);

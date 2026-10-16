@@ -184,6 +184,11 @@ export class Station {
       // 农讲所：农讲所旧址（中山四路北侧）+ 文明路糖水街（南侧）——单独的 Kit，只在地面上启用
       this.park = new Kit(this.scene, 'park-' + this.code, k.root);
       this.njs = buildNjs(this.park);
+      // 文明路糖水铺门口的食客（坐矮凳吃糖水 / 排队）：髋关节对齐凳面
+      for (const n of this.njs.npcs) {
+        const L = randomLook(n.look), y = n.seatY != null ? n.seatY - (L.kid ? 0.6 : 0.86) * L.scale : n.y;
+        const c = this.crowd.add(n.x, y, n.z, n.ry, L, n.mode); if (n.seatY != null) c.sh.position.y = 0.012;
+      }
     } else if (sig === 'memorial') {
       const Pv = k.g('pave');
       k.block(-6, 6, 0, 1.2, -6, 6, '#E3DED2', true, 'pave'); k.block(-3, 3, 1.2, 2.4, -3, 3, '#DAD4C6', true, 'pave');
