@@ -21,6 +21,7 @@ import { Render } from './core/render.js';
 import { STATIONS, LINES, nextStation } from './data/lines.js';
 import { networkSVG, panZoom } from './ui/netmap.js';
 import { Mission, GOAL } from './game/mission.js';
+import { installBrother } from './game/brother-main.js';
 const B = window.BABYLON;
 
 class Events { constructor() { this.h = {}; } on(n, f) { (this.h[n] = this.h[n] || []).push(f); } emit(n, d) { (this.h[n] || []).forEach(f => f(d)); } }
@@ -226,6 +227,8 @@ export async function start() {
 
   // —— 测试接口
   let inst = null; try { inst = new B.SceneInstrumentation(scene); inst.captureFrameTime = true; } catch (_) {}
+  // 哥哥明明 + 美食店（选角色、换人、美食护照；见 js/game/brother-main.js）
+  const brother = installBrother({ scene, cam, M, player, R, hud, seats, social, bubbles, Audio, events, input, getStation: () => G.station, getCode: () => G.code });
   window.__game = {
     state: () => ({
       code: G.code, zone: G.zone.kind, pos: [player.position.x, player.position.y, player.position.z].map(v => +v.toFixed(2)), yaw: +player.yaw.toFixed(3), pitch: +player.pitch.toFixed(3),
@@ -243,6 +246,6 @@ export async function start() {
     autopilot: (pts, run) => new Promise(resolve => { G.auto = { pts, i: 0, time: 0, resolve, run }; }),
     call: (line, step) => metro.call(line, step), openMap, closeMap, mapZoom: mapPZ,
     // 测试：软件渲染只有几帧每秒，放宽单帧步长上限让游戏时间接近墙钟（默认 0.05）
-    setDtMax: v => { G.dtMax = v; }, act: doAct, tickets, seats, social, mission, bubbles, metro, player, scene, engine, events, render: R, get station() { return G.station; }
+    setDtMax: v => { G.dtMax = v; }, act: doAct, brother, tickets, seats, social, mission, bubbles, metro, player, scene, engine, events, render: R, get station() { return G.station; }
   };
 }

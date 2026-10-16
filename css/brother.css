@@ -1,0 +1,17 @@
+/* 选角色 + 美食（哥哥明明） */
+body.charsel-on #hud, body.charsel-on #touch, body.charsel-on #stickHint { display: none !important; }
+#charsel { position: fixed; inset: 0; z-index: 40; pointer-events: none; font-family: inherit; }
+#charsel .ttl { position: absolute; left: 50%; top: calc(18px + env(safe-area-inset-top)); transform: translateX(-50%); padding: 12px 34px; border-radius: 999px; text-align: center; color: var(--ink); pointer-events: none; }
+#charsel .ttl b { display: block; font-size: 32px; font-weight: 800; letter-spacing: 1px; }
+#charsel .ttl small { display: block; font-size: 17px; color: var(--sub); margin-top: 2px; }
+#charsel .pick { position: absolute; transform: translateX(-50%); pointer-events: auto; min-width: 210px; padding: 12px 26px 14px; border-radius: 30px; border: 5px solid #fff;
+  background: linear-gradient(180deg, #ffffff, #EEF3F8); color: var(--c); box-shadow: 0 10px 26px rgba(0,0,0,.25); display: flex; flex-direction: column; align-items: center; gap: 2px; touch-action: none;
+  transition: transform .22s cubic-bezier(.3,1.6,.5,1), background .15s; font: inherit; }
+#charsel .pick .nm { font-size: 54px; font-weight: 900; line-height: 1.05; letter-spacing: 4px; }
+#charsel .pick .rl { font-size: 20px; font-weight: 700; color: #5d6b7e; }
+#charsel .pick .tag { font-size: 19px; font-weight: 700; color: #C0392B; background: #FFF1D6; border-radius: 999px; padding: 2px 12px; margin-top: 4px; }
+#charsel .pick.on { background: linear-gradient(180deg, #FFE27A, #FFC93C); border-color: #FFF6CF; transform: translateX(-50%) scale(1.08); }
+#charsel .pick.press { transform: translateX(-50%) scale(.92); }
+#charsel .go { position: absolute; left: 50%; bottom: calc(26px + env(safe-area-inset-bottom)); transform: translateX(-50%); pointer-events: auto; padding: 16px 54px; border-radius: 999px; border: 5px solid #fff;
+  background: linear-gradient(180deg, #4FD18B, #23A862); color: #fff; font: inherit; font-size: 34px; font-weight: 900; letter-spacing: 3px; box-shadow: 0 10px 26px rgba(0,0,0,.28); touch-action: none; }
+#charsel .go.press { transform: translateX(-50%) scale(.92); }
