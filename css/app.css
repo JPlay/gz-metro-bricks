@@ -405,3 +405,15 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #1d2b3a; fon
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes gpop { from { transform: scale(.86); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 @keyframes gfade { to { opacity: 0; } }
+
+/* iPhone 竖屏（窄屏）：右上角 5 个按钮放到站名牌下面一排、缩小一点，永远不压站名牌；“下一站”条和票卡标签顺延到按钮下面。iPad（≥600px）不受影响 */
+@media (orientation: portrait) and (max-width: 599px) {
+  #where { max-width: calc(100vw - 28px - env(safe-area-inset-left) - env(safe-area-inset-right)); }
+  #btns { top: calc(104px + env(safe-area-inset-top)); right: calc(8px + env(safe-area-inset-right)); left: calc(8px + env(safe-area-inset-left)); justify-content: flex-end; flex-wrap: wrap; gap: 6px; }
+  #btns .btn { width: 54px; height: 54px; border-radius: 15px; }
+  #btns .btn .ico { width: 24px; height: 24px; }
+  #btns .btn .lbl { font-size: 10px; letter-spacing: 0; }
+  #btns #bFood .emo { font-size: 20px; }
+  #next { top: calc(166px + env(safe-area-inset-top)); }
+  #inv { top: calc(166px + env(safe-area-inset-top)); }
+}

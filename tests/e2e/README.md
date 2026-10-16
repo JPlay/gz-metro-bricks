@@ -26,6 +26,7 @@ python3 tests/e2e/brother_r2.py 'http://localhost:8123/' /workspace/gz-shots-pol
 python3 tests/e2e/brother_r3.py 'http://localhost:8123/' /workspace/gz-shots-polish/brother-r3   # 明明白色短袖正面、两兄弟并排（明明高大半个头，打印头骨骼高度）、站台欢迎广播响起后出站到骑楼 → 断言没有站台字幕；每张都查性能预算 66 draws / 186,754 tris
 python3 tests/e2e/brother_perf.py 'http://localhost:8123/' [截图目录]   # 公园前街面：有美食店 vs ?nofood=1 的绘制调用 / 三角形对比
 python3 tests/e2e/audio_ios.py 'http://localhost:8123/?q=2' [截图目录]   # iOS 音频加固：默认采样率、点一下后 running、?debug=audio 诊断面板；模拟 resume() 挂起 / interrupted → 出现“点一下开启声音”→ 再点一下关掉重建；iPhone UA 静音 <audio> 循环兜底。WEBKIT=1 用 Playwright WebKit 冒烟（不是 iOS）
+python3 tests/e2e/portrait_hud.py 'http://localhost:8123/?q=2' /workspace/gz-shots-polish/portrait-hud [后缀]   # iPhone 竖屏 390×844 / 430×932：右上角 5 个按钮排到站名牌下面一排，不压站名牌 / “下一站”条 / 票卡标签；iPad 横屏 1112×834 按钮位置不变
 python3 tests/e2e/shots.py    'http://localhost:8123/'       # 截图（含竖屏 834×1112）
 python3 tests/e2e/polish_shots.py 'http://localhost:8123/' /workspace/gz-shots-polish/after 1   # 视觉升级对比截图（12 个场景 + HUD 特写），并打印每张的绘制调用数
 ```
