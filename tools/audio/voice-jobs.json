@@ -198,6 +198,24 @@
   "file": "voice/next-kk-en.mp3"
  },
  {
+  "id": "voice.visit.kk.zh",
+  "lang": "zh",
+  "text": "坑口站附近有芳村黄大仙祠，欢迎下车游玩，请从B出口出站。",
+  "file": "voice/visit-kk-zh.mp3"
+ },
+ {
+  "id": "voice.visit.kk.yue",
+  "lang": "yue",
+  "text": "坑口站附近有芳村黄大仙祠，欢迎落车游玩，请喺B出口出站。",
+  "file": "voice/visit-kk-yue.mp3"
+ },
+ {
+  "id": "voice.visit.kk.en",
+  "lang": "en",
+  "text": "Kengkou station is near Fangcun Wong Tai Sin Temple. You are welcome to get off and visit. Please use Exit B.",
+  "file": "voice/visit-kk-en.mp3"
+ },
+ {
   "id": "voice.arrive.kk.zh",
   "lang": "zh",
   "text": "列车即将到达坑口站，请小心列车与站台之间的空隙。",
@@ -306,6 +324,24 @@
   "file": "voice/next-fc-en.mp3"
  },
  {
+  "id": "voice.visit.fc.zh",
+  "lang": "zh",
+  "text": "芳村站附近有醉观公园，欢迎下车游玩，请从D出口出站。",
+  "file": "voice/visit-fc-zh.mp3"
+ },
+ {
+  "id": "voice.visit.fc.yue",
+  "lang": "yue",
+  "text": "芳村站附近有醉观公园，欢迎落车游玩，请喺D出口出站。",
+  "file": "voice/visit-fc-yue.mp3"
+ },
+ {
+  "id": "voice.visit.fc.en",
+  "lang": "en",
+  "text": "Fangcun station is near Zuiguan Park. You are welcome to get off and visit. Please use Exit D.",
+  "file": "voice/visit-fc-en.mp3"
+ },
+ {
   "id": "voice.arrive.fc.zh",
   "lang": "zh",
   "text": "列车即将到达芳村站，请小心列车与站台之间的空隙。",
@@ -358,6 +394,24 @@
   "lang": "en",
   "text": "The next station is Huangsha, the interchange with Line Six.",
   "file": "voice/next-hs-en.mp3"
+ },
+ {
+  "id": "voice.visit.hs.zh",
+  "lang": "zh",
+  "text": "黄沙站附近有沙面，欢迎下车游玩，请从D出口出站。",
+  "file": "voice/visit-hs-zh.mp3"
+ },
+ {
+  "id": "voice.visit.hs.yue",
+  "lang": "yue",
+  "text": "黄沙站附近有沙面，欢迎落车游玩，请喺D出口出站。",
+  "file": "voice/visit-hs-yue.mp3"
+ },
+ {
+  "id": "voice.visit.hs.en",
+  "lang": "en",
+  "text": "Huangsha station is near Shamian Island. You are welcome to get off and visit. Please use Exit D.",
+  "file": "voice/visit-hs-en.mp3"
  },
  {
   "id": "voice.arrive.hs.zh",
@@ -414,6 +468,24 @@
   "file": "voice/next-csl-en.mp3"
  },
  {
+  "id": "voice.visit.csl.zh",
+  "lang": "zh",
+  "text": "长寿路站附近有上下九步行街、荔枝湾涌，欢迎下车游玩，请从A出口出站。",
+  "file": "voice/visit-csl-zh.mp3"
+ },
+ {
+  "id": "voice.visit.csl.yue",
+  "lang": "yue",
+  "text": "长寿路站附近有上下九步行街、荔枝湾涌，欢迎落车游玩，请喺A出口出站。",
+  "file": "voice/visit-csl-yue.mp3"
+ },
+ {
+  "id": "voice.visit.csl.en",
+  "lang": "en",
+  "text": "Changshou Lu station is near Shangxiajiu Pedestrian Street and Lizhiwan Creek. You are welcome to get off and visit. Please use Exit A.",
+  "file": "voice/visit-csl-en.mp3"
+ },
+ {
   "id": "voice.arrive.csl.zh",
   "lang": "zh",
   "text": "列车即将到达长寿路站，请小心列车与站台之间的空隙。",
@@ -468,6 +540,24 @@
   "file": "voice/next-cjc-en.mp3"
  },
  {
+  "id": "voice.visit.cjc.zh",
+  "lang": "zh",
+  "text": "陈家祠站附近有陈家祠，欢迎下车游玩，请从C出口出站。",
+  "file": "voice/visit-cjc-zh.mp3"
+ },
+ {
+  "id": "voice.visit.cjc.yue",
+  "lang": "yue",
+  "text": "陈家祠站附近有陈家祠，欢迎落车游玩，请喺C出口出站。",
+  "file": "voice/visit-cjc-yue.mp3"
+ },
+ {
+  "id": "voice.visit.cjc.en",
+  "lang": "en",
+  "text": "Chenjiaci station is near the Chen Clan Ancestral Hall. You are welcome to get off and visit. Please use Exit C.",
+  "file": "voice/visit-cjc-en.mp3"
+ },
+ {
   "id": "voice.arrive.cjc.zh",
   "lang": "zh",
   "text": "列车即将到达陈家祠站，请小心列车与站台之间的空隙。",
@@ -520,6 +610,24 @@
   "lang": "en",
   "text": "The next station is Ximenkou.",
   "file": "voice/next-xmk-en.mp3"
+ },
+ {
+  "id": "voice.visit.xmk.zh",
+  "lang": "zh",
+  "text": "西门口站附近有光孝寺，欢迎下车游玩。",
+  "file": "voice/visit-xmk-zh.mp3"
+ },
+ {
+  "id": "voice.visit.xmk.yue",
+  "lang": "yue",
+  "text": "西门口站附近有光孝寺，欢迎落车游玩。",
+  "file": "voice/visit-xmk-yue.mp3"
+ },
+ {
+  "id": "voice.visit.xmk.en",
+  "lang": "en",
+  "text": "Ximenkou station is near Guangxiao Temple. You are welcome to get off and visit.",
+  "file": "voice/visit-xmk-en.mp3"
  },
  {
   "id": "voice.arrive.xmk.zh",
@@ -592,6 +700,24 @@
   "lang": "en",
   "text": "Please exit the train to the right. To transfer to Line Two, please take the stairs in the middle of the platform.",
   "file": "voice/transfer-gyq-en.mp3"
+ },
+ {
+  "id": "voice.visit.gyq.zh",
+  "lang": "zh",
+  "text": "公园前站附近有人民公园、北京路步行街，欢迎下车游玩。",
+  "file": "voice/visit-gyq-zh.mp3"
+ },
+ {
+  "id": "voice.visit.gyq.yue",
+  "lang": "yue",
+  "text": "公园前站附近有人民公园、北京路步行街，欢迎落车游玩。",
+  "file": "voice/visit-gyq-yue.mp3"
+ },
+ {
+  "id": "voice.visit.gyq.en",
+  "lang": "en",
+  "text": "Gongyuanqian station is near the People's Park and Beijing Road Pedestrian Street. You are welcome to get off and visit.",
+  "file": "voice/visit-gyq-en.mp3"
  },
  {
   "id": "voice.arrive.gyq.zh",
@@ -720,6 +846,24 @@
   "file": "voice/next-lsly-en.mp3"
  },
  {
+  "id": "voice.visit.lsly.zh",
+  "lang": "zh",
+  "text": "烈士陵园站附近有广州起义烈士陵园，欢迎下车游玩，请从C出口出站。",
+  "file": "voice/visit-lsly-zh.mp3"
+ },
+ {
+  "id": "voice.visit.lsly.yue",
+  "lang": "yue",
+  "text": "烈士陵园站附近有广州起义烈士陵园，欢迎落车游玩，请喺C出口出站。",
+  "file": "voice/visit-lsly-yue.mp3"
+ },
+ {
+  "id": "voice.visit.lsly.en",
+  "lang": "en",
+  "text": "Lieshi Lingyuan station is near the Guangzhou Uprising Martyrs' Cemetery. You are welcome to get off and visit. Please use Exit C.",
+  "file": "voice/visit-lsly-en.mp3"
+ },
+ {
   "id": "voice.arrive.lsly.zh",
   "lang": "zh",
   "text": "列车即将到达烈士陵园站，请小心列车与站台之间的空隙。",
@@ -772,6 +916,24 @@
   "lang": "en",
   "text": "The next station is Dongshankou, the interchange with Line Six.",
   "file": "voice/next-dsk-en.mp3"
+ },
+ {
+  "id": "voice.visit.dsk.zh",
+  "lang": "zh",
+  "text": "东山口站附近有东山口红砖洋楼、东山湖公园，欢迎下车游玩。",
+  "file": "voice/visit-dsk-zh.mp3"
+ },
+ {
+  "id": "voice.visit.dsk.yue",
+  "lang": "yue",
+  "text": "东山口站附近有东山口红砖洋楼、东山湖公园，欢迎落车游玩。",
+  "file": "voice/visit-dsk-yue.mp3"
+ },
+ {
+  "id": "voice.visit.dsk.en",
+  "lang": "en",
+  "text": "Dongshankou station is near the Dongshankou red-brick villas and Dongshan Lake Park. You are welcome to get off and visit.",
+  "file": "voice/visit-dsk-en.mp3"
  },
  {
   "id": "voice.arrive.dsk.zh",
@@ -936,6 +1098,24 @@
   "file": "voice/next-tyzx-en.mp3"
  },
  {
+  "id": "voice.visit.tyzx.zh",
+  "lang": "zh",
+  "text": "体育中心站附近有天河体育中心，欢迎下车游玩，请从C出口出站。",
+  "file": "voice/visit-tyzx-zh.mp3"
+ },
+ {
+  "id": "voice.visit.tyzx.yue",
+  "lang": "yue",
+  "text": "体育中心站附近有天河体育中心，欢迎落车游玩，请喺C出口出站。",
+  "file": "voice/visit-tyzx-yue.mp3"
+ },
+ {
+  "id": "voice.visit.tyzx.en",
+  "lang": "en",
+  "text": "Tiyu Zhongxin station is near the Tianhe Sports Center. You are welcome to get off and visit. Please use Exit C.",
+  "file": "voice/visit-tyzx-en.mp3"
+ },
+ {
   "id": "voice.arrive.tyzx.zh",
   "lang": "zh",
   "text": "列车即将到达体育中心站，请小心列车与站台之间的空隙。",
@@ -1006,6 +1186,24 @@
   "lang": "en",
   "text": "Welcome to Guangzhou Dongzhan. Please line up for the train. Let the passengers get off first before you get on.",
   "file": "voice/welcome-gzdz-en.mp3"
+ },
+ {
+  "id": "voice.visit.gzdz.zh",
+  "lang": "zh",
+  "text": "广州东站附近有天河飘绢，欢迎下车游玩，请从F出口出站。",
+  "file": "voice/visit-gzdz-zh.mp3"
+ },
+ {
+  "id": "voice.visit.gzdz.yue",
+  "lang": "yue",
+  "text": "广州东站附近有天河飘绢，欢迎落车游玩，请喺F出口出站。",
+  "file": "voice/visit-gzdz-yue.mp3"
+ },
+ {
+  "id": "voice.visit.gzdz.en",
+  "lang": "en",
+  "text": "Guangzhou Dongzhan is near the Tianhe Floating Silk fountain. You are welcome to get off and visit. Please use Exit F.",
+  "file": "voice/visit-gzdz-en.mp3"
  },
  {
   "id": "voice.destination.l2n.zh",
@@ -1368,6 +1566,24 @@
   "file": "voice/next-lx-en.mp3"
  },
  {
+  "id": "voice.visit.lx.zh",
+  "lang": "zh",
+  "text": "洛溪站附近有洛溪大桥、洛浦公园，欢迎下车游玩。",
+  "file": "voice/visit-lx-zh.mp3"
+ },
+ {
+  "id": "voice.visit.lx.yue",
+  "lang": "yue",
+  "text": "洛溪站附近有洛溪大桥、洛浦公园，欢迎落车游玩。",
+  "file": "voice/visit-lx-yue.mp3"
+ },
+ {
+  "id": "voice.visit.lx.en",
+  "lang": "en",
+  "text": "Luoxi station is near Luoxi Bridge and Luopu Park. You are welcome to get off and visit.",
+  "file": "voice/visit-lx-en.mp3"
+ },
+ {
   "id": "voice.arrive.lx.zh",
   "lang": "zh",
   "text": "列车即将到达洛溪站，请小心列车与站台之间的空隙。",
@@ -1420,6 +1636,24 @@
   "lang": "en",
   "text": "The next station is Nanzhou, the interchange with the Guangfo Line.",
   "file": "voice/next-nz-en.mp3"
+ },
+ {
+  "id": "voice.visit.nz.zh",
+  "lang": "zh",
+  "text": "南洲站附近有海珠儿童公园、陈李济中药博物馆，欢迎下车游玩。",
+  "file": "voice/visit-nz-zh.mp3"
+ },
+ {
+  "id": "voice.visit.nz.yue",
+  "lang": "yue",
+  "text": "南洲站附近有海珠儿童公园、陈李济中药博物馆，欢迎落车游玩。",
+  "file": "voice/visit-nz-yue.mp3"
+ },
+ {
+  "id": "voice.visit.nz.en",
+  "lang": "en",
+  "text": "Nanzhou station is near Haizhu Children's Park and the Chen Li Ji Chinese Medicine Museum. You are welcome to get off and visit.",
+  "file": "voice/visit-nz-en.mp3"
  },
  {
   "id": "voice.arrive.nz.zh",
@@ -1638,6 +1872,24 @@
   "file": "voice/next-jnx-en.mp3"
  },
  {
+  "id": "voice.visit.jnx.zh",
+  "lang": "zh",
+  "text": "江南西站附近有十香园，欢迎下车游玩。",
+  "file": "voice/visit-jnx-zh.mp3"
+ },
+ {
+  "id": "voice.visit.jnx.yue",
+  "lang": "yue",
+  "text": "江南西站附近有十香园，欢迎落车游玩。",
+  "file": "voice/visit-jnx-yue.mp3"
+ },
+ {
+  "id": "voice.visit.jnx.en",
+  "lang": "en",
+  "text": "Jiangnanxi station is near the Shixiang Garden. You are welcome to get off and visit.",
+  "file": "voice/visit-jnx-en.mp3"
+ },
+ {
   "id": "voice.arrive.jnx.zh",
   "lang": "zh",
   "text": "列车即将到达江南西站，请小心列车与站台之间的空隙。",
@@ -1692,6 +1944,24 @@
   "file": "voice/next-seg-en.mp3"
  },
  {
+  "id": "voice.visit.seg.zh",
+  "lang": "zh",
+  "text": "市二宫站附近有孙中山大元帅府纪念馆，欢迎下车游玩，请从A出口出站。",
+  "file": "voice/visit-seg-zh.mp3"
+ },
+ {
+  "id": "voice.visit.seg.yue",
+  "lang": "yue",
+  "text": "市二宫站附近有孙中山大元帅府纪念馆，欢迎落车游玩，请喺A出口出站。",
+  "file": "voice/visit-seg-yue.mp3"
+ },
+ {
+  "id": "voice.visit.seg.en",
+  "lang": "en",
+  "text": "Shi'ergong station is near the Memorial Museum of Sun Yat-sen's Generalissimo Mansion. You are welcome to get off and visit. Please use Exit A.",
+  "file": "voice/visit-seg-en.mp3"
+ },
+ {
   "id": "voice.arrive.seg.zh",
   "lang": "zh",
   "text": "列车即将到达市二宫站，请小心列车与站台之间的空隙。",
@@ -1744,6 +2014,24 @@
   "lang": "en",
   "text": "The next station is Haizhu Guangchang, the interchange with Line Six.",
   "file": "voice/next-hzgc-en.mp3"
+ },
+ {
+  "id": "voice.visit.hzgc.zh",
+  "lang": "zh",
+  "text": "海珠广场站附近有石室圣心大教堂，欢迎下车游玩，请从B2出口出站。",
+  "file": "voice/visit-hzgc-zh.mp3"
+ },
+ {
+  "id": "voice.visit.hzgc.yue",
+  "lang": "yue",
+  "text": "海珠广场站附近有石室圣心大教堂，欢迎落车游玩，请喺B2出口出站。",
+  "file": "voice/visit-hzgc-yue.mp3"
+ },
+ {
+  "id": "voice.visit.hzgc.en",
+  "lang": "en",
+  "text": "Haizhu Guangchang station is near the Sacred Heart Cathedral. You are welcome to get off and visit. Please use Exit B2.",
+  "file": "voice/visit-hzgc-en.mp3"
  },
  {
   "id": "voice.arrive.hzgc.zh",
@@ -1890,6 +2178,24 @@
   "file": "voice/next-yxgy-en.mp3"
  },
  {
+  "id": "voice.visit.yxgy.zh",
+  "lang": "zh",
+  "text": "越秀公园站附近有越秀公园五羊石像、镇海楼，欢迎下车游玩，请从B1出口出站。",
+  "file": "voice/visit-yxgy-zh.mp3"
+ },
+ {
+  "id": "voice.visit.yxgy.yue",
+  "lang": "yue",
+  "text": "越秀公园站附近有越秀公园五羊石像、镇海楼，欢迎落车游玩，请喺B1出口出站。",
+  "file": "voice/visit-yxgy-yue.mp3"
+ },
+ {
+  "id": "voice.visit.yxgy.en",
+  "lang": "en",
+  "text": "Yuexiu Gongyuan station is near the Five Rams Statue in Yuexiu Park and Zhenhai Tower. You are welcome to get off and visit. Please use Exit B1.",
+  "file": "voice/visit-yxgy-en.mp3"
+ },
+ {
   "id": "voice.arrive.yxgy.zh",
   "lang": "zh",
   "text": "列车即将到达越秀公园站，请小心列车与站台之间的空隙。",
@@ -1996,6 +2302,24 @@
   "lang": "en",
   "text": "The next station is Sanyuanli.",
   "file": "voice/next-syl-en.mp3"
+ },
+ {
+  "id": "voice.visit.syl.zh",
+  "lang": "zh",
+  "text": "三元里站附近有三元里人民抗英斗争纪念馆，欢迎下车游玩，请从B出口出站。",
+  "file": "voice/visit-syl-zh.mp3"
+ },
+ {
+  "id": "voice.visit.syl.yue",
+  "lang": "yue",
+  "text": "三元里站附近有三元里人民抗英斗争纪念馆，欢迎落车游玩，请喺B出口出站。",
+  "file": "voice/visit-syl-yue.mp3"
+ },
+ {
+  "id": "voice.visit.syl.en",
+  "lang": "en",
+  "text": "Sanyuanli station is near the Sanyuanli Anti-British Struggle Memorial. You are welcome to get off and visit. Please use Exit B.",
+  "file": "voice/visit-syl-en.mp3"
  },
  {
   "id": "voice.arrive.syl.zh",
@@ -2106,6 +2430,24 @@
   "file": "voice/next-bygy-en.mp3"
  },
  {
+  "id": "voice.visit.bygy.zh",
+  "lang": "zh",
+  "text": "白云公园站附近有白云公园，欢迎下车游玩，请从A出口出站。",
+  "file": "voice/visit-bygy-zh.mp3"
+ },
+ {
+  "id": "voice.visit.bygy.yue",
+  "lang": "yue",
+  "text": "白云公园站附近有白云公园，欢迎落车游玩，请喺A出口出站。",
+  "file": "voice/visit-bygy-yue.mp3"
+ },
+ {
+  "id": "voice.visit.bygy.en",
+  "lang": "en",
+  "text": "Baiyun Gongyuan station is near Baiyun Park. You are welcome to get off and visit. Please use Exit A.",
+  "file": "voice/visit-bygy-en.mp3"
+ },
+ {
   "id": "voice.arrive.bygy.zh",
   "lang": "zh",
   "text": "列车即将到达白云公园站，请小心列车与站台之间的空隙。",
@@ -2158,6 +2500,24 @@
   "lang": "en",
   "text": "The next station is Baiyun Wenhua Guangchang, the interchange with Line Twelve.",
   "file": "voice/next-bywhgc-en.mp3"
+ },
+ {
+  "id": "voice.visit.bywhgc.zh",
+  "lang": "zh",
+  "text": "白云文化广场站附近有广州城市规划展览中心，欢迎下车游玩，请从A出口出站。",
+  "file": "voice/visit-bywhgc-zh.mp3"
+ },
+ {
+  "id": "voice.visit.bywhgc.yue",
+  "lang": "yue",
+  "text": "白云文化广场站附近有广州城市规划展览中心，欢迎落车游玩，请喺A出口出站。",
+  "file": "voice/visit-bywhgc-yue.mp3"
+ },
+ {
+  "id": "voice.visit.bywhgc.en",
+  "lang": "en",
+  "text": "Baiyun Wenhua Guangchang station is near the Guangzhou Urban Planning Exhibition Center. You are welcome to get off and visit. Please use Exit A.",
+  "file": "voice/visit-bywhgc-en.mp3"
  },
  {
   "id": "voice.arrive.bywhgc.zh",
