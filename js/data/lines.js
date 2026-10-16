@@ -60,7 +60,7 @@ export const STATIONS = {
   fc: { zh: '芳村', en: 'Fangcun', x: [11, 22] },
   hs: { zh: '黄沙', en: 'Huangsha', x: [6] },
   csl: { zh: '长寿路', en: 'Changshou Lu', x: [] },
-  cjc: { zh: '陈家祠', en: 'Chenjiaci', x: [8] },
+  cjc: { zh: '陈家祠', en: 'Chenjiaci', x: [8], signature: 'clan', exits: ['C', 'D'], exitMain: 'C' },
   xmk: { zh: '西门口', en: 'Ximenkou', x: [] },
   gyq: { zh: '公园前', en: 'Gongyuanqian', x: [], signature: 'park' },
   njs: { zh: '农讲所', en: 'Nongjiangsuo', x: [], signature: 'redwall' },
