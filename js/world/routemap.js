@@ -7,7 +7,7 @@
  * 站名、站序全部来自 js/data/lines.js；1 号线 #F3D03E，2 号线 #00629B。
  */
 import { LINES, STATIONS, OTHER_LINES } from '../data/lines.js';
-import { FONT, FONT_EN, roundRect } from './kit.js';
+import { FONT, FONT_EN, roundRect, drawHallIcon } from './kit.js';
 
 export const STRIP_W = 2048, STRIP_H = 256, LCD_W = 1024, LCD_H = 384;
 export const HOT = '#FF5A4E';            // 当前 / 下一站（和 HUD、售票机上的“你在这里”同一种红）
@@ -83,6 +83,8 @@ export function drawStrip(c, line, code, step, moving, nextCode) {
     if (isHot) { c.fillStyle = HOT; roundRect(c, x - fs / 2 - 8, y0 - 6, fs + 16, nm.length * fs + 12, 12); c.fill(); }
     c.fillStyle = isHot ? '#fff' : past ? GREY_TXT : INK; c.font = `${isHot ? 800 : 600} ${fs}px ${FONT}`; c.textAlign = 'center'; c.textBaseline = 'top';
     [...nm].forEach((ch, j) => c.fillText(ch, x, y0 + j * fs));
+    // 景点站（纪念堂）：站点上方一个纪念堂小图标（白底圆角，和站里导向牌上的同一个）
+    if (S.attraction) { const s = 40, ix = isHot ? x + 30 : x - s / 2, iy = isHot ? -2 : 0; c.save(); drawHallIcon(c, ix, iy, s, '#FFFFFF'); c.restore(); }
   });
 }
 
