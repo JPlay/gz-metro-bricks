@@ -133,6 +133,14 @@ export function networkSVG(here, opts = {}) {
     if (side === 'a') ty = y - 26; else if (side === 'b') ty = y + 44; else if (side === 'l') { tx = x - 24; anc = 'end'; } else if (side === 'r') { tx = x + 24; anc = 'start'; } else { tx = x - 30; ty = y + 54; anc = 'end'; }
     s += `<text x="${tx}" y="${ty}" font-size="${fs}" font-weight="${fw}" fill="${col}" text-anchor="${anc}" paint-order="stroke" stroke="#fff" stroke-width="6" stroke-linejoin="round">${esc(S.zh)}</text>`;
   }
+  // 目的地（小任务：去中山纪念堂）：金色星圈 + 右上方的蓝色标签“目的地 中山纪念堂”
+  if (opts.dest && pos[opts.dest]) {
+    const [x, y] = pos[opts.dest], A = STATIONS[opts.dest].attraction, lx = x + 185, ly = y - 104;
+    s += `<g class="dest"><line x1="${x}" y1="${y}" x2="${lx - 120}" y2="${ly}" stroke="#1F5BB0" stroke-width="5"/>`;
+    s += `<circle cx="${x}" cy="${y}" r="24" fill="none" stroke="#F2C230" stroke-width="8"/>`;
+    s += `<rect x="${lx - 130}" y="${ly - 30}" width="260" height="60" rx="30" fill="#1F5BB0" stroke="#fff" stroke-width="4"/>`;
+    s += `<text x="${lx - 98}" y="${ly + 11}" font-size="30" text-anchor="middle">⭐</text><text x="${lx + 18}" y="${ly + 11}" font-size="27" font-weight="800" fill="#fff" text-anchor="middle">${esc(A ? A.zh : '目的地')}</text></g>`;
+  }
   // 你在这里：红点 + 脉动圈 + 标签
   if (here && pos[here]) {
     const [x, y] = pos[here];

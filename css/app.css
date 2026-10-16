@@ -379,3 +379,40 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #1d2b3a; fon
 #askway .mapbox { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; touch-action: none; }
 #askway .mapbox svg { width: 100%; height: 100%; display: block; cursor: pointer; }
 @media (orientation: portrait) { #askway .sheet { width: 98vw; padding: 10px 8px 8px; } }
+
+/* 小任务：去中山纪念堂（左上角任务卡 + 到达卡） */
+#goal { position: absolute; left: calc(14px + env(safe-area-inset-left)); top: calc(102px + env(safe-area-inset-top)); display: flex; align-items: center; gap: 12px; padding: 9px 20px 9px 9px; border-radius: 20px; max-width: 470px; }
+#next:not([hidden]) ~ #goal { top: calc(170px + env(safe-area-inset-top)); }
+#goal canvas { flex: none; width: 52px; height: 52px; border-radius: 12px; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.12); }
+#goal .t { display: flex; flex-direction: column; min-width: 0; line-height: 1.2; }
+#goal b { font-size: 24px; font-weight: 800; color: #1F5BB0; letter-spacing: 1px; }
+#goal b::before { content: '🎯 '; }
+#goal .step { font-size: 21px; font-weight: 700; color: #15191f; }
+#goal.bump { animation: gpop .4s cubic-bezier(.2,.9,.3,1.3); }
+#goal.done b::before { content: '🎉 '; }
+#goal.done { background: rgba(255,233,150,.92); }
+#goalCard { position: fixed; inset: 0; z-index: 7; display: flex; align-items: center; justify-content: center; background: rgba(10,20,40,.28); pointer-events: auto; animation: fade-in .25s ease-out; }
+#goalCard.out { animation: gfade .22s ease-in forwards; }
+#goalCard .sheet { position: relative; width: min(560px, 90vw); padding: 26px 30px 24px; border-radius: 32px; text-align: center; animation: gpop .45s cubic-bezier(.2,.9,.3,1.35); background: rgba(255,255,255,.94); }
+#goalCard canvas { width: 96px; height: 96px; }
+#goalCard h2 { margin: 6px 0 0; font-size: 40px; font-weight: 800; color: #B3302A; letter-spacing: 2px; }
+#goalCard small { display: block; font-size: 16px; color: #5A6573; font-weight: 600; }
+#goalCard .fact p { margin: 12px 0 0; font-size: 25px; font-weight: 700; line-height: 1.4; color: #1B2430; }
+#goalCard .ok { margin-top: 20px; min-width: 200px; height: 72px; border: 0; border-radius: 36px; background: #1F5BB0; color: #fff; font: inherit; font-size: 28px; font-weight: 800; box-shadow: 0 6px 16px rgba(31,91,176,.35); }
+#goalCard .ok:active { transform: scale(.92); }
+#goalCard .burst { position: absolute; left: 50%; top: 70px; width: 0; height: 0; pointer-events: none; }
+#goalCard .burst i { position: absolute; width: 14px; height: 14px; border-radius: 3px; background: #F2C230; animation: burst 1.1s ease-out forwards; }
+#goalCard .burst i:nth-child(2n) { background: #E8443A; } #goalCard .burst i:nth-child(3n) { background: #1F5BB0; } #goalCard .burst i:nth-child(5n) { background: #1FA35B; }
+#goalCard .burst i:nth-child(1) { --dx: 182px; --dy: -5px; }
+#goalCard .burst i:nth-child(2) { --dx: 89px; --dy: 66px; }
+#goalCard .burst i:nth-child(3) { --dx: -56px; --dy: 75px; }
+#goalCard .burst i:nth-child(4) { --dx: -168px; --dy: 16px; }
+#goalCard .burst i:nth-child(5) { --dx: -182px; --dy: -75px; }
+#goalCard .burst i:nth-child(6) { --dx: -89px; --dy: -146px; }
+#goalCard .burst i:nth-child(7) { --dx: 56px; --dy: -155px; }
+#goalCard .burst i:nth-child(8) { --dx: 168px; --dy: -96px; }
+@keyframes burst { from { transform: translate(0,0) rotate(0); opacity: 1; } to { transform: translate(var(--dx), var(--dy)) rotate(260deg); opacity: 0; } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@media (orientation: portrait) { #goal { max-width: calc(100vw - 30px); } #goal b { font-size: 21px; } #goal .step { font-size: 19px; } }
+@keyframes gpop { from { transform: scale(.86); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes gfade { to { opacity: 0; } }
