@@ -34,8 +34,8 @@ export const HALL_TOP_Y = 1.2 * HY;
 export const HALL_ENTRY = { x0: X0 - 2.0, x1: X0 + 2.0, z0: HALL_WALL_Z - 0.75, z1: HALL_WALL_Z + 0.5, y0: HALL_TOP_Y - 0.4 };
 /** 到达点：铜像和台阶之间（台阶前的金色圈）；区域 = 到达判定 */
 export const HALL_DOOR = { x: X0, z: HALL_STEPS_Z - 2.2, y: 0, zone: { x0: X0 - 6, x1: X0 + 6, z0: HALL_STEPS_Z - 4.4, z1: HALL_STEPS_Z + 0.6 } };
-export const GATE = { x: AX, z0: -63.4, z1: -57.8 };
-export const PARK = { x0: 16, x1: 128, z0: -61, z1: 66 };
+export const GATE = { x: AX, z0: -60.9, z1: -55.3 };            // 门楼退到人行道后面（人行道 z -64..-61.5 可以一直走过去）
+export const PARK = { x0: 16, x1: 128, z0: -58.6, z1: 66 };
 export const STATUE = { x: AX, z: HALL_STEPS_Z - 9.5 };
 export const KAPOK = { x: AX + 31, z: Z0 + 13 };
 
@@ -73,7 +73,8 @@ function buildHall(k) {
   const R0 = 12.6, R1 = 11.4;
   Pv.cyl(X0, 0.3, Z0, R0 * 2, 0.6, C.stone2, 8, T8, 0, 0, undefined, { ao: false });
   Pv.cyl(X0, 0.9, Z0, R1 * 2, 0.6, C.stone, 8, T8, 0, 0, undefined, { ao: false });
-  for (const [r, h] of [[R0, 0.6], [R1, 1.2]]) { const s = 2 * r * AP; k.col(X0, h / 2, Z0, s * 0.83, h, s); k.col(X0, h / 2, Z0, s, h, s * 0.83); k.col(X0, h / 2, Z0, s * 0.95, h, s * 0.95, { ry: Math.PI / 4 }); }
+  // 八角形碰撞：两块正交长方体 + 一块转 45° 的方块（边长 0.7s：角不超出八角的边心距，否则南边的尖角会挡在正门口）
+  for (const [r, h] of [[R0, 0.6], [R1, 1.2]]) { const s = 2 * r * AP; k.col(X0, h / 2, Z0, s * 0.83, h, s); k.col(X0, h / 2, Z0, s, h, s * 0.83); k.col(X0, h / 2, Z0, s * 0.7, h, s * 0.7, { ry: Math.PI / 4 }); }
   S.shadeRing(X0, Z0, R0 * AP, R0 * AP + 1.6, 0.012, 0.28, 32);
   // 汉白玉栏杆（台基上沿一圈矮栏，正门处断开）
   for (let f = 0; f < 8; f++) {
@@ -93,7 +94,7 @@ function buildHall(k) {
   const RW = 9.6, yW0 = 1.2, yW1 = 7.6, aw = RW * AP;
   P.cyl(X0, (yW0 + yW1) / 2, Z0, RW * 2, yW1 - yW0, C.wall, 8, T8, 0, 0, undefined, { aoTop: true });
   P.cyl(X0, yW0 + 0.3, Z0, RW * 2 + 0.3, 0.6, C.stone2, 8, T8, 0, 0, undefined, { ao: false });
-  { const s = 2 * aw; k.col(X0, (yW0 + yW1) / 2, Z0, s * 0.83, yW1 - yW0, s); k.col(X0, (yW0 + yW1) / 2, Z0, s, yW1 - yW0, s * 0.83); k.col(X0, (yW0 + yW1) / 2, Z0, s * 0.95, yW1 - yW0, s * 0.95, { ry: Math.PI / 4 }); }
+  { const s = 2 * aw; k.col(X0, (yW0 + yW1) / 2, Z0, s * 0.83, yW1 - yW0, s); k.col(X0, (yW0 + yW1) / 2, Z0, s, yW1 - yW0, s * 0.83); k.col(X0, (yW0 + yW1) / 2, Z0, s * 0.7, yW1 - yW0, s * 0.7, { ry: Math.PI / 4 }); }
   // 每个面：门廊面（南、东、西）开大红门；其余面两扇高窗（红框 + 深蓝玻璃 + 白窗棂）
   const porticoFaces = [Math.PI * 1.5, 0, Math.PI];
   for (let f = 0; f < 8; f++) {
@@ -188,7 +189,7 @@ function cheapTree(k, x, z, s) {
 }
 
 /** 四坡屋顶（庑殿式的简化）：檐口矩形 → 顶部小矩形，正反两面都画 */
-function hipRoof(k, x0, x1, z0, z1, y, h, ix, iz, col, colEave) {
+export function hipRoof(k, x0, x1, z0, z1, y, h, ix, iz, col, colEave, ridge = C.ridge, orn = C.gold) {
   const Gl = k.g('gloss'), P = k.solid;
   Gl.slab(x0 - 0.3, x1 + 0.3, y, y + 0.28, z0 - 0.3, z1 + 0.3, colEave, { ao: false });
   const y1 = y + 0.28, y2 = y1 + h, a = [[x0, z0], [x1, z0], [x1, z1], [x0, z1]], b = [[x0 + ix, z0 + iz], [x1 - ix, z0 + iz], [x1 - ix, z1 - iz], [x0 + ix, z1 - iz]];
@@ -198,11 +199,11 @@ function hipRoof(k, x0, x1, z0, z1, y, h, ix, iz, col, colEave) {
   }
   Gl.slab(x0 + ix, x1 - ix, y2 - 0.02, y2 + 0.06, z0 + iz, z1 - iz, col, { ao: false });
   // 正脊 + 两端金色吻兽 + 四角起翘
-  const zm = (z0 + z1) / 2; P.box((x0 + x1) / 2, y2 + 0.25, zm, x1 - x0 - 2 * ix + 0.6, 0.45, 0.45, C.ridge, 0, 0, 0, 1, { ao: false });
-  for (const xe of [x0 + ix - 0.1, x1 - ix + 0.1]) P.sphere(xe, y2 + 0.65, zm, 0.6, C.gold, 1);
+  const zm = (z0 + z1) / 2; P.box((x0 + x1) / 2, y2 + 0.25, zm, x1 - x0 - 2 * ix + 0.6, 0.45, 0.45, ridge, 0, 0, 0, 1, { ao: false });
+  for (const xe of [x0 + ix - 0.1, x1 - ix + 0.1]) P.sphere(xe, y2 + 0.65, zm, 0.6, orn, 1);
   for (const [cx, cz, sx, sz] of [[x0, z0, -1, -1], [x1, z0, 1, -1], [x1, z1, 1, 1], [x0, z1, -1, 1]]) {
-    P.path([[cx, y1 + 0.1, cz], [cx + sx * (ix * 0.45), y1 + h * 0.42, cz + sz * (iz * 0.45)]], 0.26, C.ridge, 5);
-    P.tubeTaper([cx, y1 + 0.1, cz], [cx + sx * 0.8, y1 + 0.75, cz + sz * 0.8], 0.3, 0.16, C.ridge, 5); P.sphere(cx + sx * 0.85, y1 + 0.8, cz + sz * 0.85, 0.28, C.gold, 1);
+    P.path([[cx, y1 + 0.1, cz], [cx + sx * (ix * 0.45), y1 + h * 0.42, cz + sz * (iz * 0.45)]], 0.26, ridge, 5);
+    P.tubeTaper([cx, y1 + 0.1, cz], [cx + sx * 0.8, y1 + 0.75, cz + sz * 0.8], 0.3, 0.16, ridge, 5); P.sphere(cx + sx * 0.85, y1 + 0.8, cz + sz * 0.85, 0.28, orn, 1);
   }
 }
 

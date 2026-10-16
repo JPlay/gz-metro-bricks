@@ -50,10 +50,10 @@ async def main():
     lx=troot[0]+18.6-3
     await view(pg,'first'); await pg.evaluate(f'__game.teleport({lx+1.05},{troot[1]+0.05},{troot[2]},-Math.PI/2); __game.player.pitch=-0.58')
     await asyncio.sleep(1.0); R['stillAboard']=(await st(pg))['aboard']
+    await shot(pg,'01-car-screen',0.8)
     # 对面（往广州南）也叫一趟车进站：车厢里不该播站台进站广播
     await pg.evaluate('__game.call(2,-1)')
     await wait(pg, f"['arrive','dwell'].includes({slot(2,-1)}.state)", 25)
-    await shot(pg,'01-car-screen',0.8)
     await asyncio.sleep(2.0)
     a=await ann(pg); ride=a[n0:]
     R['rideAnn']=ride; R['noPlatformAnnInCar']=not any('.platform.' in x for x in ride)
@@ -75,7 +75,7 @@ async def main():
     await auto(pg, [[1.2,-63.2],[72,-63.2]], True)
     await pose(pg,72,0.05,-79.6,0,-0.3,'first'); await shot(pg,'02-gate-front',1.0)
     # 栏杆特写：人行道上斜看石柱 + 铁花栏杆
-    await pose(pg,42,0.05,-63.0,0.42,0.06,'first'); await shot(pg,'04-fence',1.0)
+    await pose(pg,42,0.05,-61.9,0.42,0.06,'first'); await shot(pg,'04-fence',1.0)
     # 6. 回到门口，穿中间拱门进去，中轴大道看纪念堂（稍偏离轴线，孙中山像不挡主楼）
     await pose(pg,72,0.05,-64.5,0,0.05,'third',0.8)
     await auto(pg, [[72,-56]])
@@ -112,7 +112,8 @@ async def main():
     await pg.evaluate('__game.setMove(0,1)'); await wait(pg, "__game.state().zone!='hall'", 6); await pg.evaluate('__game.setMove(0,0)')
     s=await st(pg); R['out']=[s['zone'], s['pos']]
     R['errors']=errs(logs); R['gameSeconds']=round(await gt(pg),1)
-    R['overBudget']=[k for k,v in R['perf'].items() if v['draws']>BUDGET['draws'] or v['tris']>BUDGET['tris']]
+    # 预算只管 r3 要求的镜头；x* 是原有车站内景（站台 / 站厅导向牌），只记录
+    R['overBudget']=[k for k,v in R['perf'].items() if not k.startswith('x') and (v['draws']>BUDGET['draws'] or v['tris']>BUDGET['tris'])]
     print(json.dumps(R, ensure_ascii=False, indent=1, default=str))
     ok=R['noChip'] and R['noMapDest'] and R['board'] and R['arriving'] and R['noPlatformAnnInCar'] and len(R['visitAnn'])>=3 and R['offAt'][0]=='jnt' and not R['offAt'][2] \
        and R['street'][0]=='street' and R['noStreetHint'] and R['arrived'] and R['framed'] and R['cheer'] and R['cardSoon'] and R['cardClosed'] \

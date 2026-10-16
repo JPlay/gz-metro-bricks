@@ -85,7 +85,7 @@ export function drawStrip(c, line, code, step, moving, nextCode) {
     c.fillStyle = isHot ? '#fff' : past ? GREY_TXT : INK; c.font = `${isHot ? 800 : 600} ${fs}px ${FONT}`; c.textAlign = 'center'; c.textBaseline = 'top';
     [...nm].forEach((ch, j) => c.fillText(ch, x, y0 + j * fs));
     // 景点站（纪念堂）：站点上方一个纪念堂小图标（白底圆角，和站里导向牌上的同一个）
-    if (S.attraction) { const s = 40, ix = isHot ? x + 30 : x - s / 2, iy = isHot ? -2 : 0; c.save(); drawHallIcon(c, ix, iy, s, '#FFFFFF'); c.restore(); }
+    if (S.attraction) { const s = 58, ix = x + (isHot ? 26 : 12), iy = 0; c.save(); c.shadowColor = 'rgba(0,0,0,0.25)'; c.shadowBlur = 6; drawHallIcon(c, ix, iy, s, '#FFFFFF'); c.restore(); c.strokeStyle = '#1F5BB0'; c.lineWidth = 3; roundRect(c, ix, iy + 1, s, s - 2, s * 0.18); c.stroke(); }
   });
 }
 

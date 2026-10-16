@@ -17,7 +17,7 @@ const dirKey = (line, step) => Object.keys(LINES[line].dirs).find(d => LINES[lin
 export class Metro {
   constructor(scene, ctx) {
     this.scene = scene; this.ctx = ctx; // ctx: { player, Audio, events, buildStation(code) }
-    this.trains = [0, 1, 2, 3].map(i => { const t = new Train(scene, i); t.setVisible(false); return t; });
+    this.trains = [0, 1, 2, 3].map(i => { const t = new Train(scene, i); t.setVisible(false); t.root.getChildMeshes(false).forEach(m => { m.layerMask = 0x10000000; }); return t; });  // 列车单独一层：人在地面时镜头不画（main.js）
     this.slots = []; this.ride = null; this.legs = 0; this.buildTunnel();
   }
   buildTunnel() {

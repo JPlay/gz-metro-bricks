@@ -172,6 +172,8 @@ export async function start() {
     // 区域 / 环境声 / 欢迎广播
     const p = player.position, aboard = metro.trains.some(t => t.root.isEnabled() && t.contains(p));
     G.zone = G.inTunnel ? { kind: 'tunnel' } : G.station.zoneOf(p); G.aboard = aboard || G.inTunnel;
+    // 在地面上看不到地下的列车（车站全在地下）：用 layerMask 跳过列车网格，省掉两列车 ~6 万三角形
+    { const lm = G.zone.kind === 'street' || G.zone.kind === 'hall' ? 0x0FFFFFFF : 0x1FFFFFFF; if (cam.layerMask !== lm) cam.layerMask = lm; }
     // 坐车到站、走出车厢 → 主角庆祝一下（两只拳头举起“努力！”）
     if (G.wasAboard && !G.aboard && G.arrived) { G.arrived = false; player.celebrate(); }
     G.wasAboard = G.aboard;

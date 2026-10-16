@@ -31,9 +31,11 @@ export class Discovery {
   arrive(st) {
     const first = !this.done; this.done = true; const pl = this.player, p = pl.position, H = st.sysy && st.sysy.hall;
     if (H) {
-      const yaw = Math.atan2(H.x - p.x, H.z - p.z) + 0.6;
+      // 镜头在主角身后（远一点、略高）朝纪念堂看；主角站在中轴附近时铜像会挡在镜头和主角之间 → 镜头往同侧挪开一点
+      const off = Math.abs(p.x - H.x) > 3.5 ? 0 : (p.x <= H.x ? 0.34 : -0.34);
+      const yaw = Math.atan2(H.x - p.x, H.z - p.z) + off;
       if (pl.view !== 'third') pl.toggleView();
-      pl.frame = { dist: 13, h: 1.6, ahead: 8, lookY: 6.5, keep: pl.dist }; pl.yaw = yaw; pl.pitch = 0.05;
+      pl.frame = { dist: 15, h: 2.4, ahead: 14, lookY: 9.5, keep: pl.dist }; pl.yaw = yaw; pl.pitch = 0.05;
     }
     pl.celebrate();
     this.Audio.blip && this.Audio.blip('goal');
