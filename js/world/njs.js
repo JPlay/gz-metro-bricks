@@ -11,6 +11,7 @@
  * 性能：全部放在单独的 Kit 里（只在地面上启用），只用合批静态桶 + 一张招牌图集，不加灯。
  */
 import { hex } from '../core/geo.js';
+import { FONT } from './kit.js';
 import { hipRoof } from './sysy.js';
 
 export const NJS = { ax: -32, zFront: -60, zBack: 2, x0: -50, x1: -14 };
@@ -172,8 +173,14 @@ function wenming(k) {
   // 德政中路口：两边楼的侧墙 + 路口的竖招牌
   for (const x of [W.lane0]) { P.slab(x - 0.3, x + 0.3, 0, 7.5, W.zN, -89, hex('#E9E2D6'), { aoTop: true }); k.colSlab(x - 0.3, x + 0.3, 0, 7.5, W.zN, -89); }
   k.sign(W.lane0 + 0.36, 4.4, -95, { kind: 'plain', vert: true, w: 0.8, h: 3.2, bg: '#C0392B', fg: '#FFF2C8', zh: '文明路糖水街', face: Math.PI / 2 });
-  k.sign((W.lane0 + W.lane1) / 2, 5.6, -84.2, { kind: 'plain', w: 6.4, h: 1.1, bg: '#B4412E', fg: '#FFF2C8', zh: '文明路 · 糖水街', en: 'Wenming Road Desserts', face: Math.PI, align: 'center' });
-  for (const s of [-1, 1]) P.box((W.lane0 + W.lane1) / 2 + s * 3.4, 2.8, -84.2, 0.3, 5.6, 0.3, C.red2);
+  // 德政中路口的牌坊：两根红柱（石柱础）+ 额枋 + 绿琉璃小屋顶 + 两面都有的名牌
+  { const cx = (W.lane0 + W.lane1) / 2, z = -84.2, red = hex('#B8322A'), tile = hex('#2F6B4F'), stone = hex('#BDB6A8');
+    for (const s of [-1, 1]) { const x = cx + s * 3.4; P.box(x, 0.3, z, 0.7, 0.6, 0.7, stone); P.cyl(x, 3.2, z, 0.36, 5.2, red, 12); k.col(x, 2.9, z, 0.5, 5.8, 0.5); }
+    P.box(cx, 5.75, z, 7.6, 0.35, 0.4, red); P.box(cx, 4.55, z, 7.2, 0.22, 0.32, red);
+    P.box(cx, 5.98, z, 7.4, 0.1, 0.5, hex('#D9AE5C'));
+    P.box(cx, 6.3, z, 8.6, 0.18, 1.5, tile); P.box(cx, 6.55, z, 7.6, 0.35, 1.1, tile); P.box(cx, 6.82, z, 7.8, 0.14, 0.3, hex('#24563F'));
+    for (const s of [-1, 1]) P.box(cx + s * 4.1, 6.5, z, 0.5, 0.3, 0.3, tile, 0, 0, s * 0.5);
+    k.sign(cx, 5.1, z, { kind: 'plain', w: 5.2, h: 0.95, bg: '#B4412E', fg: '#FFE7A8', zh: '文明路 · 糖水街', en: 'Wenming Road Desserts', face: Math.PI, align: 'center', double: true }); }
   // 街两端封住（看起来像街继续延伸：远处一排低楼）
   for (const x of [W.x0 - 0.5, W.x1 + 0.5]) { P.slab(x - 0.5, x + 0.5, 0, 9, W.zS, W.zN, hex('#E3DCCF'), { aoTop: true }); k.colSlab(x - 0.5, x + 0.5, 0, 9, W.zS, W.zN); }
   // 小吃车（街心，一字排开，留出走路的位置）
@@ -201,47 +208,75 @@ function wenming(k) {
 
 /** 丽呈铂锐酒店外观：裙楼（首层玻璃店面 + 雨篷 + 正门）+ 深棕色塔楼（竖条暖黄窗带、每层一道深色横线）+ 楼顶金字招牌 + 门口灯牌 / 红飘带 */
 function hotel(k) {
-  const P = k.solid, G = k.glow, Gl = k.g('glass'), H = HOTEL, D = HOTEL_DOOR;
-  const brown = hex('#4A2C22'), brown2 = hex('#3A231B'), gold = hex('#D9AE5C'), warm = hex('#FFC56B'), warm2 = hex('#F2AE55');
-  // 裙楼（首层）
+  const P = k.solid, G = k.glow, H = HOTEL, D = HOTEL_DOOR;
+  const body = hex('#5A2A22'), body2 = hex('#45201A'), gold = hex('#D9AE5C'), dark = hex('#1E2A33'), dark2 = hex('#26323C'), warm = hex('#FFC56B'), warm2 = hex('#F2B060');
+  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  // 裙楼（1-2F）：棕红实体 + 深色玻璃 + 暖光玻璃门
   const px0 = 31.5, px1 = 49.5, pz0 = -102.2, pz1 = -84.5, PH = 5;
-  P.slab(px0, px1, 0, PH, pz0, pz1, brown2, { aoTop: true }); k.colSlab(px0, px1, 0, PH, pz0, pz1);
-  P.slab(px0 - 0.1, px1 + 0.1, PH - 0.5, PH, pz0 - 0.1, pz1 + 0.1, gold, { ao: false });
-  // 西面（德政中路）：两段暖光玻璃店面 + 中间正门
-  for (const [a, b] of [[pz0 + 0.8, D.z - 2.2], [D.z + 2.2, pz1 - 0.8]]) { Gl.slab(px0 - 0.06, px0, 0.3, 4.0, a, b, hex('#6E5040')); G.slab(px0 - 0.04, px0 - 0.02, 0.5, 3.8, a + 0.2, b - 0.2, warm2); for (let z = a + 1.6; z < b - 0.4; z += 1.6) P.slab(px0 - 0.1, px0, 0.3, 4.0, z - 0.05, z + 0.05, brown, { ao: false }); }
-  G.slab(px0 - 0.05, px0 - 0.02, 0, 3.0, D.z - D.half, D.z + D.half, hex('#FFE2A8'));
-  P.slab(px0 - 0.12, px0, 0, 3.2, D.z - 0.05, D.z + 0.05, brown2, { ao: false });
-  P.slab(px0 - 0.14, px0, 3.0, 3.2, D.z - D.half - 0.1, D.z + D.half + 0.1, gold, { ao: false });
-  // 雨篷 + 两根细柱
-  P.slab(px0 - 2.0, px0, 3.9, 4.2, D.z - 2.6, D.z + 2.6, brown, { ao: false }); P.slab(px0 - 2.05, px0, 3.85, 3.92, D.z - 2.65, D.z + 2.65, gold, { ao: false });
+  P.slab(px0, px1, 0, PH, pz0, pz1, body2, { aoTop: true }); k.colSlab(px0, px1, 0, PH, pz0, pz1);
+  P.slab(px0 - 0.1, px1 + 0.1, PH - 0.45, PH, pz0 - 0.1, pz1 + 0.1, gold, { ao: false });
+  const store = (face, a, b) => {   // face 'w' 西立面（x = px0）沿 z；'n' 北立面（z = pz1）沿 x
+    const n = Math.max(1, Math.round((b - a) / 1.6)), st = (b - a) / n;
+    for (let i = 0; i < n; i++) {
+      const u0 = a + i * st + 0.06, u1 = a + (i + 1) * st - 0.06, lit = rnd() < 0.35;
+      if (face === 'w') { P.slab(px0 - 0.06, px0, 0.3, 4.0, u0, u1, lit ? hex('#6B4A33') : dark2, { ao: false }); if (lit) G.slab(px0 - 0.07, px0 - 0.065, 3.3, 3.9, u0 + 0.1, u1 - 0.1, warm2); }
+      else { P.slab(u0, u1, 0.3, 4.0, pz1, pz1 + 0.06, lit ? hex('#6B4A33') : dark2, { ao: false }); if (lit) G.slab(u0 + 0.1, u1 - 0.1, 3.3, 3.9, pz1 + 0.065, pz1 + 0.07, warm2); }
+    }
+  };
+  store('w', pz0 + 0.8, D.z - 2.6); store('w', D.z + 2.6, pz1 - 0.8); store('n', px0 + 0.8, px1 - 0.8);
+  // 正门：两扇玻璃门（门框金色）+ 门里暖光
+  G.slab(px0 - 0.04, px0 - 0.02, 0, 3.0, D.z - D.half, D.z + D.half, hex('#FFDDA0'));
+  for (const z of [D.z - D.half, D.z, D.z + D.half]) P.slab(px0 - 0.12, px0, 0, 3.0, z - 0.05, z + 0.05, gold, { ao: false });
+  P.slab(px0 - 0.14, px0, 2.95, 3.15, D.z - D.half - 0.1, D.z + D.half + 0.1, gold, { ao: false });
+  for (const s of [-1, 1]) P.slab(px0 - 0.1, px0, 1.0, 1.1, D.z + s * 0.12, D.z + s * 0.6, hex('#B88A3E'), { ao: false });   // 门把手
+  // 雨篷 + 两根细柱 + 门头字
+  P.slab(px0 - 2.0, px0, 3.9, 4.2, D.z - 2.6, D.z + 2.6, body, { ao: false }); P.slab(px0 - 2.05, px0, 3.85, 3.92, D.z - 2.65, D.z + 2.65, gold, { ao: false });
   for (const s of [-1, 1]) { P.box(px0 - 1.85, 1.95, D.z + s * 2.4, 0.12, 3.9, 0.12, gold); k.col(px0 - 1.85, 1.95, D.z + s * 2.4, 0.15, 3.9, 0.15); }
   G.slab(px0 - 1.9, px0 - 0.1, 3.84, 3.86, D.z - 2.3, D.z + 2.3, hex('#FFE7B8'));
   k.sign(px0 - 2.06, 4.05, D.z, { kind: 'plain', w: 3.6, h: 0.32, bg: '#2A1A14', fg: '#E8C26A', zh: '丽呈铂锐酒店 REZEN', face: -Math.PI / 2, align: 'center', box: false });
-  // 北面（中山四路方向）：玻璃店面
-  Gl.slab(px0 + 0.8, px1 - 0.8, 0.3, 4.0, pz1, pz1 + 0.06, hex('#6E5040')); G.slab(px0 + 1.0, px1 - 1.0, 0.5, 3.8, pz1 + 0.02, pz1 + 0.04, warm2);
-  for (let x = px0 + 2.4; x < px1 - 0.8; x += 1.6) P.slab(x - 0.05, x + 0.05, 0.3, 4.0, pz1, pz1 + 0.1, brown, { ao: false });
-  // 塔楼：深棕色，竖条暖黄窗带（每 1.6m 一条），每层一道深色横线
-  const tx0 = 32.5, tx1 = 48.5, tz0 = -101, tz1 = -86, TY0 = PH, TY1 = 38;
-  P.slab(tx0, tx1, TY0, TY1, tz0, tz1, brown, { aoTop: true });
-  for (let z = tz0 + 0.8, i = 0; z < tz1 - 0.4; z += 1.6, i++) G.slab(tx0 - 0.06, tx0 - 0.02, TY0 + 0.6, TY1 - 1.6, z - 0.28, z + 0.28, i % 3 === 1 ? warm2 : warm);
-  for (let x = tx0 + 0.8, i = 0; x < tx1 - 0.4; x += 1.6, i++) G.slab(x - 0.28, x + 0.28, TY0 + 0.6, TY1 - 1.6, tz1 + 0.02, tz1 + 0.06, i % 3 === 2 ? warm2 : warm);
-  for (let y = TY0 + 0.6; y < TY1 - 1.5; y += 3.0) { P.slab(tx0 - 0.12, tx0, y - 0.08, y + 0.08, tz0, tz1, brown2, { ao: false }); P.slab(tx0, tx1, y - 0.08, y + 0.08, tz1, tz1 + 0.12, brown2, { ao: false }); }
-  // 楼顶：金边女儿墙 + 金字招牌「丽呈铂锐酒店 REZEN」+ R 标
-  P.slab(tx0 - 0.2, tx1 + 0.2, TY1, TY1 + 1.6, tz0 - 0.2, tz1 + 0.2, brown2, { ao: false });
-  P.slab(tx0 - 0.25, tx1 + 0.25, TY1 + 1.6, TY1 + 1.75, tz0 - 0.25, tz1 + 0.25, gold, { ao: false });
-  k.sign((tx0 + tx1) / 2 + 0.9, TY1 - 0.7, tz1 + 0.14, { kind: 'plain', w: 11.5, h: 1.9, bg: '#2A1A14', fg: '#E8C26A', zh: '丽呈铂锐酒店', en: 'REZEN', face: 0, align: 'center' });
-  k.sign(tx0 + 1.3, TY1 - 0.7, tz1 + 0.14, { kind: 'plain', w: 1.9, h: 1.9, bg: '#2A1A14', fg: '#E8C26A', zh: 'R', face: 0, align: 'center' });
-  k.sign(tx0 - 0.14, TY1 - 0.7, (tz0 + tz1) / 2, { kind: 'plain', w: 10, h: 1.9, bg: '#2A1A14', fg: '#E8C26A', zh: '丽呈铂锐酒店', en: 'REZEN', face: -Math.PI / 2, align: 'center' });
-  // 门口灯牌「我❤广州」（心形用两颗红色发光球 + 一个转 45° 的方块拼出来）
-  const sx = px0 - 0.1, sz = pz1 - 3.2, sy = 2.1;
-  P.slab(sx - 0.12, sx, sy - 0.7, sy + 0.7, sz - 2.1, sz + 2.1, hex('#1B1B1B'), { ao: false });
-  k.sign(sx - 0.13, sy, sz + 1.2, { kind: 'plain', w: 1.1, h: 1.0, bg: '#1B1B1B', fg: '#FFFFFF', zh: '我', face: -Math.PI / 2, align: 'center', box: false });
-  k.sign(sx - 0.13, sy, sz - 1.25, { kind: 'plain', w: 1.6, h: 1.0, bg: '#1B1B1B', fg: '#FFFFFF', zh: '广州', face: -Math.PI / 2, align: 'center', box: false });
-  const heart = hex('#FF2D3D');
-  for (const s of [-1, 1]) G.sphere(sx - 0.2, sy + 0.12, sz - 0.05 + s * 0.17, 0.4, heart, 1);
-  G.box(sx - 0.2, sy - 0.05, sz - 0.05, 0.1, 0.4, 0.4, heart, 0, Math.PI / 4, 0);
-  // 红色飘带雕塑（门前小广场）：一条扭转上升的红带
-  const rx = 28.6, rz = -87.6, red = hex('#D7262E');
-  P.cyl(rx, 0.2, rz, 2.0, 0.4, hex('#BFB8A8'), 16); k.col(rx, 1.5, rz, 1.8, 3, 1.8);
-  for (let i = 0; i < 14; i++) { const a = i * 0.55, r = 0.35 + 0.25 * Math.sin(i * 0.45); P.box(rx + Math.sin(a) * r, 0.65 + i * 0.3, rz + Math.cos(a) * r, 0.16, 0.42, 1.0, red, a, 0.35, 0, 1, { ao: false }); }
+  // 塔楼：棕红色墙身 + 竖向窗格（深色玻璃为主，约 3 成亮暖黄，随机）
+  const tx0 = 32.5, tx1 = 48.5, tz0 = -101, tz1 = -86, TY0 = PH, TY1 = 38, FH = 3.0;
+  P.slab(tx0, tx1, TY0, TY1, tz0, tz1, body, { aoTop: true });
+  const win = (face, u, y, lit) => {   // 一个窗格 1.0 × 2.1
+    const c = lit ? (rnd() < 0.5 ? warm : warm2) : (rnd() < 0.5 ? dark : dark2), B = lit ? G : P, h0 = y + 0.45, h1 = y + 2.55;
+    if (face === 'w') B.slab(tx0 - 0.05, tx0 - 0.01, h0, h1, u - 0.5, u + 0.5, c, { ao: false });
+    else if (face === 'e') B.slab(tx1 + 0.01, tx1 + 0.05, h0, h1, u - 0.5, u + 0.5, c, { ao: false });
+    else if (face === 'n') B.slab(u - 0.5, u + 0.5, h0, h1, tz1 + 0.01, tz1 + 0.05, c, { ao: false });
+    else B.slab(u - 0.5, u + 0.5, h0, h1, tz0 - 0.05, tz0 - 0.01, c, { ao: false });
+  };
+  for (let y = TY0 + 0.3; y < TY1 - 2.9; y += FH) {
+    for (let z = tz0 + 0.9; z < tz1 - 0.5; z += 1.5) { win('w', z, y, rnd() < 0.3); win('e', z, y, rnd() < 0.25); }
+    for (let x = tx0 + 0.9; x < tx1 - 0.5; x += 1.5) { win('n', x, y, rnd() < 0.3); win('s', x, y, rnd() < 0.25); }
+    P.slab(tx0 - 0.1, tx0, y - 0.06, y + 0.06, tz0, tz1, body2, { ao: false }); P.slab(tx0, tx1, y - 0.06, y + 0.06, tz1, tz1 + 0.1, body2, { ao: false });
+  }
+  // 楼顶：加高女儿墙 + 金色大字「丽呈铂锐酒店」（北面、西面各一块），金边
+  const PY = 4.0;
+  P.slab(tx0 - 0.2, tx1 + 0.2, TY1, TY1 + PY, tz0 - 0.2, tz1 + 0.2, body2, { ao: false });
+  P.slab(tx0 - 0.25, tx1 + 0.25, TY1 + PY, TY1 + PY + 0.15, tz0 - 0.25, tz1 + 0.25, gold, { ao: false });
+  const roofSign = (c, pw, ph) => {
+    c.fillStyle = '#2A1612'; c.fillRect(0, 0, pw, ph);
+    const g = c.createLinearGradient(0, ph * 0.1, 0, ph * 0.9); g.addColorStop(0, '#FFE6A0'); g.addColorStop(0.5, '#F2C25A'); g.addColorStop(1, '#C8902E');
+    c.fillStyle = g; c.textAlign = 'center'; c.textBaseline = 'middle';
+    // 左边 R 标（下面小字 REZEN），右边整排金色大字
+    c.font = `900 ${ph * 0.62}px Georgia,serif`; c.fillText('R', ph * 0.55, ph * 0.42); c.font = `700 ${ph * 0.17}px sans-serif`; c.fillText('REZEN', ph * 0.55, ph * 0.82);
+    const t = '丽呈铂锐酒店', x0 = ph * 1.15, avail = pw - x0 - ph * 0.2; let fs = ph * 0.74; c.font = `900 ${fs}px ${FONT}`; const tw = c.measureText(t).width; if (tw > avail) { fs *= avail / tw; c.font = `900 ${fs}px ${FONT}`; }
+    c.fillText(t, x0 + avail / 2, ph * 0.54);
+    c.strokeStyle = '#D9AE5C'; c.lineWidth = ph * 0.04; c.strokeRect(ph * 0.03, ph * 0.03, pw - ph * 0.06, ph - ph * 0.06);
+  };
+  k.sign((tx0 + tx1) / 2, TY1 + PY / 2, tz1 + 0.22, { kind: 'custom', key: 'rezenN', paint: roofSign, w: 15.8, h: 3.7, face: 0 });
+  k.sign(tx0 - 0.22, TY1 + PY / 2, (tz0 + tz1) / 2, { kind: 'custom', key: 'rezenN', paint: roofSign, w: 15.8, h: 3.7, face: -Math.PI / 2 });
+  // 门口灯牌「我❤广州」：塔楼西北角下部的竖向灯箱（参考图：我 / 红心 / 广州）
+  const heartSign = (c, pw, ph) => {
+    c.fillStyle = '#16100E'; c.fillRect(0, 0, pw, ph);
+    c.strokeStyle = '#E8C26A'; c.lineWidth = pw * 0.03; c.strokeRect(pw * 0.03, pw * 0.03, pw - pw * 0.06, ph - pw * 0.06);
+    c.fillStyle = '#FFFFFF'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `900 ${pw * 0.62}px ${FONT}`;
+    c.shadowColor = '#FFF4D0'; c.shadowBlur = pw * 0.06;
+    c.fillText('我', pw / 2, ph * 0.17);
+    const hx = pw / 2, hy = ph * 0.43, r = pw * 0.2; c.fillStyle = '#FF2D3D'; c.shadowColor = '#FF5060';
+    c.beginPath(); c.moveTo(hx, hy + r * 1.5); c.bezierCurveTo(hx - r * 2.4, hy, hx - r * 1.2, hy - r * 1.6, hx, hy - r * 0.5); c.bezierCurveTo(hx + r * 1.2, hy - r * 1.6, hx + r * 2.4, hy, hx, hy + r * 1.5); c.fill();
+    c.fillStyle = '#FFFFFF'; c.shadowColor = '#FFF4D0'; c.fillText('广', pw / 2, ph * 0.67); c.fillText('州', pw / 2, ph * 0.87);
+  };
+  const sz = tz1 - 1.6;
+  P.slab(tx0 - 0.25, tx0, TY0 + 0.4, TY0 + 7.6, sz - 1.0, sz + 1.0, hex('#16100E'), { ao: false });
+  k.sign(tx0 - 0.26, TY0 + 4.0, sz, { kind: 'custom', key: 'woaigz', paint: heartSign, w: 1.8, h: 7.0, face: -Math.PI / 2 });
 }

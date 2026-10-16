@@ -278,6 +278,8 @@ function textBlock(c, x, ph, avail, zh, en, fg, { zhK = 0.42, enK = 0.2, align =
   return zs;
 }
 const PAINT = {
+  /** 自定义画法：o.paint(c, pw, ph)，o.key 用来区分缓存 */
+  custom(c, pw, ph, o) { o.paint(c, pw, ph); },
   /** 悬挂导向牌：深灰底，白字；线路编号用线路色方块 */
   dir(c, pw, ph, o) {
     const fg = o.fg || SIGN.white; c.fillStyle = o.bg || SIGN.bg; c.fillRect(0, 0, pw, ph);
