@@ -19,6 +19,7 @@ import { HallInterior, IX } from './sysyHall.js';
 import { Crowd, randomLook, preseed, archetypeLook } from './people.js';
 import { FONT, FONT_EN, roundRect } from './kit.js';
 import { drawLineCanvas, networkSVG } from '../ui/netmap.js';
+import { buildFoodStreet } from '../game/food-street.js';
 const B = window.BABYLON;
 
 export const YC = -6, HALL_X = 46, TUNNEL_X = 140, TRACK_OFF = 7.6, PSD_OFF = 6, WALL_OFF = 10.6;
@@ -240,6 +241,8 @@ export class Station {
       for (let i = 0; i < 5; i++) { const a = i * 1.256, x = -26 + Math.cos(a) * 2.2, z = -36 + Math.sin(a) * 2.2; goat(P, x, 5.1 + (i === 0 ? 1 : 0), z, a + Math.PI / 2, i === 0 ? 1.4 : 1); }
       k.g('pave').cyl(-26, 5.4, -36, 1.6, 2, hex('#E2D3B8'), 16);
     }
+    // 美食店（哥哥明明）：站口广场一侧的门面，见 js/game/food-street.js
+    this.foodShops = buildFoodStreet(this, treeSpots);
     for (const [x, z, kind, sc] of treeSpots) if (!avoid(x, z) && !(Math.abs(x) < 12 && z > -42 && z < -20)) { D.tree(k, x, 0, z, (sc || 0.85) + D.rnd() * 0.35, kind ?? (D.rnd() < 0.2 ? 2 : D.rnd() < 0.3 ? 1 : 0)); k.col(x, 1, z, 0.45, 2, 0.45); }
   }
   /** 站口：钢结构玻璃雨棚 + 深灰门楣站名牌 + 立柱式站名标 */

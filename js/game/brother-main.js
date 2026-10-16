@@ -4,6 +4,7 @@
  */
 import { CharSelect, CHARS, applyCharacter, savedChar, saveChar } from './character.js';
 import { pressable } from './input.js';
+import { FoodCtl } from './food.js';
 const B = window.BABYLON;
 
 export function installBrother(deps) {
@@ -11,6 +12,7 @@ export function installBrother(deps) {
   if (!document.getElementById('brotherCss')) { const l = document.createElement('link'); l.id = 'brotherCss'; l.rel = 'stylesheet'; l.href = 'css/brother.css'; document.head.appendChild(l); }
   player._M = M; player.charKind = 'xingxing';
   const api = { food: null };
+  api.food = new FoodCtl(deps);
   // —— 选角色：开始时弹出（测试默认跳过，?select=1 才弹；?char= 直接指定）——
   const qs = new URLSearchParams(location.search), forced = qs.get('char');
   const sel = new CharSelect({ scene, cam, M, player, R, onDone: k => { applyCharacter(player, k, R); deps.events.emit('char', { kind: k }); api.food && api.food.onChar(k); } });
