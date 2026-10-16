@@ -2,12 +2,15 @@
  * 音频引擎（移植自旧项目 js/metro/audio.js，接口改为 ES 模块）。
  * 保留旧版做法：
  *   - 全部声音为同源本地 MP3（assets/audio，清单 manifest.json），运行时不调用任何 TTS 服务；
- *   - 尽量 24kHz AudioContext；用 OfflineAudioContext 解码（循环床 16kHz、其余 24kHz），最多 2 路并发解码；
+ *   - AudioContext 用硬件默认采样率（不再强制 24kHz：iPhone 上自定义采样率会静音/走调）；用 OfflineAudioContext 解码（循环床 16kHz、其余 24kHz），最多 2 路并发解码；
  *   - 语音按需解码，PCM 走 8MiB LRU 缓存（不淘汰正在播放的缓冲）；
  *   - 报站经“站台喇叭”链：高通 280Hz → 低通 4400Hz + 两路早期反射（53ms/137ms），播报时压低环境声；
  *   - 报站串行排队、epoch 取消、优先打断；每段开始/结束派发 gz-audio-caption 事件；
  *   - iOS：首次触摸内同步播放 1 帧静音并 resume（不能先 await 加载）；后台/pagehide 挂起，回前台重试；
- *     支持 navigator.audioSession 时请求 playback。
+ *     支持 navigator.audioSession 时请求 playback（在创建 / resume 之前）。
+ *   - iOS 加固：每次手势都重试解锁直到真正 running；'interrupted' / resume 挂起 / running 但时钟不走 → 下一次手势关掉重建；
+ *     手势里播一段静音 <audio playsinline>（iPhone 上循环，保证走媒体通道、不受静音键影响）；
+ *     手势后仍没声音时显示“点一下开启声音”；?debug=audio 显示诊断面板。
  * 广播走非定位的 PA 链（旧版无喇叭点时的回退路径），不做 HRTF 空间定位。
  */
 import { CONFIG } from '../core/config.js';
@@ -16,6 +19,7 @@ import * as WebSpeech from './webspeech.js';
 const ROOT = new URL('../../assets/audio/', import.meta.url).href;
 let ctx = null, master, compressor, buses, trainFilter, paInput, paNodes = [];
 let manifest = null, manifestLoading = null;
+let recreateNext = false, recreates = 0, unlockAttempts = 0, lastRecreate = 0, decodeOk = 0, decodeFail = 0, lastResumeErr = '';
 let everUnlocked = false, needsGesture = true, muted = false, background = document.hidden, volume = 0.9;
 const mix = { ambience: 0.55, train: 0.75, sfx: 0.8, voice: 1 };
 const assets = Object.create(null), buffers = Object.create(null), compressed = Object.create(null);
@@ -37,14 +41,22 @@ function smooth(param, target, seconds) {
 }
 function gainNode(parent, v) { const n = ctx.createGain(); n.gain.value = v; n.connect(parent); return n; }
 function canPlay() { return !!ctx && everUnlocked && ctx.state === 'running' && !background; }
-function audioSession(v) { try { if (navigator.audioSession) navigator.audioSession.type = v; } catch (_) {} }
+function audioSession(v) { try { if (navigator.audioSession && navigator.audioSession.type !== v) navigator.audioSession.type = v; } catch (e) { err('audioSession ' + e); } }
+function err(m) { log.errors.push(String(m)); if (log.errors.length > 40) log.errors.shift(); }
+const PARAMS = new URLSearchParams(location.search);
+// iPhone / iPod（iPadOS 的 Safari 报 Mac UA，不会命中 → iPad 和桌面行为不变）
+const IPHONE = /iPhone|iPod/.test(navigator.userAgent);
+// 静音键兜底：iPhone 上让一段静音 <audio> 循环播放（?audiokeep=0 关掉，=1 任何设备都开）
+const KEEP_HTML = PARAMS.has('audiokeep') ? PARAMS.get('audiokeep') !== '0' : IPHONE;
 function emit(name, detail) { window.dispatchEvent(new CustomEvent(name, { detail })); }
 
 function context() {
   if (ctx) return ctx;
   const C = window.AudioContext || window.webkitAudioContext;
   if (!C) throw new Error('此浏览器不支持 Web Audio');
-  try { ctx = new C({ sampleRate: 24000 }); } catch (_) { ctx = new C(); }
+  audioSession('playback');  // 先声明会话类型再建上下文（iOS 17+；否则默认 ambient 会被静音键静掉）
+  // 不指定 sampleRate：iPhone 硬件常是 48k，强制 24k 在 WebKit 里会走重采样，路由 / 会话变化后可能 running 但无声
+  try { ctx = new C({ latencyHint: 'interactive' }); } catch (_) { ctx = new C(); }
   master = ctx.createGain(); master.gain.value = muted ? 0 : volume;
   compressor = ctx.createDynamicsCompressor();
   compressor.threshold.value = -8; compressor.knee.value = 6; compressor.ratio.value = 4; compressor.attack.value = 0.003; compressor.release.value = 0.18;
@@ -52,8 +64,10 @@ function context() {
   buses = { ambience: gainNode(master, mix.ambience), sfx: gainNode(master, mix.sfx), voice: gainNode(master, mix.voice), train: gainNode(master, mix.train), ui: gainNode(master, 0.5) };
   trainFilter = ctx.createBiquadFilter(); trainFilter.type = 'lowpass'; trainFilter.frequency.value = 2900; trainFilter.connect(buses.train);
   resetPA();
+  const me = ctx;
   ctx.onstatechange = () => {
-    if (ctx.state === 'running') { needsGesture = false; if (everUnlocked && !background) { updateZone(); updateTrain(true); } }
+    if (me !== ctx) return;
+    if (ctx.state === 'running') { needsGesture = false; hint(false); if (everUnlocked && !background) { updateZone(); updateTrain(true); } }
     else { needsGesture = !background; stopBeds(); }
     emit('gz-audio-state', { context: ctx.state, needsGesture, background });
   };
@@ -96,7 +110,7 @@ async function decode(a, raw) {
     let dec = decoders[rate];
     if (!dec) { const O = window.OfflineAudioContext || window.webkitOfflineAudioContext; try { dec = O ? new O(1, 1, rate) : ctx; } catch (_) { dec = ctx; } decoders[rate] = dec; }
     const buf = await new Promise((res, rej) => { const p = dec.decodeAudioData(raw, res, rej); if (p && p.catch) p.catch(rej); });
-    buffers[a.id] = buf;
+    buffers[a.id] = buf; decodeOk++;
     if (a.group === 'voice') { voiceBytes += buf.length * buf.numberOfChannels * 4; voiceUsed[a.id] = performance.now(); trimVoice(a.id); }
     return buf;
   } finally { decodeActive--; const n = decodeWaiters.shift(); if (n) n(); }
@@ -126,7 +140,7 @@ export async function ensureBuffer(id) {
       if (a.group === 'voice') compressed[id] = raw; // 语音保留小体积 MP3，PCM 可被 LRU 淘汰后重解
     }
     try { return await decode(a, a.group === 'voice' ? raw.slice(0) : raw); }
-    catch (e) { missing.add(id); e.missing = true; throw e; }
+    catch (e) { decodeFail++; err('decode ' + id + ': ' + (e && e.message || e)); missing.add(id); e.missing = true; throw e; }
   })().finally(() => { delete decoding[id]; });
   return decoding[id];
 }
@@ -323,39 +337,175 @@ export function cancelKeys(keys) {
 export function isAnnouncing() { return pumping || queue.length > 0; }
 
 /* ---------- 解锁 / 生命周期 ---------- */
-/** 必须在真实触摸事件里同步调用（iOS Safari） */
-export function unlock() {
+// 0.5 秒 8kHz 8-bit 静音 WAV（运行时生成 data URI）。在手势里播放它：iOS 会把页面音频切到媒体（playback）通道
+function silentWav() {
+  const n = 4000, b = new Uint8Array(44 + n), v = new DataView(b.buffer);
+  const w = (o, t) => { for (let i = 0; i < t.length; i++) b[o + i] = t.charCodeAt(i); };
+  w(0, 'RIFF'); v.setUint32(4, 36 + n, true); w(8, 'WAVEfmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, 8000, true); v.setUint32(28, 8000, true); v.setUint16(32, 1, true); v.setUint16(34, 8, true); w(36, 'data'); v.setUint32(40, n, true);
+  b.fill(128, 44);
+  let str = ''; for (let i = 0; i < b.length; i++) str += String.fromCharCode(b[i]);
+  return 'data:audio/wav;base64,' + btoa(str);
+}
+let htmlEl = null, htmlState = 'none';
+function primeHtml() {
+  if (background) return;
   try {
-    context(); audioSession('playback');
-    const s = ctx.createBufferSource(); s.buffer = ctx.createBuffer(1, 1, ctx.sampleRate);
-    s.connect(ctx.destination); s.onended = () => s.disconnect(); s.start(0);
+    if (!htmlEl) {
+      htmlEl = document.createElement('audio');
+      htmlEl.setAttribute('playsinline', ''); htmlEl.setAttribute('webkit-playsinline', ''); htmlEl.setAttribute('x-webkit-airplay', 'deny');
+      htmlEl.preload = 'auto'; htmlEl.loop = KEEP_HTML; htmlEl.disableRemotePlayback = true; htmlEl.src = silentWav();
+    }
+    // iPhone：一直循环（暂停了就重新播）；其他设备：播一次就够
+    if (KEEP_HTML ? (!htmlEl.paused && htmlState !== 'error') : (htmlState === 'played' || htmlState === 'pending')) return;
+    htmlState = 'pending';
+    const p = htmlEl.play();
+    if (p && p.then) p.then(() => { htmlState = 'played'; }, e => { htmlState = 'error'; err('html ' + (e && e.name || e)); });
+    else htmlState = 'played';
+  } catch (e) { htmlState = 'error'; err('html ' + e.message); }
+}
+function pauseHtml() { try { if (KEEP_HTML && htmlEl && !htmlEl.paused) { htmlEl.pause(); htmlState = 'paused'; } } catch (_) {} }
+
+/** 关掉坏掉的上下文（interrupted 收不回来 / running 但时钟不走 / closed），重建整条图。已解码的 AudioBuffer 可直接复用 */
+function recreate(why) {
+  const old = ctx; if (!old) return;
+  err('recreate: ' + why); recreates++; lastRecreate = performance.now(); recreateNext = false; clock = null;
+  try { stopBeds(); } catch (_) {}
+  active.slice().forEach(a => { try { a.source.stop(); } catch (_) {} a.finish(); });
+  Object.keys(decoders).forEach(k => { if (decoders[k] === old) delete decoders[k]; });
+  old.onstatechange = null; ctx = null;
+  try { const p = old.close(); if (p && p.catch) p.catch(() => {}); } catch (_) {}
+  context();
+}
+
+// “点一下开启声音”：手势之后上下文仍没跑起来时显示，避免静默失败
+let hintEl = null;
+function hint(show) {
+  if (show && (muted || background)) show = false;
+  if (!show) { if (hintEl) hintEl.hidden = true; return; }
+  if (!hintEl) {
+    hintEl = document.createElement('div'); hintEl.id = 'audioHint'; hintEl.textContent = '🔇 点一下开启声音';
+    hintEl.style.cssText = 'position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 10px);transform:translateX(-50%);z-index:9999;padding:6px 14px;border-radius:16px;background:rgba(0,0,0,.62);color:#fff;font:600 14px/1.3 system-ui,-apple-system,sans-serif;pointer-events:none;';
+    document.body.appendChild(hintEl);
+  }
+  hintEl.hidden = false;
+}
+
+const RESUME_TIMEOUT = 1500;  // iOS 上 resume() 可能永远不 settle（WebKit 281566）
+function withTimeout(p, ms) { return Promise.race([p, new Promise(r => setTimeout(() => r('timeout'), ms))]); }
+let pendingUnlock = null, lastUnlockAt = -1e9;
+
+/** 必须在真实触摸事件里同步调用（iOS Safari）。没确认 running 之前，每次手势都会再调 */
+export function unlock() {
+  const now = performance.now();
+  // 同一次点击会依次触发 pointerdown / pointerup / touchend / click，30ms 内复用同一次尝试
+  if (pendingUnlock && now - lastUnlockAt < 30 && ctx && !recreateNext) return pendingUnlock;
+  lastUnlockAt = now; unlockAttempts++;
+  try {
+    audioSession('playback');            // 先声明会话类型，再建 / 恢复上下文
+    primeHtml();
+    if (ctx && ctx.state === 'closed') recreate('closed');
+    else if (ctx && recreateNext && now - lastRecreate > 400) recreate('not running after previous gesture');
+    context();
+    const c = ctx;
+    const s = c.createBufferSource(); s.buffer = c.createBuffer(1, 1, c.sampleRate);
+    s.connect(c.destination); s.onended = () => s.disconnect(); s.start(0);
     if (CONFIG.VOICE_FALLBACK === 'webspeech') WebSpeech.prime();
-    const p = ctx.resume();
+    // iOS 的 'interrupted'：有的版本要先 suspend 再 resume 才能恢复
+    if (c.state === 'interrupted') { try { const q = c.suspend(); if (q && q.catch) q.catch(() => {}); } catch (_) {} }
+    const p = c.state === 'running' ? Promise.resolve() : c.resume();
     loadManifest().catch(() => {});
-    return p.then(() => {
-      everUnlocked = ctx.state === 'running' || everUnlocked; needsGesture = ctx.state !== 'running';
-      if (!needsGesture && !background) { updateZone(); updateTrain(true); }
-      emit('gz-audio-state', { context: ctx.state, needsGesture, background });
-      return !needsGesture;
-    }).catch(e => { log.errors.push(String(e)); return false; });
-  } catch (e) { log.errors.push(e.message); return Promise.resolve(false); }
+    pendingUnlock = withTimeout(p.then(() => 'ok', e => { lastResumeErr = String(e && (e.name + ' ' + e.message) || e); err('resume ' + lastResumeErr); return 'err'; }), RESUME_TIMEOUT).then(r => {
+      if (c !== ctx) return !!ctx && ctx.state === 'running';
+      const ok = c.state === 'running';
+      if (r === 'timeout') err('resume timeout, state=' + c.state);
+      everUnlocked = ok || everUnlocked; needsGesture = !ok;
+      if (ok) recreateNext = false;
+      else if (!background) recreateNext = true;   // 下一次手势关掉重建
+      if (ok && !background) { updateZone(); updateTrain(true); }
+      hint(!ok);
+      emit('gz-audio-state', { context: c.state, needsGesture, background });
+      return ok;
+    });
+    return pendingUnlock;
+  } catch (e) { err('unlock ' + (e && e.message || e)); hint(true); return Promise.resolve(false); }
 }
 function visible(v) {
   background = !v;
-  if (!v) { cancelAnnouncements(); stopBeds(); needsGesture = true; audioSession('auto'); if (ctx && ctx.state === 'running') ctx.suspend().catch(() => {}); }
+  if (!v) { cancelAnnouncements(); stopBeds(); needsGesture = true; hint(false); pauseHtml(); audioSession('auto'); if (ctx && ctx.state === 'running') ctx.suspend().catch(() => {}); }
   else if (ctx && everUnlocked) {
     audioSession('playback');
-    ctx.resume().then(() => { needsGesture = ctx.state !== 'running'; if (!needsGesture) { updateZone(); updateTrain(true); } }).catch(() => { needsGesture = true; });
+    const c = ctx;
+    withTimeout(c.resume().then(() => 'ok', () => 'err'), RESUME_TIMEOUT).then(r => {
+      if (c !== ctx || background) return;
+      needsGesture = c.state !== 'running';
+      if (!needsGesture) { updateZone(); updateTrain(true); hint(false); }
+      else { if (c.state !== 'suspended' || r !== 'ok') recreateNext = true; hint(true); }
+    });
   }
 }
 document.addEventListener('visibilitychange', () => visible(!document.hidden));
 window.addEventListener('pagehide', () => visible(false));
 window.addEventListener('pageshow', e => { if (e.persisted) visible(!document.hidden); });
-['pointerdown', 'touchend', 'keydown'].forEach(ev => document.addEventListener(ev, () => {
-  if (ctx && everUnlocked && (needsGesture || ctx.state !== 'running') && !document.hidden) unlock();
+// 每种手势都试：iOS 有时不把 pointerdown / touchstart 当作用户激活，touchend / click 才算
+['pointerdown', 'pointerup', 'touchend', 'click', 'keydown'].forEach(ev => document.addEventListener(ev, e => {
+  if (document.hidden || (e.type === 'keydown' && e.repeat)) return;
+  if (!ctx || ctx.state !== 'running' || needsGesture || recreateNext || (KEEP_HTML && htmlEl && htmlEl.paused)) unlock();
 }, { capture: true, passive: true }));
 
-export function setMuted(v) { muted = !!v; applyMix(); if (muted) WebSpeech.cancel(); }
+// “running 但时钟不走”（iOS 路由 / 采样率变化后的已知症状）：标记下一次手势重建
+let clock = null, stalls = 0;
+setInterval(() => {
+  if (!ctx || background || ctx.state !== 'running') { clock = null; return; }
+  const now = performance.now(), t = ctx.currentTime;
+  if (clock && now - clock.at > 900 && t - clock.t < 0.02) { stalls++; err('clock stalled while running'); recreateNext = true; needsGesture = true; hint(true); }
+  clock = { t, at: now };
+}, 1000);
+
+function diag() {
+  const as = navigator.audioSession;
+  return {
+    iphone: IPHONE, state: ctx ? ctx.state : 'none', sampleRate: ctx ? ctx.sampleRate : null,
+    baseLatency: ctx && ctx.baseLatency != null ? +ctx.baseLatency.toFixed(4) : null, outputLatency: ctx && ctx.outputLatency != null ? +ctx.outputLatency.toFixed(4) : null,
+    currentTime: ctx ? +ctx.currentTime.toFixed(2) : null,
+    audioSession: as ? { supported: true, type: as.type, state: as.state } : { supported: false },
+    html: { keep: KEEP_HTML, state: htmlState, paused: htmlEl ? htmlEl.paused : null },
+    everUnlocked, needsGesture, recreateNext, recreates, unlockAttempts, stalls, lastResumeErr, decodeOk, decodeFail, muted, background,
+    speech: WebSpeech.available(), errors: log.errors.slice(-6)
+  };
+}
+export function diagnostics() { return diag(); }
+
+// ?debug=audio：屏幕左下角的诊断面板（给 iPhone 用户截图用），带“测试音”和“重建”按钮
+if ((PARAMS.get('debug') || '').split(',').includes('audio')) {
+  const mount = () => {
+    const box = document.createElement('div'); box.id = 'audioDebug';
+    box.style.cssText = 'position:fixed;left:6px;bottom:calc(env(safe-area-inset-bottom,0px) + 6px);z-index:10000;max-width:min(92vw,420px);padding:6px 8px;border-radius:8px;background:rgba(0,0,0,.78);color:#cfe;font:11px/1.35 ui-monospace,Menlo,monospace;white-space:pre-wrap;word-break:break-all;';
+    const pre = document.createElement('div'), row = document.createElement('div');
+    row.style.cssText = 'margin-top:4px;display:flex;gap:6px';
+    const btn = (label, fn) => { const b = document.createElement('button'); b.textContent = label; b.style.cssText = 'font:12px system-ui;padding:4px 10px;border-radius:6px;border:0'; b.addEventListener('click', e => { e.stopPropagation(); fn(); }); ['pointerdown', 'touchstart'].forEach(t => b.addEventListener(t, e => e.stopPropagation(), { passive: true })); row.appendChild(b); };
+    btn('测试音', () => { unlock().then(() => blip('goal')); });
+    btn('重建', () => { recreateNext = true; lastRecreate = 0; pendingUnlock = null; unlock().then(() => blip('settle')); });
+    box.appendChild(pre); box.appendChild(row); document.body.appendChild(box);
+    const draw = () => {
+      const d = diag(), a = d.audioSession;
+      pre.textContent = [
+        `ctx ${d.state}  ${d.sampleRate || '-'}Hz  t=${d.currentTime ?? '-'}  lat ${d.baseLatency ?? '-'}/${d.outputLatency ?? '-'}`,
+        `audioSession ${a.supported ? 'supported type=' + a.type + ' state=' + a.state : 'NOT supported'}`,
+        `html ${d.html.state}${d.html.keep ? ' (loop)' : ''} paused=${d.html.paused}  iphone=${d.iphone}`,
+        `unlocked=${d.everUnlocked} needsGesture=${d.needsGesture} recreateNext=${d.recreateNext}`,
+        `attempts=${d.unlockAttempts} recreates=${d.recreates} stalls=${d.stalls} muted=${d.muted}`,
+        `decode ok=${d.decodeOk} fail=${d.decodeFail}  speech=${d.speech}`,
+        d.lastResumeErr ? 'resumeErr ' + d.lastResumeErr : '',
+        ...d.errors.map(e => '! ' + e)
+      ].filter(Boolean).join('\n');
+    };
+    draw(); setInterval(draw, 500);
+  };
+  if (document.body) mount(); else document.addEventListener('DOMContentLoaded', mount);
+}
+
+export function setMuted(v) { muted = !!v; applyMix(); if (muted) { WebSpeech.cancel(); hint(false); } }
 export function isMuted() { return muted; }
 export function getManifest() { return manifest; }
 export function getAsset(id) { return assets[id]; }
@@ -364,7 +514,7 @@ export function getState() {
     context: ctx ? ctx.state : 'uninitialized', unlocked: everUnlocked && !!ctx && ctx.state === 'running', needsGesture, background, muted,
     zone, ducked, announcing: current ? current.key : null, queued: queue.length, active: active.length,
     decoded: Object.keys(buffers).length, missing: [...missing], voiceCacheBytes: voiceBytes,
-    sampleRate: ctx ? ctx.sampleRate : null, fallbackMode: CONFIG.VOICE_FALLBACK,
+    sampleRate: ctx ? ctx.sampleRate : null, fallbackMode: CONFIG.VOICE_FALLBACK, diag: diag(),
     log: { played: log.played.slice(), announced: log.announced.slice(), fallbacks: log.fallbacks.slice(), errors: log.errors.slice() }
   };
 }
