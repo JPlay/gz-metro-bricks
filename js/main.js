@@ -177,7 +177,7 @@ export async function start() {
     const rl = metro.ride && metro.ride.train && G.aboard ? metro.ride : null;
     const line = rl ? rl.line : (G.zone.kind === 'platform' ? G.zone.P.line : STATIONS[G.code].lines[0]);
     hud.where(G.code, line, rl && rl.phase === 'cruise' ? rl.next : null);
-    mission.update({ code: G.code, zone: G.zone, aboard: G.aboard, ride: rl, station: G.station });
+    mission.update({ code: G.code, zone: G.zone, aboard: G.aboard, ride: rl, station: G.station, dt });
     // 脚步声
     if (player.grounded && player.speed > 0.5 && !G.aboard) { stepAcc += player.speed * dt; if (stepAcc > 0.75) { stepAcc = 0; Audio.footstep(); } }
     if (player.landed) { player.landed = false; Audio.sfx('footstep', { volume: 0.6, rate: 0.8 }); }

@@ -25,6 +25,12 @@ function stationTexts(code, line) {
 /** 景点提示：前往中山纪念堂的乘客，请在纪念堂站下车（2 号线纪念堂站的“下一站”和“到站”都会接这一句） */
 export const ATTRACTION = { jnt: ['前往中山纪念堂的乘客，请在纪念堂站下车。', '前往中山纪念堂嘅乘客，请喺纪念堂站落车。', 'Passengers for the Sun Yat-sen Memorial Hall, please get off at Jiniantang station.'] };
 export const attractionSegs = code => ATTRACTION[code] ? seg('attraction.' + code, ATTRACTION[code]) : [];
+/** 到站时（车门开之前）：景点从哪个出口出站 */
+export const ATTRACTION_EXIT = { jnt: ['前往中山纪念堂的乘客，请从C出口出站。', '前往中山纪念堂嘅乘客，请喺C出口出站。', 'Passengers for the Sun Yat-sen Memorial Hall, please leave the station by Exit C.'] };
+export const attractionExitSegs = code => ATTRACTION_EXIT[code] ? seg('attraction-exit.' + code, ATTRACTION_EXIT[code]) : [];
+/** 出站后一句轻提示（只用普通话，短） */
+export const HINTS = { 'sysy.street': ['出站往左走，沿着马路走到中山纪念堂的大门。', null, null] };
+export const hintSegs = k => HINTS[k] ? seg('hint.' + k, HINTS[k]) : [];
 export function nextSegs(line, code) { return [...nextSegs0(line, code), ...attractionSegs(code)]; }
 function nextSegs0(line, code) {
   if (code === 'gyq') return [...seg('next.gyq', ['下一站，公园前。', '下一站，公园前。', 'The next station is Gongyuanqian.']),
@@ -52,7 +58,7 @@ export function departSegs(line, nextCode, dir, step, withDestination) {
 }
 export function arriveSegs(code) {
   const s = STATIONS[code];
-  return [...seg('arrive.' + code, [`列车即将到达${zhStn(s.zh)}，请小心列车与站台之间的空隙。`, `列车即将到达${zhStn(s.zh)}，请小心列车同站台之间的空隙。`, `The train is arriving at ${s.en}. Please mind the gap between the train and the platform.`]), ...attractionSegs(code)];
+  return [...seg('arrive.' + code, [`列车即将到达${zhStn(s.zh)}，请小心列车与站台之间的空隙。`, `列车即将到达${zhStn(s.zh)}，请小心列车同站台之间的空隙。`, `The train is arriving at ${s.en}. Please mind the gap between the train and the platform.`]), ...attractionExitSegs(code)];
 }
 export function welcomeSegs(code) {
   const s = STATIONS[code];
@@ -80,7 +86,7 @@ export function allJobs() {
     for (const dir of Object.keys(L.dirs)) { add(destinationSegs(line, dir)); add(terminalSegs(line, dir)); add(platformSegs(line, dir, 1)); add(platformSegs(line, dir, 2)); }
     L.stations.forEach((c, i) => { if (i > 0 && i < L.stations.length - 1) add(nextSegs(line, c)); add(arriveSegs(c)); add(welcomeSegs(c)); });
   }
-  add(doorsClosingSegs()); add(gapSegs()); Object.keys(SAFETY).forEach(k => add(safetySegs(k)));
+  add(doorsClosingSegs()); add(gapSegs()); Object.keys(HINTS).forEach(k => add(hintSegs(k))); Object.keys(SAFETY).forEach(k => add(safetySegs(k)));
   return [...out.values()].map(s => ({ ...s, file: 'voice/' + s.id.slice(6).replace(/\./g, '-') + '.mp3' }));
 }
 export { LEGACY };

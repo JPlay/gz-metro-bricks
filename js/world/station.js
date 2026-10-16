@@ -13,7 +13,7 @@ import { LINES, STATIONS, OTHER_LINES, transfersAt, nextStation } from '../data/
 import { DOOR_XS } from './train.js';
 import * as D from './decor.js';
 import * as MV from './mv.js';
-import { flatBand, stairBand, stairBandZ, bridgeStripe } from './wayfind.js';
+import { flatBand, stairBand, bridgeStripe } from './wayfind.js';
 import { buildSysy, HALL_DOOR, HALL_STEPS_Z } from './sysy.js';
 import { Crowd, randomLook, preseed, archetypeLook } from './people.js';
 import { FONT, FONT_EN, roundRect } from './kit.js';
@@ -866,16 +866,7 @@ export class Station {
    */
   sysyWayfinding() {
     const k = this.kit, G = k.g('band'), y1 = MAIN.y, y = YC, CY = y + 4.4, GR = '#1FA35B', W = '#FFFFFF', A = this.s.attraction;
-    // —— 站台：东段直接到楼梯脚；西段绕北侧走道（楼梯 / 扶梯底下过不去）
-    flatBand(G, [[40, 13.1], [15, 13.1]], y1, GR, W);
-    flatBand(G, [[-40, 12.8], [-3.2, 12.8], [-3.2, 18.6], [17.4, 18.6], [17.4, 13.5]], y1, GR, W);
-    stairBand(G, -1, y, 15, y1, 13.1, GR, W, { visual: true, walkDir: -1 });
-    // —— 站厅：楼梯口 → 闸机（x=2 那条通道）→ 绕过安检（出站走旁边）→ 通道楼梯
-    flatBand(G, [[-1, 13.1], [-2.2, 13.1], [-2.2, 1.4], [2, 1.4], [2, -4.6], [10.5, -4.6], [10.5, -15.6], [1.2, -15.6], [1.2, -20]], y, GR, W);
-    stairBandZ(G, -20, y, -36, 0, 1.2, GR, W, { walkDir: -1 });
-    // —— 街面：出站口 → 往南到路口 → 往东 → 前广场 → 台阶前
-    flatBand(G, [[1.2, -36], [1.2, -55.5], [31.6, -55.5], [31.6, -52.3]], 0, GR, W);
-    flatBand(G, [[31.6, -51.9], [31.6, HALL_STEPS_Z - 2.6]], 0.056, GR, W);
+    // （r3：去掉地面绿色引导带，改用站内真实导向牌 +“请从 C 出口出站”广播 + 出站后一句提示）
     // —— 到达圈（金色圆环，贴在广场上）
     const ring = (cx, cz, r0, r1, yy, col) => { const c = hex(col), n = 40; for (let i = 0; i < n; i++) { const a0 = i / n * Math.PI * 2, a1 = (i + 1) / n * Math.PI * 2, p = (a, r) => [cx + Math.cos(a) * r, yy, cz + Math.sin(a) * r]; G.quad(p(a0, r0), p(a1, r0), p(a1, r1), p(a0, r1), c); G.quad(p(a0, r1), p(a1, r1), p(a1, r0), p(a0, r0), c); } };
     this.goal = { x: HALL_DOOR.x, z: HALL_STEPS_Z - 1.6, zone: HALL_DOOR.zone };
@@ -894,13 +885,6 @@ export class Station {
     k.sign(5.6, y + 3.2, -15.6, { ...hs('left', { w: 4.6, h: 0.7 }), face: Math.PI / 2, hang: CY });
     // 站厅墙上的大海报：中山纪念堂就在 C 出口外
     k.sign(17.95, y + 1.6, 11, { kind: 'poster', w: 6, h: 2.2, zh: '中山纪念堂 · C 出口', en: 'Sun Yat-sen Memorial Hall · Exit C', c1: '#1F5BB0', c2: '#6FA8E8', face: -Math.PI / 2 });
-    // —— 街面：路口的指路牌（深绿杆 + 两块箭头牌）
-    const px = 3.0, pz = -57.6, P = k.solid, pole = hex('#2D4B3A');
-    P.cyl(px, 1.7, pz, 0.16, 3.4, pole, 10); P.cyl(px, 0.12, pz, 0.36, 0.24, pole, 10, 0, 0, 0, undefined, { ao: false }); P.sphere(px, 3.48, pz, 0.24, hex('#E3B341'), 1);
-    k.col(px, 1.7, pz, 0.2, 3.4, 0.2); k.shade.shadeBlob(px, pz, 0.4, 0.4, 0.012, 0.3);
-    const arm = { bg: '#24543B', exit: null };
-    k.sign(px + 1.62, 2.75, pz, { ...hs('left', { ...arm, w: 3.0, h: 0.62 }), face: 0, double: true, back: hs('right', { ...arm, w: 3.0, h: 0.62 }) });
-    k.sign(px, 2.0, pz + 1.12, { kind: 'dir', bg: '#24543B', w: 2.0, h: 0.42, zh: '地铁 纪念堂站', en: 'Metro', exits: [A.exit], arrow: 'right', face: Math.PI / 2, double: true, back: { kind: 'dir', bg: '#24543B', zh: '地铁 纪念堂站', en: 'Metro', exits: [A.exit], arrow: 'left' } });
   }
   /* ---------------- 每帧 ---------------- */
   update(dt, player, cam, Audio, metro) {

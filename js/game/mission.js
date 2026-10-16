@@ -7,6 +7,8 @@
 import { LINES, STATIONS } from '../data/lines.js';
 import { routeTo } from '../data/route.js';
 import { drawHallIcon } from '../world/kit.js';
+import { hintSegs } from '../data/phrases.js';
+import * as Ann from '../audio/announcements.js';
 const $ = id => document.getElementById(id);
 export const GOAL = { code: 'jnt', zh: '中山纪念堂', en: 'Sun Yat-sen Memorial Hall' };
 const FACTS = ['这座八角形的大房子，是为了纪念孙中山先生建的。', '蓝色的屋顶是琉璃瓦做的，像一顶亮晶晶的大蓝帽子！'];
@@ -14,7 +16,7 @@ const FACTS = ['这座八角形的大房子，是为了纪念孙中山先生建�
 export class Mission {
   constructor({ hud, Audio, player, tickets, events }) {
     this.hud = hud; this.Audio = Audio; this.player = player; this.tickets = tickets; this.events = events;
-    this.done = false; this.step = ''; this.cardOpen = false; this.inZone = false;
+    this.done = false; this.step = ''; this.cardOpen = false; this.inZone = false; this.Ann = Ann;
     this.el = $('goal'); this.card = $('goalCard');
     // 任务卡左边的小图标（canvas 画的纪念堂，和站里导向牌上的同一个）
     const ic = this.el.querySelector('canvas'); if (ic) { const c = ic.getContext('2d'); c.scale(ic.width / 48, ic.height / 48); drawHallIcon(c, 0, 0, 48, '#FFFFFF'); }
@@ -39,9 +41,9 @@ export class Mission {
       return '坐反啦！下一站下车，到对面坐车';
     }
     if (code === G) {
-      if (z.kind === 'platform') return '跟着地上的绿色箭头走';
-      if (z.kind === 'street') return '跟着绿色箭头，走到纪念堂门口';
-      return '跟着绿色箭头，从 C 出口出去';
+      if (z.kind === 'platform') return '上楼，找「中山纪念堂 C出口」的牌子';
+      if (z.kind === 'street' || z.kind === 'park' || z.kind === 'hall') return '出站往左走，到纪念堂大门';
+      return '跟着牌子，从 C 出口出站';
     }
     const legs = routeTo(code, G).legs, leg = legs[0];
     if (!leg) return '';
@@ -54,12 +56,19 @@ export class Mission {
     }
     return `下楼去坐 ${leg.line} 号线`;
   }
+  /** 任务卡只短暂出现：开始时几秒；出了纪念堂站再出现一次（配一句普通话提示） */
+  flash(sec) { this.showT = sec; this.el.classList.remove('gone'); this.el.classList.remove('bump'); void this.el.offsetWidth; this.el.classList.add('bump'); }
   update(g) {
-    const h = this.hint(g);
-    if (h !== this.step) {
-      this.step = h; const s = this.el.querySelector('.step'); s.textContent = h;
-      this.el.classList.remove('bump'); void this.el.offsetWidth; this.el.classList.add('bump');
+    const h = this.hint(g), dt = g.dt || 0;
+    if (h !== this.step) { this.step = h; this.el.querySelector('.step').textContent = h; }
+    if (this.showT === undefined) this.flash(8);
+    if (this.showT > 0) { this.showT -= dt; if (this.showT <= 0) this.el.classList.add('gone'); }
+    const out = g.code === GOAL.code && g.zone.kind === 'street' && !g.aboard;
+    if (out && !this.wasOut && !this.done && !this.streetHinted) {
+      this.streetHinted = true; this.flash(7);
+      if (this.Ann) this.Ann.say(hintSegs('sysy.street'), { key: 'hint' }); this.events && this.events.emit('hint', { k: 'sysy.street' });
     }
+    this.wasOut = out;
     this.el.classList.toggle('done', this.done);
     // 到达：纪念堂站街面、正门台阶前的金色圈附近
     const st = g.station, p = this.player.position, Z = st && st.goal && st.goal.zone;
@@ -77,5 +86,5 @@ export class Mission {
   }
   openCard() { this.card.hidden = false; this.card.classList.remove('out'); this.cardOpen = true; }
   closeCard() { if (!this.cardOpen) return; this.cardOpen = false; this.card.classList.add('out'); setTimeout(() => { if (!this.cardOpen) this.card.hidden = true; }, 220); this.Audio.blip && this.Audio.blip('tap'); }
-  info() { return { done: this.done, step: this.step, card: this.cardOpen }; }
+  info() { return { done: this.done, step: this.step, card: this.cardOpen, chip: this.showT > 0, streetHint: !!this.streetHinted }; }
 }

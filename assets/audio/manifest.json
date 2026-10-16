@@ -4720,6 +4720,45 @@
       "bytes": 46124
     },
     {
+      "id": "voice.attraction-exit.jnt.zh",
+      "file": "voice/attraction-exit-jnt-zh.mp3",
+      "group": "voice",
+      "label": "attraction-exit.jnt.zh",
+      "lang": "zh",
+      "text": "前往中山纪念堂的乘客，请从C出口出站。",
+      "model": "cosyvoice-v2",
+      "voice": "longxiaobai_v2",
+      "language_type": "Chinese",
+      "duration": 4.776,
+      "bytes": 38444
+    },
+    {
+      "id": "voice.attraction-exit.jnt.yue",
+      "file": "voice/attraction-exit-jnt-yue.mp3",
+      "group": "voice",
+      "label": "attraction-exit.jnt.yue",
+      "lang": "yue",
+      "text": "前往中山纪念堂嘅乘客，请喺C出口出站。",
+      "model": "cosyvoice-v3-flash",
+      "voice": "longjiayi_v3",
+      "language_type": "Chinese",
+      "duration": 4.776,
+      "bytes": 38444
+    },
+    {
+      "id": "voice.attraction-exit.jnt.en",
+      "file": "voice/attraction-exit-jnt-en.mp3",
+      "group": "voice",
+      "label": "attraction-exit.jnt.en",
+      "lang": "en",
+      "text": "Passengers for the Sun Yat-sen Memorial Hall, please leave the station by Exit C.",
+      "model": "cosyvoice-v2",
+      "voice": "longxiaobai_v2",
+      "language_type": "English",
+      "duration": 5.256,
+      "bytes": 42284
+    },
+    {
       "id": "voice.welcome.jnt.zh",
       "file": "voice/welcome-jnt-zh.mp3",
       "group": "voice",
@@ -5888,6 +5927,19 @@
       "language_type": "English",
       "duration": 6.768,
       "bytes": 54380
+    },
+    {
+      "id": "voice.hint.sysy.street.zh",
+      "file": "voice/hint-sysy-street-zh.mp3",
+      "group": "voice",
+      "label": "hint.sysy.street.zh",
+      "lang": "zh",
+      "text": "出站往左走，沿着马路走到中山纪念堂的大门。",
+      "model": "cosyvoice-v2",
+      "voice": "longxiaobai_v2",
+      "language_type": "Chinese",
+      "duration": 4.704,
+      "bytes": 37868
     }
   ],
   "routes": {

@@ -388,6 +388,8 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #1d2b3a; fon
 #goal b { font-size: 24px; font-weight: 800; color: #1F5BB0; letter-spacing: 1px; }
 #goal b::before { content: '🎯 '; }
 #goal .step { font-size: 21px; font-weight: 700; color: #15191f; }
+#goal { transition: opacity .5s ease, transform .5s ease; }
+#goal.gone { opacity: 0; transform: translateY(-12px); pointer-events: none; }
 #goal.bump { animation: gpop .4s cubic-bezier(.2,.9,.3,1.3); }
 #goal.done b::before { content: '🎉 '; }
 #goal.done { background: rgba(255,233,150,.92); }

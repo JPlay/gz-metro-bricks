@@ -56,9 +56,11 @@ export class Metro {
     const p = this.ctx.player.position, A = this.ctx.Audio, seated = !!this.ctx.player.seat;
     if (this.ride && this.ride.phase === 'cruise') return this.cruise(dt);
     let sound = null;
+    // 人在任何一列车厢里（停站时车厢区域也算 platform 区）就不是“站在站台上”：对面列车的进站广播 / 关门提示不该在车里响
+    const inCar = this.slots.some(o => o.train.root.isEnabled() && this.playerOn(o.train));
     for (const s of this.slots) {
       const tr = s.train, nx = nextStation(s.line, this.station.code, s.step);
-      const aboard = this.playerOn(tr), onPlat = this.ctx.zone && this.ctx.zone.kind === 'platform' && this.ctx.zone.P === s.P;
+      const aboard = this.playerOn(tr), onPlat = !inCar && this.ctx.zone && this.ctx.zone.kind === 'platform' && this.ctx.zone.P === s.P;
       s.t -= dt;
       switch (s.state) {
         case 'away':
