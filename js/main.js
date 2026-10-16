@@ -178,6 +178,18 @@ export async function start() {
     G.zone = G.inTunnel ? { kind: 'tunnel' } : G.station.zoneOf(p); G.aboard = aboard || G.inTunnel;
     // 在地面上看不到地下的列车（车站全在地下）：用 layerMask 跳过列车网格，省掉两列车 ~6 万三角形
     { const lm = G.zone.kind === 'street' || G.zone.kind === 'hall' ? 0x0FFFFFFF : 0x1FFFFFFF; if (cam.layerMask !== lm) cam.layerMask = lm; }
+    // 站台上看列车：只有自己坐的那列车画车厢里的屏（线路图条 / LCD / 呼吸光圈 / 亮面件），别的车隔着窗看不清，省 4 次绘制 / 列；
+    // 地下没有太阳：列车不投太阳阴影（每列车 3 次阴影绘制）
+    for (const t of metro.trains) {
+      if (!t._inner) t._inner = t.root.getChildMeshes(false).filter(m => /^(trainStrip|trainLcd|trainHotGlow|gloss|leafInner)$/.test(m.name) || (m.sourceMesh && m.sourceMesh.name === 'leafInner'));
+      const inside = t.root.isEnabled() && t.contains(p);
+      if (t._innerOn !== inside) { t._innerOn = inside; t._inner.forEach(m => m.setEnabled(inside)); }
+      // 车厢乘客：自己坐的车全显示；别的车只显示 20m 内的（远处隔着两层玻璃看不出来，每人 1 次绘制）
+      if (t.pax && t.root.isEnabled()) for (const q of t.pax) { const m = q.p.mesh, w = m.getAbsolutePosition(), on = inside || (w.x - p.x) ** 2 + (w.z - p.z) ** 2 < 20 * 20; if (m.isEnabled() !== on) m.setEnabled(on); }
+      const sh = G.zone.kind === 'street' && !G.inTunnel;
+      if (t._shOn !== sh && t.shadowMeshes) { t._shOn = sh; const rl = R.sg.getShadowMap().renderList; for (const m of t.shadowMeshes) { const i = rl.indexOf(m); if (sh && i < 0) rl.push(m); else if (!sh && i >= 0) rl.splice(i, 1); } }
+    }
+    R.setSunShadow(G.zone.kind === 'street' || G.zone.kind === 'hall');
     // 坐车到站、走出车厢 → 主角庆祝一下（两只拳头举起“努力！”）
     if (G.wasAboard && !G.aboard && G.arrived) { G.arrived = false; player.celebrate(); }
     G.wasAboard = G.aboard;

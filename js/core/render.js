@@ -70,11 +70,13 @@ export class Render {
     if (focus) { const d = this.sun.direction; this.sun.position.set(focus.x - d.x * 30, focus.y - d.y * 30, focus.z - d.z * 30); }
   }
   addShadowCaster(m) { this.sg.addShadowCaster(m, false); }
+  /** 地下车站里关掉太阳阴影（地下没有太阳；人物脚下有圆形影子），省掉阴影贴图那一遍的绘制 */
+  setSunShadow(on) { this.noSunShadow = !on; const v = !!this.wantShadows && on; if (this.sun.shadowEnabled !== v) this.sun.shadowEnabled = v; }
   setTier(t, quality) {
     if (t === this.tier) return; this.tier = t;
     const q = quality[t], dpr = window.devicePixelRatio || 1, s = this.scene;
     this.engine.setHardwareScalingLevel(1 / Math.min(dpr, q.scale));
-    this.sun.shadowEnabled = !!q.shadows;
+    this.wantShadows = !!q.shadows; this.sun.shadowEnabled = this.wantShadows && !this.noSunShadow;
     setNormalMaps(!!q.normals);
     // 后期
     if (q.post && !this.pipeline) {

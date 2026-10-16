@@ -303,11 +303,12 @@ export class Crowd {
   turnTo(m, want, k) { let dr = want - m.rotation.y; dr = Math.atan2(Math.sin(dr), Math.cos(dr)); m.rotation.y += dr * Math.min(1, k); }
   update(dt, focus) {
     // 地面 / 地下分开显示：人在街上时看不到地下站厅的人（以前视锥里地下的人照样画，一人两三次绘制），反之亦然；楼梯上两边都显示
-    const fy = focus ? focus.y : 0, hideLow = fy > -1.5, hideHigh = fy < -4.5;
+    const fy = focus ? focus.y : 0, hideLow = fy > -1.5, hideHigh = fy < -4.5, hideMid = fy < -10.5;   // 站台层（-12）只画站台上的人
     for (const n of this.list) {
-      const m = n.p.mesh, vis = !((hideLow && m.position.y < -3) || (hideHigh && m.position.y > -1));
+      const m = n.p.mesh, d2 = focus ? (m.position.x - focus.x) ** 2 + (m.position.z - focus.z) ** 2 + ((m.position.y - focus.y) * 3) ** 2 : 0;
+      // 地下（站厅 / 站台）再加一条：30m 外的人不画（站台一眼望到头，远处的人很小，每人 1 次绘制）
+      const vis = !((hideLow && m.position.y < -3) || (hideHigh && m.position.y > -1) || (hideMid && m.position.y > -8.5) || (hideHigh && d2 > 30 * 30));
       if (m.isEnabled() !== vis) { m.setEnabled(vis); n.sh.setEnabled(vis); }
-      const d2 = focus ? (m.position.x - focus.x) ** 2 + (m.position.z - focus.z) ** 2 + ((m.position.y - focus.y) * 3) ** 2 : 0;
       const near = d2 < 45 * 45;
       if (n.act) {
         const a = n.act; a.t -= dt; this.turnTo(m, a.yaw, dt * 7); n.p.pointYaw = a.pointYaw || 0;
