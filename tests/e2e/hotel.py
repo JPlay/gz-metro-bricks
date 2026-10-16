@@ -62,7 +62,7 @@ async def main():
     # 7b. 301 大床房：门也会开，床能坐
     await auto(pg,[[HX-3.4,3.0],[HX-4,1.6],[HX-4,0],[HX+0.2,0],[HX+0.2,1.6]]); await asyncio.sleep(1.0); R['kingDoor']=(await H(pg))['interior']['rooms'][0]['open']
     k=[x for x in (await H(pg))['interior']['seats'] if x['bed']=='king']; R['kingSeats']=len(k)
-    if k: await pose(pg,k[0]['x']+0.5*math.sin(k[0]['face']),4.55,k[0]['z']+0.5*math.cos(k[0]['face']),k[0]['face']+math.pi,0.1,'third',0.8); R['kingAct']=(await st(pg))['act']
+    if k: await pose(pg,k[0]['x']+0.5*math.sin(k[0]['face']),4.55,k[0]['z']+0.5*math.cos(k[0]['face']),k[0]['face']+math.pi,0.1,'third',0.8); await wait(pg,"__game.state().act && __game.state().act.id=='sit'",4); R['kingAct']=(await st(pg))['act']; R['kingPose']=(await st(pg))['pos']; R['kingSeat']=k[0]
     # 8. 回走廊，坐电梯下大堂
     await auto(pg,[[HX+0.2,1.6],[HX+0.2,0],[HX+6.9,-0.2]]); await pg.evaluate('__game.hotel.call()')
     await wait(pg,LIFT+".state=='open'",30); await auto(pg,[[HX+9.5,0]]); await pg.evaluate('__game.hotel.press(1)')
