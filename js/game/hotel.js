@@ -71,12 +71,26 @@ export class HotelInterior {
     P.slab(X(-8.3), X(WX + 0.3), LH, FY - 0.08, -6.3, 6.3, C.white, { ao: false }); k.colSlab(X(-8.3), X(WX + 0.3), LH, FY - 0.08, -6.3, 6.3);
     for (const x of [-5.5, -2, 1.5, 5]) for (const z of [-3.5, 0, 3.5]) G.cyl(X(x), LH - 0.01, z, 0.45, 0.02, hex('#FFF4DC'), 12);
     for (const [a, b, c, d] of [[-7.9, WX - 0.1, -5.9, -5.8], [-7.9, WX - 0.1, 5.8, 5.9], [-7.9, -7.8, -5.9, 5.9]]) G.slab(X(a), X(b), LH - 0.08, LH - 0.04, c, d, hex('#FFD9A0'));
-    // 品牌墙（北墙中间）：深色木饰面 + 金字
-    P.slab(X(-4.6), X(2.6), 1.0, 3.9, 5.88, 5.96, C.wood2, { ao: false });
-    atlas.sign(X(-1), 2.85, 5.86, 5.4, 1.2, Math.PI, (c, w, h) => {
-      c.fillStyle = '#3A231B'; c.fillRect(0, 0, w, h); c.fillStyle = '#E8C26A'; c.textAlign = 'center'; c.textBaseline = 'middle';
-      c.font = `800 ${h * 0.42}px "Noto Sans CJK SC",sans-serif`; c.fillText('丽呈铂锐酒店', w / 2, h * 0.36); c.font = `600 ${h * 0.26}px "Helvetica Neue",Arial,sans-serif`; c.fillText('R E Z E N', w / 2, h * 0.76);
+    // 品牌墙（北墙，前台后面）：整面深色木饰面（竖向木条）+ 上下暖光灯槽 + 金色 R 标 / REZEN
+    P.slab(X(-6.2), X(4.2), 0, LH, 5.86, 5.96, hex('#3B2418'), { ao: false });
+    for (let x = -6.0; x < 4.2; x += 0.6) P.slab(X(x), X(x + 0.06), 0.1, LH - 0.1, 5.83, 5.86, hex('#2C1A11'), { ao: false });
+    G.slab(X(-6.2), X(4.2), LH - 0.18, LH - 0.12, 5.8, 5.84, hex('#FFC97A')); G.slab(X(-6.2), X(4.2), 0.04, 0.08, 5.8, 5.84, hex('#FFC97A'));
+    atlas.sign(X(-1), 2.7, 5.8, 4.6, 1.7, Math.PI, (c, w, h) => {
+      c.fillStyle = '#3B2418'; c.fillRect(0, 0, w, h);
+      const g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#FFE6A0'); g.addColorStop(0.55, '#F0C060'); g.addColorStop(1, '#C8902E'); c.fillStyle = g; c.strokeStyle = g;
+      c.textAlign = 'center'; c.textBaseline = 'middle'; c.lineWidth = h * 0.035;
+      c.beginPath(); c.arc(w / 2, h * 0.3, h * 0.22, 0, Math.PI * 2); c.stroke(); c.font = `900 ${h * 0.3}px Georgia,serif`; c.fillText('R', w / 2, h * 0.31);
+      c.font = `700 ${h * 0.24}px "Helvetica Neue",Arial,sans-serif`; c.fillText('R E Z E N', w / 2, h * 0.68);
+      c.font = `600 ${h * 0.13}px "PingFang SC","Noto Sans CJK SC",sans-serif`; c.fillText('丽 呈 铂 锐 酒 店', w / 2, h * 0.88);
     });
+    // 大堂中间的地毯（深红底 + 金边）+ 两盏吊灯
+    P.slab(X(-2.6), X(5.2), 0, 0.012, -3.6, 1.8, hex('#7A2E26'), { ao: false }); P.slab(X(-2.3), X(4.9), 0.012, 0.016, -3.3, 1.5, hex('#9A4433'), { ao: false });
+    for (const [a, b, c, d] of [[-2.45, 5.05, -3.45, -3.35], [-2.45, 5.05, 1.55, 1.65], [-2.45, -2.35, -3.45, 1.65], [4.95, 5.05, -3.45, 1.65]]) P.slab(X(a), X(b), 0.016, 0.02, c, d, C.gold, { ao: false });
+    for (const x of [-0.5, 3.0]) { P.cyl(X(x), LH - 0.4, -0.9, 0.03, 0.8, C.gold, 6); G.cyl(X(x), LH - 0.9, -0.9, 0.9, 0.35, hex('#FFD48A'), 14); P.cyl(X(x), LH - 0.7, -0.9, 0.95, 0.05, C.gold, 14); }
+    // 电梯口：两边深木饰面 + 呼梯按钮（钢板 + 上 / 下 发光按钮）
+    for (const [a, b] of [[-2.6, -0.75], [0.75, 1.9]]) P.slab(X(WX - 0.04), X(WX), 0, LH, a, b, hex('#3B2418'), { ao: false });
+    P.slab(X(WX - 0.07), X(WX - 0.04), 0.95, 1.45, -1.25, -0.95, C.steel, { ao: false });
+    G.cyl(X(WX - 0.08), 1.27, -1.1, 0.12, 0.03, hex('#FFB84A'), 10, 0, 0, Math.PI / 2); G.cyl(X(WX - 0.08), 1.12, -1.1, 0.12, 0.03, hex('#FFE7B0'), 10, 0, 0, Math.PI / 2);
     // 前台：深木柜台 + 白色台面 + 金色腰线；台上一个服务铃
     const dz0 = 3.2, dz1 = 4.0, dx0 = -4.2, dx1 = 2.2;
     P.slab(X(dx0), X(dx1), 0, 1.05, dz0, dz1, C.wood, { aoTop: false }); P.slab(X(dx0 - 0.05), X(dx1 + 0.05), 1.05, 1.12, dz0 - 0.1, dz1, C.white, { ao: false });
@@ -216,7 +230,13 @@ export class HotelInterior {
       c.fillStyle = '#E8C26A'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `800 ${h * 0.2}px "Noto Sans CJK SC",sans-serif`; c.fillText('欢迎入住', w / 2, h * 0.38);
       c.fillStyle = '#fff'; c.font = `600 ${h * 0.13}px "Noto Sans CJK SC",sans-serif`; c.fillText('丽呈铂锐酒店 · REZEN', w / 2, h * 0.64);
     });
-    P.slab(X(Math.min(xw + dir * 0.7, xw + dir * 1.1)), X(Math.max(xw + dir * 0.7, xw + dir * 1.1)), y0 + 0.42, y0 + 0.47, zc - 0.2, zc + 0.2, C.sofa, { ao: false });
+    // 电视背后的木饰面板（挂墙电视）+ 桌上台灯 + 抽屉 + 带靠背的椅子
+    const xp = xw + dir * 0.02; P.slab(X(Math.min(xw, xp)), X(Math.max(xw, xp)), y0 + 0.95, y0 + 2.2, zc - 1.1, zc + 1.1, C.wood2, { ao: false });
+    P.slab(X(Math.min(xw + dir * 0.53, xw + dir * 0.56)), X(Math.max(xw + dir * 0.53, xw + dir * 0.56)), y0 + 0.5, y0 + 0.7, zc - 0.7, zc - 0.05, C.wood2, { ao: false });
+    P.cyl(X(xw + dir * 0.25), y0 + 0.79, zc + 0.6, 0.14, 0.05, C.gold, 8); P.cyl(X(xw + dir * 0.25), y0 + 0.88, zc + 0.6, 0.03, 0.22, C.gold, 6); k.glow.cyl(X(xw + dir * 0.25), y0 + 1.04, zc + 0.6, 0.26, 0.18, hex('#FFE3B0'), 10, 0, 0, 0, 0.18);
+    const cx0 = Math.min(xw + dir * 0.7, xw + dir * 1.15), cx1 = Math.max(xw + dir * 0.7, xw + dir * 1.15), cb = dir > 0 ? cx1 : cx0;
+    P.slab(X(cx0), X(cx1), y0 + 0.42, y0 + 0.49, zc - 0.22, zc + 0.22, C.sofa, { ao: false }); P.slab(X(Math.min(cb, cb - dir * 0.06)), X(Math.max(cb, cb - dir * 0.06)), y0 + 0.49, y0 + 0.95, zc - 0.22, zc + 0.22, C.sofa, { ao: false });
+    for (const [a, z] of [[cx0 + 0.04, zc - 0.18], [cx1 - 0.04, zc - 0.18], [cx0 + 0.04, zc + 0.18], [cx1 - 0.04, zc + 0.18]]) P.slab(X(a - 0.02), X(a + 0.02), y0, y0 + 0.42, z - 0.02, z + 0.02, C.gold, { ao: false });
   }
   /* ———————— 楼梯间（1F → 2F 两跑；2F → “3F” 两跑只在 2F 时显示） ———————— */
   stairs(k) {
@@ -381,14 +401,12 @@ export class HotelInterior {
 /* ———————— 画布小图 ———————— */
 function liftSign(c, w, h) { c.fillStyle = '#3A231B'; c.fillRect(0, 0, w, h); c.fillStyle = '#E8C26A'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `800 ${h * 0.5}px "Noto Sans CJK SC",sans-serif`; c.fillText('电梯 Lift', w / 2, h * 0.55); }
 function stairSign(c, w, h) { c.fillStyle = '#1F7A3A'; c.fillRect(0, 0, w, h); c.fillStyle = '#fff'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `800 ${h * 0.52}px "Noto Sans CJK SC",sans-serif`; c.fillText('楼梯 Stairs', w / 2, h * 0.55); }
-/** 窗外街景：天空 + 对面骑楼 + 远处高楼（广州塔）+ 街上的树和车；v 换一点变化 */
+/** 窗外街景：天空 + 对面骑楼 + 远处高楼+ 街上的树和车；v 换一点变化 */
 function streetView(c, w, h, v) {
   const g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#7FB6E6'); g.addColorStop(0.65, '#CFE6F5'); g.addColorStop(1, '#E9F1F4'); c.fillStyle = g; c.fillRect(0, 0, w, h);
-  // 远处高楼 + 广州塔
+  // 远处高楼（农讲所一带看不到广州塔）
   const far = ['#9FB0C2', '#B3C0CE', '#A6B6C6'];
   for (let i = 0; i < 9; i++) { const bw = w * (0.07 + ((i * 37 + v * 11) % 5) * 0.012), bh = h * (0.25 + ((i * 53 + v * 7) % 7) * 0.05), bx = (i / 9) * w + ((v * 13) % 9); c.fillStyle = far[i % 3]; c.fillRect(bx, h * 0.62 - bh, bw, bh); }
-  const tx = w * (0.18 + 0.2 * (v % 3)); c.fillStyle = '#E86A5A'; c.beginPath(); c.moveTo(tx - w * 0.035, h * 0.62); c.quadraticCurveTo(tx, h * 0.32, tx - w * 0.012, h * 0.12); c.lineTo(tx + w * 0.012, h * 0.12); c.quadraticCurveTo(tx, h * 0.32, tx + w * 0.035, h * 0.62); c.fill();
-  c.fillRect(tx - 1.5, h * 0.02, 3, h * 0.1);
   // 对面骑楼（暖色、带拱窗）
   const cols = ['#F2E3C6', '#E8D2C2', '#DCE7E0', '#F3DCD2', '#F5EBD0'];
   for (let i = 0; i < 5; i++) { const bx = i * w / 5, bw = w / 5 - 2; c.fillStyle = cols[(i + v) % 5]; c.fillRect(bx, h * 0.5, bw, h * 0.35); c.fillStyle = '#FFFFFF'; for (const fx of [0.25, 0.65]) { c.fillRect(bx + bw * fx, h * 0.56, bw * 0.16, h * 0.1); } c.fillStyle = '#3E7B58'; for (const fx of [0.27, 0.67]) c.fillRect(bx + bw * fx, h * 0.575, bw * 0.12, h * 0.075); c.fillStyle = '#8E6A4A'; c.fillRect(bx + bw * 0.1, h * 0.74, bw * 0.8, h * 0.11); }
