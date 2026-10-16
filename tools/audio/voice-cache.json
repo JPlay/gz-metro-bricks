@@ -2518,5 +2518,23 @@
     "style": "cosy",
     "model": "cosyvoice-v2",
     "voice": "longxiaobai_v2"
+  },
+  "voice.attraction.jnt.zh": {
+    "fp": "f1e48747607c3827911ce002565a09bc3e21d0d2c1dae652580325a4c62c9457",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.attraction.jnt.yue": {
+    "fp": "6836d3027fa78a01cbe00c6bff5f45df82d7064bfca6d75fbea97d3f671fa109",
+    "style": "cosy",
+    "model": "cosyvoice-v3-flash",
+    "voice": "longjiayi_v3"
+  },
+  "voice.attraction.jnt.en": {
+    "fp": "a807cd0f66ebd4068723d3b5a7b50041e481e4dd2e4392fe7e81a711313f43b5",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
   }
 }

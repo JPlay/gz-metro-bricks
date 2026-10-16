@@ -22,7 +22,11 @@ function stationTexts(code, line) {
   return { zh: s.zh, en: s.en, xs };
 }
 /** 下一站（不含终点方向） */
-export function nextSegs(line, code) {
+/** 景点提示：前往中山纪念堂的乘客，请在纪念堂站下车（2 号线纪念堂站的“下一站”和“到站”都会接这一句） */
+export const ATTRACTION = { jnt: ['前往中山纪念堂的乘客，请在纪念堂站下车。', '前往中山纪念堂嘅乘客，请喺纪念堂站落车。', 'Passengers for the Sun Yat-sen Memorial Hall, please get off at Jiniantang station.'] };
+export const attractionSegs = code => ATTRACTION[code] ? seg('attraction.' + code, ATTRACTION[code]) : [];
+export function nextSegs(line, code) { return [...nextSegs0(line, code), ...attractionSegs(code)]; }
+function nextSegs0(line, code) {
   if (code === 'gyq') return [...seg('next.gyq', ['下一站，公园前。', '下一站，公园前。', 'The next station is Gongyuanqian.']),
     ...(line === 1 ? seg('transfer.gyq', ['请从列车前进方向的右门下车，中部楼梯换乘二号线。', '请由列车前进方向的右门落车，中部楼梯换乘二号线。', 'Please exit the train to the right. To transfer to Line Two, please take the stairs in the middle of the platform.'])
       : seg('transfer.gyq2', ['可换乘一号线。', '可换乘一号线。', 'You can transfer to Line One.']))];
@@ -48,7 +52,7 @@ export function departSegs(line, nextCode, dir, step, withDestination) {
 }
 export function arriveSegs(code) {
   const s = STATIONS[code];
-  return seg('arrive.' + code, [`列车即将到达${zhStn(s.zh)}，请小心列车与站台之间的空隙。`, `列车即将到达${zhStn(s.zh)}，请小心列车同站台之间的空隙。`, `The train is arriving at ${s.en}. Please mind the gap between the train and the platform.`]);
+  return [...seg('arrive.' + code, [`列车即将到达${zhStn(s.zh)}，请小心列车与站台之间的空隙。`, `列车即将到达${zhStn(s.zh)}，请小心列车同站台之间的空隙。`, `The train is arriving at ${s.en}. Please mind the gap between the train and the platform.`]), ...attractionSegs(code)];
 }
 export function welcomeSegs(code) {
   const s = STATIONS[code];

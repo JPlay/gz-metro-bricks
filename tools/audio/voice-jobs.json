@@ -1800,6 +1800,24 @@
   "file": "voice/next-jnt-en.mp3"
  },
  {
+  "id": "voice.attraction.jnt.zh",
+  "lang": "zh",
+  "text": "前往中山纪念堂的乘客，请在纪念堂站下车。",
+  "file": "voice/attraction-jnt-zh.mp3"
+ },
+ {
+  "id": "voice.attraction.jnt.yue",
+  "lang": "yue",
+  "text": "前往中山纪念堂嘅乘客，请喺纪念堂站落车。",
+  "file": "voice/attraction-jnt-yue.mp3"
+ },
+ {
+  "id": "voice.attraction.jnt.en",
+  "lang": "en",
+  "text": "Passengers for the Sun Yat-sen Memorial Hall, please get off at Jiniantang station.",
+  "file": "voice/attraction-jnt-en.mp3"
+ },
+ {
   "id": "voice.arrive.jnt.zh",
   "lang": "zh",
   "text": "列车即将到达纪念堂站，请小心列车与站台之间的空隙。",

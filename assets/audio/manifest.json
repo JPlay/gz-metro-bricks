@@ -4642,6 +4642,45 @@
       "bytes": 16364
     },
     {
+      "id": "voice.attraction.jnt.zh",
+      "file": "voice/attraction-jnt-zh.mp3",
+      "group": "voice",
+      "label": "attraction.jnt.zh",
+      "lang": "zh",
+      "text": "前往中山纪念堂的乘客，请在纪念堂站下车。",
+      "model": "cosyvoice-v2",
+      "voice": "longxiaobai_v2",
+      "language_type": "Chinese",
+      "duration": 4.896,
+      "bytes": 39404
+    },
+    {
+      "id": "voice.attraction.jnt.yue",
+      "file": "voice/attraction-jnt-yue.mp3",
+      "group": "voice",
+      "label": "attraction.jnt.yue",
+      "lang": "yue",
+      "text": "前往中山纪念堂嘅乘客，请喺纪念堂站落车。",
+      "model": "cosyvoice-v3-flash",
+      "voice": "longjiayi_v3",
+      "language_type": "Chinese",
+      "duration": 5.016,
+      "bytes": 40364
+    },
+    {
+      "id": "voice.attraction.jnt.en",
+      "file": "voice/attraction-jnt-en.mp3",
+      "group": "voice",
+      "label": "attraction.jnt.en",
+      "lang": "en",
+      "text": "Passengers for the Sun Yat-sen Memorial Hall, please get off at Jiniantang station.",
+      "model": "cosyvoice-v2",
+      "voice": "longxiaobai_v2",
+      "language_type": "English",
+      "duration": 5.376,
+      "bytes": 43244
+    },
+    {
       "id": "voice.arrive.jnt.zh",
       "file": "voice/arrive-jnt-zh.mp3",
       "group": "voice",
