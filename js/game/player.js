@@ -37,16 +37,19 @@ export class Player {
     this.placeSeat();
   }
   hipH() { return (this.person.look.kid ? 0.6 : 0.86) * this.person.look.scale; }
-  placeSeat() { const { train, seat } = this.seat, r = train.root.position; if (seat.world) this.position.set(seat.wx, seat.wy + SEAT_HIP - this.hipH(), seat.wz); else this.position.set(r.x + seat.x, r.y + SEAT_HIP - this.hipH(), r.z + seat.sd * 1.2); }
+  placeSeat() { const { train, seat } = this.seat, r = train.root.position; if (this.lying && seat.lie) this.position.set(seat.lie.x, seat.lie.y, seat.lie.z); else if (seat.world) this.position.set(seat.wx, seat.wy + SEAT_HIP - this.hipH(), seat.wz); else this.position.set(r.x + seat.x, r.y + SEAT_HIP - this.hipH(), r.z + seat.sd * 1.2); }
   /** 贴回座位并同步模型 / 影子（列车移动之后也要调用一次，避免慢一帧） */
   syncSeat() {
     if (!this.seat) return;
     this.placeSeat(); this.collider.computeWorldMatrix(true); this.groundY = this.position.y;
-    const p = this.position; this.model.position.set(p.x, p.y, p.z); this.model.rotation.y = this.facing;
+    const p = this.position, lie = this.lying && this.seat.seat.lie;
+    // 躺在酒店床上：模型绕脚底往后倒 90°（脸朝上、头朝枕头）
+    if (lie) { this.facing = lie.yaw; this.model.rotation.x = -Math.PI / 2; } else if (this.model.rotation.x) this.model.rotation.x = 0;
+    this.model.position.set(p.x, p.y, p.z); this.model.rotation.y = this.facing;
     this.blob.position.set(p.x, (this.seat.seat.world ? this.seat.seat.wy : this.seat.train.root.position.y) + 0.02, p.z); this.blob.scaling.set(0.8, 1, 0.8); this.blob.visibility = 0.55;
   }
   standUp() {
-    const { train, seat } = this.seat, r = train.root.position; this.seat = null;
+    const { train, seat } = this.seat, r = train.root.position; this.seat = null; this.lying = false; this.model.rotation.x = 0;
     if (seat.world) { this.position.set(seat.wx + Math.sin(seat.face) * 0.5, seat.wy + 0.05, seat.wz + Math.cos(seat.face) * 0.5); this.groundY = seat.wy; }
     else { this.position.set(r.x + seat.x, r.y + 0.05, r.z + seat.sd * 0.5); this.groundY = r.y; }
     this.vy = 0; this.grounded = true; this.collider.computeWorldMatrix(true);
@@ -63,7 +66,7 @@ export class Player {
       // 坐着：不走、不受重力，每帧贴回座位（列车移动由 Metro 带着走）；跳键 = 起身
       if (inp.jump && this.onStandRequest) this.onStandRequest();
       else {
-        this.person.animate(dt, { mode: 'sit' }); this.grounded = true; this.moving = false; this.speed = 0; this.airTime = 0;
+        this.person.animate(dt, { mode: this.lying ? 'idle' : 'sit' }); this.grounded = true; this.moving = false; this.speed = 0; this.airTime = 0;
         this.syncSeat();
         return;
       }

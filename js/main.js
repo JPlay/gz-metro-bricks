@@ -22,6 +22,7 @@ import { STATIONS, LINES, nextStation } from './data/lines.js';
 import { networkSVG, panZoom } from './ui/netmap.js';
 import { Discovery } from './game/discovery.js';
 import { installBrother } from './game/brother-main.js';
+import { HotelCtl } from './game/hotel.js';
 const B = window.BABYLON;
 
 class Events { constructor() { this.h = {}; } on(n, f) { (this.h[n] = this.h[n] || []).push(f); } emit(n, d) { (this.h[n] || []).forEach(f => f(d)); } }
@@ -142,7 +143,7 @@ export async function start() {
   window.addEventListener('resize', () => engine.resize());
 
   // —— 主循环
-  let stepAcc = 0;
+  let stepAcc = 0, hotel = null;
   scene.onBeforeRenderObservable.add(() => {
     const dt = Math.min(G.dtMax || 0.05, engine.getDeltaTime() / 1000);
     // 自动驾驶（测试用）
@@ -162,8 +163,9 @@ export async function start() {
     player.updateCamera(dt, scene);
     G.station.update(dt, player, cam, Audio, metro);
     // 动作按钮：车厢里优先“坐下 / 起身”，否则售票机 / 闸机
+    const hotelAct = hotel ? hotel.update(dt) : null;
     const seatAct = seats.update(), ticketAct = tickets.update(dt, G.station, player), socialAct = social.update(dt);
-    hud.action(seatAct || ticketAct || socialAct);
+    hud.action(seatAct || hotelAct || ticketAct || socialAct);
     // 车厢里的乘客动画（只动玩家所在 / 附近的车）
     for (const t of metro.trains) if (t.root.isEnabled() && t.pax && Math.abs(t.root.position.x - p0.x) < 45 && Math.abs(t.root.position.y - p0.y) < 6) for (const q of t.pax) q.p.animate(dt);
     bubbles.update(dt);
@@ -238,6 +240,8 @@ export async function start() {
   // —— 测试接口
   let inst = null; try { inst = new B.SceneInstrumentation(scene); inst.captureFrameTime = true; } catch (_) {}
   // 哥哥明明 + 美食店（选角色、换人、美食护照；见 js/game/brother-main.js）
+  // 丽呈铂锐酒店（农讲所站）：大堂 / 电梯 / 楼梯 / 客房（见 js/game/hotel.js）
+  hotel = new HotelCtl({ scene, M, player, hud, seats, Audio, events, getStation: () => G.station, getCode: () => G.code });
   const brother = installBrother({ scene, cam, M, player, R, hud, seats, social, bubbles, Audio, events, input, getStation: () => G.station, getCode: () => G.code });
   window.__game = {
     state: () => ({
@@ -247,7 +251,7 @@ export async function start() {
       babylon: { version: B.Engine.Version, source: window.__babylonSource, attempts: window.__babylonAttempts },
       drawCalls: (engine._drawCalls && engine._drawCalls.current) ?? null, activeMeshes: scene.getActiveMeshes().length, depthBits: depthBits(), minZ: cam.minZ, gates: G.station.gates.map(g => +g.f.toFixed(2)),
       security: G.station.security.flash > 0, probes: R.probes.length, atlas: G.station.kit.atlas ? { y: G.station.kit.atlas.y + G.station.kit.atlas.row, overflow: G.station.kit.atlas.overflow } : null, audio: Audio.getState(),
-      ticket: tickets.info(), seat: seats.info(), social: social.info(), discover: discovery.info(), hall: G.station && G.station.interior ? G.station.interior.info() : null, mapOpen: !!G.mapOpen, act: hud.act ? { id: hud.act.id, label: hud.act.label } : null
+      ticket: tickets.info(), seat: seats.info(), social: social.info(), discover: discovery.info(), hotel: hotel ? hotel.info() : null, hall: G.station && G.station.interior ? G.station.interior.info() : null, mapOpen: !!G.mapOpen, act: hud.act ? { id: hud.act.id, label: hud.act.label } : null
     }),
     teleport: (x, y, z, yaw) => player.spawn(x, y, z, yaw ?? player.yaw),
     setMove: (x, y, run) => { input.virtual = (x || y) ? { x, y, run } : null; },
@@ -256,6 +260,6 @@ export async function start() {
     autopilot: (pts, run) => new Promise(resolve => { G.auto = { pts, i: 0, time: 0, resolve, run }; }),
     call: (line, step) => metro.call(line, step), openMap, closeMap, mapZoom: mapPZ,
     // 测试：软件渲染只有几帧每秒，放宽单帧步长上限让游戏时间接近墙钟（默认 0.05）
-    setDtMax: v => { G.dtMax = v; }, act: doAct, brother, tickets, seats, social, discovery, bubbles, metro, player, scene, engine, events, render: R, get station() { return G.station; }
+    setDtMax: v => { G.dtMax = v; }, act: doAct, brother, hotel, tickets, seats, social, discovery, bubbles, metro, player, scene, engine, events, render: R, get station() { return G.station; }
   };
 }
