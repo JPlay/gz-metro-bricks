@@ -50,5 +50,55 @@ async def main():
             await shot(pg, '09-ming-and-xing')
             await pg.evaluate("__game.brother.pick('mingming'); __game.brother.confirm()")
             e = errs(logs); log('errors', e); await b.close()
+        if 'street' in PARTS:
+            # 三种门面：茶楼（公园前）/ 骑楼（纪念堂）/ 档口（陈家祠）+ 公园前街景（有店 / ?nofood=1 无店 同一机位对比）
+            for code, name in [('gyq', '16-shop-teahouse'), ('jnt', '17-shop-qilou'), ('cjc', '18-shop-stall')]:
+                b, pg, logs = await open_game(p, BASE + f'?q=1&char=mingming&start={code}')
+                await pg.evaluate('__game.setDtMax(0.12)'); await asyncio.sleep(2)
+                s = (await pg.evaluate('__game.brother.food.info()'))['shops'][0]; x, z = s['out']; x += -2 if x > 0 else 2
+                await pg.evaluate(f"__game.teleport({x},0.05,{z},{s['yawIn']}); __game.player.yaw={s['yawIn']}; __game.player.pitch=0.03; __game.player.dist=8")
+                await shot(pg, name, settle=3)
+                if code == 'gyq':
+                    await pg.evaluate("__game.teleport(6,0.05,-47,-2.2); __game.player.yaw=-2.2; __game.player.pitch=0.1; __game.player.dist=5"); await shot(pg, '19-street-gyq', settle=3)
+                    await pg.evaluate('__game.teleport(0,0.05,-50,0); __game.player.facing=0; __game.player.yaw=0; __game.player.pitch=0.12; __game.player.dist=2.6'); await shot(pg, '19b-gyq-toward-station', settle=2)
+                log('errors', errs(logs)); await b.close()
+            b, pg, logs = await open_game(p, BASE + '?q=1&char=mingming&nofood=1')
+            await pg.evaluate('__game.setDtMax(0.12)'); await asyncio.sleep(2)
+            await pg.evaluate("__game.teleport(6,0.05,-47,-2.2); __game.player.yaw=-2.2; __game.player.pitch=0.1; __game.player.dist=5"); await shot(pg, '19-street-gyq-NOFOOD', settle=3)
+            await pg.evaluate('__game.teleport(0,0.05,-50,0); __game.player.facing=0; __game.player.yaw=0; __game.player.pitch=0.12; __game.player.dist=2.6'); await shot(pg, '19b-gyq-toward-station-NOFOOD', settle=2)
+            await b.close()
+        if 'eat' in PARTS:
+            # 三家店里：坐下、上菜（停在刚上菜）
+            F = '__game.brother.food'
+            for code, name in [('gyq', '20-interior-teahouse'), ('jnt', '21-interior-qilou'), ('cjc', '22-interior-stall')]:
+                b, pg, logs = await open_game(p, BASE + f'?q=1&char=mingming&start={code}')
+                await pg.evaluate('__game.setDtMax(0.12)'); await asyncio.sleep(2)
+                s = (await pg.evaluate(F + '.info()'))['shops'][0]; x, z = s['door']
+                await pg.evaluate(f"__game.teleport({x},0.05,{z},{s['yawIn']}); __game.player.yaw={s['yawIn']}"); await asyncio.sleep(0.8); await pg.evaluate('__game.setMove(0,0.8)')
+                t0 = time.time()
+                while not await pg.evaluate(F + '.info().inside') and time.time() - t0 < 90: await asyncio.sleep(0.4)
+                await pg.evaluate('__game.setMove(0,0)')
+                await asyncio.sleep(1.5); seat = (await pg.evaluate(F + '.info()'))['interior']['seats'][2]
+                await pg.evaluate(f"__game.teleport({seat['x']-0.25},{seat['y']+0.05},{seat['z']-0.55},0)"); await asyncio.sleep(1.5)
+                async def until(js, t=60):
+                    t0 = time.time()
+                    while not await pg.evaluate(js):
+                        assert time.time() - t0 < t, js
+                        await asyncio.sleep(0.4)
+                await until('(__game.seats.update()||{}).id === "sit"'); await asyncio.sleep(0.6)
+                await pg.evaluate('__game.act()'); await until('__game.seats.info().seated'); await until(F + '.info().orderBtn')
+                await pg.evaluate(F + ".hold='served'; " + F + ".openMenu()"); await until(F + '.info().menuOpen')
+                await pg.click('#foodMenu .item', timeout=60000); await until(F + '.info().meal && ' + F + '.info().meal.phase === "eat"'); await asyncio.sleep(1)
+                await pg.evaluate(f"__game.player.yaw={seat['face']}+2.5; __game.player.pitch=0.3; __game.player.dist=4.2")
+                await shot(pg, name, settle=2)
+                log('food', await pg.evaluate(F + '.info()')); log('errors', errs(logs)); await b.close()
+        if 'passport' in PARTS:
+            b, pg, logs = await open_game(p, BASE + '?q=1&char=mingming')
+            await pg.evaluate('__game.setDtMax(0.12)'); await asyncio.sleep(2)
+            await pg.evaluate("localStorage.setItem('gzmetro.foodPassport', JSON.stringify(['chalou','yuntun','changfen','tianpin'])); __game.brother.food.pass = ['chalou','yuntun','changfen','tianpin']; __game.brother.food.updateCount()")
+            await pg.evaluate('__game.brother.food.openPass()'); await shot(pg, '23-passport-4of10', settle=1.5)
+            await pg.evaluate('__game.brother.food.closePass(); __game.openMap()'); await shot(pg, '24-map-food-icons', settle=2.5)
+            n = await pg.evaluate("document.querySelectorAll('#netmap .foodmk').length"); log('map food markers', n); assert n == 10
+            log('errors', errs(logs)); await b.close()
     print('PERF', json.dumps(PERF, ensure_ascii=False))
 asyncio.run(main())

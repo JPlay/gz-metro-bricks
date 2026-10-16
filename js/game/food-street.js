@@ -20,7 +20,8 @@ export function frameFor(r) {
 
 /** 在车站街面上搭这一站的美食店；返回 [{ r, F, door:{a0,a1,dIn,dOut} }] */
 export function buildFoodStreet(st, treeSpots) {
-  const list = RESTAURANTS.filter(r => r.code === st.code);
+  // ?nofood=1：不搭美食店（性能对比用）
+  const list = /[?&]nofood=1/.test(location.search) ? [] : RESTAURANTS.filter(r => r.code === st.code);
   if (!list.length) return [];
   // 店的占地（+2.5m）里的树挪到店后面（只改位置、不删，随机数序列不变，其他装饰不受影响）
   if (treeSpots) for (const r of list) { const n = r.side === 'W' ? 1 : -1; for (let i = treeSpots.length - 1; i >= 0; i--) { const [x, z] = treeSpots[i], d = (x + n * SHOP.xf) * n, a = (z - SHOP.zc) * n; if (d > -SHOP.depth - 2.5 && d < 2.5 && Math.abs(a) < SHOP.w / 2 + 2.5) treeSpots[i] = [-n * (SHOP.xf + SHOP.depth + 3 + (i % 3) * 1.5), z, ...treeSpots[i].slice(2)]; } }

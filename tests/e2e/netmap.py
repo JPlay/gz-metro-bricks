@@ -63,8 +63,9 @@ async def main():
             await shot(pg, '4-concourse-wall-map-close')
     R['errors'] = errs(logs)
     print(json.dumps(R, ensure_ascii=False, indent=1), flush=True)
+    # 右上角按钮：原来 3 个（地图 / 视角 / 声音）+ 哥哥明明的「换人」「美食」= 5 个，都要一排不重叠
     bx = R['btns']; tidy = all(bx[i][1] + bx[i][3] <= bx[i + 1][1] for i in range(len(bx) - 1)) and bx[-1][1] + bx[-1][3] <= W and len({t for _, _, t, _ in bx}) == 1 and R['where'][1] < bx[0][1]
-    chk = {'threeBtnsTidy': len(bx) == 3 and tidy, 'allStations': R['stationsOnMap']['n'] == 39 and not R['stationsOnMap']['missing'], 'here': R['map']['hasHere'] and R['map']['pulse'],
+    chk = {'threeBtnsTidy': len(bx) in (3, 5) and tidy, 'allStations': R['stationsOnMap']['n'] == 39 and not R['stationsOnMap']['missing'], 'here': R['map']['hasHere'] and R['map']['pulse'],
            'lineColours': R['map']['polylines'] == ['#F3D03E', '#00629B'], 'closed': R['closed'], 'noErrors': not R['errors'], 'zoomed': R['zoom'] > 1.5 and R['stillOpen'] and 'scale(4)' in R['panT'] and 'translate(0px, 0px)' not in R['panT'], 'legend': len(R['legend']) == 2}
     if H > W: chk['fillsWidth'] = R['fillW'] > 0.9
     if W > H: chk['wallMap'] = R['wallReady']
