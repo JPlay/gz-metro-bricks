@@ -2,7 +2,7 @@
  * 共享材质库（不随车站重建销毁）。PBR（金属度/粗糙度）+ 顶点色 + 程序化贴图（assets/tex，见 tools/textures）。
  * 每个“桶”= 一种材质 = 每个车站 1 个合并网格。
  *   paint 漆面/塑料（纯顶点色）  floor 花岗岩地砖（站内，带反射探针）  pave 人行道铺装  tactile 盲道
- *   ceiling 铝扣板  wall 搪瓷钢板  metal 拉丝不锈钢  concrete 混凝土  brick 红砖  asphalt 沥青  grass 草地  facade 楼房立面
+ *   ceiling 铝扣板  wall 搪瓷钢板  metal 拉丝不锈钢  concrete 混凝土  brick 红砖  qz 青砖（陈家祠）  asphalt 沥青  grass 草地  facade 楼房立面
  *   glass 玻璃  glow 自发光（灯带、屏幕）  halo 灯带光晕（叠加）  shade 贴地柔和暗影（烘焙 AO）
  */
 const B = window.BABYLON;
@@ -11,15 +11,15 @@ let M = null;
 export const TEX = {
   floor: { file: 'floor', size: 1.2, normal: true }, pave: { file: 'paving', size: 1.2, normal: true }, tactile: { file: 'tactile', size: 0.3, normal: true },
   ceiling: { file: 'ceiling', size: 1.2, normal: true }, wall: { file: 'wall', size: 2.4, normal: true }, metal: { file: 'steel', size: 1.0 },
-  concrete: { file: 'concrete', size: 2.5 }, brick: { file: 'brick', size: 1.0, normal: true }, asphalt: { file: 'asphalt', size: 4 },
+  concrete: { file: 'concrete', size: 2.5 }, brick: { file: 'brick', size: 1.0, normal: true }, qz: { file: 'qingzhuan', size: 1.2, normal: true }, asphalt: { file: 'asphalt', size: 4 },
   grass: { file: 'grass', size: 2.5 }, facade: { file: 'facade', size: 6 }
 };
 const PBR = {
   paint: { rough: 0.55, metal: 0 }, floor: { rough: 0.16, metal: 0, env: 0.9 }, pave: { rough: 0.85, metal: 0 }, tactile: { rough: 0.6, metal: 0 },
   ceiling: { rough: 0.45, metal: 0.15 }, wall: { rough: 0.22, metal: 0, env: 0.8 }, metal: { rough: 0.3, metal: 1 }, concrete: { rough: 0.92, metal: 0 },
-  gloss: { rough: 0.1, metal: 0, env: 1.0 }, brick: { rough: 0.85, metal: 0 }, asphalt: { rough: 0.9, metal: 0 }, grass: { rough: 0.95, metal: 0 }, facade: { rough: 0.6, metal: 0 }
+  gloss: { rough: 0.1, metal: 0, env: 1.0 }, brick: { rough: 0.85, metal: 0 }, qz: { rough: 0.8, metal: 0 }, asphalt: { rough: 0.9, metal: 0 }, grass: { rough: 0.95, metal: 0 }, facade: { rough: 0.6, metal: 0 }
 };
-export const BUCKETS = ['paint', 'gloss', 'floor', 'pave', 'tactile', 'ceiling', 'wall', 'metal', 'concrete', 'brick', 'asphalt', 'grass', 'facade', 'glass', 'glow', 'halo', 'shade'];
+export const BUCKETS = ['paint', 'gloss', 'floor', 'pave', 'tactile', 'ceiling', 'wall', 'metal', 'concrete', 'brick', 'qz', 'asphalt', 'grass', 'facade', 'glass', 'glow', 'halo', 'shade'];
 const texCache = {};
 export function tex(scene, file, ext = 'jpg') {
   const k = file + '.' + ext; if (texCache[k]) return texCache[k];

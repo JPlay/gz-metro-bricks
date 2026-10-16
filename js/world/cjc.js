@@ -14,7 +14,7 @@ export const CJC = { cx: 39, fz: -58, x0: 24, x1: 54 };
 /** 大门（门廊里，往北走进门 = 进头进） */
 export const CJC_DOOR = { x: 39, z: -55.9, half: 1.5 };
 const C = {
-  brick: hex('#8C9395'), brick2: hex('#7D8486'), granite: hex('#CFCBC2'), granite2: hex('#B9B4A9'), tile: hex('#5F6E62'), tile2: hex('#4E5C51'),
+  brick: hex('#7D8A94'), brick2: hex('#727F89'), drum: hex('#DEDCD5'), drum2: hex('#C9C5BB'), granite: hex('#CFCBC2'), granite2: hex('#B9B4A9'), tile: hex('#5F6E62'), tile2: hex('#4E5C51'),
   black: hex('#1E1B19'), wood: hex('#5A3524'), gold: hex('#D4A84A'), plaster: hex('#E9E4D8'), ridge: hex('#6B7A6E')
 };
 let seed = 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
@@ -78,6 +78,48 @@ function paintDoorGods(c, pw, ph) {
   }
 }
 
+const GLAZE = ['#2E7D5B', '#1F5FA0', '#E0A82E', '#C2412D', '#F2EAD3', '#3BA3A0', '#2E7D5B', '#E0A82E', '#1F5FA0'].map(hex);
+/** 立体陶塑脊：前后两排彩釉人物 + 每隔一段一座亭台，两头卷起的卷草（鳌鱼）脊头；全部并进 solid 桶 */
+function ceramicRidge3D(P, xa, xb, zr, y, h, sd = 1) {
+  seed = 500 + sd * 37;
+  const L = xb - xa, fH = h * 0.5, end = Math.min(1.0, h * 0.55);
+  P.slab(xa + end * 0.6, xb - end * 0.6, y, y + h * 0.12, zr - 0.2, zr + 0.2, hex('#3F6B57'), { ao: false });   // 花果纹基座
+  for (let x = xa + end * 0.7; x < xb - end * 0.7; x += 0.34) P.sphere(x, y + h * 0.06, zr - 0.2, h * 0.1, GLAZE[(rnd() * GLAZE.length) | 0], 1, 1, true);
+  const yb = y + h * 0.12;
+  // 亭台楼阁：每隔 ~2.6m 一座（前后排之间、居中），两层檐 + 金顶
+  const pav = [];
+  for (let x = xa + end + 1.2; x < xb - end - 0.8; x += 2.4 + rnd() * 0.6) {
+    const w = h * (0.42 + rnd() * 0.12), ph = h * (0.36 + rnd() * 0.1); pav.push(x);
+    P.box(x, yb + ph / 2, zr, w, ph, w * 0.7, hex('#C9B48A'), 0, 0, 0, 1, { ao: false });
+    for (const dx of [-0.32, 0, 0.32]) P.box(x + dx * w, yb + ph * 0.42, zr - w * 0.36, w * 0.12, ph * 0.7, 0.02, hex('#7A3B22'), 0, 0, 0, 1, { ao: false });
+    P.cyl(x, yb + ph + h * 0.07, zr, w * 1.45, h * 0.14, GLAZE[0], 4, Math.PI / 4, 0, 0, w * 0.5, { ao: false });
+    P.box(x, yb + ph + h * 0.2, zr, w * 0.55, h * 0.12, w * 0.4, hex('#C9B48A'), 0, 0, 0, 1, { ao: false });
+    P.cyl(x, yb + ph + h * 0.31, zr, w * 0.9, h * 0.12, GLAZE[1], 4, Math.PI / 4, 0, 0, w * 0.2, { ao: false });
+    P.cyl(x, yb + ph + h * 0.42, zr, h * 0.05, h * 0.12, GLAZE[2], 6, 0, 0, 0, h * 0.01, { ao: false });
+  }
+  // 两排人物（戏曲故事）：前排略矮，后排高一点，避开亭台
+  for (const [dz, sc] of [[-0.12, 0.9], [0.12, 1.08]]) {
+    for (let x = xa + end + 0.35; x < xb - end - 0.3; x += 0.3 + rnd() * 0.16) {
+      if (pav.some(px => Math.abs(px - x) < h * 0.32)) continue;
+      const fh = fH * sc * (0.8 + rnd() * 0.35), c1 = GLAZE[(rnd() * GLAZE.length) | 0], c2 = GLAZE[(rnd() * GLAZE.length) | 0], z = zr + dz;
+      P.cyl(x, yb + fh * 0.33, z, fh * 0.42, fh * 0.66, c1, 6, rnd() * 3, 0, 0, fh * 0.2, { ao: false });          // 袍子（下宽上窄）
+      P.box(x, yb + fh * 0.7, z, fh * 0.32, fh * 0.12, fh * 0.18, c2, 0, 0, 0, 1, { ao: false });                    // 肩 / 披
+      P.sphere(x, yb + fh * 0.84, z, fh * 0.2, hex('#F3D9B5'), 1, 1, true);                                         // 头
+      P.box(x, yb + fh * 0.96, z, fh * 0.2, fh * 0.07, fh * 0.16, rnd() < 0.5 ? hex('#1E1B19') : GLAZE[2], 0, 0, 0, 1, { ao: false });   // 帽
+      if (rnd() < 0.35) P.tube([x + fh * 0.14, yb + fh * 0.5, z], [x + fh * 0.3, yb + fh * 1.05, z], fh * 0.04, GLAZE[2], 4);   // 兵器 / 旗杆
+    }
+  }
+  // 两头：卷起来的卷草脊头（往上翘、往里卷），黄绿蓝釉
+  for (const [x, d] of [[xa + end * 0.45, 1], [xb - end * 0.45, -1]]) {
+    const pts = []; const R = end * 0.55;
+    for (let i = 0; i <= 9; i++) { const t = i / 9, a = Math.PI * (0.05 + 1.55 * t), r = R * (1 - 0.6 * t); pts.push([x + d * (-Math.cos(a) * r * 0.9 + R * 0.2), y + h * 0.1 + R + Math.sin(a) * r * 1.4 + t * h * 0.25, zr]); }
+    P.box(x, y + h * 0.22, zr, end * 0.9, h * 0.32, 0.38, GLAZE[0], 0, 0, 0, 1, { ao: false });
+    P.path(pts, end * 0.3, GLAZE[0], 6);
+    P.path(pts.map(p => [p[0], p[1], p[2] - 0.13]), end * 0.12, GLAZE[2], 5);
+    P.sphere(pts[9][0], pts[9][1], zr, end * 0.32, GLAZE[1], 1);
+  }
+}
+
 export function buildCjc(k) {
   const P = k.solid, Pv = k.g('pave'), G = k.glow, { cx, fz, x0, x1 } = CJC;
   // 门前广场（花岗石）
@@ -101,9 +143,14 @@ export function buildCjc(k) {
   const ridge = (xa, xb, zr, y, h, key) => {   // 脊座 + 陶塑脊（两面画）
     P.slab(xa - 0.1, xb + 0.1, y, y + 0.35, zr - 0.3, zr + 0.3, C.ridge, { ao: false });
     P.slab(xa, xb, y + 0.35, y + 0.42, zr - 0.18, zr + 0.18, C.plaster, { ao: false });
-    k.sign((xa + xb) / 2, y + 0.42 + h / 2, zr, { kind: 'custom', key, paint: (c, pw, ph) => paintCeramicRidge(c, pw, ph, key.length), w: xb - xa, h, face: Math.PI, double: true });
+    ceramicRidge3D(P, xa, xb, zr, y + 0.42, h, key.length);
   };
-  const wall = (xa, xb, y0, y1, za, zb, col = C.brick) => { P.slab(xa, xb, y0, y1, za, zb, col, { aoTop: true }); k.colSlab(xa, xb, y0, y1, za, zb); };
+  const Q = k.g('qz');   // 青砖（蓝灰，磨砖对缝贴图）
+  const wall = (xa, xb, y0, y1, za, zb, col = C.brick) => {
+    const pl = y0 <= PH + 0.01 ? 0.55 : 0;   // 落地的墙：脚下一圈齐膝高的花岗石墙基（比砖墙凸出一点）
+    if (pl) P.slab(xa - 0.04, xb + 0.04, y0, y0 + pl, za - 0.04, zb + 0.04, C.granite, { ao: false });
+    Q.slab(xa, xb, y0 + pl, y1, za, zb, col, { aoTop: true }); k.colSlab(xa, xb, y0, y1, za, zb);
+  };
   // —— 头门（中间 x 27..41）：门廊退进 2.4m，前面四根石檐柱
   const GX0 = cx - 7, GX1 = cx + 7, EAVE = 7.4, RID = 10.2, zIn = fz + 2.4;
   wall(GX0, GX1, PH, EAVE, zIn, zIn + 6);                                  // 门廊后墙（大门在这里）
@@ -121,7 +168,14 @@ export function buildCjc(k) {
   k.sign(cx, PH + DH + 1.05, DZ - 0.08, { kind: 'custom', key: 'plaqueCs', w: 3.6, h: 1.0, face: Math.PI, paint: (c, pw, ph) => {
     c.fillStyle = '#1E1B19'; c.fillRect(0, 0, pw, ph); c.strokeStyle = '#D4A84A'; c.lineWidth = ph * 0.07; c.strokeRect(ph * 0.06, ph * 0.06, pw - ph * 0.12, ph - ph * 0.12);
     c.fillStyle = '#E8C26A'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `900 ${ph * 0.6}px ${FONT}`; c.fillText('陈 氏 书 院', pw / 2, ph * 0.54); } });
-  for (const s of [-1, 1]) { P.cyl(cx + s * (DW / 2 + 0.75), PH + 0.75, DZ - 0.45, 1.1, 0.42, C.granite, 14, 0, 0, Math.PI / 2); P.box(cx + s * (DW / 2 + 0.75), PH + 0.15, DZ - 0.45, 0.55, 0.3, 0.9, C.granite2); k.col(cx + s * (DW / 2 + 0.75), PH + 0.7, DZ - 0.45, 0.6, 1.4, 1.0); }   // 抱鼓石
+  for (const s of [-1, 1]) {   // 石鼓（抱鼓石）：灰白花岗石，须弥座 + 侧立的大圆鼓，紧贴门框两边
+    const x = cx + s * 1.62, z = DZ - 0.62, yb = PH + 0.55, r = 0.64;
+    P.box(x, PH + 0.275, z, 0.62, 0.55, 1.2, C.drum2, 0, 0, 0, 1, { ao: true }); P.box(x, PH + 0.5, z, 0.7, 0.1, 1.3, C.drum, 0, 0, 0, 1, { ao: false });
+    P.cyl(x, yb + r, z, 2 * r, 0.46, C.drum, 18, 0, 0, Math.PI / 2, undefined, { ao: false });
+    for (const sx of [-1, 1]) P.cyl(x + sx * 0.24, yb + r, z, 2 * r - 0.16, 0.04, C.drum2, 18, 0, 0, Math.PI / 2, undefined, { ao: false });
+    P.sphere(x, yb + 2 * r + 0.08, z, 0.26, C.drum, 1, 0.8);   // 鼓顶的小狮子头（简化成圆钮）
+    k.col(x, PH + 1.0, z, 0.7, 2.0, 1.3);
+  }
   // 门廊两侧墙上的灰塑 + 屋檐下灰塑横幅（整面）
   k.sign(cx, EAVE + 0.35, fz - 0.28, { kind: 'custom', key: 'plasterFrieze', paint: (c, pw, ph) => paintPlaster(c, pw, ph, 2), w: GX1 - GX0, h: 0.7, face: Math.PI });
   roof(GX0, GX1, fz - 0.5, fz + 3.6, EAVE, RID);
@@ -132,8 +186,7 @@ export function buildCjc(k) {
   for (const [a, b] of [[x0 + 2, GX0 - 0.5], [GX1 + 0.5, x1 - 2]]) {
     const e2 = 6.2, r2 = 8.6, mid = (a + b) / 2;
     wall(a, b, PH, e2, fz, fz + 6);
-    for (let x = a + 0.5; x < b - 0.4; x += 0.42) P.slab(x, x + 0.02, PH + 0.3, e2 - 0.4, fz - 0.012, fz, C.brick2, { ao: false });   // 磨砖对缝的竖缝
-    P.slab(mid - 1.0, mid + 1.0, PH, PH + 3.2, fz - 0.05, fz, C.black, { ao: false }); P.slab(mid - 1.2, mid + 1.2, PH + 3.2, PH + 3.4, fz - 0.07, fz, C.granite2, { ao: false });
+    P.slab(mid - 1.0, mid + 1.0, PH, PH + 3.2, fz - 0.07, fz, C.black, { ao: false }); P.slab(mid - 1.2, mid + 1.2, PH + 3.2, PH + 3.4, fz - 0.09, fz, C.granite2, { ao: false });
     k.sign(mid, e2 - 0.35, fz - 0.03, { kind: 'custom', key: 'plasterSide' + (a < cx ? 'W' : 'E'), paint: (c, pw, ph) => paintPlaster(c, pw, ph, a < cx ? 3 : 4), w: b - a - 0.4, h: 0.55, face: Math.PI });
     roof(a, b, fz - 0.4, fz + 3.0, e2, r2);
     ridge(a + 0.4, b - 0.4, fz + 3.0, r2, 1.2, 'ridgeSide' + (a < cx ? 'W' : 'E'));

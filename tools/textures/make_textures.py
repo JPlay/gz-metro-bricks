@@ -123,6 +123,19 @@ def brick():
     col = col * (0.9 + 0.2 * noise(N, 12)[..., None])
     save('brick.jpg', col)
     save('brick_n.jpg', normal_from_height(np.array(Image.fromarray((hmap * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(1.2))) / 255.0, 3.0), 90)
+# ---------- 青砖（1.2m，磨砖对缝：中性灰，颜色由顶点色给，蓝灰）----------
+def qingzhuan():
+    rows, cols, mw = 16, 4, 2; bh = N // rows; bw = N // cols
+    col = np.full((N, N), 0.97); hmap = np.zeros((N, N)); r2 = np.random.default_rng(1188)
+    for r in range(rows):
+        off = (r % 2) * bw // 2
+        for c in range(-1, cols + 1):
+            x0 = c * bw + off; y0 = r * bh; tone = r2.uniform(0.70, 0.90)
+            for xa in range(x0 + mw, x0 + bw):
+                xx = xa % N; col[y0 + mw:y0 + bh, xx] = tone; hmap[y0 + mw:y0 + bh, xx] = 1
+    col = col * (0.92 + 0.14 * noise(N, 10, seed=77))
+    save('qingzhuan.jpg', np.stack([col, col, col], -1))
+    save('qingzhuan_n.jpg', normal_from_height(np.array(Image.fromarray((hmap * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(1.0))) / 255.0, 2.5), 90)
 # ---------- 沥青（4m）----------
 def asphalt():
     g = 0.30 + 0.06 * (noise(N, 50) - 0.5)
@@ -223,7 +236,7 @@ def blob():
     Image.fromarray(img, 'RGBA').save(os.path.join(OUT, 'blob.png'), optimize=True)
 
 import sys
-ALL = [floor, tactile, ceiling, wall, steel, concrete, brick, asphalt, paving, grass, facade, sky, blob]
+ALL = [floor, tactile, ceiling, wall, steel, concrete, brick, qingzhuan, asphalt, paving, grass, facade, sky, blob]
 # 可只生成部分贴图：python3 tools/textures/make_textures.py sky（sky 用固定种子，单独生成结果一致）
 want = set(sys.argv[1:])
 for f in ALL:
