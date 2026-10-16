@@ -13,8 +13,8 @@ import { LINES, STATIONS, OTHER_LINES, transfersAt, nextStation } from '../data/
 import { DOOR_XS } from './train.js';
 import * as D from './decor.js';
 import * as MV from './mv.js';
-import { flatBand, stairBand, bridgeStripe } from './wayfind.js';
-import { buildSysy } from './sysy.js';
+import { flatBand, stairBand, stairBandZ, bridgeStripe } from './wayfind.js';
+import { buildSysy, HALL_DOOR, HALL_STEPS_Z } from './sysy.js';
 import { Crowd, randomLook, preseed, archetypeLook } from './people.js';
 import { FONT, FONT_EN, roundRect } from './kit.js';
 import { drawLineCanvas, networkSVG } from '../ui/netmap.js';
@@ -67,6 +67,7 @@ export class Station {
     this.street(); this.passage(); this.concourse();
     this.platforms.forEach(p => this.platform(p));
     if (this.platforms.length > 1) this.transfer();
+    if (this.s.attraction) this.sysyWayfinding();
     k.finish();
     this.root = k.root;
   }
@@ -257,7 +258,7 @@ export class Station {
     const lines = s.lines.map(badge), exits = [this.exitMain];
     k.sign(0, 4.85, -38.52, { kind: 'entrance', w: 9.4, h: 1.15, zh: s.zh + '站', en: s.en + ' Station', badges: lines, exits, face: Math.PI });
     // 站口导向牌（升级：大箭头 + 线路色块 + 大字，走到站口就看得到）
-    k.sign(0, 2.95, -37.6, { kind: 'way', w: 4.6, h: 0.85, zh: '进站', en: 'Entrance', arrow: 'down', badges: lines, face: Math.PI, hang: 3.6 });
+    k.sign(0, 2.95, -37.6, { kind: 'way', w: 4.6, h: 0.85, zh: '进站', en: 'Entrance', arrow: 'down', badges: lines, face: Math.PI, hang: 3.6, ...(s.attraction ? { double: true, back: this.hallSign('up', { w: 4.6, h: 0.85, exit: null }) } : {}) });
     // 换乘站：2 号线没有单独的站口——挂在“进站”牌下面，免得在街上找 2 号线的入口
     // 字号接近上面“进站”牌（h 0.8 → 中文约 0.37m，“进站”0.39m）：不画箭头（上面的“进站”已有向下箭头），省出宽度给大字；宽 7.6m 刚好在雨棚两根立柱之间
     if (this.platforms.length > 1) k.sign(0, 2.07, -37.62, { ...TRANSFER_HINT, w: 7.6, h: 0.8, face: Math.PI, hang: 3.6 });
@@ -307,7 +308,7 @@ export class Station {
     }
     k.g('ceiling').slab(-3.5, 3.5, -1.05, -0.95, -26, -20, CEIL, { ao: false });
     this.lightStrip('z', -25.8, -20.2, 0, -0.95, 0.14, 0.8, 0.28);
-    k.sign(0, -1.55, -25.6, { kind: 'dir', w: 3.6, h: 0.5, zh: '往站厅 · 乘车', en: 'To Concourse', arrow: 'down', badges: this.s.lines.map(badge), face: Math.PI, hang: -1.0 });
+    k.sign(0, -1.55, -25.6, { kind: 'dir', w: 3.6, h: 0.5, zh: '往站厅 · 乘车', en: 'To Concourse', arrow: 'down', badges: this.s.lines.map(badge), face: Math.PI, hang: -1.0, ...(this.s.attraction ? { double: true, back: this.hallSign('up', { w: 3.6, h: 0.5 }) } : {}) });
   }
   /* ---------------- 站厅 ---------------- */
   concourse() {
@@ -381,7 +382,8 @@ export class Station {
     const archLight = B.MeshBuilder.CreateBox('archLight', { width: 1.6, height: 0.1, depth: 0.04 }, this.scene); archLight.material = archLightMat; archLight.parent = k.root; archLight.position.set(0, y + 2.46, zs - 0.37);
     this.crowd.add(2.4, y, zs + 1.4, -Math.PI / 2 - 0.4, randomLook({ uniform: { top: '#24456E', bottom: '#1F2A3A', cap: '#24456E', stripe: '#E8C547' } }), 'wave');
     k.sign(0, y + 3.5, zs - 0.4, { kind: 'dir', w: 5.2, h: 0.6, zh: '安全检查', en: 'Security Check', face: Math.PI, double: true, back: { kind: 'exit', exits: this.exits }, hang: CY });
-    k.sign(10.5, y + 3.3, zs - 0.1, { kind: 'exit', w: 3.4, h: 0.55, arrow: 'up', exits: [this.exitMain], face: 0, hang: CY });
+    if (s.attraction) k.sign(10.5, y + 3.3, zs - 0.1, { ...this.hallSign('up', { w: 4.4, h: 0.62 }), face: 0, hang: CY });
+    else k.sign(10.5, y + 3.3, zs - 0.1, { kind: 'exit', w: 3.4, h: 0.55, arrow: 'up', exits: [this.exitMain], face: 0, hang: CY });
     for (const z of [-17, -15]) arrow(k, 0, y + 0.006, z, 0, '#F2C230');
     // 行李（X 光机传送带）
     const bags = [0, 1, 2].map(i => {
@@ -413,7 +415,7 @@ export class Station {
     if (this.platforms.length > 1) k.sign(0, y + 2.76, zg - 0.56, { ...TRANSFER_HINT, w: 7.8, h: 0.72, arrow: 'up', face: Math.PI, hang: CY });
     for (const z of [-8.5, -5.5]) arrow(k, 0, y + 0.006, z, 0, '#F2C230');
     // 刚过闸机：往站台（线路色块 + 两头终点），背面是出站
-    k.sign(0, y + 3.35, 2.6, { kind: 'way', w: 8.2, h: 0.9, zh: '站台', en: 'Platforms', arrow: 'up', badges: L.map(badge), dirs: termini(L[0], this.code), face: Math.PI, double: true, back: { kind: 'exit', arrow: 'up', zh: '出站', en: 'Exit', exits: this.exits }, hang: CY });
+    k.sign(0, y + 3.35, 2.6, { kind: 'way', w: 8.2, h: 0.9, zh: '站台', en: 'Platforms', arrow: 'up', badges: L.map(badge), dirs: termini(L[0], this.code), face: Math.PI, double: true, back: s.attraction ? this.hallSign('up', { w: 8.2, h: 0.9 }) : { kind: 'exit', arrow: 'up', zh: '出站', en: 'Exit', exits: this.exits }, hang: CY });
     // 盲道：通道口 → 闸机 → 楼梯口
     const T = k.g('tactile'), ty = y + 0.003, tc = hex('#F2C230');
     T.slab(5.85, 6.15, ty, ty + 0.006, -19.8, -12.6, tc, { ao: false }); T.slab(5.85, 6.15, ty, ty + 0.006, -11.4, -3.2, tc, { ao: false });
@@ -430,7 +432,7 @@ export class Station {
     k.rail(-1, 9.85, 15, 9.85, y); k.rail(-1, 18.15, 15, 18.15, y); k.rail(15, 9.85, 15, 18.15, y);
     const destTxt = L.map(l => LINES[l].zh).join(' · ');
     // 下站台的楼梯 / 扶梯口：箭头往下 + 本线色块 + 两头终点
-    k.sign(-1.6, y + 3.35, 14, { kind: 'way', w: 7.6, h: 0.9, zh: '站台', en: 'Platforms', badges: [badge(L[0])], arrow: 'down', dirs: termini(L[0], this.code), face: -Math.PI / 2, double: true, back: { kind: 'exit', arrow: 'up', exits: this.exits }, hang: CY });
+    k.sign(-1.6, y + 3.35, 14, { kind: 'way', w: 7.6, h: 0.9, zh: '站台', en: 'Platforms', badges: [badge(L[0])], arrow: 'down', dirs: termini(L[0], this.code), face: -Math.PI / 2, double: true, back: s.attraction ? this.hallSign('left', { w: 7.6, h: 0.9 }) : { kind: 'exit', arrow: 'up', exits: this.exits }, hang: CY });
     void destTxt;
     for (const [x, z, a] of [[-4, 2], [-4, 5.5], [-4, 9], [-3, 13.2, Math.PI / 2]]) arrow(k, x, y + 0.006, z, a || 0, '#F2C230');
     // 乘客（站着 / 看手机 / 走动）
@@ -667,7 +669,8 @@ export class Station {
     }
     this.pidsBuild(P, CY);
     // 楼梯口出口牌 / 站名
-    if (isMain) k.sign(16.6, y + 3.35, 14, { kind: 'exit', w: 4.4, h: 0.6, arrow: 'up', exits: this.exits, face: Math.PI / 2, double: true, hang: CY });
+    if (isMain && s.attraction) k.sign(16.6, y + 3.35, 14, { ...this.hallSign('up', { w: 5.2, h: 0.8 }), face: Math.PI / 2, double: true, back: this.hallSign('right', { w: 5.2, h: 0.8 }), hang: CY });
+    else if (isMain) k.sign(16.6, y + 3.35, 14, { kind: 'exit', w: 4.4, h: 0.6, arrow: 'up', exits: this.exits, face: Math.PI / 2, double: true, hang: CY });
     k.sign(isMain ? -30 : 30, y + 3.3, zc, { kind: 'dir', w: 5.2, h: 0.62, zh: s.zh + ' · ' + L.zh, en: s.en, badges: [badge(P.line)], face: isMain ? Math.PI / 2 : -Math.PI / 2, double: true, hang: CY, bar: lc });
     D.cctv(k, isMain ? 20 : 34, CY, zc, -Math.PI / 2); D.cctv(k, -36, CY, zc, Math.PI / 2);
     if (isMain) for (const x of [24, 20]) arrow(k, x, y + 0.006, zc - 4.2, Math.PI / 2, '#FFFFFF'), arrow(k, x, y + 0.006, zc + 4.2, Math.PI / 2, '#FFFFFF');
@@ -854,6 +857,51 @@ export class Station {
     k.sign(20, y2 + 3.25, GYQ2.zc, { ...back1, w: 4.4, h: 0.8, face: Math.PI / 2, hang: y2 + 4.2 });
     k.sign(-28, y2 + 3.25, GYQ2.zc, { ...back1, w: 4.4, h: 0.8, face: -Math.PI / 2, hang: y2 + 4.2 });
   }
+  /** 中山纪念堂导向牌的内容（kind 'hall'：箭头 + 纪念堂小图标 + 大字 + 黄色出口字母） */
+  hallSign(arrow, o = {}) { const A = this.s.attraction; return { kind: 'hall', arrow, zh: A.zh, en: A.en, exit: A.exit, ...o }; }
+  /**
+   * 纪念堂站 → 中山纪念堂（给 8 岁小朋友，一路跟着绿色引导带 + 白色箭头走）：
+   *   站台（两头 / 西侧走道）→ 楼梯 → 站厅 → 出站闸机 → C 出口通道楼梯 → 街面 → 路口指路牌 → 前广场 → 正门台阶前的金色到达圈。
+   *   导向牌都带纪念堂小图标 + “中山纪念堂 C出口”；色带用 kit 的 band 材质（和换乘引导带同一套防闪烁做法）。
+   */
+  sysyWayfinding() {
+    const k = this.kit, G = k.g('band'), y1 = MAIN.y, y = YC, CY = y + 4.4, GR = '#1FA35B', W = '#FFFFFF', A = this.s.attraction;
+    // —— 站台：东段直接到楼梯脚；西段绕北侧走道（楼梯 / 扶梯底下过不去）
+    flatBand(G, [[40, 13.1], [15, 13.1]], y1, GR, W);
+    flatBand(G, [[-40, 12.8], [-3.2, 12.8], [-3.2, 18.6], [17.4, 18.6], [17.4, 13.5]], y1, GR, W);
+    stairBand(G, -1, y, 15, y1, 13.1, GR, W, { visual: true, walkDir: -1 });
+    // —— 站厅：楼梯口 → 闸机（x=2 那条通道）→ 绕过安检（出站走旁边）→ 通道楼梯
+    flatBand(G, [[-1, 13.1], [-2.2, 13.1], [-2.2, 1.4], [2, 1.4], [2, -4.6], [10.5, -4.6], [10.5, -15.6], [1.2, -15.6], [1.2, -20]], y, GR, W);
+    stairBandZ(G, -20, y, -36, 0, 1.2, GR, W, { walkDir: -1 });
+    // —— 街面：出站口 → 往南到路口 → 往东 → 前广场 → 台阶前
+    flatBand(G, [[1.2, -36], [1.2, -55.5], [31.6, -55.5], [31.6, -52.3]], 0, GR, W);
+    flatBand(G, [[31.6, -51.9], [31.6, HALL_STEPS_Z - 2.6]], 0.056, GR, W);
+    // —— 到达圈（金色圆环，贴在广场上）
+    const ring = (cx, cz, r0, r1, yy, col) => { const c = hex(col), n = 40; for (let i = 0; i < n; i++) { const a0 = i / n * Math.PI * 2, a1 = (i + 1) / n * Math.PI * 2, p = (a, r) => [cx + Math.cos(a) * r, yy, cz + Math.sin(a) * r]; G.quad(p(a0, r0), p(a1, r0), p(a1, r1), p(a0, r1), c); G.quad(p(a0, r1), p(a1, r1), p(a1, r0), p(a0, r0), c); } };
+    this.goal = { x: HALL_DOOR.x, z: HALL_STEPS_Z - 1.6, zone: HALL_DOOR.zone };
+    ring(this.goal.x, this.goal.z, 1.05, 1.35, 0.056 + 0.03, '#F2C230'); ring(this.goal.x, this.goal.z, 0.55, 0.7, 0.056 + 0.03, '#F2C230');
+    // 漂在到达圈上方的金色菱形（每帧转、上下浮；到达后藏起来）
+    const gem = new Geo(); gem.cyl(0, 0.3, 0, 0.6, 0.6, hex('#FFD34D'), 4, 0, 0, 0, 0.0); gem.cyl(0, -0.25, 0, 0.0001, 0.5, hex('#F2B321'), 4, 0, 0, 0, 0.6);
+    this.goalGem = gem.toMesh('goalGem', this.scene, k.M.glow, k.root); this.goalGem.position.set(this.goal.x, 3.2, this.goal.z); this.goalGem.isPickable = false;
+    // —— 导向牌
+    const hs = (a, o) => this.hallSign(a, o);
+    // 站台两头（下车的人）+ 西侧走道（往东走时正前方）
+    k.sign(36, y1 + 3.25, 14, { ...hs('up', { w: 5.2, h: 0.85 }), face: Math.PI / 2, hang: y1 + 4.2 });
+    k.sign(-27, y1 + 3.25, 14, { ...hs('up', { w: 5.2, h: 0.85 }), face: -Math.PI / 2, hang: y1 + 4.2 });
+    for (const x of [-1, 8]) k.sign(x, y1 + 2.6, 19.0, { ...hs('up', { w: 3.4, h: 0.75, en: '' }), face: -Math.PI / 2, hang: y1 + 4.8 });
+    // 站厅：出闸机往左拐；安检那一排往左拐进通道
+    k.sign(4.6, y + 3.2, -5.4, { ...hs('left', { w: 5.2, h: 0.75 }), face: 0, hang: CY });
+    k.sign(5.6, y + 3.2, -15.6, { ...hs('left', { w: 4.6, h: 0.7 }), face: Math.PI / 2, hang: CY });
+    // 站厅墙上的大海报：中山纪念堂就在 C 出口外
+    k.sign(17.95, y + 1.6, 11, { kind: 'poster', w: 6, h: 2.2, zh: '中山纪念堂 · C 出口', en: 'Sun Yat-sen Memorial Hall · Exit C', c1: '#1F5BB0', c2: '#6FA8E8', face: -Math.PI / 2 });
+    // —— 街面：路口的指路牌（深绿杆 + 两块箭头牌）
+    const px = 3.0, pz = -57.6, P = k.solid, pole = hex('#2D4B3A');
+    P.cyl(px, 1.7, pz, 0.16, 3.4, pole, 10); P.cyl(px, 0.12, pz, 0.36, 0.24, pole, 10, 0, 0, 0, undefined, { ao: false }); P.sphere(px, 3.48, pz, 0.24, hex('#E3B341'), 1);
+    k.col(px, 1.7, pz, 0.2, 3.4, 0.2); k.shade.shadeBlob(px, pz, 0.4, 0.4, 0.012, 0.3);
+    const arm = { bg: '#24543B', exit: null };
+    k.sign(px + 1.62, 2.75, pz, { ...hs('left', { ...arm, w: 3.0, h: 0.62 }), face: 0, double: true, back: hs('right', { ...arm, w: 3.0, h: 0.62 }) });
+    k.sign(px, 2.0, pz + 1.12, { kind: 'dir', bg: '#24543B', w: 2.0, h: 0.42, zh: '地铁 纪念堂站', en: 'Metro', exits: [A.exit], arrow: 'right', face: Math.PI / 2, double: true, back: { kind: 'dir', bg: '#24543B', zh: '地铁 纪念堂站', en: 'Metro', exits: [A.exit], arrow: 'left' } });
+  }
   /* ---------------- 每帧 ---------------- */
   update(dt, player, cam, Audio, metro) {
     const p = player.position;
@@ -886,6 +934,7 @@ export class Station {
       e.steps.forEach((st, i) => { let u = ((i / n) * L + e.off * e.dir) % L; if (u < 0) u += L; const f = u / L; st.position.x = e.x0 + (e.x1 - e.x0) * f; st.position.y = e.y0 + (e.y1 - e.y0) * f + 0.06; });
     }
     for (const m of this.mv) m.update(dt, cam, this.events, player);
+    if (this.goalGem && this.goalGem.isEnabled()) { this.gemT = (this.gemT || 0) + dt; this.goalGem.rotation.y = this.gemT * 1.6; this.goalGem.position.y = 3.2 + Math.sin(this.gemT * 2.2) * 0.25; }
     this.crowd.update(dt, p);
     for (const pd of this.pids) { pd.t -= dt; if (pd.t <= 0) { pd.t = 1; this.drawPids(pd, metro); } }
   }

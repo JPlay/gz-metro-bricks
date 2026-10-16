@@ -184,6 +184,22 @@ export function drawBadge(c, x, y, h, b, wFactor) {
   c.fillText(t, x + w / 2, y + h * 0.53); c.textAlign = 'left';
   return w;
 }
+/** 中山纪念堂小图标（圆角浅色底 + 宝蓝两层八角屋顶 + 红柱 + 白墙 + 金顶），画在边长 s 的方块里 */
+export function drawHallIcon(c, x, y, s, bg = '#EAF2FB') {
+  c.save(); c.translate(x, y); const u = s / 48;
+  c.fillStyle = bg; roundRect(c, 0, 0, s, s, s * 0.18); c.fill();
+  const P = (pts, col) => { c.fillStyle = col; c.beginPath(); pts.forEach(([px, py], i) => i ? c.lineTo(px * u, py * u) : c.moveTo(px * u, py * u)); c.closePath(); c.fill(); };
+  P([[7, 41], [41, 41], [41, 44], [7, 44]], '#9A9385');                  // 台基
+  P([[11, 27], [37, 27], [37, 41], [11, 41]], '#FFFFFF');                // 墙
+  for (const cx of [12.5, 18.5, 27.5, 33.5]) P([[cx, 27], [cx + 2.4, 27], [cx + 2.4, 41], [cx, 41]], '#C8312A');   // 红柱
+  P([[21.5, 31], [26.5, 31], [26.5, 41], [21.5, 41]], '#8F2219');        // 门
+  P([[4, 27.5], [44, 27.5], [37, 20], [11, 20]], '#1F5BB0');             // 下层屋顶
+  P([[2, 28.5], [6, 25.5], [7, 27.5]], '#1F5BB0'); P([[46, 28.5], [42, 25.5], [41, 27.5]], '#1F5BB0');   // 翘角
+  P([[16, 20], [32, 20], [32, 16], [16, 16]], '#FFFFFF');                // 鼓座
+  P([[12, 16.5], [36, 16.5], [24, 6.5]], '#1F5BB0');                     // 上层屋顶
+  c.fillStyle = '#E3B341'; c.beginPath(); c.arc(24 * u, 5.5 * u, 2.6 * u, 0, 7); c.fill();
+  c.restore();
+}
 /** 箭头（实心，粗杆） */
 export function drawArrow(c, x, y, s, dir, col) {
   if (dir === 'uturn') { // 掉头（往左拐回去）：右边往上走、从上面绕到左边、往下指
@@ -305,6 +321,28 @@ const PAINT = {
       c.fillStyle = 'rgba(255,255,255,0.8)'; c.textBaseline = 'alphabetic'; const ws = ph * 0.26; c.font = `600 ${ws}px ${FONT}`; c.fillText('往', tx, ph * 0.5); const ww = c.measureText('往').width + ph * 0.08;
       textBlock(c, tx + ww, ph, sx + sw - tx - ww - pad * 0.5, d.zh, d.en, fg, { zhK: 0.4, enK: 0.18 });
     });
+  },
+  /**
+   * 景点导向牌（中山纪念堂）：[大箭头] [纪念堂小图标] 中山纪念堂 / Sun Yat-sen Memorial Hall | [C] 出口
+   * o.exit = 出口字母（黄底黑字，和出口牌一致）；o.bg 底色（街上路牌用深绿）；o.arrow 在右边时放到最右端
+   */
+  hall(c, pw, ph, o) {
+    const fg = SIGN.white; c.fillStyle = o.bg || '#1F2226'; c.fillRect(0, 0, pw, ph);
+    if (o.bar) { c.fillStyle = o.bar; c.fillRect(0, 0, ph * 0.08, ph); }
+    const pad = ph * 0.13, ah = ph * 0.74, tailArrow = o.arrow === 'right' || o.arrow === 'upright';
+    let x = pad + (o.bar ? ph * 0.08 : 0), right = pw - pad;
+    if (o.arrow && !tailArrow) { drawArrow(c, x, (ph - ah) / 2, ah, o.arrow, fg); x += ah + pad * 0.6; }
+    if (tailArrow) { drawArrow(c, right - ah, (ph - ah) / 2, ah, o.arrow, fg); right -= ah + pad * 0.6; }
+    const ic = ph * 0.78; drawHallIcon(c, x, (ph - ic) / 2, ic); x += ic + pad * 0.7;
+    if (o.exit) {
+      c.font = `700 ${ph * 0.4}px ${FONT}`; const tw = c.measureText('出口').width, bh = ph * 0.64, bw = bh * (o.exit.length > 1 ? 1.12 : 0.92);
+      const ex = right - tw - pad * 0.3 - bw;
+      c.fillStyle = 'rgba(255,255,255,0.3)'; c.fillRect(ex - pad * 0.8, ph * 0.16, Math.max(2, ph * 0.02), ph * 0.68);
+      drawBadge(c, ex, (ph - bh) / 2, bh, { t: o.exit, bg: SIGN.exit, fg: SIGN.exitInk });
+      c.fillStyle = SIGN.exit; c.font = `700 ${ph * 0.4}px ${FONT}`; c.textBaseline = 'middle'; c.fillText('出口', ex + bw + pad * 0.3, ph * 0.53); c.textBaseline = 'alphabetic';
+      right = ex - pad * 1.4;
+    }
+    textBlock(c, x, ph, right - x, o.zh || '中山纪念堂', o.en === undefined ? 'Sun Yat-sen Memorial Hall' : o.en, fg, { zhK: 0.46, enK: 0.19 });
   },
   /** 出口导向：深灰底，黄色字 + 黄色出口字母 */
   exit(c, pw, ph, o) { PAINT.dir(c, pw, ph, { ...o, fg: SIGN.exit, zh: o.zh || '出口', en: o.en || 'Exit' }); },

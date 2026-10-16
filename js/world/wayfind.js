@@ -13,7 +13,7 @@ export const BAND_W = 0.4, BAND_BOT = 0.012, BAND_TOP = 0.035, CHEV_UP = 0.02, C
 const STAIR_BOT = 0.02, STAIR_TOP = 0.04;
 
 /** 一个 V 形箭头（两条斜带），中心 (x,z)，指向 (fx,fz)，横向尺寸 s（米）；len = 前后总长（默认 0.8s，楼梯上按踏面深度压扁） */
-function chevron(G, x, y, z, fx, fz, s, col, len = s * 0.8) {
+export function chevron(G, x, y, z, fx, fz, s, col, len = s * 0.8) {
   const rx = fz, rz = -fx, t = len * 0.34, f0 = -len / 2 + t, f1 = len / 2; // 臂沿前进方向的厚度 t；尖端在 f1
   const P = (f, r) => [x + fx * f + rx * r, y, z + fz * f + rz * r];
   for (const sd of [-1, 1]) {
@@ -61,4 +61,16 @@ export function bridgeStripe(scene, mat, parent, dz, lanes) {
   }
   const m = G.toMesh('bridgeStripe', scene, mat, parent); m.isVisible = false;
   return m;
+}
+/** 沿 z 的楼梯（kit.stairs 'z' 同样的踏步划分，非 visual），色带中心在 x=xc；walkDir = 箭头朝向（±1，z 方向） */
+export function stairBandZ(G, a, ya, b, yb, xc, col, chevCol, { w = BAND_W, walkDir = 0, every = 3 } = {}) {
+  const c = hex(col), cc = hex(chevCol), L = Math.abs(b - a), dy = yb - ya, n = Math.max(2, Math.round(Math.abs(dy) / 0.16)), dir = Math.sign(b - a), h = w / 2;
+  const fz = walkDir || dir;
+  for (let k = 0; k < n; k++) {
+    const s0 = a + dir * L * k / n, s1 = a + dir * L * (k + 1) / n;
+    const top = ya + dy * (k + (dy < 0 ? 1 : 0)) / n;
+    const e0 = Math.min(s0, s1) + 0.015, e1 = Math.max(s0, s1) - 0.015;
+    G.slab(xc - h, xc + h, top + STAIR_BOT, top + STAIR_TOP, e0, e1, c, { ao: false });
+    if (k % every === 1 && k < n - 1) chevron(G, xc, top + STAIR_TOP + CHEV_UP, (e0 + e1) / 2, 0, fz, w * 0.9, cc, Math.min(w * 0.72, (e1 - e0) - 0.06));
+  }
 }
