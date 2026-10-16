@@ -16,6 +16,7 @@ import * as MV from './mv.js';
 import { flatBand, stairBand, bridgeStripe } from './wayfind.js';
 import { buildSysy, HALL_DOOR, HALL_ENTRY, HALL_WALL_Z, HALL_TOP_Y, GATE, PARK } from './sysy.js';
 import { HallInterior, IX } from './sysyHall.js';
+import { buildNjs, WM, NJS } from './njs.js';
 import { Crowd, randomLook, preseed, archetypeLook } from './people.js';
 import { FONT, FONT_EN, roundRect } from './kit.js';
 import { drawLineCanvas, networkSVG } from '../ui/netmap.js';
@@ -104,7 +105,9 @@ export class Station {
     // 地面：人行道花岗岩铺装（站口楼梯处开洞）
     k.floorWithHoles(-60, 60, -90, 40, -0.8, 0, hex('#D9D6D0'), [[-3.6, 3.6, -36, -26]], true, 'pave');
     // 纪念堂站：园区在东边（x 16..128），地面往东、往北扩
-    const XE = sig === 'sysy' ? 134 : 60, ZN = sig === 'sysy' ? 82 : 40;
+    const XE = sig === 'sysy' ? 134 : 60, ZN = sig === 'sysy' ? 82 : 40, ZS = sig === 'redwall' ? WM.ZS : -90;
+    // 农讲所站：往南扩出德政中路小巷 + 文明路糖水街
+    if (sig === 'redwall') k.floorWithHoles(-60, 60, ZS, -90, -0.8, 0, hex('#D9D6D0'), [], true, 'pave');
     if (sig === 'sysy') { k.floorWithHoles(60, XE, -90, ZN, -0.8, 0, hex('#D9D6D0'), [], true, 'pave'); k.floorWithHoles(-60, 60, 40, ZN, -0.8, 0, hex('#D9D6D0'), [], true, 'pave'); k.g('grass').slab(PARK.x0, PARK.x1, 0, 0.05, PARK.z1 + 0.4, ZN, hex('#FFFFFF'), { ao: false }); }
     // 马路（沥青 + 标线 + 斑马线 + 路缘石）
     k.g('asphalt').slab(-60, XE, 0, 0.012, -78, -64, hex('#9A9CA0'), { ao: false });
@@ -116,20 +119,21 @@ export class Station {
     const G = k.g('grass');
     for (const sx of [-1, 1]) for (const [z0, z1] of [[-61, -40], [-14, 32]]) {
       if (sig === 'sysy' && sx > 0) continue; // 纪念堂：东边整片给中山纪念堂和前广场
+      if (sig === 'redwall' && sx < 0) continue; // 农讲所：西边给农讲所旧址
       const x0 = Math.min(sx * 13, sx * 52), x1 = Math.max(sx * 13, sx * 52);
       G.slab(x0, x1, 0, 0.1, z0, z1, hex('#FFFFFF'), { ao: false });
       P.slab(x0 - 0.12, x1 + 0.12, 0, 0.16, z0 - 0.12, z0, hex('#C9CBCC'), { ao: false }); P.slab(x0 - 0.12, x1 + 0.12, 0, 0.16, z1, z1 + 0.12, hex('#C9CBCC'), { ao: false });
       P.slab(x0 - 0.12, x0, 0, 0.16, z0, z1, hex('#C9CBCC'), { ao: false }); P.slab(x1, x1 + 0.12, 0, 0.16, z0, z1, hex('#C9CBCC'), { ao: false });
     }
-    for (const sx of [-1, 1]) if (!(sig === 'sysy' && sx > 0)) D.hedge(k, sx * 13.6, sx * 22, -60.4, -59.4, 0.1, 0.8);
+    for (const sx of [-1, 1]) if (!(sig === 'sysy' && sx > 0) && !(sig === 'redwall' && sx < 0)) D.hedge(k, sx * 13.6, sx * 22, -60.4, -59.4, 0.1, 0.8);
     // 边界
-    k.colSlab(-61, -60, 0, 8, -90, ZN); k.colSlab(XE, XE + 1, 0, 8, -90, ZN); k.colSlab(-60, XE, 0, 8, -91, -90); k.colSlab(-60, XE, 0, 8, ZN, ZN + 1);
+    k.colSlab(-61, -60, 0, 8, ZS, ZN); k.colSlab(XE, XE + 1, 0, 8, ZS, ZN); k.colSlab(-60, XE, 0, 8, ZS - 1, ZS); k.colSlab(-60, XE, 0, 8, ZN, ZN + 1);
     this.entrance();
     // 盲道：街口 → 站口
     k.g('tactile').slab(-0.15 + 2.2, 0.15 + 2.2, 0, 0.012, -62, -38.6, hex('#F2C230'), { ao: false });
     // 路灯、长椅、树、垃圾桶
     for (const x of [-9, 9]) for (const z of [-60, -46, -32, -18]) D.lamp(k, x, 0, z, x < 0 ? Math.PI / 2 : -Math.PI / 2);
-    for (let x = -50; x <= XE - 10; x += 14) if (Math.abs(x) > 6 && !(sig === 'sysy' && Math.abs(x + 3 - GATE.x) < 15)) D.lamp(k, x + 3, 0, -62.6, Math.PI);
+    for (let x = -50; x <= XE - 10; x += 14) if (Math.abs(x) > 6 && !(sig === 'sysy' && Math.abs(x + 3 - GATE.x) < 15) && !(sig === 'redwall' && Math.abs(x + 3 - NJS.ax) < 7)) D.lamp(k, x + 3, 0, -62.6, Math.PI);
     // 长椅、垃圾桶：避开出生点和东山口取景点（STREET_CLEAR），左侧长椅从 z=-52 挪到 -44（原位置正对东山口取景视线，和行人穿插）
     const benches = [[-8, -44, Math.PI / 2], [8, -54, -Math.PI / 2]], bins = [[-7.6, -49, Math.PI / 2], [7.6, -57, -Math.PI / 2]];
     for (const [x, z, r] of benches) D.bench(k, x, 0, z, r);
@@ -147,7 +151,7 @@ export class Station {
     const lowH = h => sig === 'sysy' ? Math.min(h, 9) : h;
     for (let i = 0; i < 6; i++) { const x = -56 + i * 22.4; if (sig === 'sysy' && x > -14) continue; bld(x, sig === 'sysy' ? 50 : 34, 18, 9, lowH(12 + (i * 7) % 15), bcol[i], { ...SHOPS[i % SHOPS.length], n: [0, -1] }); }
     for (const sx of [-1, 1]) for (let i = 0; i < 4; i++) { const z = -80 + i * 28; if (z > -66 && z < -60) continue; if (sig === 'sysy' && sx > 0) continue; bld(sx * 56, z, 6, 18, 12 + ((i + (sx > 0 ? 2 : 0)) * 5) % 13, bcol[(i + (sx > 0 ? 3 : 0)) % 7], { ...SHOPS[(i + 2 + (sx > 0 ? 3 : 0)) % SHOPS.length], n: [-sx, 0] }); }
-    for (let i = 0; i < (sig === 'sysy' ? 8 : 5); i++) bld(-48 + i * 24, -86, 18, 6, lowH(15 + (i * 4) % 12), bcol[(i + 2) % 7], { ...SHOPS[(i + 4) % SHOPS.length], n: [0, 1] });
+    for (let i = 0; i < (sig === 'sysy' ? 8 : 5); i++) if (!(sig === 'redwall' && (i === 3 || i === 4))) bld(-48 + i * 24, -86, 18, 6, lowH(15 + (i * 4) % 12), bcol[(i + 2) % 7], { ...SHOPS[(i + 4) % SHOPS.length], n: [0, 1] });
     // 行人
     const C = this.crowd;
     // 站着的行人不与出生点 / 取景点（各留 1.5 米）、长椅、垃圾桶、路灯和彼此穿插：随机位置被占就按固定顺序就近挪开（不额外消耗随机数）
@@ -166,7 +170,7 @@ export class Station {
     // 左侧人行道绕圈的行人：原路线 x=-7.2/-5.5 正好穿过东山口取景点，外移到路灯和草地之间
     C.walker([[-10.3, -40], [-10.3, -58], [-11.7, -58], [-11.7, -40]], 0, randomLook({}), 1.0);
     // 招牌站：地面地标
-    const avoid = (x, z) => (sig === 'sysy' && x > 12 && z > -62) || (sig === 'park' && x > 4 && x < 26 && z > -54 && z < -30) || (sig === 'park' && Math.hypot(x + 24, z + 40) < 7);
+    const avoid = (x, z) => (sig === 'sysy' && x > 12 && z > -62) || (sig === 'redwall' && x < -12 && z > -62 && z < 4) || (sig === 'park' && x > 4 && x < 26 && z > -54 && z < -30) || (sig === 'park' && Math.hypot(x + 24, z + 40) < 7);
     if (sig === 'park') {
       for (let i = 0; i < 14; i++) treeSpots.push([(D.rnd() < 0.5 ? -1 : 1) * (15 + D.rnd() * 10), -24 + D.rnd() * 50]);
       k.g('pave').cyl(-24, 0.3, -40, 7.4, 0.6, hex('#CFC8BC'), 32); P.cyl(-24, 0.55, -40, 6.6, 0.12, hex('#BDB6A8'), 32, 0, 0, 0, undefined, { ao: false });
@@ -177,26 +181,9 @@ export class Station {
       k.col(-24, 0.4, -40, 7, 0.8, 7);
       this.mv.push(MV.penrose(k, new B.Vector3(6, 1.35, -50), 0.95, 15));
     } else if (sig === 'redwall') {
-      // 农讲所：红墙黄琉璃瓦的庭院 + 大殿
-      const red = '#B4412E', gold = hex('#E0A63A'), gold2 = hex('#C98B26');
-      for (const sx of [-1, 1]) {
-        k.block(sx * 14, sx * 40, 0, 4.2, -40, -39, red); k.block(sx * 39, sx * 40, 0, 4.2, -40, -16, red);
-        for (const [x0, x1, z0, z1] of [[sx * 13.6, sx * 40.4, -40.5, -38.5], [sx * 38.5, sx * 40.5, -40.4, -15.6]]) {
-          P.slab(Math.min(x0, x1), Math.max(x0, x1), 4.2, 4.45, z0, z1, gold2, { ao: false });
-          const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2, w = Math.abs(x1 - x0), d = Math.abs(z1 - z0);
-          P.box(cx, 4.7, cz, w, 0.12, d * 0.6, gold, 0, 0, 0, 1, { ao: false });
-          if (w > d) for (const s2 of [-1, 1]) P.box(cx, 4.55, cz + s2 * d * 0.3, w, 0.1, d * 0.55, gold, 0, s2 * 0.45, 0, 1, { ao: false });
-          else for (const s2 of [-1, 1]) P.box(cx + s2 * w * 0.3, 4.55, cz, w * 0.55, 0.1, d, gold, 0, 0, -s2 * 0.45, 1, { ao: false });
-        }
-        for (let i = 0; i < 4; i++) { const lx = sx * (17 + i * 6); k.glow.ellipsoid(lx, 3.3, -40.75, 0.6, 0.75, 0.6, hex('#FF5C4D'), 2); P.cyl(lx, 3.72, -40.75, 0.3, 0.08, gold, 10); P.cyl(lx, 2.88, -40.75, 0.3, 0.08, gold, 10); P.box(lx, 3.95, -40.75, 0.03, 0.4, 0.03, DARK); }
-      }
-      k.block(-10, 10, 0, 0.6, -12.5, 2.5, '#D8D2C4', true, 'pave');
-      k.block(-9, 9, 0.6, 5.6, -11, 1, red, true);
-      for (let i = 0; i < 8; i++) P.cyl(-8.4 + i * 2.4, 3.1, -11.4, 0.42, 5, hex('#9E2E20'), 12);
-      P.slab(-11.5, 11.5, 5.6, 5.9, -13.5, 3.5, gold2, { ao: false });
-      for (const s2 of [-1, 1]) P.box(0, 6.6, -5 + s2 * 4.3, 23.4, 0.25, 9.6, gold, 0, s2 * 0.42, 0, 1, { ao: false });
-      P.box(0, 7.55, -5, 20, 0.35, 0.5, gold2); for (const s2 of [-1, 1]) P.box(s2 * 10, 7.9, -5, 0.6, 0.7, 0.5, gold2);
-      k.sign(0, 4.6, -11.47, { kind: 'plain', w: 5.4, h: 1.0, bg: '#5A1810', fg: '#F6D58A', zh: '农民运动讲习所', en: 'Peasant Movement Institute', face: Math.PI, align: 'center' });
+      // 农讲所：农讲所旧址（中山四路北侧）+ 文明路糖水街（南侧）——单独的 Kit，只在地面上启用
+      this.park = new Kit(this.scene, 'park-' + this.code, k.root);
+      this.njs = buildNjs(this.park);
     } else if (sig === 'memorial') {
       const Pv = k.g('pave');
       k.block(-6, 6, 0, 1.2, -6, 6, '#E3DED2', true, 'pave'); k.block(-3, 3, 1.2, 2.4, -3, 3, '#DAD4C6', true, 'pave');
@@ -922,14 +909,15 @@ export class Station {
       e.steps.forEach((st, i) => { let u = ((i / n) * L + e.off * e.dir) % L; if (u < 0) u += L; const f = u / L; st.position.x = e.x0 + (e.x1 - e.x0) * f; st.position.y = e.y0 + (e.y1 - e.y0) * f + 0.06; });
     }
     for (const m of this.mv) m.update(dt, cam, this.events, player);
-    if (this.park) this.sysyUpdate(dt, player, cam);
+    if (this.park) this.parkUpdate(dt, player, cam);
     this.crowd.update(dt, p);
     for (const pd of this.pids) { pd.t -= dt; if (pd.t <= 0) { pd.t = 1; this.drawPids(pd, metro); } }
   }
   /** 纪念堂园区：只在地面上时启用园区网格；走进正门 → 进纪念堂内部（单独的场景，第一次进去时才搭），从内部南门出来回到门口 */
-  sysyUpdate(dt, player, cam) {
+  parkUpdate(dt, player, cam) {
     const p = player.position, inHall = p.x > IX - 200;
     const showPark = !inHall && p.y > -4; if (this.park.root.isEnabled() !== showPark) this.park.root.setEnabled(showPark);
+    if (!this.sysy) return;
     const E = HALL_ENTRY;
     if (!inHall && !player.seat && p.x > E.x0 && p.x < E.x1 && p.z > E.z0 && p.z < E.z1 && p.y > E.y0) {
       if (!this.interior) this.interior = new HallInterior(this.scene, this.kit.M);

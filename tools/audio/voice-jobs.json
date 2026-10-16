@@ -648,6 +648,24 @@
   "file": "voice/next-njs-en.mp3"
  },
  {
+  "id": "voice.visit.njs.zh",
+  "lang": "zh",
+  "text": "农讲所站附近有农讲所旧址、文明路糖水街，欢迎下车游玩，请从C出口出站。",
+  "file": "voice/visit-njs-zh.mp3"
+ },
+ {
+  "id": "voice.visit.njs.yue",
+  "lang": "yue",
+  "text": "农讲所站附近有农讲所旧址、文明路糖水街，欢迎落车游玩，请喺C出口出站。",
+  "file": "voice/visit-njs-yue.mp3"
+ },
+ {
+  "id": "voice.visit.njs.en",
+  "lang": "en",
+  "text": "Nongjiangsuo station is near the Peasant Movement Institute and the Wenming Road dessert street. You are welcome to get off and visit. Please use Exit C.",
+  "file": "voice/visit-njs-en.mp3"
+ },
+ {
   "id": "voice.arrive.njs.zh",
   "lang": "zh",
   "text": "列车即将到达农讲所站，请小心列车与站台之间的空隙。",

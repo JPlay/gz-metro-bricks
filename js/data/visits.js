@@ -4,6 +4,7 @@
  */
 export const VISITS = {
   jnt: { zh: ['中山纪念堂'], en: ['the Sun Yat-sen Memorial Hall'], exit: 'C' },
+  njs: { zh: ['农讲所旧址', '文明路糖水街'], en: ['the Peasant Movement Institute', 'the Wenming Road dessert street'], exit: 'C' },
 };
 const joinEn = n => n.length > 1 ? n.slice(0, -1).join(', ') + ' and ' + n[n.length - 1] : n[0];
 /** 三语报站文字：[普, 粤, 英] */
