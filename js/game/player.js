@@ -153,7 +153,11 @@ export class Player {
       // 坐下时第一人称眼高 ≈ 车厢地板上 1.1m（从脚底基准换算：座面高 − 髋高 + 眼高）
       const eye = this.seat ? EYE_SIT - SEAT_HIP + this.hipH() : EYE;
       this.eyeOff = this.eyeOff === undefined ? eye : this.eyeOff + (eye - this.eyeOff) * Math.min(1, dt * 6);
-      cam.position.set(p.x + Math.sin(this.yaw) * 0.12 + Math.cos(this.yaw) * sway, this.eyeY + this.eyeOff + bob, p.z + Math.cos(this.yaw) * 0.12 - Math.sin(this.yaw) * sway);
+      // 楼座栏板前往下看：镜头探身（抬高 + 往前越过栏板），栏板不再挡住半个画面
+      const lt = !this.seat && this.leanFn ? this.leanFn(p) * Math.max(0, Math.min(1, (this.pitch - 0.15) / 0.25)) : 0;
+      this.leanK = (this.leanK || 0) + (lt - (this.leanK || 0)) * Math.min(1, dt * 5);
+      const fw = 0.12 + 0.65 * this.leanK;
+      cam.position.set(p.x + Math.sin(this.yaw) * fw + Math.cos(this.yaw) * sway, this.eyeY + this.eyeOff + bob + 0.5 * this.leanK, p.z + Math.cos(this.yaw) * fw - Math.sin(this.yaw) * sway);
       this.model.setEnabled(false); this.blob.setEnabled(true);
     } else {
       // 竖直方向平滑（上下楼梯 / 跳跃时镜头不抖），水平方向紧跟（坐车时不拖影）

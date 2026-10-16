@@ -189,6 +189,12 @@ export class HallInterior {
   update() {}
   wantsExit(p) { return p.z < -23.3 && Math.abs(p.x - O) < 2.2 && p.y < 2; }
   /** 离玩家最近的空座位（水平 0.9m 内，高度差 1m 内） */
+  /** 站在楼座栏板前往下看：0..1（越贴近栏板越大）；玩家镜头据此“探身”越过栏板 */
+  lean(p) {
+    if (p.y < BAL.y - 0.4 || p.y > BAL.y + 0.6) return 0;
+    let d = -1e9; for (const th of FACES) { const [nx, nz] = nrm(th); d = Math.max(d, (p.x - O) * nx + p.z * nz); }
+    return Math.max(0, Math.min(1, (BAL.d0 + 1.6 - d) / 0.6));   // 栏板在 d0+0.1；离栏板 1.3m 内全探身
+  }
   seatNear(p) { let best = null, bd = 0.9; for (const s of this.seats) { if (!s.free || Math.abs(p.y - s.wy) > 1) continue; const d = Math.hypot(p.x - s.wx, p.z - s.wz); if (d < bd) { bd = d; best = s; } } return best; }
   info() { return { seats: this.seats.length, active: !!this.active }; }
   dispose() { this.seatMesh.dispose(); this.kit.dispose(); }
