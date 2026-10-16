@@ -136,6 +136,22 @@ def qingzhuan():
     col = col * (0.92 + 0.14 * noise(N, 10, seed=77))
     save('qingzhuan.jpg', np.stack([col, col, col], -1))
     save('qingzhuan_n.jpg', normal_from_height(np.array(Image.fromarray((hmap * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(1.0))) / 255.0, 2.5), 90)
+# ---------- 粗面花岗岩（2.4m，五羊像 / 基座）：中性灰底 + 黑白斑点颗粒 + 几条石块拼缝（3 行 × 2 块，错缝），颜色由顶点色给 ----------
+def granite():
+    r2 = np.random.default_rng(5150); y, x = np.mgrid[0:N, 0:N].astype(float)
+    g = 0.80 + 0.10 * (noise(N, 40, seed=51) - 0.5) + 0.10 * (noise(N, 4, seed=52) - 0.5)
+    sp = r2.random((N, N)); g[sp > 0.93] -= 0.22; g[sp < 0.04] += 0.12
+    g = np.array(Image.fromarray((np.clip(g, 0, 1) * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(0.6))) / 255.0
+    rows = 3; bh = N / rows; seam = np.zeros((N, N))
+    d = np.minimum(y % bh, bh - (y % bh)); seam = np.maximum(seam, np.clip(1 - (d - 1.0) / 1.2, 0, 1))
+    for r in range(rows):
+        off = (r % 2) * N / 4; band = (y >= r * bh) & (y < (r + 1) * bh)
+        dx = np.minimum((x - off) % (N / 2), (N / 2) - ((x - off) % (N / 2)))
+        seam = np.maximum(seam, np.where(band, np.clip(1 - (dx - 1.0) / 1.2, 0, 1), 0))
+    g = g * (1 - 0.4 * seam)
+    save('granite.jpg', np.stack([g, g * 0.99, g * 0.98], -1))
+    h = 0.15 * noise(N, 3, seed=53) - 0.8 * seam
+    save('granite_n.jpg', normal_from_height(h, 3.0), 90)
 # ---------- 沥青（4m）----------
 def asphalt():
     g = 0.30 + 0.06 * (noise(N, 50) - 0.5)
@@ -237,7 +253,7 @@ def blob():
     Image.fromarray(img, 'RGBA').save(os.path.join(OUT, 'blob.png'), optimize=True)
 
 import sys
-ALL = [floor, tactile, ceiling, wall, steel, concrete, brick, qingzhuan, asphalt, paving, grass, facade, sky, blob]
+ALL = [floor, tactile, ceiling, wall, steel, concrete, brick, qingzhuan, granite, asphalt, paving, grass, facade, sky, blob]
 # 可只生成部分贴图：python3 tools/textures/make_textures.py sky（sky 用固定种子，单独生成结果一致）
 want = set(sys.argv[1:])
 for f in ALL:
