@@ -476,14 +476,14 @@ function diag() {
 }
 export function diagnostics() { return diag(); }
 
-// ?debug=audio：屏幕左下角的诊断面板（给 iPhone 用户截图用），带“测试音”和“重建”按钮
+// ?debug=audio：屏幕左侧（HUD 下面、摇杆上面）的诊断面板，只有按钮接收触摸（给 iPhone 用户截图用），带“测试音”和“重建”按钮
 if ((PARAMS.get('debug') || '').split(',').includes('audio')) {
   const mount = () => {
     const box = document.createElement('div'); box.id = 'audioDebug';
-    box.style.cssText = 'position:fixed;left:6px;bottom:calc(env(safe-area-inset-bottom,0px) + 6px);z-index:10000;max-width:min(92vw,420px);padding:6px 8px;border-radius:8px;background:rgba(0,0,0,.78);color:#cfe;font:11px/1.35 ui-monospace,Menlo,monospace;white-space:pre-wrap;word-break:break-all;';
+    box.style.cssText = 'position:fixed;left:6px;top:calc(env(safe-area-inset-top,0px) + 232px);pointer-events:none;z-index:10000;max-width:min(92vw,420px);padding:6px 8px;border-radius:8px;background:rgba(0,0,0,.78);color:#cfe;font:11px/1.35 ui-monospace,Menlo,monospace;white-space:pre-wrap;word-break:break-all;';
     const pre = document.createElement('div'), row = document.createElement('div');
     row.style.cssText = 'margin-top:4px;display:flex;gap:6px';
-    const btn = (label, fn) => { const b = document.createElement('button'); b.textContent = label; b.style.cssText = 'font:12px system-ui;padding:4px 10px;border-radius:6px;border:0'; b.addEventListener('click', e => { e.stopPropagation(); fn(); }); ['pointerdown', 'touchstart'].forEach(t => b.addEventListener(t, e => e.stopPropagation(), { passive: true })); row.appendChild(b); };
+    const btn = (label, fn) => { const b = document.createElement('button'); b.textContent = label; b.style.cssText = 'font:12px system-ui;padding:6px 12px;border-radius:6px;border:0;pointer-events:auto'; b.addEventListener('click', e => { e.stopPropagation(); fn(); }); ['pointerdown', 'touchstart'].forEach(t => b.addEventListener(t, e => e.stopPropagation(), { passive: true })); row.appendChild(b); };
     btn('测试音', () => { unlock().then(() => blip('goal')); });
     btn('重建', () => { recreateNext = true; lastRecreate = 0; pendingUnlock = null; unlock().then(() => blip('settle')); });
     box.appendChild(pre); box.appendChild(row); document.body.appendChild(box);
