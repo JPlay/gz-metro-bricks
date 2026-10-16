@@ -23,6 +23,7 @@ python3 tests/e2e/drawcalls.py 'http://localhost:8123/' 1   # 几个固定机位
 python3 tests/e2e/brother_food.py 'http://localhost:8123/' [--start jnt] [--shots 目录]   # 哥哥明明 + 美食店：选明明 → 走进店 → 坐下 → 点菜（图片菜单）→ 上菜 → 吃一口 😋 → 菜卡 + 美食护照盖章（localStorage）→ 起身出门
 python3 tests/e2e/brother_shots.py 'http://localhost:8123/' /workspace/gz-shots-polish/brother-r1 [select,ming,street,eat,passport]   # 选角色 / 明明各角度和动作 / 三种门面 / 三家店内 / 美食护照 + 地图美食标，带 draws / tris 角标
 python3 tests/e2e/brother_r2.py 'http://localhost:8123/' /workspace/gz-shots-polish/brother-r2 [--doors]   # 明明正面 / 背面、两兄弟站在站厅、骑楼门面（--doors 再拍茶楼红木门 / 档口门帘）
+python3 tests/e2e/brother_r3.py 'http://localhost:8123/' /workspace/gz-shots-polish/brother-r3   # 明明白色短袖正面、两兄弟并排（明明高大半个头，打印头骨骼高度）、站台欢迎广播响起后出站到骑楼 → 断言没有站台字幕；每张都查性能预算 66 draws / 186,754 tris
 python3 tests/e2e/brother_perf.py 'http://localhost:8123/' [截图目录]   # 公园前街面：有美食店 vs ?nofood=1 的绘制调用 / 三角形对比
 python3 tests/e2e/shots.py    'http://localhost:8123/'       # 截图（含竖屏 834×1112）
 python3 tests/e2e/polish_shots.py 'http://localhost:8123/' /workspace/gz-shots-polish/after 1   # 视觉升级对比截图（12 个场景 + HUD 特写），并打印每张的绘制调用数
