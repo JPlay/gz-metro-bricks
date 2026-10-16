@@ -359,7 +359,7 @@ export class HotelInterior {
     this.drawDyn(this.lift);
   }
   setEnabled(v) { this.kit.root.setEnabled(v); this.active = v; if (v) { this.up.root.setEnabled(this.floor === 2); this.cap.root.setEnabled(this.floor === 3); } }
-  wantsExit(p) { return p.y < 1 && p.z < -5.75 && Math.abs(p.x - X(0)) < 1.2; }
+  wantsExit(p) { return p.y < 1 && p.z < -5.4 && Math.abs(p.x - X(0)) < 1.2; }
   seatNear(p) { let best = null, bd = 0.95; for (const s of this.seats) { if (!s.free || Math.abs(p.y - s.wy) > 1 || (s.room && this.floor !== 3)) continue; const d = Math.hypot(p.x - s.wx, p.z - s.wz); if (d < bd) { bd = d; best = s; } } return best; }
   /** 玩家在哪：'lobby' | 'corridor' | 'room' | 'stairs' | 'lift' */
   where(p) {
