@@ -203,7 +203,7 @@ def sky():
     y = (np.arange(H)[:, None] + 0.5) / H * np.ones((1, W))
     elev = (0.5 - y) * 180.0
     # 晴空蓝：天顶深蓝，地平线是干净的浅蓝（不发灰）。色调映射会压亮部，所以地平线也不能太接近白色
-    zen = np.array([0.15, 0.37, 0.80]); mid = np.array([0.30, 0.56, 0.91]); hor = np.array([0.54, 0.75, 0.96])
+    zen = np.array([0.30, 0.54, 0.88]); mid = np.array([0.42, 0.65, 0.94]); hor = np.array([0.58, 0.78, 0.97])   # 天顶别太深：以前云缝里露出的深蓝像迷彩
     e = np.clip(elev / 90.0, 0, 1)[..., None]
     t1 = np.clip(e / 0.35, 0, 1) ** 0.8          # 地平线 → 中空（0°–32°）
     t2 = np.clip((e - 0.35) / 0.65, 0, 1) ** 0.9  # 中空 → 天顶
@@ -215,11 +215,12 @@ def sky():
     n2 = noise(n, 40, seed=12, aniso=(1, 1.6))[:H, :]
     n3 = noise(n, 70, seed=13)[:H, :]
     n4 = noise(n, 170, seed=14)[:H, :]
-    f = nn * 0.75 + n2 * 0.4 + n3 * 0.18 + n4 * 0.08
+    f = nn * 0.8 + n2 * 0.22 + n3 * 0.05   # 低频为主、边缘柔和的横向云团（以前碎边多，云缝里的深蓝像迷彩）
     f = (f - f.mean()) / (f.std() + 1e-9)
-    band = np.exp(-((elev - 25.0) / 18.0) ** 2) * np.clip((elev - 3.0) / 6.0, 0, 1)
-    c = np.clip((f - 0.05) * 2.0 + (band - 0.6) * 2.2, 0, 1) * np.clip(band * 1.6, 0, 1)
-    c = c ** 0.8
+    band = np.exp(-((elev - 18.0) / 14.0) ** 2) * np.clip((elev - 3.0) / 6.0, 0, 1)   # 云压低一点：抬头看是干净均匀的蓝
+    c = np.clip((f - 0.55) * 0.9 + (band - 0.6) * 1.0, 0, 1) * np.clip(band * 1.6, 0, 1)   # 边更软、覆盖少一点
+    c = np.array(Image.fromarray((c * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(4))) / 255.0
+    c = c ** 1.1 * 0.9
     # 云的明暗：顶亮底略灰蓝，带一点体积感
     white = np.array([1.0, 1.0, 1.0]); belly = np.array([0.86, 0.90, 0.97])
     shade = np.clip(0.65 + (n2 - 0.5) * 1.2, 0, 1)[..., None]
