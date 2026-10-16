@@ -18,6 +18,7 @@ PART=seat  python3 tests/e2e/social.py 'http://localhost:8123/?q=2&start=gyq&lin
 PART=ask   python3 tests/e2e/social.py 'http://localhost:8123/?q=2&start=njs&line=1' <截图目录> [w h]   # 客服中心“问路”→ 选站（1 号线西塱、2 号线越秀公园要在公园前换乘）→ 回答气泡 + 工作人员指路
 python3 tests/e2e/signs.py    'http://localhost:8123/?q=2' <截图目录>   # 导向牌各机位（站口 / 闸机后 / 楼梯口 / 换乘楼梯 / 换乘通道 / 2 号线楼梯口 / 站台站名牌拼音）+ 牌子贴图集不溢出
 python3 tests/e2e/transfer_shots.py 'http://localhost:8123/?q=2' /workspace/gz-shots-polish/transfer-r1/   # 公园前换乘导向：站口 / 闸机前提示牌、1 号线站台楼梯脚（含竖屏）、北侧走道、换乘楼梯、通道过桥、2 号线站台、反方向黄带；ONLY=03 只拍一张
+python3 tests/e2e/sysy.py    'http://localhost:8123/' /workspace/gz-shots-polish/sysy-r1/ 1   # 去中山纪念堂任务：地图终点 → 公园前 2 号线上车 → 车厢 LCD/报站“请在纪念堂站下车” → 站台/站厅“中山纪念堂 C出口”牌 + 绿色引导带 → 路口指路牌 → 纪念堂全景 → 门口自动“努力”+ 到达卡片
 python3 tests/e2e/drawcalls.py 'http://localhost:8123/' 1   # 几个固定机位的绘制调用数（街面 / 站厅 / 站台 / 车厢）
 python3 tests/e2e/shots.py    'http://localhost:8123/'       # 截图（含竖屏 834×1112）
 python3 tests/e2e/polish_shots.py 'http://localhost:8123/' /workspace/gz-shots-polish/after 1   # 视觉升级对比截图（12 个场景 + HUD 特写），并打印每张的绘制调用数
