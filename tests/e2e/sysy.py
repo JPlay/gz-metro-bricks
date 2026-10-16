@@ -59,6 +59,9 @@ async def main():
     lx=troot[0]+18.6-3
     await view(pg,'first'); await pg.evaluate(f'__game.teleport({lx+1.05},{troot[1]+0.05},{troot[2]},-Math.PI/2); __game.player.pitch=-0.58')
     await asyncio.sleep(1.0); R['stillAboard']=(await st(pg))['aboard']
+    # 对面来车也在站台时会多出一列车的绘制（只是时机问题）：本车停住，等对面车开走再拍
+    await pg.evaluate("__game.metro.slots.find(o=>o.line==2&&o.step==1).t=Math.max(__game.metro.slots.find(o=>o.line==2&&o.step==1).t,60)")
+    await wait(pg, f"{slot(2,-1)}.state=='away'", 40)
     await shot(pg,'01-car-screen',0.8)
     # 对面（往广州南）也叫一趟车进站：车厢里不该播站台进站广播
     await pg.evaluate('__game.call(2,-1)')
