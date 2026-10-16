@@ -42,7 +42,7 @@ function paintScreen(c, pw, ph, s = 1) {
 }
 function paintSky(c, pw, ph) { const g = c.createLinearGradient(0, 0, 0, ph); g.addColorStop(0, '#8FC3EA'); g.addColorStop(1, '#D8ECF8'); c.fillStyle = g; c.fillRect(0, 0, pw, ph); c.fillStyle = 'rgba(255,255,255,0.85)'; for (const [x, y, r] of [[0.2, 0.4, 0.1], [0.28, 0.38, 0.08], [0.7, 0.6, 0.12], [0.78, 0.58, 0.09]]) { c.beginPath(); c.arc(x * pw, y * ph, r * pw, 0, Math.PI * 2); c.fill(); } }
 function paintCase(c, pw, ph, s) {   // 展柜里的东西：广彩瓷瓶 / 陶塑公仔
-  c.fillStyle = '#F4EFE4'; c.fillRect(0, 0, pw, ph);
+  c.fillStyle = '#5A1E1A'; c.fillRect(0, 0, pw, ph);
   const cols = s ? ['#C2412D', '#2E7D5B', '#E0A82E'] : ['#1F5FA0', '#C2412D', '#2E7D5B'];
   for (let i = 0; i < 3; i++) {
     const x = pw * (0.2 + i * 0.3), w = pw * 0.18, h = ph * (0.55 + (i % 2) * 0.2), y = ph * 0.92 - h;
@@ -50,7 +50,7 @@ function paintCase(c, pw, ph, s) {   // 展柜里的东西：广彩瓷瓶 / 陶�
     c.fillStyle = cols[(i + 1) % 3]; c.fillRect(x - w * 0.42, y + h * 0.42, w * 0.84, h * 0.12);
     c.fillStyle = '#D4A84A'; c.fillRect(x - w * 0.3, y, w * 0.6, h * 0.05);
   }
-  c.fillStyle = '#3B2216'; c.font = `700 ${ph * 0.07}px sans-serif`; c.textAlign = 'center'; c.fillText(s ? '石湾陶塑' : '广彩瓷器', pw / 2, ph * 0.08);
+  c.fillStyle = '#E8C26A'; c.font = `700 ${ph * 0.1}px sans-serif`; c.textAlign = 'center'; c.textBaseline = 'top'; c.fillText(s ? '石湾陶塑' : '广彩瓷器', pw / 2, ph * 0.03);
 }
 
 export class ClanInterior {
@@ -117,9 +117,15 @@ export class ClanInterior {
     for (const s of [-1, 1]) {
       const x = s * (W - 0.9), z = 5.0;
       P.slab(X(x - 0.6), X(x + 0.6), 0, 0.8, z - 1.2, z + 1.2, C.wood2, { aoTop: true }); k.colSlab(X(x - 0.6), X(x + 0.6), 0, 1.8, z - 1.2, z + 1.2);
-      atlas.sign(X(x - s * 0.62), 1.25, z, 2.3, 0.9, s > 0 ? -Math.PI / 2 : Math.PI / 2, (c, pw, ph) => paintCase(c, pw, ph, s > 0 ? 1 : 0));
+      atlas.sign(X(x + s * 0.56), 1.27, z, 2.3, 0.9, s > 0 ? Math.PI / 2 : -Math.PI / 2, (c, pw, ph) => paintCase(c, pw, ph, s > 0 ? 1 : 0));
       k.g('glass').slab(X(x - 0.6), X(x + 0.6), 0.8, 1.75, z - 1.2, z + 1.2, C.glass);
       G.slab(X(x - 0.55), X(x + 0.55), 1.74, 1.76, z - 1.15, z + 1.15, hex('#FFF4DE'));
+      // 柜里三件立体的：广彩瓶（白底红金）/ 石湾公仔（褐绿釉）
+      for (const [dz, r, h] of [[-0.7, 0.16, 0.42], [0, 0.2, 0.55], [0.7, 0.15, 0.36]]) {
+        const body = s > 0 ? hex('#8A5A34') : hex('#F3EEE2'), band = s > 0 ? hex('#2E7D5B') : hex('#C8452E');
+        P.cyl(X(x), 0.8 + h * 0.45, z + dz, r * 2, h * 0.9, body, 10); P.cyl(X(x), 0.8 + h * 0.5, z + dz, r * 2 + 0.02, h * 0.16, band, 10);
+        P.cyl(X(x), 0.8 + h * 0.97, z + dz, r * (s > 0 ? 1.5 : 0.9), h * 0.16, s > 0 ? band : hex('#D4A84A'), 10);
+      }
     }
     atlas.sign(X(-5.0), 1.5, 0.02, 1.6, 1.0, 0, (c, pw, ph) => { c.fillStyle = '#3B2216'; c.fillRect(0, 0, pw, ph); c.fillStyle = '#E8C26A'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `800 ${ph * 0.2}px sans-serif`; c.fillText('陈家祠 · 头进', pw / 2, ph * 0.25); c.fillStyle = '#F4EFE4'; c.font = `500 ${ph * 0.11}px sans-serif`; c.fillText('1894 年建成，岭南建筑“三雕两塑一铸”', pw / 2, ph * 0.52); c.fillText('木雕 石雕 砖雕 陶塑 灰塑 铁铸', pw / 2, ph * 0.72); });
     // 灯：梁下几盏宫灯（暖光）
