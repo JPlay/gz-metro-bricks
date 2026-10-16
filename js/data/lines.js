@@ -83,7 +83,7 @@ export const STATIONS = {
   jnx: { zh: '江南西', en: 'Jiangnanxi', x: [] },
   seg: { zh: '市二宫', en: "Shi'ergong", x: [] },
   hzgc: { zh: '海珠广场', en: 'Haizhu Guangchang', x: [6] },
-  jnt: { zh: '纪念堂', en: 'Jiniantang', x: [] },
+  jnt: { zh: '纪念堂', en: 'Jiniantang', x: [], signature: 'sysy', exits: ['C', 'D1', 'D2'], attraction: { zh: '中山纪念堂', en: 'Sun Yat-sen Memorial Hall', exit: 'C' } },
   yxgy: { zh: '越秀公园', en: 'Yuexiu Gongyuan', x: [], signature: 'rams' },
   gzhcz: { zh: '广州火车站', en: 'Guangzhou Huochezhan', x: [5], signature: 'railway' },
   syl: { zh: '三元里', en: 'Sanyuanli', x: [] },

@@ -14,6 +14,7 @@ import { DOOR_XS } from './train.js';
 import * as D from './decor.js';
 import * as MV from './mv.js';
 import { flatBand, stairBand, bridgeStripe } from './wayfind.js';
+import { buildSysy } from './sysy.js';
 import { Crowd, randomLook, preseed, archetypeLook } from './people.js';
 import { FONT, FONT_EN, roundRect } from './kit.js';
 import { drawLineCanvas, networkSVG } from '../ui/netmap.js';
@@ -53,6 +54,8 @@ export class Station {
   constructor(scene, code, events, M) {
     this.scene = scene; this.code = code; this.s = STATIONS[code]; this.events = events;
     this.theme = THEMES[hashCode(code) % THEMES.length];
+    // 出口字母：纪念堂站用真实的 C / D1 / D2（C 出口去中山纪念堂），其他站沿用通用的 A / D
+    this.exits = this.s.exits || ['A', 'D']; this.exitMain = this.s.attraction ? this.s.attraction.exit : 'D';
     if (this.s.signature === 'redwall') this.theme = '#F3DCD2';
     D.reseed(hashCode(code)); preseed(hashCode(code) + 3);
     const k = this.kit = new Kit(scene, 'st-' + code);
@@ -105,6 +108,7 @@ export class Station {
     // 绿化带（草地 + 路缘）
     const G = k.g('grass');
     for (const sx of [-1, 1]) for (const [z0, z1] of [[-61, -40], [-14, 32]]) {
+      if (sig === 'sysy' && sx > 0) continue; // 纪念堂：东边整片给中山纪念堂和前广场
       const x0 = Math.min(sx * 13, sx * 52), x1 = Math.max(sx * 13, sx * 52);
       G.slab(x0, x1, 0, 0.1, z0, z1, hex('#FFFFFF'), { ao: false });
       P.slab(x0 - 0.12, x1 + 0.12, 0, 0.16, z0 - 0.12, z0, hex('#C9CBCC'), { ao: false }); P.slab(x0 - 0.12, x1 + 0.12, 0, 0.16, z1, z1 + 0.12, hex('#C9CBCC'), { ao: false });
@@ -153,7 +157,7 @@ export class Station {
     // 左侧人行道绕圈的行人：原路线 x=-7.2/-5.5 正好穿过东山口取景点，外移到路灯和草地之间
     C.walker([[-10.3, -40], [-10.3, -58], [-11.7, -58], [-11.7, -40]], 0, randomLook({}), 1.0);
     // 招牌站：地面地标
-    const avoid = (x, z) => (sig === 'park' && x > 4 && x < 26 && z > -54 && z < -30) || (sig === 'park' && Math.hypot(x + 24, z + 40) < 7);
+    const avoid = (x, z) => (sig === 'sysy' && x > 12 && z > -58.5 && z < -3) || (sig === 'park' && x > 4 && x < 26 && z > -54 && z < -30) || (sig === 'park' && Math.hypot(x + 24, z + 40) < 7);
     if (sig === 'park') {
       for (let i = 0; i < 14; i++) treeSpots.push([(D.rnd() < 0.5 ? -1 : 1) * (15 + D.rnd() * 10), -24 + D.rnd() * 50]);
       k.g('pave').cyl(-24, 0.3, -40, 7.4, 0.6, hex('#CFC8BC'), 32); P.cyl(-24, 0.55, -40, 6.6, 0.12, hex('#BDB6A8'), 32, 0, 0, 0, undefined, { ao: false });
@@ -220,6 +224,8 @@ export class Station {
       P.cyl(0, 17.5, 5.92, 4.8, 0.14, hex('#2A2D31'), 32, 0, Math.PI / 2, 0); k.glow.cyl(0, 17.5, 5.86, 4.4, 0.04, hex('#FFFFFF'), 32, 0, Math.PI / 2, 0);
       P.box(0, 18.3, 5.82, 0.22, 1.7, 0.06, hex('#24324A'), 0, 0, 0, 1, { ao: false }); P.box(0.6, 17.5, 5.82, 1.3, 0.2, 0.06, hex('#24324A'), 0, 0, 0, 1, { ao: false });
       k.sign(0, 7.2, 3.94, { kind: 'plain', w: 10, h: 1.6, bg: '#B3261E', fg: '#FFFFFF', zh: '广州站', en: 'Guangzhou Railway Station', face: Math.PI, align: 'center' });
+    } else if (sig === 'sysy') {
+      this.sysy = buildSysy(k);
     } else if (sig === 'rams') {
       k.g('grass').sphere(-26, -2, -36, 22, hex('#FFFFFF'), 3, 0.45); k.col(-26, 1.5, -36, 14, 5, 14);
       for (let i = 0; i < 5; i++) { const a = i * 1.256, x = -26 + Math.cos(a) * 2.2, z = -36 + Math.sin(a) * 2.2; goat(P, x, 5.1 + (i === 0 ? 1 : 0), z, a + Math.PI / 2, i === 0 ? 1.4 : 1); }
@@ -248,7 +254,7 @@ export class Station {
     for (let x = -4.5; x <= 4.6; x += 1.5) P.slab(x - 0.04, x + 0.04, 3.75, 3.9, -38.3, -25.5, frame, { ao: false });
     P.slab(-5.3, 5.3, 3.4, 3.6, -38.5, -38.2, hex(LINES[L1].color), { ao: false });          // 线路色檐口条
     k.glow.slab(-3.4, 3.4, 3.38, 3.4, -37.9, -26.5, LIGHT, { ao: false });
-    const lines = s.lines.map(badge), exits = ['D'];
+    const lines = s.lines.map(badge), exits = [this.exitMain];
     k.sign(0, 4.85, -38.52, { kind: 'entrance', w: 9.4, h: 1.15, zh: s.zh + '站', en: s.en + ' Station', badges: lines, exits, face: Math.PI });
     // 站口导向牌（升级：大箭头 + 线路色块 + 大字，走到站口就看得到）
     k.sign(0, 2.95, -37.6, { kind: 'way', w: 4.6, h: 0.85, zh: '进站', en: 'Entrance', arrow: 'down', badges: lines, face: Math.PI, hang: 3.6 });
@@ -374,8 +380,8 @@ export class Station {
     const archLightMat = colorMat(this.scene, '#88A0B8', { glow: true }).clone('archLight');
     const archLight = B.MeshBuilder.CreateBox('archLight', { width: 1.6, height: 0.1, depth: 0.04 }, this.scene); archLight.material = archLightMat; archLight.parent = k.root; archLight.position.set(0, y + 2.46, zs - 0.37);
     this.crowd.add(2.4, y, zs + 1.4, -Math.PI / 2 - 0.4, randomLook({ uniform: { top: '#24456E', bottom: '#1F2A3A', cap: '#24456E', stripe: '#E8C547' } }), 'wave');
-    k.sign(0, y + 3.5, zs - 0.4, { kind: 'dir', w: 5.2, h: 0.6, zh: '安全检查', en: 'Security Check', face: Math.PI, double: true, back: { kind: 'exit', exits: ['A', 'D'] }, hang: CY });
-    k.sign(10.5, y + 3.3, zs - 0.1, { kind: 'exit', w: 3.4, h: 0.55, arrow: 'up', exits: ['D'], face: 0, hang: CY });
+    k.sign(0, y + 3.5, zs - 0.4, { kind: 'dir', w: 5.2, h: 0.6, zh: '安全检查', en: 'Security Check', face: Math.PI, double: true, back: { kind: 'exit', exits: this.exits }, hang: CY });
+    k.sign(10.5, y + 3.3, zs - 0.1, { kind: 'exit', w: 3.4, h: 0.55, arrow: 'up', exits: [this.exitMain], face: 0, hang: CY });
     for (const z of [-17, -15]) arrow(k, 0, y + 0.006, z, 0, '#F2C230');
     // 行李（X 光机传送带）
     const bags = [0, 1, 2].map(i => {
@@ -407,7 +413,7 @@ export class Station {
     if (this.platforms.length > 1) k.sign(0, y + 2.76, zg - 0.56, { ...TRANSFER_HINT, w: 7.8, h: 0.72, arrow: 'up', face: Math.PI, hang: CY });
     for (const z of [-8.5, -5.5]) arrow(k, 0, y + 0.006, z, 0, '#F2C230');
     // 刚过闸机：往站台（线路色块 + 两头终点），背面是出站
-    k.sign(0, y + 3.35, 2.6, { kind: 'way', w: 8.2, h: 0.9, zh: '站台', en: 'Platforms', arrow: 'up', badges: L.map(badge), dirs: termini(L[0], this.code), face: Math.PI, double: true, back: { kind: 'exit', arrow: 'up', zh: '出站', en: 'Exit', exits: ['A', 'D'] }, hang: CY });
+    k.sign(0, y + 3.35, 2.6, { kind: 'way', w: 8.2, h: 0.9, zh: '站台', en: 'Platforms', arrow: 'up', badges: L.map(badge), dirs: termini(L[0], this.code), face: Math.PI, double: true, back: { kind: 'exit', arrow: 'up', zh: '出站', en: 'Exit', exits: this.exits }, hang: CY });
     // 盲道：通道口 → 闸机 → 楼梯口
     const T = k.g('tactile'), ty = y + 0.003, tc = hex('#F2C230');
     T.slab(5.85, 6.15, ty, ty + 0.006, -19.8, -12.6, tc, { ao: false }); T.slab(5.85, 6.15, ty, ty + 0.006, -11.4, -3.2, tc, { ao: false });
@@ -424,7 +430,7 @@ export class Station {
     k.rail(-1, 9.85, 15, 9.85, y); k.rail(-1, 18.15, 15, 18.15, y); k.rail(15, 9.85, 15, 18.15, y);
     const destTxt = L.map(l => LINES[l].zh).join(' · ');
     // 下站台的楼梯 / 扶梯口：箭头往下 + 本线色块 + 两头终点
-    k.sign(-1.6, y + 3.35, 14, { kind: 'way', w: 7.6, h: 0.9, zh: '站台', en: 'Platforms', badges: [badge(L[0])], arrow: 'down', dirs: termini(L[0], this.code), face: -Math.PI / 2, double: true, back: { kind: 'exit', arrow: 'up', exits: ['A', 'D'] }, hang: CY });
+    k.sign(-1.6, y + 3.35, 14, { kind: 'way', w: 7.6, h: 0.9, zh: '站台', en: 'Platforms', badges: [badge(L[0])], arrow: 'down', dirs: termini(L[0], this.code), face: -Math.PI / 2, double: true, back: { kind: 'exit', arrow: 'up', exits: this.exits }, hang: CY });
     void destTxt;
     for (const [x, z, a] of [[-4, 2], [-4, 5.5], [-4, 9], [-3, 13.2, Math.PI / 2]]) arrow(k, x, y + 0.006, z, a || 0, '#F2C230');
     // 乘客（站着 / 看手机 / 走动）
@@ -661,7 +667,7 @@ export class Station {
     }
     this.pidsBuild(P, CY);
     // 楼梯口出口牌 / 站名
-    if (isMain) k.sign(16.6, y + 3.35, 14, { kind: 'exit', w: 4.4, h: 0.6, arrow: 'up', exits: ['A', 'D'], face: Math.PI / 2, double: true, hang: CY });
+    if (isMain) k.sign(16.6, y + 3.35, 14, { kind: 'exit', w: 4.4, h: 0.6, arrow: 'up', exits: this.exits, face: Math.PI / 2, double: true, hang: CY });
     k.sign(isMain ? -30 : 30, y + 3.3, zc, { kind: 'dir', w: 5.2, h: 0.62, zh: s.zh + ' · ' + L.zh, en: s.en, badges: [badge(P.line)], face: isMain ? Math.PI / 2 : -Math.PI / 2, double: true, hang: CY, bar: lc });
     D.cctv(k, isMain ? 20 : 34, CY, zc, -Math.PI / 2); D.cctv(k, -36, CY, zc, Math.PI / 2);
     if (isMain) for (const x of [24, 20]) arrow(k, x, y + 0.006, zc - 4.2, Math.PI / 2, '#FFFFFF'), arrow(k, x, y + 0.006, zc + 4.2, Math.PI / 2, '#FFFFFF');
