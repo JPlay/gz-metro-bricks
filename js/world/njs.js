@@ -6,7 +6,8 @@
  *     一间间糖水铺 / 小吃店招牌 + 路中间的小吃车、串串灯笼。
  * 资料：广州市政府“农民运动讲习所”（中山四路 42 号，原番禺学宫，棂星门、泮池、大成门、大成殿、崇圣殿、东西廊庑）；
  *   南方+《广州糖水边度掂？老广带去文明路》（文明路与德政中路交界的“甜蜜路口”、南洋式骑楼）、《文明路，凭什么是广州必吃街》。
- * 酒店 / 商场（珠江·星火1926 等）等主人确认后再搭，这里先空着。
+ * 德政中路东侧：丽呈铂锐酒店（德政中路 388 号，2026 年开业，离农讲所站步行不到 100m）——深棕色塔楼 + 竖条暖黄窗带、
+ *   楼顶金色「丽呈铂锐酒店 REZEN」、门口「我❤广州」灯牌和红色飘带雕塑；室内见 js/game/hotel.js。商场（珠江·星火1926）先不搭。
  * 性能：全部放在单独的 Kit 里（只在地面上启用），只用合批静态桶 + 一张招牌图集，不加灯。
  */
 import { hex } from '../core/geo.js';
@@ -19,6 +20,8 @@ export const WM = { zN: -103, zS: -113, x0: -58, x1: 58, lane0: 17, lane1: 31, Z
 export const HOTEL = { x0: 31.3, x1: 50, z0: -102.6, z1: -84 };
 /** 文明路上留空的铺位（给以后的糖水店）：[x, 骑楼正面 z] */
 export const EMPTY_BAYS = [];
+/** 酒店正门（朝西，开在德政中路上）：走进这个范围 = 进酒店大堂 */
+export const HOTEL_DOOR = { x: 31.5, z: -93, half: 1.3 };
 const C = {
   red: hex('#B4412E'), red2: hex('#9E2E20'), redD: hex('#7E2418'), yel: hex('#E0A63A'), yel2: hex('#C98B26'), ridge: hex('#B5762A'),
   granite: hex('#CFC9BC'), stone: hex('#D9D3C5'), stone2: hex('#BFB8A8'), water: hex('#5FA9C9'), pave: hex('#D8D2C4'), green: hex('#3E7B58'),
@@ -28,6 +31,7 @@ const C = {
 export function buildNjs(k) {
   institute(k);
   wenming(k);
+  hotel(k);
   return { institute: NJS, street: WM };
 }
 
@@ -193,4 +197,51 @@ function wenming(k) {
     for (let j = 0; j < 4; j++) { const z = W.zS + 2 + j * 2; k.glow.ellipsoid(x, 4.6 - Math.abs(j - 1.5) * 0.15, z, 0.5, 0.62, 0.5, hex('#FF5C4D'), 1); }
     P.box(x, 4.95, zc, 0.02, 0.02, W.zN - W.zS, C.dark, 0, 0, 0, 1, { ao: false });
   }
+}
+
+/** 丽呈铂锐酒店外观：裙楼（首层玻璃店面 + 雨篷 + 正门）+ 深棕色塔楼（竖条暖黄窗带、每层一道深色横线）+ 楼顶金字招牌 + 门口灯牌 / 红飘带 */
+function hotel(k) {
+  const P = k.solid, G = k.glow, Gl = k.g('glass'), H = HOTEL, D = HOTEL_DOOR;
+  const brown = hex('#4A2C22'), brown2 = hex('#3A231B'), gold = hex('#D9AE5C'), warm = hex('#FFC56B'), warm2 = hex('#F2AE55');
+  // 裙楼（首层）
+  const px0 = 31.5, px1 = 49.5, pz0 = -102.2, pz1 = -84.5, PH = 5;
+  P.slab(px0, px1, 0, PH, pz0, pz1, brown2, { aoTop: true }); k.colSlab(px0, px1, 0, PH, pz0, pz1);
+  P.slab(px0 - 0.1, px1 + 0.1, PH - 0.5, PH, pz0 - 0.1, pz1 + 0.1, gold, { ao: false });
+  // 西面（德政中路）：两段暖光玻璃店面 + 中间正门
+  for (const [a, b] of [[pz0 + 0.8, D.z - 2.2], [D.z + 2.2, pz1 - 0.8]]) { Gl.slab(px0 - 0.06, px0, 0.3, 4.0, a, b, hex('#6E5040')); G.slab(px0 - 0.04, px0 - 0.02, 0.5, 3.8, a + 0.2, b - 0.2, warm2); for (let z = a + 1.6; z < b - 0.4; z += 1.6) P.slab(px0 - 0.1, px0, 0.3, 4.0, z - 0.05, z + 0.05, brown, { ao: false }); }
+  G.slab(px0 - 0.05, px0 - 0.02, 0, 3.0, D.z - D.half, D.z + D.half, hex('#FFE2A8'));
+  P.slab(px0 - 0.12, px0, 0, 3.2, D.z - 0.05, D.z + 0.05, brown2, { ao: false });
+  P.slab(px0 - 0.14, px0, 3.0, 3.2, D.z - D.half - 0.1, D.z + D.half + 0.1, gold, { ao: false });
+  // 雨篷 + 两根细柱
+  P.slab(px0 - 2.0, px0, 3.9, 4.2, D.z - 2.6, D.z + 2.6, brown, { ao: false }); P.slab(px0 - 2.05, px0, 3.85, 3.92, D.z - 2.65, D.z + 2.65, gold, { ao: false });
+  for (const s of [-1, 1]) { P.box(px0 - 1.85, 1.95, D.z + s * 2.4, 0.12, 3.9, 0.12, gold); k.col(px0 - 1.85, 1.95, D.z + s * 2.4, 0.15, 3.9, 0.15); }
+  G.slab(px0 - 1.9, px0 - 0.1, 3.84, 3.86, D.z - 2.3, D.z + 2.3, hex('#FFE7B8'));
+  k.sign(px0 - 2.06, 4.05, D.z, { kind: 'plain', w: 3.6, h: 0.32, bg: '#2A1A14', fg: '#E8C26A', zh: '丽呈铂锐酒店 REZEN', face: -Math.PI / 2, align: 'center', box: false });
+  // 北面（中山四路方向）：玻璃店面
+  Gl.slab(px0 + 0.8, px1 - 0.8, 0.3, 4.0, pz1, pz1 + 0.06, hex('#6E5040')); G.slab(px0 + 1.0, px1 - 1.0, 0.5, 3.8, pz1 + 0.02, pz1 + 0.04, warm2);
+  for (let x = px0 + 2.4; x < px1 - 0.8; x += 1.6) P.slab(x - 0.05, x + 0.05, 0.3, 4.0, pz1, pz1 + 0.1, brown, { ao: false });
+  // 塔楼：深棕色，竖条暖黄窗带（每 1.6m 一条），每层一道深色横线
+  const tx0 = 32.5, tx1 = 48.5, tz0 = -101, tz1 = -86, TY0 = PH, TY1 = 38;
+  P.slab(tx0, tx1, TY0, TY1, tz0, tz1, brown, { aoTop: true });
+  for (let z = tz0 + 0.8, i = 0; z < tz1 - 0.4; z += 1.6, i++) G.slab(tx0 - 0.06, tx0 - 0.02, TY0 + 0.6, TY1 - 1.6, z - 0.28, z + 0.28, i % 3 === 1 ? warm2 : warm);
+  for (let x = tx0 + 0.8, i = 0; x < tx1 - 0.4; x += 1.6, i++) G.slab(x - 0.28, x + 0.28, TY0 + 0.6, TY1 - 1.6, tz1 + 0.02, tz1 + 0.06, i % 3 === 2 ? warm2 : warm);
+  for (let y = TY0 + 0.6; y < TY1 - 1.5; y += 3.0) { P.slab(tx0 - 0.12, tx0, y - 0.08, y + 0.08, tz0, tz1, brown2, { ao: false }); P.slab(tx0, tx1, y - 0.08, y + 0.08, tz1, tz1 + 0.12, brown2, { ao: false }); }
+  // 楼顶：金边女儿墙 + 金字招牌「丽呈铂锐酒店 REZEN」+ R 标
+  P.slab(tx0 - 0.2, tx1 + 0.2, TY1, TY1 + 1.6, tz0 - 0.2, tz1 + 0.2, brown2, { ao: false });
+  P.slab(tx0 - 0.25, tx1 + 0.25, TY1 + 1.6, TY1 + 1.75, tz0 - 0.25, tz1 + 0.25, gold, { ao: false });
+  k.sign((tx0 + tx1) / 2 + 0.9, TY1 - 0.7, tz1 + 0.14, { kind: 'plain', w: 11.5, h: 1.9, bg: '#2A1A14', fg: '#E8C26A', zh: '丽呈铂锐酒店', en: 'REZEN', face: 0, align: 'center' });
+  k.sign(tx0 + 1.3, TY1 - 0.7, tz1 + 0.14, { kind: 'plain', w: 1.9, h: 1.9, bg: '#2A1A14', fg: '#E8C26A', zh: 'R', face: 0, align: 'center' });
+  k.sign(tx0 - 0.14, TY1 - 0.7, (tz0 + tz1) / 2, { kind: 'plain', w: 10, h: 1.9, bg: '#2A1A14', fg: '#E8C26A', zh: '丽呈铂锐酒店', en: 'REZEN', face: -Math.PI / 2, align: 'center' });
+  // 门口灯牌「我❤广州」（心形用两颗红色发光球 + 一个转 45° 的方块拼出来）
+  const sx = px0 - 0.1, sz = pz1 - 3.2, sy = 2.1;
+  P.slab(sx - 0.12, sx, sy - 0.7, sy + 0.7, sz - 2.1, sz + 2.1, hex('#1B1B1B'), { ao: false });
+  k.sign(sx - 0.13, sy, sz + 1.2, { kind: 'plain', w: 1.1, h: 1.0, bg: '#1B1B1B', fg: '#FFFFFF', zh: '我', face: -Math.PI / 2, align: 'center', box: false });
+  k.sign(sx - 0.13, sy, sz - 1.25, { kind: 'plain', w: 1.6, h: 1.0, bg: '#1B1B1B', fg: '#FFFFFF', zh: '广州', face: -Math.PI / 2, align: 'center', box: false });
+  const heart = hex('#FF2D3D');
+  for (const s of [-1, 1]) G.sphere(sx - 0.2, sy + 0.12, sz - 0.05 + s * 0.17, 0.4, heart, 1);
+  G.box(sx - 0.2, sy - 0.05, sz - 0.05, 0.1, 0.4, 0.4, heart, 0, Math.PI / 4, 0);
+  // 红色飘带雕塑（门前小广场）：一条扭转上升的红带
+  const rx = 28.6, rz = -87.6, red = hex('#D7262E');
+  P.cyl(rx, 0.2, rz, 2.0, 0.4, hex('#BFB8A8'), 16); k.col(rx, 1.5, rz, 1.8, 3, 1.8);
+  for (let i = 0; i < 14; i++) { const a = i * 0.55, r = 0.35 + 0.25 * Math.sin(i * 0.45); P.box(rx + Math.sin(a) * r, 0.65 + i * 0.3, rz + Math.cos(a) * r, 0.16, 0.42, 1.0, red, a, 0.35, 0, 1, { ao: false }); }
 }
