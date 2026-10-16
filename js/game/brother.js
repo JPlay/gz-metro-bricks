@@ -1,8 +1,8 @@
 /*
  * 哥哥“明明”：和星星（hero.js）同一套玩具风格、同一套骨骼 / 程序化动画，只换外形（不用照片贴图，只是玩具版的神似）。
  *   - 黑色短发，斜刘海一绺一绺往一边拨、发尖参差；不戴眼镜；圆圆胖胖的脸，平时睁眼抿嘴笑，开心 / 庆祝 / 吃东西时眯眼张嘴大笑；
- *   - 比星星高一截、壮一点（整体缩放 1.04 vs 0.9，胸更宽）；
- *   - 白 T 恤式球衣：只有肩头和袖子是藏青（小圆肩）、藏青领口；胸前红色“SUNSHINE 23”（唯一一张小贴图，字清楚），背后藏青“23”；
+ *   - 比星星高大半个头、壮一点（整体缩放 1.12 vs 0.9；头相对身体小一点 = 看起来更大的孩子，胸更宽）；
+ *   - 白 T 恤式球衣：圆肩和短袖跟衣身一样白、连成一件（袖口一圈藏青边，袖子不比衣身宽出去多少）、藏青领口；胸前红色“SUNSHINE 23”（唯一一张小贴图，字清楚），背后藏青“23”；
  *   - 藏青及膝运动短裤 + 白色侧条 / 裤脚白边；白短袜；灰色洞洞鞋；
  *   - 金黄色挂绳 + 胸前小黑手表（也当他的羊城通）。
  * 网格：身体 1 个蒙皮网格（顶点色）+ 球衣字 1 个蒙皮小网格（贴图，alpha test）= 2 次绘制调用，和星星（身体 + 眼镜）一样。
@@ -17,7 +17,7 @@ const B = window.BABYLON;
 export const BROTHER_LOOK = {
   fem: false, kid: true, skin: '#F2D2BA', top: '#F7F7F4', bottom: '#1F2A4E', hair: '#1E1714', shoes: '#8C9399',
   hairStyle: 'side', skirt: false, shorts: true, longSleeve: false, bag: null, bagCol: '#000', glasses: false,
-  cap: null, scale: 1.04, uniform: null, phone: false, prop: null, tie: null, collar: false, hunch: 0, role: 'brother', pattern: null
+  cap: null, scale: 1.12, uniform: null, phone: false, prop: null, tie: null, collar: false, hunch: 0, role: 'brother', pattern: null
 };
 const COL = {
   hair: hex('#1E1714'), hairHi: hex('#4A3A30'), hairDark: hex('#120D0B'),
@@ -27,7 +27,7 @@ const COL = {
   eye: hex('#2A2220'), mouth: hex('#B8463F'), tongue: hex('#E57C74')
 };
 // 骨骼尺寸：髋高 / 腿长和星星一样（坐姿公式不变），头更大更圆、胸更宽更厚
-const D = { hip: 0.6, thigh: 0.31, shin: 0.29, torso: 0.4, uarm: 0.22, farm: 0.2, shoulder: 0.165, hipW: 0.072, head: 0.37, neck: 0.04, chestW: 0.35, chestD: 0.21 };
+const D = { hip: 0.6, thigh: 0.31, shin: 0.29, torso: 0.4, uarm: 0.22, farm: 0.2, shoulder: 0.14, hipW: 0.072, head: 0.345, neck: 0.04, chestW: 0.35, chestD: 0.21 };
 export const HAND_R = 11, EYES_OPEN = 12, EYES_HAPPY = 13;
 function defs(L) {
   const d = boneDefs(L);
@@ -114,9 +114,8 @@ function parts(L) {
   const sp = P(1), tr = d.torso;
   // 白色衣身本身是 jerseyGeo 的贴图网格（整件一张贴图，没有接缝 / “背心”边）；这里只放里面的填充
   sp.ellipsoid(0, tr * 0.4, 0, d.chestW * 0.9, tr * 1.0, d.chestD * 0.9, COL.jersey, 1);
-  // 肩：藏青肩头
-  // 白 T 恤：只有肩头 + 袖子是藏青（小小的圆肩，不是垫肩）
-  for (const sx of [-1, 1]) sp.ellipsoid(sx * d.shoulder * 0.98, tr - 0.07, 0, 0.088, 0.075, 0.1, COL.navy, 2);
+  // 圆肩：一根横的白色胶囊把衣身顶和两边袖子连起来（和星星一样的做法），不再有单独的藏青“垫肩”
+  sp.capsule([-d.shoulder * 0.85, tr - 0.06, 0], [d.shoulder * 0.85, tr - 0.06, 0], 0.066, 0.066, COL.jersey, 12);
   sp.cyl(0, tr - 0.015, 0, 0.13, 0.032, COL.navy, 14); // 领口罗纹
   // 金黄挂绳 + 小黑手表（羊城通）
   // 挂绳短短一圈，小手表挂在领口下面（不挡住胸前的 SUNSHINE 23）
@@ -151,11 +150,11 @@ function parts(L) {
   fh.ellipsoid(0, hy - hr * 0.22, fz - hr * 0.02, hr * 0.2, hr * 0.085, hr * 0.06, COL.mouth, 2);
   fh.ellipsoid(0, hy - hr * 0.245, fz - hr * 0.005, hr * 0.11, hr * 0.04, hr * 0.04, COL.tongue, 1);
   fh.box(0, hy - hr * 0.178, fz + hr * 0.005, hr * 0.2, hr * 0.03, hr * 0.04, skin, 0, 0, 0, 1, { ao: false }); // 上唇压平
-  // —— 手臂：藏青短袖（袖口白边）+ 肉肉的手臂 ——
+  // —— 手臂：白色短袖（和衣身同色、从圆肩直接接下来，只比手臂粗一点；袖口一圈藏青边）+ 肉肉的手臂 ——
   for (const [u, f] of [[3, 5], [4, 6]]) {
     const ua = P(u);
-    ua.capsule([0, 0, 0], [0, -d.uarm * 0.5, 0], 0.08, 0.077, COL.navy, 10);
-    ua.tubeTaper([0, -d.uarm * 0.5, 0], [0, -d.uarm * 0.56, 0], 0.16, 0.16, COL.white, 10);
+    ua.capsule([0, 0.005, 0], [0, -d.uarm * 0.46, 0], 0.06, 0.057, COL.jersey, 10);
+    ua.tubeTaper([0, -d.uarm * 0.44, 0], [0, -d.uarm * 0.52, 0], 0.126, 0.126, COL.navy, 10);
     ua.tubeTaper([0, -d.uarm * 0.5, 0], [0, -d.uarm, 0], 0.1, 0.088, skin, 10); ua.sphere(0, -d.uarm, 0, 0.088, skin, 1);
     const fa = P(f); fa.tubeTaper([0, 0, 0], [0, -d.farm, 0], 0.088, 0.074, skin, 10);
     fa.ellipsoid(0, -d.farm - 0.035, 0.005, 0.085, 0.095, 0.08, skin, 2);
@@ -201,7 +200,7 @@ export const TORSO = { y0: -0.16, y1: D.torso - 0.015, rx: D.chestW * 0.5, rz: D
 function jerseyGeo(restSpine) {
   const g = new Geo().withBones(); g.bone = 1;
   const t = new Geo(), uv = [], tr = D.torso, NU = 40, NV = 14, T = TORSO, ys = tr * 0.62;
-  const prof = y => { const k = smooth(tr * 0.5, T.y1, y), b = smooth(tr * 0.3, T.y0, y); return [T.rx * (1 - 0.3 * k * k) * (1 + 0.1 * b), T.rz * (1 - 0.22 * k * k) * (1 + 0.1 * b)]; };
+  const prof = y => { const k = smooth(tr * 0.5, T.y1, y), b = smooth(tr * 0.3, T.y0, y); return [T.rx * (1 - 0.2 * k * k) * (1 + 0.1 * b), T.rz * (1 - 0.18 * k * k) * (1 + 0.1 * b)]; };
   const k0 = 0;
   for (let j = 0; j <= NV; j++) for (let i = 0; i <= NU; i++) {
     const y = T.y0 + (T.y1 - T.y0) * j / NV, th = i / NU * Math.PI * 2 - Math.PI, [rx, rz] = prof(y);   // th = 0 正前方，±π 正后方

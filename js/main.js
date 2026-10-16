@@ -179,6 +179,8 @@ export async function start() {
     G.wasAboard = G.aboard;
     Audio.setZone(G.aboard ? 'train' : ({ street: 'street', platform: 'platform' }[G.zone.kind] || 'concourse'));
     if (G.zone.kind === 'platform' && !G.welcomed && !G.aboard) { G.welcomed = true; if (!Audio.isAnnouncing()) Ann.welcome(G.code); }
+    // 出了车站（街面 / 纪念堂大会堂）：站内广播（欢迎 / 进站 / 关门）和字幕立刻停，不再跟着人走到街上
+    if ((G.zone.kind === 'street' || G.zone.kind === 'hall') && !G.aboard && Audio.isAnnouncing()) Audio.cancelAnnouncements();
     const rl = metro.ride && metro.ride.train && G.aboard ? metro.ride : null;
     const line = rl ? rl.line : (G.zone.kind === 'platform' ? G.zone.P.line : STATIONS[G.code].lines[0]);
     hud.where(G.code, line, rl && rl.phase === 'cruise' ? rl.next : null);
