@@ -55,6 +55,7 @@ export async function start() {
   const player = new Player(scene, M, cam);
   const tickets = new Tickets({ hud, Audio, events, panel: new TvmPanel({ Audio }), scene, cam });
   const seats = new SeatCtl({ player, metro: null, Audio, events });
+  seats.hall = () => (G.station && G.station.interior && G.station.interior.active ? G.station.interior : null);
   const bubbles = new Bubbles(scene, cam);
   player.onStandRequest = () => seats.stand();
   player.meshes().forEach(m => R.addShadowCaster(m));
@@ -233,7 +234,7 @@ export async function start() {
       babylon: { version: B.Engine.Version, source: window.__babylonSource, attempts: window.__babylonAttempts },
       drawCalls: (engine._drawCalls && engine._drawCalls.current) ?? null, activeMeshes: scene.getActiveMeshes().length, depthBits: depthBits(), minZ: cam.minZ, gates: G.station.gates.map(g => +g.f.toFixed(2)),
       security: G.station.security.flash > 0, probes: R.probes.length, atlas: G.station.kit.atlas ? { y: G.station.kit.atlas.y + G.station.kit.atlas.row, overflow: G.station.kit.atlas.overflow } : null, audio: Audio.getState(),
-      ticket: tickets.info(), seat: seats.info(), social: social.info(), mission: mission.info(), mapOpen: !!G.mapOpen, act: hud.act ? { id: hud.act.id, label: hud.act.label } : null
+      ticket: tickets.info(), seat: seats.info(), social: social.info(), mission: mission.info(), hall: G.station && G.station.interior ? G.station.interior.info() : null, mapOpen: !!G.mapOpen, act: hud.act ? { id: hud.act.id, label: hud.act.label } : null
     }),
     teleport: (x, y, z, yaw) => player.spawn(x, y, z, yaw ?? player.yaw),
     setMove: (x, y, run) => { input.virtual = (x || y) ? { x, y, run } : null; },

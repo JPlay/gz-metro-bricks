@@ -69,6 +69,7 @@ export class Mission {
       if (this.Ann) this.Ann.say(hintSegs('sysy.street'), { key: 'hint' }); this.events && this.events.emit('hint', { k: 'sysy.street' });
     }
     this.wasOut = out;
+    if (this.cardT > 0) { this.cardT -= dt; if (this.cardT <= 0) this.openCard(); }
     this.el.classList.toggle('done', this.done);
     // 到达：纪念堂站街面、正门台阶前的金色圈附近
     const st = g.station, p = this.player.position, Z = st && st.goal && st.goal.zone;
@@ -76,15 +77,21 @@ export class Mission {
     if (inside && !this.inZone) this.arrive(st);
     this.inZone = inside;
   }
+  /** 到达：先把镜头摆到主角正前方偏一侧（主角 + 身后的纪念堂同框，避开铜像），主角转身“努力！”，2.4 秒后再弹到达卡 */
   arrive(st) {
-    const first = !this.done; this.done = true;
-    this.player.celebrate();
+    const first = !this.done; this.done = true; const pl = this.player, p = pl.position, H = st.sysy && st.sysy.hall;
+    if (H) {
+      const yaw = Math.atan2(H.x - p.x, H.z - p.z) + 0.6;          // 镜头看向纪念堂（镜头在主角身后 = 主角面朝镜头时就是正面）
+      if (pl.view !== 'third') pl.toggleView();
+      pl.frame = { dist: 13, h: 1.6, ahead: 8, lookY: 6.5, keep: pl.dist }; pl.yaw = yaw; pl.pitch = 0.05;
+    }
+    pl.celebrate();
     if (st.goalGem) st.goalGem.setEnabled(false);
     this.Audio.blip && this.Audio.blip('goal');
-    this.openCard(first);
+    this.cardT = 2.4;
     this.events && this.events.emit('goal', { code: GOAL.code, first });
   }
   openCard() { this.card.hidden = false; this.card.classList.remove('out'); this.cardOpen = true; }
-  closeCard() { if (!this.cardOpen) return; this.cardOpen = false; this.card.classList.add('out'); setTimeout(() => { if (!this.cardOpen) this.card.hidden = true; }, 220); this.Audio.blip && this.Audio.blip('tap'); }
-  info() { return { done: this.done, step: this.step, card: this.cardOpen, chip: this.showT > 0, streetHint: !!this.streetHinted }; }
+  closeCard() { if (!this.cardOpen) return; this.cardOpen = false; const pl = this.player; if (pl.frame) pl.frame = null; this.card.classList.add('out'); setTimeout(() => { if (!this.cardOpen) this.card.hidden = true; }, 220); this.Audio.blip && this.Audio.blip('tap'); }
+  info() { return { done: this.done, step: this.step, card: this.cardOpen, cardSoon: this.cardT > 0, chip: this.showT > 0, streetHint: !!this.streetHinted }; }
 }

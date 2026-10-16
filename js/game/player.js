@@ -33,21 +33,23 @@ export class Player {
   /** 坐下：seat = 列车座位（局部 x、侧 sd）。髋部对齐座垫，与烘焙乘客同一公式：脚底 y = 0.55 − 髋高 */
   sit(train, seat) {
     this.seat = { train, seat }; this.vel.set(0, 0, 0); this.vy = 0; this.speed = 0;
-    this.facing = seat.sd > 0 ? Math.PI : 0; this.yaw = this.facing; this.pitch = this.view === 'first' ? 0.02 : 0.12;
+    this.facing = seat.world ? seat.face : seat.sd > 0 ? Math.PI : 0; this.yaw = this.facing; this.pitch = this.view === 'first' ? 0.02 : 0.12;
     this.placeSeat();
   }
   hipH() { return (this.person.look.kid ? 0.6 : 0.86) * this.person.look.scale; }
-  placeSeat() { const { train, seat } = this.seat, r = train.root.position; this.position.set(r.x + seat.x, r.y + SEAT_HIP - this.hipH(), r.z + seat.sd * 1.2); }
+  placeSeat() { const { train, seat } = this.seat, r = train.root.position; if (seat.world) this.position.set(seat.wx, seat.wy + SEAT_HIP - this.hipH(), seat.wz); else this.position.set(r.x + seat.x, r.y + SEAT_HIP - this.hipH(), r.z + seat.sd * 1.2); }
   /** 贴回座位并同步模型 / 影子（列车移动之后也要调用一次，避免慢一帧） */
   syncSeat() {
     if (!this.seat) return;
     this.placeSeat(); this.collider.computeWorldMatrix(true); this.groundY = this.position.y;
     const p = this.position; this.model.position.set(p.x, p.y, p.z); this.model.rotation.y = this.facing;
-    this.blob.position.set(p.x, this.seat.train.root.position.y + 0.02, p.z); this.blob.scaling.set(0.8, 1, 0.8); this.blob.visibility = 0.55;
+    this.blob.position.set(p.x, (this.seat.seat.world ? this.seat.seat.wy : this.seat.train.root.position.y) + 0.02, p.z); this.blob.scaling.set(0.8, 1, 0.8); this.blob.visibility = 0.55;
   }
   standUp() {
     const { train, seat } = this.seat, r = train.root.position; this.seat = null;
-    this.position.set(r.x + seat.x, r.y + 0.05, r.z + seat.sd * 0.5); this.vy = 0; this.grounded = true; this.groundY = r.y; this.collider.computeWorldMatrix(true);
+    if (seat.world) { this.position.set(seat.wx + Math.sin(seat.face) * 0.5, seat.wy + 0.05, seat.wz + Math.cos(seat.face) * 0.5); this.groundY = seat.wy; }
+    else { this.position.set(r.x + seat.x, r.y + 0.05, r.z + seat.sd * 0.5); this.groundY = r.y; }
+    this.vy = 0; this.grounded = true; this.collider.computeWorldMatrix(true);
   }
   spawn(x, y, z, yaw) { this.position.set(x, y, z); this.groundY = y; this.camY = this.eyeY = undefined; this.yaw = this.facing = yaw; this.vy = 0; this.pitch = 0.05; this.collider.computeWorldMatrix(true); }
   /** 主更新：inp = Input.read() 的结果，extra = 额外水平位移（扶梯） */
@@ -68,13 +70,16 @@ export class Player {
     }
     if (inp.pinch && this.view === 'third') this.dist = Math.max(1.8, Math.min(9, this.dist - inp.pinch * 0.02));
     // 水平速度
-    const mag = Math.min(1, Math.hypot(inp.mx, inp.my));
+    // 取景（到达庆祝）开头 2 秒不响应摇杆：主角站定“努力！”，之后一推摇杆镜头就还给玩家
+    if (this.frame) this.frame.age = (this.frame.age || 0) + dt;
+    const held = this.frame && this.frame.age < 2.0;
+    const mag = held ? 0 : Math.min(1, Math.hypot(inp.mx, inp.my));
     let target = 0; if (mag > 0.08) target = inp.run ? CONFIG.runSpeed : CONFIG.walkSpeed * Math.min(1, mag / 0.75);
     const fx = Math.sin(this.yaw), fz = Math.cos(this.yaw), rx = Math.cos(this.yaw), rz = -Math.sin(this.yaw);
     let dx = 0, dz = 0; if (mag > 0.08) { dx = (rx * inp.mx + fx * inp.my) / mag; dz = (rz * inp.mx + fz * inp.my) / mag; }
     const k = Math.min(1, dt * (this.grounded ? 12 : 4));
     this.vel.x += (dx * target - this.vel.x) * k; this.vel.z += (dz * target - this.vel.z) * k;
-    this.speed = Math.hypot(this.vel.x, this.vel.z); this.moving = this.speed > 0.3;
+    this.speed = Math.hypot(this.vel.x, this.vel.z); this.moving = this.speed > 0.3; if (this.moving && this.frame && !held) this.frame = null;  // 一走动就把镜头还给玩家
     if (this.moving) { const want = Math.atan2(this.vel.x, this.vel.z); let d = want - this.facing; d = Math.atan2(Math.sin(d), Math.cos(d)); this.facing += d * Math.min(1, dt * 12); }
     // 跳
     if (inp.jump && this.grounded) { this.vy = CONFIG.jumpSpeed; this.grounded = false; this.jumped = true; }
@@ -190,6 +195,15 @@ export class Player {
       this.model.setEnabled(f > 0.02);
       if (f !== this._heroFade) { this._heroFade = f; for (const m of [this.model, ...this.model.getChildMeshes()]) m.visibility = f; }
       this.blob.setEnabled(true);
+      // 取景模式（到达中山纪念堂）：镜头放在主角正前方偏一侧、离 D 米、高 h 米，朝上看向主角身后的大殿，主角和整座纪念堂同框
+      const F = this.frame;
+      if (F) {
+        const sy = Math.sin(this.yaw), cy = Math.cos(this.yaw);
+        cam.position.set(p.x - sy * F.dist, p.y + F.h, p.z - cy * F.dist);
+        const lx = p.x + sy * F.ahead, lz = p.z + cy * F.ahead, ly = p.y + F.lookY;
+        this.aimPitch = Math.atan2(cam.position.y - ly, Math.hypot(lx - cam.position.x, lz - cam.position.z));
+        if (this._heroFade !== 1) { this._heroFade = 1; this.model.setEnabled(true); for (const m of [this.model, ...this.model.getChildMeshes()]) m.visibility = 1; }
+      }
     }
     // 近裁剪面随镜头调整：第三人称镜头离墙至少 0.3m（见上面的射线），0.25 不会切进墙；第一人称眼睛离墙可能只有 0.18m，用 0.1
     const nz = this.view === 'first' || this.camDist < 0.8 ? 0.1 : 0.25; if (this.view === 'first') this.aimPitch = undefined; if (cam.minZ !== nz) cam.minZ = nz;

@@ -60,7 +60,7 @@ export class Social {
   /** 玩家坐下：同侧 1.3m 以内坐着的乘客转头点点头 */
   nodNeighbour() {
     const pl = this.player; if (!pl.seat) return;
-    const { train, seat } = pl.seat; let best = null, bd = 1.3;
+    const { train, seat } = pl.seat; if (seat.world) { this.lastNod = null; return; } let best = null, bd = 1.3;
     for (const q of train.pax || []) if (q.seated && q.sd === seat.sd) { const d = Math.abs(q.x - seat.x); if (d < bd) { bd = d; best = q; } }
     if (!best) { this.lastNod = null; return; }
     const face = best.p.mesh.rotation.y, dx = (seat.x - best.x) * (Math.abs(face) < 0.1 ? 1 : -1);

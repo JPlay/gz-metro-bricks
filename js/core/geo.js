@@ -61,6 +61,8 @@ export class Geo {
   withBones() { this.b = []; return this; }
   push(x, y, z, nx, ny, nz, col, a = 1, shade = 1) {
     if (this.tint) shade *= this.tint(x, y, z, nx, ny, nz);
+    // 可选的整体缩放（中山纪念堂按真实比例放大：xz 和 y 各自缩放，绕 (cx,0,cz)）
+    const X = this.xf; if (X) { x = X.cx + (x - X.cx) * X.s; y *= X.sy; z = X.cz + (z - X.cz) * X.s; nx /= X.s; ny /= X.sy; nz /= X.s; const l = Math.hypot(nx, ny, nz) || 1; nx /= l; ny /= l; nz /= l; }
     this.p.push(x, y, z); this.n.push(nx, ny, nz); this.c.push(col[0] * shade, col[1] * shade, col[2] * shade, a);
     // 平面投影 UV（米）
     const ax = Math.abs(nx), ay = Math.abs(ny), az = Math.abs(nz);
