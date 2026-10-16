@@ -11,7 +11,7 @@ IPHONE_UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 27_0 like Mac OS X) AppleWebKit/
 SIZES = [('iphone390', 390, 844, 3, IPHONE_UA), ('iphone430', 430, 932, 3, IPHONE_UA), ('ipad_land', 1112, 834, 2, None)]
 MEASURE = """(() => { const r = el => { if (!el || el.hidden || getComputedStyle(el).display === 'none') return null; const b = el.getBoundingClientRect(); return { x: Math.round(b.left), y: Math.round(b.top), r: Math.round(b.right), b: Math.round(b.bottom) }; };
   const btns = [...document.querySelectorAll('#btns > .btn')].filter(b => !b.hidden && getComputedStyle(b).display !== 'none');
-  return { vw: innerWidth, where: r(document.getElementById('where')), next: r(document.getElementById('next')), inv: r(document.getElementById('inv')), btns: btns.map(b => ({ id: b.id, ...r(b) })) }; })()"""
+  return { vw: innerWidth, where: r(document.getElementById('where')), next: r(document.getElementById('next')), inv: r(document.getElementById('inv')), invBg: getComputedStyle(document.getElementById('inv')).backgroundColor, btns: btns.map(b => ({ id: b.id, ...r(b) })) }; })()"""
 def hit(a, b): return a and b and a['x'] < b['r'] and b['x'] < a['r'] and a['y'] < b['b'] and b['y'] < a['b']
 async def main():
     os.makedirs(OUT, exist_ok=True); ok = True; R = {}
@@ -25,10 +25,13 @@ async def main():
             out = {}
             for state in ('street', 'next'):
                 if state == 'next':  # 显示“下一站”条，确认也不被按钮压住
-                    await pg.evaluate("(() => { const n = document.getElementById('next'); n.hidden = false; if (!n.innerHTML.trim()) n.innerHTML = '<span class=\"tag\">下一站<small>Next</small></span><span class=\"nm\">农讲所<small>Nongjiangsuo</small></span>'; const v = document.getElementById('inv'); v.hidden = false; if (!v.innerHTML.trim()) v.innerHTML = '<span style=\"padding:6px 12px\">🎫 单程票</span>'; })()")
+                    await pg.evaluate("(() => { const n = document.getElementById('next'); n.hidden = false; if (!n.innerHTML.trim()) n.innerHTML = '<span class=\"tag\">下一站<small>Next</small></span><span class=\"nm\">农讲所<small>Nongjiangsuo</small></span>'; const v = document.getElementById('inv'); v.hidden = false; if (!v.innerHTML.trim()) v.innerHTML = '<span class=\"tok\"><i></i></span><span class=\"t\"><b>单程票</b><small>去 农讲所</small></span>'; })()")
                 m = await pg.evaluate(MEASURE)
                 bad = [x['id'] for x in m['btns'] if hit(x, m['where']) or hit(x, m['next']) or hit(x, m['inv']) or x['x'] < 0 or x['r'] > m['vw']]
                 if hit(m['next'], m['inv']): bad.append('next/inv')
+                if state == 'next' and w < 600:  # 竖屏小屏：票卡标签要实心白底（alpha ≥ 0.9）
+                    import re; c = [float(x) for x in re.findall(r'[\d.]+', m['invBg'])]
+                    if not (len(c) >= 3 and min(c[:3]) >= 250 and (c[3] if len(c) > 3 else 1) >= 0.9): bad.append('inv-bg ' + m['invBg'])
                 out[state] = dict(m, overlap=bad); ok &= not bad
                 path = f"{OUT}/{name}_{state}{SUF}.png"
                 try: await pg.screenshot(path=path, timeout=120000); out[state]['shot'] = path

@@ -416,6 +416,8 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #1d2b3a; fon
   #btns #bFood .emo { font-size: 20px; }
   #next { top: calc(166px + env(safe-area-inset-top)); }
   #inv { top: calc(166px + env(safe-area-inset-top)); }
+  /* 票卡标签（单程票 / 羊城通）：小屏上压在深色站牌、隧道上时毛玻璃发灰看不清，给它实心白底 + 深色字，和按钮一样一眼能读 */
+  #inv { background: rgba(255,255,255,.94); border-color: rgba(255,255,255,.98); color: var(--ink); }
 }
 
 /* ===== 丽呈铂锐酒店：躺下按钮（在「起身」左边）+ 电梯里的楼层按钮 ===== */
