@@ -20,9 +20,14 @@ python3 tests/e2e/signs.py    'http://localhost:8123/?q=2' <截图目录>   # �
 python3 tests/e2e/transfer_shots.py 'http://localhost:8123/?q=2' /workspace/gz-shots-polish/transfer-r1/   # 公园前换乘导向：站口 / 闸机前提示牌、1 号线站台楼梯脚（含竖屏）、北侧走道、换乘楼梯、通道过桥、2 号线站台、反方向黄带；ONLY=03 只拍一张
 python3 tests/e2e/sysy.py    'http://localhost:8123/' /workspace/gz-shots-polish/sysy-r1/ 1   # 去中山纪念堂任务：地图终点 → 公园前 2 号线上车 → 车厢 LCD/报站“请在纪念堂站下车” → 站台/站厅“中山纪念堂 C出口”牌 + 绿色引导带 → 路口指路牌 → 纪念堂全景 → 门口自动“努力”+ 到达卡片
 python3 tests/e2e/drawcalls.py 'http://localhost:8123/' 1   # 几个固定机位的绘制调用数（街面 / 站厅 / 站台 / 车厢）
+python3 tests/e2e/brother_food.py 'http://localhost:8123/' [--start jnt] [--shots 目录]   # 哥哥明明 + 美食店：选明明 → 走进店 → 坐下 → 点菜（图片菜单）→ 上菜 → 吃一口 😋 → 菜卡 + 美食护照盖章（localStorage）→ 起身出门
+python3 tests/e2e/brother_shots.py 'http://localhost:8123/' /workspace/gz-shots-polish/brother-r1 [select,ming,street,eat,passport]   # 选角色 / 明明各角度和动作 / 三种门面 / 三家店内 / 美食护照 + 地图美食标，带 draws / tris 角标
+python3 tests/e2e/brother_r2.py 'http://localhost:8123/' /workspace/gz-shots-polish/brother-r2 [--doors]   # 明明正面 / 背面、两兄弟站在站厅、骑楼门面（--doors 再拍茶楼红木门 / 档口门帘）
+python3 tests/e2e/brother_perf.py 'http://localhost:8123/' [截图目录]   # 公园前街面：有美食店 vs ?nofood=1 的绘制调用 / 三角形对比
 python3 tests/e2e/shots.py    'http://localhost:8123/'       # 截图（含竖屏 834×1112）
 python3 tests/e2e/polish_shots.py 'http://localhost:8123/' /workspace/gz-shots-polish/after 1   # 视觉升级对比截图（12 个场景 + HUD 特写），并打印每张的绘制调用数
 ```
 
+选角色界面在 webdriver 下默认跳过（`?select=1` 才弹），`?char=mingming|xingxing` 直接指定主角；截图上的 FPS / draws / tris 角标只由测试脚本（perfhud.py）临时贴上，游戏本身不显示。
 测试通过 `window.__game`（见 `js/main.js`）读取状态、设置虚拟摇杆和自动走路；`__game.setDtMax(0.25)` 放宽单帧步长上限（默认 0.05 秒），软件渲染 4 fps 时游戏时间也接近墙钟，等车不会慢 5 倍；触屏操作用 CDP 触摸事件真实模拟。
 软件渲染下帧率只有个位数到二十几，不代表 iPad 上的表现。截图默认写到 `/workspace/gz-shots-3d/`，可传第二个参数修改。

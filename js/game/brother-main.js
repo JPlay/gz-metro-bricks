@@ -2,7 +2,7 @@
  * 哥哥明明 + 广州美食：把选角色、换人按钮、明明的敬礼、美食店（food.js）接到游戏里。
  * main.js 只调用一次 installBrother(...)，其余都在这几个新模块里（不改 hero.js / player.js）。
  */
-import { CharSelect, CHARS, applyCharacter, savedChar, saveChar } from './character.js';
+import { CharSelect, CHARS, applyCharacter, savedChar, saveChar, makePerson } from './character.js';
 import { pressable } from './input.js';
 import { FoodCtl } from './food.js';
 const B = window.BABYLON;
@@ -47,5 +47,16 @@ export function installBrother(deps) {
     setChar: k => { applyCharacter(player, k, R); saveChar(k); api.food && api.food.onChar(k); },
     info: () => ({ char: player.charKind, select: sel.info(), food: api.food ? api.food.info() : null, saluted })
   });
+  // 另一个小朋友站在旁边（两兄弟合影 / 测试用）：api.buddy(x, y, z, yaw, mode)，api.buddy(null) 收起
+  let buddy = null;
+  api.buddy = (x, y, z, yaw = 0, mode = 'idle') => {
+    if (buddy) { buddy.p.dispose(); buddy = null; }
+    if (x === null || x === undefined) return null;
+    const kind = player.charKind === 'mingming' ? 'xingxing' : 'mingming', p = makePerson(kind, scene, M.paint, 'buddy');
+    p.mesh.position.set(x, y, z); p.mesh.rotation.y = yaw; R.addShadowCaster && R.addShadowCaster(p.mesh);
+    buddy = { p, mode }; return kind;
+  };
+  api.buddyMode = m => { if (buddy) buddy.mode = m; };
+  scene.onBeforeRenderObservable.add(() => { if (buddy) buddy.p.animate(Math.min(0.1, scene.getEngine().getDeltaTime() / 1000), { mode: buddy.mode }); });
   return api;
 }

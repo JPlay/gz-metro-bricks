@@ -96,7 +96,7 @@ export class CharSelect {
     const dist = portrait ? 6.6 : 4.4;
     this.cam.position.set(O.x, O.y + 1.45, O.z - dist); this.cam.rotation.set(0.07, 0, 0); this.cam.minZ = 0.25;
     for (const [kind, m] of Object.entries(this.models)) {
-      const on = kind === this.sel, mode = on ? (kind === 'mingming' ? 'cheer' : 'wave') : 'idle';
+      const on = kind === this.sel, mode = on ? 'cheer' : 'idle'; // 明明 cheer = ✌️ + 挥拳；星星 cheer = 两只拳头“努力！”
       m.p.animate(dt, { mode });
       m.p.mesh.position.y = O.y + 0.31 + (m.p.hipBob || 0) * 0.6;
       const want = Math.PI + m.sx * (on ? 0.0 : 0.12); m.p.mesh.rotation.y += (want - m.p.mesh.rotation.y) * Math.min(1, dt * 6);

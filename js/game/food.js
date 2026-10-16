@@ -226,7 +226,7 @@ export class FoodCtl {
     if (this.hold === 'bite' && m.phase === 'eat') m.t = Math.min(m.t, 1.7);
     if (m.phase === 'serve') { const k = Math.min(1, m.t / 0.5), s = k < 1 ? 0.3 + 0.85 * Math.sin(k * Math.PI * 0.5) : 1; m.mesh.scaling.setAll(this.DS * Math.min(1.08, s)); if (m.t > 0.8) { m.mesh.scaling.setAll(this.DS); m.phase = 'eat'; m.t = 0; } }
     else if (m.phase === 'eat') {
-      if (!m.bite && m.t > 1.0) { m.bite = true; this.count.eat++; this.bubbles.say({ pos: () => pl.model.getAbsolutePosition().add(new B.Vector3(0, 1.75 * (pl.model.scaling.y || 1), 0)) }, { html: `<div class="yum"><span class="emo">😋</span><b>好好吃！</b></div>`, kind: 'yum', ms: 2800 }); this.Audio.blip && this.Audio.blip('goal'); m.mesh.scaling.set(0.92 * this.DS, 0.85 * this.DS, 0.92 * this.DS); this.events.emit('food', { bite: m.id }); }
+      if (!m.bite && m.t > 1.0) { m.bite = true; this.count.eat++; pl.person.happyT = 4.5; this.bubbles.say({ pos: () => pl.model.getAbsolutePosition().add(new B.Vector3(0, 1.75 * (pl.model.scaling.y || 1), 0)) }, { html: `<div class="yum"><span class="emo">😋</span><b>好好吃！</b></div>`, kind: 'yum', ms: 2800 }); this.Audio.blip && this.Audio.blip('goal'); m.mesh.scaling.set(0.92 * this.DS, 0.85 * this.DS, 0.92 * this.DS); this.events.emit('food', { bite: m.id }); }
       if (m.t > 2.0 && m.t < 2.1) m.mesh.scaling.set(0.85 * this.DS, 0.7 * this.DS, 0.85 * this.DS);
       if (m.t > 3.6) { m.phase = 'card'; m.t = 0; this.showCard(); }
     } else if (m.phase === 'card' && !this.cardOpen) { m.phase = 'done'; m.mesh.scaling.set(0.8 * this.DS, 0.5 * this.DS, 0.8 * this.DS); }
@@ -236,6 +236,7 @@ export class FoodCtl {
   animateEat(m) {
     const per = this.player.person; if (!this.player.seat || !per.setBone) return;
     if (m.phase === 'eat') {
+      if (per.happyT !== undefined) per.happyT = Math.max(per.happyT, 0.3);
       const t = m.t, yay = t > 1.15 && t < 2.6;
       if (yay) { const b = Math.abs(Math.sin(t * 6)) * 0.12; per.setBone(3, 0, 0, -1.7 - b); per.setBone(4, 0, 0, 1.7 + b); per.setBone(5, 0, 0, -1.45); per.setBone(6, 0, 0, 1.45); per.setBone(2, -0.12, 0, Math.sin(t * 3) * 0.08); }
       else { const k = 0.5 - 0.5 * Math.cos(Math.min(t, 6) * Math.PI * 1.6), lean = 0.18 * (1 - k); per.setBone(4, -0.55 - 0.65 * k, 0.25 * k, -0.15 - 0.15 * k); per.setBone(6, -0.7 - 1.25 * k, 0.35 * k, 0); per.setBone(2, 0.18 * (1 - k) + 0.05, 0, 0); per.setBone(1, lean, 0, 0); }
