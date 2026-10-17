@@ -11,7 +11,7 @@ export const VISITS = {
   cjc: { zh: ['陈家祠'], en: ['the Chen Clan Ancestral Hall'], exit: 'C' },
   xmk: { zh: ['光孝寺'], en: ['Guangxiao Temple'] },
   gyq: { zh: ['人民公园', '北京路步行街'], en: ["the People's Park", 'Beijing Road Pedestrian Street'] },
-  njs: { zh: ['农讲所旧址', '文明路糖水街'], en: ['the Peasant Movement Institute', 'the Wenming Road dessert street'], exit: 'C' },
+  njs: { zh: ['农讲所旧址', '文明路糖水街'], en: ['the Peasant Movement Institute', 'the Wenming Road dessert street'], exit: 'D' },
   lsly: { zh: ['广州起义烈士陵园'], en: ["the Guangzhou Uprising Martyrs' Cemetery"], exit: 'C' },
   dsk: { zh: ['东山口红砖洋楼', '东山湖公园'], en: ['the Dongshankou red-brick villas', 'Dongshan Lake Park'] },
   tyzx: { zh: ['天河体育中心'], en: ['the Tianhe Sports Center'], exit: 'C' },

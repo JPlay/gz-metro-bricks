@@ -2580,19 +2580,19 @@
     "voice": "longxiaobai_v2"
   },
   "voice.visit.njs.yue": {
-    "fp": "a21dc04dd72c3b34bd7e67a5ad58a69cfed24c3d4238fed6e82dc0a3bf950bce",
+    "fp": "b9d766085110d78a57c521244351d5a9f81b98093eaf13dc3e5a0a1bdc601b37",
     "style": "cosy",
     "model": "cosyvoice-v3-flash",
     "voice": "longjiayi_v3"
   },
   "voice.visit.njs.zh": {
-    "fp": "6a3b9c15e4b9fb1ce6a97f3eb2201aecabf071ef4673270d83ff320b9c21e7b7",
+    "fp": "7178a2aace20e11a5f49555ee8859b4ecaedda5593357fa9e475de23a5497782",
     "style": "cosy",
     "model": "cosyvoice-v2",
     "voice": "longxiaobai_v2"
   },
   "voice.visit.njs.en": {
-    "fp": "5e0a3661d347fd10d42a05fa14eba461c2bf3e7c6ee27fb944fa9355316be8db",
+    "fp": "2c26e7c2676e908657efd68ff414e2da969b8876086954c2d2543c9430d3444d",
     "style": "cosy",
     "model": "cosyvoice-v2",
     "voice": "longxiaobai_v2"
