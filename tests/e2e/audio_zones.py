@@ -8,7 +8,7 @@
 import asyncio, sys, json, os, time
 sys.path.insert(0, os.path.dirname(__file__))
 from common import *
-from journey import GCLOCK, auto, wait, log
+from journey import GCLOCK, gt, auto, wait, log
 BASE = sys.argv[1] if len(sys.argv) > 1 else 'http://localhost:8123/'
 R = {}
 A = '__game.state().audio'
@@ -16,8 +16,12 @@ async def au(pg): return await pg.evaluate(A)
 def bed(a, k): return (a['gains']['beds'] or {}).get(k, 0)
 def beds_max(a): return max([0] + list((a['gains']['beds'] or {}).values()))
 async def steps(pg): return (await au(pg))['steps']['count']
+async def gsleep(pg, sec, wall=120):
+    """按游戏时间等（无头渲染很慢时墙钟 2.5 秒可能只有 0.5 秒游戏时间，脚步就少了）"""
+    g0 = await gt(pg); t0 = time.time()
+    while await gt(pg) - g0 < sec and time.time() - t0 < wall: await asyncio.sleep(0.2)
 async def walk(pg, x, y, sec):
-    await pg.evaluate(f'__game.setMove({x},{y})'); await asyncio.sleep(sec); await pg.evaluate('__game.setMove(0,0)')
+    await pg.evaluate(f'__game.setMove({x},{y})'); await gsleep(pg, sec); await pg.evaluate('__game.setMove(0,0)')
 async def settle(pg, sec=2.0): await asyncio.sleep(sec)   # 音频淡变是墙钟时间（时间常数 0.3s）
 async def unlock(pg):
     await pg.keyboard.press('F9'); await asyncio.sleep(0.6)   # 任意按键 = 用户手势（不点画面，免得触发游戏里的点击操作）
@@ -45,7 +49,7 @@ async def main():
     R['trainNear'] = dict(frames=len(tr), moving=len(near), min=min(near) if near else None, max=max(near) if near else None)
     ok &= len(near) > 5 and max(near) - min(near) > 0.3 and max(near) > 0.5
     # 脚步：站着不动 / 走 / 顶墙
-    n0 = await steps(pg); await asyncio.sleep(2.0); R['stillSteps'] = await steps(pg) - n0
+    n0 = await steps(pg); await gsleep(pg, 2.0); R['stillSteps'] = await steps(pg) - n0
     n0 = await steps(pg); await walk(pg, 0, 1, 2.5); R['walkSteps'] = await steps(pg) - n0; R['walkSurface'] = (await au(pg))['steps']['last']
     await pg.evaluate('__game.teleport(18.6,-11.95,12.6,0)'); await asyncio.sleep(0.5)
     await pg.evaluate('__game.setMove(0,1)'); await asyncio.sleep(6)       # 往 +z 一直走，直到顶到站台边的屏蔽门 / 墙
@@ -67,7 +71,7 @@ async def main():
     R['stairsMid'] = mid[:4]; ok &= len(mid) > 0
     await settle(pg, 2.0); a = await au(pg); R['street'] = snap(a)
     n0 = await steps(pg); await walk(pg, 0, 1, 1.5); R['streetSurface'] = (await au(pg))['steps']['last']
-    ok &= a['gains']['metro'] < 0.02 and a['gains']['pa'] < 0.02 and bed(a, 'platform') < 0.02 and bed(a, 'concourse') < 0.02 and bed(a, 'street') > 0.2 and R['streetSurface']['surface'] == 'stone'
+    ok &= a['gains']['metro'] < 0.02 and a['gains']['pa'] < 0.02 and a['gains']['sfx'] < 0.02 and bed(a, 'platform') < 0.02 and bed(a, 'concourse') < 0.02 and bed(a, 'street') > 0.2 and R['streetSurface']['surface'] == 'stone'
     R['errors1'] = errs(logs); ok &= not R['errors1']
     await b.close()
     # ---------- 酒店 + 饭店（默认起点站有饭店） ----------

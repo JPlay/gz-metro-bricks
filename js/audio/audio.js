@@ -73,6 +73,9 @@ function context() {
   // 地铁声总闸：列车循环（低通 → 距离 → 地铁）、列车单次音效、站内音效、站台喇叭，都乘 env.metro
   metroTrain = gainNode(buses.train, env.metro); metroTrainSfx = gainNode(buses.train, env.metro); metroSfx = gainNode(buses.sfx, env.metro); paOut = gainNode(buses.voice, env.metro);
   trainNear = gainNode(metroTrain, 1); stepBus = gainNode(buses.sfx, 1);
+  // 一路恒为 0 的常量源接到地铁总闸上：没有列车声 / 音效在播时 Chrome 会跳过这些“空闲”节点，增益自动化不推进，
+  // 读出来的 gain.value 一直停在旧值（测试里看到街面上 metro=1）。接上它们就一直被处理，读数 = 实际增益
+  try { const keep = ctx.createConstantSource(); keep.offset.value = 0; [trainNear, metroTrain, metroTrainSfx, metroSfx, paOut].forEach(n => keep.connect(n)); keep.start(); } catch (e) { err('keep ' + e); }
   trainFilter = ctx.createBiquadFilter(); trainFilter.type = 'lowpass'; trainFilter.frequency.value = 2900; trainFilter.connect(trainNear);
   resetPA();
   const me = ctx;
@@ -623,7 +626,7 @@ function gains() {
   if (!ctx) return null;
   const r = x => +x.toFixed(3), beds = {};
   Object.entries(ambient).forEach(([k, it]) => { beds[k] = r(it.gain.gain.value); });
-  return { metro: r(metroTrain.gain.value), pa: r(paOut.gain.value), trainNear: r(trainNear.gain.value), beds, retiring: retired.length };
+  return { metroTarget: env.metro, metro: r(metroTrain.gain.value), sfx: r(metroSfx.gain.value), pa: r(paOut.gain.value), trainNear: r(trainNear.gain.value), beds, retiring: retired.length };
 }
 export function getState() {
   return {
