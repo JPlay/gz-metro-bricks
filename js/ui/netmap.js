@@ -108,6 +108,8 @@ export function networkLayout(portrait = false) {
 /** “你在这里”脉动圈：r 30、描边 8，动画放大到 1.9 倍（css hereBreath）→ 最大外沿半径 */
 export const PULSE_R = 30, PULSE_W = 8, PULSE_MAX = (PULSE_R + PULSE_W / 2) * 1.9;
 const YOU_AT = { hs: 'L', tyzx: 'B', gzdz: 'L', lsly: 'U' };
+/** 在某站时，旁边站的站名换个边给“你在这里”让路（E = 上方、右对齐） */
+const HERE_SIDE = { dsk: { lsly: 'E' } };
 /** 景点小图标：放在站名旁边的空白处，图标下面写景点短名。每个景点有几个候选位置（相对站点圆心），按顺序取第一个
  *  不压站名 / 站点 / 线 / “你在这里”标签 / 别的图标的位置（“你在这里”那一站站名变大，所以每次画图都重新挑）；离站点远时画一条线路色细引线。 */
 export const ICON_R = 27, ICON_FS = 24, ICON_LY = ICON_R + 25;   // 图标半径、景点名字号（≥ 站名字号的一半）、景点名基线在圆心下方多少
@@ -133,6 +135,9 @@ const ICON_CAND = {
   },
 };
 const LEAD_D = 110;
+/** 只在给“你在这里”标签让位时才用的远处位置（带引线） */
+const ICON_EXTRA = { L: { sysy: [] }, P: { sysy: [], cjc: [[0, 110], [60, 110], [0, 120, 'b', false, true], [0, 130, 'b', false, true], [40, 120, 'b', false, true], [-40, 120, 'b', false, true], [0, 150, 'b', false, true]] } };
+for (let dx = 160; dx <= 320; dx += 20) for (let dy = -130; dy <= 20; dy += 10) { ICON_EXTRA.L.sysy.push([dx, dy, 'r', false, true]); (ICON_EXTRA.L.rams ||= []).push([dx, dy - 20, 'r', false, true]); }
 const GRID = []; for (let dx = -200; dx <= 200; dx += 10) for (let dy = -160; dy <= 160; dy += 8) for (const m of ['b', 'r']) { const d = Math.hypot(dx, dy); if (d > 40) GRID.push([dx, dy, m, d + (m === 'r' ? 24 : 0)]); }
 GRID.sort((a, b) => a[3] - b[3]);
 /** a = 矩形 [x, y, w, h]；b = 矩形，或圆 [cx, cy, r]（“你在这里”脉动圈放到最大时的外沿） */
@@ -146,25 +151,25 @@ export const iconFs = name => [...name].length >= 5 ? ICON_FS - 3 : ICON_FS;   /
 export const labelAt = (x, y, name, mode) => mode === 'r' ? [x + ICON_R + 7, y + iconFs(name) * 0.36, 'start'] : [x, y + ICON_LY, 'middle'];
 export const iconRects = (x, y, name, mode) => { const [lx, ly, anc] = labelAt(x, y, name, mode); return [[x - ICON_R - 2, y - ICON_R - 2, ICON_R * 2 + 4, ICON_R * 2 + 4], textRect(lx, ly, name, iconFs(name), anc)]; };
 /** 挑位置：obstacles = 已有元素外框；返回每个景点 { ...a, x, y, leader } */
-export function placeIcons(pos, obstacles, portrait = false, here = null, noGrid = false) {   // 按默认顺序摆；有图标只能退到网格里时，换成纪念堂最后摆再试一次，取退得少的
+export function placeIcons(pos, obstacles, portrait = false, here = null, noGrid = false, extra = false) {   // 按默认顺序摆；有图标只能退到网格里时，换成纪念堂最后摆再试一次，取退得少的
   let res = null;
   for (const order of [ATTRACTIONS, [...ATTRACTIONS.filter(a => a.code !== 'jnt'), ...ATTRACTIONS.filter(a => a.code === 'jnt')]]) {
-    const ob = obstacles.slice(), out = placeOrder(order, pos, ob, portrait, here, noGrid), bad = out.filter(a => a.forced).length * 100 + out.filter(a => a.ringSoft).length * 10 + out.filter(a => a.grid).length;
+    const ob = obstacles.slice(), out = placeOrder(order, pos, ob, portrait, here, noGrid, extra), bad = out.filter(a => a.forced).length * 100 + out.filter(a => a.ringSoft).length * 10 + out.filter(a => a.grid).length;
     if (!res || bad < res.bad) res = { out, ob, bad };
     if (!bad) break;
   }
   obstacles.length = 0; obstacles.push(...res.ob);
   return ATTRACTIONS.map(a => res.out.find(b => b.id === a.id));
 }
-function placeOrder(order, pos, obstacles, portrait, here, noGrid) {
-  const out = [], C = ICON_CAND[portrait ? 'P' : 'L'];
+function placeOrder(order, pos, obstacles, portrait, here, noGrid, extra) {
+  const out = [], C0 = ICON_CAND[portrait ? 'P' : 'L'], X = ICON_EXTRA[portrait ? 'P' : 'L'], C = extra ? Object.fromEntries(Object.entries(C0).map(([k, v]) => [k, [...v, ...(X[k] || [])]])) : C0;
   for (const a of order) {
     const [sx, sy] = pos[a.code];
     let best = null;
     const amb = (x, y, d) => Object.entries(pos).some(([c, p]) => c !== a.code && Math.hypot(x - p[0], y - p[1]) < d);
     // 第 1 轮：手写候选 + 附近网格，全部要躲（含“你在这里”脉动圈最大外沿）；第 2 轮（别的站的图标才有）：只用手写候选，允许被脉动圈扫到
     const rounds = [[noGrid ? C[a.id] : [...C[a.id], ...GRID.map(g => [g[0], g[1], g[2], true])], obstacles]];
-    if (a.code !== here && !noGrid) rounds.push([C[a.id], obstacles.filter(o => o.length === 4)]);
+    if (a.code !== here) rounds.push([C[a.id], obstacles.filter(o => o.length === 4)]);
     for (const [cands, avoid] of rounds) { if (best) break;
     for (const [dx, dy, m = 'b', grid, lead] of cands) {
       const x = sx + dx, y = sy + dy, d = Math.hypot(dx, dy), far = lead || (grid && d > LEAD_D);   // 手写候选不画引线（除非第 5 项写了 true）
@@ -205,16 +210,16 @@ export function networkSVG(here, opts = {}) {
     s += `<polyline points="${pts.map(p => p[0] + ',' + p[1]).join(' ')}" fill="none" stroke="${LINES[l].color}" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>`;
   }
   // 站点 + 站名
-  for (const [c, [x, y, side]] of Object.entries(pos)) {
-    const S = STATIONS[c], both = S.lines.length > 1, oth = OTHER(c), me = c === here, l = S.lines[0];
+  for (const [c, [x, y, side0]] of Object.entries(pos)) {
+    const side = HERE_SIDE[here]?.[c] || side0, S = STATIONS[c], both = S.lines.length > 1, oth = OTHER(c), me = c === here, l = S.lines[0];
     if (both) s += `<circle cx="${x}" cy="${y}" r="27" fill="#fff" stroke="${LINES[1].color}" stroke-width="11"/><circle cx="${x}" cy="${y}" r="13" fill="#fff" stroke="${LINES[2].color}" stroke-width="8"/>`;
     else if (oth.length) s += `<circle cx="${x}" cy="${y}" r="${XR}" fill="#fff" stroke="${XRING}" stroke-width="${XW}"/>`;
     else s += `<circle cx="${x}" cy="${y}" r="10" fill="#fff" stroke="${LINES[l].color}" stroke-width="6"/>`;
     const fs = me ? 30 : both ? 30 : 25, fw = me || both ? 800 : 600, col = me ? '#E2312A' : '#1B2430';
     let tx = x, ty = y + 9, anc = 'middle';
-    if (side === 'a') ty = y - 26; else if (side === 'A') { ty = y - 26; tx = x - 12; anc = 'start'; } else if (side === 'b') ty = y + 44; else if (side === 'l') { tx = x - 24; anc = 'end'; } else if (side === 'r') { tx = x + 24; anc = 'start'; } else { tx = x - 30; ty = y + 54; anc = 'end'; }
+    if (side === 'a') ty = y - 26; else if (side === 'A') { ty = y - 26; tx = x - 12; anc = 'start'; } else if (side === 'E') { ty = y - 26; tx = x + 12; anc = 'end'; } else if (side === 'b') ty = y + 44; else if (side === 'l') { tx = x - 24; anc = 'end'; } else if (side === 'r') { tx = x + 24; anc = 'start'; } else { tx = x - 30; ty = y + 54; anc = 'end'; }
     s += `<text x="${tx}" y="${ty}" font-size="${fs}" font-weight="${fw}" fill="${col}" text-anchor="${anc}" paint-order="stroke" stroke="#fff" stroke-width="6" stroke-linejoin="round">${esc(S.zh)}</text>`;
-    obst.push(textRect(tx, ty, S.zh, fs, anc), [x - 30, y - 30, 60, 60].map((v, i) => i < 2 ? v + (both ? 0 : 14) : both ? v : v - 28));
+    obst.push(textRect(tx, ty, S.zh, fs, anc), Object.assign([x - 30, y - 30, 60, 60].map((v, i) => i < 2 ? v + (both ? 0 : 14) : both ? v : v - 28), { dot: 1 }));   // dot：站点圆（外框留了余量，“你在这里”引线按实际大小算）
   }
   // 景点小图标（白底圆 + 线路色细圈 + 彩色剪影，下面写景点名；点一下打开小卡片，见 main.js）
   if (here && pos[here]) { const [x, y] = pos[here]; obst.push(Object.assign([x - 32, y - 32, 64, 64], { me: 1 }), [x, y, PULSE_MAX + 2]); }   // 红点 + 脉动圈最大时的外沿
@@ -224,18 +229,24 @@ export function networkSVG(here, opts = {}) {
   if (here && pos[here]) {
     // 依次试“你在这里”标签的几个常用位置：标签位本身空着就先占住，再摆图标；图标都能放在手写位置、引线也不压图标才采用
     const [hx, hy] = pos[here];
-    for (const [lx, ly] of [...youSpots(here, pos), ...youRing(hx, hy)]) {
-      const r = [lx - 80, ly - 27, 160, 54];
-      if (lx < 84 || ly < 30 || lx > w - 84 || ly > h - 30 || obst.some(o => o.length === 4 && hit(r, o))) continue;
-      const ob = [...obst, r], t = placeIcons(pos, ob, !!opts.portrait, here, true);
-      if (t.some(a => a.forced || a.grid || a.ringSoft)) continue;
-      ob.splice(ob.indexOf(r), 1);
-      if (youCost(hx, hy, lx, ly, ob) > 0) continue;
-      icons = t; youFix = [lx, ly]; obst.length = 0; obst.push(...ob); break;
+    // 图标先只用手写位置；还不行再退到网格里。引线可以跨过线路，但不能穿过图标 / 图标引线 / 站名 / 站点
+    const spots = [...youSpots(here, pos), ...youRing(hx, hy)];
+    for (const [noGrid, soft, extra] of [[true, false], [true, true], [true, true, true], [false, true, true]]) { if (icons) break;
+      for (const [lx, ly] of spots) {
+        const r = [lx - 80, ly - 27, 160, 54];
+        if (lx < 84 || ly < 30 || lx > w - 84 || ly > h - 30 || obst.some(o => o.length === 4 && hit(r, o))) continue;
+        if (!noGrid && youCost(hx, hy, lx, ly, obst) >= 1000) continue;   // 第 2 轮慢，先用固定障碍筛一遍
+        const ob = [...obst, r], t = placeIcons(pos, ob, !!opts.portrait, here, noGrid, extra);
+        if (t.some(a => a.forced || (noGrid && a.grid) || (!soft && a.ringSoft))) continue;   // 先找图标都不用让的；再允许别的站的图标被脉动圈扫到（ringSoft，本来就允许）；最后图标可以退到网格
+        ob.splice(ob.indexOf(r), 1);
+        if (youCost(hx, hy, lx, ly, ob) >= 1000) continue;
+        icons = t; youFix = [lx, ly]; obst.length = 0; obst.push(...ob); break;
+      }
     }
   }
   if (!icons) icons = placeIcons(pos, obst, !!opts.portrait, here);   // 先摆图标，“你在这里”标签再挑一个不压图标 / 站名的方向
   const youXY = here && pos[here] ? youFix || youAt(here, pos, obst, w, h) : null;
+  NET_DEBUG.youFix = youFix;
   for (const a of icons) {
     const ring = LINES[STATIONS[a.code].lines[0]].color;
     if (a.leader) { const [sx, sy] = a.leader, d = Math.hypot(a.x - sx, a.y - sy), ux = (a.x - sx) / d, uy = (a.y - sy) / d; s += `<line class="attrlead" x1="${(sx + ux * 16).toFixed(1)}" y1="${(sy + uy * 16).toFixed(1)}" x2="${(a.x - ux * (ICON_R + 1)).toFixed(1)}" y2="${(a.y - uy * (ICON_R + 1)).toFixed(1)}" stroke="${ring}" stroke-width="3" stroke-dasharray="2 5" stroke-linecap="round"/>`; }
@@ -259,12 +270,12 @@ const YOU_D = { R: [128, 0], L: [-128, 0], B: [0, 74], U: [0, -70], UR: [140, -9
 const youPref = (here, pos) => YOU_AT[here] || { l: 'R', r: 'L', a: 'B', A: 'B', b: 'U', x: 'UR' }[pos[here][2]];
 /** 常用位置：首选方向（站名另一侧 / YOU_AT）+ 几个固定方向 */
 function youSpots(here, pos) { const [x, y] = pos[here]; return [youPref(here, pos), 'U', 'B', 'R', 'L', 'UR', 'UR2', 'UR3', 'DR', 'UL', 'DL', 'BL'].map(sd => [x + YOU_D[sd][0], y + YOU_D[sd][1]]); }
-const youRing = (x, y) => { const out = []; for (const d of [100, 130, 160, 190, 220, 260, 300]) for (let k = 0; k < 36; k++) out.push([x + Math.round(Math.cos(k / 36 * Math.PI * 2) * d * 1.3), y + Math.round(Math.sin(k / 36 * Math.PI * 2) * d)]); return out; };
+const youRing = (x, y) => { const out = []; for (const d of [90, 110, 130, 150, 175, 200, 230, 260, 300]) for (const sx of [1.3, 1, 1.7]) for (let k = 0; k < 36; k++) out.push([x + Math.round(Math.cos(k / 36 * Math.PI * 2) * d * sx), y + Math.round(Math.sin(k / 36 * Math.PI * 2) * d)]); out.sort((a, b) => Math.hypot(a[0] - x, a[1] - y) - Math.hypot(b[0] - x, b[1] - y)); return out; };
 /** 标签放在 (lx, ly) 的代价：标签压到任何东西 / 引线压到站名、站点、图标 = 每个 1000；引线跨过线路 = 1 */
 function youCost(x, y, lx, ly, obst) {
   const d = Math.hypot(lx - x, ly - y), e = Math.min(80 / Math.max(1e-6, Math.abs(lx - x)), 27 / Math.max(1e-6, Math.abs(ly - y)));
-  const pill = [lx - 80, ly - 27, 160, 54], L = segRects(x + (lx - x) * 38 / d, y + (ly - y) * 38 / d, lx - (lx - x) * e, ly - (ly - y) * e, 3);   // 引线：从红点外 38 到标签边
-  return obst.filter(o => o.length === 4 && hit(pill, o)).length * 1000 + obst.filter(o => o.length === 4 && !o.me && L.some(r => hit(r, o))).reduce((t, o) => t + (o.ln ? 1 : 1000), 0);
+  const pill = [lx - 80, ly - 27, 160, 54], L = segRects(x + (lx - x) * 20 / d, y + (ly - y) * 20 / d, lx - (lx - x) * e, ly - (ly - y) * e, 3);   // 引线：从红点外沿（半径 20）到标签边
+  return obst.filter(o => o.length === 4 && hit(pill, o)).length * 1000 + obst.filter(o => o.length === 4 && !o.me && !(o[0] < x && x < o[0] + o[2] && o[1] < y && y < o[1] + o[3]) && L.some(r => hit(r, o.dot ? [o[0] + 2, o[1] + 2, o[2] - 4, o[3] - 4] : o))).reduce((t, o) => t + (o.ln ? 1 : 1000), 0);
 }
 /** “你在这里”标签位置：常用位置里第一个完全不压东西的；都不行就在一圈圈更远的地方找代价最小（其次离站近）的 */
 function youAt(here, pos, obst, W = 1e9, H = 1e9) {

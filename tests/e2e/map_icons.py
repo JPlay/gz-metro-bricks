@@ -23,10 +23,22 @@ async def tap(pg, sel):
 RINGJS = r"""const ringMax=svg=>{const p=svg.querySelector('circle.pulse'); if(!p) return null; let k=1;
    for(const sh of document.styleSheets){let rules; try{rules=sh.cssRules;}catch(e){continue;} for(const r of rules) if(r.type===7&&r.name==='hereBreath') for(const f of r.cssRules){const m=/scale\(([\d.]+)\)/.exec(f.style.transform); if(m) k=Math.max(k,+m[1]);}}
    return {x:+p.getAttribute('cx'), y:+p.getAttribute('cy'), r:(+p.getAttribute('r')+(+p.getAttribute('stroke-width'))/2)*k, k};};
-  const youHit=(svg,g)=>{const y=svg.querySelector('g.youare'); if(!y) return false; const rc=y.querySelector('rect').getBBox(), ln=y.querySelector('line'), P=[...g.querySelectorAll(':scope > circle:not([fill-opacity]), text.attrnm')].map(e=>e.getBBox());
-   const ov=(a,b)=>a.x<b.x+b.width&&b.x<a.x+a.width&&a.y<b.y+b.height&&b.y<a.y+a.height; if(P.some(p=>ov(p,rc))) return 'pill';
-   const x1=+ln.getAttribute('x1'),y1=+ln.getAttribute('y1'),x2=+ln.getAttribute('x2'),y2=+ln.getAttribute('y2'),L=Math.hypot(x2-x1,y2-y1);
-   for(let t=34;t<L;t+=3){const x=x1+(x2-x1)*t/L,y=y1+(y2-y1)*t/L; if(x>rc.x&&x<rc.x+rc.width&&y>rc.y&&y<rc.y+rc.height) break; if(P.some(p=>x>p.x-2.5&&x<p.x+p.width+2.5&&y>p.y-2.5&&y<p.y+p.height+2.5)) return 'leader';} return false;};
+  // “你在这里”气泡 + 引线：气泡不压任何图标 / 景点名 / 图标引线 / 站名 / 站点；引线（从红点外沿一直到气泡边）不穿过任何图标、图标引线、站名、别的站点
+  const youCheck=svg=>{const y=svg.querySelector('g.youare'); if(!y) return []; const out=[], rc=y.querySelector('rect').getBBox(), ln=y.querySelector('line'), here=svg.querySelector('circle.here');
+   const hx=+here.getAttribute('cx'), hy=+here.getAttribute('cy'), hr=+here.getAttribute('r')+(+here.getAttribute('stroke-width'))/2;
+   const boxes=[]; svg.querySelectorAll('g.attr').forEach(g=>g.querySelectorAll(':scope > circle:not([fill-opacity]), text.attrnm').forEach(e=>boxes.push(['icon:'+g.dataset.attr, e.getBBox()])));
+   svg.querySelectorAll(':scope > text[stroke]').forEach(t=>boxes.push(['name:'+t.textContent, t.getBBox()]));
+   svg.querySelectorAll(':scope > circle:not(.pulse):not(.here)').forEach(c=>{const b=c.getBBox(); if(Math.hypot(b.x+b.width/2-hx,b.y+b.height/2-hy)>1) boxes.push(['dot', b]);});
+   const leads=[...svg.querySelectorAll('line.attrlead')].map(l=>['lead:'+(l.nextElementSibling?.dataset?.attr||'?'), +l.getAttribute('x1'),+l.getAttribute('y1'),+l.getAttribute('x2'),+l.getAttribute('y2')]);
+   const ov=(a,b)=>a.x<b.x+b.width-0.5&&b.x<a.x+a.width-0.5&&a.y<b.y+b.height-0.5&&b.y<a.y+a.height-0.5;
+   const segD=(px,py,x1,y1,x2,y2)=>{const dx=x2-x1,dy=y2-y1,t=Math.max(0,Math.min(1,((px-x1)*dx+(py-y1)*dy)/(dx*dx+dy*dy||1))); return Math.hypot(px-x1-dx*t,py-y1-dy*t);};
+   boxes.forEach(([n,b])=>{if(ov(b,rc)) out.push('气泡×'+n);});
+   leads.forEach(([n,x1,y1,x2,y2])=>{for(let t=0;t<=1;t+=0.02){const x=x1+(x2-x1)*t,y=y1+(y2-y1)*t; if(x>rc.x&&x<rc.x+rc.width&&y>rc.y&&y<rc.y+rc.height){out.push('气泡×'+n); break;}}});
+   const x1=+ln.getAttribute('x1'),y1=+ln.getAttribute('y1'),x2=+ln.getAttribute('x2'),y2=+ln.getAttribute('y2'),L=Math.hypot(x2-x1,y2-y1), hitN=new Set();
+   for(let t=hr;t<L;t+=2){const x=x1+(x2-x1)*t/L,y=y1+(y2-y1)*t/L; if(x>rc.x&&x<rc.x+rc.width&&y>rc.y&&y<rc.y+rc.height) break;
+     boxes.forEach(([n,b])=>{if(x>b.x-2.5&&x<b.x+b.width+2.5&&y>b.y-2.5&&y<b.y+b.height+2.5) hitN.add(n);});
+     leads.forEach(([n,a1,b1,a2,b2])=>{if(segD(x,y,a1,b1,a2,b2)<4) hitN.add(n);}); }
+   hitN.forEach(n=>out.push('引线×'+n)); return out;};
   const ringHit=(b,c)=>Math.hypot(Math.max(b.x,Math.min(c.x,b.x+b.width))-c.x, Math.max(b.y,Math.min(c.y,b.y+b.height))-c.y)<c.r;"""
 # 打开着的全网图里：每个图标（白底圆 + 景点名）的屏幕外框 vs 站名 / 站点圆 / 别的图标
 # ONMAP：脉动圈（.pulse）是一圈放大后淡出的涟漪，不算遮挡；红色当前站点（.here）照样算
@@ -35,7 +47,7 @@ ONMAP = r"""(()=>{""" + RINGJS + r"""const svg=document.querySelector('#netmap .
  const parts=g=>[...g.querySelectorAll(':scope > circle:not([fill-opacity]), text.attrnm')].map(rr);
  const names=[...svg.querySelectorAll(':scope > text, :scope > circle:not(.pulse)')].map(e=>[e.textContent||('dot@'+e.getAttribute('cx')+','+e.getAttribute('cy')), rr(e)]);
  const bad=[]; ic.forEach(g=>{const P=parts(g); names.forEach(([n,b])=>{if(P.some(p=>hit(p,b))) bad.push(g.dataset.attr+'×'+n);}); ic.forEach(h=>{if(h!==g&&h.dataset.attr>g.dataset.attr&&P.some(p=>parts(h).some(q=>hit(p,q)))) bad.push(g.dataset.attr+'×'+h.dataset.attr);});});
- ic.forEach(g=>{const yh=youHit(svg,g); if(yh) bad.push(g.dataset.attr+'×你在这里'+(yh==='leader'?'引线':''));});
+ bad.push(...youCheck(svg).map(m=>'你在这里:'+m));
  const ring=ringMax(svg); if(ring) ic.forEach(g=>{if([...g.querySelectorAll(':scope > circle:not([fill-opacity]), text.attrnm')].some(e=>ringHit(e.getBBox(),ring))) bad.push(g.dataset.attr+'×ringMax');});
  const fsName=Math.min(...[...svg.querySelectorAll(':scope > text[stroke]')].map(t=>+t.getAttribute('font-size'))), fsAttr=Math.min(...ic.map(g=>+g.querySelector('text.attrnm').getAttribute('font-size')));
  const lbl=svg.querySelector('text.attrnm').getBoundingClientRect().height, legend=[...svg.querySelectorAll('text')].some(t=>t.textContent==='可以下车游玩的景点');
@@ -44,14 +56,14 @@ ONMAP = r"""(()=>{""" + RINGJS + r"""const svg=document.querySelector('#netmap .
 # 所有“你在这里” × 横竖屏：生成 svg 测一遍（真实文字外框）
 SWEEP = r"""(async()=>{""" + RINGJS + r"""const N=await import('/js/ui/netmap.js'); const {LINES}=await import('/js/data/lines.js'); const all=[...new Set([...LINES[1].stations,...LINES[2].stations])];
  const box=document.createElement('div'); box.style.cssText='position:fixed;left:0;top:0;width:1240px;height:1500px;visibility:hidden'; document.body.appendChild(box);
- const hit=(a,b)=>a.x<b.x+b.width-0.5&&b.x<a.x+a.width-0.5&&a.y<b.y+b.height-0.5&&b.y<a.y+a.height-0.5; const out=[], ringOwn=[], ringOther=[], youLeader=[]; let forced=0;
+ const hit=(a,b)=>a.x<b.x+b.width-0.5&&b.x<a.x+a.width-0.5&&a.y<b.y+b.height-0.5&&b.y<a.y+a.height-0.5; const out=[], ringOwn=[], ringOther=[]; let forced=0;
  for(const portrait of [false,true]) for(const here of all){ box.innerHTML=N.networkSVG(here,{portrait}); const svg=box.firstElementChild;
   const ic=[...svg.querySelectorAll('g.attr')]; forced+=ic.filter(g=>g.dataset.forced).length; const parts=g=>[...g.querySelectorAll(':scope > circle:not([fill-opacity]), text.attrnm')].map(e=>e.getBBox());
   const names=[...svg.querySelectorAll(':scope > text, :scope > circle:not(.pulse)')].map(e=>[e.textContent||'dot',e.getBBox()]);
   ic.forEach(g=>{const P=parts(g); names.forEach(([n,b])=>{if(P.some(p=>hit(p,b))) out.push((portrait?'P ':'L ')+here+':'+g.dataset.attr+'×'+n);});});
-  ic.forEach(g=>{const yh=youHit(svg,g), k=(portrait?'P ':'L ')+here+':'+g.dataset.attr; if(yh==='pill') out.push(k+'×你在这里'); else if(yh) youLeader.push(k);});
+  youCheck(svg).forEach(m=>out.push((portrait?'P ':'L ')+here+':你在这里:'+m));
   const ring=ringMax(svg); ic.forEach(g=>{if(parts(g).some(p=>ringHit(p,ring))) (g.dataset.code===here?ringOwn:ringOther).push((portrait?'P ':'L ')+here+':'+g.dataset.attr);}); }
- box.remove(); return {bad: out, forced, ringOwn, ringOther, youLeader};})()"""
+ box.remove(); return {bad: out, forced, ringOwn, ringOther, n: all.length, you: out.filter(m=>m.includes('你在这里')).length};})()"""
 async def main():
   os.makedirs(OUT, exist_ok=True)
   async with async_playwright() as p:
@@ -109,7 +121,9 @@ async def main():
   chk = {
     'iconsOnMap': set(R['ipad']['ids']) == ids and set(R['iphone1x']['ids']) == ids,
     'noOverlapIpad': not R['ipad']['bad'], 'noOverlapIphone': not R['iphone1x']['bad'],
-    'sweepNoNameOverlap': not R['sweep']['bad'], 'neverForced': R['sweep']['forced'] == 0 and not R['ipad']['forced'],
+    'sweepNoNameOverlap': not R['sweep']['bad'],
+    # 39 站 × 横竖屏：“你在这里”气泡和引线不压任何图标 / 图标引线 / 站名 / 站点（引线穿过 = FAIL）
+    'youBubbleClear': R['sweep']['n'] == 39 and R['sweep']['you'] == 0, 'neverForced': R['sweep']['forced'] == 0 and not R['ipad']['forced'],
     'iconAtLeastDot': R['ipad']['iconPx'] >= R['ipad']['dotPx'] and R['iphoneZoom']['iconPx'] >= 20,
     'iconBigIpad': R['ipad']['iconPx'] >= 30,   # r1 是 21 px 左右，放大约 1.5 倍
     'labelHalfName': R['ipad']['fsAttr'] * 2 >= 30 and R['ipad']['fsAttr'] * 2 >= R['ipad']['fsName'],   # 景点名 ≥ 站名（含“你在这里”大字 30）的一半
