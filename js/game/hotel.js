@@ -451,8 +451,12 @@ export class HotelCtl {
     this.events.emit('hotel', { enter: false });
   }
   /** 叫电梯 / 按楼层 */
-  call() { const I = this.interior, p = this.player.position; const f = p.y < 2 ? 1 : I.floor; this.count.call++; this.Audio.blip && this.Audio.blip('tap'); this.go(f); }
-  press(f) { this.Audio.blip && this.Audio.blip('tap'); this.count.ride += f !== this.interior.lift.floor ? 1 : 0; this.go(f); }
+  call() { const I = this.interior, p = this.player.position; const f = p.y < 2 ? 1 : I.floor; this.count.call++; this.Audio.blip && this.Audio.blip('ding'); this.go(f); }
+  /** 按楼层：按钮立刻亮 + “叮” */
+  press(f) {
+    this.panel.querySelectorAll('.flb').forEach(b => { if (+b.dataset.f === f) b.classList.add('on'); });
+    this.Audio.blip && this.Audio.blip('ding'); this.count.press = (this.count.press || 0) + 1; this.count.ride += f !== this.interior.lift.floor ? 1 : 0; this.go(f);
+  }
   go(f) {
     const L = this.interior.lift;
     if (L.state === 'moving') { L.queue = f; return; }

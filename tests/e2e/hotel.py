@@ -20,6 +20,19 @@ async def look(pg, yaw, pitch): await pg.evaluate(f'__game.player.yaw={yaw}; __g
 async def shot(pg, name, settle=1.2):
     await asyncio.sleep(settle); d=await perf(pg); R['perf'][name]=d; await overlay(pg,d,name); await pg.screenshot(path=OUT+name+'.png', timeout=180000); log('shot',name,d)
 async def H(pg): return (await st(pg))['hotel']
+TAPS=[]
+async def tap(pg, sel):
+    """像手指一样点按钮：取按钮中心，先确认那个点上最上层的就是这个按钮（被 pointer-events / 别的层挡住就失败），再用触摸屏点"""
+    r=await pg.evaluate("""(sel)=>{const e=document.querySelector(sel); if(!e||e.hidden) return null; const b=e.getBoundingClientRect(); const x=b.left+b.width/2, y=b.top+b.height/2;
+      const t=document.elementFromPoint(x,y); return {x,y,w:Math.round(b.width),h:Math.round(b.height),hit:!!t&&(t===e||e.contains(t)),pe:getComputedStyle(e).pointerEvents};}""", sel)
+    TAPS.append(dict(sel=sel, **(r or {'missing':True})))
+    if not r: return False
+    await pg.touchscreen.tap(r['x'], r['y']); await asyncio.sleep(0.15)
+    return r['hit']
+async def tap_floor(pg, f):
+    sel='#liftPanel .flb[data-f="%d"]'%f; hit=await tap(pg, sel)
+    lit=await pg.evaluate("document.querySelector('%s').classList.contains('on')"%sel.replace("'","\\'"))
+    return hit and lit
 LIFT="__game.state().hotel.interior.lift"
 async def main():
   import os; os.makedirs(OUT, exist_ok=True)
@@ -33,16 +46,17 @@ async def main():
     R['entered']=await wait(pg,"__game.state().hotel.inside",6); s=await st(pg); R['zone']=s['zone']; R['audioZone']=s['audio']['zone']
     # 3. 电梯口按「按电梯」→ 门开
     await auto(pg,[[HX+6.9,-0.3]]); s=await st(pg); R['actLift']=s['act']
-    await pg.evaluate('__game.act()'); R['liftOpen']=await wait(pg,LIFT+".state=='open'",20)
+    R['tapCall']=await tap(pg,'#bAct'); R['liftOpen']=await wait(pg,LIFT+".state=='open'",20)
     await pose(pg,HX+0.8,0.05,-3.4,1.12,0.02,'third',0.6); await shot(pg,'02-lobby-lift',0.6)
     # 4. 进轿厢，楼层按钮面板出现，按 3
-    await pg.evaluate('__game.teleport(%d,0.05,-0.2,1.57)'%(HX+6.9)); await pg.evaluate('__game.hotel.call()'); await wait(pg,LIFT+".state=='open'",20); await auto(pg,[[HX+9.5,0]])
+    await pg.evaluate('__game.teleport(%d,0.05,-0.2,1.57)'%(HX+6.9)); await asyncio.sleep(0.6)
+    if (await H(pg))['interior']['lift']['state']!='open': await tap(pg,'#bAct')
+    await wait(pg,LIFT+".state=='open'",20); await auto(pg,[[HX+9.5,0]])
     h=await H(pg); R['inLift']=h['where']=='lift'; R['panel']=h['panel']
-    if not h['interior']['lift']['state'] in ('open','opening'): await pg.evaluate('__game.hotel.call()')
+    R['doorsOpenInCar']=h['interior']['lift']['state'] in ('open','opening')
     await view(pg,'first'); await look(pg,-math.pi/2+0.35,0.15); await shot(pg,'x1-in-lift',0.8)
-    await pg.evaluate("document.querySelector('#liftPanel .flb[data-f=\"3\"]').dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));document.querySelector('#liftPanel .flb[data-f=\"3\"]').dispatchEvent(new PointerEvent('pointerup',{bubbles:true}))")
-    await asyncio.sleep(0.5)
-    if (await H(pg))['interior']['lift']['target']!=3 and (await H(pg))['interior']['lift']['state']!='moving': await pg.evaluate('__game.hotel.press(3)')
+    # 触摸点楼层按钮（不再用合成事件 / 直接调 press 兜底）：按下立刻亮、开始走
+    R['tap3']=await tap_floor(pg,3); await asyncio.sleep(0.3); R['press3']=(await H(pg))['count'].get('press',0)
     R['rode3']=await wait(pg,LIFT+".floor==3 && "+LIFT+".state=='open'",30); h=await H(pg); R['floorAfterRide']=h['interior']['floor']; R['posAfterRide']=(await st(pg))['pos']
     # 5. 3F 走廊
     await view(pg,'third'); await auto(pg,[[HX+6.5,0],[HX+3.2,0]]); await look(pg,-math.pi/2,0.04); await shot(pg,'03-corridor',1.0)
@@ -64,8 +78,8 @@ async def main():
     k=[x for x in (await H(pg))['interior']['seats'] if x['bed']=='king']; R['kingSeats']=len(k)
     if k: await pose(pg,k[0]['x']+0.5*math.sin(k[0]['face']),4.55,k[0]['z']+0.5*math.cos(k[0]['face']),k[0]['face']+math.pi,0.1,'third',0.8); await wait(pg,"__game.state().act && __game.state().act.id=='sit'",4); R['kingAct']=(await st(pg))['act']; R['kingPose']=(await st(pg))['pos']; R['kingSeat']=k[0]
     # 8. 回走廊，坐电梯下大堂
-    await auto(pg,[[HX+0.2,1.6],[HX+0.2,0],[HX+6.9,-0.2]]); await pg.evaluate('__game.hotel.call()')
-    await wait(pg,LIFT+".state=='open'",30); await auto(pg,[[HX+9.5,0]]); await pg.evaluate('__game.hotel.press(1)')
+    await auto(pg,[[HX+0.2,1.6],[HX+0.2,0],[HX+6.9,-0.2]]); await asyncio.sleep(0.4); R['tapCall3F']=await tap(pg,'#bAct')
+    await wait(pg,LIFT+".state=='open'",30); await auto(pg,[[HX+9.5,0]]); await asyncio.sleep(0.4); R['tap1']=await tap_floor(pg,1)
     R['rode1']=await wait(pg,LIFT+".floor==1 && "+LIFT+".state=='open'",30); R['posLobby']=(await st(pg))['pos']
     # 9. 楼梯 1F → 2F → 3F
     await auto(pg,[[HX+6.6,0],[HX+6.6,2.65],[HX+9.0,2.65],[HX+11.5,2.7],[HX+11.5,6.9],[HX+9.1,7.0],[HX+9.1,2.7]])
@@ -75,16 +89,16 @@ async def main():
     await view(pg,'third'); await look(pg,-math.pi/2,0.1); await shot(pg,'x3-stairs-3f',1.0)
     await auto(pg,[[HX+6.6,2.6],[HX+6.9,-0.2]]); R['plates3F']=[r['n'] for r in (await H(pg))['interior']['rooms']]
     # 10. 电梯下楼，出门
-    await pg.evaluate('__game.hotel.call()'); await wait(pg,LIFT+".state=='open'",30); await auto(pg,[[HX+9.5,0]]); await pg.evaluate('__game.hotel.press(1)')
+    await asyncio.sleep(0.4); R['tapCall3Fb']=await tap(pg,'#bAct'); await wait(pg,LIFT+".state=='open'",30); await auto(pg,[[HX+9.5,0]]); await asyncio.sleep(0.4); R['tap1b']=await tap_floor(pg,1)
     await wait(pg,LIFT+".floor==1 && "+LIFT+".state=='open'",30)
     await auto(pg,[[HX+6.6,0],[HX+0.5,-3],[HX+0,-6.4]])
     R['out']=await wait(pg,"!__game.state().hotel.inside",6)
     if not R['out']:   # 偶尔被跟着的弟弟挡一下：侧一步再出门
       R['exitBlockedAt']=(await st(pg))['pos']; await auto(pg,[[HX+0.6,-4.0],[HX-0.4,-6.4]]); R['out']=await wait(pg,"!__game.state().hotel.inside",6); s=await st(pg); R['outPos']=s['pos']; R['outZone']=s['zone']
-    R['errors']=errs(logs)[:5]
+    R['taps']=TAPS; R['errors']=errs(logs)[:5]
     R['overBudget']=[k for k,v in R['perf'].items() if not k.startswith('x') and (v['draws']>BUDGET['draws'] or v['tris']>BUDGET['tris'])]
     print(json.dumps(R, ensure_ascii=False, indent=1, default=str))
-    ok=R['entered'] and R['zone']=='hall' and (R['actLift'] or {}).get('label')=='按电梯' and R['liftOpen'] and R['inLift'] and R['panel'] and R['rode3'] and R['floorAfterRide']==3 \
+    ok=R['tapCall'] and R['tap3'] and R['press3']>=1 and R['tapCall3F'] and R['tap1'] and R['tapCall3Fb'] and R['tap1b'] and min(t.get('w',0) for t in TAPS if 'flb' in t['sel'])>=80 and R['entered'] and R['zone']=='hall' and (R['actLift'] or {}).get('label')=='按电梯' and R['liftOpen'] and R['inLift'] and R['panel'] and R['rode3'] and R['floorAfterRide']==3 \
        and R['plates'][0].startswith('3') and R['where']=='room' and max(R['doorOpen'])>0.7 and R['kingDoor']>0.7 and R['kingSeats']>=1 and (R.get('kingAct') or {}).get('label')=='坐下' and (R['actBed'] or {}).get('label')=='坐下' and R['seatBed'].get('seated') and R['lieBtn'] \
        and R['lying'] and R['satUp'] and R['stood'] and R['rode1'] and abs(R['stairs2F'][0]-4.5)<0.3 and R['stairs2F'][1]==2 and abs(R['stairs3F'][0]-4.5)<0.4 and R['stairs3F'][1]==3 \
        and R['out'] and R['outZone']=='street' and not R['overBudget'] and not R['errors']
