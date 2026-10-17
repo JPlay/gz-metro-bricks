@@ -72,7 +72,7 @@ export class Metro {
           break;
         case 'arriving': {
           s.u = Math.min(1, s.u + dt / ARR_T); const x = -D0 * s.step * (1 - s.u) ** 2;
-          this.move(s, x); sound = { speed: (1 - s.u) * 0.9, inside: aboard, braking: true };
+          this.move(s, x); sound = this.louder(sound, { speed: (1 - s.u) * 0.9, inside: aboard, braking: true, near: this.near(tr, p) });
           if (s.u >= 1) { s.state = 'opening'; s.t = 1.2; A.sfx('doorChime'); A.sfx('psdOpen', { volume: 0.7 }); A.sfx('doorOpen'); if (aboard) A.sfx('train.airRelease', { volume: 0.6 }); }
           break;
         }
@@ -95,7 +95,7 @@ export class Metro {
           break;
         case 'departing': {
           s.u = Math.min(1, s.u + dt / ACC_T); const x = D0 * s.step * s.u * s.u;
-          this.move(s, x); sound = { speed: s.u * 0.9, inside: aboard, braking: false };
+          this.move(s, x); sound = this.louder(sound, { speed: s.u * 0.9, inside: aboard, braking: false, near: this.near(tr, p) });
           if (aboard && nx && Math.abs(x) >= 80) { this.enterTunnel(s, nx); return; }
           if (s.u >= 1) { s.state = 'away'; s.t = 8 + Math.random() * 10; tr.setVisible(false); if (this.ride && this.ride.train === tr && !aboard) this.ride = null; }
           break;
@@ -105,6 +105,13 @@ export class Metro {
     }
     if (sound) A.trainSound(sound); else A.trainSound({ speed: 0 });
   }
+  /** 离列车多近（0..1）：到车身最近点的距离，隔一层楼（站厅听站台）再轻一些 → 站台上列车声跟着真实列车走 */
+  near(tr, p) {
+    const q = tr.root.position, dx = Math.max(0, Math.abs(p.x - q.x) - HALF), dy = p.y - q.y, dz = p.z - q.z, d = Math.hypot(dx, dz);
+    return Math.max(0.03, Math.min(1, 1.25 / (1 + (d / 11) ** 2))) * (Math.abs(dy) > 3 ? 0.35 : 1);
+  }
+  /** 两列车同时在动：取听起来更响的那列 */
+  louder(a, b) { if (!a) return b; const la = a.inside ? 9 : a.speed * a.near, lb = b.inside ? 9 : b.speed * b.near; return lb > la ? b : a; }
   carryReset(tr) { tr.prev.copyFrom(tr.root.position); }
   /** 移动列车；玩家在车上则一起刚性移动 */
   move(s, x) {

@@ -198,7 +198,14 @@ export async function start() {
     // 一上车：站台上的进站 / 欢迎 / 安全广播不再继续在车厢里响
     if (G.aboard && !G.annAboard) Audio.cancelKeys(['platform', 'welcome', 'safety']);
     G.annAboard = G.aboard;
-    Audio.setZone(inHall ? 'none' : G.aboard ? 'train' : ({ street: 'street', platform: 'platform' }[G.zone.kind] || 'concourse'));
+    // 声音分区：地铁声只在车站里（出口楼梯上随高度渐弱，到街面为 0）；街面车流；饭店嘈杂；酒店 / 纪念堂 / 陈家祠安静
+    // 室内：酒店 / 饭店（饭店内景在地下 y≈-30，zoneOf 看不出来，按控制器判断）/ 陈家祠 / 纪念堂大会堂
+    const hallKind = hotel && hotel.cur ? 'hotel' : G.brother && G.brother.food && G.brother.food.cur ? 'restaurant' : clan && clan.cur ? 'clan' : inHall ? 'sysy' : null;
+    { let metroL = 1, streetL = 0;
+      if (G.aboard || G.inTunnel) metroL = 1;
+      else if (hallKind) metroL = 0;
+      else { const u = Math.max(0, Math.min(1, (p.y - (YC + 1)) / (-0.4 - (YC + 1)))); streetL = u * u * (3 - 2 * u); metroL = 1 - streetL; }
+      Audio.setEnv({ metro: metroL, street: streetL, restaurant: hallKind === 'restaurant' ? 1 : 0, sub: G.aboard || G.inTunnel ? 'train' : G.zone.kind === 'platform' ? 'platform' : 'concourse' }); }
     if (G.zone.kind === 'platform' && !G.welcomed && !G.aboard) { G.welcomed = true; if (!Audio.isAnnouncing()) Ann.welcome(G.code); }
     // 出了车站（街面 / 纪念堂大会堂）：站内广播（欢迎 / 进站 / 关门）和字幕立刻停，不再跟着人走到街上
     if ((G.zone.kind === 'street' || G.zone.kind === 'hall') && !G.aboard && Audio.isAnnouncing()) Audio.cancelAnnouncements();
@@ -207,8 +214,13 @@ export async function start() {
     hud.where(G.code, line, rl && rl.phase === 'cruise' ? rl.next : null);
     discovery.update({ code: G.code, zone: G.zone, station: G.station, dt });
     // 脚步声
-    if (player.grounded && player.speed > 0.5 && !G.aboard) { stepAcc += player.speed * dt; if (stepAcc > 0.75) { stepAcc = 0; Audio.footstep(); } }
-    if (player.landed) { player.landed = false; Audio.sfx('footstep', { volume: 0.6, rate: 0.8 }); }
+    // 脚步声：按实际水平位移算速度（被挡住、站着不动就没有脚步），步幅随速度变大；地面：站内地砖 / 街面石板 / 地毯（饭店、酒店）/ 木地板（纪念堂）
+    { const surface = hallKind === 'hotel' || hallKind === 'restaurant' ? 'carpet' : hallKind === 'sysy' ? 'wood' : hallKind === 'clan' || G.zone.kind === 'street' ? 'stone' : 'tile';
+      const lp = G.stepPos || (G.stepPos = p.clone()), v = dt > 0 ? Math.hypot(p.x - lp.x, p.z - lp.z) / dt : 0; lp.copyFrom(p);
+      const stride = Math.max(0.65, Math.min(1.05, 0.6 + 0.08 * v));
+      if (player.grounded && !G.aboard && !player.seat && v > 0.35 && v < 15) { stepAcc += v * dt; if (stepAcc >= stride) { stepAcc -= stride; Audio.footstep({ surface, k: Math.min(1.2, 0.75 + v * 0.08) }); } }
+      else stepAcc = Math.min(stepAcc, stride * 0.55);
+      if (player.landed) { player.landed = false; Audio.footstep({ surface, land: true }); } }
     // 掉出世界 → 回到站台 / 站口
     if (!G.inTunnel && p.y < -40) {
       const P = G.station.platforms[0]; player.spawn(20, P.y + 0.05, P.zc, Math.PI / 2); hud.toast('回到站台啦');
@@ -258,7 +270,7 @@ export async function start() {
   hotel = new HotelCtl({ scene, M, player, hud, seats, Audio, events, getStation: () => G.station, getCode: () => G.code });
   // 陈家祠头进（陈家祠站 C 出口）：见 js/game/clan.js
   clan = new ClanCtl({ scene, M, player, hud, seats, Audio, events, getStation: () => G.station });
-  const brother = installBrother({ scene, cam, M, player, R, hud, seats, social, bubbles, Audio, events, input, getStation: () => G.station, getCode: () => G.code });
+  const brother = installBrother({ scene, cam, M, player, R, hud, seats, social, bubbles, Audio, events, input, getStation: () => G.station, getCode: () => G.code }); G.brother = brother;
   window.__game = {
     state: () => ({
       code: G.code, zone: G.zone.kind, pos: [player.position.x, player.position.y, player.position.z].map(v => +v.toFixed(2)), yaw: +player.yaw.toFixed(3), pitch: +player.pitch.toFixed(3),
@@ -276,6 +288,6 @@ export async function start() {
     autopilot: (pts, run) => new Promise(resolve => { G.auto = { pts, i: 0, time: 0, resolve, run }; }),
     call: (line, step) => metro.call(line, step), openMap, closeMap, mapZoom: mapPZ,
     // 测试：软件渲染只有几帧每秒，放宽单帧步长上限让游戏时间接近墙钟（默认 0.05）
-    setDtMax: v => { G.dtMax = v; }, act: doAct, brother, hotel, clan, tickets, seats, social, discovery, bubbles, metro, player, scene, engine, events, render: R, get station() { return G.station; }
+    setDtMax: v => { G.dtMax = v; }, act: doAct, Audio, brother, hotel, clan, tickets, seats, social, discovery, bubbles, metro, player, scene, engine, events, render: R, get station() { return G.station; }
   };
 }

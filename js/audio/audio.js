@@ -12,12 +12,17 @@
  *     手势里播一段静音 <audio playsinline>（iPhone 上循环，保证走媒体通道、不受静音键影响）；
  *     手势后仍没声音时显示“点一下开启声音”；?debug=audio 显示诊断面板。
  * 广播走非定位的 PA 链（旧版无喇叭点时的回退路径），不做 HRTF 空间定位。
+ * 声音分区（setEnv）：地铁声（列车行驶 / 进出站、站内音效、广播、站台 / 站厅环境）都经过一个“地铁”增益，只在车站里是 1，
+ *   上出口楼梯时随高度渐弱、到街面为 0；街面是车流环境；饭店里是合成的人声嘈杂 + 碗筷碰撞；酒店 / 纪念堂 / 陈家祠里安静。
+ *   站台上列车声跟着真实列车走（离得近更响，隔一层楼更轻）。
+ * 脚步声（footstep）：全部合成（噪声沙沙 + 脚跟闷响 + 脚尖轻响），每步音高 / 音量 / 时机随机一点；按地面分：
+ *   站内地砖清脆、街面石板发闷、木地板、草地，地毯（饭店 / 酒店）几乎听不见。节奏由调用方按实际走路速度控制。
  */
 import { CONFIG } from '../core/config.js';
 import * as WebSpeech from './webspeech.js';
 
 const ROOT = new URL('../../assets/audio/', import.meta.url).href;
-let ctx = null, master, compressor, buses, trainFilter, paInput, paNodes = [];
+let ctx = null, master, compressor, buses, trainFilter, trainNear, metroTrain, metroSfx, metroTrainSfx, paOut, stepBus, paInput, paNodes = [];
 let manifest = null, manifestLoading = null;
 let recreateNext = false, recreates = 0, unlockAttempts = 0, lastRecreate = 0, decodeOk = 0, decodeFail = 0, lastResumeErr = '';
 let everUnlocked = false, needsGesture = true, muted = false, background = document.hidden, volume = 0.9;
@@ -29,7 +34,10 @@ let decodeActive = 0; const decodeWaiters = [];
 const active = []; const ambient = Object.create(null); const loops = Object.create(null); const retired = [];
 let zone = 'none', ducked = false;
 const queue = []; let pumping = false, current = null, epoch = 0;
-let train = { speed: 0, inside: true, braking: false }, lastTrainAt = -1;
+let train = { speed: 0, inside: true, braking: false, near: 1 }, lastTrainAt = -1;
+// 声音分区：metro 地铁声 0..1（站内 1，出口楼梯上渐弱，街面 0）；street 街面车流；restaurant 饭店嘈杂；sub 站内哪种环境床
+const env = { metro: 1, street: 0, restaurant: 0, sub: 'concourse' };
+const steps = { count: 0, last: null, times: [] };
 const log = { played: [], announced: [], fallbacks: [], errors: [] };
 
 function clamp(n, a, b) { return Math.max(a, Math.min(b, Number.isFinite(n) ? n : a)); }
@@ -62,7 +70,10 @@ function context() {
   compressor.threshold.value = -8; compressor.knee.value = 6; compressor.ratio.value = 4; compressor.attack.value = 0.003; compressor.release.value = 0.18;
   master.connect(compressor); compressor.connect(ctx.destination);
   buses = { ambience: gainNode(master, mix.ambience), sfx: gainNode(master, mix.sfx), voice: gainNode(master, mix.voice), train: gainNode(master, mix.train), ui: gainNode(master, 0.5) };
-  trainFilter = ctx.createBiquadFilter(); trainFilter.type = 'lowpass'; trainFilter.frequency.value = 2900; trainFilter.connect(buses.train);
+  // 地铁声总闸：列车循环（低通 → 距离 → 地铁）、列车单次音效、站内音效、站台喇叭，都乘 env.metro
+  metroTrain = gainNode(buses.train, env.metro); metroTrainSfx = gainNode(buses.train, env.metro); metroSfx = gainNode(buses.sfx, env.metro); paOut = gainNode(buses.voice, env.metro);
+  trainNear = gainNode(metroTrain, 1); stepBus = gainNode(buses.sfx, 1);
+  trainFilter = ctx.createBiquadFilter(); trainFilter.type = 'lowpass'; trainFilter.frequency.value = 2900; trainFilter.connect(trainNear);
   resetPA();
   const me = ctx;
   ctx.onstatechange = () => {
@@ -78,9 +89,9 @@ function resetPA() {
   paNodes.forEach(n => { try { n.disconnect(); } catch (_) {} }); paNodes.length = 0;
   const high = ctx.createBiquadFilter(), low = ctx.createBiquadFilter();
   high.type = 'highpass'; high.frequency.value = 280; low.type = 'lowpass'; low.frequency.value = 4400;
-  high.connect(low); low.connect(buses.voice); paInput = high; paNodes.push(high, low);
+  high.connect(low); low.connect(paOut); paInput = high; paNodes.push(high, low);
   [0.053, 0.137].forEach((d, i) => {
-    const delay = ctx.createDelay(0.5), wet = gainNode(buses.voice, [0.13, 0.07][i]), f = ctx.createBiquadFilter();
+    const delay = ctx.createDelay(0.5), wet = gainNode(paOut, [0.13, 0.07][i]), f = ctx.createBiquadFilter();
     delay.delayTime.value = d; f.type = 'lowpass'; f.frequency.value = 2200;
     low.connect(delay); delay.connect(f); f.connect(wet); paNodes.push(delay, f, wet);
   });
@@ -172,31 +183,96 @@ function loop(id, parent) {
   return it;
 }
 function retire(coll, name, now) {
-  const it = coll[name]; if (!it) return; delete coll[name];
+  const it = coll[name]; if (!it) return; delete coll[name]; if (it.timer) { clearInterval(it.timer); it.timer = null; }
   if (!now) { retired.push(it); smooth(it.gain.gain, 0, 0.25); }
   try { it.source.stop(ctx.currentTime + (now ? 0 : 1.2)); } catch (_) {}
 }
 function stopBeds() {
   Object.keys(ambient).forEach(n => retire(ambient, n, true));
   Object.keys(loops).forEach(n => retire(loops, n, true));
-  retired.splice(0).forEach(it => { try { it.source.stop(); } catch (_) {} });
+  retired.splice(0).forEach(it => { if (it.timer) clearInterval(it.timer); try { it.source.stop(); } catch (_) {} });
 }
-const ZONE_LEVEL = { street: 0.35, concourse: 0.6, platform: 0.7, train: 0.85 };   // 'none'：没有环境声（纪念堂大会堂里）
+const ZONE_LEVEL = { street: 0.4, concourse: 0.6, platform: 0.7, train: 0.85, restaurant: 0.5 };
+const FADE = 0.3;   // 时间常数：约 1 秒基本淡完
+/** 共享白噪声（2 秒，每个上下文一份）：脚步声和饭店嘈杂都从里面随机位置取 */
+let noise = null;
+function noiseBuf() {
+  if (noise && noise.ctx === ctx) return noise.buf;
+  const n = ctx.sampleRate * 2, buf = ctx.createBuffer(1, n, ctx.sampleRate), d = buf.getChannelData(0);
+  for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+  noise = { ctx, buf }; return buf;
+}
+/** 饭店环境（合成，不要素材）：噪声过三个“共振峰”带通、各自慢慢起伏 → 远处人声嘈杂；随机碗筷 / 汤匙碰撞 */
+function restaurantBed(parent) {
+  const g = ctx.createGain(); g.gain.value = 0; g.connect(parent);
+  const src = ctx.createBufferSource(); src.buffer = noiseBuf(); src.loop = true;
+  const mixG = gainNode(g, 0.9), oscs = [];
+  [[380, 1.6, 0.5, 2.3], [950, 2.2, 0.38, 3.1], [2100, 2.6, 0.2, 4.4], [3000, 3, 0.08, 5.7]].forEach(([f, q, lvl, hz]) => {
+    const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = f; bp.Q.value = q;
+    const am = gainNode(mixG, lvl); src.connect(bp); bp.connect(am);
+    const lfo = ctx.createOscillator(), lg = ctx.createGain(); lfo.frequency.value = hz * (0.85 + Math.random() * 0.3); lg.gain.value = lvl * 0.55;
+    lfo.connect(lg); lg.connect(am.gain); lfo.start(); oscs.push(lfo);
+  });
+  src.start(0, Math.random() * 1.8);
+  const it = { source: src, gain: g, synth: true };
+  const clink = () => {
+    if (!canPlay() || ctx.state !== 'running') return;
+    const t = ctx.currentTime + Math.random() * 0.2, v = 0.035 + Math.random() * 0.05;
+    if (Math.random() < 0.6) {   // 瓷碗 / 汤匙：几个不成谐波的分音，短促衰减
+      const f0 = 1900 + Math.random() * 1700;
+      for (const [k, a] of [[1, 1], [2.71, 0.5], [5.13, 0.22]]) {
+        const o = ctx.createOscillator(), e = ctx.createGain(); o.frequency.value = f0 * k; e.gain.setValueAtTime(0, t); e.gain.linearRampToValueAtTime(v * a, t + 0.003);
+        e.gain.exponentialRampToValueAtTime(0.0003, t + 0.12 + Math.random() * 0.25); o.connect(e); e.connect(g); o.start(t); o.stop(t + 0.45);
+      }
+    } else {   // 筷子：两下很短的“嗒嗒”
+      for (let k = 0; k < 2; k++) {
+        const n = ctx.createBufferSource(), hp = ctx.createBiquadFilter(), e = ctx.createGain(), tk = t + k * (0.05 + Math.random() * 0.05);
+        n.buffer = noiseBuf(); hp.type = 'bandpass'; hp.frequency.value = 3200 + Math.random() * 1500; hp.Q.value = 2.5;
+        e.gain.setValueAtTime(0, tk); e.gain.linearRampToValueAtTime(v * 1.4, tk + 0.002); e.gain.exponentialRampToValueAtTime(0.0003, tk + 0.03);
+        n.connect(hp); hp.connect(e); e.connect(g); n.start(tk, Math.random() * 1.8); n.stop(tk + 0.05);
+      }
+    }
+  };
+  it.timer = setInterval(() => { if (Math.random() < 0.45) clink(); }, 330);
+  src.onended = () => { oscs.forEach(o => { try { o.stop(); } catch (_) {} }); const i = retired.indexOf(it); if (i !== -1) retired.splice(i, 1); try { src.disconnect(); g.disconnect(); } catch (_) {} };
+  return it;
+}
+function bedWant() {
+  const w = {};
+  if (env.metro > 0.002) w[env.sub] = env.metro * (ZONE_LEVEL[env.sub] ?? 0.6);
+  if (env.street > 0.002) w.street = env.street * ZONE_LEVEL.street;
+  if (env.restaurant > 0.002) w.restaurant = env.restaurant * ZONE_LEVEL.restaurant;
+  return w;
+}
+/** 按 env 调各条环境床和地铁总闸（淡入淡出约 1 秒） */
 function updateZone() {
   if (!canPlay()) return;
-  Object.keys(ambient).forEach(n => { if (n !== zone) retire(ambient, n); });
-  if (zone === 'none') return;
-  const id = 'ambience.' + zone;
-  if (ambient[zone]) { smooth(ambient[zone].gain.gain, ZONE_LEVEL[zone] ?? 0.6, 0.4); return; }
-  const want = zone;
-  ensureBuffer(id).then(() => {
-    if (zone !== want || !canPlay() || ambient[want]) return;
-    ambient[want] = loop(id, buses.ambience);
-    if (ambient[want]) smooth(ambient[want].gain.gain, ZONE_LEVEL[want] ?? 0.6, 0.6);
-  }).catch(e => log.errors.push(e.message));
+  for (const n of [metroTrain, metroTrainSfx, metroSfx, paOut]) smooth(n.gain, env.metro, FADE);
+  const want = bedWant();
+  Object.keys(ambient).forEach(n => { if (!(n in want)) retire(ambient, n); });
+  for (const [name, level] of Object.entries(want)) {
+    if (ambient[name]) { smooth(ambient[name].gain.gain, level, FADE); continue; }
+    if (name === 'restaurant') { ambient[name] = restaurantBed(buses.ambience); smooth(ambient[name].gain.gain, level, FADE); continue; }
+    const id = 'ambience.' + name;
+    ensureBuffer(id).then(() => {
+      if (!canPlay() || ambient[name]) return;
+      const lv = bedWant()[name]; if (!lv) return;
+      ambient[name] = loop(id, buses.ambience);
+      if (ambient[name]) smooth(ambient[name].gain.gain, lv, FADE * 1.5);
+    }).catch(e => log.errors.push(e.message));
+  }
 }
-/** 环境声区：'street' | 'concourse' | 'platform' | 'train' | 'none' */
-export function setZone(z) { if (z !== zone) { zone = z; updateZone(); } }
+/** 声音分区：{ metro 0..1, street 0..1, restaurant 0..1, sub: 'concourse'|'platform'|'train' }；每帧调用也可以（变化小于 0.01 不动） */
+export function setEnv(o) {
+  let ch = false;
+  for (const k of ['metro', 'street', 'restaurant']) if (o[k] !== undefined) { const v = clamp(o[k], 0, 1), snap = v < 0.01 ? 0 : v > 0.99 ? 1 : v; if (Math.abs(snap - env[k]) >= 0.01 || (snap !== env[k] && (snap === 0 || snap === 1))) { env[k] = snap; ch = true; } }
+  if (o.sub && o.sub !== env.sub) { env.sub = o.sub; ch = true; }
+  if (ch) { zone = env.metro > 0.5 ? env.sub : env.restaurant > 0.5 ? 'restaurant' : env.street > 0.5 ? 'street' : 'none'; updateZone(); }
+}
+/** 旧接口：'street' | 'concourse' | 'platform' | 'train' | 'none' */
+export function setZone(z) {
+  setEnv(z === 'street' ? { metro: 0, street: 1, restaurant: 0 } : z === 'none' ? { metro: 0, street: 0, restaurant: 0 } : { metro: 1, street: 0, restaurant: 0, sub: z });
+}
 
 function layer(name, target, rate) {
   if (!canPlay()) return;
@@ -213,26 +289,59 @@ function updateTrain(force) {
   if (!force && ctx.currentTime - lastTrainAt < 0.05) return;
   lastTrainAt = ctx.currentTime;
   const s = train.speed, moving = s > 0.006, body = train.inside ? 0.72 : 1;
+  smooth(trainNear.gain, train.inside ? 1 : train.near, 0.12);   // 站台上：跟着真实列车的远近
   smooth(trainFilter.frequency, train.inside ? 2900 : 10500, 0.12);
   layer('motor', moving ? body * (0.13 + 0.49 * Math.sqrt(s)) * (train.braking ? 0.34 : 1) : 0, 0.42 + s * 1.65);
   layer('roll', moving ? body * (0.08 + 0.8 * s) : 0, 0.6 + s * 0.78);
   layer('joints', moving ? body * (0.12 + 0.3 * s) : 0, 0.28 + s * 1.85);
   layer('brake', train.braking && moving ? body * (0.2 + 0.38 * (1 - s)) : 0, 0.78 + s * 0.5);
 }
-/** 列车行驶声：每帧调用 {speed:0..1, inside, braking} */
-export function trainSound(o) { train.speed = clamp(o.speed || 0, 0, 1); train.inside = o.inside !== false; train.braking = !!o.braking; updateTrain(false); }
+/** 列车行驶声：每帧调用 {speed:0..1, inside, braking, near:0..1（离列车的远近，1 = 就在旁边）} */
+export function trainSound(o) { train.speed = clamp(o.speed || 0, 0, 1); train.inside = o.inside !== false; train.braking = !!o.braking; train.near = clamp(o.near ?? 1, 0, 1); updateTrain(false); }
 
 /** 单次音效：name 为清单 id 或 sfx.xxx 的简写 */
 export function sfx(name, opts = {}) {
   const id = assets[name] ? name : (name.indexOf('.') > 0 ? name : 'sfx.' + name);
   if (!canPlay()) return 0;
-  const bus = id.startsWith('train.') ? buses.train : buses.sfx;
+  // 列车 / 车站的音效走地铁总闸（出了车站就听不到）
+  const bus = id.startsWith('train.') ? metroTrainSfx : STATION_SFX.has(id) ? metroSfx : buses.sfx;
   if (buffers[id]) return play(id, bus, opts);
   ensureBuffer(id).then(() => { if (canPlay()) play(id, bus, opts); }).catch(e => log.errors.push(e.message));
   return assets[id] ? assets[id].duration : 0;
 }
-let stepIndex = 0;
-export function footstep() { stepIndex = (stepIndex + 1) % 4; return sfx('sfx.footstep' + (stepIndex ? stepIndex + 1 : ''), { volume: 0.45, rate: 1.05 }); }
+const STATION_SFX = new Set(['sfx.doorChime', 'sfx.psdOpen', 'sfx.psdClose', 'sfx.doorOpen', 'sfx.doorClose', 'sfx.gateBeep', 'sfx.gateOpen', 'sfx.securityBeep', 'sfx.escalator', 'sfx.ticketMachine', 'sfx.tokenDrop', 'sfx.horn']);
+/* 脚步声地面：type/f/q 沙沙声的滤波，dec 衰减秒，vol 音量，thump 脚跟闷响（相对音量 / 频率），toe 脚尖轻响 */
+const SURF = {
+  tile:   { type: 'bandpass', f: 2900, q: 0.9, dec: 0.045, vol: 0.2,  thump: 0.45, tf: 125, toe: 0.55 },   // 站内花岗岩地砖：清脆
+  stone:  { type: 'lowpass',  f: 1050, q: 0.6, dec: 0.06,  vol: 0.2,  thump: 0.6,  tf: 95,  toe: 0.35 },   // 街面石板：发闷
+  wood:   { type: 'bandpass', f: 850,  q: 1.1, dec: 0.07,  vol: 0.17, thump: 0.75, tf: 160, toe: 0.4 },    // 木地板
+  grass:  { type: 'bandpass', f: 2200, q: 0.6, dec: 0.11,  vol: 0.1,  thump: 0.15, tf: 90,  toe: 0.5 },    // 草地：沙沙
+  carpet: { type: 'lowpass',  f: 380,  q: 0.5, dec: 0.05,  vol: 0.035, thump: 0.3, tf: 75,  toe: 0 }       // 地毯：几乎听不见
+};
+function burst(t, S, v, r, dec, dest) {
+  const n = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+  n.buffer = noiseBuf(); n.playbackRate.value = r; f.type = S.type; f.frequency.value = S.f * r; f.Q.value = S.q;
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + 0.004); g.gain.exponentialRampToValueAtTime(0.0003, t + dec);
+  n.connect(f); f.connect(g); g.connect(dest); n.start(t, Math.random() * 1.7); n.stop(t + dec + 0.05);
+  n.onended = () => { try { n.disconnect(); f.disconnect(); g.disconnect(); } catch (_) {} };
+}
+/** 一步脚步声（合成）。o: { surface: 'tile'|'stone'|'wood'|'grass'|'carpet', land: 落地, k: 额外音量系数 } */
+export function footstep(o = {}) {
+  const surface = SURF[o.surface] ? o.surface : 'tile', S = SURF[surface];
+  steps.count++; steps.last = { surface, land: !!o.land, at: Math.round(performance.now()) }; steps.times.push(steps.last.at); if (steps.times.length > 40) steps.times.shift();
+  if (!canPlay()) return 0;
+  const t = ctx.currentTime + 0.005 + Math.random() * 0.012, r = 1 + (Math.random() * 2 - 1) * 0.08;
+  const v = S.vol * (0.78 + Math.random() * 0.44) * (o.k ?? 1) * (o.land ? 1.5 : 1), dec = S.dec * (0.85 + Math.random() * 0.3) * (o.land ? 1.4 : 1);
+  burst(t, S, v, r, dec, stepBus);                                                                  // 鞋底落地的沙沙
+  if (S.thump) {                                                                                    // 脚跟闷响：低频，音高往下掉
+    const os = ctx.createOscillator(), g = ctx.createGain(), f0 = S.tf * r * (o.land ? 0.8 : 1);
+    os.frequency.setValueAtTime(f0, t); os.frequency.exponentialRampToValueAtTime(f0 * 0.6, t + 0.07);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v * S.thump, t + 0.005); g.gain.exponentialRampToValueAtTime(0.0003, t + 0.08);
+    os.connect(g); g.connect(stepBus); os.start(t); os.stop(t + 0.1); os.onended = () => { try { os.disconnect(); g.disconnect(); } catch (_) {} };
+  }
+  if (S.toe && !o.land) burst(t + 0.05 + Math.random() * 0.04, S, v * S.toe * (0.7 + Math.random() * 0.5), r * 1.08, dec * 0.6, stepBus);   // 脚尖滚过去的轻响
+  return dec;
+}
 
 /** 合成的柔和提示音（机关咔哒、到达和弦），不需要素材文件 */
 export function blip(kind = 'tick') {
@@ -247,6 +356,7 @@ export function blip(kind = 'tick') {
     clink: [[2637, 0, .18, 'sine', .1], [3520, .05, .22, 'sine', .07]],
     sparkle: [[1319, 0, .22, 'sine', .1], [1760, .07, .22, 'sine', .1], [2637, .14, .35, 'sine', .1], [3520, .21, .4, 'sine', .06]],
     oops: [[587, 0, .16, 'sine', .14], [440, .13, .26, 'sine', .12]],
+    ding: [[1568, 0, .45, 'sine', .15], [2093, .004, .5, 'sine', .06], [3136, .006, .2, 'sine', .03]],   // 电梯按钮：短促的“叮”
     sit: [[392, 0, .12, 'sine', .14], [294, .08, .18, 'sine', .12]], stand: [[294, 0, .1, 'sine', .12], [440, .08, .16, 'sine', .14]] }[kind] || [];
   const t0 = ctx.currentTime;
   for (const [f, d, len, type, vol] of notes) {
@@ -509,10 +619,16 @@ export function setMuted(v) { muted = !!v; applyMix(); if (muted) { WebSpeech.ca
 export function isMuted() { return muted; }
 export function getManifest() { return manifest; }
 export function getAsset(id) { return assets[id]; }
+function gains() {
+  if (!ctx) return null;
+  const r = x => +x.toFixed(3), beds = {};
+  Object.entries(ambient).forEach(([k, it]) => { beds[k] = r(it.gain.gain.value); });
+  return { metro: r(metroTrain.gain.value), pa: r(paOut.gain.value), trainNear: r(trainNear.gain.value), beds, retiring: retired.length };
+}
 export function getState() {
   return {
     context: ctx ? ctx.state : 'uninitialized', unlocked: everUnlocked && !!ctx && ctx.state === 'running', needsGesture, background, muted,
-    zone, ducked, announcing: current ? current.key : null, queued: queue.length, active: active.length,
+    zone, ducked, env: { ...env }, gains: gains(), steps: { count: steps.count, last: steps.last, times: steps.times.slice(-12) }, train: { ...train }, announcing: current ? current.key : null, queued: queue.length, active: active.length,
     decoded: Object.keys(buffers).length, missing: [...missing], voiceCacheBytes: voiceBytes,
     sampleRate: ctx ? ctx.sampleRate : null, fallbackMode: CONFIG.VOICE_FALLBACK, diag: diag(),
     log: { played: log.played.slice(), announced: log.announced.slice(), fallbacks: log.fallbacks.slice(), errors: log.errors.slice() }
