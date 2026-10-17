@@ -1,27 +1,17 @@
 <p align="center">
   <img src="./assets/readme/hero.svg" width="100%" alt="积木小列车：用积木颗粒拼出的广州地铁 1 号线列车，途经公园前、农讲所、烈士陵园、东山口">
 </p>
-
-一个给小朋友玩的网页玩具：照着一节广州地铁 1 号线的列车模型，在浏览器里用积木颗粒把它一块块拼出来；拼好之后，再以乘客的第一人称视角，从进站买票一直坐到出站。
-
-打开就能玩，不用安装任何东西，在 iPad 上用手指操作。
-
-**在线试玩：<https://gz-metro-bricks.pages.dev/>**（拼列车）· [直接去坐地铁](https://gz-metro-bricks.pages.dev/metro.html)
-
-备用地址：<https://jplay.github.io/gz-metro-bricks/>
-
 <p align="center">
-  <img src="./assets/readme/shot-build.jpg" width="49%" alt="拼搭页：一步步把列车拼出来，下方列出这一步要用的零件">
-  <img src="./assets/readme/shot-train.jpg" width="49%" alt="拼好的六节编组列车">
+  <img src="./assets/readme/choose-kid.jpg" width="100%" alt="出发前选一个小朋友：星星还是明明">
 </p>
-<p align="center">
-  <img src="./assets/readme/shot-concourse.jpg" width="49%" alt="乘车体验：站厅里过安检">
-  <img src="./assets/readme/shot-platform.jpg" width="49%" alt="乘车体验：在站台屏蔽门前候车">
-</p>
-<p align="center">
-  <img src="./assets/readme/shot-riding.jpg" width="49%" alt="乘车体验：坐在车厢里，门上方是线路图">
-  <img src="./assets/readme/shot-select.jpg" width="49%" alt="乘车体验：选择上车站和下车站">
-</p>
+
+# 坐地铁 · 广州 3D 探险
+
+一个给小朋友玩的网页 3D 小游戏：像《我的世界》那样用手指走路、转头，从广州地铁站口走进去，买票、刷闸机、等车、上车，坐着 1 号线和 2 号线去广州城里逛一逛。
+
+打开就能玩，不用安装，在 iPad 上横屏最舒服，手机竖屏也行。
+
+**👉 在线试玩：<https://gz-metro-bricks.pages.dev>**
 
 ## 这个项目的由来
 
@@ -31,29 +21,57 @@
 
 页面算不上精良，但对一个 8 岁的孩子来说足够有趣。硬件要求也很低，我们用的是一台很老的 iPad Air 3，运行流畅。如果你家小朋友也喜欢地铁，可以直接拿去在本地跑起来。
 
+<p align="center">
+  <img src="./assets/readme/third-person.jpg" width="49%" alt="第三人称：站在公园前站站口外">
+  <img src="./assets/readme/inside-train.jpg" width="49%" alt="第一人称：坐在 1 号线车厢里">
+</p>
+<p align="center">
+  <img src="./assets/readme/platform.jpg" width="49%" alt="站台：屏蔽门打开，列车进站">
+  <img src="./assets/readme/transfer.jpg" width="49%" alt="换乘通道：会自己拼起来的桥">
+</p>
+<p align="center"><sub>最早的第一版</sub></p>
+
 ## 能玩什么
 
-**拼列车**（`index.html`）
-
-- 11 步把一节车从轮子拼到受电弓，再挂成 6 节编组；每一步积木从天上掉下来落位，并列出这一步要用的零件。
-- 拖动旋转、双指缩放，可以把整车“拆开看”。
-- 拼好后能开车、开门、开灯、升降受电弓、按住鸣笛、换车身颜色。
-
-**坐地铁**（`metro.html`）
+- **坐地铁**：1 号线、2 号线的每一站都能坐到。自己在售票机买票、过安检、刷闸机，下到站台等车。车上有普通话、粤语、英语三种报站，到了想去的站就下车。
+- **选一个小朋友出发**：弟弟星星最爱坐地铁，哥哥明明最爱吃。跟着明明走，还能进店点菜、吃一口，再在美食护照上盖个章。
+- **下车去逛逛**，这几站出站就能走到景点：
+  - **中山纪念堂**：穿过大门、走过中轴大道，进到礼堂里找个位子坐下，看着舞台上的「天下为公」。
+  - **农讲所和文明路**：红墙黄瓦的旧址，旁边就是满街骑楼的糖水街。
+  - **丽呈铂锐酒店**：就在农讲所站旁边。走进大堂按电梯上三楼，进双床房在床上躺一会儿。
+  - **陈家祠**：灰砖、屋脊上一排排彩色陶塑。
+  - **五羊石像**：越秀公园站出来过马路，爬上石阶就到。
+  - **沙面**：过小石桥，走进大榕树下的林荫道，一直走到珠江边。
+- **地图**：线路图上标出了哪些站可以下车去玩，还有一个「你在这里」告诉你现在到了哪儿。
+- **会跟着地方变的声音**：站台上听得到列车进站，走上街面就是车来车往，进了酒店一下子安静下来，沙面还有鸟叫。
 
 <p align="center">
-  <img src="./assets/readme/journey.svg" width="100%" alt="一次完整的乘车流程：进站、买票过闸、候车、乘车、出站">
+  <img src="./assets/readme/sysy-auditorium.jpg" width="49%" alt="中山纪念堂礼堂">
+  <img src="./assets/readme/chen-clan-academy.jpg" width="49%" alt="陈家祠正门">
 </p>
+<p align="center"><sub>中山纪念堂：坐在礼堂里看「天下为公」　·　陈家祠：门前看满屋脊的彩色陶塑</sub></p>
+<p align="center">
+  <img src="./assets/readme/five-rams.jpg" width="49%" alt="五羊石像">
+  <img src="./assets/readme/shamian.jpg" width="49%" alt="沙面榕树林荫道">
+</p>
+<p align="center"><sub>越秀公园：从石阶下抬头看五羊石像　·　沙面：大榕树下的林荫道</sub></p>
+<p align="center">
+  <img src="./assets/readme/metro-map.jpg" width="70%" alt="带景点图标的线路图">
+</p>
+<p align="center"><sub>线路图：哪站能下车去玩一眼就知道</sub></p>
 
-- 四个真实车站：公园前、农讲所、烈士陵园、东山口，任选起点和终点，两个方向都能坐。
-- 亲手投币买绿色的单程票币，进站贴一下，出站投回去。
-- 站里和车里的积木小人会走动、排队、上下车。
-- 普通话、粤语、英语三语报站，加上站厅、站台、车厢的环境声。
-- 操作只有两种：点地上发光的脚印自动走过去，拖动屏幕转头看。
+## 怎么玩
 
-## 怎么运行
+| | iPad 触屏 | 键盘鼠标 |
+| --- | --- | --- |
+| 走路 / 跑 | 左半边屏幕按住拖动 | WASD / 方向键，Shift 跑 |
+| 看四周 | 右半边屏幕拖动 | 点一下画面后移动鼠标 |
+| 跳 | 右下角「跳」 | 空格 |
+| 买票、刷卡、坐下、打招呼…… | 走近时出现的大按钮 | E |
 
-最省事的是直接打开上面的在线试玩链接。想在自己电脑上跑，需要通过一个本地网页服务打开（直接双击 `metro.html` 不行，音频加载需要 http）：
+右上角还有换人、美食护照、地图、视角和声音按钮。没有教程，随便走走就会了。
+
+## 在自己电脑上跑
 
 ```bash
 git clone https://github.com/JPlay/gz-metro-bricks.git
@@ -61,39 +79,11 @@ cd gz-metro-bricks
 python3 -m http.server 8080
 ```
 
-然后在浏览器打开 `http://localhost:8080`。
-
-想在 iPad 上玩：让 iPad 和电脑连同一个 Wi-Fi，在 Safari 里打开 `http://<电脑的局域网 IP>:8080`，再用“添加到主屏幕”就能像 App 一样全屏打开。
-
-网址后面加 `?perf=1` 会在角上显示帧率等性能数字。
-
-## 它是怎么做出来的
-
-- 起点是几张列车模型的照片和一段视频。车身按标准积木颗粒的比例（1 颗粒宽、3 层薄板等于 1 块砖高）重新设计，用 [three.js](https://threejs.org/) r128 渲染，全部是普通 `<script>`，没有构建步骤。
-- 乘车体验的车站是“缩约版”：四个站共用一套站体结构，换站名、主题色和地面地标；公园前按真实情况做了“右门下车、左门上车”。
-- 报站语音是用语音合成预先生成的音频文件，措辞参照了公开的 1 号线报站资料；环境声来自 CC0 录音加程序合成。
-- 整个项目由人提需求、AI 编码助手协作完成：一个助手负责统筹和验收，三个助手分别负责音频、场景、玩法。
-
-## 已知的不足
-
-- 只在一台 iPad Air 3 上实际玩过，运行流畅；其他设备没有验证。
-- 穿模（镜头进墙、小人重叠之类）修过一轮，但最后一遍 12 条路线的完整检查没有跑完，仍可能遇到。
-- 语音是合成音色，不是广州地铁的官方录音；环境声也不是在广州现场录的。
-- 车站只做了 1 号线站台和站厅，换乘的 2 号线、6 号线没有建。
-- 旧版 iOS（16.0–16.3）打开侧边静音键时，网页可能完全没有声音。
-
-## 目录
-
-```text
-index.html        拼列车
-metro.html        坐地铁
-js/metro/         乘车体验的各个模块（车站、列车、小人、音频、主流程）
-assets/audio/     报站语音、环境声、音效，来源见 assets/audio/CREDITS.md
-_dev/             各模块的独立演示页、接口说明和制作脚本
-```
+然后打开 `http://localhost:8080`。站名和线路资料来自维基百科等公开资料。
 
 ## 许可与声明
 
-- 代码以 [MIT](./LICENSE) 许可开源。`three.min.js` 来自 three.js，同为 MIT 许可。
+- 代码以 [MIT](./LICENSE) 许可开源。`vendor/babylonjs/` 是 Babylon.js，Apache-2.0 许可。
+- `vendor/env/environmentSpecular.env`、`vendor/env/studio.env` 来自 [Babylon.js Assets](https://github.com/BabylonJS/Assets)（assets.babylonjs.com），CC BY 4.0 许可。贴图由本仓库脚本程序生成。
 - 音频素材的来源和许可见 [`assets/audio/CREDITS.md`](./assets/audio/CREDITS.md)。
-- 这是一个个人爱好项目，与广州地铁集团、乐高集团均无关联；“广州地铁”“LEGO/乐高”是各自权利人的商标。站名、线路等信息仅用于还原乘车场景。
+- 这是一个个人爱好项目，与广州地铁集团无关联；站名、线路等信息仅用于还原乘车场景。

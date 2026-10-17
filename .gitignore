@@ -1,16 +1,6 @@
 .DS_Store
-.claude/
-# 开发过程中的截图证据和协作记录（体积大，且只对当时的开发过程有意义）
-_dev/shots/
-_dev/BRIEF.md
-_dev/REQUESTS.md
-_dev/DEFECTS.md
-_dev/STATUS-*.md
-_dev/.metadata_never_index
-_dev/tools/qa/coordinator-tour.mjs
-.playwright-cli/
 __pycache__/
-# 只对当时那台开发机有意义的测试脚本（含本机路径）
-_dev/tools/qa/
-_dev/tools/audio/browser_round2_qa.js
-_dev/tools/audio/run-natural-cpu6.sh
+node_modules/
+.playwright-cli/
+.claude/
+_dev*.html
