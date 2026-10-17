@@ -303,7 +303,7 @@ export function buildSm(k) {
   }
   // 两边路灯、长椅（背靠树池、朝两边）
   for (let z = z1 - 6; z > zEnd + 4; z -= 16) for (const sx of [-1, 1]) lamp(k, sx * 7.6, z);
-  for (const z of tz) for (const sx of [-1, 1]) D.bench(k, sx * 2.75, 0, z + 1.6, sx > 0 ? -Math.PI / 2 : Math.PI / 2);
+  tz.forEach((z, i) => { const sx = i % 2 ? -1 : 1; D.bench(k, sx * 2.75, 0, z + 1.6, sx > 0 ? -Math.PI / 2 : Math.PI / 2); });   // 每个树池一张长椅，左右交替
   // —— 两边老洋楼（一个模板 × 5）+ 露德圣母堂
   villa(k, -1, -112, 20, 3, hex('#EBD9A6'));
   villa(k, -1, -137, 20, 2, hex('#E8C9BF'), { shut: C.trim });
@@ -312,7 +312,7 @@ export function buildSm(k) {
   villa(k, 1, -180, 22, 3, hex('#E9CFC4'));
   chapel(k);
   // 洋楼之间 / 西南角：小花园（矮绿篱 + 普通树），楼后面用树挡住
-  for (const [x, z] of [[-16, -188], [-21, -192], [17, -128], [18, -163], [-28, -124], [-28, -150], [28, -150], [28, -100]]) { D.tree(k, x, 0, z, 1.1 + rnd() * 0.3, 0); k.col(x, 1, z, 0.45, 2, 0.45); }
+  for (const [x, z] of [[-16, -188], [-21, -192], [17, -128], [18, -163]]) { D.tree(k, x, 0, z, 1.1 + rnd() * 0.3, 0); k.col(x, 1, z, 0.45, 2, 0.45); }
   D.hedge(k, -22, -11, -196.5, -195.5, 0, 0.8);
   // —— 铜像
   statue(k, 5.2, -127, -Math.PI / 2 - 0.5, 'photo');
@@ -330,3 +330,4 @@ export function buildSm(k) {
   for (const sx of [-1, 1]) k.colSlab(sx * 24 - 0.5, sx * 24 + 0.5, 0, 6, zEnd, z1);
   return { SM, CHAPEL };
 }
+export const _parts = { villa, banyan, chapel, statue, lamp };   // tests / 预算排查用
