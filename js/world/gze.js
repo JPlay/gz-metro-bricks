@@ -12,7 +12,9 @@ import { FONT, FONT_EN } from './kit.js';
 /** 大厅 z -88..-116、|x| ≤ 28；闸机 z = -112；站台 z -116..-128（边沿 -128）；轨道中心 z = -129.75 */
 export const GZE = { hz0: -88, hz1: -116, hx: 28, H: 10.5, gz: -112, edge: -128, tz: -129.75, zs: -137, xw: -60, xe: 50 };
 /** 5 号车厢（二等座）的两扇开着的车门：外面的 x ↔ 车厢里的 x（车厢中心 x = -17） */
-export const EMU = { xc: -17, doors: [{ x: -5.8, lx: 11.2 }, { x: -28.2, lx: -11.2 }], train: 'D2315', to: '厦门北', car: '05' };
+/** 挡墙（站台上，进站口后面） */
+export const BF = { z: -118.6 };
+export const EMU = { xc: -17, doors: [{ x: -5.8, lx: 11.2 }], train: 'D2315', to: '厦门北', car: '05' };
 const C = {
   white: hex('#F6F7F5'), body: hex('#F4F5F3'), red: hex('#D3121A'), win: hex('#2C3640'), skirt: hex('#9AA1A8'), dark: hex('#3A3F45'),
   frame: hex('#9FA7AE'), roof: hex('#EDEEEB'), col: hex('#E7E8E4'), seat: hex('#5E7489'), seat2: hex('#6E8499'), leg: hex('#8D949B'),
@@ -45,9 +47,14 @@ function loftCol(g, secs, colFn) {
 const HALF = [[1.52, -0.95], [1.66, -0.7], [1.70, -0.3], [1.70, 0.47], [1.70, 0.5], [1.70, 0.66], [1.70, 0.69], [1.70, 0.86], [1.70, 0.9], [1.69, 1.62], [1.685, 1.66], [1.62, 2.15], [1.40, 2.55], [0.95, 2.77], [0.45, 2.84]];
 const PROF = [...HALF.map(([z, y]) => [-z, y]), [0, 2.86], ...HALF.slice().reverse().map(([z, y]) => [z, y])];
 const bandOf = y => (y > 0.48 && y < 0.68 ? 'red' : y > 0.88 && y < 1.64 ? 'win' : 'white');
-function carBody(g, x0, x1) {
-  const sec = x => ({ cy: 0.95, cz: GZE.tz, pts: PROF.map(([z, y]) => [x, y, GZE.tz + z]) });
-  loftCol(g, [sec(x0), sec(x1)], (s, k) => { const b = bandOf(PROF[k][1]); return b === 'red' ? C.red : b === 'win' ? C.win : C.body; });
+/** 车门处的截面：站台一侧 y < 2.1 的点去掉（门洞），只剩远侧 + 车顶 */
+const PROF_DOOR = PROF.filter(([z, y]) => !(z > 0 && y < 2.1));
+function carBody(g, x0, x1, holes = []) {
+  const sec = (x, pr) => ({ cy: 0.95, cz: GZE.tz, pts: pr.map(([z, y]) => [x, y, GZE.tz + z]) });
+  const col = pr => (s, k) => { const b = bandOf(pr[k][1]); return b === 'red' ? C.red : b === 'win' ? C.win : C.body; };
+  let a = x0;
+  for (const [h0, h1] of holes) { loftCol(g, [sec(a, PROF), sec(h0, PROF)], col(PROF)); loftCol(g, [sec(h0, PROF_DOOR), sec(h1, PROF_DOOR)], col(PROF_DOOR)); a = h1; }
+  loftCol(g, [sec(a, PROF), sec(x1, PROF)], col(PROF));
   for (const x of [x0, x1]) cap(g, x, PROF.map(([z, y]) => [z, y]), x === x0 ? -1 : 1);
 }
 /** 车厢端头的封板（扇形） */
@@ -76,7 +83,7 @@ function nose(g, x0, L) {
   for (const sd of [-1, 1]) g.ellipsoid(tip.pts[0][0], 0.05, GZE.tz + sd * 0.42, 0.22, 0.09, 0.16, hex('#FFFFFF'), 1);   // 车头灯（白色玻璃罩）
 }
 /** LED 发车屏（黑底、暖黄 / 绿色点阵字） */
-const ROWS = [['D2315', '厦门北', '14:15', 'A1', '正在检票'], ['D3316', '厦门北', '16:03', 'A2', '候车'], ['D7162', '潮汕', '16:45', 'A3', '候车'], ['D2395', '厦门', '16:50', 'A1', '候车'], ['C4121', '深圳', '17:46', 'A4', '候车'], ['C6813', '汕头', '18:08', 'A2', '候车'], ['D7108', '潮汕', '19:10', 'A3', '候车']];
+const ROWS = [['D2315', '厦门北', '14:15', 'A1', '正在检票'], ['D3316', '厦门北', '16:03', 'A2', '候车'], ['D7162', '潮汕', '16:45', 'A3', '候车'], ['D2395', '厦门', '16:50', 'A1', '候车'], ['G6541', '香港西九龙', '17:25', 'A4', '候车'], ['C4121', '深圳', '17:46', 'A4', '候车'], ['C6813', '汕头', '18:08', 'A2', '候车'], ['D7108', '潮汕', '19:10', 'A3', '候车']];
 function paintBoard(c, pw, ph) {
   c.fillStyle = '#0B0D10'; c.fillRect(0, 0, pw, ph);
   const rh = ph / (ROWS.length + 2.1), xs = [0.04, 0.24, 0.47, 0.64, 0.8].map(f => f * pw);
@@ -113,7 +120,7 @@ export function buildGze(k, st) {
   glassWall(-hx, -3, hz0 - 0.03, hz0 + 0.03); glassWall(3, hx, hz0 - 0.03, hz0 + 0.03); Gl.slab(-3, 3, 3.8, H, hz0 - 0.03, hz0 + 0.03, hex('#BFD8E6'));
   k.colSlab(-hx, -3, 0, H, hz0 - 0.2, hz0 + 0.2); k.colSlab(3, hx, 0, H, hz0 - 0.2, hz0 + 0.2);
   for (const s of [-1, 1]) { glassWall(s * hx - 0.03, s * hx + 0.03, hz1, hz0); k.colSlab(s * hx - 0.2, s * hx + 0.2, 0, H, hz1, hz0); }
-  for (let x = -hx; x <= hx + 0.01; x += 3.5) M.slab(x - 0.07, x + 0.07, 0, H, hz0 + 0.03, hz0 + 0.12, C.frame, { ao: false });
+  for (let x = -hx; x <= hx + 0.01; x += 3.5) M.slab(x - 0.07, x + 0.07, Math.abs(x) < 3.1 ? 3.8 : 0, H, hz0 + 0.03, hz0 + 0.12, C.frame, { ao: false });   // 大门开口里不立竖梃
   for (const y of [3.8, 7.6, 10.6]) M.slab(-hx, hx, y - 0.06, y + 0.06, hz0 + 0.03, hz0 + 0.12, C.frame, { ao: false });
   for (const s of [-1, 1]) for (let z = hz0; z >= hz1 - 0.01; z -= 4) M.slab(s * hx - 0.12, s * hx + 0.12, 0, H, z - 0.07, z + 0.07, C.frame, { ao: false });
   // 正门雨棚 + 「进站口」
@@ -124,6 +131,9 @@ export function buildGze(k, st) {
   // 后墙（中间开口 ±5 通往站台）
   P.slab(-hx, -5, 0, H, hz1 - 0.3, hz1, C.wall); P.slab(5, hx, 0, H, hz1 - 0.3, hz1, C.wall); P.slab(-5, 5, 4.2, H, hz1 - 0.3, hz1, C.wall);
   k.colSlab(-hx, -5, 0, H, hz1 - 0.3, hz1); k.colSlab(5, hx, 0, H, hz1 - 0.3, hz1);
+  // 进站通道口后面一道挡墙（站台上，雨棚下）：从大门 / 大厅里看不到站台和列车；出了闸机往两边绕到站台
+  P.slab(-7.5, 7.5, 0, 6.6, BF.z - 0.3, BF.z, C.wall); k.colSlab(-7.5, 7.5, 0, 6.6, BF.z - 0.3, BF.z);
+  k.sign(0, 3.3, BF.z + 0.012, { kind: 'plain', w: 7.2, h: 1.5, bg: '#1F4E9C', fg: '#FFFFFF', zh: '5 站台', en: 'Platform 5', face: 0, align: 'center', box: false });
   // 候车椅：两边各 4 排（背靠背的连排椅，蓝灰色）
   const chair = (x, z, f) => {   // f = +1 面朝 +z / -1 面朝 -z
     P.box(x, 0.45, z, 0.5, 0.07, 0.46, C.seat2, 0, 0, 0, 1, { ao: false });
@@ -140,17 +150,19 @@ export function buildGze(k, st) {
   for (const [x, zr, f, look] of [[-9.1, -98, 1, {}], [-13.6, -98, -1, { phone: true }], [11.3, -102.5, 1, {}], [16.9, -93.5, 1, { bag: 'backpack' }], [8.3, -107, -1, { phone: true }]])
     out.npcs.push({ x, z: zr + f * 0.26, ry: f > 0 ? 0 : Math.PI, seatY: 0.48, mode: look.phone ? 'sitPhone' : 'sit', look });
   // 发车屏（吊在厅中间上空，面朝大门）
-  k.sign(0, 7.4, -104.5, { kind: 'custom', key: 'gzeBoard', paint: paintBoard, w: 12, h: 4.2, face: 0, hang: H });
+  k.sign(0, 7.4, -104.5, { kind: 'custom', key: 'gzeBoard', paint: paintBoard, w: 12, h: 4.2, face: 0, hang: H, double: true });   // 两面都有（检票口这边回头也看得到）
   /* ===== 检票闸机（z = gz）===== */
   const lanes = [-4.5, -1.5, 1.5, 4.5];
   k.rail(-hx, gz, -6.45, gz, 0); k.rail(6.45, gz, hx, gz, 0);
   for (const cx of [-6, -3, 0, 3, 6]) {
-    M.rbox(cx, 0, gz, 0.3, 1.0, 1.7, hex('#D7DCE0'), 0.08, 0, { bevel: 0.02 }); k.colSlab(cx - 0.4, cx + 0.4, 0, 1.0, gz - 0.85, gz + 0.85);
-    P.rbox(cx, 1.0, gz, 0.34, 0.05, 1.75, hex('#2A2D31'), 0.09, 0, { ao: false });
+    // 不锈钢闸机柜：银灰色拉丝面 + 亮一点的竖条高光 + 深色顶面玻璃
+    P.rbox(cx, 0, gz, 0.3, 1.0, 1.7, hex('#C3C9CE'), 0.06, 0, { ao: false, bevel: 0.02 }); k.colSlab(cx - 0.4, cx + 0.4, 0, 1.0, gz - 0.85, gz + 0.85);
+    for (const sx of [-1, 1]) P.slab(cx + sx * 0.151 - 0.004, cx + sx * 0.151 + 0.004, 0.08, 0.92, gz - 0.7, gz + 0.7, hex('#E4E8EB'), { ao: false });
+    P.rbox(cx, 1.0, gz, 0.34, 0.05, 1.75, hex('#5B636B'), 0.09, 0, { ao: false });
     G.slab(cx - 0.09, cx + 0.09, 1.05, 1.056, gz + 0.45, gz + 0.75, hex('#4FA3FF'), { ao: false });
     G.box(cx, 0.85, gz + 0.86, 0.12, 0.1, 0.01, hex('#3DDC84'));
   }
-  M.slab(-7, 7, 2.75, 2.85, gz - 0.1, gz + 0.1, C.frame, { ao: false }); for (const x of [-7, 7]) M.slab(x - 0.08, x + 0.08, 0, 2.85, gz - 0.08, gz + 0.08, C.frame, { ao: false });
+  P.slab(-7, 7, 2.75, 2.85, gz - 0.1, gz + 0.1, hex('#B7BEC4'), { ao: false }); for (const x of [-7, 7]) P.slab(x - 0.08, x + 0.08, 0, 2.85, gz - 0.08, gz + 0.08, hex('#B7BEC4'), { ao: false });
   k.sign(0, 3.25, gz + 0.02, { kind: 'custom', key: 'gzeGate', paint: paintGateLed, w: 9, h: 0.75, face: 0 });
   const flapG = new Geo(); flapG.rbox(0, -0.3, 0, 0.5, 0.6, 0.03, hex('#E9EEF2'), 0.12, 0, { ao: false, bottom: true }); flapG.box(-0.03, 0.0, 0, 0.44, 0.04, 0.035, hex('#D52B1E'), 0, 0, 0, 1, { ao: false });
   const flapSrc = flapG.toMesh('gzeFlap', k.scene, k.M.paint, k.root); flapSrc.isVisible = false;
@@ -182,7 +194,7 @@ export function buildGze(k, st) {
   /* ===== 复兴号（白色、红腰线、流线型车头）：3 号… 这里只做三节：车头 + 5 号车厢（门开着）+ 后一节 ===== */
   const Bd = k.g('paint');
   const cars = [[-60, -30.2], [-29.7, -4.3], [-3.8, 15]];
-  for (const [a, b] of cars) carBody(Bd, a, b);
+  for (const [a, b] of cars) carBody(Bd, a, b, EMU.doors.filter(d => d.x > a && d.x < b).map(d => [d.x - 0.5, d.x + 0.5]));
   nose(Bd, 15, 11.6);
   for (const x of [-29.95, -4.05]) P.box(x, 1.0, tz, 0.5, 3.2, 2.9, C.dark, 0, 0, 0, 1, { ao: false });   // 车厢连接处的风挡
   // 转向架（车底深灰 + 车轮）
@@ -196,20 +208,36 @@ export function buildGze(k, st) {
   // 站台一侧的车窗（深色窗带上用白色窗间柱隔开）、车门
   const zf = tz + 1.705;
   const doorsAt = [[-58, -32, -60], [-28.2, -5.8], [-1.6, 12.5]];   // 每节车两头各一扇门（5 号车厢的开着）
-  for (const [a, b] of cars) for (let x = a + 2.6; x < Math.min(b, 15.5) - 2.4; x += 1.25) P.box(x, 1.26, zf, 0.2, 0.78, 0.02, C.body, 0, 0, 0, 1, { ao: false });
-  doorsAt.forEach(([d1, d2], ci) => {
+  for (const [a, b] of cars) for (let x = a + 2.6; x < Math.min(b, 15.5) - 2.4; x += 1.25) if (!EMU.doors.some(d => Math.abs(x - d.x) < 0.75)) P.box(x, 1.26, zf, 0.2, 0.78, 0.02, C.body, 0, 0, 0, 1, { ao: false });
+  doorsAt.forEach(([d1, d2]) => {
     for (const dx of [d1, d2]) {
-      const open = ci === 1;
+      const open = EMU.doors.some(d => d.x === dx);
       if (open) {
-        // 门洞：车身是连续的放样面，门洞画成亮着的门厅（浅灰墙、深色地面、扶手、对面关着的车门）
-        G.box(dx, 1.11, zf + 0.006, 0.96, 1.74, 0.01, hex('#C6CDD3'));
-        G.box(dx, 0.12, zf + 0.006, 0.96, 0.24, 0.01, hex('#6C757D'));
-        P.box(dx, 1.35, zf + 0.012, 0.36, 0.55, 0.008, hex('#59636D'), 0, 0, 0, 1, { ao: false });            // 对面车门上的窗
-        for (const sx of [-1, 1]) P.box(dx + sx * 0.4, 1.3, zf + 0.014, 0.04, 0.9, 0.01, hex('#9AA1A8'), 0, 0, 0, 1, { ao: false });   // 扶手
-        for (const sx of [-1, 1]) P.box(dx + sx * 0.5, 1.0, zf + 0.02, 0.04, 2.0, 0.03, hex('#AEB4BA'), 0, 0, 0, 1, { ao: false });   // 门框
-        P.box(dx, 2.0, zf + 0.02, 1.04, 0.04, 0.03, hex('#AEB4BA'), 0, 0, 0, 1, { ao: false });
-        P.box(dx + 0.98, 1.0, zf + 0.04, 0.96, 1.98, 0.04, C.body, 0, 0, 0, 1, { ao: false });   // 门扇滑开
-        P.slab(dx - 0.5, dx + 0.5, -0.03, 0.0, edge - 0.65, edge, hex('#9AA0A6'), { ao: false });   // 踏板
+        // 真的门洞（车身放样在这里挖开，见 carBody）：门框往里收一点，门里是门厅——站台上就看得到车厢里面
+        const zi = zf - 0.16, zb = tz - 1.55, xa = dx - 1.6, xb = dx + 1.3;   // 门框内沿、门厅对面墙、门厅两头（客室端墙 / 车厢端）
+        for (const sx of [-1, 1]) P.slab(dx + sx * 0.5 - 0.035, dx + sx * 0.5 + 0.035, 0, 2.05, zi, zf + 0.02, hex('#B8BEC4'), { ao: false });   // 门框（侧）
+        P.slab(dx - 0.535, dx + 0.535, 2.0, 2.16, zi, zf + 0.02, hex('#B8BEC4'), { ao: false });                                                  // 门框（上）
+        P.slab(dx - 0.5, dx + 0.5, -0.95, 0.0, zi, zf - 0.01, C.body, { ao: false });                                                             // 门槛下的车身裙板
+        P.slab(dx - 0.5, dx + 0.5, -0.03, 0.005, zi, edge, hex('#9AA0A6'), { ao: false });                                                       // 踏板（伸到站台边）
+        P.slab(dx - 0.5, dx + 0.5, -0.03, 0.005, edge, edge + 0.0, hex('#9AA0A6'), { ao: false });
+        P.box(dx - 0.98, 1.0, zf + 0.04, 0.96, 1.98, 0.04, C.body, 0, 0, 0, 1, { ao: false });                                                   // 门扇往外塞拉滑开（滑向车尾一侧）
+        // 门厅：地板、天花（灯）、对面墙 + 关着的车门、客室端墙（玻璃门开着，看得到座椅）、车厢端墙；外面车身挡着，只在门洞里看得到
+        P.slab(xa, xb, -0.06, 0.0, zb, zi, hex('#8D939A'), { ao: false });
+        P.slab(xa, xb, 2.32, 2.36, zb, zi, hex('#F4F5F5'), { ao: false }); G.slab(dx - 0.6, dx + 0.6, 2.3, 2.32, zb + 0.6, zi - 0.4, hex('#FFFFFF'));
+        P.slab(xa, xb, 0, 2.32, zb - 0.05, zb, hex('#DADDE0'), { ao: false });
+        P.slab(dx - 0.5, dx + 0.5, 0, 2.0, zb, zb + 0.01, hex('#E3E6E8'), { ao: false }); P.slab(dx - 0.2, dx + 0.2, 1.1, 1.7, zb + 0.01, zb + 0.015, hex('#59636D'), { ao: false });
+        for (const sx of [-1, 1]) P.tube([dx + sx * 0.62, 0.9, zi - 0.06], [dx + sx * 0.62, 1.8, zi - 0.06], 0.035, hex('#C9CDD0'), 6);
+        P.slab(xb, xb + 0.05, 0, 2.32, zb, zi, hex('#DADDE0'), { ao: false });
+        const za = tz + 0.25 - 0.41, zc = tz + 0.25 + 0.41;   // 客室端门（过道）
+        P.slab(xa - 0.05, xa, 0, 2.32, zb, za, hex('#ECEEEF'), { ao: false }); P.slab(xa - 0.05, xa, 0, 2.32, zc, zi, hex('#ECEEEF'), { ao: false }); P.slab(xa - 0.05, xa, 2.0, 2.32, za, zc, hex('#ECEEEF'), { ao: false });
+        P.slab(xa - 3.5, xa - 0.05, -0.06, 0.0, zb, zi, hex('#8D939A'), { ao: false }); P.slab(xa - 3.5, xa - 0.05, 2.32, 2.36, zb, zi, hex('#F4F5F5'), { ao: false });
+        for (let r = 0; r < 3; r++) for (const [z0, z1] of [[-1.5, -0.16], [0.66, 1.5]]) {   // 端门里面看得到的头两三排座椅（简化）
+          const xs = xa - 0.95 - r * 1.0;
+          P.slab(xs, xs + 0.46, 0.34, 0.47, tz + z0, tz + z1, hex('#566C80'), { ao: false }); P.slab(xs - 0.06, xs + 0.06, 0.46, 1.1, tz + z0, tz + z1, hex('#4A5E71'), { ao: false });
+        }
+        for (const z of [zb - 0.05, zi]) P.slab(xa - 3.5, xa - 0.05, 0, 2.32, Math.min(z, z + 0.05), Math.max(z, z + 0.05), hex('#DADDE0'), { ao: false });   // 客室两侧墙（只在端门里看得到一点）
+        P.slab(xa - 3.55, xa - 3.5, 0, 2.32, zb, zi, hex('#DADDE0'), { ao: false });
+        G.slab(xa - 3.5, xa - 0.1, 2.3, 2.32, tz - 0.7, tz - 0.5, hex('#FFFFFF')); G.slab(xa - 3.5, xa - 0.1, 2.3, 2.32, tz + 0.5, tz + 0.7, hex('#FFFFFF'));
       } else {
         for (const sx of [-1, 1]) P.box(dx + sx * 0.5, 1.0, zf + 0.004, 0.03, 2.0, 0.02, hex('#9AA1A8'), 0, 0, 0, 1, { ao: false });
         P.box(dx, 2.0, zf + 0.004, 1.03, 0.03, 0.02, hex('#9AA1A8'), 0, 0, 0, 1, { ao: false });
@@ -221,8 +249,9 @@ export function buildGze(k, st) {
   k.sign(-17, 0.24, zf + 0.012, { kind: 'plain', w: 1.5, h: 0.36, bg: '#F4F5F3', fg: '#3A3F45', zh: '05 二等座', face: 0, align: 'center', box: false });
   // 车身碰撞（5 号车厢两扇门处留口，口里面一块“门后墙”）
   const zc0 = tz - 1.72, zc1 = edge;
-  const segs = [[-60, -28.75], [-27.65, -6.35], [-5.25, 16]];
+  const segs = [[-60, -6.35], [-5.25, 16]];   // 只有 5 号车厢东头那扇门开着
   for (const [a, b] of segs) k.colSlab(a, b, -1.3, 3.2, zc0, zc1);
+  for (const d of EMU.doors) for (const sx of [-1, 1]) k.colSlab(d.x + sx * 0.5 - 0.04, d.x + sx * 0.5 + 0.04, -1.3, 3.2, edge - 0.2, edge);
   for (const d of EMU.doors) { k.colSlab(d.x - 0.55, d.x + 0.55, -1.3, 3.2, zc0, edge - 0.7); k.colSlab(d.x - 0.55, d.x + 0.55, -1.3, 0, edge - 0.7, edge); }
   k.colSlab(16, 26.5, -1.3, 1.8, tz - 1.3, tz + 1.3);
   return out;

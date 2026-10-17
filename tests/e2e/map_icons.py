@@ -82,6 +82,11 @@ async def main():
     R['card'] = await pg.evaluate('__game.state().attrCard')
     await pg.touchscreen.tap(c[0] - 260, c[1] + 300); await asyncio.sleep(0.4)
     R['cardClosed'] = await pg.evaluate('__game.state().attrCard') is None
+    # 广州东站的复兴号车头图标 → 卡片（广州东火车站 · G 出口，和站里导向牌、报站一致）
+    c2 = await pg.evaluate("(()=>{const r=document.querySelector('#netmap g.attr[data-attr=east] circle:not([fill-opacity])').getBoundingClientRect(); return [r.left+r.width/2, r.top+r.height/2];})()")
+    await pg.touchscreen.tap(c2[0], c2[1]); await asyncio.sleep(0.5)
+    R['cardEast'] = await pg.evaluate('__game.state().attrCard')
+    await pg.touchscreen.tap(c[0] - 260, c[1] + 300); await asyncio.sleep(0.4)
     R['sweep'] = await pg.evaluate(SWEEP)
     # —— 2. 车厢条形线路图：每个景点站上方画了图标（取样图标白底圆的线路色细圈）
     R['strip'] = await pg.evaluate(r"""(async()=>{const M=await import('/js/world/routemap.js'); const A=await import('/js/data/attractions.js'); const {LINES}=await import('/js/data/lines.js'); const out={};
@@ -131,6 +136,7 @@ async def main():
     'legendRow': R['ipad']['legend'],
     'iphoneTitleOneLine': R['iphoneTitle']['small'] == 'none' and R['iphoneTitle']['h'] < R['iphoneTitle']['fs'] * 1.8,
     'card': bool(R['card']) and R['card']['id'] == 'sysy' and '中山纪念堂' in R['card']['text'] and 'C' in R['card']['text'] and R['cardClosed'],
+    'cardEast': bool(R.get('cardEast')) and R['cardEast']['id'] == 'east' and '广州东火车站' in R['cardEast']['text'] and 'G' in R['cardEast']['text'] and '站站' not in R['cardEast']['text'],
     'stripIcons': set(R['strip']) == {a[0] for a in R['attractions']} and all(any(c != 255 for c in v['ring']) for vs in R['strip'].values() for v in vs),
     'carBudget': bool(R.get('carPerf')) and R['carPerf']['draws'] <= BUDGET['draws'] and R['carPerf']['tris'] <= BUDGET['tris'],
     'noErrors': not R['errorsIpad'] and not R['errorsIphone'],

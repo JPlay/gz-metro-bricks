@@ -122,7 +122,7 @@ export async function start() {
   const hideCard = () => { attrCard.hidden = true; G.attrCard = null; };
   const showCard = (id, cx, cy) => {
     const a = ATTRACTIONS.find(t => t.id === id); if (!a) return false;
-    attrCard.innerHTML = `<b>${a.names.join('<br>')}</b><span>${STATIONS[a.code].zh}站 · 从 <em>${attractionExit(a.code)}</em> 出口出站</span>`;
+    attrCard.innerHTML = `<b>${a.names.join('<br>')}</b><span>${STATIONS[a.code].zh.replace(/站$/, '')}站 · 从 <em>${attractionExit(a.code)}</em> 出口出站</span>`;
     attrCard.hidden = false; const sh = mapEl.querySelector('.sheet').getBoundingClientRect(), w = attrCard.offsetWidth, h = attrCard.offsetHeight;
     attrCard.style.left = Math.max(8, Math.min(sh.width - w - 8, cx - sh.left - w / 2)) + 'px'; attrCard.style.top = Math.max(8, Math.min(sh.height - h - 8, cy - sh.top - h - 30)) + 'px';
     G.attrCard = { id, text: attrCard.textContent }; Audio.blip && Audio.blip('tap'); return true;

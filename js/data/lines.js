@@ -69,7 +69,7 @@ export const STATIONS = {
   yj: { zh: '杨箕', en: 'Yangji', x: [5] },
   tyxl: { zh: '体育西路', en: 'Tiyu Xilu', x: [3] },
   tyzx: { zh: '体育中心', en: 'Tiyu Zhongxin', x: [] },
-  gzdz: { zh: '广州东站', en: 'Guangzhou Dongzhan', x: [3, 11], signature: 'east' },
+  gzdz: { zh: '广州东站', en: 'Guangzhou Dongzhan', x: [3, 11], signature: 'east', exits: ['B1', 'F', 'G'], exitMain: 'G' },   // 真实：G 出口「广州火车东站」
   // —— 2 号线（2-01 … 2-24）
   gznz: { zh: '广州南站', en: 'Guangzhou Nanzhan', x: [7, 22, 'F2'] },
   sb: { zh: '石壁', en: 'Shibi', x: [7] },

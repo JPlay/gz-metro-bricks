@@ -11,6 +11,7 @@ export const ATTRACTIONS = [
   { id: 'cjc', code: 'cjc', icon: 'clan', name: '陈家祠', names: ['陈家祠'] },
   { id: 'rams', code: 'yxgy', icon: 'rams', name: '五羊石像', names: ['越秀公园五羊石像'] },
   { id: 'shamian', code: 'hs', icon: 'chapel', name: '沙面', names: ['沙面'] },
+  { id: 'east', code: 'gzdz', icon: 'emu', name: '火车东站', names: ['广州东火车站'] },
 ];
 export const attractionExit = code => { const s = STATIONS[code]; return s.attraction ? s.attraction.exit : s.exitMain || 'D'; };
 export const attractionsAt = code => ATTRACTIONS.filter(a => a.code === code);

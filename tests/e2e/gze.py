@@ -1,6 +1,7 @@
 # 广州东站端到端：1 号线广州东站站台 → 站厅 → 出口 → 街面 → 过斑马线 → 火车站候车大厅（发车屏、座椅）
 # → 检票闸机（走近自动开）→ 5 站台 → 复兴号 5 号车厢开着的车门 → 车厢里（独立场景）→ 走到座位旁坐下（第一人称看车头方向）
-# → 起身 → 从车门下车回到站台。顺路拍 4 张评审截图（不贴角标）。
+# → 起身 → 从车门下车回到站台。顺路拍 3 张评审截图（不贴角标）。
+# 大厅里看不见列车：站台在闸机后面，闸机后一道挡墙（5 站台）挡住，绕过去才到站台。
 # 断言：每一段都走得到、车厢加载 / 卸载正确、坐下成功、每个镜头不超预算（≤66 draws / 186,754 tris）、没有报错。
 # 用法：python tests/e2e/gze.py [base-url] [截图目录] [q]
 import asyncio, sys, json, math, os
@@ -9,7 +10,7 @@ from common import *
 from journey import GCLOCK, gt, auto, wait, log
 from perfhud import perf
 BASE = sys.argv[1] if len(sys.argv) > 1 else 'http://localhost:8123/'
-OUT = (sys.argv[2] if len(sys.argv) > 2 else '/workspace/gz-shots-polish/gze-r1/').rstrip('/') + '/'
+OUT = (sys.argv[2] if len(sys.argv) > 2 else '/workspace/gz-shots-polish/gze-r2/').rstrip('/') + '/'
 Q = sys.argv[3] if len(sys.argv) > 3 else '1'
 BUDGET = {'draws': 66, 'tris': 186754}
 EO = 2200          # 车厢内景放在 x=2200（js/game/east.js EO）
@@ -40,11 +41,11 @@ async def main():
     R['toHall'] = await auto(pg, [[1.2, -50], [0, -62], [0, -80], [0, -86], [0, -92], [1.5, -100]])
     await measure(pg, 'hall')
     # 3. 检票闸机（走近自动开）→ 站台
-    R['gates'] = await auto(pg, [[1.5, -108], [1.5, -111.9], [1.5, -115], [1.5, -120]])
+    R['gates'] = await auto(pg, [[1.5, -108], [1.5, -111.9], [1.5, -115], [1.5, -117.4], [9, -117.4], [9, -122.5]])   # 闸机后绕过 5 站台挡墙
     s = await st(pg); R['platform'] = s['pos']
     await measure(pg, 'platform')
     # 4. 复兴号 5 号车厢的车门（x=-5.8）→ 走进去
-    await auto(pg, [[-5.8, -124], [-5.8, -127.3], [-5.8, -128.6]])   # 走进车门那一刻被传送进车厢，autopilot 自己停下
+    await auto(pg, [[9, -124], [-5.8, -124], [-5.8, -127.3], [-5.8, -128.6]])   # 走进车门那一刻被传送进车厢，autopilot 自己停下
     R['inside'] = await wait(pg, '__game.state().east && __game.state().east.inside', 4)
     s = await st(pg); R['car'] = [s['zone'], s['pos'], s['east']]
     await measure(pg, 'car')
@@ -53,9 +54,9 @@ async def main():
     s = await st(pg); R['actBeforeSit'] = s['act']
     await pg.evaluate('__game.act()'); await asyncio.sleep(1.0)
     s = await st(pg); R['seat'] = s['seat']
-    # 04：坐着，第一人称看车头方向（前排椅背、两边大窗、行李架、端门上的显示屏）
+    # 03：坐着，第一人称看车头方向（前排椅背、两边大窗、行李架、端门上的显示屏）
     await view(pg, 'first'); await pg.evaluate('__game.player.yaw=Math.PI/2; __game.player.pitch=0.02')
-    await shot(pg, '04-seat-forward')
+    await shot(pg, '03-seat-forward')
     # 6. 起身 → 回门厅 → 下车回到站台
     await pg.evaluate('__game.act()'); await asyncio.sleep(0.8)
     s = await st(pg); R['stood'] = not s['seat']['seated']
@@ -64,9 +65,9 @@ async def main():
     R['outside'] = await wait(pg, '!__game.state().east.inside', 4)
     s = await st(pg); R['back'] = [s['zone'], s['pos']]
     # 7. 评审截图
-    await pose(pg, 0, 0.05, -56, math.pi, -0.2, 'first'); await shot(pg, '01-hall')
-    await pose(pg, -2.2, 0.05, -106.5, 3.0, 0.0, 'third'); await shot(pg, '02-gates')
-    await pose(pg, 30.5, 0.05, -122.2, -1.95, -0.02, 'third'); await shot(pg, '03-emu-nose')
+    # 01：候车大厅里面（座椅、发车屏、玻璃幕墙同框）；02：站台上看 5 号车厢开着的车门（门洞往里缩，看得见车厢里）
+    await pose(pg, -18, 0.05, -110.5, 0.85, -0.2, 'first'); await shot(pg, '01-hall-inside')
+    await pose(pg, -3.5, 0.05, -125.9, -2.31, 0.05, 'first'); await shot(pg, '02-door-05')
     R['errors'] = errs(logs); R['gameSeconds'] = round(await gt(pg), 1)
     R['overBudget'] = [k for k, v in R['perf'].items() if v['draws'] > BUDGET['draws'] or v['tris'] > BUDGET['tris']]
     print(json.dumps(R, ensure_ascii=False, indent=1, default=str))

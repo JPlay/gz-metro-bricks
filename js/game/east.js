@@ -12,7 +12,7 @@ import { Kit } from '../world/kit.js';
 import { hex } from '../core/geo.js';
 import { FoodAtlas } from './food-art.js';
 import { bakePerson, randomLook, POSES } from '../world/people.js';
-import { EMU, GZE } from '../world/gze.js';
+import { EMU, GZE, BF } from '../world/gze.js';
 
 export const EO = { x: 2200, z: 0 };
 const X = x => EO.x + x;
@@ -25,36 +25,14 @@ const W = 1.6, HC = 2.38, SX = 9.6, EX = 12.5;           // 半宽、顶高、�
 const ROWS = 18, XB0 = -9.25, PITCH = 1.0;                 // 第一排靠背 x、排距
 const BL3 = [-1.5, -0.16], BL2 = [0.66, 1.5];              // 三人座 / 二人座的 z 范围；中间是过道
 const AISLE_Z = 0.25;
-/** 车窗外：站台一侧（雨棚顶、候车楼墙、白柱子、站台地砖、黄色盲道） */
-function paintPlatform(c, pw, ph, seg) {
-  c.fillStyle = '#D6DADD'; c.fillRect(0, 0, pw, ph * 0.24);
-  c.fillStyle = '#FFF6DC'; for (let i = 0; i < 3; i++) c.fillRect(0, ph * (0.05 + i * 0.07), pw, ph * 0.015);
-  const g = c.createLinearGradient(0, ph * 0.24, 0, ph * 0.66); g.addColorStop(0, '#E8ECEF'); g.addColorStop(1, '#D4D9DD'); c.fillStyle = g; c.fillRect(0, ph * 0.24, pw, ph * 0.42);
-  c.fillStyle = '#B9C9D6'; for (let x = (seg * 37) % 60; x < pw; x += 60) c.fillRect(x, ph * 0.3, 44, ph * 0.3);   // 候车楼的玻璃
-  c.fillStyle = '#A7ADB2'; c.fillRect(0, ph * 0.66, pw, ph * 0.34);
-  c.strokeStyle = 'rgba(255,255,255,0.35)'; c.lineWidth = 1; for (let x = 0; x < pw; x += 18) { c.beginPath(); c.moveTo(x, ph * 0.66); c.lineTo(x - (x - pw / 2) * 0.3, ph); c.stroke(); }
-  c.fillStyle = '#F2C230'; c.fillRect(0, ph * 0.86, pw, ph * 0.05);
-  c.fillStyle = '#F3F4F4'; c.fillRect(0, ph * 0.95, pw, ph * 0.05);
-  c.fillStyle = '#F2F3F3'; for (let x = 120 + seg * 90; x < pw; x += 260) c.fillRect(x, ph * 0.18, 16, ph * 0.5);   // 雨棚柱
-  if (seg === 1) {   // 站名牌
-    c.fillStyle = '#1A4FA0'; c.fillRect(pw * 0.42, ph * 0.3, pw * 0.16, ph * 0.13); c.fillStyle = '#FFFFFF'; c.textAlign = 'center'; c.textBaseline = 'middle';
-    c.font = `700 ${ph * 0.09}px sans-serif`; c.fillText('广州东', pw * 0.5, ph * 0.365);
-  }
-  c.fillStyle = '#5B6470'; for (const [fx, h] of [[0.18, 0.2], [0.71, 0.22], [0.83, 0.19]]) { if ((fx * 10 + seg) % 3 < 1) continue; const x = pw * fx; c.fillRect(x - 3, ph * (0.66 - h), 7, ph * h); c.beginPath(); c.arc(x, ph * (0.64 - h), 5, 0, 6.3); c.fill(); }
-}
-/** 车窗外：另一侧（轨道、挡土墙 + 绿色护栏、远处的楼和天空） */
-function paintFar(c, pw, ph, seg) {
-  const g = c.createLinearGradient(0, 0, 0, ph * 0.62); g.addColorStop(0, '#7FB6E3'); g.addColorStop(1, '#CFE6F5'); c.fillStyle = g; c.fillRect(0, 0, pw, ph * 0.62);
-  c.fillStyle = 'rgba(255,255,255,0.9)'; for (const [fx, fy, r] of [[0.15, 0.2, 0.05], [0.2, 0.18, 0.04], [0.62, 0.28, 0.06], [0.68, 0.25, 0.04]]) { c.beginPath(); c.arc(pw * ((fx + seg * 0.31) % 1), ph * fy, ph * r * 2, 0, 6.3); c.fill(); }
+/** 车窗外另一侧远处：天空 + 一排楼（挡土墙后面），底边是地面 */
+function paintBackdrop(c, pw, ph) {
+  const g = c.createLinearGradient(0, 0, 0, ph * 0.8); g.addColorStop(0, '#7FB6E3'); g.addColorStop(1, '#D6EAF6'); c.fillStyle = g; c.fillRect(0, 0, pw, ph * 0.8);
+  c.fillStyle = 'rgba(255,255,255,0.9)'; for (const [fx, fy, r] of [[0.12, 0.2, 0.05], [0.16, 0.18, 0.04], [0.55, 0.25, 0.06], [0.6, 0.22, 0.04], [0.85, 0.15, 0.05]]) { c.beginPath(); c.arc(pw * fx, ph * fy, ph * r, 0, 6.3); c.fill(); }
   const cols = ['#D9DEE4', '#E6DCCF', '#CBD5DF', '#E9E4DA', '#D3DCD3'];
-  for (let i = 0, x = (seg * 53) % 40 - 40; x < pw; i++) { const w = 40 + ((i * 37 + seg * 11) % 50), h = ph * (0.18 + ((i * 29 + seg * 7) % 30) / 100); c.fillStyle = cols[(i + seg) % 5]; c.fillRect(x, ph * 0.5 - h, w, h + 2);
-    c.fillStyle = 'rgba(90,110,130,0.35)'; for (let y = ph * 0.5 - h + 6; y < ph * 0.48; y += 9) for (let xx = x + 5; xx < x + w - 6; xx += 10) c.fillRect(xx, y, 5, 4); x += w + 8; }
-  c.fillStyle = '#C9C5BC'; c.fillRect(0, ph * 0.5, pw, ph * 0.18);
-  c.strokeStyle = '#3F8F5A'; c.lineWidth = 2; c.beginPath(); c.moveTo(0, ph * 0.5); c.lineTo(pw, ph * 0.5); c.stroke(); for (let x = 0; x < pw; x += 14) { c.beginPath(); c.moveTo(x, ph * 0.43); c.lineTo(x, ph * 0.5); c.stroke(); }
-  c.beginPath(); c.moveTo(0, ph * 0.43); c.lineTo(pw, ph * 0.43); c.stroke();
-  c.fillStyle = '#8D867C'; c.fillRect(0, ph * 0.68, pw, ph * 0.32);
-  c.fillStyle = '#6E5B4A'; for (let x = 0; x < pw; x += 12) c.fillRect(x, ph * 0.74, 7, ph * 0.26);
-  c.fillStyle = '#B7BCC0'; c.fillRect(0, ph * 0.8, pw, ph * 0.03); c.fillRect(0, ph * 0.92, pw, ph * 0.03);
+  for (let i = 0, x = -10; x < pw; i++) { const w = 22 + ((i * 37) % 30), h = ph * (0.18 + ((i * 29) % 30) / 100); c.fillStyle = cols[i % 5]; c.fillRect(x, ph * 0.8 - h, w, h + 1);
+    c.fillStyle = 'rgba(90,110,130,0.35)'; for (let y = ph * 0.8 - h + 3; y < ph * 0.78; y += 5) for (let xx = x + 3; xx < x + w - 3; xx += 5) c.fillRect(xx, y, 2.5, 2.5); x += w + 4; }
+  c.fillStyle = '#9DA59A'; c.fillRect(0, ph * 0.8, pw, ph * 0.2);
 }
 /** 端门上方的显示屏（黑底红色点阵字） */
 function paintDisplay(c, pw, ph) {
@@ -87,22 +65,30 @@ export class EastInterior {
     const winY0 = 0.82, winY1 = 1.72;
     for (const s of [-1, 1]) {
       const zw = s * W, zi = s * (W - 0.06);
-      P.slab(X(-EX), X(EX), 0, winY0, Math.min(zw, zi), Math.max(zw, zi), C.wall2, { ao: false });
-      P.slab(X(-EX), X(EX), winY1, HC - 0.3, Math.min(zw, zi), Math.max(zw, zi), C.wall, { ao: false });
+      // 站台一侧开着的车门处墙板挖开（真的门洞，看得到外面的站台）
+      const holes = s > 0 ? EMU.doors.map(d => [d.lx - 0.5, d.lx + 0.5]) : [];
+      const cut = (a, b) => { const out = []; let x = a; for (const [h0, h1] of holes) if (h1 > a && h0 < b) { if (h0 > x) out.push([x, h0]); x = h1; } if (x < b) out.push([x, b]); return out; };
+      const zs = [Math.min(zw, zi), Math.max(zw, zi)];
+      for (const [a, b] of cut(-EX, EX)) { P.slab(X(a), X(b), 0, winY0, ...zs, C.wall2, { ao: false }); P.slab(X(a), X(b), winY1, HC - 0.3, ...zs, C.wall, { ao: false }); }
+      for (const [a, b] of [...cut(-EX, -SX), ...cut(SX, EX)]) P.slab(X(a), X(b), winY0, winY1, ...zs, C.wall2, { ao: false });   // 门厅没有车窗
+      for (const [h0, h1] of holes) {
+        P.slab(X(h0), X(h1), 2.0, HC - 0.3, ...zs, C.wall, { ao: false });                                       // 门洞上方
+        for (const x of [h0, h1]) P.slab(X(x - 0.04), X(x + 0.04), 0, 2.04, zi - 0.02, zw + 0.02, C.frame, { ao: false });   // 门框
+        P.slab(X(h0 - 0.04), X(h1 + 0.04), 2.0, 2.06, zi - 0.02, zw + 0.02, C.frame, { ao: false });
+        P.slab(X(h0), X(h1), -0.1, 0.0, W, GZE.edge - GZE.tz, hex('#9AA0A6'), { ao: false });                    // 踏板（接到站台边）
+      }
+      k.g('glass').slab(X(-SX), X(SX), winY0, winY1, s * (W - 0.035) - 0.004, s * (W - 0.035) + 0.004, hex('#DCEBF2'));   // 车窗玻璃
       P.slab(X(-SX), X(SX), winY0 - 0.05, winY0, Math.min(zi, s * (W - 0.2)), Math.max(zi, s * (W - 0.2)), C.frame, { ao: false });   // 窗台
       if (s < 0) k.colSlab(X(-EX), X(EX), 0, HC, -W - 0.4, -W + 0.06);
       else {   // 站台一侧：两扇开着的车门处留口（门口外面再挡一下，走到门口就下车）
-        for (const [a, b] of [[-EX, -11.7], [-10.7, 10.7], [11.7, EX]]) k.colSlab(X(a), X(b), 0, HC, W - 0.06, W + 0.4);
+        const hs = EMU.doors.map(d => d.lx).sort((a, b) => a - b); let a0 = -EX;
+        for (const lx of hs) { k.colSlab(X(a0), X(lx - 0.5), 0, HC, W - 0.06, W + 0.4); a0 = lx + 0.5; }
+        k.colSlab(X(a0), X(EX), 0, HC, W - 0.06, W + 0.4);
         for (const d of EMU.doors) k.colSlab(X(d.lx - 0.6), X(d.lx + 0.6), 0, HC, W + 0.15, W + 0.6);
       }
       // 窗间柱：每 2 排一扇大窗
       for (let x = -SX; x <= SX + 0.01; x += 2.0) P.slab(X(x - 0.14), X(x + 0.14), winY0, winY1, Math.min(zw, zi - s * 0.02), Math.max(zw, zi - s * 0.02), C.wall, { ao: false });
       for (const y of [winY0, winY1]) P.slab(X(-SX), X(SX), y - 0.025, y + 0.025, Math.min(zi, zi - s * 0.03), Math.max(zi, zi - s * 0.03), C.frame, { ao: false });
-      // 窗外的画：三段（站台一侧 +z）
-      for (let i = 0; i < 3; i++) {
-        const x0 = -SX + i * 6.4, uv = atlas.draw(6.4, winY1 - winY0, (c, pw, ph) => (s > 0 ? paintPlatform : paintFar)(c, pw, ph, i), 110);
-        atlas.quad(X(x0 + 3.2), (winY0 + winY1) / 2, s * (W + 0.02), 6.4, winY1 - winY0, s > 0 ? Math.PI : 0, uv);
-      }
       // 行李架（金属托架 + 浅色板 + 前沿圆管）
       const r0 = s * 1.1, r1 = s * (W - 0.06);
       P.slab(X(-SX + 0.1), X(SX - 0.1), 1.95, 1.98, Math.min(r0, r1), Math.max(r0, r1), C.rack, { ao: false });
@@ -123,15 +109,15 @@ export class EastInterior {
         for (let i = 0; i < n; i++) {
           const zc = z0 + w * (i + 0.5);
           P.rbox(X(xb + 0.3), 0.34, zc, 0.46, 0.13, w - 0.05, C.seat, 0.04, 0, { ao: false });                      // 座垫（顶 0.47）
-          P.box(X(xb + 0.05), 0.78, zc, 0.11, 0.64, w - 0.05, C.seat2, 0, 0, 0.1, 1, { ao: false });                   // 靠背（略往后仰）
-          P.box(X(xb + 0.04), 1.1, zc, 0.13, 0.15, w - 0.09, C.seat2, 0, 0, 0.1, 1, { ao: false });                   // 头枕
-          P.box(X(xb + 0.115), 1.07, zc, 0.012, 0.2, w - 0.14, C.head, 0, 0, 0.1, 1, { ao: false });                 // 白色头枕套
-          P.box(X(xb - 0.02), 0.82, zc, 0.012, 0.32, w - 0.16, C.tray, 0, 0, 0.1, 1, { ao: false });                 // 椅背上的小桌板
-          const seat = { wx: X(xb + 0.3), wy: 0, wz: zc, face: Math.PI / 2, eye: 1.24, free: true, world: true, id: this.seats.length, row: r + 1, letter: 'ABCDF'[(z0 < 0 ? 0 : 3) + i], stand: { x: X(xb + 0.42), z: AISLE_Z } };
+          P.box(X(xb + 0.05), 0.73, zc, 0.11, 0.54, w - 0.05, C.seat2, 0, 0, 0.1, 1, { ao: false });                   // 靠背（略往后仰）
+          P.box(X(xb + 0.045), 1.04, zc, 0.13, 0.13, w - 0.09, C.seat2, 0, 0, 0.1, 1, { ao: false });                   // 头枕
+          P.box(X(xb + 0.115), 1.01, zc, 0.012, 0.17, w - 0.14, C.head, 0, 0, 0.1, 1, { ao: false });                 // 白色头枕套
+          P.box(X(xb - 0.015), 0.76, zc, 0.012, 0.3, w - 0.16, C.tray, 0, 0, 0.1, 1, { ao: false });                 // 椅背上的小桌板
+          const seat = { wx: X(xb + 0.3), wy: 0, wz: zc, face: Math.PI / 2, eye: 1.42, free: true, world: true, id: this.seats.length, row: r + 1, letter: 'ABCDF'[(z0 < 0 ? 0 : 3) + i], stand: { x: X(xb + 0.42), z: AISLE_Z } };
           this.seats.push(seat);
         }
         for (let i = 0; i <= n; i++) P.slab(X(xb + 0.08), X(xb + 0.52), 0.56, 0.62, z0 + w * i - 0.025, z0 + w * i + 0.025, C.arm, { ao: false });   // 扶手
-        k.colSlab(X(xb - 0.08), X(xb + 0.22), 0, 1.2, z0, z1);
+        k.colSlab(X(xb - 0.08), X(xb + 0.22), 0, 1.1, z0, z1);
       }
     }
     // 几位坐着的乘客（烘焙进 paint 桶，不额外占 draw）
@@ -159,22 +145,52 @@ export class EastInterior {
       const xd = e * 11.2;
       P.slab(X(e > 0 ? EX - 0.06 : -EX), X(e > 0 ? EX : -EX + 0.06), 0, HC, -W, W, C.wall2, { ao: false }); k.colSlab(X(e > 0 ? EX - 0.06 : -EX - 0.4), X(e > 0 ? EX + 0.4 : -EX + 0.06), 0, HC, -W, W);
       P.slab(X(e > 0 ? EX - 0.07 : -EX + 0.06), X(e > 0 ? EX - 0.06 : -EX + 0.07), 0, 2.0, -0.45, 0.45, C.frame, { ao: false });
-      // 站台一侧：开着的门洞（墙板在门洞处挖开：重画一块门框 + 亮光）
-      P.slab(X(xd - 0.55), X(xd + 0.55), 0, 2.02, W - 0.065, W - 0.055, C.frame, { ao: false });
-      G.slab(X(xd - 0.48), X(xd + 0.48), 0, 1.98, W - 0.07, W - 0.065, hex('#EEF3F6'));
-      atlas.sign(X(xd), 1.0, W - 0.075, 0.96, 1.96, Math.PI, (c, pw, ph) => {   // 门外：站台（地砖、黄色盲道、雨棚柱）
-        const g = c.createLinearGradient(0, 0, 0, ph * 0.55); g.addColorStop(0, '#DADDE0'); g.addColorStop(1, '#ECEFF1'); c.fillStyle = g; c.fillRect(0, 0, pw, ph * 0.55);
-        c.fillStyle = '#B1B6BA'; c.fillRect(0, ph * 0.55, pw, ph * 0.45); c.fillStyle = '#F2C230'; c.fillRect(0, ph * 0.66, pw, ph * 0.05);
-        c.fillStyle = '#F6F6F6'; c.fillRect(pw * 0.62, ph * 0.08, pw * 0.08, ph * 0.47); c.fillStyle = '#9AA0A6'; c.fillRect(0, ph * 0.93, pw, ph * 0.07);
-      });
+      // 站台一侧：开着的车门是真的门洞（见上面的墙板）；没开的那扇画成关着的门
+      if (!EMU.doors.some(d => d.lx === xd)) {
+        P.slab(X(xd - 0.5), X(xd + 0.5), 0, 2.0, W - 0.065, W - 0.055, hex('#E3E6E8'), { ao: false });
+        P.slab(X(xd - 0.2), X(xd + 0.2), 1.1, 1.7, W - 0.07, W - 0.066, C.dark, { ao: false });
+        P.slab(X(xd - 0.005), X(xd + 0.005), 0, 2.0, W - 0.075, W - 0.07, C.frame, { ao: false });
+      }
       // 另一侧：关着的车门
       P.slab(X(xd - 0.5), X(xd + 0.5), 0, 2.0, -W + 0.055, -W + 0.065, hex('#E3E6E8'), { ao: false });
       P.slab(X(xd - 0.2), X(xd + 0.2), 1.1, 1.7, -W + 0.066, -W + 0.07, C.dark, { ao: false });
       P.slab(X(xd - 0.005), X(xd + 0.005), 0, 2.0, -W + 0.07, -W + 0.075, C.frame, { ao: false });
       atlas.sign(X(xd + e * 1.0), 1.75, -W + 0.08, 0.8, 0.3, 0, (c, pw, ph) => { c.fillStyle = '#1F6B4A'; c.fillRect(0, 0, pw, ph); c.fillStyle = '#FFFFFF'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `700 ${ph * 0.45}px sans-serif`; c.fillText('车门 Door', pw / 2, ph / 2); });
     }
+    this.outside(k, atlas);
     // 门厅里的扶手
-    for (const e of [-1, 1]) for (const dx of [-0.6, 0.6]) P.tube([X(e * 11.2 + dx), 0.9, W - 0.12], [X(e * 11.2 + dx), 1.8, W - 0.12], 0.035, hex('#C9CDD0'), 6);
+    for (const d of EMU.doors) for (const dx of [-0.6, 0.6]) P.tube([X(d.lx + dx), 0.9, W - 0.12], [X(d.lx + dx), 1.8, W - 0.12], 0.035, hex('#C9CDD0'), 6);
+  }
+  /**
+   * 车窗外：和街面那套站台对得上的真实几何（不是贴图）——车厢 local z = 世界 z − GZE.tz，local x = 世界 x − EMU.xc。
+   * 站台一侧（+z）：站台地面、白边 + 黄色盲道、雨棚柱、雨棚顶 + 灯带、后墙、进站口挡墙、站牌；另一侧：道床、挡土墙 + 绿栏杆、远处的楼和天空。
+   */
+  outside(k, atlas) {
+    const P = k.solid, G = k.glow, LZ = z => z - GZE.tz, LX = x => x - EMU.xc, XA = -60, XB = 60;
+    const e = LZ(GZE.edge), back = LZ(GZE.hz1 - 0.3), rz = LZ(-134.5);
+    k.g('pave').slab(X(XA), X(XB), -1.25, 0, e, back, hex('#B9BCBF'), { ao: false });
+    P.slab(X(XA), X(XB), 0.002, 0.01, e, e + 0.3, hex('#E8EAEA'), { ao: false });
+    k.g('tactile').slab(X(XA), X(XB), 0.002, 0.014, e + 0.75, e + 1.05, hex('#F2C230'), { ao: false });
+    for (let x = GZE.xw + 4; x < GZE.xe; x += 12) P.cyl(X(LX(x)), 3.3, LZ(-121.2), 0.5, 6.6, hex('#F2F3F3'), 12);
+    P.slab(X(XA), X(XB), 6.6, 6.9, rz, back, hex('#E3E5E6'), { ao: false });
+    for (const z of [-119, -124]) G.slab(X(XA), X(XB), 6.56, 6.6, LZ(z) - 0.2, LZ(z) + 0.2, hex('#FFF6E2'), { ao: false });
+    P.slab(X(XA), X(XB), 0, 10.5, back, back + 0.3, hex('#E9E6E1'), { ao: false });
+    P.slab(X(LX(-7.5)), X(LX(7.5)), 0, 6.6, LZ(BF.z - 0.3), LZ(BF.z), hex('#E9E6E1'), { ao: false });
+    const plate = (zh, en) => (c, pw, ph) => { c.fillStyle = '#1F4E9C'; c.fillRect(0, 0, pw, ph); c.fillStyle = '#FFFFFF'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `700 ${ph * 0.46}px sans-serif`; c.fillText(zh, pw / 2, ph * 0.4); c.font = `500 ${ph * 0.2}px sans-serif`; c.fillText(en, pw / 2, ph * 0.78); };
+    for (const [x, zh, en] of [[6, '广州东', 'Guangzhoudong'], [-18, '5 站台', 'Platform 5']]) {
+      atlas.sign(X(LX(x)), 3.2, LZ(-121.0) - 0.04, 3.4, 0.95, Math.PI, plate(zh, en));
+      for (const sx of [-1, 1]) P.tube([X(LX(x) + sx * 1.2), 3.67, LZ(-121.0)], [X(LX(x) + sx * 1.2), 6.6, LZ(-121.0)], 0.03, hex('#9AA1A8'), 6);
+    }
+    atlas.sign(X(LX(0)), 3.3, LZ(BF.z - 0.3) - 0.012, 7.2, 1.5, Math.PI, plate('5 站台', 'Platform 5'));
+    // 另一侧：道床、挡土墙 + 绿栏杆、远处的楼和天空
+    const zw = LZ(GZE.zs);
+    P.slab(X(XA), X(XB), -1.4, -1.3, zw, -1.75, hex('#8D867C'), { ao: false });
+    for (let x = XA; x < XB; x += 0.65) P.box(X(x), -1.25, -4.5, 0.24, 0.1, 2.6, hex('#6E5B4A'), 0, 0, 0, 1, { ao: false });
+    for (const s of [-1, 1]) P.slab(X(XA), X(XB), -1.2, -1.08, -4.5 + s * 0.717 - 0.04, -4.5 + s * 0.717 + 0.04, hex('#9EA4A9'), { ao: false });
+    P.slab(X(XA), X(XB), -1.4, 2.2, zw - 0.5, zw, hex('#C9C5BC'), { ao: false });
+    for (let x = XA; x < XB; x += 2.5) P.box(X(x), 2.8, zw - 0.25, 0.06, 1.2, 0.06, hex('#3E6B4E'), 0, 0, 0, 1, { ao: false });
+    P.slab(X(XA), X(XB), 3.35, 3.42, zw - 0.3, zw - 0.2, hex('#3E6B4E'), { ao: false });
+    atlas.quad(X(0), 12, -45, 200, 34, 0, atlas.draw(200, 34, paintBackdrop, 110));
   }
   setEnabled(v) { this.kit.root.setEnabled(v); this.active = v; }
   /** 出门：走到站台一侧开着的车门口 */
