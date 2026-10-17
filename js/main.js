@@ -205,7 +205,8 @@ export async function start() {
       if (G.aboard || G.inTunnel) metroL = 1;
       else if (hallKind) metroL = 0;
       else { const u = Math.max(0, Math.min(1, (p.y - (YC + 1)) / (-0.4 - (YC + 1)))); streetL = u * u * (3 - 2 * u); metroL = 1 - streetL; }
-      Audio.setEnv({ metro: metroL, street: streetL, restaurant: hallKind === 'restaurant' ? 1 : 0, sub: G.aboard || G.inTunnel ? 'train' : G.zone.kind === 'platform' ? 'platform' : 'concourse' }); }
+      const sm = !hallKind && G.station && G.station.sm ? Math.max(0, Math.min(1, (-78 - p.z) / 14)) : 0;   // 沙面：过了沙基涌，车流声轻下去、榕树上有鸟叫
+      Audio.setEnv({ metro: metroL, street: streetL * (1 - 0.65 * sm), birds: streetL * sm, restaurant: hallKind === 'restaurant' ? 1 : 0, sub: G.aboard || G.inTunnel ? 'train' : G.zone.kind === 'platform' ? 'platform' : 'concourse' }); }
     if (G.zone.kind === 'platform' && !G.welcomed && !G.aboard) { G.welcomed = true; if (!Audio.isAnnouncing()) Ann.welcome(G.code); }
     // 出了车站（街面 / 纪念堂大会堂）：站内广播（欢迎 / 进站 / 关门）和字幕立刻停，不再跟着人走到街上
     if ((G.zone.kind === 'street' || G.zone.kind === 'hall') && !G.aboard && Audio.isAnnouncing()) Audio.cancelAnnouncements();

@@ -36,7 +36,7 @@ let zone = 'none', ducked = false;
 const queue = []; let pumping = false, current = null, epoch = 0;
 let train = { speed: 0, inside: true, braking: false, near: 1 }, lastTrainAt = -1;
 // 声音分区：metro 地铁声 0..1（站内 1，出口楼梯上渐弱，街面 0）；street 街面车流；restaurant 饭店嘈杂；sub 站内哪种环境床
-const env = { metro: 1, street: 0, restaurant: 0, sub: 'concourse' };
+const env = { metro: 1, street: 0, restaurant: 0, birds: 0, sub: 'concourse' };   // birds：沙面榕树下的鸟叫（合成）
 const steps = { count: 0, last: null, times: [] };
 const log = { played: [], announced: [], fallbacks: [], errors: [] };
 
@@ -195,7 +195,7 @@ function stopBeds() {
   Object.keys(loops).forEach(n => retire(loops, n, true));
   retired.splice(0).forEach(it => { if (it.timer) clearInterval(it.timer); try { it.source.stop(); } catch (_) {} });
 }
-const ZONE_LEVEL = { street: 0.4, concourse: 0.6, platform: 0.7, train: 0.85, restaurant: 0.5 };
+const ZONE_LEVEL = { street: 0.4, concourse: 0.6, platform: 0.7, train: 0.85, restaurant: 0.5, birds: 0.5 };
 const FADE = 0.3;   // 时间常数：约 1 秒基本淡完
 /** 共享白噪声（2 秒，每个上下文一份）：脚步声和饭店嘈杂都从里面随机位置取 */
 let noise = null;
@@ -240,11 +240,31 @@ function restaurantBed(parent) {
   src.onended = () => { oscs.forEach(o => { try { o.stop(); } catch (_) {} }); const i = retired.indexOf(it); if (i !== -1) retired.splice(i, 1); try { src.disconnect(); g.disconnect(); } catch (_) {} };
   return it;
 }
+/** 鸟叫（合成，不要素材）：树上的小鸟，随机几声短促的“啾啾”（正弦扫频 2.5–5 kHz），偶尔一串 */
+function birdsBed(parent) {
+  const g = ctx.createGain(); g.gain.value = 0; g.connect(parent);
+  const it = { gain: g, synth: true, source: { stop() { clearInterval(it.timer); setTimeout(() => { const i = retired.indexOf(it); if (i !== -1) retired.splice(i, 1); try { g.disconnect(); } catch (_) {} }, 1500); } } };
+  const chirp = () => {
+    if (!canPlay() || ctx.state !== 'running') return;
+    const pan = ctx.createStereoPanner ? ctx.createStereoPanner() : null; if (pan) { pan.pan.value = Math.random() * 1.6 - 0.8; pan.connect(g); }
+    const out = pan || g, n = 1 + Math.floor(Math.random() * (Math.random() < 0.3 ? 6 : 3)), f0 = 2500 + Math.random() * 2200, v = 0.05 + Math.random() * 0.07, dn = 0.06 + Math.random() * 0.07;
+    let t = ctx.currentTime + 0.02;
+    for (let i = 0; i < n; i++) {
+      const o = ctx.createOscillator(), e = ctx.createGain(), f = f0 * (0.9 + Math.random() * 0.2), up = Math.random() < 0.6;
+      o.frequency.setValueAtTime(up ? f * 0.8 : f * 1.15, t); o.frequency.exponentialRampToValueAtTime(up ? f * 1.2 : f * 0.75, t + dn);
+      e.gain.setValueAtTime(0, t); e.gain.linearRampToValueAtTime(v, t + 0.01); e.gain.exponentialRampToValueAtTime(0.0003, t + dn);
+      o.connect(e); e.connect(out); o.start(t); o.stop(t + dn + 0.02); t += dn + 0.03 + Math.random() * 0.06;
+    }
+  };
+  it.timer = setInterval(() => { if (Math.random() < 0.3) chirp(); }, 280);
+  return it;
+}
 function bedWant() {
   const w = {};
   if (env.metro > 0.002) w[env.sub] = env.metro * (ZONE_LEVEL[env.sub] ?? 0.6);
   if (env.street > 0.002) w.street = env.street * ZONE_LEVEL.street;
   if (env.restaurant > 0.002) w.restaurant = env.restaurant * ZONE_LEVEL.restaurant;
+  if (env.birds > 0.002) w.birds = env.birds * ZONE_LEVEL.birds;
   return w;
 }
 /** 按 env 调各条环境床和地铁总闸（淡入淡出约 1 秒） */
@@ -255,7 +275,7 @@ function updateZone() {
   Object.keys(ambient).forEach(n => { if (!(n in want)) retire(ambient, n); });
   for (const [name, level] of Object.entries(want)) {
     if (ambient[name]) { smooth(ambient[name].gain.gain, level, FADE); continue; }
-    if (name === 'restaurant') { ambient[name] = restaurantBed(buses.ambience); smooth(ambient[name].gain.gain, level, FADE); continue; }
+    if (name === 'restaurant' || name === 'birds') { ambient[name] = (name === 'birds' ? birdsBed : restaurantBed)(buses.ambience); smooth(ambient[name].gain.gain, level, FADE); continue; }
     const id = 'ambience.' + name;
     ensureBuffer(id).then(() => {
       if (!canPlay() || ambient[name]) return;
@@ -268,7 +288,7 @@ function updateZone() {
 /** 声音分区：{ metro 0..1, street 0..1, restaurant 0..1, sub: 'concourse'|'platform'|'train' }；每帧调用也可以（变化小于 0.01 不动） */
 export function setEnv(o) {
   let ch = false;
-  for (const k of ['metro', 'street', 'restaurant']) if (o[k] !== undefined) { const v = clamp(o[k], 0, 1), snap = v < 0.01 ? 0 : v > 0.99 ? 1 : v; if (Math.abs(snap - env[k]) >= 0.01 || (snap !== env[k] && (snap === 0 || snap === 1))) { env[k] = snap; ch = true; } }
+  for (const k of ['metro', 'street', 'restaurant', 'birds']) if (o[k] !== undefined) { const v = clamp(o[k], 0, 1), snap = v < 0.01 ? 0 : v > 0.99 ? 1 : v; if (Math.abs(snap - env[k]) >= 0.01 || (snap !== env[k] && (snap === 0 || snap === 1))) { env[k] = snap; ch = true; } }
   if (o.sub && o.sub !== env.sub) { env.sub = o.sub; ch = true; }
   if (ch) { zone = env.metro > 0.5 ? env.sub : env.restaurant > 0.5 ? 'restaurant' : env.street > 0.5 ? 'street' : 'none'; updateZone(); }
 }

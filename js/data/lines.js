@@ -58,7 +58,7 @@ export const STATIONS = {
   kk: { zh: '坑口', en: 'Kengkou', x: [] },
   hdw: { zh: '花地湾', en: 'Huadiwan', x: [] },
   fc: { zh: '芳村', en: 'Fangcun', x: [11, 22] },
-  hs: { zh: '黄沙', en: 'Huangsha', x: [6] },
+  hs: { zh: '黄沙', en: 'Huangsha', x: [6], signature: 'shamian' },
   csl: { zh: '长寿路', en: 'Changshou Lu', x: [] },
   cjc: { zh: '陈家祠', en: 'Chenjiaci', x: [8], signature: 'clan', exits: ['C', 'D'], exitMain: 'C' },
   xmk: { zh: '西门口', en: 'Ximenkou', x: [] },
