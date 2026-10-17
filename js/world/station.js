@@ -20,6 +20,7 @@ import { buildNjs, WM, NJS } from './njs.js';
 import { buildCjc, CJC } from './cjc.js';
 import { buildWy, WY } from './wy.js';
 import { buildSm, SM } from './sm.js';
+import { buildGze, updateGze, GZE } from './gze.js';
 import { Crowd, randomLook, preseed, archetypeLook } from './people.js';
 import { FONT, FONT_EN, roundRect } from './kit.js';
 import { drawLineCanvas, networkSVG } from '../ui/netmap.js';
@@ -108,10 +109,11 @@ export class Station {
     // 地面：人行道花岗岩铺装（站口楼梯处开洞）
     k.floorWithHoles(-60, 60, sig === 'shamian' ? SM.z0 : -90, 40, -0.8, 0, hex('#D9D6D0'), [[-3.6, 3.6, -36, -26]], true, 'pave');   // 沙面：z -82 往南是沙基涌（小石桥过去）
     // 纪念堂站：园区在东边（x 16..128），地面往东、往北扩
-    const XE = sig === 'sysy' ? 134 : 60, ZN = sig === 'sysy' ? 82 : 40, ZS = sig === 'redwall' ? WM.ZS : sig === 'rams' ? -132 : sig === 'shamian' ? SM.zEnd : -90;
+    const XE = sig === 'sysy' ? 134 : 60, ZN = sig === 'sysy' ? 82 : 40, ZS = sig === 'redwall' ? WM.ZS : sig === 'rams' ? -132 : sig === 'shamian' ? SM.zEnd : sig === 'east' ? GZE.zs - 1.5 : -90;
     // 农讲所站：往南扩出德政中路小巷 + 文明路糖水街
     if (sig === 'shamian') k.floorWithHoles(-60, 60, ZS, SM.z1, -0.8, 0, hex('#D9D6D0'), [], true, 'pave');   // 沙面：沙基涌南边的沙面大街
     if (sig === 'redwall' || sig === 'rams') k.floorWithHoles(-60, 60, ZS, -90, -0.8, 0, hex('#D9D6D0'), [], true, 'pave');   // 越秀公园：马路南边是五羊石像的小山岗
+    if (sig === 'east') k.floorWithHoles(-60, 60, GZE.hz1 - 0.3, -90, -0.8, 0, hex('#D9D6D0'), [], true, 'pave');   // 广州东站：马路南边是火车站候车大厅（站台、轨道见 gze.js）
     if (sig === 'sysy') { k.floorWithHoles(60, XE, -90, ZN, -0.8, 0, hex('#D9D6D0'), [], true, 'pave'); k.floorWithHoles(-60, 60, 40, ZN, -0.8, 0, hex('#D9D6D0'), [], true, 'pave'); k.g('grass').slab(PARK.x0, PARK.x1, 0, 0.05, PARK.z1 + 0.4, ZN, hex('#FFFFFF'), { ao: false }); }
     // 马路（沥青 + 标线 + 斑马线 + 路缘石）
     k.g('asphalt').slab(-60, XE, 0, 0.012, -78, -64, hex('#9A9CA0'), { ao: false });
@@ -156,7 +158,7 @@ export class Station {
     const lowH = h => sig === 'sysy' ? Math.min(h, 9) : h;
     for (let i = 0; i < 6; i++) { const x = -56 + i * 22.4; if (sig === 'sysy' && x > -14) continue; bld(x, sig === 'sysy' ? 50 : 34, 18, 9, lowH(12 + (i * 7) % 15), bcol[i], { ...SHOPS[i % SHOPS.length], n: [0, -1] }); }
     for (const sx of [-1, 1]) for (let i = 0; i < 4; i++) { const z = -80 + i * 28; if (z > -66 && z < -60) continue; if (sig === 'sysy' && sx > 0) continue; if (sig === 'clan' && sx > 0 && z > -66 && z < -30) continue; if (sig === 'shamian' && z < -70) continue; bld(sx * 56, z, 6, 18, 12 + ((i + (sx > 0 ? 2 : 0)) * 5) % 13, bcol[(i + (sx > 0 ? 3 : 0)) % 7], { ...SHOPS[(i + 2 + (sx > 0 ? 3 : 0)) % SHOPS.length], n: [-sx, 0] }); }
-    for (let i = 0; i < (sig === 'sysy' ? 8 : 5); i++) if (!(sig === 'redwall' && (i === 3 || i === 4)) && !(sig === 'rams' && i >= 1 && i <= 3) && sig !== 'shamian') bld(-48 + i * 24, -86, 18, 6, lowH(15 + (i * 4) % 12), bcol[(i + 2) % 7], { ...SHOPS[(i + 4) % SHOPS.length], n: [0, 1] });
+    for (let i = 0; i < (sig === 'sysy' ? 8 : 5); i++) if (!(sig === 'redwall' && (i === 3 || i === 4)) && !(sig === 'rams' && i >= 1 && i <= 3) && sig !== 'shamian' && sig !== 'east') bld(-48 + i * 24, -86, 18, 6, lowH(15 + (i * 4) % 12), bcol[(i + 2) % 7], { ...SHOPS[(i + 4) % SHOPS.length], n: [0, 1] });
     // 行人
     const C = this.crowd;
     // 站着的行人不与出生点 / 取景点（各留 1.5 米）、长椅、垃圾桶、路灯和彼此穿插：随机位置被占就按固定顺序就近挪开（不额外消耗随机数）
@@ -175,7 +177,7 @@ export class Station {
     // 左侧人行道绕圈的行人：原路线 x=-7.2/-5.5 正好穿过东山口取景点，外移到路灯和草地之间
     C.walker([[-10.3, -40], [-10.3, -58], [-11.7, -58], [-11.7, -40]], 0, randomLook({}), 1.0);
     // 招牌站：地面地标
-    const avoid = (x, z) => (sig === 'shamian' && z < -79) || (sig === 'rams' && Math.abs(x - WY.cx) < WY.R0 + 3 && z < -80) || (sig === 'clan' && x > CJC.x0 - 3 && x < CJC.x1 + 3 && z > -64 && z < -30) || (sig === 'sysy' && x > 12 && z > -62) || (sig === 'redwall' && x < -12 && z > -62 && z < 4) || (sig === 'park' && x > 4 && x < 26 && z > -54 && z < -30) || (sig === 'park' && Math.hypot(x + 24, z + 40) < 7);
+    const avoid = (x, z) => (sig === 'shamian' && z < -79) || (sig === 'east' && z < -79) || (sig === 'rams' && Math.abs(x - WY.cx) < WY.R0 + 3 && z < -80) || (sig === 'clan' && x > CJC.x0 - 3 && x < CJC.x1 + 3 && z > -64 && z < -30) || (sig === 'sysy' && x > 12 && z > -62) || (sig === 'redwall' && x < -12 && z > -62 && z < 4) || (sig === 'park' && x > 4 && x < 26 && z > -54 && z < -30) || (sig === 'park' && Math.hypot(x + 24, z + 40) < 7);
     if (sig === 'park') {
       for (let i = 0; i < 14; i++) treeSpots.push([(D.rnd() < 0.5 ? -1 : 1) * (15 + D.rnd() * 10), -24 + D.rnd() * 50]);
       k.g('pave').cyl(-24, 0.3, -40, 7.4, 0.6, hex('#CFC8BC'), 32); P.cyl(-24, 0.55, -40, 6.6, 0.12, hex('#BDB6A8'), 32, 0, 0, 0, undefined, { ao: false });
@@ -241,6 +243,13 @@ export class Station {
       // 越秀公园：B1 出口往南过马路，五羊石像的小山岗 + 石阶（单独的 Kit，只在地面上启用；见 js/world/wy.js）
       this.park = new Kit(this.scene, 'park-' + this.code, k.root);
       this.wy = buildWy(this.park);
+    } else if (sig === 'east') {
+      // 广州东站：出站往南过马路就是火车站（候车大厅、检票闸机、站台上停着的复兴号；单独的 Kit，只在地面上启用；见 js/world/gze.js）
+      this.park = new Kit(this.scene, 'park-' + this.code, k.root);
+      this.gze = buildGze(this.park, this);
+      for (const n of this.gze.npcs) { const L = randomLook(n.look); this.crowd.add(n.x, n.seatY - (L.kid ? 0.6 : 0.86) * L.scale, n.z, n.ry, L, n.mode).sh.position.y = 0.012; }
+      // 出站口上方：「火车站 Railway Station」导向牌（往前过马路）
+      k.sign(0, 3.0, -37.2, { kind: 'dir', w: 4.2, h: 0.62, zh: '火车站', en: 'Railway Station', arrow: 'up', face: 0 });
     } else if (sig === 'shamian') {
       // 黄沙站：D 出口往南过马路、过沙基涌上的小石桥，就是沙面大街（单独的 Kit，只在地面上启用；见 js/world/sm.js）
       this.park = new Kit(this.scene, 'park-' + this.code, k.root);
@@ -928,6 +937,7 @@ export class Station {
     }
     for (const m of this.mv) m.update(dt, cam, this.events, player);
     if (this.park) this.parkUpdate(dt, player, cam);
+    if (this.gze) updateGze(this.gze, dt, player, Audio);
     this.crowd.update(dt, p);
     for (const pd of this.pids) { pd.t -= dt; if (pd.t <= 0) { pd.t = 1; this.drawPids(pd, metro); } }
   }

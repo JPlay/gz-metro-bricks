@@ -25,6 +25,7 @@ import { Discovery } from './game/discovery.js';
 import { installBrother } from './game/brother-main.js';
 import { HotelCtl } from './game/hotel.js';
 import { ClanCtl } from './game/clan.js';
+import { EastCtl } from './game/east.js';
 const B = window.BABYLON;
 
 class Events { constructor() { this.h = {}; } on(n, f) { (this.h[n] = this.h[n] || []).push(f); } emit(n, d) { (this.h[n] || []).forEach(f => f(d)); } }
@@ -157,14 +158,16 @@ export async function start() {
   window.addEventListener('resize', () => engine.resize());
 
   // —— 主循环
-  let stepAcc = 0, hotel = null, clan = null;
+  let stepAcc = 0, hotel = null, clan = null, east = null;
   scene.onBeforeRenderObservable.add(() => {
     const dt = Math.min(G.dtMax || 0.05, engine.getDeltaTime() / 1000);
     // 自动驾驶（测试用）
     if (G.auto) {
       const a = G.auto, t = a.pts[a.i], p = player.position, dx = t[0] - p.x, dz = t[1] - p.z, d = Math.hypot(dx, dz);
       a.time += dt;
-      if (player.frame) { input.virtual = null; G.auto = null; a.resolve({ ok: true, framed: true }); }  // 到达机位接管镜头时停下
+      const warped = a.lp && Math.hypot(p.x - a.lp[0], p.z - a.lp[1]) > 20; a.lp = [p.x, p.z];
+      if (warped) { input.virtual = null; G.auto = null; a.resolve({ ok: true, warped: true }); }   // 走进 / 走出独立内景（车厢、陈家祠…）被传送了：停下
+      else if (player.frame) { input.virtual = null; G.auto = null; a.resolve({ ok: true, framed: true }); }  // 到达机位接管镜头时停下
       else if (d < 0.35) { a.i++; a.time = 0; if (a.i >= a.pts.length) { input.virtual = null; G.auto = null; a.resolve({ ok: true }); } }
       else if (a.time > 12) { input.virtual = null; G.auto = null; a.resolve({ ok: false, stuckAt: [p.x, p.y, p.z], target: t }); }
       else { player.yaw = Math.atan2(dx, dz); input.virtual = { x: 0, y: d < 1 ? 0.5 : 1, run: !!a.run && d > 2 }; }
@@ -177,7 +180,7 @@ export async function start() {
     player.updateCamera(dt, scene);
     G.station.update(dt, player, cam, Audio, metro);
     // 动作按钮：车厢里优先“坐下 / 起身”，否则售票机 / 闸机
-    const hotelAct = hotel ? hotel.update(dt) : null; if (clan) clan.update(dt);
+    const hotelAct = hotel ? hotel.update(dt) : null; if (clan) clan.update(dt); if (east) east.update(dt);
     const seatAct = seats.update(), ticketAct = tickets.update(dt, G.station, player), socialAct = social.update(dt);
     hud.action(seatAct || hotelAct || ticketAct || socialAct);
     // 车厢里的乘客动画（只动玩家所在 / 附近的车）
@@ -212,12 +215,14 @@ export async function start() {
     G.annAboard = G.aboard;
     // 声音分区：地铁声只在车站里（出口楼梯上随高度渐弱，到街面为 0）；街面车流；饭店嘈杂；酒店 / 纪念堂 / 陈家祠安静
     // 室内：酒店 / 饭店（饭店内景在地下 y≈-30，zoneOf 看不出来，按控制器判断）/ 陈家祠 / 纪念堂大会堂
-    const hallKind = hotel && hotel.cur ? 'hotel' : G.brother && G.brother.food && G.brother.food.cur ? 'restaurant' : clan && clan.cur ? 'clan' : inHall ? 'sysy' : null;
+    const hallKind = hotel && hotel.cur ? 'hotel' : G.brother && G.brother.food && G.brother.food.cur ? 'restaurant' : clan && clan.cur ? 'clan' : east && east.cur ? 'emu' : inHall ? 'sysy' : null;
     { let metroL = 1, streetL = 0;
       if (G.aboard || G.inTunnel) metroL = 1;
       else if (hallKind) metroL = 0;
       else { const u = Math.max(0, Math.min(1, (p.y - (YC + 1)) / (-0.4 - (YC + 1)))); streetL = u * u * (3 - 2 * u); metroL = 1 - streetL; }
-      const sm = !hallKind && G.station && G.station.sm ? Math.max(0, Math.min(1, (-78 - p.z) / 14)) : 0;   // 沙面：过了沙基涌，车流声轻下去、榕树上有鸟叫
+      const sm = !hallKind && G.station && G.station.sm ? Math.max(0, Math.min(1, (-78 - p.z) / 14)) : 0;
+      const ez = !hallKind && G.station && G.station.gze ? Math.max(0, Math.min(1, (-86 - p.z) / 5)) : 0;   // 广州东站：进了候车大厅，街上的车流声轻下去
+      streetL *= 1 - 0.7 * ez;   // 沙面：过了沙基涌，车流声轻下去、榕树上有鸟叫
       Audio.setEnv({ metro: metroL, street: streetL * (1 - 0.65 * sm), birds: streetL * sm, restaurant: hallKind === 'restaurant' ? 1 : 0, sub: G.aboard || G.inTunnel ? 'train' : G.zone.kind === 'platform' ? 'platform' : 'concourse' }); }
     if (G.zone.kind === 'platform' && !G.welcomed && !G.aboard) { G.welcomed = true; if (!Audio.isAnnouncing()) Ann.welcome(G.code); }
     // 出了车站（街面 / 纪念堂大会堂）：站内广播（欢迎 / 进站 / 关门）和字幕立刻停，不再跟着人走到街上
@@ -228,7 +233,7 @@ export async function start() {
     discovery.update({ code: G.code, zone: G.zone, station: G.station, dt });
     // 脚步声
     // 脚步声：按实际水平位移算速度（被挡住、站着不动就没有脚步），步幅随速度变大；地面：站内地砖 / 街面石板 / 地毯（饭店、酒店）/ 木地板（纪念堂）
-    { const surface = hallKind === 'hotel' || hallKind === 'restaurant' ? 'carpet' : hallKind === 'sysy' ? 'wood' : hallKind === 'clan' || G.zone.kind === 'street' ? 'stone' : 'tile';
+    { const surface = hallKind === 'hotel' || hallKind === 'restaurant' ? 'carpet' : hallKind === 'sysy' ? 'wood' : hallKind === 'emu' ? 'carpet' : hallKind === 'clan' || G.zone.kind === 'street' ? 'stone' : 'tile';
       const lp = G.stepPos || (G.stepPos = p.clone()), v = dt > 0 ? Math.hypot(p.x - lp.x, p.z - lp.z) / dt : 0; lp.copyFrom(p);
       const stride = Math.max(0.65, Math.min(1.05, 0.6 + 0.08 * v));
       if (player.grounded && !G.aboard && !player.seat && v > 0.35 && v < 15) { stepAcc += v * dt; if (stepAcc >= stride) { stepAcc -= stride; Audio.footstep({ surface, k: Math.min(1.2, 0.75 + v * 0.08) }); } }
@@ -283,6 +288,8 @@ export async function start() {
   hotel = new HotelCtl({ scene, M, player, hud, seats, Audio, events, getStation: () => G.station, getCode: () => G.code });
   // 陈家祠头进（陈家祠站 C 出口）：见 js/game/clan.js
   clan = new ClanCtl({ scene, M, player, hud, seats, Audio, events, getStation: () => G.station });
+  // 广州东站：站台上停着的复兴号 5 号车厢（二等座）：见 js/game/east.js
+  east = new EastCtl({ scene, M, player, hud, seats, Audio, events, getStation: () => G.station });
   const brother = installBrother({ scene, cam, M, player, R, hud, seats, social, bubbles, Audio, events, input, getStation: () => G.station, getCode: () => G.code }); G.brother = brother;
   window.__game = {
     state: () => ({
@@ -292,7 +299,7 @@ export async function start() {
       babylon: { version: B.Engine.Version, source: window.__babylonSource, attempts: window.__babylonAttempts },
       drawCalls: (engine._drawCalls && engine._drawCalls.current) ?? null, activeMeshes: scene.getActiveMeshes().length, depthBits: depthBits(), minZ: cam.minZ, gates: G.station.gates.map(g => +g.f.toFixed(2)),
       security: G.station.security.flash > 0, probes: R.probes.length, atlas: G.station.kit.atlas ? { y: G.station.kit.atlas.y + G.station.kit.atlas.row, overflow: G.station.kit.atlas.overflow } : null, audio: Audio.getState(),
-      ticket: tickets.info(), seat: seats.info(), social: social.info(), discover: discovery.info(), hotel: hotel ? hotel.info() : null, clan: clan ? clan.info() : null, hall: G.station && G.station.interior ? G.station.interior.info() : null, mapOpen: !!G.mapOpen, attrCard: G.attrCard || null, act: hud.act ? { id: hud.act.id, label: hud.act.label } : null
+      ticket: tickets.info(), seat: seats.info(), social: social.info(), discover: discovery.info(), hotel: hotel ? hotel.info() : null, clan: clan ? clan.info() : null, east: east ? east.info() : null, hall: G.station && G.station.interior ? G.station.interior.info() : null, mapOpen: !!G.mapOpen, attrCard: G.attrCard || null, act: hud.act ? { id: hud.act.id, label: hud.act.label } : null
     }),
     teleport: (x, y, z, yaw) => player.spawn(x, y, z, yaw ?? player.yaw),
     setMove: (x, y, run) => { input.virtual = (x || y) ? { x, y, run } : null; },
@@ -301,6 +308,6 @@ export async function start() {
     autopilot: (pts, run) => new Promise(resolve => { G.auto = { pts, i: 0, time: 0, resolve, run }; }),
     call: (line, step) => metro.call(line, step), openMap, closeMap, mapZoom: mapPZ,
     // 测试：软件渲染只有几帧每秒，放宽单帧步长上限让游戏时间接近墙钟（默认 0.05）
-    setDtMax: v => { G.dtMax = v; }, act: doAct, Audio, brother, hotel, clan, tickets, seats, social, discovery, bubbles, metro, player, scene, engine, events, render: R, get station() { return G.station; }
+    setDtMax: v => { G.dtMax = v; }, act: doAct, Audio, brother, hotel, clan, east, tickets, seats, social, discovery, bubbles, metro, player, scene, engine, events, render: R, get station() { return G.station; }
   };
 }

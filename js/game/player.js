@@ -50,7 +50,8 @@ export class Player {
   }
   standUp() {
     const { train, seat } = this.seat, r = train.root.position; this.seat = null; this.lying = false; this.model.rotation.x = 0;
-    if (seat.world) { this.position.set(seat.wx + Math.sin(seat.face) * (seat.out || 0.5), seat.wy + 0.05, seat.wz + Math.cos(seat.face) * (seat.out || 0.5)); this.groundY = seat.wy; }
+    if (seat.world && seat.stand) { this.position.set(seat.stand.x, seat.wy + 0.05, seat.stand.z); this.groundY = seat.wy; }   // 车厢座位：起身站回过道
+    else if (seat.world) { this.position.set(seat.wx + Math.sin(seat.face) * (seat.out || 0.5), seat.wy + 0.05, seat.wz + Math.cos(seat.face) * (seat.out || 0.5)); this.groundY = seat.wy; }
     else { this.position.set(r.x + seat.x, r.y + 0.05, r.z + seat.sd * 0.5); this.groundY = r.y; }
     this.vy = 0; this.grounded = true; this.collider.computeWorldMatrix(true);
   }
@@ -151,7 +152,7 @@ export class Player {
       this.eyeY = this.eyeY === undefined ? p.y : this.eyeY + (p.y - this.eyeY) * Math.min(1, dt * 18);
       if (Math.abs(this.eyeY - p.y) > 0.6) this.eyeY = p.y;
       // 坐下时第一人称眼高 ≈ 车厢地板上 1.1m（从脚底基准换算：座面高 − 髋高 + 眼高）
-      const eye = this.seat ? EYE_SIT - SEAT_HIP + this.hipH() : EYE;
+      const eye = this.seat ? (this.seat.seat.eye || EYE_SIT) - SEAT_HIP + this.hipH() : EYE;   // 高铁座位：眼高 1.24，越过前排头枕看到车厢前方
       this.eyeOff = this.eyeOff === undefined ? eye : this.eyeOff + (eye - this.eyeOff) * Math.min(1, dt * 6);
       // 楼座栏板前往下看：镜头探身（抬高 + 往前越过栏板），栏板不再挡住半个画面
       const lt = !this.seat && this.leanFn ? this.leanFn(p) * Math.max(0, Math.min(1, (this.pitch - 0.15) / 0.25)) : 0;
