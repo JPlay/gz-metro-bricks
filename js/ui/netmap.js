@@ -111,9 +111,9 @@ const YOU_AT = { hs: 'L', tyzx: 'B', gzdz: 'L', lsly: 'U' };
 export const ICON_R = 18, ICON_FS = 18;
 export const NET_DEBUG = { obst: null };   // 排查用：上一次画图时图标要躲开的外框
 const ICON_CAND = {   // [dx, dy, 画引线?]
-  sysy: [[60, 0], [68, 0], [58, -10], [66, 30], [-150, -12], [-160, -20], [-176, -20]],
-  rams: [[-152, 0], [-172, -10], [-190, -10], [130, -6, true], [66, -40, true], [130, -40, true], [-150, -50, true]],
-  njs: [[82, 32], [86, 40], [84, 50], [100, 40], [130, 70, true], [40, -92, true], [82, 100, true]],
+  sysy: [[60, 0], [68, 0], [58, -10], [66, 30], [76, -20], [80, -24], [90, -20], [60, -70, true], [70, -70, true], [-150, -12], [-160, -20], [-176, -20]],
+  rams: [[-164, 0], [-172, -10], [-190, -10], [-210, 0], [60, 20], [60, 30], [130, -6, true], [66, -40, true], [130, -40, true], [-150, -50, true]],
+  njs: [[82, 32], [86, 40], [84, 50], [100, 40], [70, 60], [92, 30], [94, 28], [90, 60, true], [-10, -60], [-20, -80], [-40, -80], [0, -90], [130, 70, true], [40, -92, true], [40, -100, true], [60, -90, true], [82, 100, true]],
   hotel: [[82, 96], [84, 112], [140, 32], [86, 104], [140, 96], [130, 134, true], [190, 96, true]],
   cjc: [[0, 46], [-40, 46], [40, 46], [0, -100], [-40, -100]],
   shamian: [[0, -100], [-50, -60], [-52, 0], [-52, 40]],
@@ -121,20 +121,30 @@ const ICON_CAND = {   // [dx, dy, 画引线?]
 const RING = []; for (const d of [56, 72, 90, 110, 130]) for (let a = 0; a < 16; a++) RING.push([Math.round(Math.cos(a / 16 * Math.PI * 2) * d), Math.round(Math.sin(a / 16 * Math.PI * 2) * d)]);
 const hit = (a, b) => a[0] < b[0] + b[2] && b[0] < a[0] + a[2] && a[1] < b[1] + b[3] && b[1] < a[1] + a[3];
 /** 文字的大致外框（中文每字约 1 个字号宽） */
-const textRect = (x, y, t, fs, anc) => { const w = [...String(t)].length * fs * 0.96, x0 = anc === 'end' ? x - w : anc === 'start' ? x : x - w / 2; return [x0 - 1, y - fs * 0.9, w + 2, fs * 1.1]; };
+const textRect = (x, y, t, fs, anc) => { const w = [...String(t)].length * fs + 6, x0 = anc === 'end' ? x - w : anc === 'start' ? x : x - w / 2; return [x0 - 1, y - fs * 1.15, w + 2, fs * 1.5]; };
 const segRects = (x0, y0, x1, y1, hw) => { const n = Math.max(1, Math.ceil(Math.hypot(x1 - x0, y1 - y0) / (hw * 1.5))), out = []; for (let i = 0; i <= n; i++) { const t = i / n, x = x0 + (x1 - x0) * t, y = y0 + (y1 - y0) * t; out.push([x - hw, y - hw, hw * 2, hw * 2]); } return out; };
 export const iconFs = name => [...name].length >= 5 ? ICON_FS - 2 : ICON_FS;   // 名字长（中山纪念堂）字小一号
 export const iconRects = (x, y, name) => [[x - ICON_R - 3, y - ICON_R - 3, ICON_R * 2 + 6, ICON_R * 2 + 6], textRect(x, y + ICON_R + 19, name, iconFs(name), 'middle')];
 /** 挑位置：obstacles = 已有元素外框；返回每个景点 { ...a, x, y, leader } */
-export function placeIcons(pos, obstacles, soft = []) {
+export function placeIcons(pos, obstacles, soft = []) {   // 按默认顺序摆；有图标没地方放时，换成纪念堂最后摆再试一次
+  let res = null;
+  for (const order of [ATTRACTIONS, [...ATTRACTIONS.filter(a => a.code !== 'jnt'), ...ATTRACTIONS.filter(a => a.code === 'jnt')]]) {
+    const ob = obstacles.slice(), out = placeOrder(order, pos, ob, soft);
+    if (!res || !out.some(a => a.forced)) res = { out, ob };
+    if (!out.some(a => a.forced)) break;
+  }
+  obstacles.length = 0; obstacles.push(...res.ob);
+  return ATTRACTIONS.map(a => res.out.find(b => b.id === a.id));
+}
+function placeOrder(order, pos, obstacles, soft) {
   const out = [];
-  for (const a of ATTRACTIONS) {
+  for (const a of order) {
     const [sx, sy] = pos[a.code];
     let best = null;
     for (const avoid of [[...obstacles, ...soft], obstacles]) { if (best) break;   // 先连“你在这里”标签一起躲；实在没地方就只躲站名 / 站点 / 线 / 别的图标（标签压在图标上面）
     for (const c of [...ICON_CAND[a.id], ...RING.map(([dx, dy]) => [dx, dy, Math.hypot(dx, dy) > 75])]) {
       const [dx, dy, far] = c, x = sx + dx, y = sy + dy, R = iconRects(x, y, a.name);
-      const L = far ? segRects(sx + dx * 22 / Math.hypot(dx, dy), sy + dy * 22 / Math.hypot(dx, dy), x - dx * (ICON_R + 2) / Math.hypot(dx, dy), y - dy * (ICON_R + 2) / Math.hypot(dx, dy), 2) : [];
+      const L = far ? segRects(sx + dx * 26 / Math.hypot(dx, dy), sy + dy * 26 / Math.hypot(dx, dy), x - dx * (ICON_R + 2) / Math.hypot(dx, dy), y - dy * (ICON_R + 2) / Math.hypot(dx, dy), 2) : [];
       if (R.some(r => avoid.some(o => hit(r, o))) || L.some(r => avoid.some(o => hit(r, o)))) continue;
       best = { ...a, x, y, leader: far ? [sx, sy] : null }; obstacles.push(...R, ...L); break;
     } }
@@ -177,7 +187,7 @@ export function networkSVG(here, opts = {}) {
     obst.push(textRect(tx, ty, S.zh, fs, anc), [x - 30, y - 30, 60, 60].map((v, i) => i < 2 ? v + (both ? 0 : 14) : both ? v : v - 28));
   }
   // 景点小图标（白底圆 + 线路色细圈 + 彩色剪影，下面写景点名；点一下打开小卡片，见 main.js）
-  if (here && pos[here]) { const [x, y] = pos[here]; obst.push([x - 24, y - 24, 48, 48]); }
+  if (here && pos[here]) { const [x, y] = pos[here]; obst.push([x - 32, y - 32, 64, 64]); }
   NET_DEBUG.obst = obst.slice();
   const icons = placeIcons(pos, obst);   // 先摆图标，“你在这里”标签再挑一个不压图标 / 站名的方向
   const youXY = here && pos[here] ? youAt(here, pos, obst) : null;
