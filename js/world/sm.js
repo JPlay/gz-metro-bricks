@@ -73,7 +73,7 @@ function villa(k, side, zc, w, F, col, o = {}) {
 }
 
 /* ---------- 露德圣母堂：白色哥特小教堂，正立面朝街（西），中间一座方塔 + 八角尖塔 ---------- */
-export const CHAPEL = { x: 16, z: -139 };
+export const CHAPEL = { x: 18, z: -139 };
 function chapel(k) {
   const P = k.solid, Gl = k.glass, G = k.glow, { x, z } = CHAPEL, W = C.white, gray = hex('#8E8A84');
   const L = 17, Wd = 9, Hw = 7.5;
