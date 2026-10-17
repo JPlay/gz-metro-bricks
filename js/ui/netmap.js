@@ -5,6 +5,8 @@
  * 换乘站：公园前（1↔2）画成 1 号线黄 + 2 号线蓝的双色圆环；能换乘其他线路的站统一画白心粗深色圈（图例“可以换乘其他线路”）；“你在这里”大而亮，带呼吸光圈。
  */
 import { LINES, STATIONS, OTHER_LINES } from '../data/lines.js';
+import { ATTRACTIONS } from '../data/attractions.js';
+import { iconSVG } from './mapicons.js';
 
 export const GYQ = 'gyq';
 /** 两站之间的站数（同线直接数；跨线经 1/2 号线的换乘站） */
@@ -103,7 +105,44 @@ export function networkLayout(portrait = false) {
   for (const p of Object.values(pos)) { p[0] = p[0] - 100; p[1] = 760 + (p[1] - GY) * 1.45; }
   return { pos, w: 1140, h: 1500, legend: [790, 1060] };
 }
-const YOU_AT = { hs: 'L', tyzx: 'B', gzdz: 'L' };
+const YOU_AT = { hs: 'L', tyzx: 'B', gzdz: 'L', lsly: 'U' };
+/** 景点小图标：放在站名旁边的空白处，图标下面写景点短名。每个景点有几个候选位置（相对站点圆心），按顺序取第一个
+ *  不压站名 / 站点 / 线 / “你在这里”标签 / 别的图标的位置（“你在这里”那一站站名变大，所以每次画图都重新挑）；离站点远时画一条线路色细引线。 */
+export const ICON_R = 18, ICON_FS = 18;
+export const NET_DEBUG = { obst: null };   // 排查用：上一次画图时图标要躲开的外框
+const ICON_CAND = {   // [dx, dy, 画引线?]
+  sysy: [[60, 0], [68, 0], [58, -10], [66, 30], [-150, -12], [-160, -20], [-176, -20]],
+  rams: [[-152, 0], [-172, -10], [-190, -10], [130, -6, true], [66, -40, true], [130, -40, true], [-150, -50, true]],
+  njs: [[82, 32], [86, 40], [84, 50], [100, 40], [130, 70, true], [40, -92, true], [82, 100, true]],
+  hotel: [[82, 96], [84, 112], [140, 32], [86, 104], [140, 96], [130, 134, true], [190, 96, true]],
+  cjc: [[0, 46], [-40, 46], [40, 46], [0, -100], [-40, -100]],
+  shamian: [[0, -100], [-50, -60], [-52, 0], [-52, 40]],
+};
+const RING = []; for (const d of [56, 72, 90, 110, 130]) for (let a = 0; a < 16; a++) RING.push([Math.round(Math.cos(a / 16 * Math.PI * 2) * d), Math.round(Math.sin(a / 16 * Math.PI * 2) * d)]);
+const hit = (a, b) => a[0] < b[0] + b[2] && b[0] < a[0] + a[2] && a[1] < b[1] + b[3] && b[1] < a[1] + a[3];
+/** 文字的大致外框（中文每字约 1 个字号宽） */
+const textRect = (x, y, t, fs, anc) => { const w = [...String(t)].length * fs * 0.96, x0 = anc === 'end' ? x - w : anc === 'start' ? x : x - w / 2; return [x0 - 1, y - fs * 0.9, w + 2, fs * 1.1]; };
+const segRects = (x0, y0, x1, y1, hw) => { const n = Math.max(1, Math.ceil(Math.hypot(x1 - x0, y1 - y0) / (hw * 1.5))), out = []; for (let i = 0; i <= n; i++) { const t = i / n, x = x0 + (x1 - x0) * t, y = y0 + (y1 - y0) * t; out.push([x - hw, y - hw, hw * 2, hw * 2]); } return out; };
+export const iconFs = name => [...name].length >= 5 ? ICON_FS - 2 : ICON_FS;   // 名字长（中山纪念堂）字小一号
+export const iconRects = (x, y, name) => [[x - ICON_R - 3, y - ICON_R - 3, ICON_R * 2 + 6, ICON_R * 2 + 6], textRect(x, y + ICON_R + 19, name, iconFs(name), 'middle')];
+/** 挑位置：obstacles = 已有元素外框；返回每个景点 { ...a, x, y, leader } */
+export function placeIcons(pos, obstacles, soft = []) {
+  const out = [];
+  for (const a of ATTRACTIONS) {
+    const [sx, sy] = pos[a.code];
+    let best = null;
+    for (const avoid of [[...obstacles, ...soft], obstacles]) { if (best) break;   // 先连“你在这里”标签一起躲；实在没地方就只躲站名 / 站点 / 线 / 别的图标（标签压在图标上面）
+    for (const c of [...ICON_CAND[a.id], ...RING.map(([dx, dy]) => [dx, dy, Math.hypot(dx, dy) > 75])]) {
+      const [dx, dy, far] = c, x = sx + dx, y = sy + dy, R = iconRects(x, y, a.name);
+      const L = far ? segRects(sx + dx * 22 / Math.hypot(dx, dy), sy + dy * 22 / Math.hypot(dx, dy), x - dx * (ICON_R + 2) / Math.hypot(dx, dy), y - dy * (ICON_R + 2) / Math.hypot(dx, dy), 2) : [];
+      if (R.some(r => avoid.some(o => hit(r, o))) || L.some(r => avoid.some(o => hit(r, o)))) continue;
+      best = { ...a, x, y, leader: far ? [sx, sy] : null }; obstacles.push(...R, ...L); break;
+    } }
+    if (!best) { const [dx, dy] = ICON_CAND[a.id][0]; best = { ...a, x: sx + dx, y: sy + dy, leader: null, forced: true }; }
+    out.push(best);
+  }
+  return out;
+}
 /** 换乘其他线路的站：统一一种样式（白心 + 粗深色圈），不再按换乘线路上色 */
 export const XRING = '#1B2430', XR = 14, XW = 7;
 const OTHER = c => STATIONS[c].x.map(k => OTHER_LINES[k]).filter(Boolean);
@@ -117,9 +156,12 @@ export function networkSVG(here, opts = {}) {
   [1, 2].forEach((l, i) => { const L = LINES[l], y = gy + 100 + i * 56; s += `<rect x="${gx}" y="${y}" width="74" height="40" rx="12" fill="${L.color}"/><text x="${gx + 37}" y="${y + 30}" font-size="28" font-weight="800" fill="${L.ink}" text-anchor="middle">${l}</text><text x="${gx + 86}" y="${y + 30}" font-size="26" font-weight="700" fill="#1B2430">${L.zh}</text>`; });
   s += `<circle cx="${gx + 22}" cy="${gy + 240}" r="18" fill="#fff" stroke="${LINES[1].color}" stroke-width="8"/><circle cx="${gx + 22}" cy="${gy + 240}" r="8" fill="#fff" stroke="${LINES[2].color}" stroke-width="6"/><text x="${gx + 52}" y="${gy + 249}" font-size="23" font-weight="700" fill="#34404F">1号线和2号线在这里换乘</text>`;
   s += `<circle cx="${gx + 22}" cy="${gy + 290}" r="${XR}" fill="#fff" stroke="${XRING}" stroke-width="${XW}"/><text x="${gx + 52}" y="${gy + 299}" font-size="23" font-weight="700" fill="#34404F">可以换乘其他线路</text>`;
+  const obst = [];   // 景点图标要躲开的元素外框
+  [[gx, gy, 460, 320]].forEach(r => obst.push(r));   // 标题 + 图例
   // 线
   for (const l of [1, 2]) {
     const pts = LINES[l].stations.map(c => pos[c]);
+    for (let i = 0; i < pts.length - 1; i++) obst.push(...segRects(pts[i][0], pts[i][1], pts[i + 1][0], pts[i + 1][1], 9));
     s += `<polyline points="${pts.map(p => p[0] + ',' + p[1]).join(' ')}" fill="none" stroke="${LINES[l].color}" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>`;
   }
   // 站点 + 站名
@@ -132,18 +174,44 @@ export function networkSVG(here, opts = {}) {
     let tx = x, ty = y + 9, anc = 'middle';
     if (side === 'a') ty = y - 26; else if (side === 'b') ty = y + 44; else if (side === 'l') { tx = x - 24; anc = 'end'; } else if (side === 'r') { tx = x + 24; anc = 'start'; } else { tx = x - 30; ty = y + 54; anc = 'end'; }
     s += `<text x="${tx}" y="${ty}" font-size="${fs}" font-weight="${fw}" fill="${col}" text-anchor="${anc}" paint-order="stroke" stroke="#fff" stroke-width="6" stroke-linejoin="round">${esc(S.zh)}</text>`;
+    obst.push(textRect(tx, ty, S.zh, fs, anc), [x - 30, y - 30, 60, 60].map((v, i) => i < 2 ? v + (both ? 0 : 14) : both ? v : v - 28));
+  }
+  // 景点小图标（白底圆 + 线路色细圈 + 彩色剪影，下面写景点名；点一下打开小卡片，见 main.js）
+  if (here && pos[here]) { const [x, y] = pos[here]; obst.push([x - 24, y - 24, 48, 48]); }
+  NET_DEBUG.obst = obst.slice();
+  const icons = placeIcons(pos, obst);   // 先摆图标，“你在这里”标签再挑一个不压图标 / 站名的方向
+  const youXY = here && pos[here] ? youAt(here, pos, obst) : null;
+  for (const a of icons) {
+    const ring = LINES[STATIONS[a.code].lines[0]].color;
+    if (a.leader) { const [sx, sy] = a.leader, d = Math.hypot(a.x - sx, a.y - sy), ux = (a.x - sx) / d, uy = (a.y - sy) / d; s += `<line class="attrlead" x1="${(sx + ux * 16).toFixed(1)}" y1="${(sy + uy * 16).toFixed(1)}" x2="${(a.x - ux * (ICON_R + 1)).toFixed(1)}" y2="${(a.y - uy * (ICON_R + 1)).toFixed(1)}" stroke="${ring}" stroke-width="3" stroke-dasharray="2 5" stroke-linecap="round"/>`; }
+    s += `<g class="attr" data-attr="${a.id}" data-code="${a.code}"${a.forced ? ' data-forced="1"' : ''}><circle cx="${a.x}" cy="${a.y + 8}" r="${ICON_R + 16}" fill="#fff" fill-opacity="0"/>${iconSVG(a.icon, a.x, a.y, ICON_R, ring)}`;
+    s += `<text class="attrnm" x="${a.x}" y="${a.y + ICON_R + 19}" font-size="${iconFs(a.name)}" font-weight="700" fill="#34404F" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="5" stroke-linejoin="round">${esc(a.name)}</text></g>`;
   }
   // 你在这里：红点 + 脉动圈 + 标签
   if (here && pos[here]) {
     const [x, y] = pos[here];
     if (!opts.wall) s += `<circle class="pulse" cx="${x}" cy="${y}" r="30" fill="none" stroke="#FF5A4E" stroke-width="8"/>`;
     // 标签放在站名的另一侧（不盖住站名）；几个拐角站单独指定
-    const side = YOU_AT[here] || { l: 'R', r: 'L', a: 'B', b: 'U', x: 'UR' }[pos[here][2]];
-    const [dx, dy] = { R: [128, 0], L: [-128, 0], B: [0, 74], U: [0, -70], UR: [140, -96] }[side], lx = x + dx, ly = y + dy;
+    const [lx, ly] = youXY;
     s += `<g class="youare"><line x1="${x}" y1="${y}" x2="${lx}" y2="${ly}" stroke="#FF5A4E" stroke-width="5"/><rect x="${lx - 78}" y="${ly - 25}" width="156" height="50" rx="25" fill="#FF5A4E" stroke="#fff" stroke-width="4"/><text x="${lx}" y="${ly + 10}" font-size="28" font-weight="800" fill="#fff" text-anchor="middle">你在这里</text></g>`;
     s += `<circle class="here" cx="${x}" cy="${y}" r="${opts.wall ? 20 : 16}" fill="#FF5A4E" stroke="#fff" stroke-width="5"/>`;
   }
   return s + '</svg>';
+}
+const YOU_D = { R: [128, 0], L: [-128, 0], B: [0, 74], U: [0, -70], UR: [140, -96], DR: [150, 100], UL: [-140, -96], DL: [-150, 100], UU: [80, -130], UUL: [-80, -130] };
+/** “你在这里”标签位置：默认放在站名的另一侧；obst 给了就按顺序换方向，躲开景点图标（站名、站点也躲，不压别的东西） */
+function youAt(here, pos, obst) {
+  const [x, y] = pos[here], pref = YOU_AT[here] || { l: 'R', r: 'L', a: 'B', b: 'U', x: 'UR' }[pos[here][2]];
+  const at = sd => [x + YOU_D[sd][0], y + YOU_D[sd][1]];
+  if (!obst) return at(pref);
+    let best = null, bs = Infinity;
+  for (const sd of [pref, 'U', 'B', 'R', 'L', 'UR', 'DR', 'UL', 'DL', 'UU', 'UUL']) {
+    const [lx, ly] = at(sd), d = Math.hypot(lx - x, ly - y), R = [[lx - 80, ly - 27, 160, 54], ...segRects(x + (lx - x) * 30 / d, y + (ly - y) * 30 / d, lx, ly, 3)];
+    const n = obst.filter(o => R.some(r => hit(r, o))).length;
+    if (!n) return [lx, ly];
+    if (n < bs) { bs = n; best = [lx, ly]; }
+  }
+  return best;
 }
 /** 屏幕坐标 ↔ svg 坐标（viewBox + 默认 xMidYMid meet；不用 getScreenCTM，某些浏览器在缩放 / 弹窗里会算错） */
 export function svgMap(svg) {
@@ -163,7 +231,7 @@ export function nearestStation(x, y, portrait, r = 80) {
 }
 
 /** 地图里双指捏合缩放 + 单指拖动平移（1–4 倍），双击还原。box = 包着 svg 的容器；返回 reset() */
-export function panZoom(box) {
+export function panZoom(box, onTap) {
   const pts = new Map(); let k = 1, tx = 0, ty = 0, start = null, lastTap = 0, tap = null;
   const el = () => box.firstElementChild;
   const apply = () => { const r = box.getBoundingClientRect(), mx = r.width * (k - 1) / 2, my = r.height * (k - 1) / 2; tx = Math.max(-mx, Math.min(mx, tx)); ty = Math.max(-my, Math.min(my, ty)); const e = el(); if (e) { e.style.transform = `translate(${tx}px,${ty}px) scale(${k})`; e.style.transformOrigin = 'center center'; } box.classList.toggle('zoomed', k > 1.01); };
@@ -183,7 +251,8 @@ export function panZoom(box) {
   });
   // 双击还原：两次干脆的单指轻点（没拖动、没捏合）
   const up = e => {
-    if (tap && pts.size === 1 && performance.now() - tap.t < 280 && Math.hypot(e.clientX - tap.x, e.clientY - tap.y) < 12) { const now = performance.now(); if (now - lastTap < 350) { k = 1; tx = ty = 0; apply(); lastTap = 0; } else lastTap = now; }
+    if (tap && pts.size === 1 && performance.now() - tap.t < 280 && Math.hypot(e.clientX - tap.x, e.clientY - tap.y) < 12 && onTap && onTap(e.clientX, e.clientY)) lastTap = 0;   // 点到景点图标：打开小卡片（不算双击的第一下）
+    else if (tap && pts.size === 1 && performance.now() - tap.t < 280 && Math.hypot(e.clientX - tap.x, e.clientY - tap.y) < 12) { const now = performance.now(); if (now - lastTap < 350) { k = 1; tx = ty = 0; apply(); lastTap = 0; } else lastTap = now; }
     tap = null; pts.delete(e.pointerId); start = snap();
   };
   box.addEventListener('pointerup', up); box.addEventListener('pointercancel', up);

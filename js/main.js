@@ -20,6 +20,7 @@ import { mats } from './core/mats.js';
 import { Render } from './core/render.js';
 import { STATIONS, LINES, nextStation } from './data/lines.js';
 import { networkSVG, panZoom } from './ui/netmap.js';
+import { ATTRACTIONS, attractionExit } from './data/attractions.js';
 import { Discovery } from './game/discovery.js';
 import { installBrother } from './game/brother-main.js';
 import { HotelCtl } from './game/hotel.js';
@@ -115,8 +116,19 @@ export async function start() {
   // 地图按钮：全屏全网线路图，当前站有脉动的“你在这里”
   const mapEl = document.getElementById('netmap');
   // 竖屏用竖版布局（铺满宽度）；地图里可以双指缩放、单指拖动，双击还原
-  const mapBox = mapEl.querySelector('.mapbox'), mapPZ = panZoom(mapBox);
-  const drawMap = () => { G.mapPortrait = innerHeight > innerWidth; mapBox.innerHTML = networkSVG(G.code, { portrait: G.mapPortrait }); mapPZ.reset(); };
+  // 点地图上的景点小图标：弹出一张小卡片（景点名 + 从哪个出口出站）
+  const attrCard = document.createElement('div'); attrCard.className = 'attrcard'; attrCard.hidden = true; mapEl.querySelector('.sheet').appendChild(attrCard);
+  const hideCard = () => { attrCard.hidden = true; G.attrCard = null; };
+  const showCard = (id, cx, cy) => {
+    const a = ATTRACTIONS.find(t => t.id === id); if (!a) return false;
+    attrCard.innerHTML = `<b>${a.names.join('<br>')}</b><span>${STATIONS[a.code].zh}站 · 从 <em>${attractionExit(a.code)}</em> 出口出站</span>`;
+    attrCard.hidden = false; const sh = mapEl.querySelector('.sheet').getBoundingClientRect(), w = attrCard.offsetWidth, h = attrCard.offsetHeight;
+    attrCard.style.left = Math.max(8, Math.min(sh.width - w - 8, cx - sh.left - w / 2)) + 'px'; attrCard.style.top = Math.max(8, Math.min(sh.height - h - 8, cy - sh.top - h - 30)) + 'px';
+    G.attrCard = { id, text: attrCard.textContent }; Audio.blip && Audio.blip('tap'); return true;
+  };
+  const mapTap = (x, y) => { const g = document.elementsFromPoint(x, y).map(e => e.closest && e.closest('g.attr')).find(Boolean); if (g) return showCard(g.dataset.attr, x, y); hideCard(); return false; };
+  const mapBox = mapEl.querySelector('.mapbox'), mapPZ = panZoom(mapBox, mapTap);
+  const drawMap = () => { G.mapPortrait = innerHeight > innerWidth; mapBox.innerHTML = networkSVG(G.code, { portrait: G.mapPortrait }); mapPZ.reset(); hideCard(); };
   const openMap = () => { drawMap(); mapEl.classList.remove('out'); mapEl.hidden = false; G.mapOpen = true; Audio.blip && Audio.blip('tap'); };
   window.addEventListener('resize', () => { if (G.mapOpen && G.mapPortrait !== (innerHeight > innerWidth)) drawMap(); });
   const closeMap = () => { if (!G.mapOpen) return; G.mapOpen = false; mapEl.classList.add('out'); setTimeout(() => { if (!G.mapOpen) mapEl.hidden = true; }, 200); };
@@ -280,7 +292,7 @@ export async function start() {
       babylon: { version: B.Engine.Version, source: window.__babylonSource, attempts: window.__babylonAttempts },
       drawCalls: (engine._drawCalls && engine._drawCalls.current) ?? null, activeMeshes: scene.getActiveMeshes().length, depthBits: depthBits(), minZ: cam.minZ, gates: G.station.gates.map(g => +g.f.toFixed(2)),
       security: G.station.security.flash > 0, probes: R.probes.length, atlas: G.station.kit.atlas ? { y: G.station.kit.atlas.y + G.station.kit.atlas.row, overflow: G.station.kit.atlas.overflow } : null, audio: Audio.getState(),
-      ticket: tickets.info(), seat: seats.info(), social: social.info(), discover: discovery.info(), hotel: hotel ? hotel.info() : null, clan: clan ? clan.info() : null, hall: G.station && G.station.interior ? G.station.interior.info() : null, mapOpen: !!G.mapOpen, act: hud.act ? { id: hud.act.id, label: hud.act.label } : null
+      ticket: tickets.info(), seat: seats.info(), social: social.info(), discover: discovery.info(), hotel: hotel ? hotel.info() : null, clan: clan ? clan.info() : null, hall: G.station && G.station.interior ? G.station.interior.info() : null, mapOpen: !!G.mapOpen, attrCard: G.attrCard || null, act: hud.act ? { id: hud.act.id, label: hud.act.label } : null
     }),
     teleport: (x, y, z, yaw) => player.spawn(x, y, z, yaw ?? player.yaw),
     setMove: (x, y, run) => { input.virtual = (x || y) ? { x, y, run } : null; },

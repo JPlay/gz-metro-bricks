@@ -7,8 +7,10 @@
  * 站名、站序全部来自 js/data/lines.js；1 号线 #F3D03E，2 号线 #00629B。
  */
 import { LINES, STATIONS, OTHER_LINES } from '../data/lines.js';
-import { FONT, FONT_EN, roundRect, drawHallIcon } from './kit.js';
+import { FONT, FONT_EN, roundRect } from './kit.js';
 import { VISITS, visitBanner } from '../data/visits.js';
+import { attractionsAt } from '../data/attractions.js';
+import { drawIcon } from '../ui/mapicons.js';
 
 export const STRIP_W = 2048, STRIP_H = 256, LCD_W = 1024, LCD_H = 384;
 export const HOT = '#FF5A4E';            // 当前 / 下一站（和 HUD、售票机上的“你在这里”同一种红）
@@ -84,8 +86,8 @@ export function drawStrip(c, line, code, step, moving, nextCode) {
     if (isHot) { c.fillStyle = HOT; roundRect(c, x - fs / 2 - 8, y0 - 6, fs + 16, nm.length * fs + 12, 12); c.fill(); }
     c.fillStyle = isHot ? '#fff' : past ? GREY_TXT : INK; c.font = `${isHot ? 800 : 600} ${fs}px ${FONT}`; c.textAlign = 'center'; c.textBaseline = 'top';
     [...nm].forEach((ch, j) => c.fillText(ch, x, y0 + j * fs));
-    // 景点站（纪念堂）：站点上方一个纪念堂小图标（白底圆角，和站里导向牌上的同一个）
-    if (S.attraction) { const s = 58, ix = x + (isHot ? 26 : 12), iy = 0; c.save(); c.shadowColor = 'rgba(0,0,0,0.25)'; c.shadowBlur = 6; drawHallIcon(c, ix, iy, s, '#FFFFFF'); c.restore(); c.strokeStyle = '#1F5BB0'; c.lineWidth = 3; roundRect(c, ix, iy + 1, s, s - 2, s * 0.18); c.stroke(); }
+    // 景点站：站点上方画景点小图标（和全网图同一套：白底圆 + 线路色细圈 + 彩色剪影）；一站两个景点（农讲所 + 酒店）就左右各一个
+    attractionsAt(cd).forEach((a, j, arr) => drawIcon(c, a.icon, x + (arr.length > 1 && j === 0 ? -30 : 30), 29, 20, past ? GREY : L.color));
   });
 }
 
