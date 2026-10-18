@@ -2778,19 +2778,19 @@
     "voice": "longxiaobai_v2"
   },
   "voice.visit.gzdz.zh": {
-    "fp": "097e8813a0755621401c190281e6b68152be80fce2884513f4bd0c163bd0682e",
+    "fp": "3dde6c23382d81239c548caca39ad45fdf6f8f9f01f596d1a5c6ef4e11b1ccea",
     "style": "cosy",
     "model": "cosyvoice-v2",
     "voice": "longxiaobai_v2"
   },
   "voice.visit.gzdz.yue": {
-    "fp": "4dfca01acd2c93d066ea0142d54f2e30a0791f224fb6b3c835aef403a5d2f1a2",
+    "fp": "64ccdfcdd7e3d0e8dd03d58c48663df5a1c59874920a9dc474f8b7e1bc0de28c",
     "style": "cosy",
     "model": "cosyvoice-v3-flash",
     "voice": "longjiayi_v3"
   },
   "voice.visit.gzdz.en": {
-    "fp": "0da8ec0ddcda9f53c27879434047178e24dba070f5f143dc55bf9fb3b9740be8",
+    "fp": "1fb20b46cdb04dd630316630d0151efece2fca1a23cb957b8053909200150559",
     "style": "cosy",
     "model": "cosyvoice-v2",
     "voice": "longxiaobai_v2"

@@ -3321,12 +3321,12 @@
       "group": "voice",
       "label": "visit.gzdz.zh",
       "lang": "zh",
-      "text": "广州东站附近有天河飘绢，欢迎下车游玩，请从F出口出站。",
+      "text": "前往广州东火车站的乘客，请从G出口出站。",
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 6.936,
-      "bytes": 55724
+      "duration": 5.232,
+      "bytes": 42092
     },
     {
       "id": "voice.visit.gzdz.yue",
@@ -3334,12 +3334,12 @@
       "group": "voice",
       "label": "visit.gzdz.yue",
       "lang": "yue",
-      "text": "广州东站附近有天河飘绢，欢迎落车游玩，请喺F出口出站。",
+      "text": "前往广州东火车站嘅乘客，请喺G出口出站。",
       "model": "cosyvoice-v3-flash",
       "voice": "longjiayi_v3",
       "language_type": "Chinese",
-      "duration": 6.888,
-      "bytes": 55340
+      "duration": 5.424,
+      "bytes": 43628
     },
     {
       "id": "voice.visit.gzdz.en",
@@ -3347,12 +3347,12 @@
       "group": "voice",
       "label": "visit.gzdz.en",
       "lang": "en",
-      "text": "Guangzhou Dongzhan is near the Tianhe Floating Silk fountain. You are welcome to get off and visit. Please use Exit F.",
+      "text": "Passengers for Guangzhou East Railway Station, please use Exit G.",
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 7.44,
-      "bytes": 59756
+      "duration": 4.32,
+      "bytes": 34796
     },
     {
       "id": "voice.destination.l2n.zh",
