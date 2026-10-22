@@ -212,25 +212,28 @@ export class XmStation {
         BR.slab(xa, xb, y + 0.6, CY - 0.6, z0, z1, TILE, { ao: false });
         Pv.slab(xa - (e > 0 ? 0.02 : 0), xb + (e < 0 ? 0.02 : 0), y + 1.6, y + 1.78, z0, z1, SEA, { ao: false });
         // 红砖拼花窗（“出砖入石”）：中间一块白石框 + 海蓝心
-        Pv.slab(xa - (e > 0 ? 0.03 : 0), xb + (e < 0 ? 0.03 : 0), y + 1.75, y + 2.7, zc - 1.6, zc + 1.6, STONE, { ao: false });
-        Pv.slab(xa - (e > 0 ? 0.05 : 0), xb + (e < 0 ? 0.05 : 0), y + 1.88, y + 2.57, zc - 1.4, zc + 1.4, SEA, { ao: false });
+        Pv.slab(xa - (e > 0 ? 0.03 : 0), xb + (e < 0 ? 0.03 : 0), y + 1.3, y + 2.35, zc - 1.6, zc + 1.6, STONE, { ao: false });
+        Pv.slab(xa - (e > 0 ? 0.05 : 0), xb + (e < 0 ? 0.05 : 0), y + 1.43, y + 2.22, zc - 1.4, zc + 1.4, SEA, { ao: false });
       }
       // 燕尾脊：贴在端墙上沿（沿 z 方向做脊）
       // 山墙上的大燕尾脊：深色瓦脊 + 白灰线，两端长长上翘分叉（低于天花梁，正面能看见）
       const xr = xi - e * 0.16, col = hex('#2F2723'), line = STONE;
-      const ya = y + 3.05, za = z0 + 2.6, zb = z1 - 2.6;
-      Pv.slab(xr - 0.14, xr + 0.14, ya, ya + 0.42, za, zb, col, { ao: false });
+      const ya = y + 2.75, za = z0 + 3.0, zb = z1 - 3.0;
+      Pv.slab(xr - 0.14, xr + 0.14, ya, ya + 0.5, za, zb, col, { ao: false });
+      // 屋面瓦（脊下一道赭红瓦檐，读作“屋顶”）+ 白灰滴水线
+      Pv.slab(xr - 0.1, xr + 0.1, ya - 0.55, ya - 0.08, za - 0.9, zb + 0.9, hex('#8E3B28'), { ao: false });
+      Pv.slab(xr - 0.12, xr + 0.12, ya - 0.64, ya - 0.55, za - 1.0, zb + 1.0, STONE, { ao: false });
       Pv.slab(xr - 0.16, xr + 0.16, ya - 0.08, ya, za - 0.3, zb + 0.3, line, { ao: false });
       for (const s2 of [-1, 1]) {
         const ze = s2 < 0 ? za : zb;
-        Pv.box(xr, ya + 0.36, ze + s2 * 0.95, 0.28, 0.36, 2.0, col, 0, -s2 * 0.4, 0, 1, { ao: false });
-        Pv.box(xr, ya + 0.95, ze + s2 * 1.95, 0.24, 0.2, 1.3, col, 0, -s2 * 0.85, 0, 1, { ao: false });
-        Pv.box(xr, ya + 0.78, ze + s2 * 2.15, 0.2, 0.14, 1.0, col, 0, -s2 * 0.35, 0, 1, { ao: false });
+        Pv.box(xr, ya + 0.36, ze + s2 * 0.95, 0.28, 0.36, 2.0, col, 0, s2 * 0.4, 0, 1, { ao: false });
+        Pv.box(xr, ya + 0.95, ze + s2 * 1.95, 0.24, 0.2, 1.3, col, 0, s2 * 0.85, 0, 1, { ao: false });
+        Pv.box(xr, ya + 0.78, ze + s2 * 2.15, 0.2, 0.14, 1.0, col, 0, s2 * 0.35, 0, 1, { ao: false });
       }
     }
     // 2) 岛中立柱（侧式站贴墙不放）
     if (!so) for (let x = -22.5; x <= 22.6; x += 9) {
-      if (Math.abs(x) < 3 || ((P.hole || P.under) && x > XF.x0 - 1.5 && x < XF.x1 + 1.5)) continue;
+      if (Math.abs(x) < 3 || ((P.hole || P.under) && x > XF.x0 - 1.5 && x < XF.x1 + 3.5)) continue;
       k.colSlab(x - 0.45, x + 0.45, y, CY, zc - 0.45, zc + 0.45);
       if (rock) {
         for (let yy = y; yy < CY - 0.3; ) {
