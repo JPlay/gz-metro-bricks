@@ -199,12 +199,12 @@ export class XmnStation {
     at.quad(MT.x1 + 0.41, HY + 3.55, -80, 7.6, 1.5, Math.PI / 2, at.draw(7.6, 1.5, metroPortal));
     P.slab(MT.x1 - 0.02, MT.x1 + 0.42, HY + 2.6, HY + 2.75, T.z0, T.z1, C.l1, { ao: false });
     const gxx = MT.gx;
+    // 第三阶段：闸机翼门打开（可进站台）；只留闸机柱碰撞，通道中间能走过去
     for (let z = MT.z0 + 1.2, i = 0; z < MT.z1 - 0.8; z += 1.2, i++) {
       P.rbox(gxx, HY, z, 1.7, 1.0, 0.28, hex('#D7DADD'), 0.04, 0, { ao: false }); P.slab(gxx - 0.85, gxx + 0.85, HY + 1.0, HY + 1.03, z - 0.14, z + 0.14, hex('#2B3036'), { ao: false }); P.slab(gxx - 0.86, gxx + 0.86, HY + 0.82, HY + 0.9, z - 0.145, z + 0.145, C.l1, { ao: false });
-      G.slab(gxx + 0.55, gxx + 0.75, HY + 1.041, HY + 1.05, z - 0.1, z + 0.1, hex(i % 3 === 1 ? '#F04A3A' : '#38C46A'), { ao: false });
-      if (z + 1.2 < MT.z1 - 0.8) k.glass.slab(gxx - 0.05, gxx + 0.05, HY + 0.35, HY + 1.0, z + 0.14, z + 1.06, hex('#F2A06A'));   // 翼门（关着）
+      G.slab(gxx + 0.55, gxx + 0.75, HY + 1.041, HY + 1.05, z - 0.1, z + 0.1, hex('#38C46A'), { ao: false });   // 全绿：开放
+      k.colSlab(gxx - 0.85, gxx + 0.85, HY, HY + 1.0, z - 0.14, z + 0.14);
     }
-    k.colSlab(gxx - 0.3, gxx + 0.3, HY, HY + 1.6, MT.z0, MT.z1);
     this.hang(gxx + 0.4, HY + 3.4, -80, 6, 0.9, Math.PI / 2, board([{ metro: 1 }, { zh: '进站', en: 'Entrance' }, { l1: 1 }, { zh: '往 岩内 / 镇海路', en: 'To Yannei / Zhenhailu' }]), HC);
     for (const z of [-90.2, -88.6]) { P.rbox(-93, HY, z, 1.0, 1.9, 0.8, hex('#E9EBEC'), 0.05, Math.PI / 2, { ao: false }); at.quad(-92.48, HY + 1.35, z, 0.6, 0.45, Math.PI / 2, at.draw(0.6, 0.45, bigText('购票', 'Tickets', '#1D3F73', '#FFFFFF'))); k.colSlab(-93.5, -92.5, HY, HY + 1.9, z - 0.4, z + 0.4); }
     P.rbox(-92, HY, -70.2, 5, 1.1, 2.2, hex('#F3F1EC'), 0.05, 0, { ao: false }); k.colSlab(-94.5, -89.5, HY, HY + 1.1, -71.3, -68); at.quad(-92, HY + 2.6, -68.02, 4, 0.6, Math.PI, at.draw(4, 0.6, bigText('客服中心 Service Centre', null, L1, '#FFFFFF')));

@@ -382,9 +382,22 @@ export class EastCtl {
       if (this.interior.wantsExit(p) && !pl.seat && !this.ride) this.exit();
     } else if (this.cur.loc === 'xmn') {
       if (!pl.seat && p.y > -1 && p.y < 2 && p.z < GZE.edge - 0.05) { const d = EMU.doors.find(d => Math.abs(p.x - (XO.x + d.x)) < 0.55); if (d) this.board(d); }
-      if (p.y < -12) { pl.spawn(XO.x - 5.8, 0.05, GZE.edge + 1.5, 0); }   // 出站层在 -6.5，掉到更下面才算掉出去
+      if (p.y < -12 && !(this.xmMetro && this.xmMetro.station)) { pl.spawn(XO.x - 5.8, 0.05, GZE.edge + 1.5, 0); }
       const a = XmnStation.area(p.x - XO.x, p.y, p.z);
       if (a !== this.cur.area) { const was = this.cur.area; this.cur.area = a; if (was) { const T = { hall: '出站层 · Arrivals', passage: '换乘地铁通道 · Metro transfer', plaza: '南广场 · South Square', platform: '站台 · Platforms' }; this.hud.toast('厦门北站 ' + T[a], 1800); } this.events.emit('east', { area: a }); }
+      // 穿过地铁闸机、下到站台 → 交给厦门地铁
+      if (this.xmMetro && !this.xmMetro.station && a === 'passage' && p.y < -9 && (p.x - XO.x) < -98) {
+        this.xmMetro.enterFromRailway(pl); this.cur.loc = 'xmmetro'; this.cur.area = 'metro';
+        this.hud.toast('厦门地铁 1号线 · 厦门北站', 2200);
+      }
+    } else if (this.cur.loc === 'xmmetro') {
+      // 在厦门北站台爬回站厅 → 回到国铁付费区
+      if (this.xmMetro && this.xmMetro.code === 'xmnb' && p.y > -7.2 && (p.x - XO.x) > -96 && (p.x - XO.x) < -88) {
+        this.xmMetro.exitToRailway(pl); this.cur.loc = 'xmn'; this.cur.area = 'passage';
+        this.hud.toast('厦门北站 · 换乘地铁通道', 1800);
+      }
+      // 人已经坐上厦门地铁离开厦门北：关掉国铁 cur 里的站台逻辑，但保留 side=xm 方便回程
+      if (this.xmMetro && this.xmMetro.code && this.xmMetro.code !== 'xmnb' && this.xmn) this.xmn.show(null);
     }
     return null;
   }

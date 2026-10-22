@@ -19,13 +19,16 @@ import { TvmPanel } from './ui/tvm.js';
 import { mats } from './core/mats.js';
 import { Render } from './core/render.js';
 import { STATIONS, LINES, nextStation } from './data/lines.js';
-import { networkSVG, panZoom } from './ui/netmap.js';
+import { networkSVG, xmNetworkSVG, panZoom } from './ui/netmap.js';
 import { ATTRACTIONS, attractionExit } from './data/attractions.js';
 import { Discovery } from './game/discovery.js';
 import { installBrother } from './game/brother-main.js';
 import { HotelCtl } from './game/hotel.js';
 import { ClanCtl } from './game/clan.js';
 import { EastCtl } from './game/east.js';
+import { XmMetro } from './game/xmService.js';
+import { XM_LINES, XM_STATIONS } from './data/xm-lines.js';
+import { XO } from './world/xmn.js';
 const B = window.BABYLON;
 
 class Events { constructor() { this.h = {}; } on(n, f) { (this.h[n] = this.h[n] || []).push(f); } emit(n, d) { (this.h[n] || []).forEach(f => f(d)); } }
@@ -110,7 +113,7 @@ export async function start() {
   events.on('gate', d => { if (d.beep) hud.toast('闸机开啦 ✔'); });
   events.on('security', () => hud.toast('安检通过 ✔ 嘀！'));
   events.on('mv', d => { hud.toast(MVTXT[d.kind] || '✨', 2400); Audio.blip && Audio.blip('goal'); G.mv = (G.mv || 0) + 1; });
-  events.on('ride', d => { if (d.phase === 'arrive') { hud.toast(`到站：${STATIONS[d.to].zh}`, 2200); G.arrived = true; } });
+  events.on('ride', d => { if (d.phase === 'arrive') { const nm = (STATIONS[d.to] || XM_STATIONS[d.to] || {}).zh || d.to; hud.toast(`到站：${nm}`, 2200); G.arrived = true; G.welcomed = false; } });
 
   // —— 按钮
   const toggleView = () => { const v = player.toggleView(); hud.setBtn('bView', v === 'first', v === 'first' ? 'eye1' : 'eye3', v === 'first' ? '第一人称' : '第三人称'); return v; };
@@ -130,7 +133,12 @@ export async function start() {
   };
   const mapTap = (x, y) => { const g = document.elementsFromPoint(x, y).map(e => e.closest && e.closest('g.attr')).find(Boolean); if (g) return showCard(g.dataset.attr, x, y); hideCard(); return false; };
   const mapBox = mapEl.querySelector('.mapbox'), mapPZ = panZoom(mapBox, mapTap);
-  const drawMap = () => { G.mapPortrait = innerHeight > innerWidth; mapBox.innerHTML = networkSVG(G.code, { portrait: G.mapPortrait }); mapPZ.reset(); hideCard(); };
+  const drawMap = () => {
+    G.mapPortrait = innerHeight > innerWidth;
+    if (xmMetro && xmMetro.station) mapBox.innerHTML = xmNetworkSVG(xmMetro.code, { portrait: G.mapPortrait });
+    else mapBox.innerHTML = networkSVG(G.code, { portrait: G.mapPortrait });
+    mapPZ.reset(); hideCard();
+  };
   const openMap = () => { drawMap(); mapEl.classList.remove('out'); mapEl.hidden = false; G.mapOpen = true; Audio.blip && Audio.blip('tap'); };
   window.addEventListener('resize', () => { if (G.mapOpen && G.mapPortrait !== (innerHeight > innerWidth)) drawMap(); });
   const closeMap = () => { if (!G.mapOpen) return; G.mapOpen = false; mapEl.classList.add('out'); setTimeout(() => { if (!G.mapOpen) mapEl.hidden = true; }, 200); };
@@ -159,7 +167,7 @@ export async function start() {
   window.addEventListener('resize', () => engine.resize());
 
   // —— 主循环
-  let stepAcc = 0, hotel = null, clan = null, east = null;
+  let stepAcc = 0, hotel = null, clan = null, east = null, xmMetro = null;
   scene.onBeforeRenderObservable.add(() => {
     const dt = Math.min(G.dtMax || 0.05, engine.getDeltaTime() / 1000);
     // 自动驾驶（测试用）
@@ -174,12 +182,13 @@ export async function start() {
       else { player.yaw = Math.atan2(dx, dz); input.virtual = { x: 0, y: d < 1 ? 0.5 : 1, run: !!a.run && d > 2 }; }
     }
     const inp = input.read(), p0 = player.position;
-    const conv = G.station.conveyor(player.position);
+    const inXm = !!(xmMetro && xmMetro.station);
+    const conv = (!inXm && !(east && east.cur)) ? G.station.conveyor(player.position) : 0;
     player.update(dt, inp, conv ? { x: conv * dt, z: 0 } : null);
-    metro.update(dt);
+    if (inXm) xmMetro.update(dt); else if (!(east && east.cur)) metro.update(dt);
     player.syncSeat();
     player.updateCamera(dt, scene);
-    G.station.update(dt, player, cam, Audio, metro);
+    if (!inXm && !(east && east.cur)) G.station.update(dt, player, cam, Audio, metro);
     // 动作按钮：车厢里优先“坐下 / 起身”，否则售票机 / 闸机
     const hotelAct = hotel ? hotel.update(dt) : null; if (clan) clan.update(dt); if (east) east.update(dt);
     const seatAct = seats.update(), ticketAct = tickets.update(dt, G.station, player), socialAct = social.update(dt);
@@ -190,13 +199,19 @@ export async function start() {
     // 坐着时藏起“跳”按钮（起身用右下角的“起身”）
     const seated = !!player.seat; if (seated !== G.jumpHidden) { G.jumpHidden = seated; document.getElementById('bJump').hidden = seated; }
     // 区域 / 环境声 / 欢迎广播
-    const p = player.position, aboard = metro.trains.some(t => t.root.isEnabled() && t.contains(p));
-    G.zone = G.inTunnel ? { kind: 'tunnel' } : G.station.zoneOf(p); G.aboard = aboard || G.inTunnel;
+    const p = player.position;
+    const aboardGz = !(east && east.cur) && !inXm && metro.trains.some(t => t.root.isEnabled() && t.contains(p));
+    const aboardXm = inXm && xmMetro.trains.some(t => t.root.isEnabled() && t.contains(p));
+    G.aboard = aboardGz || aboardXm || G.inTunnel;
+    if (G.inTunnel) G.zone = { kind: 'tunnel' };
+    else if (inXm) { G.zone = xmMetro.station.zoneOf(p); G.code = xmMetro.code; }
+    else if (east && east.cur) G.zone = { kind: 'xmn', area: east.area };
+    else G.zone = G.station.zoneOf(p);
     // 在地面上看不到地下的列车（车站全在地下）：用 layerMask 跳过列车网格，省掉两列车 ~6 万三角形
     { const lm = G.zone.kind === 'street' || G.zone.kind === 'hall' ? 0x0FFFFFFF : 0x1FFFFFFF; if (cam.layerMask !== lm) cam.layerMask = lm; }
     // 站台上看列车：只有自己坐的那列车画车厢里的屏（线路图条 / LCD / 呼吸光圈 / 亮面件），别的车隔着窗看不清，省 4 次绘制 / 列；
     // 地下没有太阳：列车不投太阳阴影（每列车 3 次阴影绘制）
-    for (const t of metro.trains) {
+    for (const t of [...metro.trains, ...(xmMetro ? xmMetro.trains : [])]) {
       if (!t._inner) t._inner = t.root.getChildMeshes(false).filter(m => /^(trainStrip|trainLcd|trainHotGlow|gloss|leafInner)$/.test(m.name) || (m.sourceMesh && m.sourceMesh.name === 'leafInner'));
       const inside = t.root.isEnabled() && t.contains(p);
       if (t._innerOn !== inside) { t._innerOn = inside; t._inner.forEach(m => m.setEnabled(inside)); }
@@ -216,23 +231,25 @@ export async function start() {
     G.annAboard = G.aboard;
     // 声音分区：地铁声只在车站里（出口楼梯上随高度渐弱，到街面为 0）；街面车流；饭店嘈杂；酒店 / 纪念堂 / 陈家祠安静
     // 室内：酒店 / 饭店（饭店内景在地下 y≈-30，zoneOf 看不出来，按控制器判断）/ 陈家祠 / 纪念堂大会堂
-    const hallKind = hotel && hotel.cur ? 'hotel' : G.brother && G.brother.food && G.brother.food.cur ? 'restaurant' : clan && clan.cur ? 'clan' : east && east.cur ? (east.loc === 'car' ? 'emu' : 'xmn') : inHall ? 'sysy' : null;
+    const hallKind = hotel && hotel.cur ? 'hotel' : G.brother && G.brother.food && G.brother.food.cur ? 'restaurant' : clan && clan.cur ? 'clan' : inXm ? 'xmmetro' : east && east.cur ? (east.loc === 'car' ? 'emu' : 'xmn') : inHall ? 'sysy' : null;
     { let metroL = 1, streetL = 0;
       if (G.aboard || G.inTunnel) metroL = 1;
       else if (hallKind === 'xmn' && east.area === 'plaza') { metroL = 0; streetL = 1; }   // 厦门北站南广场：露天，街上的声音
-      else if (hallKind === 'emu' || hallKind === 'xmn') metroL = 1;   // 动车车厢 / 厦门北站台：广播、列车声都要听得到（环境床：车厢空调 / 站台）
+      else if (hallKind === 'emu' || hallKind === 'xmn' || hallKind === 'xmmetro') metroL = 1;   // 动车 / 国铁厦门北 / 厦门地铁
       else if (hallKind) metroL = 0;
       else { const u = Math.max(0, Math.min(1, (p.y - (YC + 1)) / (-0.4 - (YC + 1)))); streetL = u * u * (3 - 2 * u); metroL = 1 - streetL; }
       const sm = !hallKind && G.station && G.station.sm ? Math.max(0, Math.min(1, (-78 - p.z) / 14)) : 0;
       const ez = !hallKind && G.station && G.station.gze ? Math.max(0, Math.min(1, (-86 - p.z) / 5)) : 0;   // 广州东站：进了候车大厅，街上的车流声轻下去
       streetL *= 1 - 0.7 * ez;   // 沙面：过了沙基涌，车流声轻下去、榕树上有鸟叫
-      Audio.setEnv({ metro: metroL, street: streetL * (1 - 0.65 * sm), birds: streetL * sm, restaurant: hallKind === 'restaurant' ? 1 : 0, sub: G.aboard || G.inTunnel || hallKind === 'emu' ? 'train' : G.zone.kind === 'platform' || (hallKind === 'xmn' && east.area === 'platform') ? 'platform' : 'concourse' }); }
-    if (G.zone.kind === 'platform' && !G.welcomed && !G.aboard) { G.welcomed = true; if (!Audio.isAnnouncing()) Ann.welcome(G.code); }
+      Audio.setEnv({ metro: metroL, street: streetL * (1 - 0.65 * sm), birds: streetL * sm, restaurant: hallKind === 'restaurant' ? 1 : 0, sub: G.aboard || G.inTunnel || hallKind === 'emu' ? 'train' : G.zone.kind === 'platform' || (hallKind === 'xmn' && east.area === 'platform') || hallKind === 'xmmetro' ? 'platform' : 'concourse' }); }
+    if (G.zone.kind === 'platform' && !G.welcomed && !G.aboard && !inXm) { G.welcomed = true; if (!Audio.isAnnouncing()) Ann.welcome(G.code); }
+    if (inXm && G.zone.kind === 'platform' && !G.welcomed && !G.aboard) { G.welcomed = true; if (!Audio.isAnnouncing()) Ann.welcome(xmMetro.code); }
     // 出了车站（街面 / 纪念堂大会堂）：站内广播（欢迎 / 进站 / 关门）和字幕立刻停，不再跟着人走到街上
     if ((G.zone.kind === 'street' || G.zone.kind === 'hall') && !G.aboard && !(east && east.cur) && Audio.isAnnouncing()) Audio.cancelAnnouncements();
-    const rl = metro.ride && metro.ride.train && G.aboard ? metro.ride : null;
-    const line = rl ? rl.line : (G.zone.kind === 'platform' ? G.zone.P.line : STATIONS[G.code].lines[0]);
-    const rh = east && east.railHud(); if (rh) hud.whereRail(rh); else hud.where(G.code, line, rl && rl.phase === 'cruise' ? rl.next : null);
+    const rlXm = inXm && xmMetro.ride && xmMetro.ride.train && G.aboard ? xmMetro.ride : null;
+    const rl = !inXm && metro.ride && metro.ride.train && G.aboard ? metro.ride : null;
+    if (inXm) hud.whereXm(xmMetro.code, rlXm ? rlXm.line : (G.zone.P ? G.zone.P.line : XM_STATIONS[xmMetro.code].lines[0]), rlXm && rlXm.phase === 'cruise' ? rlXm.next : null);
+    else { const rh = east && east.railHud(); if (rh) hud.whereRail(rh); else { const line = rl ? rl.line : (G.zone.kind === 'platform' ? G.zone.P.line : STATIONS[G.code].lines[0]); hud.where(G.code, line, rl && rl.phase === 'cruise' ? rl.next : null); } }
     discovery.update({ code: G.code, zone: G.zone, station: G.station, dt });
     // 脚步声
     // 脚步声：按实际水平位移算速度（被挡住、站着不动就没有脚步），步幅随速度变大；地面：站内地砖 / 街面石板 / 地毯（饭店、酒店）/ 木地板（纪念堂）
@@ -244,7 +261,8 @@ export async function start() {
       if (player.landed) { player.landed = false; Audio.footstep({ surface, land: true }); } }
     // 掉出世界 → 回到站台 / 站口
     if (!G.inTunnel && p.y < -40) {
-      const P = G.station.platforms[0]; player.spawn(20, P.y + 0.05, P.zc, Math.PI / 2); hud.toast('回到站台啦');
+      if (inXm) { const P = xmMetro.station.platforms[0]; player.spawn(XO.x + 10, P.y + 0.05, P.zc + 2, Math.PI / 2); hud.toast('回到站台啦'); }
+      else if (!(east && east.cur)) { const P = G.station.platforms[0]; player.spawn(20, P.y + 0.05, P.zc, Math.PI / 2); hud.toast('回到站台啦'); }
     }
     // 室内外灯光过渡 + 阴影跟随玩家
     R.update(dt, G.zone.kind === 'street' && !G.inTunnel ? 0 : 1, p);
@@ -293,12 +311,19 @@ export async function start() {
   clan = new ClanCtl({ scene, M, player, hud, seats, Audio, events, getStation: () => G.station });
   // 广州东站：站台上停着的复兴号 5 号车厢（二等座）：见 js/game/east.js
   east = new EastCtl({ scene, M, player, hud, seats, Audio, events, getStation: () => G.station });
+  xmMetro = new XmMetro(scene, {
+    player, Audio, events,
+    onTunnel: v => { G.inTunnel = v; scene.fogMode = v ? B.Scene.FOGMODE_LINEAR : B.Scene.FOGMODE_NONE; },
+    getRailway: () => east && east.xmn
+  });
+  east.xmMetro = xmMetro;
+  xmMetro.trains.forEach(t => t.shadowMeshes && t.shadowMeshes.forEach(m => R.addShadowCaster(m)));
   const brother = installBrother({ scene, cam, M, player, R, hud, seats, social, bubbles, Audio, events, input, getStation: () => G.station, getCode: () => G.code }); G.brother = brother;
   window.__game = {
     state: () => ({
       code: G.code, zone: G.zone.kind, pos: [player.position.x, player.position.y, player.position.z].map(v => +v.toFixed(2)), yaw: +player.yaw.toFixed(3), pitch: +player.pitch.toFixed(3),
       view: player.view, grounded: player.grounded, aboard: !!G.aboard, inTunnel: G.inTunnel, fps: Math.round(engine.getFps()), avgFps: Math.round(G.fps), tier: G.tier,
-      metro: metro.info(), mv: G.mv || 0, camPos: [cam.position.x, cam.position.y, cam.position.z].map(v => +v.toFixed(2)),
+      metro: metro.info(), xmMetro: xmMetro ? xmMetro.info() : null, mv: G.mv || 0, camPos: [cam.position.x, cam.position.y, cam.position.z].map(v => +v.toFixed(2)),
       babylon: { version: B.Engine.Version, source: window.__babylonSource, attempts: window.__babylonAttempts },
       drawCalls: (engine._drawCalls && engine._drawCalls.current) ?? null, activeMeshes: scene.getActiveMeshes().length, depthBits: depthBits(), minZ: cam.minZ, gates: G.station.gates.map(g => +g.f.toFixed(2)),
       security: G.station.security.flash > 0, probes: R.probes.length, atlas: G.station.kit.atlas ? { y: G.station.kit.atlas.y + G.station.kit.atlas.row, overflow: G.station.kit.atlas.overflow } : null, audio: Audio.getState(),
@@ -309,8 +334,8 @@ export async function start() {
     look: (dx, dy) => { input.look.x += dx; input.look.y += dy; },
     jump: () => { input.jumpQueued = true; }, toggleView, toggleMute,
     autopilot: (pts, run) => new Promise(resolve => { G.auto = { pts, i: 0, time: 0, resolve, run }; }),
-    call: (line, step) => metro.call(line, step), openMap, closeMap, mapZoom: mapPZ,
+    call: (line, step) => (xmMetro && xmMetro.station ? xmMetro.call(line, step) : metro.call(line, step)), openMap, closeMap, mapZoom: mapPZ,
     // 测试：软件渲染只有几帧每秒，放宽单帧步长上限让游戏时间接近墙钟（默认 0.05）
-    setDtMax: v => { G.dtMax = v; }, act: doAct, Audio, brother, hotel, clan, east, tickets, seats, social, discovery, bubbles, metro, player, scene, engine, events, render: R, get station() { return G.station; }
+    setDtMax: v => { G.dtMax = v; }, act: doAct, Audio, brother, hotel, clan, east, xmMetro, tickets, seats, social, discovery, bubbles, metro, player, scene, engine, events, render: R, get station() { return G.station; }
   };
 }

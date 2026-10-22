@@ -1,5 +1,6 @@
 // HUD：左上角站名牌（广州地铁风格：线路色标 + 中文站名 + 英文站名 + 线路色底边）、下一站提示、居中提示（toast）。
 import { LINES, STATIONS } from '../data/lines.js';
+import { XM_LINES, XM_STATIONS } from '../data/xm-lines.js';
 import { TOKEN_HTML, CARD_HTML, flyEl, popChip } from './tvm.js';
 const $ = id => document.getElementById(id);
 export class Hud {
@@ -13,6 +14,17 @@ export class Hud {
     if (changed) { w.classList.remove('swap'); void w.offsetWidth; w.classList.add('swap'); }
     const n = $('next');
     if (nextCode) { n.hidden = false; n.innerHTML = `<span class="tag">下一站<small>Next</small></span><span class="nm">${STATIONS[nextCode].zh}<small>${STATIONS[nextCode].en}</small></span>`; n.style.setProperty('--line', L.color); } else n.hidden = true;
+  }
+  /** 厦门地铁：线路色标 + 站名（和广州同款 HUD，数据来自 xm-lines） */
+  whereXm(code, line, nextCode) {
+    const s = XM_STATIONS[code], L = XM_LINES[line] || XM_LINES[s.lines[0]], key = 'xm:' + code + line + (nextCode || '');
+    if (key === this.key) return; const changed = this.key && !this.key.startsWith('xm:' + code); this.key = key;
+    const w = $('where'); w.style.setProperty('--line', L.color); w.style.setProperty('--ink', L.ink);
+    const ln = $('whereLine'); ln.innerHTML = `<b>${L.id}</b><small>号线</small>`; ln.setAttribute('aria-label', '厦门地铁' + L.zh);
+    $('whereName').textContent = s.zh; $('whereEn').textContent = s.en;
+    if (changed) { w.classList.remove('swap'); void w.offsetWidth; w.classList.add('swap'); }
+    const n = $('next');
+    if (nextCode && XM_STATIONS[nextCode]) { n.hidden = false; n.innerHTML = `<span class="tag">下一站<small>Next</small></span><span class="nm">${XM_STATIONS[nextCode].zh}<small>${XM_STATIONS[nextCode].en}</small></span>`; n.style.setProperty('--line', L.color); } else n.hidden = true;
   }
   /** 国铁（动车 / 厦门北站）：左上角换成车次徽标 + 名字；o = { badge, zh, en, color, next: { zh, en } } */
   whereRail(o) {
