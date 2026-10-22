@@ -53,7 +53,7 @@ export class EastInterior {
     this.doorLeaf(k);
     k.finish(); atlas.finish(k.root, 'emuSigns');
     // 车窗玻璃：比站里的玻璃更通透（少反光），车窗外的风景才看得清
-    const gm = k.byBucket['glass@emu'] && k.byBucket['glass@emu'].material; if (gm) { gm.alpha = 0.08; gm.environmentIntensity = 0.35; k.byBucket['glass@emu'].alphaIndex = 10; this.pane.material = gm; }
+    const gm = k.byBucket['glass@emu'] && k.byBucket['glass@emu'].material; if (gm) { gm.alpha = 0.15; gm.environmentIntensity = 0.5; k.byBucket['glass@emu'].alphaIndex = 10; this.pane.material = gm; }
     // 车窗外的广州东站站台：单独的 Kit（开车时整体往后滑走），不冻结世界矩阵
     const ko = this.outGz = new Kit(scene, 'emu-out-gz'), ao = this.outGzAtlas = new FoodAtlas(scene, 512);
     this.outside(ko, ao); ko.finish(false); ao.finish(ko.root, 'emuOutSigns');

@@ -23,7 +23,7 @@ function ridge(c, pw, base, amp, col, R, n = 7, sharp = 0.5) {
 /* 远景：2 列 × 5 行（城市 / 田野 / 山 / 海 / 厦门）；面板 120 m 宽、y -60..90；地平线 y = 0（0.6 高处）。
  * 楼房按米来画（横 / 竖像素密度不一样）：有宽度、有一格格窗户，不会变成一排细竖条。 */
 const FAR_ROWS = ['city', 'fields', 'mount', 'sea', 'xiamen'];
-const HZ_F = 0.6, FW = 120, FY0 = -60, FY1 = 90;
+const FW = 120, FY0 = -60, FY1 = 200, HZ_F = FY1 / (FY1 - FY0), KA = 150 / (FY1 - FY0);   // 面板往上一直到 200 m：斜着往上看也看不到面板上沿
 const fx = (pw, x) => pw * x / FW, fy = (ph, y) => ph * (FY1 - y) / (FY1 - FY0);
 /** 一栋楼（米）：x0..x1、底 yb、高 h；正面 + 右侧一窄条暗面 + 屋顶线 + 一格格窗户 */
 function tower(c, pw, ph, x0, x1, yb, h, col, R, o = {}) {
@@ -66,17 +66,17 @@ function seaBridge(c, pw, ph, v) {
 }
 const FAR = {
   city(c, pw, ph, v, R) { const hz = fy(ph, 0); sky(c, pw, ph, hz, '#8DB8DE', '#E3ECF2');
-    ridge(c, pw, hz, ph * 0.07, 'rgba(150,170,178,0.75)', R, 5, 0.3);                                     // 白云山一线
+    ridge(c, pw, hz, ph * KA * 0.07, 'rgba(150,170,178,0.75)', R, 5, 0.3);                                     // 白云山一线
     skyline(c, pw, ph, R, { hmin: 14, hmax: v ? 46 : 34, wmin: 14, wmax: 30, gap: 5, cols: ['#C9D2DB', '#D8D3C9', '#BFCAD4', '#DDD9CF'] });
     c.fillStyle = 'rgba(225,235,242,0.25)'; c.fillRect(0, fy(ph, 30), pw, hz - fy(ph, 30));             // 远处一层薄雾
     c.fillStyle = '#93A08E'; c.fillRect(0, hz, pw, ph - hz); },
-  fields(c, pw, ph, v, R) { const hz = ph * HZ_F; sky(c, pw, ph, hz); ridge(c, pw, hz, ph * 0.12, '#9BB4B8', R, 6, 0.4); ridge(c, pw, hz, ph * 0.06, '#86A890', R, 9, 0.3); c.fillStyle = '#7FA066'; c.fillRect(0, hz, pw, ph - hz); },
-  mount(c, pw, ph, v, R) { const hz = ph * HZ_F; sky(c, pw, ph, hz, '#7EAFDB', '#D5E6F0'); ridge(c, pw, hz, ph * 0.34, '#8FAAB5', R, 5, 0.6); ridge(c, pw, hz, ph * 0.22, '#5F8A6C', R, 7, 0.5); c.fillStyle = '#557E58'; c.fillRect(0, hz, pw, ph - hz); },
+  fields(c, pw, ph, v, R) { const hz = ph * HZ_F; sky(c, pw, ph, hz); ridge(c, pw, hz, ph * KA * 0.12, '#9BB4B8', R, 6, 0.4); ridge(c, pw, hz, ph * KA * 0.06, '#86A890', R, 9, 0.3); c.fillStyle = '#7FA066'; c.fillRect(0, hz, pw, ph - hz); },
+  mount(c, pw, ph, v, R) { const hz = ph * HZ_F; sky(c, pw, ph, hz, '#7EAFDB', '#D5E6F0'); ridge(c, pw, hz, ph * KA * 0.34, '#8FAAB5', R, 5, 0.6); ridge(c, pw, hz, ph * KA * 0.22, '#5F8A6C', R, 7, 0.5); c.fillStyle = '#557E58'; c.fillRect(0, hz, pw, ph - hz); },
   sea(c, pw, ph, v, R) { const hz = fy(ph, 0); sky(c, pw, ph, hz, '#77B0E2', '#E6F1F7');
-    ridge(c, pw, hz, ph * 0.09, 'rgba(128,156,170,0.7)', R, 4, 0.5);                                     // 远山（低、发蓝）
+    ridge(c, pw, hz, ph * KA * 0.09, 'rgba(128,156,170,0.7)', R, 4, 0.5);                                     // 远山（低、发蓝）
     water(c, pw, ph, R); seaBridge(c, pw, ph, v); },
   xiamen(c, pw, ph, v, R) { const hz = fy(ph, 0); sky(c, pw, ph, hz, '#7DB6E6', '#E4F0F7');
-    ridge(c, pw, hz, ph * 0.14, '#93B0B0', R, 5, 0.5);                                                    // 岛上的山
+    ridge(c, pw, hz, ph * KA * 0.14, '#93B0B0', R, 5, 0.5);                                                    // 岛上的山
     const cols = ['#E6E9EC', '#D3DEE6', '#EDE6DA', '#C6D3DE', '#F0EEE9'];
     skyline(c, pw, ph, R, { hmin: 16, hmax: 48, wmin: 12, wmax: 26, gap: 4, yb: 1, cols });
     if (v === 0) for (const x0 of [52, 70]) tower(c, pw, ph, x0, x0 + 13, 1, 88, '#B9CCDA', R, { floor: 4, bay: 2.6, win: 'rgba(60,90,120,0.5)', crown: x0 > 60 ? 1 : -1, crownH: 9 });   // 双子塔（世茂海峡大厦）
@@ -220,7 +220,7 @@ export class EmuScenery {
   constructor(scene, parent) {
     this.root = new B.TransformNode('emuScenery', scene); this.root.parent = parent;
     const P = this.root;
-    this.far = new Layer(scene, 'sceneFar', { parent: P, rows: FAR_ROWS, cols: 2, size: 2048, paint: FAR, n: 6, w: 120, z: 120, y0: -60, y1: 90, k: 0.35, init: 'city', seed: 3 });
+    this.far = new Layer(scene, 'sceneFar', { parent: P, rows: FAR_ROWS, cols: 2, size: 2048, paint: FAR, n: 10, w: 120, z: 120, y0: FY0, y1: FY1, k: 0.35, init: 'city', seed: 3 });
     this.mid = new Layer(scene, 'sceneMid', { parent: P, rows: MID_ROWS, cols: 2, paint: MID, alpha: true, n: 14, w: 40, z: 40, y0: -25, y1: 20, k: 0.75, init: 'city', seed: 5 });
     this.near = new Layer(scene, 'sceneNear', { parent: P, rows: NEAR_ROWS, cols: 2, paint: NEAR, alpha: true, n: 12, w: 14, z: 8.5, y0: NY0, y1: NY0 + NH, k: 1, init: 'empty', seed: 9 });
     // 道床（碎石 + 轨枕），贴图沿 x 滚动

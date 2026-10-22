@@ -64,7 +64,7 @@ async def main():
     # a：关好门、列车开出广州东站台（站在过道往站台一侧看，站台和「广州东」站牌往后滑）
     await wait(pg, '__game.east.info().ride.rt > 4.5', 10)
     # a：坐在 12 排 F 座（靠站台一侧的窗），往前斜着看一排大车窗：「5 站台」牌子和柱子往后退
-    await sit_at(pg, 12, 'F', 1.1, 0.28)
+    await sit_at(pg, 12, 'F', 1.05, 0.2)
     ok('carWallMoving', await pg.evaluate(WALL))
     await shot(pg, 'a-depart-gzdz', 0.8)
     e = await E(pg); ok('platformSliding', e['ride']['s'] > 3 and e['ride']['v'] > 1 and e['door'] >= 1)
