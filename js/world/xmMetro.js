@@ -192,6 +192,31 @@ export class XmStation {
       G.box(x, y + 0.42 * k, ze + e * 0.62 * k, d * 0.8, 0.09 * k, 0.55 * k, col, 0, -e * 0.95, 0, 1, { ao: false });
     }
   }
+  /** 柱头燕尾脊（实心）：中段平直，两头分段上翘、尾端分叉；红橙瓦面 + 浅灰白压边。沿 z 放，rx=-e·θ 上翘 */
+  ridgeZ(G, x, yb, zc, half = 0.55) {
+    const TILE = hex('#C9552F'), TRIM = hex('#ECE8E0'), o = { ao: false }, W = 0.34;
+    G.slab(x - W / 2, x + W / 2, yb, yb + 0.22, zc - half, zc + half, TILE, o);
+    G.slab(x - W / 2 - 0.03, x + W / 2 + 0.03, yb + 0.22, yb + 0.27, zc - half, zc + half, TRIM, o);
+    G.slab(x - W / 2 - 0.02, x + W / 2 + 0.02, yb - 0.04, yb, zc - half - 0.02, zc + half + 0.02, TRIM, o);
+    const seg = (cz, cy, th, len, h, w, e) => {   // 中心 (cz,cy)、沿 e·z 方向、上翘角 th
+      G.box(x, cy, cz, w, h, len, TILE, 0, -e * th, 0, 1, o);
+      const nz = -e * Math.sin(th), ny = Math.cos(th);
+      G.box(x, cy + ny * (h / 2 + 0.025), cz + nz * (h / 2 + 0.025), w + 0.05, 0.05, len, TRIM, 0, -e * th, 0, 1, o);
+    };
+    for (const e of [-1, 1]) {
+      let z = zc + e * half, yy = yb + 0.11, h = 0.22, w = W;
+      for (const deg of [12, 26, 40, 54]) {
+        const th = deg * Math.PI / 180, L = 0.17;
+        seg(z + e * Math.cos(th) * L / 2, yy + Math.sin(th) * L / 2, th, L + 0.02, h, w, e);
+        z += e * Math.cos(th) * L; yy += Math.sin(th) * L; h -= 0.02; w -= 0.02;
+      }
+      // 燕尾分叉：上叉陡、下叉平，都是实心短块
+      for (const [deg, L, hh] of [[72, 0.26, 0.12], [28, 0.28, 0.12]]) {
+        const th = deg * Math.PI / 180;
+        seg(z + e * Math.cos(th) * L / 2, yy + Math.sin(th) * L / 2, th, L, hh, w - 0.04, e);
+      }
+    }
+  }
   /** 闽南红砖墙面：按 ~1.6 m 分块，每块砖色略有深浅（同一个材质桶，不加 draw） */
   bricks(x0, x1, y0, y1, z0, z1) {
     const B2 = this.kit.g('brick@xm'), alongX = (x1 - x0) >= (z1 - z0), L = alongX ? x1 - x0 : z1 - z0, n = Math.max(1, Math.round(L / 1.6));
@@ -276,14 +301,16 @@ export class XmStation {
         Pv.slab(x - 0.6, x + 0.6, CY - 0.3, CY - 0.15, zc - 0.6, zc + 0.6, SEA, { ao: false });
       } else {
         Pv.slab(x - 0.55, x + 0.55, y, y + 0.45, zc - 0.55, zc + 0.55, STONE, { ao: false });
-        for (const [a0, a1, b0, b1] of [[x - 0.45, x + 0.45, zc - 0.46, zc - 0.44], [x - 0.45, x + 0.45, zc + 0.44, zc + 0.46], [x - 0.46, x - 0.44, zc - 0.45, zc + 0.45], [x + 0.44, x + 0.46, zc - 0.45, zc + 0.45]]) this.bricks(a0, a1, y + 0.45, CY - 0.55, b0, b1);
-        Pv.slab(x - 0.44, x + 0.44, y + 0.45, CY - 0.55, zc - 0.44, zc + 0.44, hex('#7A3A2A'), { ao: false });
-        // 柱头燕尾脊（沿站台方向，两头上翘分叉）
-        this.yanweiZ(Pv, x, CY - 1.0, zc - 0.6, zc + 0.6, 0.5, hex('#2F2723'), 0.72);
-        Pv.slab(x - 0.5, x + 0.5, CY - 0.55, CY - 0.4, zc - 0.5, zc + 0.5, SEA, { ao: false });
-        // 木斗拱（托住天花）
-        Pv.slab(x - 0.8, x + 0.8, CY - 0.4, CY - 0.2, zc - 0.3, zc + 0.3, hex(th.beam), { ao: false });
-        Pv.slab(x - 0.3, x + 0.3, CY - 0.4, CY - 0.2, zc - 0.8, zc + 0.8, hex(th.beam), { ao: false });
+        const CT = CY - 1.25;   // 砖柱顶
+        for (const [a0, a1, b0, b1] of [[x - 0.45, x + 0.45, zc - 0.46, zc - 0.44], [x - 0.45, x + 0.45, zc + 0.44, zc + 0.46], [x - 0.46, x - 0.44, zc - 0.45, zc + 0.45], [x + 0.44, x + 0.46, zc - 0.45, zc + 0.45]]) this.bricks(a0, a1, y + 0.45, CT, b0, b1);
+        Pv.slab(x - 0.44, x + 0.44, y + 0.45, CT, zc - 0.44, zc + 0.44, hex('#7A3A2A'), { ao: false });
+        // 海蓝柱头板 + 实心燕尾脊（沿站台方向看是侧影）
+        Pv.slab(x - 0.6, x + 0.6, CT, CT + 0.15, zc - 0.6, zc + 0.6, SEA, { ao: false });
+        this.ridgeZ(Pv, x, CT + 0.19, zc);
+        // 木斗拱：脊上一根短柱托住天花
+        Pv.slab(x - 0.14, x + 0.14, CT + 0.46, CY - 0.2, zc - 0.2, zc + 0.2, hex(th.beam), { ao: false });
+        Pv.slab(x - 0.8, x + 0.8, CY - 0.2, CY, zc - 0.25, zc + 0.25, hex(th.beam), { ao: false });
+        Pv.slab(x - 0.25, x + 0.25, CY - 0.2, CY, zc - 0.9, zc + 0.9, hex(th.beam), { ao: false });
       }
     }
     // 2b) 古地石：岛中一道岩壁把立柱连起来（中间留 x≈0 一段可以穿过）
