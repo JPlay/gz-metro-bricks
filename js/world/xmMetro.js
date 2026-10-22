@@ -25,6 +25,7 @@ export const XM_PSD = 6;
 export const XM_WALL = 10.6;
 export const XM_HALL_X = 36;
 export const XM_TUNNEL_X = 90;
+export const XF = { x0: 4, x1: 20, z0: -1.9, z1: 1.9 };   // 吕厝换乘楼梯（L1 地面开洞 → L2）
 import { DOOR_XS as TRAIN_DOORS } from './train.js';
 
 const THEME = {
@@ -57,7 +58,7 @@ export class XmStation {
     k.root.position.set(XO.x, 0, 0);
     this.atlas = new FoodAtlas(scene, 2048);
     this.platforms = this.frames().map(f => ({ ...f, sides: this.sidesFor(f) }));
-    this.platforms.forEach(p => this.buildPlatform(p));
+    this.platforms.forEach(p => { this.buildPlatform(p); this.decor(p); });
     if (this.platforms.length > 1) this.buildTransfer();
     if (code === 'xmnb') this.linkRailway();
     else this.buildConcourse();
@@ -66,8 +67,8 @@ export class XmStation {
   frames() {
     const lines = this.s.lines;
     if (lines.length > 1) return [
-      { line: 1, y: XM_PY, zc: 0 },
-      { line: 2, y: XM_PY2, zc: 28 }
+      { line: 1, y: XM_PY, zc: 0, hole: true },
+      { line: 2, y: XM_PY2, zc: 0, under: true }   // 吕厝：2 号线在 1 号线正下方（真实 1 号线地下二层、2 号线地下三层）
     ];
     // 厦门北站：侧式站台对准国铁出站层地铁站厅（z≈-80），轨在 -z（往站房外）
     if (this.code === 'xmnb') return [{ line: 1, y: XM_PY, zc: -80 }];   // 游戏用岛式（双边可乘）；真实为侧式
@@ -96,7 +97,7 @@ export class XmStation {
     if (sideOnly === 'B') { z0 = zc - 0.4; z1 = zc + XM_PSD; }
     else if (sideOnly === 'A') { z0 = zc - XM_PSD; z1 = zc + 0.4; }
     else if (sideOnly) { z0 = zc - 0.5; z1 = zc + XM_PSD; }
-    k.floorWithHoles(-XM_HALL_X, XM_HALL_X, z0, z1, y - 1.3, y, hex(th.floor), [], true, 'floor');
+    k.floorWithHoles(-XM_HALL_X, XM_HALL_X, z0, z1, y - 1.3, y, hex(th.floor), P.hole ? [[XF.x0, XF.x1, XF.z0 - 0.1, XF.z1 + 0.1]] : [], true, 'floor');
     // 盲道 + 石材收边
     for (const sz of (sideOnly === 'A' ? [-1] : sideOnly === 'B' ? [1] : sideOnly ? [1] : [-1, 1])) {
       k.g('tactile').slab(-XM_HALL_X, XM_HALL_X, y, y + 0.006, zc + sz * 5.2 - 0.2, zc + sz * 5.2 + 0.2, hex('#F2C230'), { ao: false });
@@ -113,7 +114,7 @@ export class XmStation {
       W.slab(-XM_HALL_X, XM_HALL_X, y - 1.75, y + 4.8, wz - (sz > 0 ? 0 : 0.3), wz + (sz > 0 ? 0.3 : 0), hex(th.wall), { aoTop: true });
       k.colSlab(-XM_HALL_X, XM_HALL_X, y - 1.75, y + 4.8, wz - 0.15, wz + 0.15);
       // 红砖 / 岩石墙裙 + 线路色腰线
-      BR.slab(-XM_HALL_X, XM_HALL_X, y - 1.75, y + 1.4, wz - sz * 0.02, wz + sz * 0.02, hex(th.dado), { ao: false });
+      BR.slab(-XM_HALL_X, XM_HALL_X, y - 1.75, y + 1.4, wz - sz * 0.02, wz + sz * 0.02, (this.themeKey === 'rock' ? hex(th.dado) : hex('#D99A84')), { ao: false });
       Pv.slab(-XM_HALL_X, XM_HALL_X, y + 1.4, y + 1.55, wz - sz * 0.03, wz + sz * 0.03, hex(th.beam), { ao: false });
       Pv.slab(-XM_HALL_X, XM_HALL_X, y + 0.15, y + 0.5, wz - sz * 0.04, wz, hex(lc), { ao: false });
       if (this.themeKey === 'rock') {
@@ -167,10 +168,106 @@ export class XmStation {
       for (const sx of [-1.8, 1.8]) M.tube([sx, y + 3.95, z], [sx, y + 4.15, z], 0.03, hex('#9AA1A8'), 6);
     }
   }
+  /** 燕尾脊：一根脊 + 两端上翘分叉的“燕尾”（闽南古厝屋脊）。dir: 'x' 沿 x */
+  yanwei(G, x0, x1, y, z, d, col) {
+    G.slab(x0, x1, y, y + 0.16, z - d / 2, z + d / 2, col, { ao: false });
+    for (const e of [-1, 1]) {
+      const xe = e < 0 ? x0 : x1;
+      // 主燕尾：向外上翘；副尾：更陡、略短 → 分叉
+      G.box(xe + e * 0.42, y + 0.2, z, 0.95, 0.12, d, col, 0, 0, e * 0.42, 1, { ao: false });
+      G.box(xe + e * 0.62, y + 0.42, z, 0.55, 0.09, d * 0.8, col, 0, 0, e * 0.95, 1, { ao: false });
+    }
+  }
+  /** 站台装修：端墙（闽南红砖山墙 / 岩壁）、岛中立柱、屏蔽门上方门楣、燕尾脊吊牌框 */
+  decor(P) {
+    const k = this.kit, y = P.y, zc = P.zc, th = this.th, Pv = k.solid, BR = k.g('brick'), GR = k.g('granite'), G = k.glow;
+    const rock = this.themeKey === 'rock', CY = y + 4.2, SEA = hex('#1F6FA8'), STONE = hex('#E9E3D6'), TILE = hex('#D99A84');
+    const so = P.sideOnly;
+    const z0 = so === 'A' ? zc - XM_PSD : so ? zc - 0.5 : zc - XM_PSD, z1 = so === 'A' ? zc + 0.4 : zc + XM_PSD;
+    let seed = (this.code.charCodeAt(0) * 31 + P.line * 7) | 0;
+    const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
+    const ROCKS = ['#8C8276', '#A39A8C', '#6F675D', '#B3A897', '#7E7466', '#958B7C'].map(hex);
+    // 1) 端墙：站台两头封住（不再看到天空）
+    for (const e of [-1, 1]) {
+      const xw = e * XM_HALL_X, xi = xw - e * 0.3;
+      Pv.slab(Math.min(xw, xi), Math.max(xw, xi), y, CY + 0.25, z0, z1, hex(th.wall), { ao: false });
+      k.colSlab(Math.min(xw, xi), Math.max(xw, xi), y, CY, z0, z1);
+      const xf = xi - e * 0.04, xa = Math.min(xi, xf), xb = Math.max(xi, xf);
+      if (rock) {
+        // 岩壁：不规则石块凹凸
+        for (let yy = y; yy < CY; ) {
+          const h = 0.5 + rnd() * 0.7;
+          for (let zz = z0; zz < z1; ) {
+            const w = 0.8 + rnd() * 1.6, dz = Math.min(w, z1 - zz), dep = 0.05 + rnd() * 0.25;
+            GR.slab(xa - (e > 0 ? dep : 0), xb + (e < 0 ? dep : 0), yy, Math.min(CY, yy + h) - 0.03, zz, zz + dz - 0.04, ROCKS[(rnd() * ROCKS.length) | 0], { ao: false });
+            zz += dz;
+          }
+          yy += h;
+        }
+        // 海蓝腰带 + 站名
+        Pv.slab(xa - (e > 0 ? 0.32 : 0), xb + (e < 0 ? 0.32 : 0), y + 1.0, y + 1.18, z0, z1, SEA, { ao: false });
+      } else {
+        // 白石勒脚 + 红砖墙身 + 海蓝瓷砖腰线 + 燕尾脊山墙轮廓
+        Pv.slab(xa, xb, y, y + 0.6, z0, z1, STONE, { ao: false });
+        BR.slab(xa, xb, y + 0.6, CY - 0.6, z0, z1, TILE, { ao: false });
+        Pv.slab(xa - (e > 0 ? 0.02 : 0), xb + (e < 0 ? 0.02 : 0), y + 1.6, y + 1.78, z0, z1, SEA, { ao: false });
+        // 红砖拼花窗（“出砖入石”）：中间一块白石框 + 海蓝心
+        Pv.slab(xa - (e > 0 ? 0.03 : 0), xb + (e < 0 ? 0.03 : 0), y + 1.75, y + 2.7, zc - 1.6, zc + 1.6, STONE, { ao: false });
+        Pv.slab(xa - (e > 0 ? 0.05 : 0), xb + (e < 0 ? 0.05 : 0), y + 1.88, y + 2.57, zc - 1.4, zc + 1.4, SEA, { ao: false });
+      }
+      // 燕尾脊：贴在端墙上沿（沿 z 方向做脊）
+      // 山墙上的大燕尾脊：深色瓦脊 + 白灰线，两端长长上翘分叉（低于天花梁，正面能看见）
+      const xr = xi - e * 0.16, col = hex('#2F2723'), line = STONE;
+      const ya = y + 3.05, za = z0 + 2.6, zb = z1 - 2.6;
+      Pv.slab(xr - 0.14, xr + 0.14, ya, ya + 0.42, za, zb, col, { ao: false });
+      Pv.slab(xr - 0.16, xr + 0.16, ya - 0.08, ya, za - 0.3, zb + 0.3, line, { ao: false });
+      for (const s2 of [-1, 1]) {
+        const ze = s2 < 0 ? za : zb;
+        Pv.box(xr, ya + 0.36, ze + s2 * 0.95, 0.28, 0.36, 2.0, col, 0, -s2 * 0.4, 0, 1, { ao: false });
+        Pv.box(xr, ya + 0.95, ze + s2 * 1.95, 0.24, 0.2, 1.3, col, 0, -s2 * 0.85, 0, 1, { ao: false });
+        Pv.box(xr, ya + 0.78, ze + s2 * 2.15, 0.2, 0.14, 1.0, col, 0, -s2 * 0.35, 0, 1, { ao: false });
+      }
+    }
+    // 2) 岛中立柱（侧式站贴墙不放）
+    if (!so) for (let x = -22.5; x <= 22.6; x += 9) {
+      if (Math.abs(x) < 3 || ((P.hole || P.under) && x > XF.x0 - 1.5 && x < XF.x1 + 1.5)) continue;
+      k.colSlab(x - 0.45, x + 0.45, y, CY, zc - 0.45, zc + 0.45);
+      if (rock) {
+        for (let yy = y; yy < CY - 0.3; ) {
+          const h = 0.35 + rnd() * 0.5, g = 0.04 + rnd() * 0.12;
+          GR.slab(x - 0.45 - g, x + 0.45 + g, yy, Math.min(CY - 0.3, yy + h) - 0.02, zc - 0.45 - g, zc + 0.45 + g, ROCKS[(rnd() * ROCKS.length) | 0], { ao: false });
+          yy += h;
+        }
+        Pv.slab(x - 0.6, x + 0.6, CY - 0.3, CY - 0.15, zc - 0.6, zc + 0.6, SEA, { ao: false });
+      } else {
+        Pv.slab(x - 0.55, x + 0.55, y, y + 0.45, zc - 0.55, zc + 0.55, STONE, { ao: false });
+        BR.slab(x - 0.45, x + 0.45, y + 0.45, CY - 0.55, zc - 0.45, zc + 0.45, TILE, { ao: false });
+        Pv.slab(x - 0.5, x + 0.5, CY - 0.55, CY - 0.4, zc - 0.5, zc + 0.5, SEA, { ao: false });
+        // 木斗拱（托住天花）
+        Pv.slab(x - 0.8, x + 0.8, CY - 0.4, CY - 0.2, zc - 0.3, zc + 0.3, hex(th.beam), { ao: false });
+        Pv.slab(x - 0.3, x + 0.3, CY - 0.4, CY - 0.2, zc - 0.8, zc + 0.8, hex(th.beam), { ao: false });
+      }
+    }
+    // 3) 屏蔽门上方门楣：红砖（或岩石）带 + 海蓝瓷砖线 + 燕尾脊
+    for (const side of Object.values(P.sides)) {
+      const sg = side.key === 'A' ? -1 : 1, zf = side.psdZ - sg * 0.14;
+      const za = Math.min(zf, zf - sg * 0.05), zb = Math.max(zf, zf - sg * 0.05);
+      Pv.slab(-XM_HALL_X + 0.3, XM_HALL_X - 0.3, y + 2.82, y + 2.97, za - 0.02, zb + 0.02, SEA, { ao: false });
+      (rock ? GR : BR).slab(-XM_HALL_X + 0.3, XM_HALL_X - 0.3, y + 2.97, CY, za, zb, rock ? hex('#8C8276') : TILE, { ao: false });
+      for (let x = -31.5; x <= 31.6; x += 9) this.yanwei(Pv, x - 2.6, x + 2.6, CY - 0.62, zf - sg * 0.08, 0.1, rock ? hex('#3E3A34') : hex('#7A2E1F'));
+    }
+    // 4) 方向吊牌加燕尾脊框顶（站名 / 往 xx 方向）
+    for (const side of Object.values(P.sides)) {
+      const z = zc + (side.key === 'A' ? -2.5 : 2.5);
+      this.yanwei(Pv, -2.7, 2.7, y + 3.98, z, 0.1, hex('#7A2E1F'));
+      Pv.slab(-2.85, 2.85, y + 3.0, y + 3.05, z - 0.04, z + 0.04, SEA, { ao: false });
+    }
+  }
   ceil(P) {
     const k = this.kit, y = P.y, zc = P.zc, th = this.th, CY = y + 4.2, Pv = k.solid, G = k.glow;
     const z0 = P.sideOnly ? zc - 0.5 : zc - XM_PSD, z1 = zc + XM_PSD;
-    k.g('ceiling').slab(-XM_HALL_X, XM_HALL_X, CY, CY + 0.25, z0, z1, hex('#F4F2EE'), { ao: false });
+    if (P.under) k.floorWithHoles(-XM_HALL_X, XM_HALL_X, z0, z1, CY, CY + 0.25, hex('#F4F2EE'), [[XF.x0 - 0.2, XF.x1, XF.z0 - 0.3, XF.z1 + 0.3]], false, 'ceiling');
+    else k.g('ceiling').slab(-XM_HALL_X, XM_HALL_X, CY, CY + 0.25, z0, z1, hex('#F4F2EE'), { ao: false });
     if (this.themeKey === 'sail' || this.themeKey === 'sea') {
       // 波浪 / 帆：海蓝弧板
       for (let i = 0; i < 9; i++) {
@@ -182,8 +279,8 @@ export class XmStation {
       for (let x = -XM_HALL_X + 2; x < XM_HALL_X; x += 3.2) Pv.slab(x - 0.2, x + 0.2, CY - 0.5, CY, z0, z1, hex(th.beam), { ao: false });
     } else {
       // 人字梁 / 木椽（闽南古厝意象）
-      for (let x = -XM_HALL_X + 2; x < XM_HALL_X; x += 3.6) Pv.slab(x - 0.09, x + 0.09, CY - 0.35, CY, z0, z1, hex(th.beam), { ao: false });
-      for (const z of [-3, 0, 3]) G.slab(-XM_HALL_X + 1, XM_HALL_X - 1, CY - 0.4, CY - 0.36, zc + z - 0.2, zc + z + 0.2, hex('#FFF8EC'), { ao: false });
+      for (let x = -XM_HALL_X + 2; x < XM_HALL_X; x += 3.6) { if (P.under && x > XF.x0 - 0.5 && x < XF.x1 + 0.5) { Pv.slab(x - 0.09, x + 0.09, CY - 0.35, CY, z0, XF.z0 - 0.3, hex(th.beam), { ao: false }); Pv.slab(x - 0.09, x + 0.09, CY - 0.35, CY, XF.z1 + 0.3, z1, hex(th.beam), { ao: false }); } else Pv.slab(x - 0.09, x + 0.09, CY - 0.35, CY, z0, z1, hex(th.beam), { ao: false }); }
+      for (const z of (P.under ? [-3, 3] : [-3, 0, 3])) G.slab(-XM_HALL_X + 1, XM_HALL_X - 1, CY - 0.4, CY - 0.36, zc + z - 0.2, zc + z + 0.2, hex('#FFF8EC'), { ao: false });
     }
   }
   psdBuild(P, side) {
@@ -217,23 +314,25 @@ export class XmStation {
     const closed = f < 0.7;
     for (const c of side.psd.cols) c.checkCollisions = closed;
   }
-  /** 吕厝：两层之间的换乘楼梯 + 导向 */
+  /** 吕厝：1 号线站台中间开洞，直跑楼梯下到正下方 2 号线站台；两头吊换乘牌（1 橙 / 2 绿） */
   buildTransfer() {
-    const k = this.kit, Pv = k.solid;
-    // 楼梯从 L1 (y=-13,z=0) 到 L2 (y=-22,z=28)；中间休息平台
-    k.floorWithHoles(-10, 10, 8, 16, XM_PY - 4.3, XM_PY - 4, hex('#D8D3CA'), [], true, 'floor');
-    k.stairs('z', 4, XM_PY, 10, XM_PY - 4, -8, 8, XM_PY - 4, '#D6D1C7');
-    k.stairs('z', 14, XM_PY - 4, 22, XM_PY2, -8, 8, XM_PY2, '#D6D1C7');
-    const paint = (c, pw, ph) => {
+    const k = this.kit, Pv = k.solid, SEA = hex('#1F6FA8');
+    k.stairs('x', XF.x0, XM_PY, XF.x1, XM_PY2, XF.z0, XF.z1, XM_PY2, '#D6D1C7');
+    // 洞口栏杆（两侧 + 楼梯起点对面一头），白石栏板 + 海蓝扶手
+    for (const z of [XF.z0 - 0.05, XF.z1 + 0.05]) { k.rail(XF.x0, z, XF.x1, z, XM_PY); Pv.slab(XF.x0, XF.x1, XM_PY, XM_PY + 0.9, z - 0.06, z + 0.06, hex('#E9E3D6'), { ao: false }); Pv.slab(XF.x0, XF.x1, XM_PY + 0.9, XM_PY + 1.0, z - 0.09, z + 0.09, SEA, { ao: false }); }
+    k.rail(XF.x1, XF.z0, XF.x1, XF.z1, XM_PY);
+    // 楼梯井侧墙（L1 地板到 L2 天花之间），红砖
+    for (const z of [XF.z0 - 0.3, XF.z1 + 0.3]) k.g('brick').slab(XF.x0 - 0.2, XF.x1, XM_PY2 + 4.2, XM_PY - 1.3, z - 0.1, z + 0.1, hex('#D99A84'), { ao: false });
+    const sign = (to) => (c, pw, ph) => {
       c.fillStyle = '#1B2530'; c.fillRect(0, 0, pw, ph);
-      c.fillStyle = '#F2711C'; c.fillRect(8, 8, ph * 0.55, ph - 16);
-      c.fillStyle = '#FFF'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `800 ${ph * 0.4}px ${FONT_EN}`; c.fillText('1', 8 + ph * 0.275, ph * 0.4);
-      c.fillStyle = '#00A651'; c.fillRect(8, ph * 0.55, ph * 0.55, ph * 0.35);
-      c.fillStyle = '#FFF'; c.font = `800 ${ph * 0.28}px ${FONT_EN}`; c.fillText('2', 8 + ph * 0.275, ph * 0.72);
-      c.textAlign = 'left'; c.font = `700 ${ph * 0.28}px ${FONT}`; c.fillText('换乘 Transfer', ph * 0.8, ph * 0.5);
+      const L = XM_LINES[to]; c.fillStyle = L.color; c.fillRect(10, 10, ph - 20, ph - 20);
+      c.fillStyle = '#FFF'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `800 ${ph * 0.55}px ${FONT_EN}`; c.fillText(String(to), 10 + (ph - 20) / 2, ph * 0.54);
+      c.textAlign = 'left'; c.font = `800 ${ph * 0.34}px ${FONT}`; c.fillText(`换乘 ${to}号线`, ph * 1.05, ph * 0.38);
+      c.fillStyle = '#C9D2DB'; c.font = `600 ${ph * 0.17}px ${FONT_EN}`; c.fillText(`Transfer to Line ${to}  ·  往 ${Object.values(L.dirs).map(d => d.zh).join(' / ')}`, ph * 1.05, ph * 0.74);
     };
-    this.atlas.quad(0, XM_PY + 3.4, 6, 5, 1.0, Math.PI, this.atlas.draw(5, 1.0, paint));
-    this.atlas.quad(0, XM_PY2 + 3.4, 24, 5, 1.0, 0, this.atlas.draw(5, 1.0, paint));
+    // L1：楼梯口上方（面向 -x 走过来的人）；L2：楼梯脚（面向 +x）
+    this.atlas.quad(XF.x0 - 0.6, XM_PY + 3.3, 0, 5.2, 1.0, -Math.PI / 2, this.atlas.draw(5.2, 1.0, sign(2)));
+    this.atlas.quad(XF.x1 + 0.8, XM_PY2 + 3.3, 0, 5.2, 1.0, Math.PI / 2, this.atlas.draw(5.2, 1.0, sign(1)));
   }
   /** 普通站：小站厅 + 出入口（游戏里出到黑处即可） */
   buildConcourse() {
