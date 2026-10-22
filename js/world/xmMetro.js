@@ -15,6 +15,7 @@ import { hex, mix } from '../core/geo.js';
 import { FoodAtlas } from '../game/food-art.js';
 import { XM_LINES, XM_STATIONS, xmNext, xmDirFor } from '../data/xm-lines.js';
 import { XO } from './xmn.js';
+import { XM_EXITS } from './xmStreet.js';
 import { noProbe } from './xmnStation.js';
 
 const B = window.BABYLON;
@@ -441,9 +442,38 @@ export class XmStation {
     const k = this.kit, y = XM_PY + 6.5, Pv = k.solid, th = this.th;
     k.floorWithHoles(-20, 20, -18, -8, y - 0.3, y, hex(th.floor), [], true, 'floor');
     k.stairs('z', -8, XM_PY, -14, y, -6, 6, XM_PY, '#D6D1C7');
-    Pv.slab(-20, 20, y, y + 3.5, -18.4, -18, hex(th.wall));
+    const ex = XM_EXITS[this.code];
+    if (!ex) { Pv.slab(-20, 20, y, y + 3.5, -18.4, -18, hex(th.wall)); k.g('brick').slab(-20, 20, y, y + 1.4, -18.35, -18.05, hex(th.dado), { ao: false }); }
+    else {
+      // 南墙在出口通道处开口（宽 4.4 m）
+      const g0 = ex.x - 2.2, g1 = ex.x + 2.2;
+      for (const [a0, a1] of [[-20, g0], [g1, 20]]) { Pv.slab(a0, a1, y, y + 3.5, -18.4, -18, hex(th.wall)); k.g('brick').slab(a0, a1, y, y + 1.4, -18.35, -18.05, hex(th.dado), { ao: false }); k.colSlab(a0, a1, y, y + 3.5, -18.4, -18); }
+      this.buildExit(ex, y);
+    }
     Pv.slab(-20.4, -20, y, y + 3.5, -18, -8, hex(th.wall)); Pv.slab(20, 20.4, y, y + 3.5, -18, -8, hex(th.wall));
-    k.g('brick').slab(-20, 20, y, y + 1.4, -18.35, -18.05, hex(th.dado), { ao: false });
+  }
+  /** 出口通道：站厅南墙开口 → 平走一段 → 楼梯上到地面（y=0）→ 顶上是“出站”的亮光；走到顶（z < -35）就进街区 */
+  buildExit(ex, y) {
+    const k = this.kit, Pv = k.solid, th = this.th, x0 = ex.x - 2.2, x1 = ex.x + 2.2, W = hex('#E9E4DA');
+    k.floorWithHoles(x0, x1, -22, -18.4, y - 0.3, y, hex(th.floor), [], true, 'floor');
+    k.stairs('z', -22, y, -34, 0, x0 + 0.05, x1 - 0.05, y, '#D6D1C7');
+    k.floorWithHoles(x0, x1, -37, -34, -0.3, 0, hex(th.floor), [], true, 'floor');
+    for (const [a, b] of [[x0 - 0.3, x0], [x1, x1 + 0.3]]) { Pv.slab(a, b, y, 3.6, -37, -18.4, W, { ao: false }); k.colSlab(a, b, y, 3.6, -37, -18.4); }
+    Pv.slab(x0 - 0.3, x1 + 0.3, 3.6, 3.9, -37.3, -18.4, hex('#F4F2EE'), { ao: false });
+    Pv.slab(x0, x1, y + 3.2, y + 3.5, -22, -18.4, hex('#F4F2EE'), { ao: false });
+    Pv.slab(x0 - 0.3, x1 + 0.3, -0.3, 3.6, -37.3, -37, hex('#F4F2EE'), { ao: false }); k.colSlab(x0, x1, 0, 3.6, -37.4, -37);
+    k.glow.slab(x0 + 0.2, x1 - 0.2, 0.2, 3.3, -36.98, -36.94, hex('#FFF8E8'), { ao: false });   // 地面出口的天光
+    for (let z = -33; z < -19; z += 3.2) k.glow.slab(ex.x - 0.15, ex.x + 0.15, 3.55, 3.6, z, z + 2, hex('#FFF6E0'), { ao: false });
+    // 站厅里的出口牌（黄底黑字，地铁出口导向）
+    const lc = XM_LINES[ex.line].color;
+    const paint = (c, pw, ph) => {
+      c.fillStyle = '#F2C230'; c.fillRect(0, 0, pw, ph); c.fillStyle = '#1B2530'; c.fillRect(8, 8, ph - 16, ph - 16);
+      c.fillStyle = '#F2C230'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `800 ${ph * (ex.n.length > 1 ? 0.36 : 0.48)}px ${FONT_EN}`; c.fillText(ex.n || '出', 8 + (ph - 16) / 2, ph * 0.52);
+      c.fillStyle = '#1B2530'; c.textAlign = 'left'; c.font = `800 ${ph * 0.3}px ${FONT}`; c.fillText(`${ex.n ? ex.n + '号' : ''}出口  ${ex.road}`, ph * 0.95, ph * 0.36);
+      c.font = `600 ${ph * 0.2}px ${FONT}`; c.fillText(ex.to.join(' · '), ph * 0.95, ph * 0.72);
+    };
+    this.atlas.quad(ex.x, y + 2.9, -18.5, 4.2, 0.85, 0, this.atlas.draw(4.2, 0.85, paint));
+    k.g('band').slab(x0, x1, y + 3.3, y + 3.45, -18.55, -18.45, hex(lc), { ao: false });
   }
   /** 厦门北站：接到国铁出站层已有的地铁站厅楼梯口（xmnStation 里楼梯下到约 -12） */
   linkRailway() {

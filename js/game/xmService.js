@@ -8,6 +8,7 @@ import { Geo, hex } from '../core/geo.js';
 import { mats } from '../core/mats.js';
 import { XM_LINES, xmNext, xmDirFor } from '../data/xm-lines.js';
 import { XmStation, XM_PY } from '../world/xmMetro.js';
+import { XmStreet, XM_EXITS, XS } from '../world/xmStreet.js';
 import { XO } from '../world/xmn.js';
 import * as Ann from '../audio/announcements.js';
 const B = window.BABYLON;
@@ -42,6 +43,7 @@ export class XmMetro {
     root.position.y = TUN_Y; root.setEnabled(false); m1.isPickable = false;
   }
   buildStation(code) {
+    if (this.street) { this.street.dispose(); this.street = null; }
     if (this.station) this.station.dispose();
     const st = new XmStation(this.scene, code);
     this.station = st; this.code = code;
@@ -79,7 +81,9 @@ export class XmMetro {
   update(dt) {
     if (!this.station) return;
     const p = this.ctx.player.position, A = this.ctx.Audio, seated = !!this.ctx.player.seat;
+    if (this.street) { const p = this.ctx.player.position; if (this.street.wantsBack(p)) this.backFromStreet(); return; }
     if (this.ride && this.ride.phase === 'cruise') return this.cruise(dt);
+    { const ex = XM_EXITS[this.code], p = this.ctx.player.position; if (ex && !this.ride && p.z < -35.2 && p.y > -1 && Math.abs(p.x - XO.x - ex.x) < 2.4) { this.goStreet(); return; } }
     let sound = null;
     const inCar = this.slots.some(o => o.train.root.isEnabled() && this.playerOn(o.train));
     const multi = this.station.platforms.length > 1;
@@ -169,6 +173,24 @@ export class XmMetro {
     Ann.arrive(this.code); this.ctx.Audio.sfx('train.brake', { volume: 0.5 });
     this.ctx.events.emit('ride', { phase: 'arrive', to: this.code, line: r.line, net: 'xm' });
   }
+  /** 出站：关掉车站，加载出口外的街区（独立场景） */
+  goStreet() {
+    const pl = this.ctx.player;
+    this.station.kit.root.setEnabled(false); this.trains.forEach(t => t.setVisible(false));
+    this.slots.forEach(s => { s.state = 'away'; s.t = 6 + Math.random() * 6; });
+    this.street = new XmStreet(this.scene, this.code);
+    const [x, y, z, yaw] = this.street.spawn(); pl.spawn(x, y, z, yaw);
+    try { this.ctx.Audio.cancelAnnouncements(); this.ctx.Audio.trainSound({ speed: 0 }); } catch (_) {}
+    this.ctx.events.emit('xm', { street: true, code: this.code });
+  }
+  backFromStreet() {
+    const pl = this.ctx.player, ex = XM_EXITS[this.code];
+    this.street.dispose(); this.street = null;
+    this.station.kit.root.setEnabled(true);
+    pl.spawn(XO.x + ex.x, 0.05, -34.4, 0);
+    this.ctx.events.emit('xm', { street: false, code: this.code });
+  }
+  zoneOf(p) { return this.street ? this.street.zoneOf(p) : this.station.zoneOf(p); }
   /** 从国铁付费区进入厦门北站地铁站台 */
   enterFromRailway(player) {
     this.buildStation('xmnb');
@@ -191,6 +213,6 @@ export class XmMetro {
   info() {
     return { code: this.code, ride: this.ride ? { phase: this.ride.phase, line: this.ride.line, step: this.ride.step, next: this.ride.next } : null,
       slots: this.slots.map(s => ({ line: s.line, side: s.side.key, step: s.step, state: s.state, t: +s.t.toFixed(1), x: +(s.train.root.position.x - XO.x).toFixed(1), doors: +s.f.toFixed(2) })),
-      station: this.station ? this.station.info() : null };
+      station: this.station ? this.station.info() : null, street: this.street ? this.street.info() : null };
   }
 }

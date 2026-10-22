@@ -24,7 +24,7 @@ export function snapshot(g) {
   const { player, G, metro } = g, xm = g.xmMetro(), east = g.east(), hotel = g.hotel(), clan = g.clan(), br = g.brother();
   const p = player.position, pos = [p.x, p.y, p.z].map(v => +v.toFixed(2)), yaw = +player.yaw.toFixed(3);
   if (xm && xm.station) {
-    const riding = G.aboard || G.inTunnel || G.zone.kind === 'tunnel';
+    const riding = G.aboard || G.inTunnel || G.zone.kind === 'tunnel' || !!xm.street;   // 街区：存成“回到这个站的站台”
     const line = xm.ride ? xm.ride.line : (G.zone.P ? G.zone.P.line : null);
     return riding ? { city: 'xm', code: xm.code, line, platform: true } : { city: 'xm', code: xm.code, line, pos, yaw };
   }

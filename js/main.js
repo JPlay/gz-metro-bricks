@@ -220,7 +220,7 @@ export async function start() {
     const aboardXm = inXm && xmMetro.trains.some(t => t.root.isEnabled() && t.contains(p));
     G.aboard = aboardGz || aboardXm || G.inTunnel;
     if (G.inTunnel) G.zone = { kind: 'tunnel' };
-    else if (inXm) { G.zone = xmMetro.station.zoneOf(p); G.code = xmMetro.code; }
+    else if (inXm) { G.zone = xmMetro.zoneOf(p); G.code = xmMetro.code; }
     else if (east && east.cur) G.zone = { kind: 'xmn', area: east.area };
     else G.zone = G.station.zoneOf(p);
     // 在地面上看不到地下的列车（车站全在地下）：用 layerMask 跳过列车网格，省掉两列车 ~6 万三角形
@@ -247,7 +247,7 @@ export async function start() {
     G.annAboard = G.aboard;
     // 声音分区：地铁声只在车站里（出口楼梯上随高度渐弱，到街面为 0）；街面车流；饭店嘈杂；酒店 / 纪念堂 / 陈家祠安静
     // 室内：酒店 / 饭店（饭店内景在地下 y≈-30，zoneOf 看不出来，按控制器判断）/ 陈家祠 / 纪念堂大会堂
-    const hallKind = hotel && hotel.cur ? 'hotel' : G.brother && G.brother.food && G.brother.food.cur ? 'restaurant' : clan && clan.cur ? 'clan' : inXm ? 'xmmetro' : east && east.cur ? (east.loc === 'car' ? 'emu' : 'xmn') : inHall ? 'sysy' : null;
+    const hallKind = hotel && hotel.cur ? 'hotel' : G.brother && G.brother.food && G.brother.food.cur ? 'restaurant' : clan && clan.cur ? 'clan' : inXm ? (xmMetro.street ? null : 'xmmetro') : east && east.cur ? (east.loc === 'car' ? 'emu' : 'xmn') : inHall ? 'sysy' : null;
     { let metroL = 1, streetL = 0;
       if (G.aboard || G.inTunnel) metroL = 1;
       else if (hallKind === 'xmn' && east.area === 'plaza') { metroL = 0; streetL = 1; }   // 厦门北站南广场：露天，街上的声音
