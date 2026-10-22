@@ -335,6 +335,8 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #1d2b3a; fon
 /* 窄屏（iPhone 竖屏）：标题只留「线路图」一行，副标题「1 号线 · 2 号线」不显示 */
 @media (max-width: 599px) { #netmap .ttl small { display: none; } #netmap .ttl { min-width: 0; } }
 #netmap .x { margin-left: auto; width: 76px; height: 76px; border-radius: 50%; border: 0; background: rgba(20,40,60,.08); color: #34404f; display: flex; align-items: center; justify-content: center; pointer-events: auto; }
+#netmap .restart { margin-left: auto; height: 56px; padding: 0 20px; border-radius: 28px; border: 0; background: rgba(20,40,60,.08); color: #34404f; font-weight: 700; font-size: 20px; line-height: 1; pointer-events: auto; }
+#netmap .restart + .x { margin-left: 12px; } #netmap .restart.press { transform: scale(.92); }
 #netmap .x .ico { width: 34px; height: 34px; } #netmap .x.press { transform: scale(.88); }
 #netmap .mapbox { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; touch-action: none; border-radius: 22px; }
 #netmap .mapbox svg { width: 100%; height: 100%; display: block; will-change: transform; }

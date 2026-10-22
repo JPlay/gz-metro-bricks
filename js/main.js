@@ -29,6 +29,7 @@ import { EastCtl } from './game/east.js';
 import { XmMetro } from './game/xmService.js';
 import { XM_LINES, XM_STATIONS } from './data/xm-lines.js';
 import { XO } from './world/xmn.js';
+import { readSave, writeSave, clearSave, installAutosave } from './game/save.js';
 const B = window.BABYLON;
 
 class Events { constructor() { this.h = {}; } on(n, f) { (this.h[n] = this.h[n] || []).push(f); } emit(n, d) { (this.h[n] || []).forEach(f => f(d)); } }
@@ -103,7 +104,20 @@ export async function start() {
   if (CONFIG.start && STATIONS[CONFIG.start]) {
     const st = buildStation(CONFIG.start), P = st.platformFor(CONFIG.startLine) || st.platforms[0];
     player.spawn(20, P.y + 0.05, P.zc, Math.PI / 2);
-  } else { buildStation('gyq'); player.spawn(SPAWN.x, SPAWN.y + 0.05, SPAWN.z, SPAWN.yaw); }
+  } else {
+    // 续玩：读存档（坏档 / 版本不对 → readSave 返回 null → 默认开局）
+    const sv = readSave(); let ok = false;
+    if (sv && sv.city === 'gz' && STATIONS[sv.code]) {
+      try {
+        const st = buildStation(sv.code);
+        if (sv.platform || !sv.pos) { const P = (sv.line && st.platformFor(sv.line)) || st.platforms[0]; player.spawn(20, P.y + 0.05, P.zc, Math.PI / 2); }
+        else player.spawn(sv.pos[0], sv.pos[1], sv.pos[2], sv.yaw);
+        ok = true; G.resumed = 'gz';
+      } catch (e) { console.warn('resume gz failed', e); clearSave(); }
+    }
+    if (sv && sv.city === 'xm' && XM_STATIONS[sv.code]) G.pendingXm = sv;
+    if (!ok) { buildStation('gyq'); player.spawn(SPAWN.x, SPAWN.y + 0.05, SPAWN.z, SPAWN.yaw); }
+  }
   mark('station');
   progress(0.72, '正在贴瓷砖、挂站牌…');
   await paint();
@@ -322,7 +336,26 @@ export async function start() {
     onNewTrain: t => t.shadowMeshes && t.shadowMeshes.forEach(m => R.addShadowCaster(m))
   });
   east.xmMetro = xmMetro;
+  // 续玩：厦门地铁（要等 east / xmMetro 建好）。跟从国铁走进厦门北地铁一样：广州场景关掉，xmMetro 接管
+  if (G.pendingXm) {
+    const sv = G.pendingXm; G.pendingXm = null;
+    try {
+      east.ensure(); east.side = 'xm'; east.cur = { st: G.station, loc: 'xmmetro', area: 'metro' }; G.station.kit.root.setEnabled(false);
+      xmMetro.buildStation(sv.code); events.emit('xm', { enter: true, code: sv.code });
+      const st = xmMetro.station;
+      if (sv.platform || !sv.pos) { const P = (sv.line && st.platformFor(sv.line)) || st.platforms[0]; const z = P.sideOnly === 'A' ? P.zc - 2.2 : P.sideOnly === 'B' ? P.zc + 2.2 : P.zc + 2; player.spawn(XO.x + 10, P.y + 0.05, z, Math.PI / 2); }
+      else player.spawn(sv.pos[0], sv.pos[1], sv.pos[2], sv.yaw);
+      G.resumed = 'xm';
+    } catch (e) { console.warn('resume xm failed', e); clearSave(); G.noSave = true; location.reload(); }
+  }
   const brother = installBrother({ scene, cam, M, player, R, hud, seats, social, bubbles, Audio, events, input, getStation: () => G.station, getCode: () => G.code }); G.brother = brother;
+  // 自动存档（5 秒 / 切后台 / 关页面）；测试 URL（?start=）也存，方便 e2e 验证
+  const saveCtx = { player, G, metro, xmMetro: () => xmMetro, east: () => east, hotel: () => hotel, clan: () => clan, brother: () => brother, off: () => !!G.noSave };
+  installAutosave(saveCtx);
+  // 地图面板里唯一的「回到起点」：清存档、重新开局
+  { const hd = mapEl.querySelector('header'), b = document.createElement('button'); b.className = 'restart'; b.textContent = '回到起点'; b.setAttribute('aria-label', '回到起点');
+    hd.insertBefore(b, hd.querySelector('.x'));
+    pressable(b, () => { G.noSave = true; clearSave(); location.reload(); }); }
   window.__game = {
     state: () => ({
       code: G.code, zone: G.zone.kind, pos: [player.position.x, player.position.y, player.position.z].map(v => +v.toFixed(2)), yaw: +player.yaw.toFixed(3), pitch: +player.pitch.toFixed(3),
@@ -340,6 +373,6 @@ export async function start() {
     autopilot: (pts, run) => new Promise(resolve => { G.auto = { pts, i: 0, time: 0, resolve, run }; }),
     call: (line, step) => (xmMetro && xmMetro.station ? xmMetro.call(line, step) : metro.call(line, step)), openMap, closeMap, mapZoom: mapPZ,
     // 测试：软件渲染只有几帧每秒，放宽单帧步长上限让游戏时间接近墙钟（默认 0.05）
-    setDtMax: v => { G.dtMax = v; }, act: doAct, Audio, brother, hotel, clan, east, xmMetro, tickets, seats, social, discovery, bubbles, metro, player, scene, engine, events, render: R, get station() { return G.station; }
+    setDtMax: v => { G.dtMax = v; }, save: { write: () => writeSave(saveCtx), read: readSave, clear: clearSave, off: () => { G.noSave = true; }, resumed: () => G.resumed || null }, act: doAct, Audio, brother, hotel, clan, east, xmMetro, tickets, seats, social, discovery, bubbles, metro, player, scene, engine, events, render: R, get station() { return G.station; }
   };
 }
