@@ -3054,6 +3054,18 @@
   "file": "voice/welcome-cyg-en.mp3"
  },
  {
+  "id": "voice.xmvisit.cyg.zh",
+  "lang": "zh",
+  "text": "诚毅广场站附近有集美市民广场、诚毅科技探索中心，欢迎下车游玩。",
+  "file": "voice/xmvisit-cyg-zh.mp3"
+ },
+ {
+  "id": "voice.xmvisit.cyg.en",
+  "lang": "en",
+  "text": "Chengyi Guangchang station is near Jimei Civic Square and the Chengyi Science and Technology Exploration Center. You are welcome to get off and visit.",
+  "file": "voice/xmvisit-cyg-en.mp3"
+ },
+ {
   "id": "voice.next.grn.zh",
   "lang": "zh",
   "text": "下一站，官任，可换乘6号线。",
@@ -3196,6 +3208,18 @@
   "lang": "en",
   "text": "Welcome to Yuanboyuan station. Please line up for the train. Let the passengers get off first before you get on.",
   "file": "voice/welcome-yby-en.mp3"
+ },
+ {
+  "id": "voice.xmvisit.yby.zh",
+  "lang": "zh",
+  "text": "园博苑站附近有园林博览苑，欢迎下车游玩。",
+  "file": "voice/xmvisit-yby-zh.mp3"
+ },
+ {
+  "id": "voice.xmvisit.yby.en",
+  "lang": "en",
+  "text": "Yuanboyuan station is near the Garden Expo Park. You are welcome to get off and visit.",
+  "file": "voice/xmvisit-yby-en.mp3"
  },
  {
   "id": "voice.next.jmx.zh",
@@ -3450,6 +3474,18 @@
   "file": "voice/welcome-lcu-en.mp3"
  },
  {
+  "id": "voice.xmvisit.lcu.zh",
+  "lang": "zh",
+  "text": "吕厝站附近有莲花公园，欢迎下车游玩，请从12号出口出站。",
+  "file": "voice/xmvisit-lcu-zh.mp3"
+ },
+ {
+  "id": "voice.xmvisit.lcu.en",
+  "lang": "en",
+  "text": "Lücuo station is near Lianhua Park. You are welcome to get off and visit. Please use Exit 12.",
+  "file": "voice/xmvisit-lcu-en.mp3"
+ },
+ {
   "id": "voice.next.lhj.zh",
   "lang": "zh",
   "text": "下一站，莲花路口。",
@@ -3484,6 +3520,18 @@
   "lang": "en",
   "text": "Welcome to Lianhua Lukou station. Please line up for the train. Let the passengers get off first before you get on.",
   "file": "voice/welcome-lhj-en.mp3"
+ },
+ {
+  "id": "voice.xmvisit.lhj.zh",
+  "lang": "zh",
+  "text": "莲花路口站附近有莲花公园，欢迎下车游玩，请从4号出口出站。",
+  "file": "voice/xmvisit-lhj-zh.mp3"
+ },
+ {
+  "id": "voice.xmvisit.lhj.en",
+  "lang": "en",
+  "text": "Lianhua Lukou station is near Lianhua Park. You are welcome to get off and visit. Please use Exit 4.",
+  "file": "voice/xmvisit-lhj-en.mp3"
  },
  {
   "id": "voice.next.lbn.zh",
@@ -3664,6 +3712,18 @@
   "lang": "en",
   "text": "Welcome to Zhongshan Gongyuan station. Please line up for the train. Let the passengers get off first before you get on.",
   "file": "voice/welcome-zsp-en.mp3"
+ },
+ {
+  "id": "voice.xmvisit.zsp.zh",
+  "lang": "zh",
+  "text": "中山公园站附近有中山公园，欢迎下车游玩。",
+  "file": "voice/xmvisit-zsp-zh.mp3"
+ },
+ {
+  "id": "voice.xmvisit.zsp.en",
+  "lang": "en",
+  "text": "Zhongshan Gongyuan station is near Zhongshan Park. You are welcome to get off and visit.",
+  "file": "voice/xmvisit-zsp-en.mp3"
  },
  {
   "id": "voice.arrive.zhl.zh",
@@ -4422,6 +4482,18 @@
   "file": "voice/welcome-jtou-en.mp3"
  },
  {
+  "id": "voice.xmvisit.jtou.zh",
+  "lang": "zh",
+  "text": "江头站附近有莲龙小学，欢迎下车游玩，请从2号出口出站。",
+  "file": "voice/xmvisit-jtou-zh.mp3"
+ },
+ {
+  "id": "voice.xmvisit.jtou.en",
+  "lang": "en",
+  "text": "Jiangtou station is near Lianlong Primary School. You are welcome to get off and visit. Please use Exit 2.",
+  "file": "voice/xmvisit-jtou-en.mp3"
+ },
+ {
   "id": "voice.next.hpu.zh",
   "lang": "zh",
   "text": "下一站，后埔。",
@@ -4456,6 +4528,18 @@
   "lang": "en",
   "text": "Welcome to Houpu station. Please line up for the train. Let the passengers get off first before you get on.",
   "file": "voice/welcome-hpu-en.mp3"
+ },
+ {
+  "id": "voice.xmvisit.hpu.zh",
+  "lang": "zh",
+  "text": "后埔站附近有忠仑公园，欢迎下车游玩，请从4号出口出站。",
+  "file": "voice/xmvisit-hpu-zh.mp3"
+ },
+ {
+  "id": "voice.xmvisit.hpu.en",
+  "lang": "en",
+  "text": "Houpu station is near Zhonglun Park. You are welcome to get off and visit. Please use Exit 4.",
+  "file": "voice/xmvisit-hpu-en.mp3"
  },
  {
   "id": "voice.next.ctg.zh",

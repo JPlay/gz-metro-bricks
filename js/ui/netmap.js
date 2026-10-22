@@ -7,6 +7,7 @@
 import { LINES, STATIONS, OTHER_LINES } from '../data/lines.js';
 import { XM_LINES, XM_STATIONS } from '../data/xm-lines.js';
 import { ATTRACTIONS } from '../data/attractions.js';
+import { XM_ATTRACTIONS } from '../data/xm-visits.js';
 import { iconSVG } from './mapicons.js';
 
 export const GYQ = 'gyq';
@@ -382,6 +383,19 @@ export function xmNetworkSVG(here, { portrait = false } = {}) {
     const label = S.zh.length > 4 ? S.zh.slice(0, 4) : S.zh;
     const ly = y + (portrait ? 18 : (S.lines[0] === 1 ? -14 : 18));
     s += `<text x="${x}" y="${ly}" text-anchor="middle" font-size="${hereOn ? 13 : 10}" font-weight="${hereOn ? 800 : 600}" fill="#1B2530">${label}</text>`;
+  }
+  // 景点小图标（和广州图一样可点开小卡片）：1 号线横排时放线下方，2 号线竖排时放线右侧；相邻两站错开
+  const XR = 13, alt = {};
+  for (const a of XM_ATTRACTIONS) {
+    const [x, y] = pos[a.code], S = XM_STATIONS[a.code], onL1 = S.lines.includes(1);
+    let ix, iy, anc = 'middle', tx, ty;
+    if (a.code === 'lcu') { ix = portrait ? x - 50 : x - 40; iy = portrait ? y - 44 : y + 40; }
+    else if (onL1) { if (portrait) { const k = (alt.p1 = !alt.p1) ? 1 : 2; ix = x - 40 * k; iy = y; } else { const k = (alt.l1 = !alt.l1) ? 1 : 2; ix = x; iy = y + 22 + 26 * k; } }
+    else { if (portrait) { const k = (alt.p2 = !alt.p2) ? 1 : 2; ix = x + 8; iy = y - 30 - 40 * k; } else { const k = (alt.l2 = !alt.l2) ? 1 : 2; ix = x + 70 + 46 * (k - 1); iy = y; } }
+    tx = ix; ty = iy + XR + 12;
+    s += `<line x1="${x}" y1="${y}" x2="${ix}" y2="${iy}" stroke="#9AA3AD" stroke-width="2" stroke-dasharray="2 4"/>`;
+    s += `<g class="attr" data-attr="${a.id}" data-code="${a.code}"><circle cx="${ix}" cy="${iy}" r="${XR + 10}" fill="#fff" fill-opacity="0"/>${iconSVG(a.icon, ix, iy, XR, XM_LINES[S.lines[0]].color)}`;
+    s += `<text x="${tx}" y="${ty}" font-size="10" font-weight="700" fill="#34404F" text-anchor="${anc}" paint-order="stroke" stroke="#fff" stroke-width="4" stroke-linejoin="round">${a.name}</text></g>`;
   }
   s += `</svg>`;
   return s;

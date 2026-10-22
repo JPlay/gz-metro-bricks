@@ -29,6 +29,7 @@ import { EastCtl } from './game/east.js';
 import { XmMetro } from './game/xmService.js';
 import { XM_LINES, XM_STATIONS } from './data/xm-lines.js';
 import { XO } from './world/xmn.js';
+import { XM_ATTRACTIONS } from './data/xm-visits.js';
 import { readSave, writeSave, clearSave, installAutosave } from './game/save.js';
 const B = window.BABYLON;
 
@@ -139,8 +140,9 @@ export async function start() {
   const attrCard = document.createElement('div'); attrCard.className = 'attrcard'; attrCard.hidden = true; mapEl.querySelector('.sheet').appendChild(attrCard);
   const hideCard = () => { attrCard.hidden = true; G.attrCard = null; };
   const showCard = (id, cx, cy) => {
-    const a = ATTRACTIONS.find(t => t.id === id); if (!a) return false;
-    attrCard.innerHTML = `<b>${a.names.join('<br>')}</b><span>${STATIONS[a.code].zh.replace(/站$/, '')}站 · 从 <em>${attractionExit(a.code)}</em> 出口出站</span>`;
+    const xa = XM_ATTRACTIONS.find(t => t.id === id), a = xa || ATTRACTIONS.find(t => t.id === id); if (!a) return false;
+    attrCard.innerHTML = xa ? `<b>${a.names.join('<br>')}</b><span>${XM_STATIONS[a.code].zh}站 · ${a.exit ? `从 <em>${a.exit}</em> 号出口出站` : '在本站下车'}</span>`
+      : `<b>${a.names.join('<br>')}</b><span>${STATIONS[a.code].zh.replace(/站$/, '')}站 · 从 <em>${attractionExit(a.code)}</em> 出口出站</span>`;
     attrCard.hidden = false; const sh = mapEl.querySelector('.sheet').getBoundingClientRect(), w = attrCard.offsetWidth, h = attrCard.offsetHeight;
     attrCard.style.left = Math.max(8, Math.min(sh.width - w - 8, cx - sh.left - w / 2)) + 'px'; attrCard.style.top = Math.max(8, Math.min(sh.height - h - 8, cy - sh.top - h - 30)) + 'px';
     G.attrCard = { id, text: attrCard.textContent }; Audio.blip && Audio.blip('tap'); return true;

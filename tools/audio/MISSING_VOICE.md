@@ -1,20 +1,14 @@
 # 缺失的报站语音片段
 
-由 `node tools/audio/export_jobs.mjs` 生成。全网共需 843 条片段，已有 MP3 489 条，缺 354 条（普通话 177 / 粤语 0 / 英语 177）。
+由 `node tools/audio/export_jobs.mjs` 生成。全网共需 857 条片段，已有 MP3 507 条，缺 350 条（普通话 175 / 粤语 0 / 英语 175）。
 缺失片段在游戏里自动用 Web Speech 朗读（zh-CN → zh-HK（若有）→ en-US（若有），语速 0.95），并照常显示字幕。
 
 生成方法：设置环境变量 DASHSCOPE_API_KEY 后运行 `python3 tools/audio/generate_voice.py`（会读取 voice-jobs.json，只生成缺的）。
 
 | id | 语言 | 文本 |
 | --- | --- | --- |
-| voice.destination.xmzhl.zh | zh | 本次列车终点站为镇海路。 |
-| voice.destination.xmzhl.en | en | The destination of this train is Zhenhailu. |
 | voice.terminal.xmzhl.zh | zh | 下一站是本次列车的终点站，镇海路。请全部乘客带齐行李物品在此站下车，欢迎再次乘坐厦门地铁。 |
 | voice.terminal.xmzhl.en | en | The next station is Zhenhailu, the terminal of this journey. Please take all your belongings and leave the train. Thank you for travelling on Xiamen Metro. |
-| voice.platform.xmzhl.1.zh | zh | 一站台，镇海路方向列车即将进站。 |
-| voice.platform.xmzhl.1.en | en | The train bound for Zhenhailu is approaching at Platform 1. |
-| voice.platform.xmzhl.2.zh | zh | 二站台，镇海路方向列车即将进站。 |
-| voice.platform.xmzhl.2.en | en | The train bound for Zhenhailu is approaching at Platform 2. |
 | voice.destination.xmyan.zh | zh | 本次列车终点站为岩内。 |
 | voice.destination.xmyan.en | en | The destination of this train is Yannei. |
 | voice.terminal.xmyan.zh | zh | 下一站是本次列车的终点站，岩内。请全部乘客带齐行李物品在此站下车，欢迎再次乘坐厦门地铁。 |
@@ -29,14 +23,6 @@
 | voice.welcome.yan.en | en | Welcome to Yannei station. Please line up for the train. Let the passengers get off first before you get on. |
 | voice.next.xmnb.zh | zh | 下一站，厦门北站，可换乘4号线。 |
 | voice.next.xmnb.en | en | The next station is Xiamen North Railway Station, the interchange with Line 4. |
-| voice.arrive.xmnb.zh | zh | 列车即将到达厦门北站，请小心列车与站台之间的空隙。 |
-| voice.arrive.xmnb.en | en | The train is arriving at Xiamen North Railway Station. Please mind the gap between the train and the platform. |
-| voice.welcome.xmnb.zh | zh | 欢迎光临厦门北站。请排队候车，先下后上。 |
-| voice.welcome.xmnb.en | en | Welcome to Xiamen North Railway Station. Please line up for the train. Let the passengers get off first before you get on. |
-| voice.next.tsl.zh | zh | 下一站，天水路。 |
-| voice.next.tsl.en | en | The next station is Tianshui Lu. |
-| voice.arrive.tsl.zh | zh | 列车即将到达天水路站，请小心列车与站台之间的空隙。 |
-| voice.arrive.tsl.en | en | The train is arriving at Tianshui Lu. Please mind the gap between the train and the platform. |
 | voice.welcome.tsl.zh | zh | 欢迎光临天水路站。请排队候车，先下后上。 |
 | voice.welcome.tsl.en | en | Welcome to Tianshui Lu station. Please line up for the train. Let the passengers get off first before you get on. |
 | voice.next.jmd.zh | zh | 下一站，集美大道。 |
@@ -57,6 +43,8 @@
 | voice.arrive.cyg.en | en | The train is arriving at Chengyi Guangchang. Please mind the gap between the train and the platform. |
 | voice.welcome.cyg.zh | zh | 欢迎光临诚毅广场站。请排队候车，先下后上。 |
 | voice.welcome.cyg.en | en | Welcome to Chengyi Guangchang station. Please line up for the train. Let the passengers get off first before you get on. |
+| voice.xmvisit.cyg.zh | zh | 诚毅广场站附近有集美市民广场、诚毅科技探索中心，欢迎下车游玩。 |
+| voice.xmvisit.cyg.en | en | Chengyi Guangchang station is near Jimei Civic Square and the Chengyi Science and Technology Exploration Center. You are welcome to get off and visit. |
 | voice.next.grn.zh | zh | 下一站，官任，可换乘6号线。 |
 | voice.next.grn.en | en | The next station is Guanren, the interchange with Line 6. |
 | voice.arrive.grn.zh | zh | 列车即将到达官任站，请小心列车与站台之间的空隙。 |
@@ -81,6 +69,8 @@
 | voice.arrive.yby.en | en | The train is arriving at Yuanboyuan. Please mind the gap between the train and the platform. |
 | voice.welcome.yby.zh | zh | 欢迎光临园博苑站。请排队候车，先下后上。 |
 | voice.welcome.yby.en | en | Welcome to Yuanboyuan station. Please line up for the train. Let the passengers get off first before you get on. |
+| voice.xmvisit.yby.zh | zh | 园博苑站附近有园林博览苑，欢迎下车游玩。 |
+| voice.xmvisit.yby.en | en | Yuanboyuan station is near the Garden Expo Park. You are welcome to get off and visit. |
 | voice.next.jmx.zh | zh | 下一站，集美学村。 |
 | voice.next.jmx.en | en | The next station is Jimei School Village. |
 | voice.arrive.jmx.zh | zh | 列车即将到达集美学村站，请小心列车与站台之间的空隙。 |
@@ -119,16 +109,16 @@
 | voice.welcome.wsp.en | en | Welcome to Wushipu station. Please line up for the train. Let the passengers get off first before you get on. |
 | voice.next.lcu.zh | zh | 下一站，吕厝，可换乘1号线。 |
 | voice.next.lcu.en | en | The next station is Lücuo, the interchange with Line 1. |
-| voice.arrive.lcu.zh | zh | 列车即将到达吕厝站，请小心列车与站台之间的空隙。 |
-| voice.arrive.lcu.en | en | The train is arriving at Lücuo. Please mind the gap between the train and the platform. |
-| voice.welcome.lcu.zh | zh | 欢迎光临吕厝站。请排队候车，先下后上。 |
-| voice.welcome.lcu.en | en | Welcome to Lücuo station. Please line up for the train. Let the passengers get off first before you get on. |
+| voice.xmvisit.lcu.zh | zh | 吕厝站附近有莲花公园，欢迎下车游玩，请从12号出口出站。 |
+| voice.xmvisit.lcu.en | en | Lücuo station is near Lianhua Park. You are welcome to get off and visit. Please use Exit 12. |
 | voice.next.lhj.zh | zh | 下一站，莲花路口。 |
 | voice.next.lhj.en | en | The next station is Lianhua Lukou. |
 | voice.arrive.lhj.zh | zh | 列车即将到达莲花路口站，请小心列车与站台之间的空隙。 |
 | voice.arrive.lhj.en | en | The train is arriving at Lianhua Lukou. Please mind the gap between the train and the platform. |
 | voice.welcome.lhj.zh | zh | 欢迎光临莲花路口站。请排队候车，先下后上。 |
 | voice.welcome.lhj.en | en | Welcome to Lianhua Lukou station. Please line up for the train. Let the passengers get off first before you get on. |
+| voice.xmvisit.lhj.zh | zh | 莲花路口站附近有莲花公园，欢迎下车游玩，请从4号出口出站。 |
+| voice.xmvisit.lhj.en | en | Lianhua Lukou station is near Lianhua Park. You are welcome to get off and visit. Please use Exit 4. |
 | voice.next.lbn.zh | zh | 下一站，莲坂。 |
 | voice.next.lbn.en | en | The next station is Lianban. |
 | voice.arrive.lbn.zh | zh | 列车即将到达莲坂站，请小心列车与站台之间的空隙。 |
@@ -159,6 +149,8 @@
 | voice.arrive.zsp.en | en | The train is arriving at Zhongshan Gongyuan. Please mind the gap between the train and the platform. |
 | voice.welcome.zsp.zh | zh | 欢迎光临中山公园站。请排队候车，先下后上。 |
 | voice.welcome.zsp.en | en | Welcome to Zhongshan Gongyuan station. Please line up for the train. Let the passengers get off first before you get on. |
+| voice.xmvisit.zsp.zh | zh | 中山公园站附近有中山公园，欢迎下车游玩。 |
+| voice.xmvisit.zsp.en | en | Zhongshan Gongyuan station is near Zhongshan Park. You are welcome to get off and visit. |
 | voice.arrive.zhl.zh | zh | 列车即将到达镇海路站，请小心列车与站台之间的空隙。 |
 | voice.arrive.zhl.en | en | The train is arriving at Zhenhailu. Please mind the gap between the train and the platform. |
 | voice.welcome.zhl.zh | zh | 欢迎光临镇海路站。请排队候车，先下后上。 |
@@ -285,12 +277,16 @@
 | voice.arrive.jtou.en | en | The train is arriving at Jiangtou. Please mind the gap between the train and the platform. |
 | voice.welcome.jtou.zh | zh | 欢迎光临江头站。请排队候车，先下后上。 |
 | voice.welcome.jtou.en | en | Welcome to Jiangtou station. Please line up for the train. Let the passengers get off first before you get on. |
+| voice.xmvisit.jtou.zh | zh | 江头站附近有莲龙小学，欢迎下车游玩，请从2号出口出站。 |
+| voice.xmvisit.jtou.en | en | Jiangtou station is near Lianlong Primary School. You are welcome to get off and visit. Please use Exit 2. |
 | voice.next.hpu.zh | zh | 下一站，后埔。 |
 | voice.next.hpu.en | en | The next station is Houpu. |
 | voice.arrive.hpu.zh | zh | 列车即将到达后埔站，请小心列车与站台之间的空隙。 |
 | voice.arrive.hpu.en | en | The train is arriving at Houpu. Please mind the gap between the train and the platform. |
 | voice.welcome.hpu.zh | zh | 欢迎光临后埔站。请排队候车，先下后上。 |
 | voice.welcome.hpu.en | en | Welcome to Houpu station. Please line up for the train. Let the passengers get off first before you get on. |
+| voice.xmvisit.hpu.zh | zh | 后埔站附近有忠仑公园，欢迎下车游玩，请从4号出口出站。 |
+| voice.xmvisit.hpu.en | en | Houpu station is near Zhonglun Park. You are welcome to get off and visit. Please use Exit 4. |
 | voice.next.ctg.zh | zh | 下一站，蔡塘。 |
 | voice.next.ctg.en | en | The next station is Caitang. |
 | voice.arrive.ctg.zh | zh | 列车即将到达蔡塘站，请小心列车与站台之间的空隙。 |

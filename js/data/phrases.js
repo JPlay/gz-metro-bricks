@@ -6,6 +6,7 @@
 import { LINES, STATIONS, OTHER_LINES, isTerminal, transfersAt } from './lines.js';
 import { XM_LINES, XM_STATIONS, xmNext, xmIsTerminal, xmTransfers } from './xm-lines.js';
 import { VISITS, visitTexts } from './visits.js';
+import { xmVisitTexts } from './xm-visits.js';
 
 export const LANGS = ['zh', 'yue', 'en'];
 const LEGACY = new Set(['gyq', 'njs', 'lsly', 'dsk']);
@@ -115,9 +116,11 @@ export function xmNextSegs(line, code) {
   const zx = xs.length ? '，可换乘' + xZh : '', ex = xs.length ? ', the interchange with ' + xEn : '';
   return seg('next.' + code, [`下一站，${s.zh}${zx}。`, null, `The next station is ${s.en}${ex}.`]);
 }
+/** 厦门：下一站附近的景点（js/data/xm-visits.js） */
+export const xmVisitSegs = code => { const s = XM_STATIONS[code], t = s && xmVisitTexts(code, s.zh + '站', s.en + ' station'); return t ? seg('xmvisit.' + code, t) : []; };
 export function xmDepartSegs(line, nextCode, dir, step, withDestination) {
   const head = withDestination ? xmDestinationSegs(line, dir) : [];
-  return xmIsTerminal(line, nextCode, step) ? [...head, ...xmTerminalSegs(line, dir)] : [...head, ...xmNextSegs(line, nextCode)];
+  return xmIsTerminal(line, nextCode, step) ? [...head, ...xmTerminalSegs(line, dir)] : [...head, ...xmNextSegs(line, nextCode), ...xmVisitSegs(nextCode)];
 }
 export function allJobs() {
   const out = new Map(), add = list => list.forEach(s => out.set(s.id, s));
@@ -129,7 +132,7 @@ export function allJobs() {
   for (const [id, L] of Object.entries(XM_LINES)) {
     const line = +id;
     for (const dir of Object.keys(L.dirs)) { add(xmDestinationSegs(line, dir)); add(xmTerminalSegs(line, dir)); add(xmPlatformSegs(line, dir, 1)); add(xmPlatformSegs(line, dir, 2)); }
-    L.stations.forEach((c, i) => { if (i > 0 && i < L.stations.length - 1) add(xmNextSegs(line, c)); add(arriveSegs(c)); add(welcomeSegs(c)); });
+    L.stations.forEach((c, i) => { if (i > 0 && i < L.stations.length - 1) add(xmNextSegs(line, c)); add(arriveSegs(c)); add(welcomeSegs(c)); add(xmVisitSegs(c)); });
   }
   add(doorsClosingSegs()); add(gapSegs()); add(emuJobs()); Object.keys(SAFETY).forEach(k => add(safetySegs(k)));
   return [...out.values()].map(s => ({ ...s, file: 'voice/' + s.id.slice(6).replace(/\./g, '-') + '.mp3' }));
