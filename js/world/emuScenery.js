@@ -20,23 +20,68 @@ function ridge(c, pw, base, amp, col, R, n = 7, sharp = 0.5) {
   c.lineTo(0, pts[0][1]); for (let i = 1; i <= n; i++) { const [x0, y0] = pts[i - 1], [x1, y1] = pts[i]; c.quadraticCurveTo((x0 + x1) / 2, Math.min(y0, y1) - amp * sharp * R(), x1, y1); }
   c.lineTo(pw, base + 400); c.closePath(); c.fill();
 }
-/* 远景：1 列 × 5 行（城市 / 田野 / 山 / 海 / 厦门），地平线在 0.62 高处 */
+/* 远景：2 列 × 5 行（城市 / 田野 / 山 / 海 / 厦门）；面板 120 m 宽、y -60..90；地平线 y = 0（0.6 高处）。
+ * 楼房按米来画（横 / 竖像素密度不一样）：有宽度、有一格格窗户，不会变成一排细竖条。 */
 const FAR_ROWS = ['city', 'fields', 'mount', 'sea', 'xiamen'];
-const HZ_F = 0.6;
+const HZ_F = 0.6, FW = 120, FY0 = -60, FY1 = 90;
+const fx = (pw, x) => pw * x / FW, fy = (ph, y) => ph * (FY1 - y) / (FY1 - FY0);
+/** 一栋楼（米）：x0..x1、底 yb、高 h；正面 + 右侧一窄条暗面 + 屋顶线 + 一格格窗户 */
+function tower(c, pw, ph, x0, x1, yb, h, col, R, o = {}) {
+  const X0 = fx(pw, x0), X1 = fx(pw, x1), Yb = fy(ph, yb), Yt = fy(ph, yb + h), sw = (X1 - X0) * 0.14;
+  c.fillStyle = col; c.fillRect(X0, Yt, X1 - X0, Yb - Yt);
+  c.fillStyle = 'rgba(40,55,70,0.18)'; c.fillRect(X1 - sw, Yt, sw, Yb - Yt);                       // 侧面暗一点 → 有体积
+  c.fillStyle = 'rgba(255,255,255,0.35)'; c.fillRect(X0, Yt, X1 - X0, Math.max(1.5, (Yb - Yt) * 0.015));   // 屋顶亮边
+  const fl = o.floor || 3.6, bay = o.bay || 3.2, win = o.win || 'rgba(70,95,120,0.55)';
+  c.fillStyle = win;
+  for (let y = yb + 1.2; y < yb + h - 1.5; y += fl) for (let x = x0 + 1.2; x < x1 - 1.4 - (x1 - x0) * 0.14; x += bay) c.fillRect(fx(pw, x), fy(ph, y + fl * 0.62), fx(pw, bay * 0.55), Math.max(1.5, fy(ph, 0) - fy(ph, fl * 0.45)));
+  if (o.crown) { c.fillStyle = col; c.beginPath(); c.moveTo(X0, Yt); c.lineTo((X0 + X1) / 2 + (o.crown > 0 ? sw : -sw), fy(ph, yb + h + o.crownH)); c.lineTo(X1, Yt); c.fill(); }
+}
+function skyline(c, pw, ph, R, { hmin, hmax, wmin, wmax, gap, yb = 0.5, cols }) {
+  for (let x = 2 + R() * 6; x < FW - 2 - wmin;) {
+    const w = Math.min(wmin + R() * (wmax - wmin), FW - 2 - x), h = hmin + R() * (hmax - hmin);
+    tower(c, pw, ph, x, x + w, yb, h, cols[Math.floor(R() * cols.length)], R); x += w + gap * (0.4 + R());
+  }
+}
+/** 远处海面（地平线 → 面板底），带一点波光 */
+function water(c, pw, ph, R, top = '#A9CFE0', bot = '#2E7AA0', glints = 60) {
+  const hz = fy(ph, 0), g = c.createLinearGradient(0, hz, 0, ph); g.addColorStop(0, top); g.addColorStop(1, bot); c.fillStyle = g; c.fillRect(0, hz, pw, ph - hz);
+  c.fillStyle = 'rgba(255,255,255,0.35)'; for (let i = 0; i < glints; i++) { const y = hz + R() * (ph - hz); c.fillRect(R() * pw, y, fx(pw, 2 + R() * 5), 1.5); }
+}
+/** 并行的跨海公路桥（厦漳跨海大桥那样）：桥面 y 9 m、每 40 m 一个桥墩从水里立起来；v=1 的那块中间是斜拉桥的塔 + 两边扇形拉索 */
+function seaBridge(c, pw, ph, v) {
+  const dk0 = 8, dk1 = 10.5;
+  c.fillStyle = '#C9CED2';
+  for (const x of [20, 60, 100]) { if (v === 1 && x === 60) continue; c.fillRect(fx(pw, x - 1.6), fy(ph, dk0), fx(pw, 3.2), fy(ph, -0.5) - fy(ph, dk0)); }   // 桥墩
+  c.fillStyle = 'rgba(80,100,115,0.35)'; for (const x of [20, 60, 100]) if (!(v === 1 && x === 60)) c.fillRect(fx(pw, x + 0.8), fy(ph, dk0), fx(pw, 0.8), fy(ph, -0.5) - fy(ph, dk0));
+  c.fillStyle = '#E3E6E8'; c.fillRect(0, fy(ph, dk1), pw, fy(ph, dk0) - fy(ph, dk1));                  // 桥面（连续，左右面板拼得上）
+  c.fillStyle = '#9AA3AA'; c.fillRect(0, fy(ph, dk0 + 0.6), pw, 2);
+  if (v === 1) {   // 斜拉桥塔（H 形从侧面看是一根，往上收）+ 拉索
+    const top = 62, X = 60;
+    c.fillStyle = '#D9DDDF'; c.beginPath(); c.moveTo(fx(pw, X - 3.2), fy(ph, -0.5)); c.lineTo(fx(pw, X + 3.2), fy(ph, -0.5)); c.lineTo(fx(pw, X + 1.6), fy(ph, top)); c.lineTo(fx(pw, X - 1.6), fy(ph, top)); c.closePath(); c.fill();
+    c.fillStyle = 'rgba(80,100,115,0.3)'; c.fillRect(fx(pw, X + 0.6), fy(ph, top), fx(pw, 1.0), fy(ph, -0.5) - fy(ph, top));
+    c.fillStyle = '#C0392B'; c.fillRect(fx(pw, X - 1.6), fy(ph, top + 1.2), fx(pw, 3.2), fy(ph, top) - fy(ph, top + 1.2));   // 塔顶航空灯
+    c.strokeStyle = 'rgba(235,238,240,0.95)'; c.lineWidth = 1.6;
+    for (let i = 0; i < 9; i++) { const ya = top - 3 - i * 2.2, dx = 10 + i * 5.2; for (const sd of [-1, 1]) { c.beginPath(); c.moveTo(fx(pw, X), fy(ph, ya)); c.lineTo(fx(pw, X + sd * dx), fy(ph, dk1)); c.stroke(); } }
+  }
+}
 const FAR = {
-  city(c, pw, ph, v, R) { const hz = ph * HZ_F; sky(c, pw, ph, hz, '#8DB8DE', '#E3ECF2');
-    c.fillStyle = 'rgba(160,175,190,0.9)'; for (let x = 0; x < pw;) { const w = 10 + R() * 26, h = ph * (0.05 + R() * 0.16); c.fillRect(x, hz - h, w, h + 1); x += w + R() * 6; }
-    ridge(c, pw, hz - ph * 0.02, ph * 0.08, 'rgba(150,170,175,0.8)', R, 5, 0.3); c.fillStyle = '#93A08E'; c.fillRect(0, hz, pw, ph - hz); },
+  city(c, pw, ph, v, R) { const hz = fy(ph, 0); sky(c, pw, ph, hz, '#8DB8DE', '#E3ECF2');
+    ridge(c, pw, hz, ph * 0.07, 'rgba(150,170,178,0.75)', R, 5, 0.3);                                     // 白云山一线
+    skyline(c, pw, ph, R, { hmin: 14, hmax: v ? 46 : 34, wmin: 14, wmax: 30, gap: 5, cols: ['#C9D2DB', '#D8D3C9', '#BFCAD4', '#DDD9CF'] });
+    c.fillStyle = 'rgba(225,235,242,0.25)'; c.fillRect(0, fy(ph, 30), pw, hz - fy(ph, 30));             // 远处一层薄雾
+    c.fillStyle = '#93A08E'; c.fillRect(0, hz, pw, ph - hz); },
   fields(c, pw, ph, v, R) { const hz = ph * HZ_F; sky(c, pw, ph, hz); ridge(c, pw, hz, ph * 0.12, '#9BB4B8', R, 6, 0.4); ridge(c, pw, hz, ph * 0.06, '#86A890', R, 9, 0.3); c.fillStyle = '#7FA066'; c.fillRect(0, hz, pw, ph - hz); },
   mount(c, pw, ph, v, R) { const hz = ph * HZ_F; sky(c, pw, ph, hz, '#7EAFDB', '#D5E6F0'); ridge(c, pw, hz, ph * 0.34, '#8FAAB5', R, 5, 0.6); ridge(c, pw, hz, ph * 0.22, '#5F8A6C', R, 7, 0.5); c.fillStyle = '#557E58'; c.fillRect(0, hz, pw, ph - hz); },
-  sea(c, pw, ph, v, R) { const hz = ph * HZ_F; sky(c, pw, ph, hz, '#77B0E2', '#E6F1F7');
-    ridge(c, pw, hz, ph * 0.06, 'rgba(120,150,165,0.75)', R, 4, 0.5);   // 远处的岛
-    const g = c.createLinearGradient(0, hz, 0, ph); g.addColorStop(0, '#9CC6DA'); g.addColorStop(1, '#3F86A8'); c.fillStyle = g; c.fillRect(0, hz, pw, ph - hz);
-    c.fillStyle = 'rgba(255,255,255,0.35)'; for (let i = 0; i < 40; i++) c.fillRect(R() * pw, hz + R() * (ph - hz), 6 + R() * 18, 1.5); },
-  xiamen(c, pw, ph, v, R) { const hz = ph * HZ_F; sky(c, pw, ph, hz, '#7DB6E6', '#E4F0F7'); ridge(c, pw, hz, ph * 0.16, '#93B0B0', R, 5, 0.5);
-    c.fillStyle = 'rgba(175,188,200,0.95)'; for (let x = R() * 40; x < pw;) { const w = 8 + R() * 18, h = ph * (0.05 + R() * 0.2); c.fillRect(x, hz - h, w, h + 1); x += w + 8 + R() * 30; }
-    if (v === 0) { c.fillStyle = 'rgba(150,165,182,0.95)'; for (const dx of [0, 26]) { c.fillRect(pw * 0.6 + dx, hz - ph * 0.34, 16, ph * 0.34); c.beginPath(); c.moveTo(pw * 0.6 + dx, hz - ph * 0.34); c.lineTo(pw * 0.6 + dx + 8, hz - ph * 0.4); c.lineTo(pw * 0.6 + dx + 16, hz - ph * 0.34); c.fill(); } }   // 双子塔
-    c.fillStyle = '#86A47E'; c.fillRect(0, hz, pw, ph - hz); }
+  sea(c, pw, ph, v, R) { const hz = fy(ph, 0); sky(c, pw, ph, hz, '#77B0E2', '#E6F1F7');
+    ridge(c, pw, hz, ph * 0.09, 'rgba(128,156,170,0.7)', R, 4, 0.5);                                     // 远山（低、发蓝）
+    water(c, pw, ph, R); seaBridge(c, pw, ph, v); },
+  xiamen(c, pw, ph, v, R) { const hz = fy(ph, 0); sky(c, pw, ph, hz, '#7DB6E6', '#E4F0F7');
+    ridge(c, pw, hz, ph * 0.14, '#93B0B0', R, 5, 0.5);                                                    // 岛上的山
+    const cols = ['#E6E9EC', '#D3DEE6', '#EDE6DA', '#C6D3DE', '#F0EEE9'];
+    skyline(c, pw, ph, R, { hmin: 16, hmax: 48, wmin: 12, wmax: 26, gap: 4, yb: 1, cols });
+    if (v === 0) for (const x0 of [52, 70]) tower(c, pw, ph, x0, x0 + 13, 1, 88, '#B9CCDA', R, { floor: 4, bay: 2.6, win: 'rgba(60,90,120,0.5)', crown: x0 > 60 ? 1 : -1, crownH: 9 });   // 双子塔（世茂海峡大厦）
+    c.fillStyle = '#B9B2A6'; c.fillRect(0, fy(ph, 1), pw, fy(ph, 0) - fy(ph, 1));                         // 海堤
+    water(c, pw, ph, R, '#9FCADD', '#3482A6', 30); }
 };
 /* 中景：2 列 × 5 行；面板 y -25..20 → 地面线（y = -1.3）在 0.52 高处，以上镂空 */
 const MID_ROWS = ['city', 'fields', 'mount', 'sea', 'xiamen'];
@@ -51,14 +96,23 @@ function cuo(c, x, gy, w, R) { const h = 20 + R() * 6; c.fillStyle = '#E8E0D2'; 
   c.fillStyle = '#5C2A22'; c.beginPath(); c.moveTo(x - 4, gy - h); c.lineTo(x + w + 4, gy - h); c.lineTo(x + w - 6, gy - h - 10); c.lineTo(x + 6, gy - h - 10); c.closePath(); c.fill();
   c.strokeStyle = '#5C2A22'; c.lineWidth = 3; c.beginPath(); c.moveTo(x + 2, gy - h - 10); c.quadraticCurveTo(x + w / 2, gy - h - 6, x + w - 2, gy - h - 10); c.stroke();
   for (const [ex, d] of [[x + 2, -1], [x + w - 2, 1]]) { c.beginPath(); c.moveTo(ex, gy - h - 10); c.quadraticCurveTo(ex + d * 6, gy - h - 12, ex + d * 10, gy - h - 22); c.stroke(); } }   // 燕尾
+const mx = (pw, x) => pw * x / 40, my = (ph, y) => ph * (20 - y) / 45;
+/** 中景楼房（米）：x0..x1、从地面（y -1.3）起高 h；一层 3 m、一开间 2.5 m 的窗格 + 侧面暗条 + 屋顶 */
+function block(c, pw, ph, x0, x1, h, col) {
+  const X0 = mx(pw, x0), X1 = mx(pw, x1), Yb = my(ph, -1.3), Yt = my(ph, -1.3 + h), sw = (X1 - X0) * 0.12;
+  c.fillStyle = col; c.fillRect(X0, Yt, X1 - X0, Yb - Yt); c.fillStyle = 'rgba(40,55,70,0.16)'; c.fillRect(X1 - sw, Yt, sw, Yb - Yt);
+  c.fillStyle = '#8D959E'; c.fillRect(X0 - 2, Yt - 3, X1 - X0 + 4, 4);
+  c.fillStyle = 'rgba(60,80,100,0.55)';
+  for (let y = -1.3 + 1.0; y < -1.3 + h - 1.6; y += 3) for (let x = x0 + 0.7; x < x1 - 1.2 - (x1 - x0) * 0.12; x += 2.5) c.fillRect(mx(pw, x), my(ph, y + 1.8), mx(pw, 1.4), my(ph, 0) - my(ph, 1.5));
+}
 const MID = {
   city(c, pw, ph, v, R) { const gy = ph * (1 - GL_M); c.clearRect(0, 0, pw, ph);
     const cols = ['#D9DEE4', '#E6DCCF', '#CBD5DF', '#E9E4DA', '#D3DCD3', '#C8CFD8'];
-    for (let x = 4; x < pw - 30;) { const w = 34 + R() * 50, h = ph * (0.12 + R() * 0.3); house(c, x, gy, w, h, cols[Math.floor(R() * cols.length)], '#8D959E', R); x += w + 6 + R() * 18; }
-    for (let i = 0; i < 6; i++) tree(c, R() * pw, gy, 6 + R() * 4, '#4F7F4A');
+    for (let x = 1 + R() * 2; x < 40 - 9;) { const w = Math.min(8 + R() * 10, 39 - x), h = 6 + R() * (v ? 15 : 11); block(c, pw, ph, x, x + w, h, cols[Math.floor(R() * cols.length)]); x += w + 1 + R() * 3; }
+    for (let i = 0; i < 5; i++) tree(c, R() * pw, gy, 6 + R() * 4, '#4F7F4A');
     c.fillStyle = '#8F9890'; c.fillRect(0, gy, pw, ph - gy); c.fillStyle = '#A9AEA6'; c.fillRect(0, gy + 6, pw, 5); },
   fields(c, pw, ph, v, R) { const gy = ph * (1 - GL_M); c.clearRect(0, 0, pw, ph);
-    if (v === 0) { house(c, pw * 0.3, gy, 40, 26, '#F1EFE8', '#6E5B4A', R); house(c, pw * 0.3 + 46, gy, 30, 20, '#ECE8DE', '#6E5B4A', R); }
+    if (v === 0) { house(c, pw * 0.3, gy, 90, 30, '#F1EFE8', '#6E5B4A', R); house(c, pw * 0.3 + 98, gy, 64, 22, '#ECE8DE', '#6E5B4A', R); }
     for (let i = 0; i < 9; i++) { const x = R() * pw; if (R() < 0.5) tree(c, x, gy, 5 + R() * 4, '#4C7A40'); else palm(c, x, gy, 18 + R() * 8); }
     for (let y = gy, k = 0; y < ph; y += 7 + k * 1.5, k++) { c.fillStyle = k % 2 ? '#86B05A' : '#9CC063'; c.fillRect(0, y, pw, 8 + k * 1.5); }
     c.fillStyle = 'rgba(80,110,60,0.5)'; for (let x = R() * 60; x < pw; x += 60 + R() * 80) c.fillRect(x, gy, 2, ph - gy); },
@@ -72,8 +126,8 @@ const MID = {
     if (v === 1) { c.fillStyle = '#E9ECEE'; c.beginPath(); c.moveTo(pw * 0.6, gy - 2); c.lineTo(pw * 0.6 + 26, gy - 2); c.lineTo(pw * 0.6 + 20, gy + 3); c.lineTo(pw * 0.6 + 4, gy + 3); c.fill(); c.fillStyle = '#C0392B'; c.fillRect(pw * 0.6 + 10, gy - 9, 6, 7); }   // 小渔船
     c.fillStyle = 'rgba(120,95,70,0.6)'; for (let x = R() * 80; x < pw; x += 70 + R() * 90) c.fillRect(x, gy + 4, 30, 2); },   // 远处的养殖浮排
   xiamen(c, pw, ph, v, R) { const gy = ph * (1 - GL_M); c.clearRect(0, 0, pw, ph);
-    if (v === 0) { cuo(c, 30, gy, 60, R); cuo(c, 110, gy, 48, R); house(c, 200, gy, 60, ph * 0.32, '#F2EEE6', '#7E8A96', R); house(c, 280, gy, 44, ph * 0.22, '#E6EEF2', '#7E8A96', R); cuo(c, 360, gy, 62, R); }
-    else { house(c, 20, gy, 70, ph * 0.38, '#F4F1EA', '#6F7C88', R); house(c, 110, gy, 50, ph * 0.26, '#DDE8EE', '#6F7C88', R); cuo(c, 190, gy, 56, R); house(c, 280, gy, 80, ph * 0.3, '#EFE6DA', '#6F7C88', R); cuo(c, 400, gy, 50, R); }
+    if (v === 0) { cuo(c, mx(pw, 1), gy, mx(pw, 9), R); cuo(c, mx(pw, 11.5), gy, mx(pw, 7.5), R); block(c, pw, ph, 21, 30, 13, '#F2EEE6'); cuo(c, mx(pw, 31.5), gy, mx(pw, 7.5), R); }
+    else { block(c, pw, ph, 1, 11, 16, '#F4F1EA'); cuo(c, mx(pw, 13), gy, mx(pw, 9), R); block(c, pw, ph, 24, 33, 10, '#DDE8EE'); cuo(c, mx(pw, 34), gy, mx(pw, 5.5), R); }
     for (let i = 0; i < 7; i++) palm(c, R() * pw, gy, 22 + R() * 10);
     c.fillStyle = '#8E9A8C'; c.fillRect(0, gy, pw, ph - gy); c.fillStyle = '#B9B2A6'; c.fillRect(0, gy + 6, pw, 5); }
 };
@@ -114,7 +168,7 @@ function bedPaint(c, S) { c.fillStyle = '#8E877C'; c.fillRect(0, 0, S, S); const
 class Layer {
   constructor(scene, name, o) {
     Object.assign(this, o); this.scene = scene;
-    const S = 1024, tex = this.tex = new B.DynamicTexture(name + 'Tex', { width: S, height: S }, scene, true);
+    const S = o.size || 1024, tex = this.tex = new B.DynamicTexture(name + 'Tex', { width: S, height: S }, scene, true);
     tex.hasAlpha = !!o.alpha; tex.wrapU = tex.wrapV = B.Texture.CLAMP_ADDRESSMODE; tex.anisotropicFilteringLevel = 4;
     const c = tex.getContext(), cw = S / o.cols, ch = S / o.rows.length, pad = 2, R = rng(o.seed);
     c.clearRect(0, 0, S, S);
@@ -164,7 +218,7 @@ export class EmuScenery {
   constructor(scene, parent) {
     this.root = new B.TransformNode('emuScenery', scene); this.root.parent = parent;
     const P = this.root;
-    this.far = new Layer(scene, 'sceneFar', { parent: P, rows: FAR_ROWS, cols: 1, paint: FAR, n: 6, w: 120, z: 120, y0: -60, y1: 90, k: 0.35, init: 'city', seed: 3 });
+    this.far = new Layer(scene, 'sceneFar', { parent: P, rows: FAR_ROWS, cols: 2, size: 2048, paint: FAR, n: 6, w: 120, z: 120, y0: -60, y1: 90, k: 0.35, init: 'city', seed: 3 });
     this.mid = new Layer(scene, 'sceneMid', { parent: P, rows: MID_ROWS, cols: 2, paint: MID, alpha: true, n: 14, w: 40, z: 40, y0: -25, y1: 20, k: 0.75, init: 'city', seed: 5 });
     this.near = new Layer(scene, 'sceneNear', { parent: P, rows: NEAR_ROWS, cols: 2, paint: NEAR, alpha: true, n: 12, w: 14, z: 8.5, y0: NY0, y1: NY0 + NH, k: 1, init: 'empty', seed: 9 });
     // 道床（碎石 + 轨枕），贴图沿 x 滚动

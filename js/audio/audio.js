@@ -392,7 +392,7 @@ export function blip(kind = 'tick') {
 }
 
 /* ---------- 报站队列 ---------- */
-function caption(a, extra) { emit('gz-audio-caption', a ? { id: a.id, text: a.text, lang: a.lang, channel: 'important', ...extra } : null); }
+function caption(a, extra) { emit('gz-audio-caption', a ? { id: a.id, text: a.text, lang: a.lang, channel: 'important', ms: estimate(a), ...extra } : null); }
 function sleep(ms, token) { return new Promise(r => { const t = setTimeout(r, ms); if (token) token.cancel = () => { clearTimeout(t); r(); }; }); }
 let sleepToken = null;
 function estimate(a) { return (a.duration || Math.max(1.5, (a.text || '').length * (a.lang === 'en' ? 0.07 : 0.24))) * 1000; }

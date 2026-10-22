@@ -27,6 +27,7 @@ const OUT = [
   { t: 110, near: 'tunnel', tunnel: true },
   { t: 119, near: 'mount' },
   { t: 128, far: 'sea', mid: 'sea', near: 'bridge', bridge: true },
+  { t: 147, far: 'xiamen', bridge: true },   // 快过完桥：对岸厦门的楼群才出现
   { t: 156, far: 'xiamen', mid: 'xiamen', near: 'fields' }
 ];
 const BACK = [
