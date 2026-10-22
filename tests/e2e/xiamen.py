@@ -207,7 +207,7 @@ async def main():
     })()""")
     ok('offAtLcu', await wait(pg, '__game.xmMetro.code==="lcu" && !__game.state().aboard', 4))
     # 走换乘楼梯：1 号线站台中间的楼梯口 → 下到正下方 2 号线站台
-    await auto(pg, [[XO + 1, 0.0], [XO + 4.5, 0.0]]); await auto(pg, [[XO + 12, 0.0], [XO + 21, 0.0]]); await auto(pg, [[XO + 24, 0.0]])
+    await auto(pg, [[XO + 1, 2.7], [XO + 21.6, 2.7]]); await auto(pg, [[XO + 21.6, 0.0], [XO + 19.5, 0.0]]); await auto(pg, [[XO + 12, 0.0], [XO + 3.5, 0.0]]); await auto(pg, [[XO + 0, 0.0]])
     s = await st(pg); ok('transferStairs', s['pos'][1] < -21 and s['zone'] == 'platform' and s['code'] == 'lcu')
     await measure3(pg, 's3-lcu-l2')
     ok('boardL2', await xm_board(pg, 2, 1))
