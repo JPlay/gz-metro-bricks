@@ -11,6 +11,7 @@ import { hex, mix } from '../core/geo.js';
 import { FoodAtlas } from '../game/food-art.js';
 import * as D from './decor.js';
 import { XM_LINES } from '../data/xm-lines.js';
+import { xinliEstate, Xinli256 } from './xmXinli.js';
 
 export const XS = { x: 4000, z: 0 };
 /** 车站里的出口通道（站厅南墙 x 处开口 → 楼梯上到地面 → 进街区） */
@@ -18,6 +19,7 @@ export const XM_EXITS = {
   jtou: { n: '2', x: 10, line: 2, road: '吕岭路', to: ['莲龙小学', '莲花小学'], toEn: ['Lianlong Primary School', 'Lianhua Primary School'] },
   lcu: { n: '12', x: 10, line: 1, road: '嘉禾路', to: ['莲花公园'], toEn: ['Lianhua Park'] },
   cyg: { n: '', x: 10, line: 1, road: '诚毅南路', to: ['莲花首岸'], toEn: ['Lianhua Shou\'an'] },
+  hpu: { n: '2', x: 10, line: 2, road: '吕岭路', to: ['鑫利花园'], toEn: ['Xinli Garden'] },
 };
 const FONT = '"PingFang SC","Hiragino Sans GB","Noto Sans CJK SC","Microsoft YaHei",sans-serif', FONT_EN = '"Helvetica Neue",Arial,sans-serif';
 
@@ -68,16 +70,35 @@ export class XmStreet {
     { const q = this.atlas.quad.bind(this.atlas); this.atlas.quad = (x, y, z, w, h, a, uv) => q(x, y, z, w, h, Math.PI - a, uv); }   // 本文件约定：a=0 朝 -z、π 朝 +z、±π/2 朝 ±x
     D.reseed(code.length * 97 + code.charCodeAt(0));
     this.ground(); this.kiosk();
-    if (code === 'jtou') this.jiangtou(); else if (code === 'lcu') this.lucuo(); else if (code === 'cyg') this.chengyi();
+    if (code === 'jtou') this.jiangtou(); else if (code === 'lcu') this.lucuo(); else if (code === 'cyg') this.chengyi(); else if (code === 'hpu') this.houpu();
     k.finish(true); this.atlas.finish(k.root, 'xmStreetSigns');
     k.root.getChildMeshes(false).forEach(m => { m.receiveShadows = true; });
   }
-  dispose() { if (this.atlas) this.atlas.dispose(); this.kit.root.getChildMeshes(false).forEach(m => m.dispose()); this.kit.root.dispose(); }
+  dispose() { if (this.inside) { this.inside.dispose(); this.inside = null; } if (this.atlas) this.atlas.dispose(); this.kit.root.getChildMeshes(false).forEach(m => m.dispose()); this.kit.root.dispose(); }
   /** 回到出口亭（往里走）→ 回车站 */
   wantsBack(p) { const lx = p.x - XS.x, lz = p.z - XS.z; return lz < -2.6 && lz > -6 && Math.abs(lx) < 1.9 && p.y < 1.5; }
   spawn() { return [XS.x, 0.05, XS.z + 1.2, 0]; }
-  zoneOf(p) { return { kind: 'street', net: 'xm', code: this.code, street: true }; }
-  info() { return { code: this.code, meshes: this.kit.root.getChildMeshes(false).length, atlasOverflow: this.atlas.overflow, atlasY: this.atlas.y + this.atlas.row }; }
+  zoneOf(p) { return this.inside ? { ...this.inside.zoneOf(p), code: this.code, street: true } : { kind: 'street', net: 'xm', code: this.code, street: true }; }
+  info() { return { code: this.code, meshes: this.kit.root.getChildMeshes(false).length, atlasOverflow: this.atlas.overflow, atlasY: this.atlas.y + this.atlas.row, inside: this.inside ? 256 : null }; }
+  /** 每帧：楼内 ↔ 街面切换；返回 'back' = 回车站 */
+  update(pl) {
+    const p = pl.position;
+    if (this.inside) { if (this.inside.wantsOut(p)) this.leaveBuilding(pl); return null; }
+    if (this.wantsBack(p)) return 'back';
+    const d = this.xinli && this.xinli.door256;
+    if (d && Math.abs(p.x - XS.x - d.x) < 1.0 && p.z - XS.z > d.z - 0.5 && p.z - XS.z < d.z + 0.6 && p.y < 1.5) this.enterBuilding(pl);
+    return null;
+  }
+  /** 进 256 号楼：楼梯间 + 各户单独加载（街区先隐藏） */
+  enterBuilding(pl) {
+    this.kit.root.setEnabled(false);
+    this.inside = new Xinli256(this.scene, { x: XS.x, y: 0, z: XS.z + 1000 });
+    const [x, y, z, yaw] = this.inside.spawn(); pl.spawn(x, y, z, yaw);
+  }
+  leaveBuilding(pl) {
+    this.inside.dispose(); this.inside = null; this.kit.root.setEnabled(true);
+    const d = this.xinli.door256; pl.spawn(XS.x + d.x, 0.05, XS.z + d.z - 1.6, Math.PI);
+  }
 
   /* ---------- 通用 ---------- */
   ground() {
@@ -225,6 +246,11 @@ export class XmStreet {
     k.metal.sphere(yx, 6.0, yz, 0.6, hex('#E8C25A'), 1);
     // —— 莲花小学（西南偏西 ~340 m → 约 85 m）：花园校园 + 映华楼（2025 新楼）——
     this.lianhuaSchool(-96, 56);
+    // 莲花北路（转向南、贴着莲花小学西边），西侧一排老店面；35-104 号：新疆麦麦提烤羊肉王（学校往南偏西 ~100 m → ~25 m）
+    this.road(-106, -98, 54, 200, false, null);
+    this.kebab(-110, 112, 120);
+    D.building(k, -116, 102, 12, 16, 10, '#B9A48E'); D.building(k, -116, 130, 12, 16, 13, '#A99782'); k.colSlab(-122, -110, 0, 10, 94, 110); k.colSlab(-122, -110, 0, 13, 122, 138);
+    for (let z = 60; z < 196; z += 11) if (z < 108 || z > 124) this.lightTree(-97.2, z, 0.8);
     this.filler([[60, -40, 30, 14, 26, '#C9C2B6'], [-40, -42, 34, 14, 32, '#D8D2C6'], [-110, -40, 30, 14, 22, '#BFB6A8'], [110, -40, 26, 14, 30, '#CDC5B8'], [52, 160, 30, 20, 18, '#D2CABE'], [-60, 120, 26, 18, 20, '#C6BEB1'], [120, 90, 20, 30, 24, '#D9D3C8']]);
   }
   lianhuaSchool(X0, Z0) {
@@ -259,6 +285,50 @@ export class XmStreet {
     for (const [x, z] of [[X0 + 3, Z0 + 3], [X0 + 3, Z0 + 26], [X0 + 30, Z0 + 3], [X0 + 30, Z0 + 26], [X0 + 46, Z0 + 46], [X0 + 4, Z0 + 47], [X0 + 52, Z0 + 47], [X0 + 26, Z0 + 2.5], [X0 + 14, Z0 + 2.5]]) this.lightTree(x, z, 0.85, 1);
   }
 
+  /* ---------- 后埔 2 号出口：鑫利花园（吕岭路 250–266 号，往西南 ~200 m → 约 50 m） ---------- */
+  houpu() {
+    const k = this.kit;
+    this.road(-160, 160, -22, -8, true, '吕岭路');
+    for (let x = -150; x <= 150; x += 12) if (Math.abs(x) > 6 && (x > -30 || x < -132)) this.lightTree(x, -6.2, 0.8);
+    for (const x of [-8, 8]) D.lamp(k, x, 0, -6.6, Math.PI);
+    this.xinli = xinliEstate(this);
+    this.filler([[60, -40, 30, 14, 30, '#C9C2B6'], [-40, -42, 34, 14, 24, '#D8D2C6'], [-110, -40, 30, 14, 34, '#BFB6A8'], [110, -40, 26, 14, 22, '#CDC5B8'], [40, 50, 30, 30, 28, '#D2CABE'], [-80, 120, 40, 20, 26, '#C6BEB1']]);
+  }
+  /** 莲花北路 35-104：新疆麦麦提烤羊肉王（红底白字招牌、门口炭烤槽 + 串架、矮桌塑料凳） */
+  kebab(x1, z0, z1) {
+    const k = this.kit, P = k.solid, A = this.atlas, M = k.metal, x0 = x1 - 12, h = 10.2, zc = (z0 + z1) / 2, W = z1 - z0;
+    // 三层老店面：上面两层是住宅（棕色面砖 + 防盗网窗），底层店面敞开
+    P.slab(x0, x1, 3.4, h, z0, z1, hex('#9C6B55'), { ao: false }); k.colSlab(x0, x1, 0, h, z0, z0 + 0.3); k.colSlab(x0, x1, 0, h, z1 - 0.3, z1); k.colSlab(x0, x0 + 0.3, 0, h, z0, z1);
+    const up = (c, pw, ph) => { c.fillStyle = '#9C6B55'; c.fillRect(0, 0, pw, ph); c.strokeStyle = 'rgba(255,255,255,0.1)'; for (let y = 0; y < ph; y += 6) { c.beginPath(); c.moveTo(0, y); c.lineTo(pw, y); c.stroke(); }
+      for (let f = 0; f < 2; f++) for (let b = 0; b < 3; b++) { const bw = pw / 3, x = b * bw + bw * 0.18, y = ph * (f * 0.5 + 0.12), w = bw * 0.64, hh = ph * 0.3; c.fillStyle = '#EDEAE4'; c.fillRect(x - 3, y - 3, w + 6, hh + 6); c.fillStyle = '#6F8C9E'; c.fillRect(x, y, w, hh); c.strokeStyle = '#DADDE0'; c.lineWidth = 2; for (let i = 1; i < 6; i++) { c.beginPath(); c.moveTo(x + w * i / 6, y); c.lineTo(x + w * i / 6, y + hh); c.stroke(); } } };
+    A.quad(x1 + 0.03, 3.4 + (h - 3.4) / 2, zc, W, h - 3.4, Math.PI / 2, A.draw(W, h - 3.4, up, 40));
+    // 底层店内：白瓷砖墙 + 地砖 + 里面两张桌子
+    P.slab(x0 + 0.3, x1, 0.0, 0.03, z0 + 0.3, z1 - 0.3, hex('#D9D4CA'), { ao: false });
+    P.slab(x0 + 0.3, x0 + 0.4, 0, 3.4, z0 + 0.3, z1 - 0.3, hex('#F2F0EC'), { ao: false });
+    for (const [za, zb] of [[z0, z0 + 0.3], [z1 - 0.3, z1]]) P.slab(x0, x1, 0, 3.4, za, zb, hex('#F2F0EC'), { ao: false });   // 店面两侧墙（原来只有碰撞，看得见天）
+    P.slab(x0 + 0.3, x1, 3.2, 3.4, z0 + 0.3, z1 - 0.3, hex('#F7F5F0'), { ao: false }); k.glow.slab(x0 + 3, x1 - 3, 3.17, 3.2, zc - 0.2, zc + 0.2, hex('#FFF4DC'), { ao: false });
+    // 招牌：红底白字
+    P.slab(x1, x1 + 0.25, 3.4, 4.6, z0, z1, hex('#C21F1F'), { ao: false });
+    A.quad(x1 + 0.27, 4.0, zc, W - 0.2, 1.1, Math.PI / 2, A.draw(W - 0.2, 1.1, (c, pw, ph) => { c.fillStyle = '#C21F1F'; c.fillRect(0, 0, pw, ph); c.fillStyle = '#FFFFFF'; c.textAlign = 'center'; c.textBaseline = 'middle';
+      c.font = `800 ${ph * 0.56}px ${FONT}`; let t = '新疆麦麦提烤羊肉王', tw = c.measureText(t).width; if (tw > pw * 0.94) c.font = `800 ${ph * 0.56 * pw * 0.94 / tw}px ${FONT}`; c.fillText(t, pw / 2, ph * 0.42);
+      c.font = `600 ${ph * 0.16}px ${FONT}`; c.fillText('羊肉串 · 烤馕 · 拌面 · 抓饭', pw / 2, ph * 0.84); }, 120));
+    // 门口炭烤槽：铁皮长槽 + 发红的炭 + 一排羊肉串 + 烟罩
+    const gx = x1 + 1.2, g0 = z0 + 1.2, g1 = z0 + 4.2;
+    M.slab(gx - 0.25, gx + 0.25, 0.7, 0.95, g0, g1, hex('#3A3D40'), { ao: false }); for (const z of [g0 + 0.1, g1 - 0.1]) M.slab(gx - 0.22, gx + 0.22, 0, 0.7, z - 0.04, z + 0.04, hex('#2C2E30'), { ao: false });
+    k.colSlab(gx - 0.3, gx + 0.3, 0, 1.0, g0, g1);
+    k.glow.slab(gx - 0.2, gx + 0.2, 0.95, 0.98, g0 + 0.1, g1 - 0.1, hex('#FF6A1E'), { ao: false });
+    for (let i = 0; i < 18; i++) { const z = g0 + 0.2 + i * 0.15; M.slab(gx - 0.42, gx + 0.42, 1.0, 1.012, z - 0.006, z + 0.006, hex('#B9BEC3'), { ao: false }); P.slab(gx - 0.18, gx + 0.18, 1.0, 1.04, z - 0.025, z + 0.025, hex(i % 3 ? '#8E4A2E' : '#A85A36'), { ao: false }); }
+    // 串架：竖铁架上挂一排排生串
+    const rz = g1 + 0.6;
+    for (const dz of [0, 1.0]) M.cyl(gx, 0.9, rz + dz, 0.05, 1.8, hex('#8A9198'), 6);
+    for (let r = 0; r < 4; r++) { const y = 0.7 + r * 0.32; M.slab(gx - 0.02, gx + 0.02, y, y + 0.02, rz, rz + 1.0, hex('#8A9198'), { ao: false }); for (let i = 0; i < 9; i++) P.slab(gx - 0.12, gx + 0.12, y - 0.04, y, rz + 0.06 + i * 0.1, rz + 0.08 + i * 0.1, hex(i % 2 ? '#C0483A' : '#E0A88C'), { ao: false }); }
+    // 门口矮桌 + 塑料凳（红 / 蓝）
+    for (const [tx, tz] of [[x1 + 2.6, zc + 1.6], [x1 + 2.6, zc + 3.6], [x0 + 4, zc], [x0 + 7.5, zc - 2]]) {
+      P.slab(tx - 0.4, tx + 0.4, 0, 0.5, tz - 0.4, tz + 0.4, hex('#DCD7CC'), { ao: false }); P.slab(tx - 0.45, tx + 0.45, 0.5, 0.54, tz - 0.45, tz + 0.45, hex('#F4F2EE'), { ao: false }); k.colSlab(tx - 0.45, tx + 0.45, 0, 0.54, tz - 0.45, tz + 0.45);
+      for (const [dx, dz, cl] of [[-0.75, 0, '#D93A30'], [0.75, 0, '#2E6FC2'], [0, 0.75, '#D93A30']]) { P.cyl(tx + dx, 0.15, tz + dz, 0.34, 0.3, hex(cl), 8, 0, 0, 0, 0.26); P.cyl(tx + dx, 0.31, tz + dz, 0.36, 0.03, hex(cl), 8); }
+    }
+    k.shade.shadeBlob(x1 + 1.8, zc, 2.2, W / 2, 0.02, 0.18);
+  }
   /* ---------- 吕厝 12 号出口：莲花公园 ---------- */
   lucuo() {
     const k = this.kit, P = k.solid, A = this.atlas;

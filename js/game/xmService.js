@@ -81,7 +81,7 @@ export class XmMetro {
   update(dt) {
     if (!this.station) return;
     const p = this.ctx.player.position, A = this.ctx.Audio, seated = !!this.ctx.player.seat;
-    if (this.street) { const p = this.ctx.player.position; if (this.street.wantsBack(p)) this.backFromStreet(); return; }
+    if (this.street) { if (this.street.update(this.ctx.player) === 'back') this.backFromStreet(); return; }
     if (this.ride && this.ride.phase === 'cruise') return this.cruise(dt);
     { const ex = XM_EXITS[this.code], p = this.ctx.player.position; if (ex && !this.ride && p.z < -35.2 && p.y > -1 && Math.abs(p.x - XO.x - ex.x) < 2.4) { this.goStreet(); return; } }
     let sound = null;
