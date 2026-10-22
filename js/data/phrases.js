@@ -1,5 +1,5 @@
 /*
- * 报站文案与语音片段 id（普通话 → 粤语 → 英语）。浏览器和 Node（tools/audio/export_jobs.mjs）共用。
+ * 报站文案与语音片段 id（普通话 → 粤语 → 英语；厦门地铁为 普通话 → 闽南语 → 英语）。浏览器和 Node（tools/audio/export_jobs.mjs）共用。
  * 旧项目已有 90 条 MP3（公园前/农讲所/烈士陵园/东山口 + 1 号线方向等），这里的 id 与文字与之完全一致；
  * 新增车站 / 2 号线方向沿用同一句式，暂无 MP3 时由 Web Speech 按 text 朗读（见 js/audio/audio.js）。
  */
@@ -9,8 +9,12 @@ import { VISITS, visitTexts } from './visits.js';
 import { xmVisitTexts } from './xm-visits.js';
 
 export const LANGS = ['zh', 'yue', 'en'];
+/** 播放顺序：普通话 → 粤语（广州）/ 闽南语（厦门地铁）→ 英语。粤语只在广州、闽南语只在厦门地铁 1/2 号线；动车只有普通话 + 英语 */
+export const ORDER = ['zh', 'yue', 'nan', 'en'];
 const LEGACY = new Set(['gyq', 'njs', 'lsly', 'dsk']);
 const seg = (key, texts) => LANGS.map((l, i) => ({ id: `voice.${key}.${l}`, lang: l, text: texts[i] })).filter(s => s.text);
+/** 厦门地铁：[普通话, 英语] → 普通话 → 闽南语（同一段中文文字，用闽南话念）→ 英语 */
+const xseg = (key, zh, en) => [{ id: `voice.${key}.zh`, lang: 'zh', text: zh }, { id: `voice.${key}.nan`, lang: 'nan', text: zh }, { id: `voice.${key}.en`, lang: 'en', text: en }].filter(s => s.text);
 
 function xZh(list) { return list.map(k => { const o = OTHER_LINES[k]; return o.name || o.num + '号线'; }).join('、'); }
 function xEn(list) {
@@ -56,13 +60,13 @@ function stnOf(code) { return STATIONS[code] || XM_STATIONS[code]; }
 function isXm(code) { return !!XM_STATIONS[code] && !STATIONS[code]; }
 export function arriveSegs(code) {
   const s = stnOf(code);
-  // 厦门地铁只播普通话 + 英语（不播粤语）
-  if (isXm(code)) return seg('arrive.' + code, [`列车即将到达${zhStn(s.zh)}，请小心列车与站台之间的空隙。`, null, `The train is arriving at ${s.en}. Please mind the gap between the train and the platform.`]);
+  // 厦门地铁：普通话 → 闽南语 → 英语（不播粤语）
+  if (isXm(code)) return xseg('arrive.' + code, `列车即将到达${zhStn(s.zh)}，请小心列车与站台之间的空隙。`, `The train is arriving at ${s.en}. Please mind the gap between the train and the platform.`);
   return [...seg('arrive.' + code, [`列车即将到达${zhStn(s.zh)}，请小心列车与站台之间的空隙。`, `列车即将到达${zhStn(s.zh)}，请小心列车同站台之间的空隙。`, `The train is arriving at ${s.en}. Please mind the gap between the train and the platform.`])];
 }
 export function welcomeSegs(code) {
   const s = stnOf(code);
-  if (isXm(code)) return seg('welcome.' + code, [`欢迎光临${zhStn(s.zh)}。请排队候车，先下后上。`, null, `Welcome to ${enStn(s)}. Please line up for the train. Let the passengers get off first before you get on.`]);
+  if (isXm(code)) return xseg('welcome.' + code, `欢迎光临${zhStn(s.zh)}。请排队候车，先下后上。`, `Welcome to ${enStn(s)}. Please line up for the train. Let the passengers get off first before you get on.`);
   return seg('welcome.' + code, [`欢迎光临${zhStn(s.zh)}。请排队候车，先下后上。`, `欢迎光临${zhStn(s.zh)}。请排队候车，先落后上。`, `Welcome to ${enStn(s)}. Please line up for the train. Let the passengers get off first before you get on.`]);
 }
 export function platformSegs(line, dir, n) {
@@ -95,29 +99,31 @@ export const emuArriveSegs = d => { const t = EMU_T[d]; return seg('emu.arrive.'
 export function emuJobs() { return [...emuDoorsSegs(), ...emuBridgeSegs(), ...['xm', 'gz'].flatMap(d => [...emuDepartSegs(d), ...emuNextSegs(d), ...emuArriveSegs(d)])]; }
 
 /** 全网需要的全部片段（用于生成缺失清单 / 语音生成任务） */
-/** 厦门地铁报站（普通话 + 英语；线路方向 id 带 xm 前缀以免和广州撞） */
+/** 厦门地铁报站（普通话 → 闽南语 → 英语；线路方向 id 带 xm 前缀以免和广州撞） */
 export function xmDestinationSegs(line, dir) {
   const d = XM_LINES[line].dirs[dir];
-  return seg('destination.xm' + dir, [`本次列车终点站为${d.zh}。`, null, `The destination of this train is ${d.en}.`]);
+  return xseg('destination.xm' + dir, `本次列车终点站为${d.zh}。`, `The destination of this train is ${d.en}.`);
 }
 export function xmTerminalSegs(line, dir) {
   const d = XM_LINES[line].dirs[dir];
-  return seg('terminal.xm' + dir, [`下一站是本次列车的终点站，${d.zh}。请全部乘客带齐行李物品在此站下车，欢迎再次乘坐厦门地铁。`, null,
-    `The next station is ${d.en}, the terminal of this journey. Please take all your belongings and leave the train. Thank you for travelling on Xiamen Metro.`]);
+  return xseg('terminal.xm' + dir, `下一站是本次列车的终点站，${d.zh}。请全部乘客带齐行李物品在此站下车，欢迎再次乘坐厦门地铁。`,
+    `The next station is ${d.en}, the terminal of this journey. Please take all your belongings and leave the train. Thank you for travelling on Xiamen Metro.`);
 }
 export function xmPlatformSegs(line, dir, n) {
   const d = XM_LINES[line].dirs[dir], num = ['一', '二'][n - 1];
-  return seg(`platform.xm${dir}.${n}`, [`${num}站台，${d.zh}方向列车即将进站。`, null, `The train bound for ${d.en} is approaching at Platform ${n}.`]);
+  return xseg(`platform.xm${dir}.${n}`, `${num}站台，${d.zh}方向列车即将进站。`, `The train bound for ${d.en} is approaching at Platform ${n}.`);
 }
 export function xmNextSegs(line, code) {
   const s = XM_STATIONS[code], xs = xmTransfers(code, line);
   const xZh = xs.map(k => typeof k === 'number' && XM_LINES[k] ? XM_LINES[k].zh : (k === 3 ? '3号线' : k === 4 ? '4号线' : k === 6 ? '6号线' : String(k))).join('、');
   const xEn = xs.map(k => typeof k === 'number' && XM_LINES[k] ? XM_LINES[k].en : ('Line ' + k)).join(' and ');
   const zx = xs.length ? '，可换乘' + xZh : '', ex = xs.length ? ', the interchange with ' + xEn : '';
-  return seg('next.' + code, [`下一站，${s.zh}${zx}。`, null, `The next station is ${s.en}${ex}.`]);
+  // 两条线都停的站（吕厝）：换乘对象随线路不同 → 片段 id 带线路号（next.lcu1 / next.lcu2）
+  const both = Object.values(XM_LINES).filter(L => L.stations.includes(code)).length > 1;
+  return xseg('next.' + code + (both ? line : ''), `下一站，${s.zh}${zx}。`, `The next station is ${s.en}${ex}.`);
 }
 /** 厦门：下一站附近的景点（js/data/xm-visits.js） */
-export const xmVisitSegs = code => { const s = XM_STATIONS[code], t = s && xmVisitTexts(code, s.zh + '站', s.en + ' station'); return t ? seg('xmvisit.' + code, t) : []; };
+export const xmVisitSegs = code => { const s = XM_STATIONS[code], t = s && xmVisitTexts(code, s.zh + '站', s.en + ' station'); return t ? xseg('xmvisit.' + code, t[0], t[t.length - 1]) : []; };
 export function xmDepartSegs(line, nextCode, dir, step, withDestination) {
   const head = withDestination ? xmDestinationSegs(line, dir) : [];
   return xmIsTerminal(line, nextCode, step) ? [...head, ...xmTerminalSegs(line, dir)] : [...head, ...xmNextSegs(line, nextCode), ...xmVisitSegs(nextCode)];

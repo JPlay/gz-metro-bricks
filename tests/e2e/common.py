@@ -8,7 +8,7 @@ async def open_game(p, url, w=1112, h=834, bjs=None):
     logs=[]
     pg.on('console', lambda m: logs.append((m.type, m.text)))
     pg.on('pageerror', lambda e: logs.append(('pageerror', str(e))))
-    pg.on('requestfailed', lambda r: logs.append(('reqfail', r.url)))
+    pg.on('requestfailed', lambda r: logs.append(('reqfail', r.url, r.failure)))
     await pg.goto(url)
     try:
         await pg.wait_for_function('window.__game || document.querySelector("#loading.err")', timeout=90000)

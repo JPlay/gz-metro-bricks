@@ -426,6 +426,7 @@ async function pump() {
         let ok = !!(a.file && assets[a.id]);
         if (ok) { try { await ensureBuffer(a.id); } catch (e) { ok = false; } }
         if (item.epoch !== epoch) break;
+        if (!ok && a.lang === 'nan') { log.skipped = (log.skipped || []).concat(a.id); continue; }   // 闽南语没有 MP3 时不能让 Web Speech 用普通话念：直接跳过
         if (!ok) { await fallbackClip(a, item.epoch); continue; }
         caption(a);
         log.announced.push(a.id);

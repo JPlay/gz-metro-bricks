@@ -10,7 +10,9 @@ def log(*a): print(time.strftime('%H:%M:%S'),*a, flush=True)
 GCLOCK = "window.__gt===undefined && (window.__gt=0, __game.scene.onBeforeRenderObservable.add(()=>{ window.__gt += Math.min(0.05, __game.engine.getDeltaTime()/1000); }))"
 async def gt(pg): return await pg.evaluate('window.__gt||0')
 async def auto(pg, pts, run=False):
-    r=await pg.evaluate(f'__game.autopilot({json.dumps(pts)}, {str(run).lower()})')
+    # 墙钟保底 10 分钟：游戏时间不走（渲染卡住）时 autopilot 的 Promise 永远不 resolve，不能让整套测试挂死
+    r=await pg.evaluate(f'Promise.race([__game.autopilot({json.dumps(pts)}, {str(run).lower()}), new Promise(r => setTimeout(() => r({{ok:false, wallTimeout:true}}), 600000))])')
+    if r.get('wallTimeout'): log('auto: wall timeout (game clock stalled?) at gt', round(await gt(pg),1))
     s=await st(pg); log('auto', pts[-1], '->', r['ok'], s['pos'], s['zone'], r.get('stuckAt'), 'fps', s['fps'])
     return r['ok']
 async def wait(pg, js, game=60, wall=1800, poll=0.5):

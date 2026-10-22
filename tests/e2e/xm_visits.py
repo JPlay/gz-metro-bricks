@@ -1,4 +1,4 @@
-# 厦门景点：报站片段（下一站后接景点句，普通话 + 英语，有 MP3）+ 厦门线路图景点图标可点开卡片
+# 厦门景点：报站片段（下一站后接景点句，普通话 + 闽南语 + 英语，有 MP3）+ 厦门线路图景点图标可点开卡片
 import asyncio, sys, json, os
 sys.path.insert(0, os.path.dirname(__file__))
 from common import *
@@ -14,7 +14,7 @@ async def main():
     print('segs', segs, flush=True)
     ok('departHasVisit', 'voice.xmvisit.jtou.zh' in segs and 'voice.xmvisit.jtou.en' in segs and segs.index('voice.xmvisit.jtou.zh') > segs.index('voice.next.jtou.zh'))
     man = await pg.evaluate("""fetch('assets/audio/manifest.json').then(r => r.json()).then(m => m.assets.filter(a => a.id.startsWith('voice.xmvisit.')).map(a => a.file))""")
-    ok('manifest14', len(man) == 14)
+    ok('manifest14', len([f for f in man if not f.endswith('-nan.mp3')]) == 14 and len([f for f in man if f.endswith('-nan.mp3')]) == 7)   # 普通话+英语 14 条 + 闽南语 7 条
     okf = await pg.evaluate("""(async (fs) => { for (const f of fs) { const r = await fetch('assets/audio/' + f); if (!r.ok) return false; } return true; })""", man)
     ok('mp3sLoad', okf)
     await pg.evaluate("""(() => { const g=__game; g.east.ensure(); g.east.side='xm'; g.east.cur={st:g.station, loc:'xmmetro', area:'metro'}; g.xmMetro.enterFromRailway(g.player); })()""")

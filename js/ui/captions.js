@@ -1,6 +1,6 @@
 // 广播字幕：监听音频引擎的 gz-audio-caption 事件，显示当前片段的文字和语言标记。
 export const HOLD_MS = 2500;
-const BADGE = { zh: '普', yue: '粤', en: 'EN' };
+const BADGE = { zh: '普', yue: '粤', nan: '闽', en: 'EN' };
 export function initCaptions() {
   const el = document.getElementById('caption'), langEl = el.querySelector('.lang'), textEl = el.querySelector('.text');
   let hideTimer = null;
