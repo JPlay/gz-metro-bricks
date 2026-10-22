@@ -3,7 +3,9 @@
 # → 从同一扇车门上车、坐下 → 回程 D3311 开回广州东 → 下车回到广州东站站台。
 # 断言：每一段都走得到；车门关好才开车、开车时出不去；各路段远景按顺序出现；广播（字幕事件）按顺序；每个镜头 ≤66 draws / 186,754 tris；没有报错。
 # 评审截图（iPad 横屏 1112×834，不贴角标）：a 关门开出广州东站台、b 车窗外的九龙江特大桥、c 在厦门北站下车。
-# 用法：python tests/e2e/xiamen.py [base-url] [截图目录] [q]
+# 第二阶段：厦门北站台 → 楼梯下出站层 → 出站检票口 → 免安检换乘通道 → 地铁 1 号线闸机（关着）→ 楼梯上南广场 → 回站台；新镜头 ≤50 draws。
+# 评审截图（第二阶段，另一个目录）：xm1 出站层、xm2 换乘地铁通道、xm3 南广场站房立面。
+# 用法：python tests/e2e/xiamen.py [base-url] [截图目录] [q] [第二阶段截图目录]
 import asyncio, sys, json, os
 sys.path.insert(0, os.path.dirname(__file__))
 from common import *
@@ -24,6 +26,13 @@ async def measure(pg, name):
 async def shot(pg, name, settle=1.0):
     await asyncio.sleep(settle); await measure(pg, name)
     await pg.screenshot(path=OUT + name + '.png', timeout=180000)
+OUT2 = (sys.argv[4] if len(sys.argv) > 4 else '/workspace/gz-shots-polish/xm-s2-r1/').rstrip('/') + '/'
+BUDGET2 = 50   # 第二阶段新加的镜头（厦门北站房）
+async def measure2(pg, name):
+    d = await measure(pg, name); ok('budget50:' + name, d['draws'] <= BUDGET2 and d['tris'] <= BUDGET['tris']); return d
+async def shot2(pg, name, settle=1.2):
+    await asyncio.sleep(settle); await measure2(pg, name)
+    await pg.screenshot(path=OUT2 + name + '.png', timeout=180000)
 async def until_rt(pg, rt, speed=10):
     await pg.evaluate(f'__game.east.setSpeed({speed})')
     r = await wait(pg, f'(__game.east.info().ride||{{rt:1e9}}).rt > {rt}', 400)
@@ -46,7 +55,7 @@ async def sit_row14(pg):
     await pg.evaluate('__game.act()'); await asyncio.sleep(0.8)
     return (await st(pg))['seat'].get('seated')
 async def main():
-  os.makedirs(OUT, exist_ok=True)
+  os.makedirs(OUT, exist_ok=True); os.makedirs(OUT2, exist_ok=True)
   async with async_playwright() as p:
     b, pg, logs = await open_game(p, BASE + f'?q={Q}&start=gzdz&line=1')
     await pg.evaluate(GCLOCK); await pg.evaluate('__game.setDtMax(0.25)')
@@ -109,10 +118,36 @@ async def main():
     await pg.evaluate('__game.player.yaw=1.78; __game.player.pitch=0.06')
     await shot(pg, 'c-arrive-xmn', 1.2)
     # 站台上走走（不掉下去）
-    await auto(pg, [[XO - 2, -124.6], [XO + 8, -124.6]]); await auto(pg, [[XO - 16, -124.6]])
+    await auto(pg, [[XO - 2, -125.4], [XO + 8, -125.4]]); await auto(pg, [[XO - 16, -125.4]])
     s = await st(pg); ok('xmnWalk', s['pos'][1] > -0.5 and s['pos'][0] < XO - 14)
     await measure(pg, 'xmn-platform')
     ok('captionHidden', await wait(pg, CAPHIDDEN, 200, wall=40))
+    # 6. 第二阶段：站台 → 楼梯下到出站层 → 出站检票口 → 免安检换乘通道 → 地铁 1 号线闸机（关着，第三阶段才进得去）
+    #    → 回到出站通道 → 楼梯上南广场（站房立面）→ 原路回站台
+    e = await E(pg); ok('stationZone', e['xmn']['station'] and e['xmn']['stationOn'] and e['area'] == 'platform')
+    await auto(pg, [[XO - 8, -123.3], [XO - 12, -123.3]]); await auto(pg, [[XO - 30, -123.3]])
+    s = await st(pg); e = await E(pg); ok('hallDown', s['pos'][1] < -6 and e['area'] == 'hall')
+    await view(pg, 'first'); await pg.evaluate('__game.player.yaw=0.6; __game.player.pitch=0')   # 1：下了楼梯，出站层：吊牌、出站检票口
+    await shot2(pg, 'xm1-hall'); ok('hudHall', '出站层' in (await pg.evaluate("document.body.innerText")))
+    await view(pg, 'third')
+    await auto(pg, [[XO - 24, -112], [XO - 20, -104]]); await auto(pg, [[XO - 20, -96], [XO - 20, -88]])
+    s = await st(pg); ok('throughExitGates', s['pos'][2] > -99)
+    await auto(pg, [[XO - 30, -80], [XO - 42, -80]])
+    e = await E(pg); ok('passageArea', e['area'] in ('hall', 'passage'))
+    await view(pg, 'first'); await pg.evaluate('__game.player.yaw=-Math.PI/2; __game.player.pitch=0.02')   # 2：换乘地铁通道，吊牌 + 尽头地铁入口
+    await shot2(pg, 'xm2-transfer'); await view(pg, 'third')
+    await auto(pg, [[XO - 64, -80], [XO - 86, -80]]); await auto(pg, [[XO - 99, -80]])
+    s = await st(pg); e = await E(pg); ok('metroGatesClosed', XO - 95.7 < s['pos'][0] < XO - 93 and e['area'] == 'passage'); await measure2(pg, 'xm-metro-gates')
+    await auto(pg, [[XO - 70, -80], [XO - 48, -80]]); await auto(pg, [[XO - 30, -80], [XO - 20, -70]])
+    await auto(pg, [[XO - 20, -62], [XO - 20, -50]]); await auto(pg, [[XO - 20, -36]])
+    s = await st(pg); e = await E(pg); ok('upToPlaza', s['pos'][1] > -0.3 and e['area'] == 'plaza'); await measure2(pg, 'xm-stair-top')
+    await auto(pg, [[XO - 5, -20], [XO - 5, 5]]); await auto(pg, [[XO - 5, 30]])
+    await pg.evaluate('__game.player.yaw=Math.PI; __game.player.pitch=-0.12')   # 3：南广场看站房立面（燕尾脊屋顶、红砖、海蓝玻璃）
+    await shot2(pg, 'xm3-forecourt')
+    await auto(pg, [[XO - 20, -20], [XO - 20, -36]]); await auto(pg, [[XO - 20, -50], [XO - 20, -64]])
+    await auto(pg, [[XO - 20, -72], [XO - 20, -90]]); await auto(pg, [[XO - 20, -104], [XO - 28, -112]])
+    await auto(pg, [[XO - 30, -123.3], [XO - 26, -123.3]]); await auto(pg, [[XO - 12, -123.3], [XO - 8, -123.3]])
+    s = await st(pg); e = await E(pg); ok('backOnPlatform', abs(s['pos'][1]) < 0.3 and e['area'] == 'platform' and e['loc'] == 'xmn')
     # 5. 回程：从车门上车、坐下 → D3311 开回广州东；途中拍 b（九龙江特大桥）
     await auto(pg, [[XO - 5.8, -126.2], [XO - 5.8, -127.3], [XO - 5.8, -128.6]])
     ok('reboard', await wait(pg, '__game.east.info().inside', 4))
