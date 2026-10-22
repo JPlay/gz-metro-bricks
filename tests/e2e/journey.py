@@ -15,10 +15,14 @@ async def auto(pg, pts, run=False):
     return r['ok']
 async def wait(pg, js, game=60, wall=1800, poll=0.5):
     """等 js 为真；超过 game 秒游戏时间（或 wall 秒真实时间）算超时"""
-    g0=await gt(pg); t0=time.time()
+    g0=await gt(pg); t0=time.time(); last=(g0, t0)
     while time.time()-t0<wall:
         if await pg.evaluate(js): return True
-        if await gt(pg)-g0>game: return False
+        g=await gt(pg)
+        if g-g0>game: return False
+        # 游戏时间不走了（软件渲染卡住、页面不出帧）：120 秒墙钟没前进就判失败，不再空等 30 分钟
+        if g!=last[0]: last=(g, time.time())
+        elif time.time()-last[1]>120: log('wait: game clock stalled for 120s at', round(g,1), js[:80]); return False
         await asyncio.sleep(poll)
     return False
 def slot(line, step): return f"(__game.state().metro.slots.find(s=>s.line=={line}&&s.step=={step})||{{}})"

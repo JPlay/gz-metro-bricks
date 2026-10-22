@@ -53,11 +53,16 @@ async def main():
     R['toSeat'] = await auto(pg, [[EO + 10.6, 0.25], [EO + 9.0, 0.3], [EO + 4.2, 0.3]])   # 第 14 排二人座（往前还有 4 排，看得到端门上的显示屏）
     s = await st(pg); R['actBeforeSit'] = s['act']
     await pg.evaluate('__game.act()'); await asyncio.sleep(1.0)
+    # 坐下就会开始“关门 → 发车”倒计时（4.2 s 关门、6.5 s 开车）。截图期间冻结动车时钟，否则机器快的时候（setDtMax 0.25）截图那几秒车就开走了、下不了车
+    # （startRide 在坐稳 1.2 s 后才调用，而且会把 speed 设回 1：等它开始了再冻结）
+    await wait(pg, '!!__game.east.info().ride', 5)
+    await pg.evaluate('__game.east.speed = 0')
     s = await st(pg); R['seat'] = s['seat']
     # 03：坐着，第一人称看车头方向（前排椅背、两边大窗、行李架、端门上的显示屏）
     await view(pg, 'first'); await pg.evaluate('__game.player.yaw=Math.PI/2; __game.player.pitch=0.02')
     await shot(pg, '03-seat-forward')
-    # 6. 起身 → 回门厅 → 下车回到站台
+    # 6. 起身 → 回门厅 → 下车回到站台（先恢复动车时钟；还在关门前，起身即取消发车、车门重新打开）
+    await pg.evaluate('__game.east.speed = 1')
     await pg.evaluate('__game.act()'); await asyncio.sleep(0.8)
     s = await st(pg); R['stood'] = not s['seat']['seated']
     await view(pg, 'third')

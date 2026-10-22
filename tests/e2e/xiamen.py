@@ -267,8 +267,9 @@ async def main():
     await pg.evaluate('__game.east.setSpeed(10)')
     ok('arrivedGz', await wait(pg, '__game.east.info().count.arrived.length >= 2', 200))
     await pg.evaluate('__game.east.setSpeed(1)')
-    await wait(pg, '__game.east.info().door <= 0', 4)
+    # 到站后马上起身：还坐着的话，门开好 1.2 s 后会自动“关门开车”返程（机器快时来不及下车）
     if (await st(pg))['seat'].get('seated'): await pg.evaluate('__game.act()'); await asyncio.sleep(0.4)   # 起身下车
+    await wait(pg, '__game.east.info().door <= 0', 6)
     await view(pg, 'third')
     await auto(pg, [[EO + 10.6, 0.25], [EO + 11.2, 0.9], [EO + 11.2, 1.6]])
     ok('backGz', await wait(pg, '!__game.east.info().inside && __game.east.info().loc === null', 4))
