@@ -10,6 +10,7 @@ import { Kit, FONT, FONT_EN, roundRect } from './kit.js';
 import { Geo, hex, mix } from '../core/geo.js';
 import { randomLook, preseed, Person } from './people.js';
 import { LINES, STATIONS } from '../data/lines.js';
+import { XM_LINES, XM_STATIONS } from '../data/xm-lines.js';
 import { drawStrip, drawLcd, hotUV, STRIP_W, STRIP_H } from './routemap.js';
 const TEX_K = 0.75; // 车内两块屏贴图的缩放（见 build）
 const B = window.BABYLON;
@@ -18,7 +19,11 @@ export const CAR_X = [-18.6, 0, 18.6], DOOR_DX = [-6, 0, 6], HALF = 27.9, DOOR_W
 export const DOOR_XS = CAR_X.flatMap(c => DOOR_DX.map(d => c + d));
 const WHITE = [1, 1, 1], STEEL = hex('#BFC6CE'), DARK = hex('#2A2E33'), INT = hex('#F1F0EC'), FLOORC = hex('#8E979F');
 // 涂装（对照实车）：1 号线 A1 型 = 黄色车身 + 红色腰带；2 号线 = 香槟色车身 + 线路蓝腰带
-const BODY = { 1: '#F4CF3A', 2: '#E9DEC6' }, STRIPE = { 1: '#D52B1E', 2: '#00629B' };
+const BODY = { 1: '#F4CF3A', 2: '#E9DEC6', xm1: '#F5E6D8', xm2: '#E6F3EA' }, STRIPE = { 1: '#D52B1E', 2: '#00629B', xm1: '#F2711C', xm2: '#00A651' };
+/** 当前列车跑哪张网：'gz' | 'xm'（厦门地铁线路图 / 站名来自 xm-lines） */
+function netLines(net) { return net === 'xm' ? XM_LINES : LINES; }
+function netStations(net) { return net === 'xm' ? XM_STATIONS : STATIONS; }
+function lineKey(net, line) { return net === 'xm' ? 'xm' + line : line; }
 // 外轮廓（右半，自下而上），左半镜像
 const R = [[1.34, -0.95], [1.45, -0.86], [1.5, -0.6], [1.52, 0.2], [1.53, 0.95], [1.515, 1.55], [1.48, 2.05], [1.43, 2.33], [1.33, 2.53], [1.13, 2.68], [0.8, 2.77], [0.4, 2.81], [0, 2.82]];
 const OUT = [...R, ...R.slice(0, -1).reverse().map(([z, y]) => [-z, y])];
@@ -55,7 +60,7 @@ export class Train {
     this.seatMat = M.paint.clone('trainSeat' + id); this.seatMat.roughness = 0.25;
     this.steelMat = M.metal.clone('trainSteel' + id); this.steelMat.metallic = 0.45; this.steelMat.roughness = 0.25;
     this.glassMat = M.glass.clone('trainGlass' + id); this.glassMat.albedoColor = new B.Color3(0.22, 0.3, 0.36); this.glassMat.alpha = 0.32;
-    this.line = 1; this.open = { 1: 0, '-1': 0 }; this.s = 0; this.pos = new B.Vector3(); this.prev = new B.Vector3();
+    this.line = 1; this.net = 'gz'; this.open = { 1: 0, '-1': 0 }; this.s = 0; this.pos = new B.Vector3(); this.prev = new B.Vector3();
     this.build();
     this.setLine(1);
   }
@@ -276,25 +281,26 @@ export class Train {
     });
     this.shadowMeshes = [this.body, by.line, by.paint].filter(Boolean);
   }
-  setLine(line) {
-    this.line = line;
+  setLine(line, net = this.net) {
+    this.line = line; this.net = net || 'gz';
+    const key = lineKey(this.net, line), L = netLines(this.net)[line];
     const lin = h => B.Color3.FromHexString(h).toLinearSpace();
-    this.lineMat.albedoColor = lin(STRIPE[line] || LINES[line].color);
-    this.accentMat.albedoColor = lin(STRIPE[line] || LINES[line].color);
-    this.shellMat.albedoColor = lin(BODY[line] || BODY[1]);
-    this.seatMat.albedoColor = lin(LINES[line].color);
+    this.lineMat.albedoColor = lin(STRIPE[key] || L.color);
+    this.accentMat.albedoColor = lin(STRIPE[key] || L.color);
+    this.shellMat.albedoColor = lin(BODY[key] || BODY[1]);
+    this.seatMat.albedoColor = lin(L.color);
   }
   /**
    * 换站时调用：线路图 + 车厢 LCD + 车头目的地屏。code = 当前站（停站 / 进站时）或刚开出的站，
    * moving = 已关门开出（高亮下一站 nextCode，LCD 显示“下一站”），否则高亮本站、LCD 显示“到站”。同样的参数不重画。
    */
   setMap(line, code, step, nextCode, moving = false) {
-    const key = [line, code, step, nextCode, moving].join(); if (key === this.mapKey) return; this.mapKey = key;
-    this.mapInfo = { line, code, step, next: nextCode, moving, hot: moving && nextCode ? nextCode : code };
-    const L = LINES[line];
-    { const sc = this.stripTex.getContext(); sc.save(); sc.setTransform(TEX_K, 0, 0, TEX_K, 0, 0); drawStrip(sc, line, code, step, moving, nextCode); sc.restore(); } this.stripTex.update(true);
+    const key = [this.net, line, code, step, nextCode, moving].join(); if (key === this.mapKey) return; this.mapKey = key;
+    this.mapInfo = { line, code, step, next: nextCode, moving, hot: moving && nextCode ? nextCode : code, net: this.net };
+    const L = netLines(this.net)[line];
+    { const sc = this.stripTex.getContext(); sc.save(); sc.setTransform(TEX_K, 0, 0, TEX_K, 0, 0); drawStrip(sc, line, code, step, moving, nextCode, this.net); sc.restore(); } this.stripTex.update(true);
     // 光圈挪到高亮站：贴图 (u,v) → 每块线路图上的位置，往车厢里浮 1.5cm
-    const { u, v } = hotUV(line, code, step, moving, nextCode), pos = [], r = 0.085;
+    const { u, v } = hotUV(line, code, step, moving, nextCode, this.net), pos = [], r = 0.085;
     for (const q of this.stripQuads) {
       const P = k => q[0][k] + (q[1][k] - q[0][k]) * u + (q[3][k] - q[0][k]) * v, c = [P(0), P(1), P(2)], sg = Math.sign(q[0][2]);
       const ex = [q[1][0] - q[0][0], 0, 0], len = Math.abs(ex[0]), ux = ex[0] / len;
@@ -305,7 +311,7 @@ export class Train {
     this.hotGlow.updateVerticesData(B.VertexBuffer.PositionKind, pos); this.hotGlow.refreshBoundingInfo();
     // LCD（贴图上 3/4）+ 车头目的地屏（上 1/4：黑底，橙色 LED 字）
     const c = this.mapTex.getContext(); c.save(); c.setTransform(TEX_K, 0, 0, TEX_K, 0, 0);
-    c.save(); c.translate(0, 128); drawLcd(c, line, code, step, moving, nextCode); c.restore();
+    c.save(); c.translate(0, 128); drawLcd(c, line, code, step, moving, nextCode, this.net); c.restore();
     const dir = Object.values(L.dirs).find(d => d.step === step) || Object.values(L.dirs)[0], H = 128;
     c.fillStyle = '#0A0B0C'; c.fillRect(0, 0, 1024, H);
     c.fillStyle = L.color; roundRect(c, 14, 20, 100, 88, 12); c.fill(); c.fillStyle = L.ink; c.font = `700 70px ${FONT_EN}`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(String(line), 64, 68);
