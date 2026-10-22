@@ -51,8 +51,8 @@ async def main():
     # a：关好门、列车开出广州东站台（站在过道往站台一侧看，站台和「广州东」站牌往后滑）
     await wait(pg, '__game.east.info().ride.rt > 4.5', 10)
     await pg.evaluate('__game.act()'); await asyncio.sleep(0.4)   # 起身（行驶中可以在车厢里走）
-    # 站在门厅里看关好的车门（门上小窗是玻璃，外面的站台在往后退）+ 左边端门里的客室
-    await view(pg, 'first'); await pg.evaluate(f'__game.teleport({EO + 12.1},0.05,-1.15,-0.42); __game.player.pitch=-0.02')
+    # 站在过道上往车尾方向看站台一侧的大窗：「5 站台」牌子和柱子在往后退
+    await view(pg, 'first'); await pg.evaluate(f'__game.teleport({EO + 8.2},0.05,0.45,-0.8); __game.player.pitch=-0.05')
     await shot(pg, 'a-depart-gzdz', 0.8)
     e = await E(pg); ok('platformSliding', e['ride']['s'] > 3 and e['ride']['v'] > 1 and e['door'] >= 1)
     await pg.evaluate(f'__game.teleport({EO + 9.0},0.05,0.3,-Math.PI/2)'); await asyncio.sleep(0.5)
@@ -89,8 +89,8 @@ async def main():
     await pg.evaluate('__game.player.yaw=1.78; __game.player.pitch=0.06')
     await shot(pg, 'c-arrive-xmn', 1.2)
     # 站台上走走（不掉下去）
-    await auto(pg, [[XO - 2, -124.6], [XO + 20, -124.6], [XO - 30, -124.6]])
-    s = await st(pg); ok('xmnWalk', s['pos'][1] > -0.5 and s['pos'][0] < XO - 25)
+    await auto(pg, [[XO - 2, -124.6], [XO + 8, -124.6]]); await auto(pg, [[XO - 16, -124.6]])
+    s = await st(pg); ok('xmnWalk', s['pos'][1] > -0.5 and s['pos'][0] < XO - 14)
     await measure(pg, 'xmn-platform')
     # 5. 回程：从车门上车、坐下 → D3311 开回广州东；途中拍 b（九龙江特大桥）
     await auto(pg, [[XO - 5.8, -126.2], [XO - 5.8, -127.3], [XO - 5.8, -128.6]])
@@ -105,6 +105,7 @@ async def main():
     await view(pg, 'first'); await asyncio.sleep(0.5); await pg.evaluate('__game.player.yaw=Math.PI*1.12; __game.player.pitch=-0.1')
     e = await E(pg); ok('bridgeSeg', e['ride']['seg']['bridge'])
     await shot(pg, 'b-bridge', 1.5)
+    await pg.evaluate('__game.act()'); await asyncio.sleep(0.4)   # 起身
     await until_rt(pg, 60)
     await pg.evaluate('__game.east.setSpeed(10)')
     ok('arrivedGz', await wait(pg, '__game.east.info().count.arrived.length >= 2', 200))

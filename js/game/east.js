@@ -317,6 +317,8 @@ export class EastCtl {
   tick(dtWall) {
     const R = this.ride, I = this.interior, A = this.Audio, dt = dtWall * this.speed, F = R.flags;
     R.t += dt;
+    // 关门前（广播刚响）又站起来：车门还开着就不发车，可以下车（坐回去 1.2 秒后重新开始）
+    if (R.phase === 'closing' && !(this.player.seat && this.player.seat.seat)) { const f = I.doorF; this.cancelRide(); if (f > 0) { I.setDoor(f); this.doorOpenT = 1.25 * f; this._openSfx = false; } return; }
     if (!F.annDoors && R.t >= 0.6) { F.annDoors = true; Ann.say(PH.emuDoorsSegs(), { key: 'emu', interrupt: true }); }
     if (R.t >= 4.2) { if (!F.closeSfx) { F.closeSfx = true; A.sfx('doorClose'); } I.setDoor(Math.min(1, (R.t - 4.2) / 1.25)); }
     if (R.t < 6.5) return;
