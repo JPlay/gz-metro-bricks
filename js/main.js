@@ -318,10 +318,10 @@ export async function start() {
   xmMetro = new XmMetro(scene, {
     player, Audio, events,
     onTunnel: v => { G.inTunnel = v; scene.fogMode = v ? B.Scene.FOGMODE_LINEAR : B.Scene.FOGMODE_NONE; },
-    getRailway: () => east && east.xmn
+    getRailway: () => east && east.xmn,
+    onNewTrain: t => t.shadowMeshes && t.shadowMeshes.forEach(m => R.addShadowCaster(m))
   });
   east.xmMetro = xmMetro;
-  xmMetro.trains.forEach(t => t.shadowMeshes && t.shadowMeshes.forEach(m => R.addShadowCaster(m)));
   const brother = installBrother({ scene, cam, M, player, R, hud, seats, social, bubbles, Audio, events, input, getStation: () => G.station, getCode: () => G.code }); G.brother = brother;
   window.__game = {
     state: () => ({

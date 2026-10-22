@@ -71,8 +71,7 @@ async def xm_board(pg, line, step):
       __game.player.spawn(tr.root.position.x, P.y+0.55, lz, 0);
       __game.player.yaw=0; __game.player.pitch=0;
     }})()""")
-    await asyncio.sleep(0.5)
-    return await pg.evaluate('__game.state().aboard')
+    return await wait(pg, '__game.state().aboard', 4)
 async def measure2(pg, name):
     d = await measure(pg, name); ok('budget50:' + name, d['draws'] <= BUDGET2 and d['tris'] <= BUDGET['tris']); return d
 async def shot2(pg, name, settle=1.2):

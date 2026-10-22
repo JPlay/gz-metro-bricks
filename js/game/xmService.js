@@ -17,14 +17,16 @@ const dirKey = (line, step) => Object.keys(XM_LINES[line].dirs).find(d => XM_LIN
 export class XmMetro {
   constructor(scene, ctx) {
     this.scene = scene; this.ctx = ctx; // { player, Audio, events, onTunnel, getRailway }
-    this.trains = [10, 11].map(i => {
-      const t = new Train(scene, i); t.net = 'xm'; t.setVisible(false);
-      t.root.getChildMeshes(false).forEach(m => { m.layerMask = 0x10000000; });
-      (t.pax || []).forEach(({ p }) => { if (p && p.mesh) p.mesh.setEnabled(false); });
-      return t;
-    });
+    this.trains = [10, 11].map(i => this.makeTrain(i));
     this.slots = []; this.ride = null; this.legs = 0; this.station = null; this.code = null;
     this.buildTunnel();
+  }
+  makeTrain(i) {
+    const t = new Train(this.scene, i); t.net = 'xm'; t.setVisible(false);
+    t.root.getChildMeshes(false).forEach(m => { m.layerMask = 0x10000000; });
+    (t.pax || []).forEach(({ p }) => { if (p && p.mesh) p.mesh.setEnabled(false); });  // 少乘客省 draw
+    if (this.ctx.onNewTrain) this.ctx.onNewTrain(t);
+    return t;
   }
   buildTunnel() {
     const M = mats(this.scene), g = new Geo(), gl = new Geo(), root = this.tunnel = new B.TransformNode('xmRideTunnel', this.scene);
@@ -63,8 +65,7 @@ export class XmMetro {
     for (const P of station.platforms) for (const side of Object.values(P.sides)) {
       const slot = { P, side, line: P.line, step: side.step, state: 'away', t: 2 + Math.random() * 6, train: null, u: 0, f: 0, ann: false };
       if (this.ride && this.ride.line === P.line && this.ride.step === side.step) { slot.train = this.ride.train; this.ride.slot = slot; }
-      else slot.train = free.shift();
-      if (!slot.train) continue;
+      else slot.train = free.shift() || (this.trains.push(this.makeTrain(10 + this.trains.length)), this.trains[this.trains.length - 1]);   // 吕厝 4 个站台侧：按需补车
       this.slots.push(slot);
     }
     this.slots.forEach((s, i) => { if (s.state === 'away') s.t = 2 + i * 2.5; });
