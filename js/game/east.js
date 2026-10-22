@@ -74,7 +74,7 @@ export class EastInterior {
     for (const s of [-1, 1]) G.slab(X(-SX + 0.2), X(SX - 0.2), HC - 0.02, HC - 0.005, s * 0.62 - 0.11, s * 0.62 + 0.11, hex('#FFFFFF'));
     G.slab(X(-SX + 0.2), X(SX - 0.2), HC - 0.015, HC, -0.05, 0.05, hex('#EAF3FF'));
     // 两侧墙：下墙板 + 大车窗（窗间柱）+ 窗上墙板；窗外是画（站台一侧 / 另一侧）
-    const winY0 = 0.88, winY1 = 1.62, NWIN = 10, WP = 2 * SX / NWIN, PIER = 0.62;   // 每块窗 1.3 m 宽、窗间柱 0.62 m
+    const winY0 = 1.0, winY1 = 1.74, NWIN = 10, WP = 2 * SX / NWIN, PIER = 0.62;   // 每块窗 1.3 m 宽、窗间柱 0.62 m
     for (const s of [-1, 1]) {
       const zw = s * W, zi = s * (W - 0.12);   // 车厢侧墙有 12 cm 厚：窗洞四周看得到窗套的厚度
       // 站台一侧开着的车门处墙板挖开（真的门洞，看得到外面的站台）
@@ -133,7 +133,7 @@ export class EastInterior {
           P.box(X(xb + 0.045), 1.04, zc, 0.13, 0.13, w - 0.09, C.seat2, 0, 0, 0.1, 1, { ao: false });                   // 头枕
           P.box(X(xb + 0.115), 1.01, zc, 0.012, 0.17, w - 0.14, C.head, 0, 0, 0.1, 1, { ao: false });                 // 白色头枕套
           P.box(X(xb - 0.015), 0.76, zc, 0.012, 0.3, w - 0.16, C.tray, 0, 0, 0.1, 1, { ao: false });                 // 椅背上的小桌板
-          const seat = { wx: X(xb + 0.3), wy: 0, wz: zc, face: Math.PI / 2, eye: 1.42, free: true, world: true, id: this.seats.length, row: r + 1, letter: 'ABCDF'[(z0 < 0 ? 0 : 3) + i], stand: { x: X(xb + 0.42), z: AISLE_Z } };
+          const seat = { wx: X(xb + 0.3), wy: 0, wz: zc, face: Math.PI / 2, eye: 1.34, free: true, world: true, id: this.seats.length, row: r + 1, letter: 'ABCDF'[(z0 < 0 ? 0 : 3) + i], stand: { x: X(xb + 0.42), z: AISLE_Z } };
           this.seats.push(seat);
         }
         for (let i = 0; i <= n; i++) P.slab(X(xb + 0.08), X(xb + 0.52), 0.56, 0.62, z0 + w * i - 0.025, z0 + w * i + 0.025, C.arm, { ao: false });   // 扶手

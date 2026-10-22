@@ -63,8 +63,8 @@ async def main():
     ok('departed', await wait(pg, '__game.east.info().ride.phase === "run"', 6))
     # a：关好门、列车开出广州东站台（站在过道往站台一侧看，站台和「广州东」站牌往后滑）
     await wait(pg, '__game.east.info().ride.rt > 4.5', 10)
-    # a：坐在 13 排 F 座（靠站台一侧的窗），往前斜着看一排大车窗：「5 站台」牌子和柱子往后退
-    await sit_at(pg, 13, 'F', 1.02, -0.04)
+    # a：坐在 12 排 F 座（靠站台一侧的窗），往前斜着看一排大车窗：「5 站台」牌子和柱子往后退
+    await sit_at(pg, 12, 'F', 1.1, 0.28)
     ok('carWallMoving', await pg.evaluate(WALL))
     await shot(pg, 'a-depart-gzdz', 0.8)
     e = await E(pg); ok('platformSliding', e['ride']['s'] > 3 and e['ride']['v'] > 1 and e['door'] >= 1)
@@ -81,8 +81,8 @@ async def main():
     segs = []
     for rt in [30, 60, 90, 98, 112, 126, 137, 160]:
         await until_rt(pg, rt); e = await E(pg); segs.append((rt, e['ride']['seg']['near'], e['ride']['seg']['mid']))
-        if rt == 137:   # b：坐到 13 排 A 座（另一侧靠窗），透过车窗看九龙江特大桥外的海面和斜拉桥
-            await sit_at(pg, 13, 'A', 2.2, -0.03)
+        if rt == 137:   # b：坐到 12 排 A 座（另一侧靠窗），透过车窗看九龙江特大桥外的海面和斜拉桥
+            await sit_at(pg, 12, 'A', 2.1, 0.14)
             ok('bridgeSeg', e['ride']['seg']['bridge']); ok('carWallBridge', await pg.evaluate(WALL))
             await shot(pg, 'b-bridge', 1.5)
             ok('captionNotDepart', 'Welcome aboard' not in (await pg.evaluate("document.querySelector('#caption .text').textContent")) or await pg.evaluate(CAPHIDDEN))
@@ -124,6 +124,7 @@ async def main():
     ok('arrivedGz', await wait(pg, '__game.east.info().count.arrived.length >= 2', 200))
     await pg.evaluate('__game.east.setSpeed(1)')
     await wait(pg, '__game.east.info().door <= 0', 4)
+    if (await st(pg))['seat'].get('seated'): await pg.evaluate('__game.act()'); await asyncio.sleep(0.4)   # 起身下车
     await view(pg, 'third')
     await auto(pg, [[EO + 10.6, 0.25], [EO + 11.2, 0.9], [EO + 11.2, 1.6]])
     ok('backGz', await wait(pg, '!__game.east.info().inside && __game.east.info().loc === null', 4))

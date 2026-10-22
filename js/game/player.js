@@ -158,7 +158,7 @@ export class Player {
       const lt = !this.seat && this.leanFn ? this.leanFn(p) * Math.max(0, Math.min(1, (this.pitch - 0.15) / 0.25)) : 0;
       this.leanK = (this.leanK || 0) + (lt - (this.leanK || 0)) * Math.min(1, dt * 5);
       // 坐着时眼睛只往“座位朝向”那边探 12 cm：扭头看窗外不会把镜头探进车厢侧墙里（近裁剪面把墙切掉 → 像没有墙）
-      const fw = this.seat ? 0.12 * Math.max(0, Math.cos(this.yaw - this.facing)) : 0.12 + 0.65 * this.leanK;
+      const cd = Math.cos(this.yaw - this.facing), fw = this.seat ? 0.12 * Math.max(0, cd) - 0.3 * (1 - Math.abs(cd)) : 0.12 + 0.65 * this.leanK;   // 扭头看侧面：身子往后靠 30 cm
       cam.position.set(p.x + Math.sin(this.yaw) * fw + Math.cos(this.yaw) * sway, this.eyeY + this.eyeOff + bob + 0.5 * this.leanK, p.z + Math.cos(this.yaw) * fw - Math.sin(this.yaw) * sway);
       this.model.setEnabled(false); this.blob.setEnabled(true);
     } else {
