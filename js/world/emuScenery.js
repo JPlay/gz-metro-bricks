@@ -155,9 +155,11 @@ const NEAR = {
     if (v === 0) { c.fillStyle = '#FFE7A8'; c.fillRect(pw * 0.5, ny(ph, 2.4), 18, 5); } c.fillStyle = '#202326'; c.fillRect(0, ny(ph, -0.9), pw, ph); },
   portalIn(c, pw, ph, v, R) { NEAR.mount(c, pw, ph, 1, R); c.fillStyle = '#B9BAB2'; c.fillRect(pw * 0.55, 0, pw * 0.08, ph); c.fillStyle = '#2B2E31'; c.fillRect(pw * 0.63, 0, pw * 0.37, ph); },
   portalOut(c, pw, ph, v, R) { NEAR.mount(c, pw, ph, 1, R); c.fillStyle = '#2B2E31'; c.fillRect(0, 0, pw * 0.37, ph); c.fillStyle = '#B9BAB2'; c.fillRect(pw * 0.37, 0, pw * 0.08, ph); },
-  bridge(c, pw, ph, v) { c.clearRect(0, 0, pw, ph);   // 桥栏（混凝土护墙 + 栏杆），下面空着 → 透过去看中景的海面
-    c.fillStyle = '#C4C6C2'; c.fillRect(0, ny(ph, -0.3), pw, ny(ph, -1.6) - ny(ph, -0.3)); c.fillStyle = '#9EA2A0'; c.fillRect(0, ny(ph, -0.3), pw, 3);
-    c.fillStyle = '#B1B5B3'; c.fillRect(0, ny(ph, 0.5), pw, 2); for (let x = 0; x < pw; x += pw / 10) c.fillRect(x, ny(ph, 0.5), 2, ny(ph, -0.3) - ny(ph, 0.5));
+  bridge(c, pw, ph, v) { c.clearRect(0, 0, pw, ph);   // 桥上：只有桥面边梁 + 一道钢栏杆（上下都通透 → 看得到下面和远处的海）
+    c.fillStyle = '#C9CBC6'; c.fillRect(0, ny(ph, -1.0), pw, ny(ph, -1.5) - ny(ph, -1.0)); c.fillStyle = '#A3A7A4'; c.fillRect(0, ny(ph, -1.0), pw, 3);   // 边梁
+    c.fillStyle = 'rgba(0,0,0,0.12)'; c.fillRect(0, ny(ph, -1.5), pw, 4);
+    c.fillStyle = '#7F8A92'; c.fillRect(0, ny(ph, 1.0), pw, 4); c.fillRect(0, ny(ph, 0.35), pw, 2);                                               // 扶手 + 中横杆
+    for (let x = 0; x < pw; x += pw / 10) c.fillRect(x, ny(ph, 1.0), 3, ny(ph, -1.0) - ny(ph, 1.0));                                            // 立柱
     catenary(c, pw, ph); if (v === 0) mast(c, pw, ph, pw * 0.5); }
 };
 function bedPaint(c, S) { c.fillStyle = '#8E877C'; c.fillRect(0, 0, S, S); const R = rng(7); for (let i = 0; i < 900; i++) { c.fillStyle = R() < 0.5 ? '#7C756B' : '#A39C90'; c.fillRect(R() * S, R() * S, 2, 2); }
@@ -226,13 +228,23 @@ export class EmuScenery {
     bt.wrapU = B.Texture.WRAP_ADDRESSMODE; bt.uScale = 300 / 2.6; bt.vScale = 1;
     const bm = this.bedMat = new B.StandardMaterial('bedMat', scene); bm.emissiveTexture = bt; bm.disableLighting = true; bm.specularColor = new B.Color3(0, 0, 0); bm.diffuseColor = new B.Color3(0, 0, 0); bt.level = 0.92;
     const bed = this.bed = B.MeshBuilder.CreateGround('sceneBed', { width: 300, height: 17 }, scene); bed.position.y = -1.45; bed.parent = P; bed.material = bm; bed.isPickable = false;
-    this.meshes = [this.far.mesh, this.mid.mesh, this.near.mesh, bed];
+    // 桥下的海面（只在桥上打开，+1 次绘制）：近景板和道床都收窄到桥面宽，往下看就是开阔的海
+    const sea = this.sea = B.MeshBuilder.CreateGround('sceneSea', { width: 700, height: 260 }, scene); sea.position.y = -12; sea.parent = P; sea.isPickable = false;
+    const sm = this.seaMat = new B.StandardMaterial('seaMat', scene); sm.disableLighting = true; sm.emissiveColor = B.Color3.FromHexString('#3C83A6'); sm.specularColor = new B.Color3(0, 0, 0); sm.diffuseColor = new B.Color3(0, 0, 0); sm.fogEnabled = false;
+    sea.material = sm; sea.setEnabled(false); this.bridgeK = 0;
+    this.meshes = [this.far.mesh, this.mid.mesh, this.near.mesh, bed, sea];
   }
   /** seg：{ far, mid, near } 当前路段每层要的内容（near 可以是 'empty'） */
   advance(d, seg) {
     this.far.advance(d, () => seg.far); this.mid.advance(d, () => seg.mid); this.near.advance(d, () => seg.near);
     this.bedTex.uOffset = (this.bedTex.uOffset + d / 2.6) % 1;
+    // 近景里大半块面板是桥 → 近景板从 ±8.5 m 收到 ±4 m（桥栏）、道床收到桥面宽、海面打开
+    const nb = this.near.slots.filter(q => q.row === 'bridge').length / this.near.slots.length, want = nb > 0.5 ? 1 : 0;
+    this.bridgeK += (want - this.bridgeK) * Math.min(1, 0.04 + d * 0.02);
+    if (Math.abs(this.bridgeK - want) < 0.01) this.bridgeK = want;
+    const k = this.bridgeK; this.near.mesh.scaling.z = 1 - k * (1 - 4 / 8.5); this.bed.scaling.z = 1 - k * (1 - 7.4 / 17); this.sea.setEnabled(k > 0.02);
   }
+  resetBridge() { this.bridgeK = 0; this.near.mesh.scaling.z = 1; this.bed.scaling.z = 1; this.sea.setEnabled(false); }
   setEnabled(v) { this.root.setEnabled(v); }
-  dispose() { this.far.dispose(); this.mid.dispose(); this.near.dispose(); this.bed.dispose(); this.bedMat.dispose(); this.bedTex.dispose(); this.root.dispose(); }
+  dispose() { this.far.dispose(); this.mid.dispose(); this.near.dispose(); this.bed.dispose(); this.bedMat.dispose(); this.sea.dispose(); this.seaMat.dispose(); this.bedTex.dispose(); this.root.dispose(); }
 }

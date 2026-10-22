@@ -312,7 +312,7 @@ export class EastCtl {
     this.count.rides++; this.setSpeed(1); this.speed = 1;
     // 起步前远景：近景先空着（站台还在旁边），中远景是出发城市
     const r0 = this.ride.route[0], Sc = this.interior.scenery;
-    Sc.far.fill(r0.far); Sc.mid.fill(r0.mid); Sc.near.fill('empty');
+    Sc.far.fill(r0.far); Sc.mid.fill(r0.mid); Sc.near.fill('empty'); Sc.resetBridge();
     this.events.emit('emu', { phase: 'closing', dest });
   }
   cancelRide() { this.ride = null; this.interior.setDoor(0); this.Audio.trainSound({ speed: 0 }); this.events.emit('emu', { phase: 'cancel' }); }
@@ -355,7 +355,7 @@ export class EastCtl {
   arrive() {
     const R = this.ride; this.ride = null; this.side = R.dest; this.setSpeed(1);
     this.Audio.trainSound({ speed: 0 }); this.Audio.sfx('train.airRelease', { volume: 0.6 });
-    this.showStopped(); this.interior.scenery.near.fill('empty');
+    this.showStopped(); this.interior.scenery.near.fill('empty'); this.interior.scenery.resetBridge();
     this.doorOpenT = 1.25; this.count.arrived.push(R.dest);
     Ann.say(PH.emuArriveSegs(R.dest), { key: 'emu', interrupt: true });
     this.hud.toast(R.dest === 'xm' ? '到站：厦门北站' : '到站：广州东站', 2400);
