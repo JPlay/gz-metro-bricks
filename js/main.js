@@ -96,7 +96,7 @@ export async function start() {
     if (byB['floor@P']) R.makeProbe('probeP', new B.Vector3(0, MAIN.y + 2.1, MAIN.zc), new B.Vector3(96, 4.2, 12), list, byB['floor@P'].material);
     if (byB['floor@P2']) R.makeProbe('probeP2', new B.Vector3(0, GYQ2.y + 2.1, GYQ2.zc), new B.Vector3(96, 4.2, 12), list, byB['floor@P2'].material);
     st.ticketPolicy = tickets;
-    G.station = st; G.code = code; G.welcomed = false;
+    G.station = st; G.code = code; G.gzCode = code; G.welcomed = false;
     metro.attach(st);
     return st;
   }
@@ -219,6 +219,8 @@ export async function start() {
     const aboardGz = !(east && east.cur) && !inXm && metro.trains.some(t => t.root.isEnabled() && t.contains(p));
     const aboardXm = inXm && xmMetro.trains.some(t => t.root.isEnabled() && t.contains(p));
     G.aboard = aboardGz || aboardXm || G.inTunnel;
+    // 在厦门地铁里 G.code 是厦门站码；回到广州（坐动车回来时广州站不重建）要换回广州站码，否则 STATIONS[G.code] 为空，HUD 每帧报错、游戏卡死
+    if (!inXm && G.gzCode) G.code = G.gzCode;
     if (G.inTunnel) G.zone = { kind: 'tunnel' };
     else if (inXm) { G.zone = xmMetro.zoneOf(p); G.code = xmMetro.code; }
     else if (east && east.cur) G.zone = { kind: 'xmn', area: east.area };
@@ -247,7 +249,7 @@ export async function start() {
     G.annAboard = G.aboard;
     // 声音分区：地铁声只在车站里（出口楼梯上随高度渐弱，到街面为 0）；街面车流；饭店嘈杂；酒店 / 纪念堂 / 陈家祠安静
     // 室内：酒店 / 饭店（饭店内景在地下 y≈-30，zoneOf 看不出来，按控制器判断）/ 陈家祠 / 纪念堂大会堂
-    const hallKind = hotel && hotel.cur ? 'hotel' : G.brother && G.brother.food && G.brother.food.cur ? 'restaurant' : clan && clan.cur ? 'clan' : inXm ? (xmMetro.street ? null : 'xmmetro') : east && east.cur ? (east.loc === 'car' ? 'emu' : 'xmn') : inHall ? 'sysy' : null;
+    const hallKind = hotel && hotel.cur ? 'hotel' : G.brother && G.brother.food && G.brother.food.cur ? 'restaurant' : clan && clan.cur ? 'clan' : inXm ? (xmMetro.street && !xmMetro.street.inside ? null : 'xmmetro') : east && east.cur ? (east.loc === 'car' ? 'emu' : 'xmn') : inHall ? 'sysy' : null;
     { let metroL = 1, streetL = 0;
       if (G.aboard || G.inTunnel) metroL = 1;
       else if (hallKind === 'xmn' && east.area === 'plaza') { metroL = 0; streetL = 1; }   // 厦门北站南广场：露天，街上的声音
