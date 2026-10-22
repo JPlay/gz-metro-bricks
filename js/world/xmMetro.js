@@ -23,14 +23,14 @@ export const XM_PY2 = -22;         // 2 号线站台面（吕厝更深一层）
 export const XM_TRACK = 7.6;
 export const XM_PSD = 6;
 export const XM_WALL = 10.6;
-export const XM_HALL_X = 42;
-export const XM_TUNNEL_X = 120;
+export const XM_HALL_X = 36;
+export const XM_TUNNEL_X = 90;
 import { DOOR_XS as TRAIN_DOORS } from './train.js';
 
 const THEME = {
   minnan: { wall: '#F1EEE8', dado: '#B5452F', beam: '#9A6A43', accent: '#2C6E9E', floor: '#D8D3CA' },
   transfer: { wall: '#F4F2EE', dado: '#B5452F', beam: '#8B6914', accent: '#00A651', floor: '#DAD6CE' },
-  rock: { wall: '#D9D4CC', dado: '#6E6A63', beam: '#4A4742', accent: '#8A857C', floor: '#C4BFB6' },
+  rock: { wall: '#C8C2B8', dado: '#5C574F', beam: '#3E3B36', accent: '#8A857C', floor: '#B9B3A8' },
   sail: { wall: '#E8F2F7', dado: '#2C7DB0', beam: '#1F5F8B', accent: '#F2711C', floor: '#DCE6EC' },
   sea: { wall: '#E4F0EC', dado: '#1F8A6E', beam: '#0E6B55', accent: '#00A651', floor: '#D5E6DF' },
   jiageng: { wall: '#F5F0E8', dado: '#A8432E', beam: '#E9E4DA', accent: '#1F5F8B', floor: '#E2DCD2' }
@@ -70,7 +70,7 @@ export class XmStation {
       { line: 2, y: XM_PY2, zc: 28 }
     ];
     // 厦门北站：侧式站台对准国铁出站层地铁站厅（z≈-80），轨在 -z（往站房外）
-    if (this.code === 'xmnb') return [{ line: 1, y: XM_PY, zc: -80 }];   // 对准国铁地铁站厅；游戏里用岛式方便上下车
+    if (this.code === 'xmnb') return [{ line: 1, y: XM_PY, zc: -80, sideOnly: 'A' }];  // 侧式：轨在 -z，站台朝站厅 +z
     if (this.s.side) return [{ line: lines[0], y: XM_PY, zc: 0, sideOnly: true }];
     return [{ line: lines[0], y: XM_PY, zc: 0 }];
   }
@@ -81,17 +81,24 @@ export class XmStation {
       key, step, n, trackZ: P.zc + (key === 'A' ? -1 : 1) * XM_TRACK,
       psdZ: P.zc + (key === 'A' ? -1 : 1) * XM_PSD, doorSg: key === 'A' ? -1 : 1
     });
-    if (P.sideOnly) return { B: mk('B', dirs[0].step, 1) };   // 侧式只开 B 侧
+    if (P.sideOnly) {
+      const key = P.sideOnly === 'A' ? 'A' : 'B';
+      const step = key === 'A' ? dirs[0].step : dirs[1].step;
+      return { [key]: mk(key, step, 1) };
+    }
     return { A: mk('A', dirs[0].step, 1), B: mk('B', dirs[1].step, 2) };
   }
   buildPlatform(P) {
     const k = this.kit, y = P.y, zc = P.zc, L = XM_LINES[P.line], lc = L.color, th = this.th;
     const Pv = k.solid, W = k.g('wall'), BR = k.g('brick'), F = k.g('floor'), G = k.glow, M = k.metal;
-    const sideOnly = !!P.sideOnly;
-    const z0 = sideOnly ? zc - 0.5 : zc - XM_PSD, z1 = zc + XM_PSD;
+    const sideOnly = P.sideOnly;
+    let z0 = zc - XM_PSD, z1 = zc + XM_PSD;
+    if (sideOnly === 'B') { z0 = zc - 0.4; z1 = zc + XM_PSD; }
+    else if (sideOnly === 'A') { z0 = zc - XM_PSD; z1 = zc + 0.4; }
+    else if (sideOnly) { z0 = zc - 0.5; z1 = zc + XM_PSD; }
     k.floorWithHoles(-XM_HALL_X, XM_HALL_X, z0, z1, y - 1.3, y, hex(th.floor), [], true, 'floor');
     // 盲道 + 石材收边
-    for (const sz of (sideOnly ? [1] : [-1, 1])) {
+    for (const sz of (sideOnly === 'A' ? [-1] : sideOnly === 'B' ? [1] : sideOnly ? [1] : [-1, 1])) {
       k.g('tactile').slab(-XM_HALL_X, XM_HALL_X, y, y + 0.006, zc + sz * 5.2 - 0.2, zc + sz * 5.2 + 0.2, hex('#F2C230'), { ao: false });
       Pv.slab(-XM_HALL_X, XM_HALL_X, y, y + 0.004, zc + sz * 5.7 - 0.15, zc + sz * 5.7 + 0.15, hex('#9AA0A6'), { ao: false });
     }
@@ -109,10 +116,14 @@ export class XmStation {
       BR.slab(-XM_HALL_X, XM_HALL_X, y - 1.75, y + 1.4, wz - sz * 0.02, wz + sz * 0.02, hex(th.dado), { ao: false });
       Pv.slab(-XM_HALL_X, XM_HALL_X, y + 1.4, y + 1.55, wz - sz * 0.03, wz + sz * 0.03, hex(th.beam), { ao: false });
       Pv.slab(-XM_HALL_X, XM_HALL_X, y + 0.15, y + 0.5, wz - sz * 0.04, wz, hex(lc), { ao: false });
+      if (this.themeKey === 'rock') {
+        k.g('granite').slab(-XM_HALL_X, XM_HALL_X, y + 1.55, y + 4.5, wz - sz * 0.015, wz + sz * 0.015, hex('#A39E94'), { ao: false });
+        for (let x = -XM_HALL_X + 3; x < XM_HALL_X; x += 6) Pv.slab(x - 0.15, x + 0.15, y + 1.55, y + 4.5, wz - sz * 0.04, wz, hex('#6E6A63'), { ao: false });
+      }
       // 站名牌
       const stIdx = L.stations.indexOf(this.code);
       const prevC = L.stations[stIdx - 1], nextC = L.stations[stIdx + 1];
-      for (let x = -32; x <= 32; x += 20) {
+      for (let x = -24; x <= 24; x += 32) {
         const paint = (c, pw, ph) => {
           c.fillStyle = '#1B2530'; c.fillRect(0, 0, pw, ph);
           c.fillStyle = lc; c.fillRect(8, 8, ph * 0.7, ph - 16);
@@ -171,7 +182,7 @@ export class XmStation {
       for (let x = -XM_HALL_X + 2; x < XM_HALL_X; x += 3.2) Pv.slab(x - 0.2, x + 0.2, CY - 0.5, CY, z0, z1, hex(th.beam), { ao: false });
     } else {
       // 人字梁 / 木椽（闽南古厝意象）
-      for (let x = -XM_HALL_X + 1.5; x < XM_HALL_X; x += 2.4) Pv.slab(x - 0.09, x + 0.09, CY - 0.35, CY, z0, z1, hex(th.beam), { ao: false });
+      for (let x = -XM_HALL_X + 2; x < XM_HALL_X; x += 3.6) Pv.slab(x - 0.09, x + 0.09, CY - 0.35, CY, z0, z1, hex(th.beam), { ao: false });
       for (const z of [-3, 0, 3]) G.slab(-XM_HALL_X + 1, XM_HALL_X - 1, CY - 0.4, CY - 0.36, zc + z - 0.2, zc + z + 0.2, hex('#FFF8EC'), { ao: false });
     }
   }
@@ -183,7 +194,7 @@ export class XmStation {
     const seg = (a, b) => {
       if (b - a < 0.05) return;
       k.glass.slab(a, b, y + 0.1, y + 2.3, z - 0.012, z + 0.012, hex('#D6EEF8'));
-      for (let m = a; m <= b + 0.01; m += Math.max(0.5, (b - a) / Math.max(1, Math.round((b - a) / 1.6))))
+      for (let m = a; m <= b + 0.01; m += Math.max(1.2, (b - a) / Math.max(1, Math.round((b - a) / 2.4))))
         k.metal.slab(m - 0.04, m + 0.04, y, y + 2.3, z - 0.06, z + 0.06, hex('#B9C0C8'), { ao: false });
       k.colSlab(a, b, y, y + 3.2, z - 0.08, z + 0.08);
     };
@@ -209,8 +220,10 @@ export class XmStation {
   /** 吕厝：两层之间的换乘楼梯 + 导向 */
   buildTransfer() {
     const k = this.kit, Pv = k.solid;
-    // 楼梯从 L1 (y=-13,z=0) 到 L2 (y=-22,z=28)
-    k.stairs('z', 8, XM_PY, 22, XM_PY2, -8, 8, XM_PY2, '#D6D1C7');
+    // 楼梯从 L1 (y=-13,z=0) 到 L2 (y=-22,z=28)；中间休息平台
+    k.floorWithHoles(-10, 10, 8, 16, XM_PY - 4.3, XM_PY - 4, hex('#D8D3CA'), [], true, 'floor');
+    k.stairs('z', 4, XM_PY, 10, XM_PY - 4, -8, 8, XM_PY - 4, '#D6D1C7');
+    k.stairs('z', 14, XM_PY - 4, 22, XM_PY2, -8, 8, XM_PY2, '#D6D1C7');
     const paint = (c, pw, ph) => {
       c.fillStyle = '#1B2530'; c.fillRect(0, 0, pw, ph);
       c.fillStyle = '#F2711C'; c.fillRect(8, 8, ph * 0.55, ph - 16);

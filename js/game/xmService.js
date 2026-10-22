@@ -17,7 +17,12 @@ const dirKey = (line, step) => Object.keys(XM_LINES[line].dirs).find(d => XM_LIN
 export class XmMetro {
   constructor(scene, ctx) {
     this.scene = scene; this.ctx = ctx; // { player, Audio, events, onTunnel, getRailway }
-    this.trains = [10, 11].map(i => { const t = new Train(scene, i); t.setVisible(false); t.root.getChildMeshes(false).forEach(m => { m.layerMask = 0x10000000; }); return t; });  // id 10/11 避开广州 0..3
+    this.trains = [10, 11].map(i => {
+      const t = new Train(scene, i); t.net = 'xm'; t.setVisible(false);
+      t.root.getChildMeshes(false).forEach(m => { m.layerMask = 0x10000000; });
+      (t.pax || []).forEach(({ p }) => { if (p && p.mesh) p.mesh.setEnabled(false); });
+      return t;
+    });
     this.slots = []; this.ride = null; this.legs = 0; this.station = null; this.code = null;
     this.buildTunnel();
   }
@@ -42,8 +47,11 @@ export class XmMetro {
     // 离开厦门北站台时关掉国铁站房；回到厦门北再打开
     const rail = this.ctx.getRailway && this.ctx.getRailway();
     if (rail) {
-      if (code === 'xmnb') { rail.show('solo'); if (rail.station) rail.station.setEnabled(true); }
-      else { rail.show(null); }
+      if (code === 'xmnb') {
+        rail.show('solo');
+        if (rail.station) rail.station.setEnabled(false);
+        if (rail.solo && rail.solo.root) rail.solo.root.setEnabled(false);
+      } else { rail.show(null); }
     }
     this.ctx.events.emit('xm', { code, station: st.info() });
     return st;
@@ -157,7 +165,7 @@ export class XmMetro {
   enterFromRailway(player) {
     this.buildStation('xmnb');
     const P = this.station.platformFor(1) || this.station.platforms[0];
-    player.spawn(XO.x - 20, P.y + 0.05, P.zc + 1.5, Math.PI);   // 站台中部，面朝 -z（列车）
+    player.spawn(XO.x - 20, P.y + 0.05, P.zc + 1.5, Math.PI);
     Ann.welcome('xmnb');
     this.ctx.events.emit('xm', { enter: true, code: 'xmnb' });
   }
