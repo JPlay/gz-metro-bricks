@@ -2790,6 +2790,102 @@
   "file": "voice/gap-en.mp3"
  },
  {
+  "id": "voice.emu.doors.zh",
+  "lang": "zh",
+  "text": "列车即将出发，车门即将关闭，请注意安全。",
+  "file": "voice/emu-doors-zh.mp3"
+ },
+ {
+  "id": "voice.emu.doors.en",
+  "lang": "en",
+  "text": "The train is about to depart. The doors are closing.",
+  "file": "voice/emu-doors-en.mp3"
+ },
+ {
+  "id": "voice.emu.bridge.zh",
+  "lang": "zh",
+  "text": "列车正在通过九龙江特大桥。",
+  "file": "voice/emu-bridge-zh.mp3"
+ },
+ {
+  "id": "voice.emu.bridge.en",
+  "lang": "en",
+  "text": "We are now crossing the Jiulong River Bridge.",
+  "file": "voice/emu-bridge-en.mp3"
+ },
+ {
+  "id": "voice.emu.depart.xm.zh",
+  "lang": "zh",
+  "text": "旅客们，欢迎乘坐D二三一五次列车。本次列车由广州东站开往厦门北站。",
+  "file": "voice/emu-depart-xm-zh.mp3"
+ },
+ {
+  "id": "voice.emu.depart.xm.en",
+  "lang": "en",
+  "text": "Welcome aboard train D two three one five, from Guangzhou East to Xiamen North.",
+  "file": "voice/emu-depart-xm-en.mp3"
+ },
+ {
+  "id": "voice.emu.next.xm.zh",
+  "lang": "zh",
+  "text": "前方到站，厦门北站。请您带好随身物品，准备下车。",
+  "file": "voice/emu-next-xm-zh.mp3"
+ },
+ {
+  "id": "voice.emu.next.xm.en",
+  "lang": "en",
+  "text": "We will soon arrive at Xiamen North. Please take your belongings and get ready to leave the train.",
+  "file": "voice/emu-next-xm-en.mp3"
+ },
+ {
+  "id": "voice.emu.arrive.xm.zh",
+  "lang": "zh",
+  "text": "厦门北站到了。欢迎您来到厦门，下车时请注意列车与站台之间的空隙。",
+  "file": "voice/emu-arrive-xm-zh.mp3"
+ },
+ {
+  "id": "voice.emu.arrive.xm.en",
+  "lang": "en",
+  "text": "We have arrived at Xiamen North. Welcome to Xiamen. Please mind the gap when leaving the train.",
+  "file": "voice/emu-arrive-xm-en.mp3"
+ },
+ {
+  "id": "voice.emu.depart.gz.zh",
+  "lang": "zh",
+  "text": "旅客们，欢迎乘坐D三三一一次列车。本次列车由厦门北站开往广州东站。",
+  "file": "voice/emu-depart-gz-zh.mp3"
+ },
+ {
+  "id": "voice.emu.depart.gz.en",
+  "lang": "en",
+  "text": "Welcome aboard train D three three one one, from Xiamen North to Guangzhou East.",
+  "file": "voice/emu-depart-gz-en.mp3"
+ },
+ {
+  "id": "voice.emu.next.gz.zh",
+  "lang": "zh",
+  "text": "前方到站，广州东站。请您带好随身物品，准备下车。",
+  "file": "voice/emu-next-gz-zh.mp3"
+ },
+ {
+  "id": "voice.emu.next.gz.en",
+  "lang": "en",
+  "text": "We will soon arrive at Guangzhou East. Please take your belongings and get ready to leave the train.",
+  "file": "voice/emu-next-gz-en.mp3"
+ },
+ {
+  "id": "voice.emu.arrive.gz.zh",
+  "lang": "zh",
+  "text": "广州东站到了。欢迎您来到广州，下车时请注意列车与站台之间的空隙。",
+  "file": "voice/emu-arrive-gz-zh.mp3"
+ },
+ {
+  "id": "voice.emu.arrive.gz.en",
+  "lang": "en",
+  "text": "We have arrived at Guangzhou East. Welcome to Guangzhou. Please mind the gap when leaving the train.",
+  "file": "voice/emu-arrive-gz-en.mp3"
+ },
+ {
   "id": "voice.safety.queue.zh",
   "lang": "zh",
   "text": "请不要越出黄色安全线，请按地面标识排队候车。",

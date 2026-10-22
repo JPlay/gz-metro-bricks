@@ -14,6 +14,15 @@ export class Hud {
     const n = $('next');
     if (nextCode) { n.hidden = false; n.innerHTML = `<span class="tag">下一站<small>Next</small></span><span class="nm">${STATIONS[nextCode].zh}<small>${STATIONS[nextCode].en}</small></span>`; n.style.setProperty('--line', L.color); } else n.hidden = true;
   }
+  /** 国铁（动车 / 厦门北站）：左上角换成车次徽标 + 名字；o = { badge, zh, en, color, next: { zh, en } } */
+  whereRail(o) {
+    const key = 'rail:' + o.badge + o.zh + o.en + (o.next ? o.next.zh : ''); if (key === this.key) return; this.key = key;
+    const w = $('where'); w.style.setProperty('--line', o.color); w.style.setProperty('--ink', '#FFFFFF');
+    const ln = $('whereLine'); ln.innerHTML = `<b class="rail">${o.badge}</b>`; ln.setAttribute('aria-label', o.badge);
+    $('whereName').textContent = o.zh; $('whereEn').textContent = o.en;
+    const n = $('next');
+    if (o.next) { n.hidden = false; n.innerHTML = `<span class="tag">前方到站<small>Next</small></span><span class="nm">${o.next.zh}<small>${o.next.en}</small></span>`; n.style.setProperty('--line', o.color); } else n.hidden = true;
+  }
   toast(text, ms = 1800) {
     const t = $('toast'); t.textContent = text; t.hidden = false; t.classList.remove('out'); t.style.animation = 'none'; void t.offsetWidth; t.style.animation = '';
     clearTimeout(this.toastT); clearTimeout(this.toastT2);

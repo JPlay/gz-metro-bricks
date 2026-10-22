@@ -72,6 +72,21 @@ const SAFETY = {
 };
 export const safetySegs = k => seg('safety.' + k, [SAFETY[k][0], SAFETY[k][1], null]);
 
+/*
+ * 动车（国铁）车厢广播：只有普通话 + 英语（国铁列车不播粤语；js/data/rail.js）。时间压缩的一程里不报中途停站。
+ * 车次按铁路播音习惯逐位读（D 二三一五）；英文站名用 Guangzhou East / Xiamen North（车站英文译名）。
+ */
+const EMU_T = {
+  xm: { no: 'D二三一五', noEn: 'D two three one five', from: '广州东站', to: '厦门北站', fromEn: 'Guangzhou East', toEn: 'Xiamen North', city: '厦门', cityEn: 'Xiamen' },
+  gz: { no: 'D三三一一', noEn: 'D three three one one', from: '厦门北站', to: '广州东站', fromEn: 'Xiamen North', toEn: 'Guangzhou East', city: '广州', cityEn: 'Guangzhou' }
+};
+export const emuDoorsSegs = () => seg('emu.doors', ['列车即将出发，车门即将关闭，请注意安全。', null, 'The train is about to depart. The doors are closing.']);
+export const emuDepartSegs = d => { const t = EMU_T[d]; return seg('emu.depart.' + d, [`旅客们，欢迎乘坐${t.no}次列车。本次列车由${t.from}开往${t.to}。`, null, `Welcome aboard train ${t.noEn}, from ${t.fromEn} to ${t.toEn}.`]); };
+export const emuBridgeSegs = () => seg('emu.bridge', ['列车正在通过九龙江特大桥。', null, 'We are now crossing the Jiulong River Bridge.']);
+export const emuNextSegs = d => { const t = EMU_T[d]; return seg('emu.next.' + d, [`前方到站，${t.to}。请您带好随身物品，准备下车。`, null, `We will soon arrive at ${t.toEn}. Please take your belongings and get ready to leave the train.`]); };
+export const emuArriveSegs = d => { const t = EMU_T[d]; return seg('emu.arrive.' + d, [`${t.to}到了。欢迎您来到${t.city}，下车时请注意列车与站台之间的空隙。`, null, `We have arrived at ${t.toEn}. Welcome to ${t.cityEn}. Please mind the gap when leaving the train.`]); };
+export function emuJobs() { return [...emuDoorsSegs(), ...emuBridgeSegs(), ...['xm', 'gz'].flatMap(d => [...emuDepartSegs(d), ...emuNextSegs(d), ...emuArriveSegs(d)])]; }
+
 /** 全网需要的全部片段（用于生成缺失清单 / 语音生成任务） */
 export function allJobs() {
   const out = new Map(), add = list => list.forEach(s => out.set(s.id, s));
@@ -80,7 +95,7 @@ export function allJobs() {
     for (const dir of Object.keys(L.dirs)) { add(destinationSegs(line, dir)); add(terminalSegs(line, dir)); add(platformSegs(line, dir, 1)); add(platformSegs(line, dir, 2)); }
     L.stations.forEach((c, i) => { if (i > 0 && i < L.stations.length - 1) add(nextSegs(line, c)); add(arriveSegs(c)); add(welcomeSegs(c)); add(visitSegs(c)); });
   }
-  add(doorsClosingSegs()); add(gapSegs()); Object.keys(SAFETY).forEach(k => add(safetySegs(k)));
+  add(doorsClosingSegs()); add(gapSegs()); add(emuJobs()); Object.keys(SAFETY).forEach(k => add(safetySegs(k)));
   return [...out.values()].map(s => ({ ...s, file: 'voice/' + s.id.slice(6).replace(/\./g, '-') + '.mp3' }));
 }
 export { LEGACY };

@@ -83,7 +83,7 @@ function nose(g, x0, L) {
   for (const sd of [-1, 1]) g.ellipsoid(tip.pts[0][0], 0.05, GZE.tz + sd * 0.42, 0.22, 0.09, 0.16, hex('#FFFFFF'), 1);   // 车头灯（白色玻璃罩）
 }
 /** LED 发车屏（黑底、暖黄 / 绿色点阵字） */
-const ROWS = [['D2315', '厦门北', '14:15', 'A1', '正在检票'], ['D3316', '厦门北', '16:03', 'A2', '候车'], ['D7162', '潮汕', '16:45', 'A3', '候车'], ['D2395', '厦门', '16:50', 'A1', '候车'], ['G6541', '香港西九龙', '17:25', 'A4', '候车'], ['C4121', '深圳', '17:46', 'A4', '候车'], ['C6813', '汕头', '18:08', 'A2', '候车'], ['D7108', '潮汕', '19:10', 'A3', '候车']];
+const ROWS = [['D2315', '厦门北', '14:20', 'A1', '正在检票'], ['D3313', '厦门北', '15:51', 'A2', '候车'], ['D7162', '潮汕', '16:45', 'A3', '候车'], ['D2395', '厦门', '16:50', 'A1', '候车'], ['G6541', '香港西九龙', '17:25', 'A4', '候车'], ['C4121', '深圳', '17:46', 'A4', '候车'], ['C6813', '汕头', '18:08', 'A2', '候车'], ['D7108', '潮汕', '19:10', 'A3', '候车']];
 function paintBoard(c, pw, ph) {
   c.fillStyle = '#0B0D10'; c.fillRect(0, 0, pw, ph);
   const rh = ph / (ROWS.length + 2.1), xs = [0.04, 0.24, 0.47, 0.64, 0.8].map(f => f * pw);
@@ -191,6 +191,15 @@ export function buildGze(k, st) {
   M.slab(xw, xe, 3.35, 3.42, GZE.zs - 0.3, GZE.zs - 0.2, hex('#3E6B4E'), { ao: false });
   // 站台东头（车头前面）没有车挡着的地方：站台边一道看不见的挡板，不会掉下去
   k.colSlab(26.5, xe, 0, 1.4, edge - 0.25, edge);
+  buildEmuTrain(k, (x, y, z, w, h, zh, fg) => k.sign(x, y, z, { kind: 'plain', w, h, bg: '#F4F5F3', fg, zh, face: 0, align: 'center', box: false }));
+  return out;
+}
+/**
+ * 停在站台边的复兴号（车头 + 5 号车厢（门开着）+ 后一节），站台坐标系：轨道中心 z = GZE.tz、站台边 GZE.edge、车厢中心 x = EMU.xc。
+ * 广州东站和厦门北站共用（厦门北站的 Kit 整体平移到别处）；label(x, y, z, w, h, zh, fg) 画车身上的小字牌。
+ */
+export function buildEmuTrain(k, label) {
+  const P = k.solid, G = k.glow, M = k.metal, { edge, tz } = GZE;
   /* ===== 复兴号（白色、红腰线、流线型车头）：3 号… 这里只做三节：车头 + 5 号车厢（门开着）+ 后一节 ===== */
   const Bd = k.g('paint');
   const cars = [[-60, -30.2], [-29.7, -4.3], [-3.8, 15]];
@@ -245,8 +254,8 @@ export function buildGze(k, st) {
       }
     }
   });
-  k.sign(6, 0.24, zf + 0.012, { kind: 'plain', w: 1.9, h: 0.4, bg: '#F4F5F3', fg: '#D3121A', zh: '复兴号', face: 0, align: 'center', box: false });
-  k.sign(-17, 0.24, zf + 0.012, { kind: 'plain', w: 1.5, h: 0.36, bg: '#F4F5F3', fg: '#3A3F45', zh: '05 二等座', face: 0, align: 'center', box: false });
+  label(6, 0.24, zf + 0.012, 1.9, 0.4, '复兴号', '#D3121A');
+  label(-17, 0.24, zf + 0.012, 1.5, 0.36, '05 二等座', '#3A3F45');
   // 车身碰撞（5 号车厢两扇门处留口，口里面一块“门后墙”）
   const zc0 = tz - 1.72, zc1 = edge;
   const segs = [[-60, -6.35], [-5.25, 16]];   // 只有 5 号车厢东头那扇门开着
@@ -254,7 +263,6 @@ export function buildGze(k, st) {
   for (const d of EMU.doors) for (const sx of [-1, 1]) k.colSlab(d.x + sx * 0.5 - 0.04, d.x + sx * 0.5 + 0.04, -1.3, 3.2, edge - 0.2, edge);
   for (const d of EMU.doors) { k.colSlab(d.x - 0.55, d.x + 0.55, -1.3, 3.2, zc0, edge - 0.7); k.colSlab(d.x - 0.55, d.x + 0.55, -1.3, 0, edge - 0.7, edge); }
   k.colSlab(16, 26.5, -1.3, 1.8, tz - 1.3, tz + 1.3);
-  return out;
 }
 /** 闸机：走近（任意一边）就开，走过去关上 */
 export function updateGze(o, dt, player, Audio) {
