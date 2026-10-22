@@ -24,7 +24,7 @@ const OUT = [
   { t: 84, far: 'mount', mid: 'mount', near: 'mount' },
   { t: 94, near: 'tunnel', tunnel: true },
   { t: 102, near: 'mount' },
-  { t: 110, near: 'tunnel', tunnel: true, far: 'sea' },   // 远景在隧道里整片换成海（看不见远景的时候换，出洞就是海）
+  { t: 110, near: 'tunnel', tunnel: true, far: 'sea', mid: 'sea' },   // 远景 / 中景在隧道里整片换成海（看不见的时候换，出洞就看到海）
   { t: 119, near: 'mount' },
   { t: 128, far: 'sea', mid: 'sea', near: 'bridge', bridge: true },
   { t: 140, far: 'xiamen', bridge: true },   // 过桥后半段：对岸厦门的楼群才出现（远景层移得慢，约 15 s 后进入窗口）

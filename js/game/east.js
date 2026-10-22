@@ -340,7 +340,7 @@ export class EastCtl {
     if (R.braking) { v = Math.max(0.6, Math.sqrt(2 * R.dec * Math.max(0, R.rem))); R.rem -= v * dt; }
     R.v = v; R.s += v * dt;
     const seg = this.segAt(rt), near = R.braking && R.rem < 170 ? 'empty' : seg.near;
-    if (seg.tunnel && I.scenery.far.front(1) !== seg.far) I.scenery.far.fill(seg.far);   // 隧道里看不见远景：整片换掉
+    if (seg.tunnel) for (const L of ['far', 'mid']) if (I.scenery[L].front(1) !== seg[L]) I.scenery[L].fill(seg[L]);   // 隧道里看不见远景 / 中景：整片换掉
     I.scenery.advance(v * dt, { far: seg.far, mid: seg.mid, near });
     // 出发站台往后滑走；目的地站台从前面滑进来
     const from = R.dest === 'xm' ? 'gz' : 'xm', gone = R.s > 420;
