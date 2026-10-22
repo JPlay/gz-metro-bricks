@@ -28,6 +28,19 @@ async def until_rt(pg, rt, speed=10):
     await pg.evaluate(f'__game.east.setSpeed({speed})')
     r = await wait(pg, f'(__game.east.info().ride||{{rt:1e9}}).rt > {rt}', 400)
     await pg.evaluate('__game.east.setSpeed(1)'); return r
+SIT = "(() => { const s = __game.east.interior.seats.find(q => q.row === %d && q.letter === '%s'); __game.seats.sit({ id: 'hall', root: { position: { x: 0, y: 0, z: 0 } }, pax: [] }, s); })()"
+async def sit_at(pg, row, letter, yaw, pitch):
+    if (await st(pg))['seat'].get('seated'): await pg.evaluate('__game.act()'); await asyncio.sleep(0.3)
+    await pg.evaluate(SIT % (row, letter)); await view(pg, 'first'); await asyncio.sleep(0.3)
+    await pg.evaluate(f'__game.player.yaw={yaw}; __game.player.pitch={pitch}')
+# 车厢侧墙在不在：从过道往两边窗间柱打射线，要打到车厢的墙（paint 桶），且这一帧在画
+WALL = """(() => { const sc = __game.scene, B = BABYLON, out = [];
+  for (const s of [-1, 1]) for (const lx of [-9.6 + 1.92 * 3, -9.6 + 1.92 * 7]) {
+    const r = new B.Ray(new B.Vector3(%d + lx, 1.5, 0.3), new B.Vector3(0, 0, s), 3);
+    const h = sc.pickWithRay(r, m => m.isEnabled() && m.isVisible && !(m.metadata && m.metadata.collider));
+    out.push(!!(h && h.hit && h.pickedMesh && h.pickedMesh.name === 'paint' && Math.abs(Math.abs(h.pickedPoint.z) - 1.48) < 0.05 && sc.getActiveMeshes().data.includes(h.pickedMesh)));
+  } return out.every(Boolean); })()""" % EO
+CAPHIDDEN = "document.getElementById('caption').hidden"
 async def sit_row14(pg):
     await auto(pg, [[EO + 10.6, 0.25], [EO + 9.0, 0.3], [EO + 4.2, 0.3]])
     await pg.evaluate('__game.act()'); await asyncio.sleep(0.8)
@@ -50,12 +63,13 @@ async def main():
     ok('departed', await wait(pg, '__game.east.info().ride.phase === "run"', 6))
     # a：关好门、列车开出广州东站台（站在过道往站台一侧看，站台和「广州东」站牌往后滑）
     await wait(pg, '__game.east.info().ride.rt > 4.5', 10)
-    await pg.evaluate('__game.act()'); await asyncio.sleep(0.4)   # 起身（行驶中可以在车厢里走）
-    # 站在过道上往车尾方向看站台一侧的大窗：「5 站台」牌子和柱子在往后退
-    await view(pg, 'first'); await pg.evaluate(f'__game.teleport({EO + 8.2},0.05,0.45,-0.8); __game.player.pitch=-0.05')
+    # a：坐在 13 排 F 座（靠站台一侧的窗），往前斜着看一排大车窗：「5 站台」牌子和柱子往后退
+    await sit_at(pg, 13, 'F', 1.02, -0.04)
+    ok('carWallMoving', await pg.evaluate(WALL))
     await shot(pg, 'a-depart-gzdz', 0.8)
     e = await E(pg); ok('platformSliding', e['ride']['s'] > 3 and e['ride']['v'] > 1 and e['door'] >= 1)
-    await pg.evaluate(f'__game.teleport({EO + 9.0},0.05,0.3,-Math.PI/2)'); await asyncio.sleep(0.5)
+    await pg.evaluate('__game.act()'); await asyncio.sleep(0.4)   # 起身（行驶中可以在车厢里走）
+    await view(pg, 'third'); await pg.evaluate(f'__game.teleport({EO + 9.0},0.05,0.3,-Math.PI/2)'); await asyncio.sleep(0.5)
     # 行驶中在车厢里走动；走到车门口也下不了车
     s0 = (await st(pg))['pos']
     await auto(pg, [[EO + 6.0, 0.3], [EO + 2.0, 0.3]])
@@ -65,8 +79,14 @@ async def main():
     await auto(pg, [[EO + 10.6, 0.25], [EO + 9.0, 0.3]])
     # 3. 快进：路段顺序
     segs = []
-    for rt in [30, 60, 90, 98, 112, 126, 140, 160]:
+    for rt in [30, 60, 90, 98, 112, 126, 137, 160]:
         await until_rt(pg, rt); e = await E(pg); segs.append((rt, e['ride']['seg']['near'], e['ride']['seg']['mid']))
+        if rt == 137:   # b：坐到 13 排 A 座（另一侧靠窗），透过车窗看九龙江特大桥外的海面和斜拉桥
+            await sit_at(pg, 13, 'A', 2.2, -0.03)
+            ok('bridgeSeg', e['ride']['seg']['bridge']); ok('carWallBridge', await pg.evaluate(WALL))
+            await shot(pg, 'b-bridge', 1.5)
+            ok('captionNotDepart', 'Welcome aboard' not in (await pg.evaluate("document.querySelector('#caption .text').textContent")) or await pg.evaluate(CAPHIDDEN))
+            await pg.evaluate('__game.act()'); await asyncio.sleep(0.3); await view(pg, 'third')
         if rt == 30: await measure(pg, 'cruise-city')
         if rt == 98: await measure(pg, 'tunnel')
     R['segs'] = segs; log('segs', segs)
@@ -92,20 +112,13 @@ async def main():
     await auto(pg, [[XO - 2, -124.6], [XO + 8, -124.6]]); await auto(pg, [[XO - 16, -124.6]])
     s = await st(pg); ok('xmnWalk', s['pos'][1] > -0.5 and s['pos'][0] < XO - 14)
     await measure(pg, 'xmn-platform')
+    ok('captionHidden', await wait(pg, CAPHIDDEN, 200, wall=40))
     # 5. 回程：从车门上车、坐下 → D3311 开回广州东；途中拍 b（九龙江特大桥）
     await auto(pg, [[XO - 5.8, -126.2], [XO - 5.8, -127.3], [XO - 5.8, -128.6]])
     ok('reboard', await wait(pg, '__game.east.info().inside', 4))
     ok('seated2', await sit_row14(pg))
     ok('rideBack', await wait(pg, '!!__game.east.info().ride && __game.east.info().ride.dest === "gz"', 6))
     await wait(pg, '__game.east.info().ride.phase === "run"', 10)
-    await until_rt(pg, 31)
-    # b：坐到第 13 排靠窗 A 座（测试直接换座），第一人称看窗外的九龙江特大桥
-    await pg.evaluate('__game.act()'); await asyncio.sleep(0.4)
-    await pg.evaluate("(() => { const s = __game.east.interior.seats.find(q => q.row === 13 && q.letter === 'A'); __game.seats.sit({ id: 'hall', root: { position: { x: 0, y: 0, z: 0 } }, pax: [] }, s); })()")
-    await view(pg, 'first'); await asyncio.sleep(0.5); await pg.evaluate('__game.player.yaw=Math.PI*1.12; __game.player.pitch=-0.1')
-    e = await E(pg); ok('bridgeSeg', e['ride']['seg']['bridge'])
-    await shot(pg, 'b-bridge', 1.5)
-    await pg.evaluate('__game.act()'); await asyncio.sleep(0.4)   # 起身
     await until_rt(pg, 60)
     await pg.evaluate('__game.east.setSpeed(10)')
     ok('arrivedGz', await wait(pg, '__game.east.info().count.arrived.length >= 2', 200))
