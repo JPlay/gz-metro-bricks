@@ -70,7 +70,7 @@ export class XmStation {
       { line: 2, y: XM_PY2, zc: 28 }
     ];
     // 厦门北站：侧式站台对准国铁出站层地铁站厅（z≈-80），轨在 -z（往站房外）
-    if (this.code === 'xmnb') return [{ line: 1, y: XM_PY, zc: -80, sideOnly: 'A' }];  // 侧式：轨在 -z，站台朝站厅 +z
+    if (this.code === 'xmnb') return [{ line: 1, y: XM_PY, zc: -80 }];   // 游戏用岛式（双边可乘）；真实为侧式
     if (this.s.side) return [{ line: lines[0], y: XM_PY, zc: 0, sideOnly: true }];
     return [{ line: lines[0], y: XM_PY, zc: 0 }];
   }

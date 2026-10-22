@@ -261,7 +261,11 @@ export async function start() {
       if (player.landed) { player.landed = false; Audio.footstep({ surface, land: true }); } }
     // 掉出世界 → 回到站台 / 站口
     if (!G.inTunnel && p.y < -40) {
-      if (inXm) { const P = xmMetro.station.platforms[0]; player.spawn(XO.x + 10, P.y + 0.05, P.zc + 2, Math.PI / 2); hud.toast('回到站台啦'); }
+      if (inXm) {
+        const P = xmMetro.station.platforms[0];
+        const z = P.sideOnly === 'A' ? P.zc - 2.2 : P.sideOnly === 'B' ? P.zc + 2.2 : P.zc + 2;
+        player.spawn(XO.x + 10, P.y + 0.05, z, Math.PI / 2); hud.toast('回到站台啦');
+      }
       else if (!(east && east.cur)) { const P = G.station.platforms[0]; player.spawn(20, P.y + 0.05, P.zc, Math.PI / 2); hud.toast('回到站台啦'); }
     }
     // 室内外灯光过渡 + 阴影跟随玩家

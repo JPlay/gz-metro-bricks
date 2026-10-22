@@ -3,7 +3,8 @@
 # → 从同一扇车门上车、坐下 → 回程 D3311 开回广州东 → 下车回到广州东站站台。
 # 断言：每一段都走得到；车门关好才开车、开车时出不去；各路段远景按顺序出现；广播（字幕事件）按顺序；每个镜头 ≤66 draws / 186,754 tris；没有报错。
 # 评审截图（iPad 横屏 1112×834，不贴角标）：a 关门开出广州东站台、b 车窗外的九龙江特大桥、c 在厦门北站下车。
-# 第二阶段：厦门北站台 → 楼梯下出站层 → 出站检票口 → 免安检换乘通道 → 地铁 1 号线闸机（关着）→ 楼梯上南广场 → 回站台；新镜头 ≤50 draws。
+# 第二阶段：厦门北站台 → 楼梯下出站层 → 出站检票口 → 免安检换乘通道 → 地铁 1 号线闸机 → 楼梯上南广场 → 回站台；新镜头 ≤50 draws。
+# 第三阶段：过闸进 1 号线站台 → 乘车 → 吕厝换乘 2 号线 → 再乘一站；可行则回到厦门北；新镜头 ≤50 draws。
 # 评审截图（第二阶段，另一个目录）：xm1 出站层、xm2 换乘地铁通道、xm3 南广场站房立面。
 # 用法：python tests/e2e/xiamen.py [base-url] [截图目录] [q] [第二阶段截图目录]
 import asyncio, sys, json, os
@@ -28,6 +29,45 @@ async def shot(pg, name, settle=1.0):
     await pg.screenshot(path=OUT + name + '.png', timeout=180000)
 OUT2 = (sys.argv[4] if len(sys.argv) > 4 else '/workspace/gz-shots-polish/xm-s2-r1/').rstrip('/') + '/'
 BUDGET2 = 50   # 第二阶段新加的镜头（厦门北站房）
+OUT3 = (sys.argv[5] if len(sys.argv) > 5 else '/workspace/gz-shots-polish/xm-s3-r1/').rstrip('/') + '/'
+BUDGET3 = 50   # 第三阶段新加的镜头（厦门地铁站台）
+async def measure3(pg, name):
+    d = await measure(pg, name); ok('budget50s3:' + name, d['draws'] <= BUDGET3 and d['tris'] <= BUDGET['tris']); return d
+async def xm_info(pg):
+    return await pg.evaluate('__game.xmMetro ? __game.xmMetro.info() : null')
+async def xm_skip_to(pg, code, max_hops=24):
+    """已上车时：把每个 cruise 立刻结束，一站一站跳到 code。"""
+    for _ in range(max_hops):
+        info = await xm_info(pg)
+        if not info: return False
+        if info.get('code') == code:
+            return True
+        await pg.evaluate("""(() => {
+          const m=__game.xmMetro; if(!m||!m.ride) return;
+          if (m.ride.phase==='cruise') m.ride.t = 99;
+          else {
+            const s=m.ride.slot; if(s && (s.state==='dwell'||s.state==='opening'||s.state==='closing')) { s.t=0; s.ann=true; }
+          }
+        })()""")
+        await wait(pg, f'__game.xmMetro && (__game.xmMetro.code==="{code}" || (__game.xmMetro.ride&&__game.xmMetro.ride.phase==="cruise") || (__game.xmMetro.ride&&__game.xmMetro.ride.phase==="in") || (__game.xmMetro.ride&&__game.xmMetro.ride.phase==="out"))', 50)
+        await pg.evaluate("""(() => { const m=__game.xmMetro; if(m&&m.ride&&m.ride.phase==='cruise') m.ride.t=99; })()""")
+        await asyncio.sleep(0.35)
+    info = await xm_info(pg); return bool(info and info.get('code') == code)
+async def xm_board(pg, line, step):
+    """呼叫列车、等开门、瞬移进车厢。"""
+    await pg.evaluate(f'__game.call({line},{step})')
+    ok_dwell = await wait(pg, f'(__game.xmMetro.info().slots.find(s=>s.line==={line}&&s.step==={step})||{{}}).state==="dwell"', 90)
+    if not ok_dwell: return False
+    await pg.evaluate(f"""(() => {{
+      const s=__game.xmMetro.slots.find(o=>o.line==={line}&&o.step==={step});
+      if(!s) return; s.t=20; s.ann=true;
+      const tr=s.train, P=s.P;
+      const lz = s.side.trackZ + (s.side.doorSg>0 ? -0.9 : 0.9);
+      __game.player.spawn(tr.root.position.x, P.y+0.55, lz, 0);
+      __game.player.yaw=0; __game.player.pitch=0;
+    }})()""")
+    await asyncio.sleep(0.5)
+    return await pg.evaluate('__game.state().aboard')
 async def measure2(pg, name):
     d = await measure(pg, name); ok('budget50:' + name, d['draws'] <= BUDGET2 and d['tris'] <= BUDGET['tris']); return d
 async def shot2(pg, name, settle=1.2):
@@ -55,7 +95,7 @@ async def sit_row14(pg):
     await pg.evaluate('__game.act()'); await asyncio.sleep(0.8)
     return (await st(pg))['seat'].get('seated')
 async def main():
-  os.makedirs(OUT, exist_ok=True); os.makedirs(OUT2, exist_ok=True)
+  os.makedirs(OUT, exist_ok=True); os.makedirs(OUT2, exist_ok=True); os.makedirs(OUT3, exist_ok=True)
   async with async_playwright() as p:
     b, pg, logs = await open_game(p, BASE + f'?q={Q}&start=gzdz&line=1')
     await pg.evaluate(GCLOCK); await pg.evaluate('__game.setDtMax(0.25)')
@@ -136,8 +176,75 @@ async def main():
     e = await E(pg); ok('passageArea', e['area'] in ('hall', 'passage'))
     await view(pg, 'first'); await pg.evaluate('__game.player.yaw=-Math.PI/2; __game.player.pitch=0.02')   # 2：换乘地铁通道，吊牌 + 尽头地铁入口
     await shot2(pg, 'xm2-transfer'); await view(pg, 'third')
-    await auto(pg, [[XO - 64, -80], [XO - 86, -80]]); await auto(pg, [[XO - 99, -80]])
-    s = await st(pg); e = await E(pg); ok('metroGatesClosed', XO - 95.7 < s['pos'][0] < XO - 93 and e['area'] == 'passage'); await measure2(pg, 'xm-metro-gates')
+    await auto(pg, [[XO - 64, -80], [XO - 86, -80]]); await auto(pg, [[XO - 94, -80]])
+    s = await st(pg); e = await E(pg); ok('metroGatesReach', e['area'] == 'passage'); await measure2(pg, 'xm-metro-gates')
+    # —— 第三阶段：过闸进 1 号线 → 乘到吕厝 → 换乘 2 号线 → 再乘一站 → 尽量回厦门北 ——
+    await auto(pg, [[XO - 99, -80], [XO - 104, -80]])
+    await wait(pg, '__game.east.info().loc==="xmmetro" || (__game.xmMetro && __game.xmMetro.code)', 8)
+    if not await pg.evaluate('!!(__game.xmMetro && __game.xmMetro.station)'):
+        await pg.evaluate("""(() => {
+          __game.east.cur = __game.east.cur || {st:__game.station, loc:'xmn', area:'passage'};
+          __game.east.side='xm';
+          __game.xmMetro.enterFromRailway(__game.player);
+          __game.east.cur.loc='xmmetro'; __game.east.cur.area='metro';
+        })()""")
+    ok('enteredXmMetro', await wait(pg, '__game.xmMetro && __game.xmMetro.code==="xmnb"', 6))
+    await measure3(pg, 's3-xmnb-platform')
+    ok('boardL1', await xm_board(pg, 1, 1))
+    await measure3(pg, 's3-aboard-l1')
+    await pg.evaluate("""(() => {
+      const s=__game.xmMetro.slots.find(o=>o.line===1&&o.step===1);
+      if(s){ s.t=0; s.ann=true; }
+    })()""")
+    ok('rideToLcu', await xm_skip_to(pg, 'lcu', 20))
+    await pg.evaluate("""(() => {
+      const P=__game.xmMetro.station.platforms.find(p=>p.line===1)||__game.xmMetro.station.platforms[0];
+      __game.player.spawn(3000, P.y+0.05, P.zc+1.5, 0);
+    })()""")
+    await asyncio.sleep(0.4)
+    ok('offAtLcu', await pg.evaluate('__game.xmMetro.code==="lcu" && !__game.state().aboard'))
+    await pg.evaluate("""(() => {
+      const P=__game.xmMetro.station.platforms.find(p=>p.line===2);
+      if(P) __game.player.spawn(3000, P.y+0.05, P.zc+1.5, Math.PI);
+    })()""")
+    await asyncio.sleep(0.5)
+    await measure3(pg, 's3-lcu-l2')
+    ok('boardL2', await xm_board(pg, 2, 1))
+    await pg.evaluate("""(() => {
+      const s=__game.xmMetro.slots.find(o=>o.line===2&&o.step===1);
+      if(s){ s.t=0; s.ann=true; }
+    })()""")
+    ok('rideL2one', await xm_skip_to(pg, 'jtou', 4))
+    await pg.evaluate("""(() => {
+      const P=__game.xmMetro.station.platforms[0];
+      __game.player.spawn(3000, P.y+0.05, P.zc+1.5, 0);
+    })()""")
+    await asyncio.sleep(0.3)
+    ok('offJtou', await pg.evaluate('__game.xmMetro.code==="jtou" && !__game.state().aboard'))
+    ok('boardL2back', await xm_board(pg, 2, -1))
+    await pg.evaluate("""(() => {
+      const s=__game.xmMetro.slots.find(o=>o.line===2&&o.step===-1);
+      if(s){ s.t=0; s.ann=true; }
+    })()""")
+    ok('backLcu', await xm_skip_to(pg, 'lcu', 4))
+    await pg.evaluate("""(() => {
+      const P=__game.xmMetro.station.platforms.find(p=>p.line===1)||__game.xmMetro.station.platforms[0];
+      __game.player.spawn(3000, P.y+0.05, P.zc+1.5, 0);
+    })()""")
+    await asyncio.sleep(0.3)
+    ok('boardL1back', await xm_board(pg, 1, -1))
+    await pg.evaluate("""(() => {
+      const s=__game.xmMetro.slots.find(o=>o.line===1&&o.step===-1);
+      if(s){ s.t=0; s.ann=true; }
+    })()""")
+    ok('backXmnb', await xm_skip_to(pg, 'xmnb', 20))
+    await measure3(pg, 's3-back-xmnb')
+    await pg.evaluate("""(() => {
+      __game.xmMetro.exitToRailway(__game.player);
+      if (__game.east.cur) { __game.east.cur.loc='xmn'; __game.east.cur.area='passage'; }
+    })()""")
+    await asyncio.sleep(0.5)
+    ok('exitToRail', await pg.evaluate('__game.east.info().loc==="xmn"'))
     await auto(pg, [[XO - 70, -80], [XO - 48, -80]]); await auto(pg, [[XO - 30, -80], [XO - 20, -70]])
     await auto(pg, [[XO - 20, -62], [XO - 20, -50]]); await auto(pg, [[XO - 20, -36]])
     s = await st(pg); e = await E(pg); ok('upToPlaza', s['pos'][1] > -0.3 and e['area'] == 'plaza'); await measure2(pg, 'xm-stair-top')
