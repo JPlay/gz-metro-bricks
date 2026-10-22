@@ -52,6 +52,14 @@ function facadePaint({ floors, bays, wall = '#A8423A', tile = 0.07, band = '#F1E
     }
   };
 }
+/** 门柱竖排字：每个字一行，按柱面宽高缩放到放得下 */
+function pillarText(t, bg = '#B8463A', fg = '#F6D36B') {
+  return (c, pw, ph) => {
+    c.fillStyle = bg; c.fillRect(0, 0, pw, ph); c.fillStyle = fg; c.textAlign = 'center'; c.textBaseline = 'middle';
+    const ch = [...t], sz = Math.min(pw * 0.72, ph * 0.86 / ch.length); c.font = `800 ${sz}px ${FONT}`;
+    ch.forEach((x, i) => c.fillText(x, pw / 2, ph / 2 + (i - (ch.length - 1) / 2) * sz * 1.08));
+  };
+}
 function textPaint(lines, { bg = '#B3261E', fg = '#F6D36B', font = FONT, weight = 800, frame = null } = {}) {
   return (c, pw, ph) => {
     c.fillStyle = bg; c.fillRect(0, 0, pw, ph);
@@ -190,7 +198,7 @@ export class XmStreet {
     this.road(14, 26, -8, 200, false, '龙翔里');              // 往南的小路
     this.road(-160, 14, 44, 54, true, '莲花北路');             // 往西去莲花小学
     for (let x = -150; x <= 150; x += 12) if (Math.abs(x) > 6) this.lightTree(x, -6.2, 0.8);
-    for (let z = 4; z < 190; z += 12) { this.lightTree(12, z, 0.75); this.lightTree(28, z, 0.75); }
+    for (let z = 4; z < 190; z += 12) { this.lightTree(12, z, 0.75); this.lightTree(28, Math.abs(z - 88) < 8 ? z + 9 : z, 0.75); }   // 莲龙小学校门（z 81..95）前不种树，挪到门柱外
     for (const x of [-8, 8]) D.lamp(k, x, 0, -6.6, Math.PI);
     D.bench(k, -6, 0, 3, Math.PI / 2); D.bin(k, 5, 0, 3);
     // —— 莲龙小学（东南偏南 ~290 m → 约 70 m）：校门朝西开在龙翔里上 ——
@@ -200,12 +208,19 @@ export class XmStreet {
     // 校门：两根门柱 + 校名（金字红底）+ 伸缩门（拉开一半）+ 门卫室
     const gz = SZ + 30;
     for (const dz of [-6.2, 6.2]) { P.slab(SX - 0.7, SX + 0.7, 0, 3.4, gz + dz - 0.7, gz + dz + 0.7, hex('#B8463A'), { ao: false }); P.slab(SX - 0.8, SX + 0.8, 3.4, 3.6, gz + dz - 0.8, gz + dz + 0.8, hex('#F1EEE8'), { ao: false }); k.colSlab(SX - 0.7, SX + 0.7, 0, 3.4, gz + dz - 0.7, gz + dz + 0.7); }
-    A.quad(SX - 0.72, 2.5, gz - 6.2, 1.2, 1.6, -Math.PI / 2, A.draw(1.2, 1.6, textPaint(['小学', 'PRIMARY'], { bg: '#B8463A', fg: '#F6D36B' })));
-    A.quad(SX - 0.72, 2.5, gz + 6.2, 1.2, 1.6, -Math.PI / 2, A.draw(1.2, 1.6, textPaint(['莲龙', 'LIANLONG'], { bg: '#B8463A', fg: '#F6D36B' })));
+    A.quad(SX - 0.72, 2.5, gz - 6.2, 1.2, 1.6, -Math.PI / 2, A.draw(1.2, 1.6, pillarText('小学')));
+    A.quad(SX - 0.72, 2.5, gz + 6.2, 1.2, 1.6, -Math.PI / 2, A.draw(1.2, 1.6, pillarText('莲龙')));
     P.slab(SX - 0.5, SX + 0.5, 3.6, 4.4, gz - 7, gz + 7, hex('#9C352C'), { ao: false });
     A.quad(SX - 0.53, 4.0, gz, 12, 0.75, -Math.PI / 2, A.draw(12, 0.75, textPaint(['厦门市莲龙小学'], { bg: '#9C352C', fg: '#F6D36B' })));
-    for (let i = 0; i < 9; i++) { const z = gz + 5.4 - i * 0.55; k.metal.slab(SX - 0.05, SX + 0.05, 0.1, 1.5, z - 0.02, z + 0.02, hex('#C8CDD2'), { ao: false }); k.metal.box(SX, 0.8, z - 0.27, 0.04, 1.3, 0.62, hex('#B9BFC5'), 0, 0.9 * (i % 2 ? 1 : -1)); }
-    k.colSlab(SX - 0.2, SX + 0.2, 0, 1.5, gz + 0.5, gz + 5.6);
+    { // 伸缩门（银灰不锈钢，拉开一半）：竖杆 + 交叉斜杆 + 上下横杆 + 底轮；门头机箱在靠柱一端
+      const SG = hex('#C3C8CD'), SD = hex('#9EA5AC'), za = gz + 0.6, zb = gz + 5.45, n = 10, cw = (zb - za) / n, ang = Math.atan2(cw, 1.2), dl = Math.hypot(cw, 1.2);
+      for (let i = 0; i <= n; i++) { const z = za + i * cw; P.slab(SX - 0.04, SX + 0.04, 0.12, 1.5, z - 0.025, z + 0.025, SG, { ao: false }); }
+      for (let i = 0; i < n; i++) { const z = za + (i + 0.5) * cw; for (const sg of [-1, 1]) P.box(SX + sg * 0.02, 0.8, z, 0.025, dl, 0.035, SD, 0, sg * ang); }
+      for (const y of [0.16, 1.44]) P.slab(SX - 0.05, SX + 0.05, y - 0.03, y + 0.03, za, zb, SG, { ao: false });
+      for (let i = 0; i <= n; i += 2) P.cyl(SX, 0.06, za + i * cw, 0.12, 0.08, hex('#3A3D40'), 6, 0, 0, Math.PI / 2);
+      P.slab(SX - 0.22, SX + 0.22, 0, 1.6, zb, zb + 0.35, hex('#D4D8DC'), { ao: false });   // 机头
+    }
+    k.colSlab(SX - 0.2, SX + 0.2, 0, 1.6, gz + 0.5, gz + 5.8);
     P.slab(SX + 1.5, SX + 4.5, 0, 2.8, gz - 10.5, gz - 7.5, hex('#E8E4DC'), { ao: false }); k.glass.slab(SX + 1.48, SX + 1.52, 1.0, 2.2, gz - 10, gz - 8, hex('#BFD8E6')); P.slab(SX + 1.3, SX + 4.7, 2.8, 3.0, gz - 10.7, gz - 7.3, hex('#9C352C'), { ao: false }); k.colSlab(SX + 1.5, SX + 4.5, 0, 2.8, gz - 10.5, gz - 7.5);
     // 教学楼（4 层红砖色瓷砖、白横带、顶层拱窗、红色门廊）：南北向长条，面朝西（校门）
     const tb = facadePaint({ floors: 4, bays: 12, arch: true, ground: (c, x, y, w, h) => { const bw = w / 12; for (let b = 0; b < 12; b++) { if (b === 5 || b === 6) continue; c.fillStyle = '#F4F2EE'; c.fillRect(b * bw + bw * 0.2 - 3, y + h * 0.2 - 3, bw * 0.6 + 6, h * 0.58 + 6); c.fillStyle = '#7FA3B8'; c.fillRect(b * bw + bw * 0.2, y + h * 0.2, bw * 0.6, h * 0.58); } c.fillStyle = '#3B3330'; c.fillRect(5 * bw + bw * 0.15, y + h * 0.2, bw * 1.7, h * 0.8); } });
@@ -304,9 +319,15 @@ export class XmStreet {
     A.quad(x1 + 0.03, 3.4 + (h - 3.4) / 2, zc, W, h - 3.4, Math.PI / 2, A.draw(W, h - 3.4, up, 40));
     // 底层店内：白瓷砖墙 + 地砖 + 里面两张桌子
     P.slab(x0 + 0.3, x1, 0.0, 0.03, z0 + 0.3, z1 - 0.3, hex('#D9D4CA'), { ao: false });
-    P.slab(x0 + 0.3, x0 + 0.4, 0, 3.4, z0 + 0.3, z1 - 0.3, hex('#F2F0EC'), { ao: false });
-    for (const [za, zb] of [[z0, z0 + 0.3], [z1 - 0.3, z1]]) P.slab(x0, x1, 0, 3.4, za, zb, hex('#F2F0EC'), { ao: false });   // 店面两侧墙（原来只有碰撞，看得见天）
-    P.slab(x0 + 0.3, x1, 3.2, 3.4, z0 + 0.3, z1 - 0.3, hex('#F7F5F0'), { ao: false }); k.glow.slab(x0 + 3, x1 - 3, 3.17, 3.2, zc - 0.2, zc + 0.2, hex('#FFF4DC'), { ao: false });
+    P.slab(x0 + 0.3, x0 + 0.4, 0, 3.4, z0 + 0.3, z1 - 0.3, hex('#F4E6C8'), { ao: false });
+    for (const [za, zb] of [[z0, z0 + 0.3], [z1 - 0.3, z1]]) P.slab(x0, x1, 0, 3.4, za, zb, hex('#F4E6C8'), { ao: false });   // 店面两侧墙（原来只有碰撞，看得见天）
+    P.slab(x0 + 0.3, x1, 3.2, 3.4, z0 + 0.3, z1 - 0.3, hex('#F6E2B8'), { ao: false });
+    for (const dz of [-2.2, 0, 2.2]) k.glow.slab(x0 + 2.5, x1 - 2.5, 3.16, 3.2, zc + dz - 0.18, zc + dz + 0.18, hex('#FFC864'), { ao: false });   // 暖黄灯管
+    // 后墙菜单板（深红底、黄字价目）
+    A.quad(x0 + 0.42, 2.15, zc, 4.4, 1.5, Math.PI / 2, A.draw(4.4, 1.5, (c, pw, ph) => { c.fillStyle = '#7A1414'; c.fillRect(0, 0, pw, ph); c.strokeStyle = '#F2C24E'; c.lineWidth = ph * 0.02; c.strokeRect(ph * 0.03, ph * 0.03, pw - ph * 0.06, ph - ph * 0.06);
+      c.fillStyle = '#FFE08A'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `800 ${ph * 0.16}px ${FONT}`; c.fillText('菜 单', pw / 2, ph * 0.15);
+      const items = [['羊肉串', '3元/串'], ['红柳大串', '12元'], ['烤腰子', '8元'], ['烤馕', '5元'], ['拌面', '18元'], ['抓饭', '22元']];
+      c.font = `700 ${ph * 0.11}px ${FONT}`; items.forEach(([n, v], i) => { const col = i % 2, row = (i / 2) | 0, x = pw * (col ? 0.53 : 0.07), y = ph * (0.38 + row * 0.22); c.textAlign = 'left'; c.fillStyle = '#FFFFFF'; c.fillText(n, x, y); c.textAlign = 'right'; c.fillStyle = '#FFE08A'; c.fillText(v, x + pw * 0.4, y); }); }, 120));
     // 招牌：红底白字
     P.slab(x1, x1 + 0.25, 3.4, 4.6, z0, z1, hex('#C21F1F'), { ao: false });
     A.quad(x1 + 0.27, 4.0, zc, W - 0.2, 1.1, Math.PI / 2, A.draw(W - 0.2, 1.1, (c, pw, ph) => { c.fillStyle = '#C21F1F'; c.fillRect(0, 0, pw, ph); c.fillStyle = '#FFFFFF'; c.textAlign = 'center'; c.textBaseline = 'middle';
@@ -364,12 +385,13 @@ export class XmStreet {
     const WX = 18, WZ = 14;
     ring(WX, WZ, WX + 1.0, WZ + 1.0, 0.25, hex('#BDB6A8'), P);
     for (let i = 0; i < N; i++) { const a = (i + 0.5) / N * Math.PI * 2; k.col(cx + Math.cos(a) * (WX + 0.5), 0.5, cz + Math.sin(a) * (WZ + 0.5), 1.2, 1, 2.6, { ry: -a }); }
-    const W = k.g('glass@pond');
-    for (let i = 0; i < N; i++) { const a0 = i / N * Math.PI * 2, a1 = (i + 1) / N * Math.PI * 2; const tri = (B, y, r, col) => { const c0 = [cx, y, cz], A1 = [cx + Math.cos(a1) * (WX + r), y, cz + Math.sin(a1) * (WZ + r)], A0 = [cx + Math.cos(a0) * (WX + r), y, cz + Math.sin(a0) * (WZ + r)]; B.quad(c0, A1, A0, c0, col); B.quad(c0, A0, A1, c0, col); };
-      tri(W, 0.09, 0, hex('#7FB8B0')); tri(P, 0.035, 0.2, hex('#5E9A90')); }   // 水面（地面之上；池底深绿）
-    for (let i = 0; i < 70; i++) { const a = D.rnd() * Math.PI * 2, r = Math.sqrt(D.rnd()) * 0.9; const x = cx + Math.cos(a) * r * WX, z = cz + Math.sin(a) * r * WZ, s = 0.5 + D.rnd() * 0.5;
+    for (let i = 0; i < N; i++) { const a0 = i / N * Math.PI * 2, a1 = (i + 1) / N * Math.PI * 2; const tri = (B, y, r, col) => { const c0 = [cx, y, cz], A1 = [cx + Math.cos(a1) * (WX + r), y, cz + Math.sin(a1) * (WZ + r)], A0 = [cx + Math.cos(a0) * (WX + r), y, cz + Math.sin(a0) * (WZ + r)]; B.quad(c0, A0, A1, A1, col); };   // 朝上的一面；第 4 点不能和第 1 点重合（否则法线算成 0，水面发黑）
+      tri(P, 0.09, 0, hex('#4F9C9A')); tri(P, 0.035, 0.2, hex('#2F6E6A')); }   // 水面（地面之上；池底深绿）
+    // 水面上的天光：几道浅蓝白的反光带（贴在水面上 1 cm）
+    for (const [dx, dz, w, d] of [[-6, -4, 9, 1.4], [3, 3, 11, 1.1], [-2, 8, 7, 0.9], [8, -7, 6, 1.0]]) P.slab(cx + dx - w / 2, cx + dx + w / 2, 0.095, 0.1, cz + dz - d / 2, cz + dz + d / 2, hex('#A9D6DE'), { ao: false });
+    for (let i = 0; i < 150; i++) { const a = D.rnd() * Math.PI * 2, r = Math.sqrt(D.rnd()) * 0.93; const x = cx + Math.cos(a) * r * WX, z = cz + Math.sin(a) * r * WZ, s = 0.8 + D.rnd() * 0.7;
       P.cyl(x, 0.12 + D.rnd() * 0.04, z, 1.3 * s, 0.03, hex(D.rnd() < 0.5 ? '#4E8E3E' : '#5DA04A'), 8);
-      if (i % 4 === 0) { P.ellipsoid(x + 0.2, 0.55, z, 0.32, 0.36, 0.32, hex('#F07FA8'), 1); P.cyl(x + 0.2, 0.25, z, 0.04, 0.5, hex('#4E8E3E'), 4); } }
+      if (i % 7 === 0) { P.ellipsoid(x + 0.2, 0.55, z, 0.32, 0.36, 0.32, hex('#F07FA8'), 1); P.cyl(x + 0.2, 0.25, z, 0.04, 0.5, hex('#4E8E3E'), 4); } }
     // 小石桥 + 亭子（池边）
     k.g('granite').slab(cx - 1.2, cx + 1.2, 0.3, 0.55, cz - WZ - 1.2, cz - WZ + 4, hex('#CFCBC2'), { ao: false });
     const tx = cx + WX + 4, tz = cz;

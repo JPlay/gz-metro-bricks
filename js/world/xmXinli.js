@@ -177,11 +177,23 @@ export class Xinli256 {
     const flight = (a, ya, b, yb, w0, w1) => {
       k.stairs('z', a, ya, b, yb, w0, w1, Math.max(ya, yb), tread, { rails: false, steps: false });   // baseY = 顶：不要侧墙 / 端墙（端墙会悬在下一层平台人头高度）
       const n = Math.max(2, Math.round(Math.abs(yb - ya) / 0.16)), dir = Math.sign(b - a), L = Math.abs(b - a);
+      const rise = Math.abs(yb - ya) / n;
       for (let i = 0; i < n; i++) {
         const s0 = a + dir * L * i / n, s1 = a + dir * L * (i + 1) / n, top = ya + (yb - ya) * (i + 1) / n;
-        k.g('floor').slab(w0, w1, top - 0.34, top, Math.min(s0, s1), Math.max(s0, s1), tread, { ao: false });
+        k.g('floor').slab(w0, w1, top - rise - 0.04, top, Math.min(s0, s1), Math.max(s0, s1), tread, { ao: false });
         k.g('paint').slab(w0 + 0.05, w1 - 0.05, top, top + 0.006, Math.min(s0, s0 + dir * 0.07), Math.max(s0, s0 + dir * 0.07), nose, { ao: false });
       }
+      // 梯段底板：一整块平滑的斜板（白色涂料），把踏步下面的锯齿包住——从下一层抬头看是一道光滑的斜面
+      const dy = yb - ya, len = Math.hypot(L, dy), ang = Math.atan2(dy, b - a), th = 0.2;
+      P.box((w0 + w1) / 2, (ya + yb) / 2 - (rise + 0.04) / 2 - th / 2 / Math.abs(Math.cos(ang)), (a + b) / 2, w1 - w0, th, len, soffit, 0, -ang);
+    };
+    const soffit = hex('#F2EFE8'), IRON = hex('#2F3133'), RAIL = hex('#4A2E22');
+    // 老小区铁栏杆：黑色方钢竖杆（间距 ~0.12）+ 深棕扶手
+    const railing = (z0, y0, z1, y1) => {
+      const n = Math.round(Math.abs(z1 - z0) / 0.12), L = Math.hypot(z1 - z0, y1 - y0), ang = Math.atan2(y1 - y0, z1 - z0);
+      for (let i = 0; i <= n; i++) { const t = i / n, z = z0 + (z1 - z0) * t, yb = y0 + (y1 - y0) * t; P.slab(-0.015, 0.015, yb, yb + 0.92, z - 0.015, z + 0.015, IRON, { ao: false }); }
+      P.box(0, (y0 + y1) / 2 + 0.95, (z0 + z1) / 2, 0.07, 0.06, L + 0.08, RAIL, 0, -ang);
+      P.box(0, (y0 + y1) / 2 + 0.12, (z0 + z1) / 2, 0.03, 0.03, L, IRON, 0, -ang);
     };
     for (let f = 0; f < N; f++) {
       const y = f * FH;
@@ -190,9 +202,8 @@ export class Xinli256 {
         flight(1.2, y, 4.4, y + FH / 2, -1.25, -0.02);   // 上半跑（左）
         k.floorWithHoles(-1.3, 1.3, 4.4, 6.0, y + FH / 2 - 0.15, y + FH / 2, hex('#B9B4A8'), [], true, 'floor');  // 休息平台
         flight(4.4, y + FH / 2, 1.2, y + FH, 0.02, 1.25);  // 下半跑（右）
-        // 中间的铁栏杆（深绿铁管）+ 碰撞
-        k.metal.tube([0, y + 1.0, 1.2], [0, y + FH / 2 + 1.0, 4.4], 0.05, hex('#3E5A4C'), 6);
-        k.metal.tube([0, y + FH / 2 + 1.0, 4.4], [0, y + FH + 1.0, 1.2], 0.05, hex('#3E5A4C'), 6);
+        // 中间的铁栏杆（老小区：黑铁竖杆 + 棕扶手）+ 碰撞
+        railing(1.2, y, 4.4, y + FH / 2); railing(4.4, y + FH / 2, 1.2, y + FH);
         k.col(0, y + FH / 2 + 0.5, 2.8, 0.1, FH + 1, 3.2);
         // 休息平台的窗（朝南）
         k.glass.slab(-0.8, 0.8, y + FH / 2 + 0.9, y + FH / 2 + 2.1, 6.02, 6.06, hex('#BFD8E6'));
@@ -215,8 +226,8 @@ export class Xinli256 {
         k.solid.box(sx * (1.3 + 0.45), y + 1.05, -1.25, 0.9, 2.05, 0.05, hex('#7A3E2C'));
         A.quad(sx * 1.17, y + 2.32, -0.7, 0.36, 0.2, sx < 0 ? Math.PI / 2 : -Math.PI / 2, A.draw(0.36, 0.2, (c, pw, ph) => { c.fillStyle = '#D8D3C8'; c.fillRect(0, 0, pw, ph); c.fillStyle = '#2E2E2E'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `700 ${ph * 0.7}px ${FONT_EN}`; c.fillText(no, pw / 2, ph * 0.55); }, 300));
       }
-      // 楼层号（墙上）
-      A.quad(0, y + 1.6, 5.98, 0.5, 0.3, Math.PI, A.draw(0.5, 0.3, (c, pw, ph) => { c.fillStyle = '#ECE8DF'; c.fillRect(0, 0, pw, ph); c.fillStyle = '#B8483A'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `800 ${ph * 0.8}px ${FONT_EN}`; c.fillText(`${f + 1}F`, pw / 2, ph * 0.55); }, 200));
+      // 楼层号：画在楼层平台的墙上（对着上来的楼梯；一楼在门洞上方）——只写楼层，不写户号
+      A.quad(0, f > 0 ? y + 1.75 : 2.6, -1.38, 0.62, 0.38, 0, A.draw(0.5, 0.3, (c, pw, ph) => { c.fillStyle = '#ECE8DF'; c.fillRect(0, 0, pw, ph); c.fillStyle = '#B8483A'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `800 ${ph * 0.8}px ${FONT_EN}`; c.fillText(`${f + 1}F`, pw / 2, ph * 0.55); }, 200));
     }
     // 顶：屋面板；地面层门厅（门洞 z=-1.4，往 -z 走出楼）+ 信报箱
     P.slab(-1.42, 1.42, N * FH - 0.15, N * FH + 0.1, -1.52, 6.12, wall, { ao: false });
@@ -225,7 +236,6 @@ export class Xinli256 {
     k.floorWithHoles(-3, 3, -5, -1.4, -0.15, 0, hex('#8E8A82'), [], true, 'pave');   // 门口一小块地面
     k.glow.slab(-3, 3, 0, 3.2, -5.05, -5.0, hex('#DDE8F0'), { ao: false });          // 门外的天光
     k.colSlab(-3.1, 3.1, 0, 3.2, -5.2, -5.0); k.colSlab(-3.1, -3, 0, 3.2, -5, -1.4); k.colSlab(3, 3.1, 0, 3.2, -5, -1.4);
-    k.metal.slab(-1.28, -1.2, 1.0, 1.8, 2.0, 4.0, hex('#6E8C7C'), { ao: false });    // 信报箱
     k.finish(true); this.atlas.finish(k.root, 'xinli256Signs');
   }
   /** 一户：门厅 + 客厅（朝北）+ 卧室（朝南）+ 厨房 + 卫生间；sx=-1 左户（f01），+1 右户（f02） */
@@ -237,11 +247,24 @@ export class Xinli256 {
     // 外墙（四周；北、南有窗 + 防盗网）
     const xo = sx < 0 ? x0 : x1;
     P.slab(Math.min(xo, xo + sx * 0.2), Math.max(xo, xo + sx * 0.2), y, y + FH, z0, z1, wall, { ao: false }); k.colSlab(Math.min(xo, xo + sx * 0.2), Math.max(xo, xo + sx * 0.2), y, y + FH, z0, z1);
+    const bd0 = Math.min(X(7.8), X(9.6)), bd1 = Math.max(X(7.8), X(9.6));   // 阳台推拉门（北墙最外一间）
     for (const zz of [z0, z1]) {
       const zw0 = Math.min(zz, zz + (zz < 0 ? -0.2 : 0.2)), zw1 = Math.max(zz, zz + (zz < 0 ? -0.2 : 0.2));
-      P.slab(x0, x1, y, y + 0.9, zw0, zw1, wall, { ao: false }); P.slab(x0, x1, y + 2.3, y + FH, zw0, zw1, wall, { ao: false }); k.colSlab(x0, x1, y, y + FH, zw0, zw1);
-      for (let i = 0; i < 3; i++) { const a = Math.min(X(2.6 + i * 2.6), X(4.4 + i * 2.6)), b = Math.max(X(2.6 + i * 2.6), X(4.4 + i * 2.6)); k.glass.slab(a, b, y + 0.9, y + 2.3, zw0 + 0.08, zw1 - 0.08, hex('#CFE3EE')); for (let g = 0; g < 6; g++) { const gx = a + (b - a) * (g + 0.5) / 6; k.metal.slab(gx - 0.015, gx + 0.015, y + 0.9, y + 2.3, zz < 0 ? zw0 - 0.04 : zw1, zz < 0 ? zw0 : zw1 + 0.04, hex('#E8EAEC'), { ao: false }); } }
-      P.slab(Math.min(X(2.6), X(1.6 + 8)), Math.max(X(2.6), X(1.6 + 8)), y + 0.9, y + 0.94, zz < 0 ? zw0 + 0.02 : zw1 - 0.06, zz < 0 ? zw0 + 0.06 : zw1 - 0.02, hex('#DDD8CE'), { ao: false });
+      if (zz === z0) { P.slab(x0, bd0, y, y + 0.9, zw0, zw1, wall, { ao: false }); P.slab(bd1, x1, y, y + 0.9, zw0, zw1, wall, { ao: false }); } else P.slab(x0, x1, y, y + 0.9, zw0, zw1, wall, { ao: false });
+      P.slab(x0, x1, y + 2.3, y + FH, zw0, zw1, wall, { ao: false }); k.colSlab(x0, x1, y, y + FH, zw0, zw1);
+      for (let i = 0; i < 3; i++) { if (zz === z0 && i === 2) continue; const a = Math.min(X(2.6 + i * 2.6), X(4.4 + i * 2.6)), b = Math.max(X(2.6 + i * 2.6), X(4.4 + i * 2.6)); k.glass.slab(a, b, y + 0.9, y + 2.3, zw0 + 0.08, zw1 - 0.08, hex('#CFE3EE')); for (let g = 0; g < 6; g++) { const gx = a + (b - a) * (g + 0.5) / 6; k.metal.slab(gx - 0.015, gx + 0.015, y + 0.9, y + 2.3, zz < 0 ? zw0 - 0.04 : zw1, zz < 0 ? zw0 : zw1 + 0.04, hex('#E8EAEC'), { ao: false }); } }
+      P.slab(Math.min(X(2.6), X(zz === z0 ? 7.0 : 9.6)), Math.max(X(2.6), X(zz === z0 ? 7.0 : 9.6)), y + 0.9, y + 0.94, zz < 0 ? zw0 + 0.02 : zw1 - 0.06, zz < 0 ? zw0 + 0.06 : zw1 - 0.02, hex('#DDD8CE'), { ao: false });
+    }
+    { // 推拉门：两扇铝框玻璃门（一扇推开一半）+ 外面的阳台（栏板 + 晾衣杆 + 盆栽）
+      const AL = hex('#BFC4C8'), m = (bd0 + bd1) / 2;
+      for (const [p0, p1, zz] of [[bd0, m + 0.1, -6.12], [m - 0.45, bd1 - 0.45, -6.06]]) { k.glass.slab(p0 + 0.04, p1 - 0.04, y + 0.04, y + 2.26, zz - 0.02, zz + 0.02, hex('#CFE3EE'));
+        for (const xx of [p0, p1 - 0.05]) P.slab(xx, xx + 0.05, y, y + 2.3, zz - 0.03, zz + 0.03, AL, { ao: false }); for (const yy of [y, y + 2.25]) P.slab(p0, p1, yy, yy + 0.05, zz - 0.03, zz + 0.03, AL, { ao: false }); }
+      P.slab(bd0, bd1, y, y + 0.03, -6.2, -6.0, AL, { ao: false });   // 门槛轨道
+      P.slab(bd0 - 0.2, bd1 + 0.2, y - 0.15, y - 0.02, -7.5, -6.2, hex('#CFC9BE'), { ao: false });   // 阳台地面
+      P.slab(bd0 - 0.2, bd1 + 0.2, y - 0.02, y + 1.05, -7.6, -7.5, wall, { ao: false }); for (const xx of [bd0 - 0.2, bd1 + 0.1]) P.slab(xx, xx + 0.1, y - 0.02, y + 1.05, -7.5, -6.2, wall, { ao: false });
+      P.slab(bd0 - 0.1, bd1 + 0.1, y + 2.2, y + 2.23, -7.0, -6.97, AL, { ao: false });   // 晾衣杆
+      P.slab(bd0 + 0.3, bd0 + 0.75, y + 1.2, y + 1.95, -7.02, -6.98, hex('#E0A93A'), { ao: false }); P.slab(bd0 + 0.9, bd0 + 1.3, y + 1.4, y + 1.95, -7.02, -6.98, hex('#7FA8D0'), { ao: false });   // 晾着的衣服
+      P.cyl(bd1 - 0.3, y + 0.18, -7.15, 0.36, 0.36, hex('#B8663A'), 8); P.ellipsoid(bd1 - 0.3, y + 0.62, -7.15, 0.5, 0.55, 0.5, hex('#4E8F3E'), 1);
     }
     // 户内隔墙：客厅（z<1）/ 卧室（z>1, 外侧）/ 厨房 + 卫生间（z>1, 靠楼梯间）
     const part = (a, b, za, zb, door) => { const lo = Math.min(a, b), hi = Math.max(a, b); if (door) { const [d0, d1] = door; for (const [p, q] of [[za, d0], [d1, zb]]) if (q - p > 0.05) { P.slab(lo, hi, y, y + FH, p, q, wall, { ao: false }); k.colSlab(lo, hi, y, y + FH, p, q); } P.slab(lo, hi, y + 2.1, y + FH, d0, d1, wall, { ao: false }); } else { P.slab(lo, hi, y, y + FH, za, zb, wall, { ao: false }); k.colSlab(lo, hi, y, y + FH, za, zb); } };
@@ -256,9 +279,20 @@ export class Xinli256 {
     const fur = (a, b, y0, y1, za, zb, col) => { P.slab(Math.min(X(a), X(b)), Math.max(X(a), X(b)), y + y0, y + y1, za, zb, hex(col), { ao: false }); };
     fur(5.0, 7.8, 0, 0.45, -5.6, -4.8, '#8A6A54'); fur(5.0, 7.8, 0.45, 0.85, -5.85, -5.6, '#8A6A54'); k.colSlab(Math.min(X(5), X(7.8)), Math.max(X(5), X(7.8)), y, y + 0.85, -5.85, -4.8);   // 沙发
     fur(5.6, 7.2, 0, 0.4, -4.0, -3.4, '#6A4E3A');                                       // 茶几
-    fur(5.0, 7.8, 0, 0.5, 0.6, 1.1, '#5A4636'); fur(5.8, 7.0, 0.5, 1.15, 0.95, 1.05, '#1E2226');   // 电视柜 + 电视
+    // 电视柜（长矮柜 + 两个抽屉）+ 电视（黑框、深蓝屏）+ 音箱
+    fur(4.8, 8.0, 0, 0.48, 0.62, 1.12, '#7A5A44'); fur(5.0, 6.3, 0.12, 0.36, 0.6, 0.62, '#8E6C52'); fur(6.5, 7.8, 0.12, 0.36, 0.6, 0.62, '#8E6C52');
+    fur(5.6, 7.2, 0.52, 1.46, 1.0, 1.08, '#16181B'); fur(5.66, 7.14, 0.58, 1.4, 0.98, 1.0, '#2C4058'); fur(6.3, 6.5, 0.48, 0.52, 0.85, 1.05, '#16181B');
+    for (const a of [5.1, 7.5]) fur(a - 0.12, a + 0.12, 0.48, 0.9, 0.8, 1.05, '#2A2A2A');
     fur(2.4, 3.8, 0, 0.76, -4.4, -3.2, '#B08A64'); k.colSlab(Math.min(X(2.4), X(3.8)), Math.max(X(2.4), X(3.8)), y, y + 0.76, -4.4, -3.2);   // 餐桌
-    for (const [a, zc] of [[2.2, -3.8], [4.0, -3.8]]) fur(a - 0.2, a + 0.2, 0, 0.45, zc - 0.2, zc + 0.2, '#C9302C');   // 红塑料凳
+    // 四把木餐椅（坐面 + 靠背 + 四条腿）
+    for (const [a, zc, bz] of [[2.75, -4.75, -1], [3.45, -4.75, -1], [2.75, -2.85, 1], [3.45, -2.85, 1]]) {
+      fur(a - 0.21, a + 0.21, 0.42, 0.46, zc - 0.21, zc + 0.21, '#9A7350');
+      fur(a - 0.21, a + 0.21, 0.46, 0.95, zc + bz * 0.18, zc + bz * 0.21, '#9A7350');
+      for (const [dx, dz] of [[-0.18, -0.18], [0.18, -0.18], [-0.18, 0.18], [0.18, 0.18]]) fur(a + dx - 0.02, a + dx + 0.02, 0, 0.42, zc + dz - 0.02, zc + dz + 0.02, '#6E5038'); }
+    // 卧室门：木门开着靠在卧室一侧 + 门套
+    P.slab(Math.min(X(5.6), X(5.64)), Math.max(X(5.6), X(5.64)), y, y + 2.08, 1.26, 2.12, hex('#A8754E'), { ao: false });
+    fur(5.62, 5.7, 1.0, 1.06, 2.0, 2.06, '#D8C9A0');
+    for (const a of [5.52, 6.6]) fur(a, a + 0.08, 0, 2.15, 1.12, 1.28, '#8A5E3E'); fur(5.52, 6.68, 2.08, 2.15, 1.12, 1.28, '#8A5E3E');
     fur(5.4, 7.8, 0, 0.5, 3.2, 5.6, '#E8E2D6'); fur(5.4, 7.8, 0.5, 0.58, 3.2, 5.6, '#8FB0C8'); fur(5.4, 7.8, 0, 1.0, 5.6, 5.8, '#7A5A44'); k.colSlab(Math.min(X(5.4), X(7.8)), Math.max(X(5.4), X(7.8)), y, y + 0.58, 3.2, 5.8);   // 床
     fur(8.3, 8.85, 0, 2.0, 1.4, 3.2, '#C9B08C');                                         // 衣柜
     fur(1.5, 4.1, 0, 0.85, 2.9, 3.5, '#D8D4CC'); fur(2.0, 2.8, 0.85, 0.9, 3.0, 3.4, '#3A3A3A');   // 厨房灶台
