@@ -17,7 +17,7 @@ const dirKey = (line, step) => Object.keys(XM_LINES[line].dirs).find(d => XM_LIN
 export class XmMetro {
   constructor(scene, ctx) {
     this.scene = scene; this.ctx = ctx; // { player, Audio, events, onTunnel, getRailway }
-    this.trains = [10, 11].map(i => { const t = new Train(scene, i);  // id 10/11 避开广州 0..3 t.setVisible(false); t.root.getChildMeshes(false).forEach(m => { m.layerMask = 0x10000000; }); return t; });
+    this.trains = [10, 11].map(i => { const t = new Train(scene, i); t.setVisible(false); t.root.getChildMeshes(false).forEach(m => { m.layerMask = 0x10000000; }); return t; });  // id 10/11 避开广州 0..3
     this.slots = []; this.ride = null; this.legs = 0; this.station = null; this.code = null;
     this.buildTunnel();
   }
