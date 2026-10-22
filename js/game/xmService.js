@@ -82,6 +82,7 @@ export class XmMetro {
     if (this.ride && this.ride.phase === 'cruise') return this.cruise(dt);
     let sound = null;
     const inCar = this.slots.some(o => o.train.root.isEnabled() && this.playerOn(o.train));
+    const multi = this.station.platforms.length > 1;
     for (const s of this.slots) {
       const tr = s.train, nx = xmNext(s.line, this.code, s.step);
       const aboard = this.playerOn(tr), onPlat = !inCar && this.ctx.zone && this.ctx.zone.kind === 'platform' && this.ctx.zone.P === s.P;
@@ -127,6 +128,8 @@ export class XmMetro {
         }
       }
       if (this.ride && this.ride.train === tr && !aboard && s.state !== 'departing' && s.state !== 'arriving') this.ride = null;
+      // 叠层换乘站：只画玩家所在那一层的列车（另一层隔着楼板看不见，省 draw）
+      if (multi && s.state !== 'away') { const near = aboard || Math.abs(p.y - s.P.y) < 5; if (tr.root.isEnabled() !== near) tr.setVisible(near); }
     }
     if (sound) A.trainSound(sound); else if (!(this.ride && this.ride.phase === 'cruise')) A.trainSound({ speed: 0 });
   }

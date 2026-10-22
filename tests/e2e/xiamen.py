@@ -205,8 +205,7 @@ async def main():
       const P=__game.xmMetro.station.platforms.find(p=>p.line===1)||__game.xmMetro.station.platforms[0];
       __game.player.spawn(3000, P.y+0.05, P.zc+1.5, 0);
     })()""")
-    await asyncio.sleep(0.4)
-    ok('offAtLcu', await pg.evaluate('__game.xmMetro.code==="lcu" && !__game.state().aboard'))
+    ok('offAtLcu', await wait(pg, '__game.xmMetro.code==="lcu" && !__game.state().aboard', 4))
     # 走换乘楼梯：1 号线站台中间的楼梯口 → 下到正下方 2 号线站台
     await auto(pg, [[XO + 1, 0.0], [XO + 4.5, 0.0]]); await auto(pg, [[XO + 12, 0.0], [XO + 21, 0.0]]); await auto(pg, [[XO + 24, 0.0]])
     s = await st(pg); ok('transferStairs', s['pos'][1] < -21 and s['zone'] == 'platform' and s['code'] == 'lcu')
@@ -221,8 +220,7 @@ async def main():
       const P=__game.xmMetro.station.platforms[0];
       __game.player.spawn(3000, P.y+0.05, P.zc+1.5, 0);
     })()""")
-    await asyncio.sleep(0.3)
-    ok('offJtou', await pg.evaluate('__game.xmMetro.code==="jtou" && !__game.state().aboard'))
+    ok('offJtou', await wait(pg, '__game.xmMetro.code==="jtou" && !__game.state().aboard', 4))
     ok('boardL2back', await xm_board(pg, 2, -1))
     await pg.evaluate("""(() => {
       const s=__game.xmMetro.slots.find(o=>o.line===2&&o.step===-1);
