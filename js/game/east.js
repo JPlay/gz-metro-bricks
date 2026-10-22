@@ -359,6 +359,7 @@ export class EastCtl {
     this.Audio.trainSound({ speed: 0 }); this.Audio.sfx('train.airRelease', { volume: 0.6 });
     this.showStopped(); this.interior.scenery.near.fill('empty'); this.interior.scenery.resetBridge();
     this.doorOpenT = 1.25; this.count.arrived.push(R.dest);
+    this.needStand = true;   // 到站后一直坐着不会自动关门返程：要先起身（再坐下才会开回去），不然广播还没播完门就关了
     Ann.say(PH.emuArriveSegs(R.dest), { key: 'emu', interrupt: true });
     this.hud.toast(R.dest === 'xm' ? '到站：厦门北站' : '到站：广州东站', 2400);
     this.events.emit('emu', { phase: 'arrive', dest: R.dest }); this.events.emit('ride', { phase: 'arriveRail', to: R.dest });
@@ -378,7 +379,8 @@ export class EastCtl {
     if (st !== this.cur.st) { this.interior.setEnabled(false); this.xmn.show(null); this.ride = null; this.cur = null; return null; }
     if (this.cur.loc === 'car') {
       // 坐下（车停着、门开着）→ 关门开车
-      if (!this.ride && pl.seat && pl.seat.seat && pl.seat.seat.world && this.interior.doorF < 0.01 && !(this.doorOpenT > 0)) { this.sitT = (this.sitT || 0) + dtWall; if (this.sitT > 1.2) { this.sitT = 0; this.startRide(); } } else this.sitT = 0;
+      if (!pl.seat) this.needStand = false;
+      if (!this.ride && !this.needStand && pl.seat && pl.seat.seat && pl.seat.seat.world && this.interior.doorF < 0.01 && !(this.doorOpenT > 0)) { this.sitT = (this.sitT || 0) + dtWall; if (this.sitT > 1.2) { this.sitT = 0; this.startRide(); } } else this.sitT = 0;
       if (this.interior.wantsExit(p) && !pl.seat && !this.ride) this.exit();
     } else if (this.cur.loc === 'xmn') {
       if (!pl.seat && p.y > -1 && p.y < 2 && p.z < GZE.edge - 0.05) { const d = EMU.doors.find(d => Math.abs(p.x - (XO.x + d.x)) < 0.55); if (d) this.board(d); }
