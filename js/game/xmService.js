@@ -85,6 +85,10 @@ export class XmMetro {
       const tr = s.train, nx = xmNext(s.line, this.code, s.step);
       const aboard = this.playerOn(tr), onPlat = !inCar && this.ctx.zone && this.ctx.zone.kind === 'platform' && this.ctx.zone.P === s.P;
       s.t -= dt;
+      // 坐在车里时对面那趟车先不进站（iPad 预算：车厢里 ≤50 draws）
+      if (inCar && !aboard) {
+        if (s.state === 'arriving' || s.state === 'away') { if (tr.root.isEnabled()) tr.setVisible(false); s.state = 'away'; s.t = Math.max(s.t, 3); continue; }
+      }
       switch (s.state) {
         case 'away':
           if (s.t <= 0) {

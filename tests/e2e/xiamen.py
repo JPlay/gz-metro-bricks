@@ -36,23 +36,28 @@ async def measure3(pg, name):
 async def xm_info(pg):
     return await pg.evaluate('__game.xmMetro ? __game.xmMetro.info() : null')
 async def xm_skip_to(pg, code, max_hops=24):
-    """已上车时：把每个 cruise 立刻结束，一站一站跳到 code。"""
-    for _ in range(max_hops):
-        info = await xm_info(pg)
-        if not info: return False
-        if info.get('code') == code:
-            return True
-        await pg.evaluate("""(() => {
-          const m=__game.xmMetro; if(!m||!m.ride) return;
-          if (m.ride.phase==='cruise') m.ride.t = 99;
-          else {
-            const s=m.ride.slot; if(s && (s.state==='dwell'||s.state==='opening'||s.state==='closing')) { s.t=0; s.ann=true; }
+    """已上车：每一站都真的走一遍状态机（关门→出站→隧道→进站→开门），只是把每段计时快进。到 code 开门停稳为止。"""
+    for _ in range(max_hops * 40):
+        r = await pg.evaluate("""(() => {
+          const m=__game.xmMetro; if(!m||!m.station) return null;
+          const ab=__game.state().aboard, ride=m.ride;
+          const s=(ride&&ride.slot) || m.slots.find(o=>o.train.root.isEnabled() && o.train.contains(__game.player.position));
+          if (!s) return ab ? 'wait' : 'noride';
+          if (m.code===%r && s.state==='dwell') return 'done';
+          if (!ride) { if (s.state==='dwell') { s.t=0; s.ann=true; } else if (s.state==='closing') s.t=Math.min(s.t,0.05); return 'boarding'; }
+          if (ride.phase==='cruise') ride.t=99;
+          else if (s) {
+            if (s.state==='arriving') s.u=Math.max(s.u,0.98);
+            else if (s.state==='dwell' && m.code!==%r) { s.t=0; s.ann=true; }
+            else if (s.state==='closing') s.t=Math.min(s.t,0.05);
+            else if (s.state==='departing') s.u=Math.max(s.u,0.93);
           }
-        })()""")
-        await wait(pg, f'__game.xmMetro && (__game.xmMetro.code==="{code}" || (__game.xmMetro.ride&&__game.xmMetro.ride.phase==="cruise") || (__game.xmMetro.ride&&__game.xmMetro.ride.phase==="in") || (__game.xmMetro.ride&&__game.xmMetro.ride.phase==="out"))', 50)
-        await pg.evaluate("""(() => { const m=__game.xmMetro; if(m&&m.ride&&m.ride.phase==='cruise') m.ride.t=99; })()""")
-        await asyncio.sleep(0.35)
-    info = await xm_info(pg); return bool(info and info.get('code') == code)
+          return m.code+':'+(ride.phase)+':'+(s&&s.state);
+        })()""" % (code, code))
+        if r == 'done': return True
+        if r is None or r == 'noride': log('skip', r); return False
+        await asyncio.sleep(0.3)
+    return False
 async def xm_board(pg, line, step):
     """呼叫列车、等开门、瞬移进车厢。"""
     await pg.evaluate(f'__game.call({line},{step})')
