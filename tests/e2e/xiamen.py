@@ -144,7 +144,7 @@ async def main():
     await auto(pg, [[XO - 5, -20], [XO - 5, 5]]); await auto(pg, [[XO - 5, 30]])
     await pg.evaluate('__game.player.yaw=Math.PI; __game.player.pitch=-0.12')   # 3：南广场看站房立面（燕尾脊屋顶、红砖、海蓝玻璃）
     await shot2(pg, 'xm3-forecourt')
-    await auto(pg, [[XO - 20, -20], [XO - 20, -36]]); await auto(pg, [[XO - 20, -50], [XO - 20, -64]])
+    await auto(pg, [[XO - 5, 10], [XO - 5, -10]]); await auto(pg, [[XO - 20, -25], [XO - 20, -36]]); await auto(pg, [[XO - 20, -50], [XO - 20, -64]])
     await auto(pg, [[XO - 20, -72], [XO - 20, -90]]); await auto(pg, [[XO - 20, -104], [XO - 28, -112]])
     await auto(pg, [[XO - 30, -123.3], [XO - 26, -123.3]]); await auto(pg, [[XO - 12, -123.3], [XO - 8, -123.3]])
     s = await st(pg); e = await E(pg); ok('backOnPlatform', abs(s['pos'][1]) < 0.3 and e['area'] == 'platform' and e['loc'] == 'xmn')

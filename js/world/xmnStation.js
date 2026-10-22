@@ -106,7 +106,7 @@ export function noProbe(root) {
     const mat = m.material; if (!mat || !('reflectionTexture' in mat) || mat.name.endsWith('@xmn')) continue;
     if (!mat.reflectionTexture && !['floor', 'wall', 'gloss'].includes(mat.name)) continue;
     const c = NOPROBE[mat.name] || (NOPROBE[mat.name] = mat.clone(mat.name + '@xmn'));
-    c.reflectionTexture = null; c._noProbe = true; if (c.name.startsWith('floor')) c.environmentIntensity = 0.3; m.material = c;
+    c.reflectionTexture = null; c._noProbe = true; if (c.name.startsWith('floor')) { c.environmentIntensity = 0.12; c.roughness = 0.42; } m.material = c;
   }
 }
 export class XmnStation {
@@ -226,7 +226,7 @@ export class XmnStation {
     for (const [x0, x1, z0, z1] of [[PZ.x0 - 1, PZ.x0, PZ.z0, PZ.z1], [PZ.x1, PZ.x1 + 1, PZ.z0, PZ.z1], [PZ.x0, PZ.x1, PZ.z1, PZ.z1 + 1]]) k.colSlab(x0, x1, 0, 3, z0, z1);
     for (let x = PZ.x0 + 2; x < PZ.x1; x += 3) P.cyl(x, 0.45, PZ.z1 - 0.3, 0.22, 0.9, hex('#E8E6E1'), 8);   // 路边石墩
     // 花坛 + 棕榈 + 路灯
-    for (const [x, z] of [[-70, -30], [-45, -10], [-70, 10], [40, -30], [15, -10], [40, 10], [-10, 18], [70, -10]]) {
+    for (const [x, z] of [[-70, -30], [-45, -10], [-70, 10], [40, -30], [15, -10], [40, 10], [28, 26], [70, -10]]) {
       BR.slab(x - 2.4, x + 2.4, 0, 0.55, z - 2.4, z + 2.4, C.brick); P.slab(x - 2.5, x + 2.5, 0.55, 0.62, z - 2.5, z + 2.5, C.stone, { ao: false }); k.g('grass').slab(x - 2.2, x + 2.2, 0.62, 0.66, z - 2.2, z + 2.2, hex('#5E8F4A'), { ao: false });
       k.colSlab(x - 2.5, x + 2.5, 0, 0.62, z - 2.5, z + 2.5);
       const h = 7 + ((x * 7 + z) % 3 + 3) % 3; P.cyl(x, 0.6 + h / 2, z, 0.42, h, C.trunk, 8, 0, 0, 0, 0.3);
@@ -286,9 +286,9 @@ export class XmnStation {
     roof(-58, 48, 27.5, 7, zb + 6, z - 6, 1.3, 32);
     // 屋脊 + 燕尾：中间一道深红褐色正脊，两头分叉上翘
     const rr = hex('#7A3426'), zr = (zb + z) / 2 - 2;
-    P.slab(-38, 28, 29.1, 30.2, zr - 0.5, zr + 0.5, rr, { ao: false });
+    P.slab(-38, 28, 29.0, 30.8, zr - 0.7, zr + 0.7, rr, { ao: false });
     for (const sd of [-1, 1]) { const x0 = sd < 0 ? -38 : 28;
-      for (let i = 0; i < 9; i++) for (const fz of [-1, 1]) P.box(x0 + sd * (i * 1.3 + 0.6), 29.6 + i * 0.5 + i * i * 0.07, zr + fz * (0.1 + i * i * 0.012), 1.45, 0.7, 0.45, rr, fz * sd * -0.06 * i / 9, 0, sd * (0.16 + i * 0.075), 1, { ao: false }); }
+      for (let i = 0; i < 10; i++) for (const fz of [-1, 1]) P.box(x0 + sd * (i * 1.4 + 0.7), 29.9 + i * 0.55 + i * i * 0.09, zr + fz * (0.15 + i * i * 0.014), 1.6, 1.2, 0.6, rr, fz * sd * -0.06 * i / 9, 0, sd * (0.16 + i * 0.075), 1, { ao: false }); }
     // 檐下“凤凰木”树形柱：白色主干 + 四根斜撑托住挑檐
     for (const x of [-80, -58, -36, -2, 20, 42, 64]) {
       P.cyl(x, 7, z + 6.5, 0.9, 14, C.mull, 12, 0, 0, 0, 0.7);
