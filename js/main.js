@@ -219,13 +219,14 @@ export async function start() {
     const hallKind = hotel && hotel.cur ? 'hotel' : G.brother && G.brother.food && G.brother.food.cur ? 'restaurant' : clan && clan.cur ? 'clan' : east && east.cur ? (east.loc === 'car' ? 'emu' : 'xmn') : inHall ? 'sysy' : null;
     { let metroL = 1, streetL = 0;
       if (G.aboard || G.inTunnel) metroL = 1;
+      else if (hallKind === 'xmn' && east.area === 'plaza') { metroL = 0; streetL = 1; }   // 厦门北站南广场：露天，街上的声音
       else if (hallKind === 'emu' || hallKind === 'xmn') metroL = 1;   // 动车车厢 / 厦门北站台：广播、列车声都要听得到（环境床：车厢空调 / 站台）
       else if (hallKind) metroL = 0;
       else { const u = Math.max(0, Math.min(1, (p.y - (YC + 1)) / (-0.4 - (YC + 1)))); streetL = u * u * (3 - 2 * u); metroL = 1 - streetL; }
       const sm = !hallKind && G.station && G.station.sm ? Math.max(0, Math.min(1, (-78 - p.z) / 14)) : 0;
       const ez = !hallKind && G.station && G.station.gze ? Math.max(0, Math.min(1, (-86 - p.z) / 5)) : 0;   // 广州东站：进了候车大厅，街上的车流声轻下去
       streetL *= 1 - 0.7 * ez;   // 沙面：过了沙基涌，车流声轻下去、榕树上有鸟叫
-      Audio.setEnv({ metro: metroL, street: streetL * (1 - 0.65 * sm), birds: streetL * sm, restaurant: hallKind === 'restaurant' ? 1 : 0, sub: G.aboard || G.inTunnel || hallKind === 'emu' ? 'train' : G.zone.kind === 'platform' || hallKind === 'xmn' ? 'platform' : 'concourse' }); }
+      Audio.setEnv({ metro: metroL, street: streetL * (1 - 0.65 * sm), birds: streetL * sm, restaurant: hallKind === 'restaurant' ? 1 : 0, sub: G.aboard || G.inTunnel || hallKind === 'emu' ? 'train' : G.zone.kind === 'platform' || (hallKind === 'xmn' && east.area === 'platform') ? 'platform' : 'concourse' }); }
     if (G.zone.kind === 'platform' && !G.welcomed && !G.aboard) { G.welcomed = true; if (!Audio.isAnnouncing()) Ann.welcome(G.code); }
     // 出了车站（街面 / 纪念堂大会堂）：站内广播（欢迎 / 进站 / 关门）和字幕立刻停，不再跟着人走到街上
     if ((G.zone.kind === 'street' || G.zone.kind === 'hall') && !G.aboard && !(east && east.cur) && Audio.isAnnouncing()) Audio.cancelAnnouncements();
@@ -235,7 +236,7 @@ export async function start() {
     discovery.update({ code: G.code, zone: G.zone, station: G.station, dt });
     // 脚步声
     // 脚步声：按实际水平位移算速度（被挡住、站着不动就没有脚步），步幅随速度变大；地面：站内地砖 / 街面石板 / 地毯（饭店、酒店）/ 木地板（纪念堂）
-    { const surface = hallKind === 'hotel' || hallKind === 'restaurant' ? 'carpet' : hallKind === 'sysy' ? 'wood' : hallKind === 'emu' ? 'carpet' : hallKind === 'clan' || (G.zone.kind === 'street' && !hallKind) ? 'stone' : 'tile';
+    { const surface = hallKind === 'hotel' || hallKind === 'restaurant' ? 'carpet' : hallKind === 'sysy' ? 'wood' : hallKind === 'emu' ? 'carpet' : hallKind === 'clan' || (G.zone.kind === 'street' && !hallKind) || (hallKind === 'xmn' && east.area === 'plaza') ? 'stone' : 'tile';
       const lp = G.stepPos || (G.stepPos = p.clone()), v = dt > 0 ? Math.hypot(p.x - lp.x, p.z - lp.z) / dt : 0; lp.copyFrom(p);
       const stride = Math.max(0.65, Math.min(1.05, 0.6 + 0.08 * v));
       if (player.grounded && !G.aboard && !player.seat && v > 0.35 && v < 15) { stepAcc += v * dt; if (stepAcc >= stride) { stepAcc -= stride; Audio.footstep({ surface, k: Math.min(1.2, 0.75 + v * 0.08) }); } }
