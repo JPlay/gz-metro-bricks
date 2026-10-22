@@ -155,11 +155,10 @@ const NEAR = {
     if (v === 0) { c.fillStyle = '#FFE7A8'; c.fillRect(pw * 0.5, ny(ph, 2.4), 18, 5); } c.fillStyle = '#202326'; c.fillRect(0, ny(ph, -0.9), pw, ph); },
   portalIn(c, pw, ph, v, R) { NEAR.mount(c, pw, ph, 1, R); c.fillStyle = '#B9BAB2'; c.fillRect(pw * 0.55, 0, pw * 0.08, ph); c.fillStyle = '#2B2E31'; c.fillRect(pw * 0.63, 0, pw * 0.37, ph); },
   portalOut(c, pw, ph, v, R) { NEAR.mount(c, pw, ph, 1, R); c.fillStyle = '#2B2E31'; c.fillRect(0, 0, pw * 0.37, ph); c.fillStyle = '#B9BAB2'; c.fillRect(pw * 0.37, 0, pw * 0.08, ph); },
-  bridge(c, pw, ph, v) { c.clearRect(0, 0, pw, ph);   // 桥上：只有桥面边梁 + 一道钢栏杆（上下都通透 → 看得到下面和远处的海）
-    c.fillStyle = '#C9CBC6'; c.fillRect(0, ny(ph, -1.0), pw, ny(ph, -1.5) - ny(ph, -1.0)); c.fillStyle = '#A3A7A4'; c.fillRect(0, ny(ph, -1.0), pw, 3);   // 边梁
-    c.fillStyle = 'rgba(0,0,0,0.12)'; c.fillRect(0, ny(ph, -1.5), pw, 4);
-    c.fillStyle = '#7F8A92'; c.fillRect(0, ny(ph, 1.0), pw, 4); c.fillRect(0, ny(ph, 0.35), pw, 2);                                               // 扶手 + 中横杆
-    for (let x = 0; x < pw; x += pw / 10) c.fillRect(x, ny(ph, 1.0), 3, ny(ph, -1.0) - ny(ph, 1.0));                                            // 立柱
+  bridge(c, pw, ph, v) { c.clearRect(0, 0, pw, ph);   // 桥上：矮矮的边梁 + 一道细栏杆（只比道床高 1 m，稀疏的细立柱 → 车窗里大半是海）
+    c.fillStyle = '#C9CBC6'; c.fillRect(0, ny(ph, -1.3), pw, ny(ph, -1.55) - ny(ph, -1.3)); c.fillStyle = 'rgba(0,0,0,0.12)'; c.fillRect(0, ny(ph, -1.55), pw, 3);   // 边梁
+    c.fillStyle = '#8A949B'; c.fillRect(0, ny(ph, -0.45), pw, 3);                                                                                   // 扶手
+    for (let x = 0; x < pw; x += pw / 5) c.fillRect(x, ny(ph, -0.45), 2, ny(ph, -1.3) - ny(ph, -0.45));                                             // 细立柱
     catenary(c, pw, ph); if (v === 0) mast(c, pw, ph, pw * 0.5); }
 };
 function bedPaint(c, S) { c.fillStyle = '#8E877C'; c.fillRect(0, 0, S, S); const R = rng(7); for (let i = 0; i < 900; i++) { c.fillStyle = R() < 0.5 ? '#7C756B' : '#A39C90'; c.fillRect(R() * S, R() * S, 2, 2); }
@@ -242,7 +241,7 @@ export class EmuScenery {
     const nb = this.near.slots.filter(q => q.row === 'bridge').length / this.near.slots.length, want = nb > 0.5 ? 1 : 0;
     this.bridgeK += (want - this.bridgeK) * Math.min(1, 0.04 + d * 0.02);
     if (Math.abs(this.bridgeK - want) < 0.01) this.bridgeK = want;
-    const k = this.bridgeK; this.near.mesh.scaling.z = 1 - k * (1 - 4 / 8.5); this.bed.scaling.z = 1 - k * (1 - 7.4 / 17); this.sea.setEnabled(k > 0.02);
+    const k = this.bridgeK; this.near.mesh.scaling.z = 1 - k * (1 - 5.5 / 8.5); this.bed.scaling.z = 1 - k * (1 - 7.4 / 17); this.sea.setEnabled(k > 0.02);
   }
   resetBridge() { this.bridgeK = 0; this.near.mesh.scaling.z = 1; this.bed.scaling.z = 1; this.sea.setEnabled(false); }
   setEnabled(v) { this.root.setEnabled(v); }
