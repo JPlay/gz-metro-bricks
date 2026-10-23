@@ -309,7 +309,7 @@ function dianqianTemple(S) {
     const y = z < TD ? 2.5 + slope * (TD - z) : 2.5, pitch = z < TD - 30 ? -slope + 0.06 : 0.02;
     plane.position.set(0, y + 2.4, z); plane.rotation.set(-pitch, 0, 0); };
   place();
-  S.tick = dt => { S.plane.t += dt; place(); };
+  S.tick = dt => { if (!S.plane.hold) S.plane.t += dt; place(); };
 }
 
 /* ====================== 集美学村站 2 号出口：龙舟池 · 南薰楼 · 鳌园 ====================== */
@@ -435,7 +435,7 @@ function wetlandPark(S) {
   for (let i = 0; i < 26; i++) { const a = D.rnd() * TAU, r = 0.82 + D.rnd() * 0.12, x = cx + Math.cos(a) * RX * r, z = cz + Math.sin(a) * RZ * r; if (Math.abs(x - 20) < 18 && z < cz + 10 && z > 50) continue; mangrove(x, z, 0.8 + D.rnd() * 0.5); }
   for (let i = 0; i < 8; i++) { const a = i / 8 * TAU + 0.3; mangrove(icx + Math.cos(a) * IX * 0.7, icz + Math.sin(a) * IZ * 0.7 + 2, 0.7); }
   const reeds = (x, z) => { for (let i = 0; i < 9; i++) { const dx = (D.rnd() - 0.5) * 1.6, dz = (D.rnd() - 0.5) * 1.6, h = 1.4 + D.rnd() * 0.8; P.tube([x + dx, 0, z + dz], [x + dx * 1.2, h, z + dz * 1.2], 0.05, hex('#9EAA6A'), 3); P.ellipsoid(x + dx * 1.2, h + 0.15, z + dz * 1.2, 0.14, 0.5, 0.14, hex('#C9B58A'), 0); } };
-  for (let i = 0; i < 40; i++) { const a = i / 40 * TAU, x = cx + Math.cos(a) * (RX - 2), z = cz + Math.sin(a) * (RZ - 2); if (Math.abs(x - 10) < 6 && z < cz) continue; reeds(x, z); }
+  for (let i = 0; i < 26; i++) { const a = i / 26 * TAU, x = cx + Math.cos(a) * (RX - 2), z = cz + Math.sin(a) * (RZ - 2); if (Math.abs(x - 10) < 6 && z < cz) continue; reeds(x, z); }
   // 黑天鹅（黑身红嘴，S 形长脖子）
   const swan = (x, z, r, s = 1) => { const BL = hex('#1D1F22'), F = Math.sin(r), Q = Math.cos(r);
     P.ellipsoid(x, 0.32 * s, z, 0.9 * s, 0.6 * s, 1.6 * s, BL, 1, r); P.ellipsoid(x - F * 0.5 * s, 0.6 * s, z - Q * 0.5 * s, 0.8 * s, 0.5 * s, 0.9 * s, hex('#2A2C30'), 1, r);

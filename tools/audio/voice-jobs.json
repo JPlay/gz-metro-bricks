@@ -3206,19 +3206,19 @@
  {
   "id": "voice.xmvisit.cyg.zh",
   "lang": "zh",
-  "text": "诚毅广场站附近有集美市民广场、诚毅科技探索中心，欢迎下车游玩。",
+  "text": "诚毅广场站附近有集美市民广场，欢迎下车游玩。",
   "file": "voice/xmvisit-cyg-zh.mp3"
  },
  {
   "id": "voice.xmvisit.cyg.nan",
   "lang": "nan",
-  "text": "诚毅广场站附近有集美市民广场、诚毅科技探索中心，欢迎下车游玩。",
+  "text": "诚毅广场站附近有集美市民广场，欢迎下车游玩。",
   "file": "voice/xmvisit-cyg-nan.mp3"
  },
  {
   "id": "voice.xmvisit.cyg.en",
   "lang": "en",
-  "text": "Chengyi Guangchang station is near Jimei Civic Square and the Chengyi Science and Technology Exploration Center. You are welcome to get off and visit.",
+  "text": "Chengyi Guangchang station is near Jimei Civic Square. You are welcome to get off and visit.",
   "file": "voice/xmvisit-cyg-en.mp3"
  },
  {
@@ -3274,6 +3274,42 @@
   "lang": "en",
   "text": "Welcome to Guanren station. Please line up for the train. Let the passengers get off first before you get on.",
   "file": "voice/welcome-grn-en.mp3"
+ },
+ {
+  "id": "voice.xmvisit.grn.zh",
+  "lang": "zh",
+  "text": "官任站附近有诚毅科技探索中心，欢迎下车游玩，请从3号出口出站。",
+  "file": "voice/xmvisit-grn-zh.mp3"
+ },
+ {
+  "id": "voice.xmvisit.grn.nan",
+  "lang": "nan",
+  "text": "官任站附近有诚毅科技探索中心，欢迎下车游玩，请从3号出口出站。",
+  "file": "voice/xmvisit-grn-nan.mp3"
+ },
+ {
+  "id": "voice.xmvisit.grn.en",
+  "lang": "en",
+  "text": "Guanren station is near the Chengyi Science and Technology Exploration Center. You are welcome to get off and visit. Please use Exit 3.",
+  "file": "voice/xmvisit-grn-en.mp3"
+ },
+ {
+  "id": "voice.xmexit.grn.zh",
+  "lang": "zh",
+  "text": "前往诚毅科技探索中心的乘客，请从3号出口出站。",
+  "file": "voice/xmexit-grn-zh.mp3"
+ },
+ {
+  "id": "voice.xmexit.grn.nan",
+  "lang": "nan",
+  "text": "前往诚毅科技探索中心的乘客，请从3号出口出站。",
+  "file": "voice/xmexit-grn-nan.mp3"
+ },
+ {
+  "id": "voice.xmexit.grn.en",
+  "lang": "en",
+  "text": "Passengers for the Chengyi Science and Technology Exploration Center, please use Exit 3.",
+  "file": "voice/xmexit-grn-en.mp3"
  },
  {
   "id": "voice.next.xjl.zh",
@@ -3440,20 +3476,38 @@
  {
   "id": "voice.xmvisit.yby.zh",
   "lang": "zh",
-  "text": "园博苑站附近有园林博览苑，欢迎下车游玩。",
+  "text": "园博苑站附近有园林博览苑，欢迎下车游玩，请从2号出口出站。",
   "file": "voice/xmvisit-yby-zh.mp3"
  },
  {
   "id": "voice.xmvisit.yby.nan",
   "lang": "nan",
-  "text": "园博苑站附近有园林博览苑，欢迎下车游玩。",
+  "text": "园博苑站附近有园林博览苑，欢迎下车游玩，请从2号出口出站。",
   "file": "voice/xmvisit-yby-nan.mp3"
  },
  {
   "id": "voice.xmvisit.yby.en",
   "lang": "en",
-  "text": "Yuanboyuan station is near the Garden Expo Park. You are welcome to get off and visit.",
+  "text": "Yuanboyuan station is near the Garden Expo Park. You are welcome to get off and visit. Please use Exit 2.",
   "file": "voice/xmvisit-yby-en.mp3"
+ },
+ {
+  "id": "voice.xmexit.yby.zh",
+  "lang": "zh",
+  "text": "前往园林博览苑的乘客，请从2号出口出站。",
+  "file": "voice/xmexit-yby-zh.mp3"
+ },
+ {
+  "id": "voice.xmexit.yby.nan",
+  "lang": "nan",
+  "text": "前往园林博览苑的乘客，请从2号出口出站。",
+  "file": "voice/xmexit-yby-nan.mp3"
+ },
+ {
+  "id": "voice.xmexit.yby.en",
+  "lang": "en",
+  "text": "Passengers for the Garden Expo Park, please use Exit 2.",
+  "file": "voice/xmexit-yby-en.mp3"
  },
  {
   "id": "voice.next.jmx.zh",
@@ -3510,6 +3564,42 @@
   "file": "voice/welcome-jmx-en.mp3"
  },
  {
+  "id": "voice.xmvisit.jmx.zh",
+  "lang": "zh",
+  "text": "集美学村站附近有集美学村、龙舟池、鳌园，欢迎下车游玩，请从2号出口出站。",
+  "file": "voice/xmvisit-jmx-zh.mp3"
+ },
+ {
+  "id": "voice.xmvisit.jmx.nan",
+  "lang": "nan",
+  "text": "集美学村站附近有集美学村、龙舟池、鳌园，欢迎下车游玩，请从2号出口出站。",
+  "file": "voice/xmvisit-jmx-nan.mp3"
+ },
+ {
+  "id": "voice.xmvisit.jmx.en",
+  "lang": "en",
+  "text": "Jimei School Village station is near Jimei School Village, the Dragon Boat Pond and Aoyuan Garden. You are welcome to get off and visit. Please use Exit 2.",
+  "file": "voice/xmvisit-jmx-en.mp3"
+ },
+ {
+  "id": "voice.xmexit.jmx.zh",
+  "lang": "zh",
+  "text": "前往集美学村、龙舟池、鳌园的乘客，请从2号出口出站。",
+  "file": "voice/xmexit-jmx-zh.mp3"
+ },
+ {
+  "id": "voice.xmexit.jmx.nan",
+  "lang": "nan",
+  "text": "前往集美学村、龙舟池、鳌园的乘客，请从2号出口出站。",
+  "file": "voice/xmexit-jmx-nan.mp3"
+ },
+ {
+  "id": "voice.xmexit.jmx.en",
+  "lang": "en",
+  "text": "Passengers for Jimei School Village, the Dragon Boat Pond and Aoyuan Garden, please use Exit 2.",
+  "file": "voice/xmexit-jmx-en.mp3"
+ },
+ {
   "id": "voice.next.gqi.zh",
   "lang": "zh",
   "text": "下一站，高崎。",
@@ -3564,6 +3654,42 @@
   "file": "voice/welcome-gqi-en.mp3"
  },
  {
+  "id": "voice.xmvisit.gqi.zh",
+  "lang": "zh",
+  "text": "高崎站附近有海堤纪念公园，欢迎下车游玩，请从1号出口出站。",
+  "file": "voice/xmvisit-gqi-zh.mp3"
+ },
+ {
+  "id": "voice.xmvisit.gqi.nan",
+  "lang": "nan",
+  "text": "高崎站附近有海堤纪念公园，欢迎下车游玩，请从1号出口出站。",
+  "file": "voice/xmvisit-gqi-nan.mp3"
+ },
+ {
+  "id": "voice.xmvisit.gqi.en",
+  "lang": "en",
+  "text": "Gaoqi station is near the Seawall Memorial Park. You are welcome to get off and visit. Please use Exit 1.",
+  "file": "voice/xmvisit-gqi-en.mp3"
+ },
+ {
+  "id": "voice.xmexit.gqi.zh",
+  "lang": "zh",
+  "text": "前往海堤纪念公园的乘客，请从1号出口出站。",
+  "file": "voice/xmexit-gqi-zh.mp3"
+ },
+ {
+  "id": "voice.xmexit.gqi.nan",
+  "lang": "nan",
+  "text": "前往海堤纪念公园的乘客，请从1号出口出站。",
+  "file": "voice/xmexit-gqi-nan.mp3"
+ },
+ {
+  "id": "voice.xmexit.gqi.en",
+  "lang": "en",
+  "text": "Passengers for the Seawall Memorial Park, please use Exit 1.",
+  "file": "voice/xmexit-gqi-en.mp3"
+ },
+ {
   "id": "voice.next.dqn.zh",
   "lang": "zh",
   "text": "下一站，殿前。",
@@ -3616,6 +3742,42 @@
   "lang": "en",
   "text": "Welcome to Dianqian station. Please line up for the train. Let the passengers get off first before you get on.",
   "file": "voice/welcome-dqn-en.mp3"
+ },
+ {
+  "id": "voice.xmvisit.dqn.zh",
+  "lang": "zh",
+  "text": "殿前站附近有清水宫，欢迎下车游玩，请从1号出口出站。",
+  "file": "voice/xmvisit-dqn-zh.mp3"
+ },
+ {
+  "id": "voice.xmvisit.dqn.nan",
+  "lang": "nan",
+  "text": "殿前站附近有清水宫，欢迎下车游玩，请从1号出口出站。",
+  "file": "voice/xmvisit-dqn-nan.mp3"
+ },
+ {
+  "id": "voice.xmvisit.dqn.en",
+  "lang": "en",
+  "text": "Dianqian station is near Qingshui Temple. You are welcome to get off and visit. Please use Exit 1.",
+  "file": "voice/xmvisit-dqn-en.mp3"
+ },
+ {
+  "id": "voice.xmexit.dqn.zh",
+  "lang": "zh",
+  "text": "前往清水宫的乘客，请从1号出口出站。",
+  "file": "voice/xmexit-dqn-zh.mp3"
+ },
+ {
+  "id": "voice.xmexit.dqn.nan",
+  "lang": "nan",
+  "text": "前往清水宫的乘客，请从1号出口出站。",
+  "file": "voice/xmexit-dqn-nan.mp3"
+ },
+ {
+  "id": "voice.xmexit.dqn.en",
+  "lang": "en",
+  "text": "Passengers for Qingshui Temple, please use Exit 1.",
+  "file": "voice/xmexit-dqn-en.mp3"
  },
  {
   "id": "voice.next.hjy.zh",
@@ -3852,6 +4014,24 @@
   "file": "voice/xmvisit-lcu-en.mp3"
  },
  {
+  "id": "voice.xmexit.lcu.zh",
+  "lang": "zh",
+  "text": "前往莲花公园的乘客，请从12号出口出站。",
+  "file": "voice/xmexit-lcu-zh.mp3"
+ },
+ {
+  "id": "voice.xmexit.lcu.nan",
+  "lang": "nan",
+  "text": "前往莲花公园的乘客，请从12号出口出站。",
+  "file": "voice/xmexit-lcu-nan.mp3"
+ },
+ {
+  "id": "voice.xmexit.lcu.en",
+  "lang": "en",
+  "text": "Passengers for Lianhua Park, please use Exit 12.",
+  "file": "voice/xmexit-lcu-en.mp3"
+ },
+ {
   "id": "voice.next.lhj.zh",
   "lang": "zh",
   "text": "下一站，莲花路口。",
@@ -3924,6 +4104,24 @@
   "file": "voice/xmvisit-lhj-en.mp3"
  },
  {
+  "id": "voice.xmexit.lhj.zh",
+  "lang": "zh",
+  "text": "前往莲花公园的乘客，请从4号出口出站。",
+  "file": "voice/xmexit-lhj-zh.mp3"
+ },
+ {
+  "id": "voice.xmexit.lhj.nan",
+  "lang": "nan",
+  "text": "前往莲花公园的乘客，请从4号出口出站。",
+  "file": "voice/xmexit-lhj-nan.mp3"
+ },
+ {
+  "id": "voice.xmexit.lhj.en",
+  "lang": "en",
+  "text": "Passengers for Lianhua Park, please use Exit 4.",
+  "file": "voice/xmexit-lhj-en.mp3"
+ },
+ {
   "id": "voice.next.lbn.zh",
   "lang": "zh",
   "text": "下一站，莲坂。",
@@ -3976,6 +4174,42 @@
   "lang": "en",
   "text": "Welcome to Lianban station. Please line up for the train. Let the passengers get off first before you get on.",
   "file": "voice/welcome-lbn-en.mp3"
+ },
+ {
+  "id": "voice.xmvisit.lbn.zh",
+  "lang": "zh",
+  "text": "莲坂站附近有外图厦门书城，欢迎下车游玩，请从3号出口出站。",
+  "file": "voice/xmvisit-lbn-zh.mp3"
+ },
+ {
+  "id": "voice.xmvisit.lbn.nan",
+  "lang": "nan",
+  "text": "莲坂站附近有外图厦门书城，欢迎下车游玩，请从3号出口出站。",
+  "file": "voice/xmvisit-lbn-nan.mp3"
+ },
+ {
+  "id": "voice.xmvisit.lbn.en",
+  "lang": "en",
+  "text": "Lianban station is near Xiamen Book City. You are welcome to get off and visit. Please use Exit 3.",
+  "file": "voice/xmvisit-lbn-en.mp3"
+ },
+ {
+  "id": "voice.xmexit.lbn.zh",
+  "lang": "zh",
+  "text": "前往外图厦门书城的乘客，请从3号出口出站。",
+  "file": "voice/xmexit-lbn-zh.mp3"
+ },
+ {
+  "id": "voice.xmexit.lbn.nan",
+  "lang": "nan",
+  "text": "前往外图厦门书城的乘客，请从3号出口出站。",
+  "file": "voice/xmexit-lbn-nan.mp3"
+ },
+ {
+  "id": "voice.xmexit.lbn.en",
+  "lang": "en",
+  "text": "Passengers for Xiamen Book City, please use Exit 3.",
+  "file": "voice/xmexit-lbn-en.mp3"
  },
  {
   "id": "voice.next.hbd.zh",
@@ -4196,20 +4430,38 @@
  {
   "id": "voice.xmvisit.zsp.zh",
   "lang": "zh",
-  "text": "中山公园站附近有中山公园，欢迎下车游玩。",
+  "text": "中山公园站附近有中山公园，欢迎下车游玩，请从3A出口出站。",
   "file": "voice/xmvisit-zsp-zh.mp3"
  },
  {
   "id": "voice.xmvisit.zsp.nan",
   "lang": "nan",
-  "text": "中山公园站附近有中山公园，欢迎下车游玩。",
+  "text": "中山公园站附近有中山公园，欢迎下车游玩，请从3A出口出站。",
   "file": "voice/xmvisit-zsp-nan.mp3"
  },
  {
   "id": "voice.xmvisit.zsp.en",
   "lang": "en",
-  "text": "Zhongshan Gongyuan station is near Zhongshan Park. You are welcome to get off and visit.",
+  "text": "Zhongshan Gongyuan station is near Zhongshan Park. You are welcome to get off and visit. Please use Exit 3A.",
   "file": "voice/xmvisit-zsp-en.mp3"
+ },
+ {
+  "id": "voice.xmexit.zsp.zh",
+  "lang": "zh",
+  "text": "前往中山公园的乘客，请从3A出口出站。",
+  "file": "voice/xmexit-zsp-zh.mp3"
+ },
+ {
+  "id": "voice.xmexit.zsp.nan",
+  "lang": "nan",
+  "text": "前往中山公园的乘客，请从3A出口出站。",
+  "file": "voice/xmexit-zsp-nan.mp3"
+ },
+ {
+  "id": "voice.xmexit.zsp.en",
+  "lang": "en",
+  "text": "Passengers for Zhongshan Park, please use Exit 3A.",
+  "file": "voice/xmexit-zsp-en.mp3"
  },
  {
   "id": "voice.arrive.zhl.zh",
@@ -4246,6 +4498,42 @@
   "lang": "en",
   "text": "Welcome to Zhenhailu station. Please line up for the train. Let the passengers get off first before you get on.",
   "file": "voice/welcome-zhl-en.mp3"
+ },
+ {
+  "id": "voice.xmvisit.zhl.zh",
+  "lang": "zh",
+  "text": "镇海路站附近有和平码头、中山路步行街，欢迎下车游玩，和平码头请从1号出口出站，中山路步行街请从3B出口出站。",
+  "file": "voice/xmvisit-zhl-zh.mp3"
+ },
+ {
+  "id": "voice.xmvisit.zhl.nan",
+  "lang": "nan",
+  "text": "镇海路站附近有和平码头、中山路步行街，欢迎下车游玩，和平码头请从1号出口出站，中山路步行街请从3B出口出站。",
+  "file": "voice/xmvisit-zhl-nan.mp3"
+ },
+ {
+  "id": "voice.xmvisit.zhl.en",
+  "lang": "en",
+  "text": "Zhenhailu station is near Heping Pier and Zhongshan Road Pedestrian Street. You are welcome to get off and visit. For Heping Pier, please use Exit 1. For Zhongshan Road Pedestrian Street, please use Exit 3B.",
+  "file": "voice/xmvisit-zhl-en.mp3"
+ },
+ {
+  "id": "voice.xmexit.zhl.zh",
+  "lang": "zh",
+  "text": "前往和平码头的乘客，请从1号出口出站；前往中山路步行街的乘客，请从3B出口出站。",
+  "file": "voice/xmexit-zhl-zh.mp3"
+ },
+ {
+  "id": "voice.xmexit.zhl.nan",
+  "lang": "nan",
+  "text": "前往和平码头的乘客，请从1号出口出站；前往中山路步行街的乘客，请从3B出口出站。",
+  "file": "voice/xmexit-zhl-nan.mp3"
+ },
+ {
+  "id": "voice.xmexit.zhl.en",
+  "lang": "en",
+  "text": "Passengers for Heping Pier, please use Exit 1. Passengers for Zhongshan Road Pedestrian Street, please use Exit 3B.",
+  "file": "voice/xmexit-zhl-en.mp3"
  },
  {
   "id": "voice.destination.xmwyw.zh",
@@ -5022,6 +5310,42 @@
   "file": "voice/welcome-hcw-en.mp3"
  },
  {
+  "id": "voice.xmvisit.hcw.zh",
+  "lang": "zh",
+  "text": "海沧湾公园站附近有海沧湾公园，欢迎下车游玩，请从2号出口出站。",
+  "file": "voice/xmvisit-hcw-zh.mp3"
+ },
+ {
+  "id": "voice.xmvisit.hcw.nan",
+  "lang": "nan",
+  "text": "海沧湾公园站附近有海沧湾公园，欢迎下车游玩，请从2号出口出站。",
+  "file": "voice/xmvisit-hcw-nan.mp3"
+ },
+ {
+  "id": "voice.xmvisit.hcw.en",
+  "lang": "en",
+  "text": "Haicangwan Gongyuan station is near Haicang Bay Park. You are welcome to get off and visit. Please use Exit 2.",
+  "file": "voice/xmvisit-hcw-en.mp3"
+ },
+ {
+  "id": "voice.xmexit.hcw.zh",
+  "lang": "zh",
+  "text": "前往海沧湾公园的乘客，请从2号出口出站。",
+  "file": "voice/xmexit-hcw-zh.mp3"
+ },
+ {
+  "id": "voice.xmexit.hcw.nan",
+  "lang": "nan",
+  "text": "前往海沧湾公园的乘客，请从2号出口出站。",
+  "file": "voice/xmexit-hcw-nan.mp3"
+ },
+ {
+  "id": "voice.xmexit.hcw.en",
+  "lang": "en",
+  "text": "Passengers for Haicang Bay Park, please use Exit 2.",
+  "file": "voice/xmexit-hcw-en.mp3"
+ },
+ {
   "id": "voice.next.ylz.zh",
   "lang": "zh",
   "text": "下一站，邮轮中心。",
@@ -5074,6 +5398,42 @@
   "lang": "en",
   "text": "Welcome to Cruise Center station. Please line up for the train. Let the passengers get off first before you get on.",
   "file": "voice/welcome-ylz-en.mp3"
+ },
+ {
+  "id": "voice.xmvisit.ylz.zh",
+  "lang": "zh",
+  "text": "邮轮中心站附近有厦鼓码头，欢迎下车游玩，请从6号出口出站。",
+  "file": "voice/xmvisit-ylz-zh.mp3"
+ },
+ {
+  "id": "voice.xmvisit.ylz.nan",
+  "lang": "nan",
+  "text": "邮轮中心站附近有厦鼓码头，欢迎下车游玩，请从6号出口出站。",
+  "file": "voice/xmvisit-ylz-nan.mp3"
+ },
+ {
+  "id": "voice.xmvisit.ylz.en",
+  "lang": "en",
+  "text": "Cruise Center station is near the Xiamen-Gulangyu Ferry Terminal. You are welcome to get off and visit. Please use Exit 6.",
+  "file": "voice/xmvisit-ylz-en.mp3"
+ },
+ {
+  "id": "voice.xmexit.ylz.zh",
+  "lang": "zh",
+  "text": "前往厦鼓码头的乘客，请从6号出口出站。",
+  "file": "voice/xmexit-ylz-zh.mp3"
+ },
+ {
+  "id": "voice.xmexit.ylz.nan",
+  "lang": "nan",
+  "text": "前往厦鼓码头的乘客，请从6号出口出站。",
+  "file": "voice/xmexit-ylz-nan.mp3"
+ },
+ {
+  "id": "voice.xmexit.ylz.en",
+  "lang": "en",
+  "text": "Passengers for the Xiamen-Gulangyu Ferry Terminal, please use Exit 6.",
+  "file": "voice/xmexit-ylz-en.mp3"
  },
  {
   "id": "voice.next.jyl.zh",
@@ -5182,6 +5542,42 @@
   "lang": "en",
   "text": "Welcome to Hubin Zhonglu station. Please line up for the train. Let the passengers get off first before you get on.",
   "file": "voice/welcome-hbz-en.mp3"
+ },
+ {
+  "id": "voice.xmvisit.hbz.zh",
+  "lang": "zh",
+  "text": "湖滨中路站附近有白鹭洲公园，欢迎下车游玩，请从2号出口出站。",
+  "file": "voice/xmvisit-hbz-zh.mp3"
+ },
+ {
+  "id": "voice.xmvisit.hbz.nan",
+  "lang": "nan",
+  "text": "湖滨中路站附近有白鹭洲公园，欢迎下车游玩，请从2号出口出站。",
+  "file": "voice/xmvisit-hbz-nan.mp3"
+ },
+ {
+  "id": "voice.xmvisit.hbz.en",
+  "lang": "en",
+  "text": "Hubin Zhonglu station is near Bailuzhou Park. You are welcome to get off and visit. Please use Exit 2.",
+  "file": "voice/xmvisit-hbz-en.mp3"
+ },
+ {
+  "id": "voice.xmexit.hbz.zh",
+  "lang": "zh",
+  "text": "前往白鹭洲公园的乘客，请从2号出口出站。",
+  "file": "voice/xmexit-hbz-zh.mp3"
+ },
+ {
+  "id": "voice.xmexit.hbz.nan",
+  "lang": "nan",
+  "text": "前往白鹭洲公园的乘客，请从2号出口出站。",
+  "file": "voice/xmexit-hbz-nan.mp3"
+ },
+ {
+  "id": "voice.xmexit.hbz.en",
+  "lang": "en",
+  "text": "Passengers for Bailuzhou Park, please use Exit 2.",
+  "file": "voice/xmexit-hbz-en.mp3"
  },
  {
   "id": "voice.next.tyz.zh",
@@ -5382,6 +5778,24 @@
   "file": "voice/xmvisit-jtou-en.mp3"
  },
  {
+  "id": "voice.xmexit.jtou.zh",
+  "lang": "zh",
+  "text": "前往莲龙小学的乘客，请从2号出口出站。",
+  "file": "voice/xmexit-jtou-zh.mp3"
+ },
+ {
+  "id": "voice.xmexit.jtou.nan",
+  "lang": "nan",
+  "text": "前往莲龙小学的乘客，请从2号出口出站。",
+  "file": "voice/xmexit-jtou-nan.mp3"
+ },
+ {
+  "id": "voice.xmexit.jtou.en",
+  "lang": "en",
+  "text": "Passengers for Lianlong Primary School, please use Exit 2.",
+  "file": "voice/xmexit-jtou-en.mp3"
+ },
+ {
   "id": "voice.next.hpu.zh",
   "lang": "zh",
   "text": "下一站，后埔。",
@@ -5454,6 +5868,24 @@
   "file": "voice/xmvisit-hpu-en.mp3"
  },
  {
+  "id": "voice.xmexit.hpu.zh",
+  "lang": "zh",
+  "text": "前往忠仑公园的乘客，请从4号出口出站。",
+  "file": "voice/xmexit-hpu-zh.mp3"
+ },
+ {
+  "id": "voice.xmexit.hpu.nan",
+  "lang": "nan",
+  "text": "前往忠仑公园的乘客，请从4号出口出站。",
+  "file": "voice/xmexit-hpu-nan.mp3"
+ },
+ {
+  "id": "voice.xmexit.hpu.en",
+  "lang": "en",
+  "text": "Passengers for Zhonglun Park, please use Exit 4.",
+  "file": "voice/xmexit-hpu-en.mp3"
+ },
+ {
   "id": "voice.next.ctg.zh",
   "lang": "zh",
   "text": "下一站，蔡塘。",
@@ -5506,6 +5938,42 @@
   "lang": "en",
   "text": "Welcome to Caitang station. Please line up for the train. Let the passengers get off first before you get on.",
   "file": "voice/welcome-ctg-en.mp3"
+ },
+ {
+  "id": "voice.xmvisit.ctg.zh",
+  "lang": "zh",
+  "text": "蔡塘站附近有忠仑公园，欢迎下车游玩，请从2号出口出站。",
+  "file": "voice/xmvisit-ctg-zh.mp3"
+ },
+ {
+  "id": "voice.xmvisit.ctg.nan",
+  "lang": "nan",
+  "text": "蔡塘站附近有忠仑公园，欢迎下车游玩，请从2号出口出站。",
+  "file": "voice/xmvisit-ctg-nan.mp3"
+ },
+ {
+  "id": "voice.xmvisit.ctg.en",
+  "lang": "en",
+  "text": "Caitang station is near Zhonglun Park. You are welcome to get off and visit. Please use Exit 2.",
+  "file": "voice/xmvisit-ctg-en.mp3"
+ },
+ {
+  "id": "voice.xmexit.ctg.zh",
+  "lang": "zh",
+  "text": "前往忠仑公园的乘客，请从2号出口出站。",
+  "file": "voice/xmexit-ctg-zh.mp3"
+ },
+ {
+  "id": "voice.xmexit.ctg.nan",
+  "lang": "nan",
+  "text": "前往忠仑公园的乘客，请从2号出口出站。",
+  "file": "voice/xmexit-ctg-nan.mp3"
+ },
+ {
+  "id": "voice.xmexit.ctg.en",
+  "lang": "en",
+  "text": "Passengers for Zhonglun Park, please use Exit 2.",
+  "file": "voice/xmexit-ctg-en.mp3"
  },
  {
   "id": "voice.next.gds.zh",
@@ -5778,6 +6246,42 @@
   "file": "voice/welcome-gys-en.mp3"
  },
  {
+  "id": "voice.xmvisit.gys.zh",
+  "lang": "zh",
+  "text": "观音山站附近有观音山沙滩、沙雕公园，欢迎下车游玩，请从4号出口出站。",
+  "file": "voice/xmvisit-gys-zh.mp3"
+ },
+ {
+  "id": "voice.xmvisit.gys.nan",
+  "lang": "nan",
+  "text": "观音山站附近有观音山沙滩、沙雕公园，欢迎下车游玩，请从4号出口出站。",
+  "file": "voice/xmvisit-gys-nan.mp3"
+ },
+ {
+  "id": "voice.xmvisit.gys.en",
+  "lang": "en",
+  "text": "Guanyinshan station is near Guanyinshan Beach and the Sand Sculpture Park. You are welcome to get off and visit. Please use Exit 4.",
+  "file": "voice/xmvisit-gys-en.mp3"
+ },
+ {
+  "id": "voice.xmexit.gys.zh",
+  "lang": "zh",
+  "text": "前往观音山沙滩、沙雕公园的乘客，请从4号出口出站。",
+  "file": "voice/xmexit-gys-zh.mp3"
+ },
+ {
+  "id": "voice.xmexit.gys.nan",
+  "lang": "nan",
+  "text": "前往观音山沙滩、沙雕公园的乘客，请从4号出口出站。",
+  "file": "voice/xmexit-gys-nan.mp3"
+ },
+ {
+  "id": "voice.xmexit.gys.en",
+  "lang": "en",
+  "text": "Passengers for Guanyinshan Beach and the Sand Sculpture Park, please use Exit 4.",
+  "file": "voice/xmexit-gys-en.mp3"
+ },
+ {
   "id": "voice.next.dzh.zh",
   "lang": "zh",
   "text": "下一站，东宅。",
@@ -5992,6 +6496,42 @@
   "lang": "en",
   "text": "Welcome to Wetland Park station. Please line up for the train. Let the passengers get off first before you get on.",
   "file": "voice/welcome-sdy-en.mp3"
+ },
+ {
+  "id": "voice.xmvisit.sdy.zh",
+  "lang": "zh",
+  "text": "湿地公园站附近有五缘湾湿地公园，欢迎下车游玩，请从3号出口出站。",
+  "file": "voice/xmvisit-sdy-zh.mp3"
+ },
+ {
+  "id": "voice.xmvisit.sdy.nan",
+  "lang": "nan",
+  "text": "湿地公园站附近有五缘湾湿地公园，欢迎下车游玩，请从3号出口出站。",
+  "file": "voice/xmvisit-sdy-nan.mp3"
+ },
+ {
+  "id": "voice.xmvisit.sdy.en",
+  "lang": "en",
+  "text": "Wetland Park station is near Wuyuan Bay Wetland Park. You are welcome to get off and visit. Please use Exit 3.",
+  "file": "voice/xmvisit-sdy-en.mp3"
+ },
+ {
+  "id": "voice.xmexit.sdy.zh",
+  "lang": "zh",
+  "text": "前往五缘湾湿地公园的乘客，请从3号出口出站。",
+  "file": "voice/xmexit-sdy-zh.mp3"
+ },
+ {
+  "id": "voice.xmexit.sdy.nan",
+  "lang": "nan",
+  "text": "前往五缘湾湿地公园的乘客，请从3号出口出站。",
+  "file": "voice/xmexit-sdy-nan.mp3"
+ },
+ {
+  "id": "voice.xmexit.sdy.en",
+  "lang": "en",
+  "text": "Passengers for Wuyuan Bay Wetland Park, please use Exit 3.",
+  "file": "voice/xmexit-sdy-en.mp3"
  },
  {
   "id": "voice.next.zzh.zh",

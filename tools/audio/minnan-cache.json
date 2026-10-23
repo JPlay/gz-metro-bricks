@@ -297,11 +297,11 @@
   "flag": false
  },
  "voice.xmvisit.cyg.nan": {
-  "fp": "96a203c31183dcad7a8850bc9e115a160704ee04ccc3c21b3b9aa4c8bded40b5",
+  "fp": "c5ec931d46f2ddfa7bff233532319bba4dd38c64a77643ac86014f42a9b263be",
   "model": "cosyvoice-v3.5-flash",
   "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
-  "sim": 0.893,
-  "asr": "诚怡广场站附近有壹美市民广场、诚意科技探索中心，欢迎下车游玩。",
+  "sim": 0.7,
+  "asr": "新义工顶站附近有壹个市民广场，欢迎下车游玩。",
   "tries": 4,
   "flag": true
  },
@@ -396,11 +396,11 @@
   "flag": true
  },
  "voice.xmvisit.yby.nan": {
-  "fp": "03db8f43085ebd756d6a72a42f4ee717a2334f46bf397d5d9f6d23a646fd20a4",
+  "fp": "62e89c16c5c28b95c4e3e81ca9dff00b20a30c434becdf0fb287d971e693a73d",
   "model": "cosyvoice-v3.5-flash",
   "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
-  "sim": 0.833,
-  "asr": "万博晚站附近有园林博览园，欢迎下车游玩。",
+  "sim": 0.808,
+  "asr": "万埔湾站附近有园林博览馆，欢迎下车游玩，请从二号出口出站。",
   "tries": 4,
   "flag": true
  },
@@ -711,11 +711,11 @@
   "flag": true
  },
  "voice.xmvisit.zsp.nan": {
-  "fp": "a385c4e8e489b134ac04ad3bde0bc76bad1987ee44f2cf3570bb453198d43028",
+  "fp": "1b6d813b66a3fe213569823af5a4682c98d988bdcff02f687688fe2be23e2d1b",
   "model": "cosyvoice-v3.5-flash",
   "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
-  "sim": 1.0,
-  "asr": "中山公园站附近有中山公园，欢迎下车游玩。",
+  "sim": 0.885,
+  "asr": "中山公坟站附近有中山公园，欢迎下车游玩车东3A出口出站。",
   "tries": 4,
   "flag": true
  },
@@ -1661,6 +1661,276 @@
   "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
   "sim": 0.762,
   "asr": "下站旅厝可换乘一号线。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.xmexit.grn.nan": {
+  "fp": "de5daa081fceebc8939c567ded4333f1414cb84467e33da1de70d28252a3ce22",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.0,
+  "asr": "",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.xmexit.yby.nan": {
+  "fp": "64723520e228ba1474b99def244d9bc36247e21c45291fa912800eb2a14cd3f9",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.667,
+  "asr": "巡往晚林博览园的乘客请众如何出口出站？",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.xmexit.gqi.nan": {
+  "fp": "5280153590f12018ea2261d12179a48cea58ca2afed6f2c4d5438446d0e87a81",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.368,
+  "asr": "怎么还底机炼工魂类型客恰从一号出口出站。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.xmexit.jmx.nan": {
+  "fp": "9b81e3b870e0a4a1395ea575309cf24453c2c9718dfe406d8651fe85e05fd646",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.364,
+  "asr": "简王及威哈存龙九地澳湾的乘客恰中利合出口出站。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.xmexit.lbn.nan": {
+  "fp": "cf92e533e8f694755e37183504cdd8a44bc290d4b74d7af03737239dea0db157",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.632,
+  "asr": "震红怀岛、厦门、苏城的乘客请从沙河出口出站。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.xmexit.dqn.nan": {
+  "fp": "507ef5bc26ecceb488e617fb82d7b0be9581f23319650903bb853b2c764d26b3",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.875,
+  "asr": "前往清水港的乘客请从壹号出口出站。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.xmexit.lcu.nan": {
+  "fp": "6c7fb21aaefabdf068e0c029058e803cee59ef2bfb2190cc9e31d5de4d9d5d46",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 1.0,
+  "asr": "前往莲花公园的乘客请从12号出口出站。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.xmexit.lhj.nan": {
+  "fp": "2322b530e46da0adb407c9353446b09bd6dbcde7d0bf01b1f0b083ec93ca3a98",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.882,
+  "asr": "前往莲花公园的乘客车从四号出口出站。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.xmexit.hcw.nan": {
+  "fp": "4fc814e810b819b69900e0ae1b3de191afb73d10dc49c87a474712f7159aa2a7",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.611,
+  "asr": "转翁系乘运共园的乘客，请从二号出口出站。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.xmexit.zsp.nan": {
+  "fp": "4f87490464be595e965666c34d73100610c61154c2cb3e4634424fbaf995d29a",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.765,
+  "asr": "尊望中山公园的乘客请从三个出口出站。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.xmexit.hbz.nan": {
+  "fp": "b87a037885b5eec46f4bdf641b541861d926ee6578bb35c0c223e42963190c9b",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.667,
+  "asr": "前往百偌9公分的乘客车从二号出口出站。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.xmexit.jtou.nan": {
+  "fp": "636f68382a06abb75901cf54cd39f0a86cbca1f4b1604d26a9015c06d7197410",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.606,
+  "asr": "在网面弄小的乘客请从旅河出口出站。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.xmexit.ctg.nan": {
+  "fp": "e835e78db456f06e217edaacaa07b24de555d90a9d47f3a6331ebc489c75fb14",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.647,
+  "asr": "水往将伦公园的乘客请众二好出口出站。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.xmexit.zhl.nan": {
+  "fp": "24ef6ae36da39a1d1425239498cbcfc8951902aadc42bf0de25f35d98e5b6b56",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.833,
+  "asr": "一目好平码头的乘客请从壹号出口出站。前往中山路步行街的乘客请从沙边出口出站。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.xmexit.ylz.nan": {
+  "fp": "ebf39f880f6d87b456a96f6a19c53b55faecde1b40ff4e2255f3b56e860228b4",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.765,
+  "asr": "前往的古码头的乘客请从六河出口出站。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.xmexit.hpu.nan": {
+  "fp": "abc3559086a7939b04d7861dcfebe472f38424de0f39eee36d160ea65eee1908",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.706,
+  "asr": "今往中伦公文的乘客，请从四号出口出站。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.xmexit.gys.nan": {
+  "fp": "3b9f3ac39d75a72ff93f8e1081067268915108440d346156b83bca412c8aa175",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.727,
+  "asr": "展望关音沙沙滩沙雕公园的乘客，请将四号出口出站。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.xmexit.sdy.nan": {
+  "fp": "fe465ed15a35833fe4b9bb88cbd7f55d5656afe15aaae38dd6301969f2995875",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.732,
+  "asr": "10万欧元湾湿地公园的乘客，请从三号出口出站。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.xmvisit.jmx.nan": {
+  "fp": "7555f2a48a9b4f441d141ff6965b06f45497b7916aed0de82236947ba838e4b8",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.548,
+  "asr": "一米厦村站附近有壹米下村拢走伫鳌环，欢迎下车游玩。车纵二何出口出站。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.xmvisit.grn.nan": {
+  "fp": "bc0392f61da745ebecd37626764721442f0c3b067ace1e3b4f1e3ff6a3f3e371",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.704,
+  "asr": "观hold有科技探索中心，欢迎下车游玩，车从三号出口出站。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.xmvisit.gqi.nan": {
+  "fp": "18a511a1f9453b269a5bc22ab2775b1b71fc56ca387caa79d7ad59f6c0b03d6c",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.808,
+  "asr": "国际站附近有海底纪念公园，欢迎下车游玩。车从壹号出口出站。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.xmvisit.lbn.nan": {
+  "fp": "b91dd41cf08682ecda8f97d5d990f44bdaae518d4ad6a681defcc4e499f8f4d9",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.5,
+  "asr": "连班长呼近有话多，厦门市情欢迎阿恰游玩恰总三号出口出站。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.xmvisit.dqn.nan": {
+  "fp": "cc538c2f679ccd10c142e016d9131c92e3e93544391c24fdf4a42b44684e8a1c",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.826,
+  "asr": "电检站附近有清水港，欢迎下车游玩，请从壹号出口出站。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.xmvisit.hcw.nan": {
+  "fp": "3f15618548c2b593968088844dfa8c32c3c5b2cb4f24b93d9387536df39946b3",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.929,
+  "asr": "海沧湾公园站附近有海沧湾公园，欢迎下车游玩，车从二号出口出站。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.xmvisit.ctg.nan": {
+  "fp": "01f08251fe74bedbfeb35e0e98ee2bddc5efc9359985c25be747a2bd1c1d94dd",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.542,
+  "asr": "蔡堂斩富滚，吴宗伦、公鸿欢迎黑车游玩，车从二号出口出站。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.xmvisit.zhl.nan": {
+  "fp": "8d676fbe000ff648c702140a01294a3028d8558c5c322ce64010acabf74d22f9",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.837,
+  "asr": "静海路站，沪景五和平码头，中山路步行街，欢迎下车游玩。和平码头恰厂一号出口出站，中山路步行街车从3B出口出站。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.xmvisit.sdy.nan": {
+  "fp": "beb22616dfa876173399b486a30b6183a178a5a3748fe6f39c6e00177f8d3a4c",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.453,
+  "asr": "手六红散郡湾湾田公亨，欢迎下车游玩，车中三河出口出站。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.xmvisit.ylz.nan": {
+  "fp": "ce8f521e513d6e58a34a13c1fbe52a0c8878ab81984146405948b0f7d2b07f2a",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.863,
+  "asr": "邮轮中心站附近路古码头，欢迎下车游玩，请从六号出口出站。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.xmvisit.hbz.nan": {
+  "fp": "43078d508072739e6440d5b4629f3d54d5ad7393b40dcddfd2f83023bc588912",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.741,
+  "asr": "湖滨长乐站附近有白罗座公园，欢迎下车游玩，请总旅合出口出站。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.xmvisit.gys.nan": {
+  "fp": "1686b4eb1d8893eacd25cddbc2d8bfc4484404630fcc6a703da7de9e30ae1d10",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.833,
+  "asr": "观音刷站附近有观音沙沙滩沙雕公园，欢迎下车游玩。请总事否出口出站。",
   "tries": 4,
   "flag": true
  }
