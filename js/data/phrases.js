@@ -6,7 +6,7 @@
 import { LINES, STATIONS, OTHER_LINES, isTerminal, transfersAt } from './lines.js';
 import { XM_LINES, XM_STATIONS, xmNext, xmIsTerminal, xmTransfers } from './xm-lines.js';
 import { VISITS, visitTexts } from './visits.js';
-import { xmVisitTexts } from './xm-visits.js';
+import { xmVisitTexts, xmExitTexts } from './xm-visits.js';
 
 export const LANGS = ['zh', 'yue', 'en'];
 /** 播放顺序：普通话 → 粤语（广州）/ 闽南语（厦门地铁）→ 英语。粤语只在广州、闽南语只在厦门地铁 1/2 号线；动车只有普通话 + 英语 */
@@ -123,6 +123,7 @@ export function xmNextSegs(line, code) {
   return xseg('next.' + code + (both ? line : ''), `下一站，${s.zh}${zx}。`, `The next station is ${s.en}${ex}.`);
 }
 /** 厦门：下一站附近的景点（js/data/xm-visits.js） */
+export const xmExitSegs = code => { const t = xmExitTexts(code); return t ? xseg('xmexit.' + code, t[0], t[t.length - 1]) : []; };
 export const xmVisitSegs = code => { const s = XM_STATIONS[code], t = s && xmVisitTexts(code, s.zh + '站', s.en + ' station'); return t ? xseg('xmvisit.' + code, t[0], t[t.length - 1]) : []; };
 export function xmDepartSegs(line, nextCode, dir, step, withDestination) {
   const head = withDestination ? xmDestinationSegs(line, dir) : [];
@@ -138,7 +139,7 @@ export function allJobs() {
   for (const [id, L] of Object.entries(XM_LINES)) {
     const line = +id;
     for (const dir of Object.keys(L.dirs)) { add(xmDestinationSegs(line, dir)); add(xmTerminalSegs(line, dir)); add(xmPlatformSegs(line, dir, 1)); add(xmPlatformSegs(line, dir, 2)); }
-    L.stations.forEach((c, i) => { if (i > 0 && i < L.stations.length - 1) add(xmNextSegs(line, c)); add(arriveSegs(c)); add(welcomeSegs(c)); add(xmVisitSegs(c)); });
+    L.stations.forEach((c, i) => { if (i > 0 && i < L.stations.length - 1) add(xmNextSegs(line, c)); add(arriveSegs(c)); add(welcomeSegs(c)); add(xmVisitSegs(c)); add(xmExitSegs(c)); });
   }
   add(doorsClosingSegs()); add(gapSegs()); add(emuJobs()); Object.keys(SAFETY).forEach(k => add(safetySegs(k)));
   return [...out.values()].map(s => ({ ...s, file: 'voice/' + s.id.slice(6).replace(/\./g, '-') + '.mp3' }));

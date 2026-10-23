@@ -12,6 +12,8 @@ import { FoodAtlas } from '../game/food-art.js';
 import * as D from './decor.js';
 import { XM_LINES } from '../data/xm-lines.js';
 import { xinliEstate, Xinli256 } from './xmXinli.js';
+import { exitZh } from '../data/xm-visits.js';
+import { ATTR_EXITS, ATTR_BUILD } from './xmAttr.js';
 
 export const XS = { x: 4000, z: 0 };
 /** 车站里的出口通道（站厅南墙 x 处开口 → 楼梯上到地面 → 进街区） */
@@ -20,12 +22,14 @@ export const XM_EXITS = {
   lcu: { n: '12', x: 10, line: 1, road: '嘉禾路', to: ['莲花公园'], toEn: ['Lianhua Park'] },
   cyg: { n: '', x: 10, line: 1, road: '诚毅南路', to: ['莲花首岸'], toEn: ['Lianhua Shou\'an'] },
   hpu: { n: '2', x: 10, line: 2, road: '吕岭路', to: ['鑫利花园'], toEn: ['Xinli Garden'] },
+  ...ATTR_EXITS,
 };
-const FONT = '"PingFang SC","Hiragino Sans GB","Noto Sans CJK SC","Microsoft YaHei",sans-serif', FONT_EN = '"Helvetica Neue",Arial,sans-serif';
+export const FONT = '"PingFang SC","Hiragino Sans GB","Noto Sans CJK SC","Microsoft YaHei",sans-serif';
+export const FONT_EN = '"Helvetica Neue",Arial,sans-serif';
 
 /* ---------- 立面贴图 ---------- */
 /** 瓷砖立面：floors 层、bays 开间；arch：顶层拱窗；band：每层白色横带 */
-function facadePaint({ floors, bays, wall = '#A8423A', tile = 0.07, band = '#F1EEE8', glass = '#7FA3B8', frame = '#F4F2EE', grille = true, arch = false, ground = null, balcony = null }) {
+export function facadePaint({ floors, bays, wall = '#A8423A', tile = 0.07, band = '#F1EEE8', glass = '#7FA3B8', frame = '#F4F2EE', grille = true, arch = false, ground = null, balcony = null }) {
   return (c, pw, ph) => {
     c.fillStyle = wall; c.fillRect(0, 0, pw, ph);
     // 瓷砖缝
@@ -53,14 +57,14 @@ function facadePaint({ floors, bays, wall = '#A8423A', tile = 0.07, band = '#F1E
   };
 }
 /** 门柱竖排字：每个字一行，按柱面宽高缩放到放得下 */
-function pillarText(t, bg = '#B8463A', fg = '#F6D36B') {
+export function pillarText(t, bg = '#B8463A', fg = '#F6D36B') {
   return (c, pw, ph) => {
     c.fillStyle = bg; c.fillRect(0, 0, pw, ph); c.fillStyle = fg; c.textAlign = 'center'; c.textBaseline = 'middle';
     const ch = [...t], sz = Math.min(pw * 0.72, ph * 0.86 / ch.length); c.font = `800 ${sz}px ${FONT}`;
     ch.forEach((x, i) => c.fillText(x, pw / 2, ph / 2 + (i - (ch.length - 1) / 2) * sz * 1.08));
   };
 }
-function textPaint(lines, { bg = '#B3261E', fg = '#F6D36B', font = FONT, weight = 800, frame = null } = {}) {
+export function textPaint(lines, { bg = '#B3261E', fg = '#F6D36B', font = FONT, weight = 800, frame = null } = {}) {
   return (c, pw, ph) => {
     c.fillStyle = bg; c.fillRect(0, 0, pw, ph);
     if (frame) { c.strokeStyle = frame; c.lineWidth = ph * 0.05; c.strokeRect(ph * 0.05, ph * 0.05, pw - ph * 0.1, ph - ph * 0.1); }
@@ -78,8 +82,9 @@ export class XmStreet {
     { const q = this.atlas.quad.bind(this.atlas); this.atlas.quad = (x, y, z, w, h, a, uv) => q(x, y, z, w, h, Math.PI - a, uv); }   // 本文件约定：a=0 朝 -z、π 朝 +z、±π/2 朝 ±x
     D.reseed(code.length * 97 + code.charCodeAt(0));
     this.ground(); this.kiosk();
-    if (code === 'jtou') this.jiangtou(); else if (code === 'lcu') this.lucuo(); else if (code === 'cyg') this.chengyi(); else if (code === 'hpu') this.houpu();
+    if (code === 'jtou') this.jiangtou(); else if (code === 'lcu') this.lucuo(); else if (code === 'cyg') this.chengyi(); else if (code === 'hpu') this.houpu(); else if (ATTR_BUILD[code]) ATTR_BUILD[code](this);
     k.finish(true); this.atlas.finish(k.root, 'xmStreetSigns');
+    if (this.after) this.after();   // 动画件（不冻结），如清水宫上空降落的飞机
     k.root.getChildMeshes(false).forEach(m => { m.receiveShadows = true; });
   }
   dispose() { if (this.inside) { this.inside.dispose(); this.inside = null; } if (this.atlas) this.atlas.dispose(); this.kit.root.getChildMeshes(false).forEach(m => m.dispose()); this.kit.root.dispose(); }
@@ -91,6 +96,7 @@ export class XmStreet {
   /** 每帧：楼内 ↔ 街面切换；返回 'back' = 回车站 */
   update(pl) {
     const p = pl.position;
+    if (this.tick) this.tick(Math.min(0.1, this.scene.getEngine().getDeltaTime() / 1000));
     if (this.inside) { if (this.inside.wantsOut(p)) this.leaveBuilding(pl); return null; }
     if (this.wantsBack(p)) return 'back';
     const d = this.xinli && this.xinli.door256;
@@ -148,7 +154,7 @@ export class XmStreet {
       c.fillStyle = '#20272E'; c.fillRect(0, 0, pw, ph);
       c.fillStyle = lc; c.fillRect(0, 0, ph, ph); c.fillStyle = '#FFF'; c.textAlign = 'center'; c.textBaseline = 'middle';
       c.font = `800 ${ph * 0.6}px ${FONT_EN}`; c.fillText(ex.n || '出', ph / 2, ph * 0.54);
-      c.textAlign = 'left'; c.font = `800 ${ph * 0.36}px ${FONT}`; c.fillText('厦门地铁' + (ex.n ? `  ${ex.n}号出口` : '  出口'), ph * 1.2, ph * 0.38);
+      c.textAlign = 'left'; c.font = `800 ${ph * 0.36}px ${FONT}`; c.fillText('厦门地铁' + (ex.n ? `  ${exitZh(ex.n)}` : '  出口'), ph * 1.2, ph * 0.38);
       c.font = `600 ${ph * 0.2}px ${FONT_EN}`; c.fillText('Xiamen Metro' + (ex.n ? ` · Exit ${ex.n}` : ' · Exit'), ph * 1.2, ph * 0.74);
     };
     this.atlas.quad(0, 3.55, 0.72, 5.4, 0.62, Math.PI, this.atlas.draw(5.4, 0.62, sign));
@@ -164,7 +170,8 @@ export class XmStreet {
     P.ellipsoid(x - R * 0.45, cy + R * 0.25, z + R * 0.4, R * 1.05, R * 0.8, R * 1.05, hex(greens[2]), 1);
     this.kit.shade.shadeBlob(x, z, 2 * s, 2 * s, 0.02, 0.28, 0, 10);
   }
-  fence(x0, z0, x1, z1, gaps = [], h = 1.8) {
+  fence(x0, z0, x1, z1, gaps = [], h = 1.8, pick = 8) {
+    const NOAO = { ao: false };
     const k = this.kit, M = k.metal, len = Math.hypot(x1 - x0, z1 - z0), ux = (x1 - x0) / len, uz = (z1 - z0) / len, n = Math.ceil(len / 2.4);
     for (let i = 0; i < n; i++) {
       const a = i / n * len, b = (i + 1) / n * len, m = (a + b) / 2;
@@ -173,8 +180,8 @@ export class XmStreet {
       const ry = Math.atan2(ux, uz);
       M.box((ax + bx) / 2, h - 0.05, (az + bz) / 2, 0.06, 0.06, b - a, hex('#2F3A33'), ry);
       M.box((ax + bx) / 2, 0.25, (az + bz) / 2, 0.06, 0.06, b - a, hex('#2F3A33'), ry);
-      for (let j = 0; j < 8; j++) { const t = (j + 0.5) / 8; M.box(ax + (bx - ax) * t, h / 2, az + (bz - az) * t, 0.03, h, 0.03, hex('#2F3A33')); }
-      M.box(ax, h / 2 + 0.05, az, 0.1, h + 0.1, 0.1, hex('#25302A'));
+      for (let j = 0; j < pick; j++) { const t = (j + 0.5) / pick; M.box(ax + (bx - ax) * t, h / 2, az + (bz - az) * t, 0.03, h, 0.03, hex('#2F3A33'), 0, 0, 0, 1, NOAO); }   // 细栏杆不做 AO 分段（省三角形）
+      M.box(ax, h / 2 + 0.05, az, 0.1, h + 0.1, 0.1, hex('#25302A'), 0, 0, 0, 1, NOAO);
       k.col((ax + bx) / 2, h / 2, (az + bz) / 2, 0.2, h, b - a, { ry });
     }
   }

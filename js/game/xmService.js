@@ -11,6 +11,7 @@ import { XmStation, XM_PY } from '../world/xmMetro.js';
 import { XmStreet, XM_EXITS, XS } from '../world/xmStreet.js';
 import { XO } from '../world/xmn.js';
 import * as Ann from '../audio/announcements.js';
+import { xmExitSegs } from '../data/phrases.js';
 const B = window.BABYLON;
 const TUN_Y = -300, ARR_T = 9, D0 = 100, VMAX = 22;
 const dirKey = (line, step) => Object.keys(XM_LINES[line].dirs).find(d => XM_LINES[line].dirs[d].step === step);
@@ -127,15 +128,20 @@ export class XmMetro {
           s.u = Math.min(1, s.u + dt / 8); const x = D0 * s.step * s.u * s.u;
           this.move(s, x); sound = this.louder(sound, { speed: s.u * 0.9, inside: aboard, braking: false });
           if (aboard && nx && Math.abs(x) >= 80) { this.enterTunnel(s, nx); return; }
-          if (s.u >= 1) { s.state = 'away'; s.t = 8 + Math.random() * 10; tr.setVisible(false); if (this.ride && this.ride.train === tr && !aboard) this.ride = null; }
+          if (s.u >= 1) { s.state = 'away'; s.t = 8 + Math.random() * 10; tr.setVisible(false); if (this.ride && this.ride.train === tr && !aboard) this.alighted(); }
           break;
         }
       }
-      if (this.ride && this.ride.train === tr && !aboard && s.state !== 'departing' && s.state !== 'arriving') this.ride = null;
+      if (this.ride && this.ride.train === tr && !aboard && s.state !== 'departing' && s.state !== 'arriving') this.alighted();
       // 叠层换乘站：只画玩家所在那一层的列车（另一层隔着楼板看不见，省 draw）
       if (multi && s.state !== 'away') { const near = aboard || Math.abs(p.y - s.P.y) < 5; if (tr.root.isEnabled() !== near) tr.setVisible(near); }
     }
     if (sound) A.trainSound(sound); else if (!(this.ride && this.ride.phase === 'cruise')) A.trainSound({ speed: 0 });
+  }
+  /** 下车了：有景点出口的站再播一句“前往××的乘客，请从N号出口出站”（每到一次站播一次） */
+  alighted() {
+    const from = this.ride; this.ride = null;
+    if (from && this.guided !== this.code && xmExitSegs(this.code).length) { this.guided = this.code; Ann.xmExit(this.code); }
   }
   move(s, x) {
     const tr = s.train, pl = this.ctx.player, aboard = this.playerOn(tr);

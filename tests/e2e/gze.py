@@ -66,7 +66,7 @@ async def main():
     await pg.evaluate('__game.act()'); await asyncio.sleep(0.8)
     s = await st(pg); R['stood'] = not s['seat']['seated']
     await view(pg, 'third')
-    await auto(pg, [[EO + 9.0, 0.25], [EO + 10.6, 0.25], [EO + 11.2, 0.9], [EO + 11.2, 1.6]])
+    await auto(pg, [[EO + 9.0, 0.25], [EO + 10.6, 0.25], [EO + 11.2, 0.9], [EO + 11.2, 2.0]])
     R['outside'] = await wait(pg, '!__game.state().east.inside', 4)
     s = await st(pg); R['back'] = [s['zone'], s['pos']]
     # 7. 评审截图

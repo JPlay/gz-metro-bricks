@@ -16,6 +16,7 @@ import { FoodAtlas } from '../game/food-art.js';
 import { XM_LINES, XM_STATIONS, xmNext, xmDirFor } from '../data/xm-lines.js';
 import { XO } from './xmn.js';
 import { XM_EXITS } from './xmStreet.js';
+import { exitZh } from '../data/xm-visits.js';
 import { noProbe } from './xmnStation.js';
 
 const B = window.BABYLON;
@@ -469,7 +470,7 @@ export class XmStation {
     const paint = (c, pw, ph) => {
       c.fillStyle = '#F2C230'; c.fillRect(0, 0, pw, ph); c.fillStyle = '#1B2530'; c.fillRect(8, 8, ph - 16, ph - 16);
       c.fillStyle = '#F2C230'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `800 ${ph * (ex.n.length > 1 ? 0.36 : 0.48)}px ${FONT_EN}`; c.fillText(ex.n || '出', 8 + (ph - 16) / 2, ph * 0.52);
-      c.fillStyle = '#1B2530'; c.textAlign = 'left'; c.font = `800 ${ph * 0.3}px ${FONT}`; c.fillText(`${ex.n ? ex.n + '号' : ''}出口  ${ex.road}`, ph * 0.95, ph * 0.36);
+      c.fillStyle = '#1B2530'; c.textAlign = 'left'; c.font = `800 ${ph * 0.3}px ${FONT}`; c.fillText(`${ex.n ? exitZh(ex.n) : '出口'}  ${ex.road}`, ph * 0.95, ph * 0.36);
       c.font = `600 ${ph * 0.2}px ${FONT}`; c.fillText(ex.to.join(' · '), ph * 0.95, ph * 0.72);
     };
     this.atlas.quad(ex.x, y + 2.9, -18.5, 4.2, 0.85, 0, this.atlas.draw(4.2, 0.85, paint));
