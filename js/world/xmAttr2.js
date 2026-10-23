@@ -319,14 +319,14 @@ function sciTech(S) {
     k.col(x, 2, z, 4.6, 4, 4.6); }
   { const x = 30, z = 40; GR.cyl(x, 0.4, z, 7, 0.8, hex('#D7D1C4'), 24); k.metal.tube([x, 0.8, z + 1], [x, 5, z - 2], 0.3, hex('#8A7A5A'), 6); for (let i = 0; i < 12; i++) { const a = i / 12 * TAU; P.slab(x + Math.cos(a) * 3 - 0.1, x + Math.cos(a) * 3 + 0.1, 0.8, 0.84, z + Math.sin(a) * 3 - 0.3, z + Math.sin(a) * 3 + 0.3, hex('#5A4A3A'), { ao: false }); } k.col(x, 0.4, z, 7, 0.8, 7); }
   // 恐龙骨架（化石展的招牌）：一串椎骨 + 肋骨 + 四条腿 + 大头骨，站在石台上
-  { const x = 0, z = 70, BO = hex('#EDE3CC'); GR.slab(x - 9, x + 9, 0, 0.6, z - 3, z + 3, hex('#BDB6A8'), { ao: false }); k.colSlab(x - 9, x + 9, 0, 4, z - 3, z + 3);
-    const sp = []; for (let i = 0; i <= 16; i++) { const t = i / 16; sp.push([x - 8 + t * 15, 3.4 + Math.sin(t * Math.PI) * 1.6 - (t < 0.2 ? (0.2 - t) * 6 : 0), z]); } P.path(sp, 0.32, BO, 5);
-    for (let i = 5; i <= 11; i++) { const [rx, ry] = sp[i]; for (const s of [-1, 1]) P.path([[rx, ry, z], [rx + 0.2, ry - 0.9, z + s * 0.9], [rx + 0.3, ry - 1.8, z + s * 0.5]], 0.1, BO, 4); }
-    for (const [lx, top] of [[-2.4, 4.0], [2.6, 4.4]]) for (const s of [-1, 1]) P.path([[x + lx, top, z + s * 0.5], [x + lx + 0.6, top - 1.8, z + s * 0.7], [x + lx - 0.2, 0.7, z + s * 0.7]], 0.22, BO, 4);
+  { const x = 0, z = 70, BO = hex('#8C6A46'); GR.slab(x - 9, x + 9, 0, 0.6, z - 3, z + 3, hex('#BDB6A8'), { ao: false }); k.colSlab(x - 9, x + 9, 0, 4, z - 3, z + 3);
+    const sp = []; for (let i = 0; i <= 16; i++) { const t = i / 16; sp.push([x - 8 + t * 15, 3.4 + Math.sin(t * Math.PI) * 1.6 - (t < 0.2 ? (0.2 - t) * 6 : 0), z]); } P.path(sp, 0.5, BO, 5);
+    for (let i = 5; i <= 11; i++) { const [rx, ry] = sp[i]; for (const s of [-1, 1]) P.path([[rx, ry, z], [rx + 0.2, ry - 0.9, z + s * 0.9], [rx + 0.3, ry - 1.8, z + s * 0.5]], 0.18, BO, 4); }
+    for (const [lx, top] of [[-2.4, 4.0], [2.6, 4.4]]) for (const s of [-1, 1]) P.path([[x + lx, top, z + s * 0.5], [x + lx + 0.6, top - 1.8, z + s * 0.7], [x + lx - 0.2, 0.7, z + s * 0.7]], 0.34, BO, 4);
     P.box(x + 7.9, 4.9, z, 2.0, 1.1, 0.9, BO, 0, 0, -0.25); P.box(x + 8.0, 4.2, z, 1.6, 0.25, 0.7, BO, 0, 0, -0.1); P.box(x + 7.5, 5.15, z, 0.4, 0.3, 0.95, hex('#5A4632')); }
   // 大猫（“大猫小猫”特展）：一只趴着的黄色大猫雕塑，小朋友可以爬
   { const x = 34, z = 66, Y = hex('#E0A040'), Yd = hex('#B87A28'); GR.slab(x - 4, x + 4, 0, 0.4, z - 2.4, z + 2.4, hex('#BDB6A8'), { ao: false });
-    P.ellipsoid(x, 1.6, z, 5.2, 2.2, 2.4, Y, 1); P.sphere(x + 2.9, 2.6, z, 1.9, Y, 1); for (const s of [-1, 1]) P.cyl(x + 3.2, 3.5, z + s * 0.6, 0.6, 0.6, Y, 4, 0, 0, 0, 0.1);
+    P.ellipsoid(x, 1.6, z, 5.2, 2.2, 2.4, Y, 2); P.sphere(x + 2.9, 2.6, z, 1.9, Y, 2); for (const s of [-1, 1]) P.cyl(x + 3.2, 3.5, z + s * 0.6, 0.6, 0.6, Y, 4, 0, 0, 0, 0.1);
     for (const [lx, s] of [[1.8, -1], [1.8, 1], [-1.8, -1], [-1.8, 1]]) P.cyl(x + lx, 0.8, z + s * 0.8, 0.8, 1.0, Y, 6);
     P.path([[x - 2.5, 1.6, z], [x - 4.0, 1.4, z + 0.6], [x - 4.8, 2.2, z + 1.2]], 0.3, Y, 4);
     for (let i = 0; i < 4; i++) P.box(x - 1.5 + i * 1.1, 2.68, z, 0.25, 0.08, 2.0, Yd); k.col(x, 1.4, z, 7, 2.8, 2.6); }
@@ -339,11 +339,11 @@ function sciTech(S) {
 
 /* ====================== 蔡塘站 2 号出口：忠仑公园 ====================== */
 function zhonglunPark(S) {
-  const k = S.kit, P = k.solid, A = S.atlas, GR = k.g('granite'), G = k.g('grass'), W = k.g('gloss@water');
+  const k = S.kit, P = k.solid, A = S.atlas, GR = k.g('granite'), G = k.g('grass'), W = k.g('paint@lake');
   front(S, null);
   G.slab(-160, 160, 0.004, 0.012, 2, 196, hex('#FFFFFF'), { ao: false });
   // 大门：两块大石头 + 横梁“忠仑公园”
-  { const z = 22; for (const s of [-1, 1]) { P.ellipsoid(s * 9, 2.4, z, 5, 5, 4, hex('#A39B8C'), 1); k.col(s * 9, 2.4, z, 4.4, 4.8, 3.6); }
+  { const z = 22; for (const s of [-1, 1]) { P.ellipsoid(s * 9, 2.2, z, 5.2, 4.6, 3.8, hex('#B3A894'), 3); P.ellipsoid(s * 9 + s * 1.4, 4.6, z + 0.3, 3.2, 2.6, 2.8, hex('#A89D88'), 3); k.col(s * 9, 2.4, z, 4.4, 4.8, 3.6);   /* 圆润的景观石（原 1 段细分远看像灰色六边形） */ }
     P.slab(-7, 7, 4.4, 6.0, z - 0.4, z + 0.4, hex('#5E6B5A'), { ao: false }); const uv = A.draw(13, 1.4, textPaint(['忠仑公园', 'Zhonglun Park'], { bg: '#5E6B5A', fg: '#F2EAD0' })); A.quad(0, 5.2, z - 0.42, 13, 1.4, 0, uv); A.quad(0, 5.2, z + 0.42, 13, 1.4, Math.PI, uv); }
   // 环形步道 + 中心湖
   const cx = 0, cz = 110, RX = 50, RZ = 32;
@@ -472,7 +472,7 @@ function haicangBay(S) {
 
 const ALL_BUILD = { zhl: zhenhaiRoad, lbn: bookCity, gqi: seawallPark, yby: gardenExpo, grn: sciTech, ctg: zhonglunPark, hbz: bailuzhou, ylz: ferryPier, hcw: haicangBay };
 // 分批接入：LIVE 里的站才建景点街区，其余仍是普通街面
-const LIVE = ['zhl', 'lbn', 'gqi'];
+const LIVE = ['zhl', 'lbn', 'gqi', 'yby', 'grn', 'ctg'];
 
 export const ATTR_EXITS2 = Object.fromEntries(LIVE.map(c => [c, ALL_EXITS[c]]));
 export const ATTR_BUILD2 = Object.fromEntries(LIVE.map(c => [c, ALL_BUILD[c]]));

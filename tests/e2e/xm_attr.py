@@ -7,7 +7,7 @@ from perfhud import perf
 URL = sys.argv[1] if len(sys.argv) > 1 else 'http://localhost:8177/'
 AREA = {'draws': 50, 'tris': 186754}
 VIEW_TRIS = 90000   # 景点街区：任何视角 ≤ 9 万三角形（用“整片街区所有可见网格之和”兜底，比单一视角更严）
-BUILT = ['zsp', 'dqn', 'jmx', 'sdy', 'gys', 'zhl', 'lbn', 'gqi']   # 已建街区
+BUILT = ['zsp', 'dqn', 'jmx', 'sdy', 'gys', 'zhl', 'lbn', 'gqi', 'yby', 'grn', 'ctg']   # 已建街区
 CODES = BUILT + ['zhl', 'lbn', 'gqi', 'yby', 'grn', 'ctg', 'hbz', 'ylz', 'hcw']   # 报站/出口文本
 R = {'checks': {}, 'perf': {}, 'info': {}, 'area': {}}
 def ok(k, v): R['checks'][k] = bool(v); log('check', k, bool(v)); return v
