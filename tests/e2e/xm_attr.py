@@ -6,9 +6,10 @@ from journey import GCLOCK, auto, log
 from perfhud import perf
 URL = sys.argv[1] if len(sys.argv) > 1 else 'http://localhost:8177/'
 AREA = {'draws': 50, 'tris': 186754}
+VIEW_TRIS = 90000   # 景点街区：任何视角 ≤ 9 万三角形（用“整片街区所有可见网格之和”兜底，比单一视角更严）
 BUILT = ['zsp', 'dqn', 'jmx', 'sdy', 'gys']   # 已建街区
 CODES = BUILT + ['zhl', 'lbn', 'gqi', 'yby', 'grn', 'ctg', 'hbz', 'ylz', 'hcw']   # 报站/出口文本
-R = {'checks': {}, 'perf': {}, 'info': {}}
+R = {'checks': {}, 'perf': {}, 'info': {}, 'area': {}}
 def ok(k, v): R['checks'][k] = bool(v); log('check', k, bool(v)); return v
 async def S(pg): return await pg.evaluate('(() => { const m = __game.xmMetro, s = __game.state(); return { pos: s.pos, zone: s.zone, street: m.street ? m.street.info() : null }; })()')
 async def main():
@@ -32,6 +33,8 @@ async def main():
       await pg.evaluate('__game.player.yaw = 0; __game.player.pitch = 0.05')
       await asyncio.sleep(1.2)
       d = await perf(pg, 3, 0.25); R['perf'][c] = d; log('perf', c, d)
+      R['area'][c] = await pg.evaluate("() => __game.scene.meshes.filter(m => m.isEnabled() && m.isVisible && m.getTotalIndices).reduce((t, m) => t + m.getTotalIndices() / 3 * (m.instances ? 1 + m.instances.length : 1), 0)"); log('areaTris', c, R['area'][c])
+      ok(c + ':tris90k', d['tris'] <= VIEW_TRIS and R['area'][c] <= VIEW_TRIS)
       s = await S(pg); ok(c + ':walk', s['street'] and s['pos'][2] > 5)
       await auto(pg, [[4000, 2], [4000, -1.5], [4000, -4.5]])
       s = await S(pg); ok(c + ':back', s['street'] is None and abs(s['pos'][2] + 34.4) < 1.5)

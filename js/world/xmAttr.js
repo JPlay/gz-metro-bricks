@@ -519,17 +519,19 @@ function guanyinBeach(S) {
   SA.slab(-160, 160, 0.0, 0.05, 27, SH + 2, SAND, { ao: false });
   SA.slab(-160, 160, 0.05, 0.055, SH - 8, SH + 1, hex('#C9AE7C'), { ao: false });   // 湿沙
   for (let i = 0; i < 46; i++) { const x = -150 + D.rnd() * 300, z = 32 + D.rnd() * (SH - 46); SA.ellipsoid(x, 0.03, z, 2 + D.rnd() * 4, 0.12, 1 + D.rnd() * 2, SANDd, 1); }
-  W.slab(-900, 900, 0.0, 0.07, SH - 2, 900, hex('#2F86A8'), { ao: false });
-  W.slab(-900, 900, 0.07, 0.075, SH - 2, SH + 14, hex('#5FB3C9'), { ao: false });   // 近岸浅水（浅一点的蓝绿）
-  // 岸边泡沫：一串不规则的白色薄片
-  for (let i = 0; i < 40; i++) { const x0 = -160 + i * 8 + D.rnd() * 3, w = 5 + D.rnd() * 5, z = SH - 1.6 + Math.sin(i * 1.3) * 0.8; W.slab(x0, x0 + w, 0.076, 0.1, z, z + 0.8 + D.rnd() * 0.8, hex('#F7FAFA'), { ao: false }); }
-  // 三道碎浪：蓝色浪身（隆起 0.2~0.5 m）+ 白色浪尖；越远越长越平
-  for (const [wz, hh, seg] of [[SH + 6, 0.38, 10], [SH + 15, 0.3, 14], [SH + 28, 0.22, 18]]) {
-    for (let i = 0; i < 400 / seg; i++) { const x0 = -200 + i * seg + D.rnd() * 3, w = seg * (0.55 + D.rnd() * 0.35), z = wz + Math.sin(i * 0.9) * 1.2;
-      W.box(x0 + w / 2, 0.07 + hh / 2, z + 0.5, w, hh, 1.6, hex('#3E9CBC'), 0, -0.25, 0, 1, { ao: false });
-      W.box(x0 + w / 2, 0.07 + hh, z, w * 0.9, 0.12, 0.7, hex('#F4F8F8'), 0, 0, 0, 1, { ao: false });
-      W.slab(x0 + w * 0.1, x0 + w * 0.85, 0.076, 0.085, z - 2.2, z - 0.9, hex('#DCEFF3'), { ao: false }); } }
-  for (let i = 0; i < 18; i++) { const x0 = -200 + i * 24 + D.rnd() * 6, z = SH + 44 + D.rnd() * 60; W.slab(x0, x0 + 10, 0.075, 0.08, z, z + 0.6, hex('#BFDDE8'), { ao: false }); }
+  const SEA = k.g('paint@sea');   // 哑光：低机位掠射时 gloss 水面会把天空反成一片白
+  SEA.slab(-900, 900, 0.0, 0.07, SH - 2, 900, hex('#2A7FB0'), { ao: false });
+  SEA.slab(-900, 900, 0.07, 0.085, SH - 2, SH + 12, hex('#4DB3CC'), { ao: false });   // 近岸浅水（浅一点的蓝绿）
+  // 岸边泡沫：沿水线一条连续的白沫（前后错开一点）；白沫和浪尖用哑光材质，避免水面高光把整片海照成白的
+  const FO = k.g('paint@foam'), FW = hex('#F6F9FA'), FP = hex('#BFE3EC');
+  for (let i = 0; i < 32; i++) { const x0 = -160 + i * 10, z = SH - 1.6 + Math.sin(i * 1.3) * 0.6; FO.slab(x0 - 0.5, x0 + 10.5, 0.1, 0.13, z, z + 0.9 + D.rnd() * 0.6, FW, { ao: false }); }
+  // 三道碎浪：连续的白色浪尖（略高出水面）+ 前面一窄条淡蓝白碎沫；越远越窄
+  for (const [wz, hh, dd] of [[SH + 7, 0.3, 0.9], [SH + 17, 0.24, 0.7], [SH + 30, 0.18, 0.55]]) {
+    const segN = 20, L = 400 / segN;
+    for (let i = 0; i < segN; i++) { const x0 = -200 + i * L, z = wz + Math.sin(i * 0.8 + wz) * 1.0;
+      FO.box(x0 + L / 2, 0.08 + hh / 2, z, L + 0.6, hh, dd, FW, 0, 0, 0, 1, { ao: false });
+      FO.slab(x0 - 0.3, x0 + L + 0.3, 0.1, 0.11, z - dd / 2 - 1.0, z - dd / 2, FP, { ao: false }); } }
+  for (let i = 0; i < 18; i++) { const x0 = -200 + i * 24 + D.rnd() * 6, z = SH + 44 + D.rnd() * 60; FO.slab(x0, x0 + 10, 0.1, 0.11, z, z + 0.5, FP, { ao: false }); }
   k.colSlab(-160, 160, 0, 3, SH + 3, SH + 4);   // 只能走到浅水边
   // 远处的小岛（大担 / 二担方向）
   P.ellipsoid(-180, 0, 620, 160, 50, 60, hex('#6E8A86'), 1); P.ellipsoid(220, 0, 700, 120, 36, 50, hex('#7A9490'), 1);
