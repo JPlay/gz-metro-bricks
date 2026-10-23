@@ -15,3 +15,4 @@ export const safety = k => say(P.safetySegs(k), { key: 'safety' });
 /** 厦门地铁报站（普通话 + 英语） */
 export const xmDepart = (line, nextCode, dir, step, withDest) => say(P.xmDepartSegs(line, nextCode, dir, step, withDest), { key: 'next', interrupt: true });
 export const xmPlatform = (line, dir, n) => say(P.xmPlatformSegs(line, dir, n), { key: 'platform', interrupt: true });
+export const xmExit = code => say(P.xmExitSegs(code), { key: 'xmexit' });
