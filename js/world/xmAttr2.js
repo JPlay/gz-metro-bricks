@@ -370,7 +370,7 @@ function zhonglunPark(S) {
 
 /* ====================== 湖滨中路站 2 号出口：白鹭洲公园（白鹭女神 + 音乐喷泉） ====================== */
 function bailuzhou(S) {
-  const k = S.kit, P = k.solid, A = S.atlas, GR = k.g('granite'), G = k.g('grass'), W = k.g('gloss@water');
+  const k = S.kit, P = k.solid, A = S.atlas, GR = k.g('granite'), G = k.g('grass'), W = k.g('paint@lake');
   front(S, '湖滨中路');
   G.slab(-160, 160, 0.004, 0.012, 2, 70, hex('#FFFFFF'), { ao: false });
   stone(S, 10, 18, 5, 1.8, '白鹭洲公园', 'Bailuzhou Park', { bg: '#5E6B5A', fg: '#F2EAD0' });
@@ -417,7 +417,7 @@ function ferryPier(S) {
   S.facadeBlock(0, (Z0 + Z1) / 2, X1 - X0, Z1 - Z0, 10, '#F1F1EE', facadePaint({ floors: 2, bays: 20, wall: '#F1F1EE', band: '#2F6FB5', glass: '#7FA6C0', frame: '#FFFFFF', grille: false }), facadePaint({ floors: 2, bays: 6, wall: '#F1F1EE', band: '#2F6FB5', glass: '#7FA6C0', frame: '#FFFFFF', grille: false }));
   for (let i = 0; i < 5; i++) { const x = X0 + 10 + i * 20; k.g('gloss').cyl(x, 11.5, (Z0 + Z1) / 2, 20, Z1 - Z0 + 6, hex('#F4F5F6'), 16, Math.PI / 2, Math.PI / 2, 0); }
   k.metal.slab(X0 - 1, X1 + 1, 10.2, 10.6, Z0 - 3, Z1 + 3, hex('#2F6FB5'), { ao: false });
-  A.quad(0, 7.6, Z0 - 0.06, 26, 2.8, 0, A.draw(26, 2.8, textPaint(['厦鼓码头', 'XIAMEN–GULANGYU FERRY'], { bg: '#F1F1EE', fg: '#2F6FB5' })));
+  P.slab(-19, 19, 5.4, 9.8, Z0 - 0.5, Z0 - 0.1, hex('#2F6FB5'), { ao: false }); A.quad(0, 7.6, Z0 - 0.56, 37, 4.0, 0, A.draw(37, 4.0, textPaint(['厦鼓码头', 'XIAMEN–GULANGYU FERRY'], { bg: '#2F6FB5', fg: '#FFFFFF' }), 27));   /* 大蓝牌，远处也看得清 */
   A.quad(0, 2.0, Z0 - 0.06, 14, 3.4, 0, A.draw(14, 3.4, (c, pw, ph) => { c.fillStyle = '#3A4A5A'; c.fillRect(0, 0, pw, ph); c.fillStyle = '#9FC1D8'; for (let i = 0; i < 6; i++) c.fillRect(pw * (0.03 + i * 0.163), ph * 0.08, pw * 0.13, ph * 0.84); }));
   // 售票 / 指示牌
   { const x = -26, z = 36; k.metal.cyl(x, 1.5, z, 0.16, 3, hex('#5C646C'), 6); P.slab(x - 2, x + 2, 2.6, 4.0, z - 0.1, z + 0.1, hex('#2F6FB5'), { ao: false }); A.quad(x, 3.3, z - 0.12, 3.8, 1.2, 0, A.draw(3.8, 1.2, textPaint(['往鼓浪屿 →', 'To Gulangyu'], { bg: '#2F6FB5', fg: '#FFFFFF' }))); }
@@ -472,7 +472,7 @@ function haicangBay(S) {
 
 const ALL_BUILD = { zhl: zhenhaiRoad, lbn: bookCity, gqi: seawallPark, yby: gardenExpo, grn: sciTech, ctg: zhonglunPark, hbz: bailuzhou, ylz: ferryPier, hcw: haicangBay };
 // 分批接入：LIVE 里的站才建景点街区，其余仍是普通街面
-const LIVE = ['zhl', 'lbn', 'gqi', 'yby', 'grn', 'ctg'];
+const LIVE = Object.keys(ALL_BUILD);   // 9 个全部接入
 
 export const ATTR_EXITS2 = Object.fromEntries(LIVE.map(c => [c, ALL_EXITS[c]]));
 export const ATTR_BUILD2 = Object.fromEntries(LIVE.map(c => [c, ALL_BUILD[c]]));
