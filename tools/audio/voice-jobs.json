@@ -3278,37 +3278,37 @@
  {
   "id": "voice.xmvisit.grn.zh",
   "lang": "zh",
-  "text": "官任站附近有诚毅科技探索中心，欢迎下车游玩，请从3号出口出站。",
+  "text": "官任站附近有厦门诚毅自然探索馆，欢迎下车游玩，请从3号出口出站。",
   "file": "voice/xmvisit-grn-zh.mp3"
  },
  {
   "id": "voice.xmvisit.grn.nan",
   "lang": "nan",
-  "text": "官任站附近有诚毅科技探索中心，欢迎下车游玩，请从3号出口出站。",
+  "text": "官任站附近有厦门诚毅自然探索馆，欢迎下车游玩，请从3号出口出站。",
   "file": "voice/xmvisit-grn-nan.mp3"
  },
  {
   "id": "voice.xmvisit.grn.en",
   "lang": "en",
-  "text": "Guanren station is near the Chengyi Science and Technology Exploration Center. You are welcome to get off and visit. Please use Exit 3.",
+  "text": "Guanren station is near the Xiamen Chengyi Nature Exploration Museum. You are welcome to get off and visit. Please use Exit 3.",
   "file": "voice/xmvisit-grn-en.mp3"
  },
  {
   "id": "voice.xmexit.grn.zh",
   "lang": "zh",
-  "text": "前往诚毅科技探索中心的乘客，请从3号出口出站。",
+  "text": "前往厦门诚毅自然探索馆的乘客，请从3号出口出站。",
   "file": "voice/xmexit-grn-zh.mp3"
  },
  {
   "id": "voice.xmexit.grn.nan",
   "lang": "nan",
-  "text": "前往诚毅科技探索中心的乘客，请从3号出口出站。",
+  "text": "前往厦门诚毅自然探索馆的乘客，请从3号出口出站。",
   "file": "voice/xmexit-grn-nan.mp3"
  },
  {
   "id": "voice.xmexit.grn.en",
   "lang": "en",
-  "text": "Passengers for the Chengyi Science and Technology Exploration Center, please use Exit 3.",
+  "text": "Passengers for the Xiamen Chengyi Nature Exploration Museum, please use Exit 3.",
   "file": "voice/xmexit-grn-en.mp3"
  },
  {

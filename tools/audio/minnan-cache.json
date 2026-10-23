@@ -1665,11 +1665,11 @@
   "flag": true
  },
  "voice.xmexit.grn.nan": {
-  "fp": "de5daa081fceebc8939c567ded4333f1414cb84467e33da1de70d28252a3ce22",
+  "fp": "8b200e7387675b6c31d3dce931dc6a29a35376ab2b24f12f65b78d67629737d8",
   "model": "cosyvoice-v3.5-flash",
   "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
-  "sim": 0.0,
-  "asr": "",
+  "sim": 0.682,
+  "asr": "今晚的梦新意自然探索馆的乘客，请从三号出口出站。",
   "tries": 1,
   "flag": false
  },
@@ -1836,13 +1836,13 @@
   "flag": false
  },
  "voice.xmvisit.grn.nan": {
-  "fp": "bc0392f61da745ebecd37626764721442f0c3b067ace1e3b4f1e3ff6a3f3e371",
+  "fp": "c6bae6b1f58a90acd9bcb26e82f6f6925f84e2e36eded21e830a84ea5ac423c3",
   "model": "cosyvoice-v3.5-flash",
   "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
-  "sim": 0.704,
-  "asr": "观hold有科技探索中心，欢迎下车游玩，车从三号出口出站。",
-  "tries": 4,
-  "flag": true
+  "sim": 0.414,
+  "asr": "关念港护军与耳盟形意自然探索观，欢迎哈恰游玩恰中山后出口出站。",
+  "tries": 1,
+  "flag": false
  },
  "voice.xmvisit.gqi.nan": {
   "fp": "18a511a1f9453b269a5bc22ab2775b1b71fc56ca387caa79d7ad59f6c0b03d6c",

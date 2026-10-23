@@ -4,7 +4,7 @@
  *   莲坂 3：外图厦门书城（玻璃大厅里的波浪形书架，可以走进去）
  *   高崎 1：海堤纪念公园（老铁轨一直铺进海里）
  *   园博苑 2：水上园林 + 落羽杉（长在水里的“水杉林”）
- *   官任 3：诚毅科技探索中心
+ *   官任 3：厦门诚毅自然探索馆（原诚毅科技探索中心）+ 集美塔
  *   蔡塘 2：忠仑公园
  *   湖滨中路 2：白鹭洲公园（白鹭女神像 + 音乐喷泉，筼筜湖）
  *   邮轮中心 6：厦鼓码头（去鼓浪屿的轮渡）
@@ -20,7 +20,7 @@ const WIP_EXITS = {
   lbn: { n: '3', x: 10, line: 1, road: '嘉禾路', to: ['外图厦门书城'], toEn: ['Xiamen Book City'] },
   gqi: { n: '1', x: 10, line: 1, road: '海堤纪念公园', to: ['海堤纪念公园'], toEn: ['Seawall Memorial Park'] },
   yby: { n: '2', x: 10, line: 1, road: '园博苑', to: ['园博苑'], toEn: ['Garden Expo Park'] },
-  grn: { n: '3', x: 10, line: 1, road: '诚毅科技探索中心', to: ['诚毅科技探索中心'], toEn: ['Chengyi Sci-Tech Center'] },
+  grn: { n: '3', x: 10, line: 1, road: '诚毅自然探索馆', to: ['厦门诚毅自然探索馆', '集美塔'], toEn: ['Chengyi Nature Museum', 'Jimei Tower'] },
   ctg: { n: '2', x: 10, line: 2, road: '忠仑公园', to: ['忠仑公园'], toEn: ['Zhonglun Park'] },
   hbz: { n: '2', x: 10, line: 2, road: '白鹭洲公园', to: ['白鹭洲公园'], toEn: ['Bailuzhou Park'] },
   ylz: { n: '6', x: 10, line: 2, road: '厦鼓码头', to: ['厦鼓码头'], toEn: ['Xiamen–Gulangyu Ferry Pier'] },
@@ -275,7 +275,7 @@ function gardenExpo(S) {
   S.filler([[-70, -42, 40, 16, 16, '#D2CABE'], [20, -44, 40, 16, 20, '#C9C2B6'], [100, -42, 40, 16, 18, '#CDC5B8']]);
 }
 
-/* ====================== 官任站 3 号出口：诚毅科技探索中心 ====================== */
+/* ====================== 官任站 3 号出口：厦门诚毅自然探索馆 · 集美塔 ====================== */
 function sciTech(S) {
   const k = S.kit, P = k.solid, A = S.atlas, GR = k.g('granite'), G = k.g('grass');
   front(S, null);
@@ -292,7 +292,7 @@ function sciTech(S) {
   const dz = cz - R - 4;
   P.sphere(0, 16, dz, 24, hex('#E9EEF2'), 3); P.cyl(0, 3, dz, 18, 6, hex('#D9D6CE'), 16); k.col(0, 8, dz, 20, 16, 20);
   for (let i = 0; i < 3; i++) P.cyl(0, 16, dz, 27 + i * 0.1, 0.4, hex(['#2F6FB5', '#F2711C', '#00A651'][i]), 32, 0.4 * i, 0.35 + i * 0.3, 0.2 * i);   // 星环
-  const sign = (c, pw, ph) => { c.fillStyle = '#2F6FB5'; c.fillRect(0, 0, pw, ph); c.fillStyle = '#FFFFFF'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `800 ${ph * 0.5}px ${FONT}`; c.fillText('诚毅科技探索中心', pw / 2, ph * 0.4); c.font = `600 ${ph * 0.2}px Arial`; c.fillText('CHENGYI SCI-TECH EXPLORATION CENTER', pw / 2, ph * 0.8); };
+  const sign = (c, pw, ph) => { c.fillStyle = '#2F6FB5'; c.fillRect(0, 0, pw, ph); c.fillStyle = '#FFFFFF'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `800 ${ph * 0.5}px ${FONT}`; c.fillText('厦门诚毅自然探索馆', pw / 2, ph * 0.4); c.font = `600 ${ph * 0.2}px Arial`; c.fillText('XIAMEN CHENGYI NATURE EXPLORATION MUSEUM', pw / 2, ph * 0.8); };
   P.slab(-14, 14, 0, 3.2, dz - 14, dz - 13.4, hex('#2F6FB5'), { ao: false }); k.colSlab(-14, 14, 0, 3.2, dz - 14, dz - 13.4); A.quad(0, 1.6, dz - 14.02, 27.6, 3.0, 0, A.draw(27.6, 3.0, sign));
   // 广场：DNA 双螺旋雕塑 + 日晷 + 太阳系小行星
   { const x = -30, z = 40; GR.cyl(x, 0.3, z, 5, 0.6, hex('#BDB6A8'), 16);
@@ -327,7 +327,7 @@ function zhonglunPark(S) {
   { const x = -RX - 10, z = cz; GR.slab(x - 3.2, x + 3.2, 0, 0.3, z - 3.2, z + 3.2, hex('#D2CCBF'), { ao: false }); for (const [dx, dz] of [[-2.2, -2.2], [2.2, -2.2], [-2.2, 2.2], [2.2, 2.2]]) { P.cyl(x + dx, 1.7, z + dz, 0.3, 2.8, hex('#A23B2C'), 8); k.colSlab(x + dx - 0.2, x + dx + 0.2, 0, 3, z + dz - 0.2, z + dz + 0.2); } roof(k.g('gloss@tile'), x, z, 5, 5, 3.1, 2.2, hex('#3A4A5A'), { ovh: 0.9 }); }
   // 小山包（绿草坡）+ 坡上的花海（三角梅 / 凤凰木）
   for (const [x, z, rx, ry, rz] of [[90, 80, 46, 10, 34], [-100, 160, 50, 12, 36], [100, 170, 40, 9, 30]]) { G.ellipsoid(x, 0, z, rx, ry * 2, rz, hex('#FFFFFF'), 2); k.col(x, ry / 2, z, rx * 0.7, ry, rz * 0.7); }
-  for (let i = 0; i < 30; i++) { const a = D.rnd() * TAU, r = D.rnd(), x = 90 + Math.cos(a) * 18 * r, z = 80 + Math.sin(a) * 13 * r; P.sphere(x, 4.6 - r * 3.4, z, 1.2, hex(i % 3 ? '#D63384' : '#F2B233'), 0); }
+  for (let i = 0; i < 30; i++) { const a = D.rnd() * TAU, r = D.rnd(), x = 90 + Math.cos(a) * 18 * r, z = 80 + Math.sin(a) * 13 * r; P.sphere(x, 4.6 - r * 3.4, z, 1.2, hex(i % 3 ? '#D63384' : '#F2B233'), 1); }
   // 儿童游乐区 + 篮球场
   { const x = 70, z = 34; P.slab(x - 14, x + 14, 0.012, 0.04, z - 8, z + 8, hex('#F2C230'), { ao: false });
     for (const [dx, c] of [[-8, '#E84A5F'], [0, '#3FA7D6'], [8, '#6CC04A']]) { P.slab(x + dx - 1.5, x + dx + 1.5, 0, 2.2, z - 1.5, z + 1.5, hex(c), { ao: false }); P.cyl(x + dx, 3.2, z, 3.6, 2.0, hex('#F4F4F4'), 4, Math.PI / 4, 0, 0, 0); k.colSlab(x + dx - 1.5, x + dx + 1.5, 0, 2.2, z - 1.5, z + 1.5); }

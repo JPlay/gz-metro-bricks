@@ -170,7 +170,8 @@ export class XmStreet {
     P.ellipsoid(x - R * 0.45, cy + R * 0.25, z + R * 0.4, R * 1.05, R * 0.8, R * 1.05, hex(greens[2]), 1);
     this.kit.shade.shadeBlob(x, z, 2 * s, 2 * s, 0.02, 0.28, 0, 10);
   }
-  fence(x0, z0, x1, z1, gaps = [], h = 1.8) {
+  fence(x0, z0, x1, z1, gaps = [], h = 1.8, pick = 8) {
+    const NOAO = { ao: false };
     const k = this.kit, M = k.metal, len = Math.hypot(x1 - x0, z1 - z0), ux = (x1 - x0) / len, uz = (z1 - z0) / len, n = Math.ceil(len / 2.4);
     for (let i = 0; i < n; i++) {
       const a = i / n * len, b = (i + 1) / n * len, m = (a + b) / 2;
@@ -179,8 +180,8 @@ export class XmStreet {
       const ry = Math.atan2(ux, uz);
       M.box((ax + bx) / 2, h - 0.05, (az + bz) / 2, 0.06, 0.06, b - a, hex('#2F3A33'), ry);
       M.box((ax + bx) / 2, 0.25, (az + bz) / 2, 0.06, 0.06, b - a, hex('#2F3A33'), ry);
-      for (let j = 0; j < 8; j++) { const t = (j + 0.5) / 8; M.box(ax + (bx - ax) * t, h / 2, az + (bz - az) * t, 0.03, h, 0.03, hex('#2F3A33')); }
-      M.box(ax, h / 2 + 0.05, az, 0.1, h + 0.1, 0.1, hex('#25302A'));
+      for (let j = 0; j < pick; j++) { const t = (j + 0.5) / pick; M.box(ax + (bx - ax) * t, h / 2, az + (bz - az) * t, 0.03, h, 0.03, hex('#2F3A33'), 0, 0, 0, 1, NOAO); }   // 细栏杆不做 AO 分段（省三角形）
+      M.box(ax, h / 2 + 0.05, az, 0.1, h + 0.1, 0.1, hex('#25302A'), 0, 0, 0, 1, NOAO);
       k.col((ax + bx) / 2, h / 2, (az + bz) / 2, 0.2, h, b - a, { ry });
     }
   }

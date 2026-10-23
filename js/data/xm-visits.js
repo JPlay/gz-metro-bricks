@@ -6,7 +6,7 @@
 export const XM_VISITS = {
   // —— 1 号线 ——
   cyg: { zh: ['集美市民广场'], en: ['Jimei Civic Square'], icon: 'science', name: '市民广场' },
-  grn: { zh: ['诚毅科技探索中心'], en: ['the Chengyi Science and Technology Exploration Center'], exit: '3', icon: 'science', name: '诚毅科技' },
+  grn: { zh: ['厦门诚毅自然探索馆'], en: ['the Xiamen Chengyi Nature Exploration Museum'], exit: '3', icon: 'science', name: '诚毅自然探索馆' },   // 原“诚毅科技探索中心”，2026-07-03 升级改名开馆（福建省政府网 2026-07-05）
   jmx: { zh: ['集美学村', '龙舟池', '鳌园'], en: ['Jimei School Village', 'the Dragon Boat Pond', 'Aoyuan Garden'], exit: '2', icon: 'jiageng', name: '集美学村' },
   yby: { zh: ['园林博览苑'], en: ['the Garden Expo Park'], exit: '2', icon: 'pavilion', name: '园博苑' },
   gqi: { zh: ['海堤纪念公园'], en: ['the Seawall Memorial Park'], exit: '1', icon: 'rail', name: '海堤公园' },
