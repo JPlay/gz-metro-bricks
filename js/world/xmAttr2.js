@@ -110,22 +110,33 @@ function zhenhaiRoad(S) {
   const pastel = ['#E9D6B4', '#F1E5CF', '#E4C9A8', '#EBDCC2', '#DDC6A6', '#F0DFC6'];
   const UVC = {}, once = (key, f) => UVC[key] || (UVC[key] = f());   // 同色同高的立面/卷帘/招牌共用一块图集，免得 2048 图集溢出
   const qilou = (side, z0, z1, i) => {  // side -1 = 西侧（立面朝 +x），+1 = 东侧（朝 -x）
-    const xf = side < 0 ? X0 : X1, xb = xf + side * 14, w = z1 - z0, col = pastel[i % 6], h = 13 + (i % 3) * 2.5;
-    const a = Math.min(xf, xb), b = Math.max(xf, xb);
-    // 后半截实墙，前 3.5 m 是骑楼（底层廊下，二层以上挑出来压在柱子上）
-    const xi = xf + side * 3.5, ai = Math.min(xi, xb), bi = Math.max(xi, xb);
-    P.slab(ai, bi, 0, h, z0 + 0.1, z1 - 0.1, hex(col), { ao: false }); k.colSlab(ai, bi, 0, h, z0, z1);
-    P.slab(a, b, 4.2, h, z0 + 0.1, z1 - 0.1, hex(col), { ao: false });
-    P.slab(Math.min(xf, xi), Math.max(xf, xi), 0.03, 0.06, z0, z1, hex('#9A8E7A'), { ao: false });
-    for (const z of [z0 + 0.5, (z0 + z1) / 2, z1 - 0.5]) { P.slab(xf - 0.35, xf + 0.35, 0, 4.2, z - 0.35, z + 0.35, hex(col), { ao: false }); k.colSlab(xf - 0.35, xf + 0.35, 0, 4.2, z - 0.35, z + 0.35); }
+    // 骑楼：二层以上整片挑出盖住人行道，压在临街一排柱子上；底层店面缩进 3.5 m，柱廊下是有顶的人行道
+    const xf = side < 0 ? X0 : X1, xb = xf + side * 14, w = z1 - z0, col = pastel[i % 6], h = 13 + (i % 3) * 2.5, zc = (z0 + z1) / 2;
+    const xi = xf + side * 3.5, lo = (u, v) => Math.min(u, v), hi = (u, v) => Math.max(u, v), WH = '#F3EDE2';
+    // 底层店铺（缩进）+ 楼上（压到街边）
+    P.slab(lo(xi, xb), hi(xi, xb), 0, 4.2, z0 + 0.1, z1 - 0.1, hex('#CDBB9C'), { ao: false }); k.colSlab(lo(xi, xb), hi(xi, xb), 0, 4.2, z0, z1);
+    P.slab(lo(xf, xb), hi(xf, xb), 4.2, h, z0 + 0.1, z1 - 0.1, hex(col), { ao: false });
+    // 廊顶（挑楼的底面，深色）+ 临街的白色横梁 / 腰线
+    P.slab(lo(xf, xi), hi(xf, xi), 3.95, 4.2, z0, z1, hex('#7E7466'), { ao: false });
+    P.slab(xf - 0.45, xf + 0.45, 3.4, 4.25, z0, z1, hex(WH), { ao: false }); P.slab(xf - 0.6, xf + 0.6, 4.25, 4.55, z0, z1, hex('#B5523B'), { ao: false });
+    // 廊下人行道（米色方砖，和街面分开）
+    P.slab(lo(xf, xi), hi(xf, xi), 0.03, 0.09, z0, z1, hex('#D4C19C'), { ao: false }); P.slab(xf - 0.25, xf + 0.25, 0.03, 0.16, z0, z1, hex('#9A8E7A'), { ao: false });
+    // 柱廊：一排方柱（柱础 + 柱身 + 柱头 + 两边托角），每开间 4 根
+    for (let n = 0; n < 4; n++) { const z = z0 + 0.6 + n * (w - 1.2) / 3;
+      P.slab(xf - 0.5, xf + 0.5, 0.09, 0.6, z - 0.5, z + 0.5, hex('#A79A84'), { ao: false });
+      P.slab(xf - 0.38, xf + 0.38, 0.6, 3.1, z - 0.38, z + 0.38, hex(WH), { ao: false });
+      P.slab(xf - 0.5, xf + 0.5, 3.1, 3.4, z - 0.55, z + 0.55, hex(WH), { ao: false });
+      for (const d of [-1, 1]) P.box(xf, 3.25, z + d * 0.75, 0.5, 0.36, 0.55, hex(WH), 0, d * 0.6, 0, 1, { ao: false });
+      k.colSlab(xf - 0.4, xf + 0.4, 0, 3.4, z - 0.4, z + 0.4); }
     // 山花女儿墙（中间起拱）
-    P.slab(xf - 0.2, xf + 0.2, h, h + 1.2, z0 + 0.2, z1 - 0.2, hex(col), { ao: false }); P.cyl(xf, h + 1.2, (z0 + z1) / 2, 4, 0.4, hex(col), 12, 0, 0, Math.PI / 2);
+    P.slab(xf - 0.2, xf + 0.2, h, h + 1.2, z0 + 0.2, z1 - 0.2, hex(col), { ao: false }); P.cyl(xf, h + 1.2, zc, 4, 0.4, hex(col), 12, 0, 0, Math.PI / 2);
     const ry = side < 0 ? Math.PI / 2 : -Math.PI / 2;
-    const uv = once('f' + (i % 6) + w, () => A.draw(w - 0.4, h - 4.4, facadePaint({ floors: 3, bays: Math.max(2, Math.round(w / 3.2)), wall: col, band: '#B5523B', glass: '#6F8DA0', frame: '#FFFFFF', grille: false, arch: true, tile: 0.05 }), 40));
-    A.quad(xf - side * 0.21, 4.2 + (h - 4.4) / 2, (z0 + z1) / 2, w - 0.4, h - 4.4, ry, uv);
+    const uv = once('f' + (i % 6) + w, () => A.draw(w - 0.4, h - 4.8, facadePaint({ floors: 3, bays: Math.max(2, Math.round(w / 3.2)), wall: col, band: '#B5523B', glass: '#6F8DA0', frame: '#FFFFFF', grille: false, arch: true, tile: 0.05 }), 40));
+    A.quad(xf - side * 0.21, 4.6 + (h - 4.8) / 2, zc, w - 0.4, h - 4.8, ry, uv);
+    // 缩进的店面：招牌 + 卷帘/橱窗（在柱廊里面）
     const shop = ['老字号', '黄则和', '馅饼', '沙茶面', '鼓浪屿馅饼', '花生汤', '土笋冻', '茶叶', '药房', '鱼丸'][i % 10];
-    A.quad(xi - side * 0.02, 2.6, (z0 + z1) / 2, w * 0.7, 0.9, ry, once('s' + shop + (i % 3) + w, () => A.draw(w * 0.7, 0.9, textPaint([shop], { bg: ['#8A2A1E', '#1E3A5A', '#2E5A3A'][i % 3], fg: '#F2D06B' }), 70)));
-    A.quad(xi - side * 0.02, 1.1, (z0 + z1) / 2, w * 0.7, 1.8, ry, once('r' + w, () => A.draw(w * 0.7, 1.8, (c, pw, ph) => { c.fillStyle = '#3A3A3A'; c.fillRect(0, 0, pw, ph); c.fillStyle = '#D9C69A'; c.fillRect(pw * 0.06, ph * 0.08, pw * 0.88, ph * 0.84); c.fillStyle = '#8A6A4A'; for (let j = 1; j < 4; j++) c.fillRect(pw * j / 4, ph * 0.08, 3, ph * 0.84); }, 50)));
+    A.quad(xi - side * 0.02, 3.3, zc, w * 0.7, 0.8, ry, once('s' + shop + (i % 3) + w, () => A.draw(w * 0.7, 0.8, textPaint([shop], { bg: ['#8A2A1E', '#1E3A5A', '#2E5A3A'][i % 3], fg: '#F2D06B' }), 70)));
+    A.quad(xi - side * 0.02, 1.5, zc, w * 0.7, 2.6, ry, once('r' + w, () => A.draw(w * 0.7, 2.6, (c, pw, ph) => { c.fillStyle = '#3A3A3A'; c.fillRect(0, 0, pw, ph); c.fillStyle = '#E8D9B0'; c.fillRect(pw * 0.04, ph * 0.06, pw * 0.58, ph * 0.9); c.fillStyle = '#9FC1D8'; c.fillRect(pw * 0.68, ph * 0.06, pw * 0.28, ph * 0.9); c.fillStyle = '#8A6A4A'; for (let j = 1; j < 5; j++) c.fillRect(pw * 0.04 + pw * 0.58 * j / 5, ph * 0.06, 3, ph * 0.9); }, 50)));
   };
   let i = 0; for (let z = Z0 + 4; z < Z1 - 4; z += 11) { qilou(-1, z, z + 11, i); qilou(1, z + (i % 2 ? 0 : 0), z + 11, i + 3); i++; }
   // 3B 出口（街口，东侧骑楼廊下前）
@@ -163,7 +174,7 @@ function bookCity(S) {
   for (let x = X0; x <= X1; x += 5) k.metal.slab(x - 0.08, x + 0.08, 0, 8, Z0 + 0.4, Z0 + 0.6, hex('#3A4652'), { ao: false });
   k.metal.slab(X0, X1, 7.8, 8.2, Z0 + 0.3, Z0 + 0.7, hex('#3A4652'), { ao: false });
   P.slab(X0 + 0.5, X1 - 0.5, 7.7, 8, Z0 + 0.5, Z1 - 0.5, hex('#F4EFE6'), { ao: false });   // 天花
-  WD.slab(X0 + 0.5, X1 - 0.5, 0.005, 0.03, Z0 + 0.5, Z1 - 0.5, hex('#C9A37A'), { ao: false });
+  GR.slab(X0 + 0.5, X1 - 0.5, 0.005, 0.03, Z0 + 0.5, Z1 - 0.5, hex('#DAD2C3'), { ao: false });   // 浅色石材地面（原来的木地板远看一片橙）
   for (let x = X0 + 6; x < X1 - 4; x += 8) for (let z = Z0 + 6; z < Z1 - 4; z += 8) k.glow.slab(x - 1.2, x + 1.2, 7.66, 7.7, z - 0.3, z + 0.3, hex('#FFF6E0'), { ao: false });
   // 波浪形书架：顺着正弦曲线摆的一串书架格子（彩色书脊）
   const spines = (c, pw, ph) => { const cols = ['#B3261E', '#2F6FB5', '#E0A82E', '#2E8B57', '#6A3D8A', '#E86A3A', '#1E3A5A', '#F2F2F2', '#3FA7D6'];
@@ -173,16 +184,17 @@ function bookCity(S) {
   const wave = (zc, amp, ph0, h) => { const N = 18, xs = X0 + 4, xe = X1 - 4;
     for (let i = 0; i < N; i++) { const t0 = i / N, t1 = (i + 1) / N, x0 = xs + (xe - xs) * t0, x1 = xs + (xe - xs) * t1, z0 = zc + Math.sin(t0 * TAU * 1.5 + ph0) * amp, z1 = zc + Math.sin(t1 * TAU * 1.5 + ph0) * amp;
       const mx = (x0 + x1) / 2, mz = (z0 + z1) / 2, len = Math.hypot(x1 - x0, z1 - z0), ry = Math.atan2(x1 - x0, z1 - z0);
+      if (Math.abs(mx) < 3) continue;   // 中间留一条直通的过道（正门进来一路走到后墙）
       WD.box(mx, h / 2, mz, 0.5, h, len + 0.05, hex('#8A6A4A'), ry); k.col(mx, h / 2, mz, 0.5, h, len, { ry });
       WD.box(mx, h + 0.04, mz, 0.6, 0.08, len + 0.1, hex('#E9D8B8'), ry);
       const nx = Math.cos(ry), nz = -Math.sin(ry);   // 书架两面的法线
       for (const s of [-1, 1]) A.quad(mx + s * nx * 0.26, h / 2, mz + s * nz * 0.26, len * 0.98, h * 0.94, (s > 0 ? Math.PI / 2 : -Math.PI / 2) - ry, suv); } };   // 法线 (cos ry, −sin ry) → a = π/2 − ry
-  wave(Z0 + 16, 3.4, 0, 3.6); wave(Z0 + 30, 3.4, Math.PI, 3.6);   // 高书架（比小朋友高一倍）
+  for (const zc of [Z0 + 10, Z0 + 18, Z0 + 26, Z0 + 34]) wave(zc, 1.6, 0, 4.4);   // 四排高高的波浪书架（同相位平行，排与排之间是 7 m 宽的弯弯过道，可以在中间走）
   // 后墙通高书墙
   const wuv = A.draw(X1 - X0 - 2, 7, spines); A.quad(0, 3.7, Z1 - 0.52, X1 - X0 - 2, 7, Math.PI, wuv);
   // 读书台 + 小朋友
   for (const [x, z] of [[-24, Z0 + 42], [0, Z0 + 44], [24, Z0 + 42]]) { WD.cyl(x, 0.4, z, 3.2, 0.8, hex('#E9D8B8'), 12); k.col(x, 0.4, z, 3, 0.8, 3); for (let j = 0; j < 5; j++) P.box(x - 0.8 + j * 0.4, 0.86, z + (j % 2) * 0.3, 0.32, 0.12, 0.45, hex(['#B3261E', '#2F6FB5', '#E0A82E', '#2E8B57', '#6A3D8A'][j]), j * 0.4); }
-  for (const [x, z, c] of [[-20, Z0 + 23, '#E84A5F'], [10, Z0 + 24, '#3FA7D6'], [-4, Z0 + 38, '#F2B233'], [26, Z0 + 37, '#6CC04A']]) figure(P, x, z, c, 1.2);
+  for (const [x, z, c] of [[-12, Z0 + 14, '#E84A5F'], [12, Z0 + 22, '#3FA7D6'], [-12, Z0 + 30, '#F2B233'], [1, Z0 + 40, '#6CC04A']]) figure(P, x, z, c, 1.2);
   // 门前小广场
   for (const x of [-30, -15, 15, 30]) S.lightTree(x, 26, 0.9, 1);
   for (const [x, r] of [[-22, 0], [22, 0]]) D.bench(k, x, 0, 20, r);
@@ -343,14 +355,20 @@ function zhonglunPark(S) {
   front(S, null);
   G.slab(-160, 160, 0.004, 0.012, 2, 196, hex('#FFFFFF'), { ao: false });
   // 大门：两块大石头 + 横梁“忠仑公园”
-  { const z = 22; for (const s of [-1, 1]) { P.ellipsoid(s * 9, 2.2, z, 5.2, 4.6, 3.8, hex('#B3A894'), 3); P.ellipsoid(s * 9 + s * 1.4, 4.6, z + 0.3, 3.2, 2.6, 2.8, hex('#A89D88'), 3); k.col(s * 9, 2.4, z, 4.4, 4.8, 3.6);   /* 圆润的景观石（原 1 段细分远看像灰色六边形） */ }
+  { const z = 22; for (const s of [-1, 1]) { GR.slab(s * 7.6 - 0.6, s * 7.6 + 0.6, 0, 6.0, z - 0.6, z + 0.6, hex('#8E8576'), { ao: false }); k.colSlab(s * 7.6 - 0.6, s * 7.6 + 0.6, 0, 6, z - 0.6, z + 0.6);   // 门柱撑起横梁
+      P.ellipsoid(s * 13.5, 2.0, z + 0.6, 5.0, 4.2, 3.8, hex('#B3A894'), 3); P.ellipsoid(s * 15, 4.0, z + 1.0, 3.0, 2.4, 2.6, hex('#A89D88'), 3); k.col(s * 13.5, 2.2, z + 0.6, 4.4, 4.4, 3.4);   /* 景观石挪到招牌两边，不挡正门视线 */ }
     P.slab(-7, 7, 4.4, 6.0, z - 0.4, z + 0.4, hex('#5E6B5A'), { ao: false }); const uv = A.draw(13, 1.4, textPaint(['忠仑公园', 'Zhonglun Park'], { bg: '#5E6B5A', fg: '#F2EAD0' })); A.quad(0, 5.2, z - 0.42, 13, 1.4, 0, uv); A.quad(0, 5.2, z + 0.42, 13, 1.4, Math.PI, uv); }
   // 环形步道 + 中心湖
   const cx = 0, cz = 110, RX = 50, RZ = 32;
   ring(P, cx, cz, RX + 3, RZ + 3, RX + 7, RZ + 7, 0.02, hex('#C8553D'), 48);   // 红色塑胶跑道
   ring(GR, cx, cz, RX, RZ, RX + 1.2, RZ + 1.2, 0.2, hex('#BDB6A8'), 48);
   disc(W, cx, cz, RX + 0.2, RZ + 0.2, 0.06, hex('#4F8E96'), 48); ringCol(k, cx, cz, RX + 0.6, RZ + 0.6, 56);
-  P.slab(-2, 2, 0.01, 0.03, 26, cz - RZ - 7, hex('#CBBFA8'), { ao: false });
+  // 正门 → 湖边的步道：花岗岩铺面 + 两侧路沿 + 花坛 + 行道树，一路通到湖边的环湖步道
+  { const zA = 2, zB = cz - RZ - 1; GR.slab(-3, 3, 0.01, 0.05, zA, zB, hex('#CFC6B4'), { ao: false });
+    for (let z = zA + 2; z < zB; z += 2.4) GR.slab(-3, 3, 0.05, 0.06, z, z + 0.12, hex('#B5AC99'), { ao: false });   // 石板缝
+    for (const s of [-1, 1]) { GR.slab(s * 3 - 0.2, s * 3 + 0.2, 0, 0.22, zA, zB, hex('#9C9484'), { ao: false });
+      for (let z = 30; z < zB - 6; z += 12) { P.slab(s * 4.2 - 0.8, s * 4.2 + 0.8, 0, 0.35, z - 2.5, z + 2.5, hex('#8E8576'), { ao: false }); P.slab(s * 4.2 - 0.65, s * 4.2 + 0.65, 0.35, 0.55, z - 2.35, z + 2.35, hex((z / 12 | 0) % 2 ? '#D63384' : '#F2B233'), { ao: false }); }
+      for (let z = 36; z < zB - 4; z += 12) S.lightTree(s * 6.5, z, 0.8, 0); } }
   // 湖心喷泉 + 九曲桥边的亭
   P.cyl(cx, 0.2, cz, 6, 0.4, hex('#BDB6A8'), 16); for (let i = 0; i < 8; i++) { const a = i / 8 * TAU; k.glass.tube([cx + Math.cos(a) * 1, 0.4, cz + Math.sin(a) * 1], [cx + Math.cos(a) * 3.2, 4, cz + Math.sin(a) * 3.2], 0.25, hex('#E8F4FA'), 4); } k.glass.cyl(cx, 3.5, cz, 0.5, 7, hex('#E8F4FA'), 6);
   { const x = -RX - 10, z = cz; GR.slab(x - 3.2, x + 3.2, 0, 0.3, z - 3.2, z + 3.2, hex('#D2CCBF'), { ao: false }); for (const [dx, dz] of [[-2.2, -2.2], [2.2, -2.2], [-2.2, 2.2], [2.2, 2.2]]) { P.cyl(x + dx, 1.7, z + dz, 0.3, 2.8, hex('#A23B2C'), 8); k.colSlab(x + dx - 0.2, x + dx + 0.2, 0, 3, z + dz - 0.2, z + dz + 0.2); } roof(k.g('gloss@tile'), x, z, 5, 5, 3.1, 2.2, hex('#3A4A5A'), { ovh: 0.9 }); }
@@ -379,21 +397,39 @@ function bailuzhou(S) {
   W.slab(-900, 900, -0.3, 0.02, 72, 900, hex('#3F7F8E'), { ao: false });
   seawall(S, -160, 160, 72); k.colSlab(-160, 160, 0, 3, 71.2, 72);
   // 白鹭女神像：湖中圆台，白色少女坐像，手里托一只白鹭（鹭岛的城市雕塑）
-  const SX = 0, SZ = 110;
+  const SX = 0, SZ = 94;   // 离岸近一点（音乐喷泉挪到雕像后面当背景，不挡视线）
   GR.cyl(SX, 0.6, SZ, 12, 1.2, hex('#BDB6A8'), 24); GR.cyl(SX, 2.4, SZ, 5, 2.4, hex('#E3DDD0'), 16);
-  const Wh = hex('#F4F2EC');
-  P.ellipsoid(SX, 5.2, SZ + 0.4, 3.8, 3.0, 4.6, Wh, 2);             // 衣裙 / 盘坐的腿
-  P.cyl(SX, 7.8, SZ + 0.6, 2.2, 3.6, Wh, 10, 0, -0.1, 0, 1.4);       // 上身
-  P.sphere(SX, 10.3, SZ + 0.4, 1.5, Wh, 2); P.ellipsoid(SX, 10.4, SZ + 1.0, 1.7, 2.4, 1.4, Wh, 1);   // 头 + 长发
-  P.tube([SX - 0.9, 9.0, SZ + 0.4], [SX - 2.2, 10.2, SZ - 0.6], 0.6, Wh, 6); P.tube([SX - 2.2, 10.2, SZ - 0.6], [SX - 2.0, 11.8, SZ - 0.9], 0.5, Wh, 6);   // 举起的手
-  P.tube([SX + 0.9, 9.0, SZ + 0.4], [SX + 2.0, 7.6, SZ - 0.8], 0.6, Wh, 6);
-  // 手上的白鹭（展翅）
-  { const bx = SX - 2.0, by = 12.6, bz = SZ - 1.0; P.ellipsoid(bx, by, bz, 0.7, 0.7, 1.4, Wh, 1); P.path([[bx, by + 0.3, bz - 0.5], [bx, by + 1.1, bz - 0.7], [bx, by + 1.2, bz - 1.1]], 0.2, Wh, 4); P.tubeTaper([bx, by + 1.2, bz - 1.2], [bx, by + 1.1, bz - 1.9], 0.14, 0.04, hex('#2A2A2A'), 4);
-    for (const s of [-1, 1]) { q2(P, [bx, by + 0.2, bz - 0.4], [bx + s * 3.2, by + 1.8, bz + 0.2], [bx + s * 2.6, by + 1.0, bz + 1.2], [bx, by + 0.2, bz + 0.6], Wh); } }
+  // 白石雕像：长发少女侧身跪坐在礁石上，面朝西（岸上看是侧影），左臂高举一只展翅白鹭
+  const Wh = hex('#F7F4EE'), ST = P, ws = 3;   // 白色石雕（哑光白，石座用灰色花岗岩区分开）
+  GR.ellipsoid(SX, 4.0, SZ, 5.4, 2.2, 4.4, hex('#CFC9BC'), ws); GR.ellipsoid(SX + 1.6, 4.3, SZ + 0.8, 3.0, 1.8, 2.6, hex('#C4BDB0'), ws);   // 礁石座
+  // 跪坐的腿：大腿朝前（−x），小腿折回压在身下偏向岸这一侧；裙摆盖住腿、垂到石头上
+  for (const [kz, fz] of [[-0.95, -1.9], [-0.1, -1.25]]) { ST.path([[SX + 0.3, 5.35, SZ + kz * 0.4], [SX - 2.0, 5.05, SZ + kz]], 1.1, Wh, 10); ST.path([[SX - 2.0, 5.0, SZ + kz], [SX + 0.5, 4.85, SZ + fz]], 0.85, Wh, 10); ST.ellipsoid(SX + 0.9, 4.8, SZ + fz, 0.9, 0.35, 0.45, Wh, 2); }
+  ST.ellipsoid(SX - 0.9, 5.35, SZ - 0.55, 3.6, 1.2, 2.5, Wh, ws); ST.ellipsoid(SX - 0.4, 4.95, SZ - 0.8, 4.4, 0.6, 3.4, Wh, ws);   // 裙
+  ST.ellipsoid(SX + 0.25, 5.8, SZ, 1.9, 1.5, 2.2, Wh, ws);   // 臀
+  // 上身（肩宽沿 z）、脖子、头（微微仰起看着白鹭）
+  ST.ellipsoid(SX - 0.15, 7.35, SZ, 1.25, 2.9, 1.85, Wh, ws); ST.ellipsoid(SX - 0.55, 7.9, SZ, 0.7, 1.0, 1.4, Wh, 2);
+  ST.cyl(SX - 0.2, 9.15, SZ, 0.55, 0.9, Wh, 10, 0, 0, 0.15); ST.ellipsoid(SX - 0.4, 10.0, SZ, 1.15, 1.35, 1.0, Wh, ws, 0, 0, 0.25);
+  ST.ellipsoid(SX - 1.0, 10.05, SZ, 0.22, 0.3, 0.2, Wh, 1);   // 鼻尖
+  // 长发：头顶的发髻壳 + 顺着后背（+x）一路垂到腰下的一大把，再有一缕搭在肩上
+  ST.ellipsoid(SX - 0.15, 10.15, SZ, 1.2, 1.45, 1.12, Wh, ws);
+  ST.path([[SX + 0.25, 10.4, SZ], [SX + 0.75, 9.4, SZ + 0.05], [SX + 0.95, 8.1, SZ], [SX + 0.9, 6.8, SZ - 0.05], [SX + 1.25, 5.9, SZ]], 1.15, Wh, 10);
+  ST.ellipsoid(SX + 0.85, 8.4, SZ, 0.55, 2.4, 1.5, Wh, ws);
+  ST.path([[SX + 0.1, 9.9, SZ - 0.55], [SX + 0.15, 9.0, SZ - 0.9], [SX + 0.1, 8.2, SZ - 1.0]], 0.4, Wh, 8);
+  // 右臂（离岸那侧）垂下，手搭在膝上；左臂（岸这侧）高举过头托着白鹭
+  ST.path([[SX - 0.2, 8.6, SZ + 0.9], [SX - 0.75, 7.25, SZ + 1.0], [SX - 1.9, 5.85, SZ + 0.15]], 0.5, Wh, 8);
+  ST.path([[SX - 0.2, 8.6, SZ - 0.9], [SX - 0.85, 10.2, SZ - 1.35], [SX - 1.05, 11.9, SZ - 1.1]], 0.48, Wh, 8); ST.sphere(SX - 1.05, 12.05, SZ - 1.1, 0.5, Wh, 2);
+  // 白鹭：头朝岸（−z），脖子弯成 S 形，两翼向左右上方展开成 V 字（岸上看得很清楚）
+  { const bx = SX - 1.05, by = 12.75, bz = SZ - 1.1;
+    ST.ellipsoid(bx, by, bz, 0.75, 0.75, 1.5, Wh, ws, 0, 0.15, 0);
+    ST.path([[bx, by + 0.15, bz - 0.55], [bx, by + 0.75, bz - 0.9], [bx, by + 1.3, bz - 0.75], [bx, by + 1.7, bz - 1.1]], 0.26, Wh, 8); ST.sphere(bx, by + 1.75, bz - 1.2, 0.36, Wh, 2);
+    ST.tubeTaper([bx, by + 1.75, bz - 1.35], [bx, by + 1.6, bz - 2.0], 0.13, 0.03, Wh, 6);
+    ST.tubeTaper([bx, by - 0.05, bz + 0.65], [bx, by - 0.25, bz + 1.4], 0.4, 0.06, Wh, 6);   // 尾
+    for (const s of [-1, 1]) { q2(ST, [bx + s * 0.25, by + 0.25, bz - 0.5], [bx + s * 2.0, by + 1.5, bz - 0.4], [bx + s * 2.3, by + 1.4, bz + 0.7], [bx + s * 0.25, by + 0.25, bz + 0.6], Wh);
+      q2(ST, [bx + s * 2.0, by + 1.5, bz - 0.4], [bx + s * 3.3, by + 2.9, bz - 0.2], [bx + s * 3.4, by + 2.6, bz + 0.5], [bx + s * 2.3, by + 1.4, bz + 0.7], Wh); } }
   k.col(SX, 2, SZ, 12, 4, 12);
-  // 音乐喷泉：雕像前一排水柱（不同高度）+ 灯
-  for (let i = 0; i < 25; i++) { const x = -48 + i * 4, z = 90, h = 3 + Math.abs(Math.sin(i * 0.7)) * 9; k.glass.cyl(x, h / 2, z, 0.45, h, hex('#E8F6FC'), 6, 0, 0, 0, 0.15); k.glass.sphere(x, h, z, 1.0, hex('#F4FAFE'), 1); k.glow.cyl(x, 0.1, z, 0.9, 0.12, hex(['#7FD3FF', '#FFE07F', '#FF8FB8'][i % 3]), 8); }
-  for (let i = 0; i < 12; i++) { const a = i / 12 * TAU, x = SX + Math.cos(a) * 9, z = SZ + Math.sin(a) * 9; k.glass.tube([x, 0.2, z], [SX + Math.cos(a) * 6.5, 6, SZ + Math.sin(a) * 6.5], 0.35, hex('#E8F6FC'), 4); }
+  // 音乐喷泉：雕像后面一排水柱（不同高度）+ 灯
+  for (let i = 0; i < 25; i++) { const x = -48 + i * 4, z = SZ + 20, h = 3 + Math.abs(Math.sin(i * 0.7)) * 9; k.glass.cyl(x, h / 2, z, 0.45, h, hex('#E8F6FC'), 6, 0, 0, 0, 0.15); k.glass.sphere(x, h, z, 1.0, hex('#F4FAFE'), 1); k.glow.cyl(x, 0.1, z, 0.9, 0.12, hex(['#7FD3FF', '#FFE07F', '#FF8FB8'][i % 3]), 8); }
+  for (let i = 1; i < 6; i++) { const a = i / 12 * TAU, x = SX + Math.cos(a) * 9, z = SZ + Math.sin(a) * 9; k.glass.tube([x, 0.2, z], [SX + Math.cos(a) * 6.5, 6, SZ + Math.sin(a) * 6.5], 0.35, hex('#E8F6FC'), 4); }
   // 白鹭（湖面 / 栏杆上）
   const egret = (x, z, y = 0, fly = false) => { P.ellipsoid(x, y + 0.9, z, 0.34, 0.4, 0.7, Wh, 1, 0.4, 0.4); P.path([[x, y + 1.05, z + 0.25], [x, y + 1.45, z + 0.3], [x, y + 1.6, z + 0.42]], 0.09, Wh, 4); P.tubeTaper([x, y + 1.62, z + 0.5], [x, y + 1.6, z + 0.8], 0.06, 0.02, hex('#2A2A2A'), 4);
     if (fly) for (const s of [-1, 1]) q2(P, [x, y + 1.0, z - 0.2], [x + s * 1.4, y + 1.6, z], [x + s * 1.2, y + 1.2, z + 0.4], [x, y + 1.0, z + 0.3], Wh); else for (const s of [-0.08, 0.08]) P.tube([x + s, y, z], [x + s, y + 0.7, z], 0.03, hex('#2A2A2A'), 3); };
