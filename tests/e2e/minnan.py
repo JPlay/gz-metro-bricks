@@ -14,7 +14,7 @@ async def main():
       const m = await (await fetch('assets/audio/manifest.json')).json(), have = new Set(m.assets.map(a => a.id));
       let load = 0; for (const j of nan) { if (have.has(j.id)) { const r = await fetch('assets/audio/' + j.file); if (r.ok && (await r.arrayBuffer()).byteLength > 2000) load++; } }
       const XS = (await import('./js/data/xm-lines.js')).XM_STATIONS;
-      const badNan = nan.filter(j => { const m = j.id.match(/^voice\\.(next|arrive|welcome|xmvisit|destination|terminal|platform)\\.([a-z0-9]+)/); return !m || (['destination', 'terminal', 'platform'].includes(m[1]) ? !m[2].startsWith('xm') : !XS[m[2].replace(/[12]$/, '')]); }).map(j => j.id);
+      const badNan = nan.filter(j => { const m = j.id.match(/^voice\\.(next|arrive|welcome|xmvisit|xmexit|destination|terminal|platform)\\.([a-z0-9]+)/); return !m || (['destination', 'terminal', 'platform'].includes(m[1]) ? !m[2].startsWith('xm') : !XS[m[2].replace(/[12]$/, '')]); }).map(j => j.id);
       return { xm, gz, emuNan: emu.filter(i => i.endsWith('.nan')), nanCount: nan.length, load, badNan }; })()""")
     print(json.dumps(st0, ensure_ascii=False), flush=True)
     xm = st0['xm']
