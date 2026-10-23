@@ -5,7 +5,9 @@
  * 换乘站：公园前（1↔2）画成 1 号线黄 + 2 号线蓝的双色圆环；能换乘其他线路的站统一画白心粗深色圈（图例“可以换乘其他线路”）；“你在这里”大而亮，带呼吸光圈。
  */
 import { LINES, STATIONS, OTHER_LINES } from '../data/lines.js';
+import { XM_LINES, XM_STATIONS } from '../data/xm-lines.js';
 import { ATTRACTIONS } from '../data/attractions.js';
+import { XM_ATTRACTIONS } from '../data/xm-visits.js';
 import { iconSVG } from './mapicons.js';
 
 export const GYQ = 'gyq';
@@ -339,4 +341,62 @@ export function panZoom(box, onTap) {
   };
   box.addEventListener('pointerup', up); box.addEventListener('pointercancel', up);
   return { reset() { k = 1; tx = ty = 0; pts.clear(); apply(); }, set(nk, x = 0, y = 0) { k = nk; tx = x; ty = y; apply(); }, get scale() { return k; } };
+}
+
+/** 厦门地铁全网图（1 橙红 + 2 鹭岛绿，吕厝换乘）；和广州图同款交互 */
+export function xmNetworkSVG(here, { portrait = false } = {}) {
+  const W = portrait ? 720 : 1100, H = portrait ? 1100 : 720;
+  // 简易坐标：1 号线竖排，2 号线横排，交于吕厝
+  const L1 = XM_LINES[1].stations, L2 = XM_LINES[2].stations;
+  const iLcu1 = L1.indexOf('lcu'), iLcu2 = L2.indexOf('lcu');
+  const pos = {};
+  const x0 = portrait ? 360 : 200, y0 = portrait ? 80 : 360, dx = portrait ? 0 : 28, dy = portrait ? 36 : 0;
+  L1.forEach((c, i) => { pos[c] = [x0 + (i - iLcu1) * (portrait ? 0 : 28), y0 + (i - iLcu1) * (portrait ? 36 : 0)]; });
+  L2.forEach((c, i) => {
+    if (c === 'lcu') return;
+    const [lx, ly] = pos.lcu;
+    pos[c] = portrait ? [lx + (i - iLcu2) * 28, ly] : [lx, ly + (i - iLcu2) * 22];
+  });
+  // 归一到画布边距
+  const xs = Object.values(pos).map(p => p[0]), ys = Object.values(pos).map(p => p[1]);
+  const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+  const pad = 70, sx = (W - 2 * pad) / Math.max(1, maxX - minX), sy = (H - 2 * pad) / Math.max(1, maxY - minY);
+  const sc = Math.min(sx, sy);
+  for (const c of Object.keys(pos)) pos[c] = [pad + (pos[c][0] - minX) * sc, pad + (pos[c][1] - minY) * sc];
+  let s = `<svg class="netmap" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
+  s += `<text x="${W/2}" y="36" text-anchor="middle" font-size="22" font-weight="800" fill="#1B2530">厦门地铁</text>`;
+  s += `<text x="${W/2}" y="56" text-anchor="middle" font-size="13" fill="#6B7280">Xiamen Metro · 1号线 闽南红 · 2号线 鹭岛绿</text>`;
+  for (const [id, L] of Object.entries(XM_LINES)) {
+    const pts = L.stations.map(c => pos[c]);
+    s += `<polyline points="${pts.map(p => p[0] + ',' + p[1]).join(' ')}" fill="none" stroke="${L.color}" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>`;
+  }
+  for (const [c, [x, y]] of Object.entries(pos)) {
+    const S = XM_STATIONS[c], both = S.lines.length > 1, hereOn = c === here;
+    if (both) {
+      s += `<circle cx="${x}" cy="${y}" r="11" fill="#fff" stroke="${XM_LINES[1].color}" stroke-width="5"/>`;
+      s += `<circle cx="${x}" cy="${y}" r="5" fill="${XM_LINES[2].color}"/>`;
+    } else {
+      const lc = XM_LINES[S.lines[0]].color;
+      s += `<circle cx="${x}" cy="${y}" r="8" fill="#fff" stroke="${lc}" stroke-width="5"/>`;
+    }
+    if (hereOn) s += `<circle cx="${x}" cy="${y}" r="16" fill="none" stroke="#FF5A4E" stroke-width="3"><animate attributeName="r" values="14;20;14" dur="1.6s" repeatCount="indefinite"/></circle>`;
+    const label = S.zh.length > 4 ? S.zh.slice(0, 4) : S.zh;
+    const ly = y + (portrait ? 18 : (S.lines[0] === 1 ? -14 : 18));
+    s += `<text x="${x}" y="${ly}" text-anchor="middle" font-size="${hereOn ? 13 : 10}" font-weight="${hereOn ? 800 : 600}" fill="#1B2530">${label}</text>`;
+  }
+  // 景点小图标（和广州图一样可点开小卡片）：1 号线横排时放线下方，2 号线竖排时放线右侧；相邻两站错开
+  const XR = 13, alt = {};
+  for (const a of XM_ATTRACTIONS) {
+    const [x, y] = pos[a.code], S = XM_STATIONS[a.code], onL1 = S.lines.includes(1);
+    let ix, iy, anc = 'middle', tx, ty;
+    if (a.code === 'lcu') { ix = portrait ? x - 50 : x - 40; iy = portrait ? y - 44 : y + 40; }
+    else if (onL1) { if (portrait) { const k = (alt.p1 = !alt.p1) ? 1 : 2; ix = x - 40 * k; iy = y; } else { const k = (alt.l1 = !alt.l1) ? 1 : 2; ix = x; iy = y + 22 + 26 * k; } }
+    else { if (portrait) { const k = (alt.p2 = !alt.p2) ? 1 : 2; ix = x + 8; iy = y - 30 - 40 * k; } else { const k = (alt.l2 = !alt.l2) ? 1 : 2; ix = x + 70 + 46 * (k - 1); iy = y; } }
+    tx = ix; ty = iy + XR + 12;
+    s += `<line x1="${x}" y1="${y}" x2="${ix}" y2="${iy}" stroke="#9AA3AD" stroke-width="2" stroke-dasharray="2 4"/>`;
+    s += `<g class="attr" data-attr="${a.id}" data-code="${a.code}"><circle cx="${ix}" cy="${iy}" r="${XR + 10}" fill="#fff" fill-opacity="0"/>${iconSVG(a.icon, ix, iy, XR, XM_LINES[S.lines[0]].color)}`;
+    s += `<text x="${tx}" y="${ty}" font-size="10" font-weight="700" fill="#34404F" text-anchor="${anc}" paint-order="stroke" stroke="#fff" stroke-width="4" stroke-linejoin="round">${a.name}</text></g>`;
+  }
+  s += `</svg>`;
+  return s;
 }

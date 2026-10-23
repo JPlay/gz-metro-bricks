@@ -19,6 +19,7 @@ PART=ask   python3 tests/e2e/social.py 'http://localhost:8123/?q=2&start=njs&lin
 python3 tests/e2e/signs.py    'http://localhost:8123/?q=2' <截图目录>   # 导向牌各机位（站口 / 闸机后 / 楼梯口 / 换乘楼梯 / 换乘通道 / 2 号线楼梯口 / 站台站名牌拼音）+ 牌子贴图集不溢出
 python3 tests/e2e/transfer_shots.py 'http://localhost:8123/?q=2' /workspace/gz-shots-polish/transfer-r1/   # 公园前换乘导向：站口 / 闸机前提示牌、1 号线站台楼梯脚（含竖屏）、北侧走道、换乘楼梯、通道过桥、2 号线站台、反方向黄带；ONLY=03 只拍一张
 python3 tests/e2e/sysy.py    'http://localhost:8123/' /workspace/gz-shots-polish/sysy-r1/ 1   # 去中山纪念堂任务：地图终点 → 公园前 2 号线上车 → 车厢 LCD/报站“请在纪念堂站下车” → 站台/站厅“中山纪念堂 C出口”牌 + 绿色引导带 → 路口指路牌 → 纪念堂全景 → 门口自动“努力”+ 到达卡片
+python3 tests/e2e/xiamen.py 'http://localhost:8123/' /workspace/gz-shots-polish/xm-r1/ 1 /workspace/gz-shots-polish/xm-s2-r1/   # 动车（第一 + 第二阶段）：广州东 5 站台上车坐下 → 关门发车 → 车里走动、开着车下不去 → ×10 快进：城市/田野/山+隧道/九龙江特大桥/厦门 → 厦门北站台下车 → 楼梯下出站层 → 出站检票口 → 免安检换乘通道到地铁 1 号线闸机（关着）→ 上南广场看站房 → 回站台 → 回程 D3311 回广州东；广播顺序、≤66 draws（厦门北站房新镜头 ≤50）
 python3 tests/e2e/drawcalls.py 'http://localhost:8123/' 1   # 几个固定机位的绘制调用数（街面 / 站厅 / 站台 / 车厢）
 python3 tests/e2e/brother_food.py 'http://localhost:8123/' [--start jnt] [--shots 目录]   # 哥哥明明 + 美食店：选明明 → 走进店 → 坐下 → 点菜（图片菜单）→ 上菜 → 吃一口 😋 → 菜卡 + 美食护照盖章（localStorage）→ 起身出门
 python3 tests/e2e/brother_shots.py 'http://localhost:8123/' /workspace/gz-shots-polish/brother-r1 [select,ming,street,eat,passport]   # 选角色 / 明明各角度和动作 / 三种门面 / 三家店内 / 美食护照 + 地图美食标，带 draws / tris 角标

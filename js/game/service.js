@@ -103,7 +103,7 @@ export class Metro {
       }
       if (this.ride && this.ride.train === tr && !aboard && s.state !== 'departing' && s.state !== 'arriving') this.ride = null;
     }
-    if (sound) A.trainSound(sound); else A.trainSound({ speed: 0 });
+    if (sound) A.trainSound(sound); else if (!(this.ctx.extTrain && this.ctx.extTrain())) A.trainSound({ speed: 0 });
   }
   /** 离列车多近（0..1）：到车身最近点的距离，隔一层楼（站厅听站台）再轻一些 → 站台上列车声跟着真实列车走 */
   near(tr, p) {

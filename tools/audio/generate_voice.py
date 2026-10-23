@@ -20,7 +20,9 @@ STYLES={
            'instruction':'平静清晰的城市地铁报站女声，中等语速，字正腔圆，站名后短暂停顿，客观播报，声音成熟稳定。','optimize':True},
  'flat':{'langs':{'zh':('qwen3-tts-instruct-flash','Serena','Chinese'),'yue':('qwen3-tts-flash','Kiki','Chinese'),'en':('qwen3-tts-flash','Jennifer','English')},
          'instruction':'标准地铁报站播音，录音广播式的女声。语调平稳平直，句尾不上扬，几乎没有高低起伏；吐字清晰，字正腔圆；语速适中且均匀；不带任何情绪和感情色彩，不热情、不亲切、不夸张，客观中性。','optimize':False},
- 'cosy':{'langs':{'zh':('cosyvoice-v2','longxiaobai_v2','Chinese'),'yue':('cosyvoice-v3-flash','longjiayi_v3','Chinese'),'en':('cosyvoice-v2','longxiaobai_v2','English')},
+ 'cosy':{'langs':{'zh':('cosyvoice-v2','longxiaobai_v2','Chinese'),'yue':('cosyvoice-v3-flash','longjiayi_v3','Chinese'),'en':('cosyvoice-v2','longxiaobai_v2','English'),
+                # 闽南语（厦门地铁）：由 tools/audio/generate_minnan.py 生成（带指令 + ASR 质检），这里只登记进清单
+                'nan':('cosyvoice-v3.5-flash','cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375','Chinese')},
          'instruction':None,'optimize':False},
 }
 def _style_arg():
@@ -37,7 +39,7 @@ OPTIMIZE=STYLES[STYLE]['optimize']
 JOBS=[]
 
 def add(key,texts,label):
-    for lang,text in zip(LANGS,texts):
+    for lang,text in zip(['zh','yue','en'],texts):
         model,voice,language=LANGS[lang]
         JOBS.append({'id':'voice.'+key+'.'+lang,'file':'voice/'+key.replace('.','-')+'-'+lang+'.mp3','group':'voice','label':label,'lang':lang,'text':text,'model':model,'voice':voice,'language_type':language})
 
@@ -86,6 +88,7 @@ if EXTRA.exists():
     for j in json.loads(EXTRA.read_text()):
         # phrases.js 是文字的唯一来源：同 id 的旧片段（如英文站名改用拼音）按导出的文字重新生成
         if j['id'] in known: known[j['id']]['text']=j['text']; continue
+        if j['lang'] not in LANGS:continue
         model,voice,language=LANGS[j['lang']]
         JOBS.append({'id':j['id'],'file':j['file'],'group':'voice','label':j['id'][6:],'lang':j['lang'],'text':j['text'],'model':model,'voice':voice,'language_type':language})
 
@@ -161,7 +164,7 @@ def manifest():
             next_seq=seq('destination.'+d)+seq('next.'+sid)
             next_seq+=seq('transfer.gyq') if sid=='gyq' else seq('exit.left')
             routes[sid+'_'+d]={'station':sid,'dir':1 if d=='up' else -1,'destination':'广州东站' if d=='up' else '西塱','announcements':{'next':next_seq,'arrive':seq('arrive.'+sid),'welcome':seq('welcome.'+sid)}}
-    result={'version':2,'voiceStyle':STYLE,'languages':['zh','yue','en'],'languageNames':{'zh':'普通话','yue':'粤语','en':'英语'},'assets':assets,'routes':routes,'announcements':{'doorsClosing':seq('doorsClosing'),'gap':seq('gap')},'notes':['四站双方向使用预合成段落组合，普通话→粤语→英语。','到站、关门等扩展三语便于儿童体验；实际车厢部分安全提示仅普通话。','站台编号必须由场景传入，默认上行1、下行2是场景约定，非每座真实站台的核验结果。']}
+    result={'version':2,'voiceStyle':STYLE,'languages':['zh','yue','nan','en'],'languageNames':{'zh':'普通话','yue':'粤语','nan':'闽南语（厦门地铁）','en':'英语'},'assets':assets,'routes':routes,'announcements':{'doorsClosing':seq('doorsClosing'),'gap':seq('gap')},'notes':['四站双方向使用预合成段落组合，普通话→粤语→英语。','到站、关门等扩展三语便于儿童体验；实际车厢部分安全提示仅普通话。','站台编号必须由场景传入，默认上行1、下行2是场景约定，非每座真实站台的核验结果。']}
     result['doorDuration']=1.25;result['gateDuration']=.6
     result['stationSafety']={key:{'ids':['voice.safety.'+key+'.zh','voice.safety.'+key+'.yue'],'zones':zones,'evidence':evidence} for key,zh,yue,label,zones,evidence in SAFETY}
     (OUT/'manifest.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
@@ -178,7 +181,7 @@ if __name__=='__main__':
     if not host.endswith('/api/v1'):host+='/api/v1'
     stamp=ROOT/'tools/audio/voice-cache.json'
     if stamp.exists():CACHE=json.loads(stamp.read_text())
-    jobs=[j for j in JOBS if not args.only or args.only in j['id']]
+    jobs=[j for j in JOBS if (not args.only or args.only in j['id']) and j['lang']!='nan']   # nan 由 generate_minnan.py 生成
     with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
         futures=[pool.submit(generate,j,key,host) for j in jobs]
         for n,f in enumerate(concurrent.futures.as_completed(futures),1):

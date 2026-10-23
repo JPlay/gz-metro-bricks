@@ -335,6 +335,8 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #1d2b3a; fon
 /* 窄屏（iPhone 竖屏）：标题只留「线路图」一行，副标题「1 号线 · 2 号线」不显示 */
 @media (max-width: 599px) { #netmap .ttl small { display: none; } #netmap .ttl { min-width: 0; } }
 #netmap .x { margin-left: auto; width: 76px; height: 76px; border-radius: 50%; border: 0; background: rgba(20,40,60,.08); color: #34404f; display: flex; align-items: center; justify-content: center; pointer-events: auto; }
+#netmap .restart { margin-left: auto; height: 56px; padding: 0 20px; border-radius: 28px; border: 0; background: rgba(20,40,60,.08); color: #34404f; font-weight: 700; font-size: 20px; line-height: 1; pointer-events: auto; }
+#netmap .restart + .x { margin-left: 12px; } #netmap .restart.press { transform: scale(.92); }
 #netmap .x .ico { width: 34px; height: 34px; } #netmap .x.press { transform: scale(.88); }
 #netmap .mapbox { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; touch-action: none; border-radius: 22px; }
 #netmap .mapbox svg { width: 100%; height: 100%; display: block; will-change: transform; }
@@ -447,3 +449,12 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #1d2b3a; fon
 #netmap .attrcard span { font-size: 20px; font-weight: 600; color: #4A5666; }
 #netmap .attrcard em { font-style: normal; font-weight: 800; color: #fff; background: #1FA35B; border-radius: 8px; padding: 0 8px; }
 #netmap .attrcard[hidden] { display: none; }
+/* 国铁（动车 / 厦门北站）：左上角徽标写车次 */
+#where .line b.rail { font-size: 15px; letter-spacing: 0; font-weight: 800; }
+/* 动车「快进」按钮（开车时出现在动作按钮左边）：×1 → ×4 → ×10 */
+#bFast { position: fixed; right: calc(env(safe-area-inset-right) + 330px); bottom: calc(env(safe-area-inset-bottom) + 30px); z-index: 30;
+  min-width: 104px; height: 88px; border-radius: 24px; border: 0; background: linear-gradient(#5BA8E6, #2C7DB0); color: #fff; font: 800 20px/1.1 var(--font, sans-serif);
+  box-shadow: 0 8px 22px rgba(20, 80, 140, .4); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+#bFast[hidden] { display: none; }
+#bFast .emo { font-size: 32px; line-height: 1; }
+#bFast.on { background: linear-gradient(#FFB54A, #F07A1F); box-shadow: 0 8px 22px rgba(180, 80, 0, .45); }

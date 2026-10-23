@@ -10,15 +10,21 @@ def log(*a): print(time.strftime('%H:%M:%S'),*a, flush=True)
 GCLOCK = "window.__gt===undefined && (window.__gt=0, __game.scene.onBeforeRenderObservable.add(()=>{ window.__gt += Math.min(0.05, __game.engine.getDeltaTime()/1000); }))"
 async def gt(pg): return await pg.evaluate('window.__gt||0')
 async def auto(pg, pts, run=False):
-    r=await pg.evaluate(f'__game.autopilot({json.dumps(pts)}, {str(run).lower()})')
+    # 墙钟保底 10 分钟：游戏时间不走（渲染卡住）时 autopilot 的 Promise 永远不 resolve，不能让整套测试挂死
+    r=await pg.evaluate(f'Promise.race([__game.autopilot({json.dumps(pts)}, {str(run).lower()}), new Promise(r => setTimeout(() => r({{ok:false, wallTimeout:true}}), 600000))])')
+    if r.get('wallTimeout'): log('auto: wall timeout (game clock stalled?) at gt', round(await gt(pg),1))
     s=await st(pg); log('auto', pts[-1], '->', r['ok'], s['pos'], s['zone'], r.get('stuckAt'), 'fps', s['fps'])
     return r['ok']
 async def wait(pg, js, game=60, wall=1800, poll=0.5):
     """等 js 为真；超过 game 秒游戏时间（或 wall 秒真实时间）算超时"""
-    g0=await gt(pg); t0=time.time()
+    g0=await gt(pg); t0=time.time(); last=(g0, t0)
     while time.time()-t0<wall:
         if await pg.evaluate(js): return True
-        if await gt(pg)-g0>game: return False
+        g=await gt(pg)
+        if g-g0>game: return False
+        # 游戏时间不走了（软件渲染卡住、页面不出帧）：120 秒墙钟没前进就判失败，不再空等 30 分钟
+        if g!=last[0]: last=(g, time.time())
+        elif time.time()-last[1]>120: log('wait: game clock stalled for 120s at', round(g,1), js[:80]); return False
         await asyncio.sleep(poll)
     return False
 def slot(line, step): return f"(__game.state().metro.slots.find(s=>s.line=={line}&&s.step=={step})||{{}})"

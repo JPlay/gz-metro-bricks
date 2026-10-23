@@ -392,7 +392,7 @@ export function blip(kind = 'tick') {
 }
 
 /* ---------- 报站队列 ---------- */
-function caption(a, extra) { emit('gz-audio-caption', a ? { id: a.id, text: a.text, lang: a.lang, channel: 'important', ...extra } : null); }
+function caption(a, extra) { emit('gz-audio-caption', a ? { id: a.id, text: a.text, lang: a.lang, channel: 'important', ms: estimate(a), ...extra } : null); }
 function sleep(ms, token) { return new Promise(r => { const t = setTimeout(r, ms); if (token) token.cancel = () => { clearTimeout(t); r(); }; }); }
 let sleepToken = null;
 function estimate(a) { return (a.duration || Math.max(1.5, (a.text || '').length * (a.lang === 'en' ? 0.07 : 0.24))) * 1000; }
@@ -426,6 +426,7 @@ async function pump() {
         let ok = !!(a.file && assets[a.id]);
         if (ok) { try { await ensureBuffer(a.id); } catch (e) { ok = false; } }
         if (item.epoch !== epoch) break;
+        if (!ok && a.lang === 'nan') { log.skipped = (log.skipped || []).concat(a.id); continue; }   // 闽南语没有 MP3 时不能让 Web Speech 用普通话念：直接跳过
         if (!ok) { await fallbackClip(a, item.epoch); continue; }
         caption(a);
         log.announced.push(a.id);

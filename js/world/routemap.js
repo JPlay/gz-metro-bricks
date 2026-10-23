@@ -7,6 +7,9 @@
  * 站名、站序全部来自 js/data/lines.js；1 号线 #F3D03E，2 号线 #00629B。
  */
 import { LINES, STATIONS, OTHER_LINES } from '../data/lines.js';
+import { XM_LINES, XM_STATIONS } from '../data/xm-lines.js';
+const NET = { gz: { LINES, STATIONS, OTHER: OTHER_LINES }, xm: { LINES: XM_LINES, STATIONS: XM_STATIONS, OTHER: { 3: { zh: '3号线', en: 'Line 3', color: '#00A0E9' }, 4: { zh: '4号线', en: 'Line 4', color: '#E60012' }, 6: { zh: '6号线', en: 'Line 6', color: '#8B5CF6' } } } };
+function N(net = 'gz') { return NET[net] || NET.gz; }
 import { FONT, FONT_EN, roundRect } from './kit.js';
 import { VISITS, visitBanner } from '../data/visits.js';
 import { attractionsAt } from '../data/attractions.js';
@@ -19,27 +22,27 @@ const GREY = '#C3C9D0', GREY_TXT = '#9BA4AF', INK = '#1B1D20';
 const X0 = 70, X1 = 1650, LY = 58, BX = 1728;      // 线段从 X0 到 X1，线的高度 LY（画布坐标，y 向下）；BX = 色块左边
 
 /** 换乘环的第二种颜色：1/2 号线互换（公园前），其他已开通线路统一深色 */
-export function transferColor(code, line) {
-  const s = STATIONS[code], o = s.lines.find(l => l !== line);
-  if (o) return LINES[o].color;
-  // 能换乘其他线路：和全网图同一种样式（深色内圈），不按换乘线路上色
-  return s.x.some(k => OTHER_LINES[k]) ? '#1B2430' : null;
+export function transferColor(code, line, net = 'gz') {
+  const { LINES: L, STATIONS: S, OTHER } = N(net);
+  const s = S[code], o = s.lines.find(l => l !== line);
+  if (o) return L[o].color;
+  return s.x.some(k => OTHER[k]) ? '#1B2430' : null;
 }
 /** 行进方向排好的站序（step=+1 原序，-1 倒序）、高亮站的下标、已经过的站数 */
-export function stripModel(line, code, step, moving, nextCode) {
-  const L = LINES[line], ord = step > 0 ? L.stations.slice() : L.stations.slice().reverse();
+export function stripModel(line, code, step, moving, nextCode, net = 'gz') {
+  const L = N(net).LINES[line], ord = step > 0 ? L.stations.slice() : L.stations.slice().reverse();
   const i = ord.indexOf(code), hot = moving && nextCode ? ord.indexOf(nextCode) : i;
-  return { ord, hot, passed: hot };   // 下标 < passed 的都是经过的
+  return { ord, hot, passed: hot };
 }
 export const stationX = (k, n) => X0 + (X1 - X0) * (n === 1 ? 0.5 : k / (n - 1));
 /** 高亮站在条形图贴图上的位置（u: 0..1 左→右，v: 0..1 下→上） */
-export function hotUV(line, code, step, moving, nextCode) {
-  const m = stripModel(line, code, step, moving, nextCode);
+export function hotUV(line, code, step, moving, nextCode, net = 'gz') {
+  const m = stripModel(line, code, step, moving, nextCode, net);
   return { u: stationX(m.hot, m.ord.length) / STRIP_W, v: 1 - LY / STRIP_H };
 }
 
-export function drawStrip(c, line, code, step, moving, nextCode) {
-  const L = LINES[line], W = STRIP_W, H = STRIP_H, { ord, hot, passed } = stripModel(line, code, step, moving, nextCode), n = ord.length;
+export function drawStrip(c, line, code, step, moving, nextCode, net = 'gz') {
+  const L = N(net).LINES[line], W = STRIP_W, H = STRIP_H, { ord, hot, passed } = stripModel(line, code, step, moving, nextCode, net), n = ord.length;
   const dir = Object.values(L.dirs).find(d => d.step === step);
   c.clearRect(0, 0, W, H);
   c.fillStyle = '#2A2E33'; c.fillRect(0, 0, W, H);                       // 黑色边框
@@ -59,7 +62,7 @@ export function drawStrip(c, line, code, step, moving, nextCode) {
     c.strokeStyle = k < passed ? GREY : L.color; c.lineWidth = 16;
     c.beginPath(); c.moveTo(xs[k], LY); c.lineTo(xs[k + 1], LY); c.stroke();
     if (k >= passed) {   // 方向小箭头（白色），线段中间
-      const mx = (xs[k] + xs[k + 1]) / 2; c.strokeStyle = line === 1 ? '#8A6D00' : '#FFFFFF'; c.lineWidth = 4;
+      const mx = (xs[k] + xs[k + 1]) / 2; c.strokeStyle = (net === 'gz' && line === 1) ? '#8A6D00' : '#FFFFFF'; c.lineWidth = 4;
       c.beginPath(); c.moveTo(mx - 5, LY - 6); c.lineTo(mx + 3, LY); c.lineTo(mx - 5, LY + 6); c.stroke();
     }
   }
@@ -68,7 +71,7 @@ export function drawStrip(c, line, code, step, moving, nextCode) {
   // 站点 + 竖排站名
   const big = n <= 16 ? 38 : 32, small = n <= 16 ? 32 : 26;
   ord.forEach((cd, k) => {
-    const x = xs[k], isHot = k === hot, past = k < passed, tc = transferColor(cd, line), S = STATIONS[cd];
+    const x = xs[k], isHot = k === hot, past = k < passed, tc = transferColor(cd, line, net), S = N(net).STATIONS[cd];
     if (isHot) {
       c.fillStyle = 'rgba(255,90,78,0.22)'; c.beginPath(); c.arc(x, LY, 40, 0, 7); c.fill();
       c.fillStyle = HOT; c.beginPath(); c.arc(x, LY, 27, 0, 7); c.fill(); c.lineWidth = 6; c.strokeStyle = '#fff'; c.stroke();
@@ -92,8 +95,8 @@ export function drawStrip(c, line, code, step, moving, nextCode) {
 }
 
 /** LCD：moving = 已关门开出（显示“下一站”），否则“到站”（本站） */
-export function drawLcd(c, line, code, step, moving, nextCode) {
-  const L = LINES[line], W = LCD_W, H = LCD_H, show = moving && nextCode ? nextCode : code, S = STATIONS[show];
+export function drawLcd(c, line, code, step, moving, nextCode, net = 'gz') {
+  const L = N(net).LINES[line], W = LCD_W, H = LCD_H, show = moving && nextCode ? nextCode : code, S = N(net).STATIONS[show];
   c.clearRect(0, 0, W, H);
   c.fillStyle = '#2A2E33'; c.fillRect(0, 0, W, H);
   const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#0E2236'); g.addColorStop(1, '#081420');
@@ -106,7 +109,7 @@ export function drawLcd(c, line, code, step, moving, nextCode) {
   c.font = `700 36px ${FONT_EN}`; c.fillText(tag[1], 56 + tw + 22, 78);
   c.textAlign = 'right'; c.font = `800 44px ${FONT}`; c.fillText(L.zh, W - 56, 74);
   // 有景点的站：站名小一点，下面加一条黄色提示“本站可前往：中山纪念堂（C 出口）”，与报站“X 站附近有……”同步
-  const A = VISITS[show] ? visitBanner(show) : '', nameY = A ? 214 : 268, enY = A ? 262 : 338;
+  const A = net === 'gz' && VISITS[show] ? visitBanner(show) : '', nameY = A ? 214 : 268, enY = A ? 262 : 338;
   // 中间：大号中文站名 + 英文
   const fz = A ? 112 : S.zh.length >= 5 ? 128 : 150;
   c.fillStyle = '#FFFFFF'; c.textAlign = 'center'; c.textBaseline = 'alphabetic'; c.font = `800 ${fz}px ${FONT}`;

@@ -157,7 +157,8 @@ export class Player {
       // 楼座栏板前往下看：镜头探身（抬高 + 往前越过栏板），栏板不再挡住半个画面
       const lt = !this.seat && this.leanFn ? this.leanFn(p) * Math.max(0, Math.min(1, (this.pitch - 0.15) / 0.25)) : 0;
       this.leanK = (this.leanK || 0) + (lt - (this.leanK || 0)) * Math.min(1, dt * 5);
-      const fw = 0.12 + 0.65 * this.leanK;
+      // 坐着时眼睛只往“座位朝向”那边探 12 cm：扭头看窗外不会把镜头探进车厢侧墙里（近裁剪面把墙切掉 → 像没有墙）
+      const cd = Math.cos(this.yaw - this.facing), fw = this.seat ? 0.12 * Math.max(0, cd) - 0.3 * (1 - Math.abs(cd)) : 0.12 + 0.65 * this.leanK;   // 扭头看侧面：身子往后靠 30 cm
       cam.position.set(p.x + Math.sin(this.yaw) * fw + Math.cos(this.yaw) * sway, this.eyeY + this.eyeOff + bob + 0.5 * this.leanK, p.z + Math.cos(this.yaw) * fw - Math.sin(this.yaw) * sway);
       this.model.setEnabled(false); this.blob.setEnabled(true);
     } else {
@@ -215,7 +216,7 @@ export class Player {
       }
     }
     // 近裁剪面随镜头调整：第三人称镜头离墙至少 0.3m（见上面的射线），0.25 不会切进墙；第一人称眼睛离墙可能只有 0.18m，用 0.1
-    const nz = this.view === 'first' || this.camDist < 0.8 ? 0.1 : 0.25; if (this.view === 'first') this.aimPitch = undefined; if (cam.minZ !== nz) cam.minZ = nz;
+    const nz = this.view === 'first' ? (this.seat ? 0.05 : 0.1) : this.camDist < 0.8 ? 0.1 : 0.25; if (this.view === 'first') this.aimPitch = undefined; if (cam.minZ !== nz) cam.minZ = nz;
     cam.rotation.set(this.view === 'first' || this.aimPitch === undefined ? this.pitch : this.aimPitch, this.yaw, 0);
   }
   toggleView() {
