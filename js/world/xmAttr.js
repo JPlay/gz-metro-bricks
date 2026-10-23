@@ -542,7 +542,7 @@ function guanyinBeach(S) {
   { const x = 72, z = 76; for (const [dx, dz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) P.tube([x + dx * 1.2, 0, z + dz * 1.2], [x + dx * 0.8, 3.2, z + dz * 0.8], 0.16, hex('#F4F4F4'), 5);
     P.slab(x - 1.2, x + 1.2, 3.2, 3.35, z - 1.2, z + 1.2, hex('#F4F4F4'), { ao: false }); P.slab(x - 1.0, x + 1.0, 3.35, 4.4, z - 1.0, z + 1.0, hex('#E84A3A'), { ao: false }); P.cyl(x, 4.8, z, 2.4, 0.8, hex('#F4F4F4'), 4, Math.PI / 4, 0, 0, 0.2);
     P.path([[x - 0.9, 0, z - 2.6], [x - 0.9, 3.2, z - 1.2]], 0.08, hex('#F4F4F4'), 4); P.path([[x + 0.9, 0, z - 2.6], [x + 0.9, 3.2, z - 1.2]], 0.08, hex('#F4F4F4'), 4); k.colSlab(x - 1.3, x + 1.3, 0, 4.4, z - 1.3, z + 1.3); }
-  { const x = 30, z = 70; for (const s of [-1, 1]) k.metal.cyl(x + s * 5, 1.2, z, 0.12, 2.4, hex('#E6E6E6'), 5); k.glass.slab(x - 5, x + 5, 1.5, 2.4, z - 0.02, z + 0.02, hex('#DDE4E8')); P.sphere(x + 2, 0.15, z + 3, 0.3, hex('#F2B233'), 1); }
+  { const x = 30, z = 70; for (const s of [-1, 1]) k.metal.cyl(x + s * 5, 1.2, z, 0.12, 2.4, hex('#E6E6E6'), 5); k.glass.slab(x - 5, x + 5, 1.5, 2.4, z - 0.02, z + 0.02, hex('#DDE4E8')); { const sx = x + 2, sz = z + 3, SF = hex('#E8743A'); P.cyl(sx, 0.06, sz, 0.36, 0.1, SF, 5); for (let i = 0; i < 5; i++) { const a = i / 5 * TAU + 0.3; P.box(sx + Math.cos(a) * 0.3, 0.05, sz + Math.sin(a) * 0.3, 0.2, 0.08, 0.6, SF, Math.atan2(Math.cos(a), Math.sin(a)), 0, 0, 1, { ao: false }); } }/* 海星（原来那颗 20 面排球远看像橙色六边形） */ }
   for (const [x, z, c] of [[16, 54, '#E84A5F'], [20, 42, '#3FA7D6'], [40, 84, '#F2B233'], [54, 86, '#6CC04A'], [90, 85, '#E86A3A'], [-20, 82, '#3FA7D6']]) figure(P, x, z, c, 1.3, 0.05);
   // —— 沙雕公园（西边，围起来的一片）：城堡 · 海龟 · 海豚 · 大象 · 鼓浪屿钢琴 ——
   const X0 = -150, X1 = -46, Z0 = 32, Z1 = 80;
