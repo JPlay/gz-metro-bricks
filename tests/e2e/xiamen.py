@@ -127,7 +127,7 @@ async def main():
     s0 = (await st(pg))['pos']
     await auto(pg, [[EO + 6.0, 0.3], [EO + 2.0, 0.3]])
     s1 = await st(pg); ok('walkWhileMoving', abs(s1['pos'][0] - s0[0]) > 3 and (await E(pg))['inside'])
-    await auto(pg, [[EO + 10.6, 0.25], [EO + 11.2, 0.9], [EO + 11.2, 1.6]])
+    await auto(pg, [[EO + 10.6, 0.25], [EO + 11.2, 0.9], [EO + 11.2, 2.0]])
     e = await E(pg); ok('cantExitMoving', e['inside'] and e['ride'] is not None)
     await auto(pg, [[EO + 10.6, 0.25], [EO + 9.0, 0.3]])
     # 3. 快进：路段顺序
@@ -154,7 +154,7 @@ async def main():
     await measure(pg, 'arrived-in-car')
     # 4. 下车 → 厦门北站站台
     await view(pg, 'third')
-    await auto(pg, [[EO + 10.6, 0.25], [EO + 11.2, 0.9], [EO + 11.2, 1.6]])
+    await auto(pg, [[EO + 10.6, 0.25], [EO + 11.2, 0.9], [EO + 11.2, 2.0]])
     ok('atXmn', await wait(pg, '__game.east.info().loc === "xmn"', 4))
     s = await st(pg); R['xmnPos'] = s['pos']; ok('xmnPos', s['pos'][0] > XO - 100 and abs(s['pos'][2] + 127.1) < 0.6)
     # c：刚下车，第三人称，站台、站名牌、停着的复兴号
@@ -272,7 +272,7 @@ async def main():
     if (await st(pg))['seat'].get('seated'): await pg.evaluate('__game.act()'); await asyncio.sleep(0.4)   # 起身下车
     await wait(pg, '__game.east.info().door <= 0', 6)
     await view(pg, 'third')
-    await auto(pg, [[EO + 10.6, 0.25], [EO + 11.2, 0.9], [EO + 11.2, 1.6]])
+    await auto(pg, [[EO + 10.6, 0.25], [EO + 11.2, 0.9], [EO + 11.2, 2.0]])
     ok('backGz', await wait(pg, '!__game.east.info().inside && __game.east.info().loc === null', 4))
     s = await st(pg); R['gzPos'] = s['pos']; ok('gzPos', s['code'] == 'gzdz' and s['pos'][0] < 0 and s['pos'][2] > -128)
     await measure(pg, 'gz-platform-after')
