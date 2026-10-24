@@ -5688,6 +5688,42 @@
   "file": "voice/welcome-yxd-en.mp3"
  },
  {
+  "id": "voice.xmvisit.yxd.zh",
+  "lang": "zh",
+  "text": "育秀东路站附近有新东方，欢迎下车游玩，请从3号出口出站。",
+  "file": "voice/xmvisit-yxd-zh.mp3"
+ },
+ {
+  "id": "voice.xmvisit.yxd.nan",
+  "lang": "nan",
+  "text": "育秀东路站附近有新东方，欢迎下车游玩，请从3号出口出站。",
+  "file": "voice/xmvisit-yxd-nan.mp3"
+ },
+ {
+  "id": "voice.xmvisit.yxd.en",
+  "lang": "en",
+  "text": "Yuxiu Donglu station is near New Oriental. You are welcome to get off and visit. Please use Exit 3.",
+  "file": "voice/xmvisit-yxd-en.mp3"
+ },
+ {
+  "id": "voice.xmexit.yxd.zh",
+  "lang": "zh",
+  "text": "前往新东方的乘客，请从3号出口出站。",
+  "file": "voice/xmexit-yxd-zh.mp3"
+ },
+ {
+  "id": "voice.xmexit.yxd.nan",
+  "lang": "nan",
+  "text": "前往新东方的乘客，请从3号出口出站。",
+  "file": "voice/xmexit-yxd-nan.mp3"
+ },
+ {
+  "id": "voice.xmexit.yxd.en",
+  "lang": "en",
+  "text": "Passengers for New Oriental, please use Exit 3.",
+  "file": "voice/xmexit-yxd-en.mp3"
+ },
+ {
   "id": "voice.next.lcu2.zh",
   "lang": "zh",
   "text": "下一站，吕厝，可换乘1号线。",
