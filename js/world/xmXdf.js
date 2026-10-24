@@ -142,7 +142,7 @@ export class XdfLobby {
     WD.slab(-2.4, 2.4, 0, 1.05, Z1 - 3.2, Z1 - 1.6, hex('#E9E2D6'), { ao: false });
     P.slab(-2.5, 2.5, 1.05, 1.12, Z1 - 3.25, Z1 - 1.55, blue, { ao: false });
     k.colSlab(-2.5, 2.5, 0, 1.12, Z1 - 3.25, Z1 - 1.55);
-    A.quad(0, 0.7, Z1 - 3.26, 3.6, 0.55, 0, A.draw(3.6, 0.55, textPaint(['前 台', 'Reception'], { bg: XDF_BLUE, fg: '#FFFFFF' })));
+    A.quad(0, 0.7, Z1 - 3.26, 3.6, 0.55, Math.PI, A.draw(3.6, 0.55, textPaint(['前 台', 'Reception'], { bg: XDF_BLUE, fg: '#FFFFFF' })));
     // 台上一台电脑 + 绿植
     P.box(-0.8, 1.35, Z1 - 2.4, 0.55, 0.4, 0.08, hex('#2A2A2A')); P.box(-0.8, 1.12, Z1 - 2.4, 0.4, 0.06, 0.3, hex('#C8CDD2'));
     P.cyl(1.6, 1.25, Z1 - 2.2, 0.22, 0.25, hex('#B8663A'), 8); P.ellipsoid(1.6, 1.55, Z1 - 2.2, 0.35, 0.4, 0.35, hex('#4E8F3E'), 1);
