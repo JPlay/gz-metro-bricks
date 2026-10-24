@@ -92,26 +92,38 @@ export class XmStreet {
   wantsBack(p) { const lx = p.x - XS.x, lz = p.z - XS.z; return lz < -2.6 && lz > -6 && Math.abs(lx) < 1.9 && p.y < 1.5; }
   spawn() { return [XS.x, 0.05, XS.z + 1.2, 0]; }
   zoneOf(p) { return this.inside ? { ...this.inside.zoneOf(p), code: this.code, street: true } : { kind: 'street', net: 'xm', code: this.code, street: true }; }
-  info() { return { code: this.code, meshes: this.kit.root.getChildMeshes(false).length, atlasOverflow: this.atlas.overflow, atlasY: this.atlas.y + this.atlas.row, inside: this.inside ? 256 : null }; }
+  info() { return { code: this.code, meshes: this.kit.root.getChildMeshes(false).length, atlasOverflow: this.atlas.overflow, atlasY: this.atlas.y + this.atlas.row, inside: this.inside ? (this.inside.id || 256) : null }; }
   /** 每帧：楼内 ↔ 街面切换；返回 'back' = 回车站 */
   update(pl) {
     const p = pl.position;
     if (this.tick) this.tick(Math.min(0.1, this.scene.getEngine().getDeltaTime() / 1000));
     if (this.inside) { if (this.inside.wantsOut(p)) this.leaveBuilding(pl); return null; }
     if (this.wantsBack(p)) return 'back';
-    const d = this.xinli && this.xinli.door256;
-    if (d && Math.abs(p.x - XS.x - d.x) < 1.0 && p.z - XS.z > d.z - 0.5 && p.z - XS.z < d.z + 0.6 && p.y < 1.5) this.enterBuilding(pl);
+    const door = this._enterDoor();
+    if (door) {
+      const lx = p.x - XS.x, lz = p.z - XS.z;
+      if (Math.abs(lx - door.x) < (door.halfW || 1.0) && lz > door.z + (door.zLo ?? -0.5) && lz < door.z + (door.zHi ?? 0.6) && p.y < 1.5) this.enterBuilding(pl);
+    }
     return null;
   }
-  /** 进 256 号楼：楼梯间 + 各户单独加载（街区先隐藏） */
+  /** 可进建筑的门：鑫利 256 / 新东方大厅（enterDoor） */
+  _enterDoor() {
+    if (this.enterDoor) return this.enterDoor;
+    if (this.xinli && this.xinli.door256) return { ...this.xinli.door256, make: (scene, o) => new Xinli256(scene, o), outYaw: Math.PI, outDz: -1.6, id: 256 };
+    return null;
+  }
+  /** 进楼：单独加载室内（街区先隐藏） */
   enterBuilding(pl) {
+    const door = this._enterDoor(); if (!door) return;
     this.kit.root.setEnabled(false);
-    this.inside = new Xinli256(this.scene, { x: XS.x, y: 0, z: XS.z + 1000 });
+    this.inside = door.make(this.scene, { x: XS.x, y: 0, z: XS.z + 1000 });
     const [x, y, z, yaw] = this.inside.spawn(); pl.spawn(x, y, z, yaw);
   }
   leaveBuilding(pl) {
+    const door = this._enterDoor();
     this.inside.dispose(); this.inside = null; this.kit.root.setEnabled(true);
-    const d = this.xinli.door256; pl.spawn(XS.x + d.x, 0.05, XS.z + d.z - 1.6, Math.PI);
+    if (!door) return;
+    pl.spawn(XS.x + door.x, 0.05, XS.z + door.z + (door.outDz ?? -1.6), door.outYaw ?? Math.PI);
   }
 
   /* ---------- 通用 ---------- */
