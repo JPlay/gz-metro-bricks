@@ -21,10 +21,10 @@ JUMP = """window.__jmp===undefined && (window.__jmp={max:0, at:null, last:null},
 async def jreset(pg): await pg.evaluate('window.__jmp.max=0; window.__jmp.at=null; window.__jmp.last=null')
 async def jcheck(pg, name):
     j = await pg.evaluate('window.__jmp'); R['jumps'][name] = j; return ok('noTeleport:' + name, j['max'] < TELEPORT)
-DOORS = """(key => { const m=__game.xmMetro, s=m.slots.find(o=>o.side.key===key && (%s)); if(!s) return null; const tr=s.train;
-  const platSg = Math.sign(s.P.zc - s.side.trackZ);   // 列车局部哪一侧（±z）朝站台
-  return {line:s.line, state:s.state, platSg, doorSg:s.side.doorSg, openPlat: tr.open[platSg], openOuter: tr.open[-platSg],
-    x: tr.root.position.x, trackZ: s.side.trackZ, psdZ: s.side.psdZ, zc: s.P.zc}; })"""
+DOORS = """(key => { const m=__game.xmMetro, sl=m.slots.find(s=>s.side.key===key && (%s)); if(!sl) return null; const tr=sl.train;
+  const platSg = Math.sign(sl.P.zc - sl.side.trackZ);   // 列车局部哪一侧（±z）朝站台
+  return {line:sl.line, state:sl.state, platSg, doorSg:sl.side.doorSg, openPlat: tr.open[platSg], openOuter: tr.open[-platSg],
+    x: tr.root.position.x, trackZ: sl.side.trackZ, psdZ: sl.side.psdZ, zc: sl.P.zc}; })"""
 async def door_check(pg, name, key, line=None, walk_in=True):
     cond = 'true' if line is None else f's.line==={line}'
     await pg.evaluate(f"__game.xmMetro.slots.forEach(s=>{{ if(s.side.key==='{key}' && ({cond}) && s.state==='away') s.t=0; }})")
@@ -36,13 +36,16 @@ async def door_check(pg, name, key, line=None, walk_in=True):
     ok('platformDoorsOpen:' + name, r['openPlat'] >= 0.99 and r['doorSg'] == r['platSg'])
     ok('outerDoorsClosed:' + name, r['openOuter'] == 0)
     if not walk_in: return True
-    await pg.evaluate(f"__game.xmMetro.slots.forEach(s=>{{ if(s.side.key==='{key}' && ({cond}) && s.state==='dwell') s.t=Math.max(s.t, 40); }})")
+    # 机器 2–4 fps，停站 3.5 s 游戏时间只有几帧：测试期间每帧把这班车的停站倒计时按住（门一直开着），走完再放
+    await pg.evaluate(f"""(() => {{ const s=__game.xmMetro.slots.find(s=>s.side.key==='{key}' && ({cond}) && s.state==='dwell'); window.__holdSlot=s;
+      if (!window.__holdObs) window.__holdObs=__game.scene.onBeforeRenderObservable.add(()=>{{ const h=window.__holdSlot; if (h && h.state==='dwell') h.t=Math.max(h.t, 3.4); }}); }})()""")
     sg = 1 if r['psdZ'] > r['trackZ'] else -1          # 站台在轨道的哪一侧
     zPlat = r['psdZ'] + sg * 0.8; zCar = r['trackZ']
     await auto(pg, [[r['x'] + 6, zPlat]]); await jreset(pg); await auto(pg, [[r['x'] + 6, zCar]])
     ab = await wait(pg, '__game.state().aboard', 3); ok('walkAboard:' + name, ab); await jcheck(pg, 'board:' + name)
     await pg.screenshot(path=f'{OUT}doors-{name}.png', timeout=180000)
     await auto(pg, [[r['x'] + 6, zPlat]]); ok('walkOff:' + name, not (await st(pg))['aboard'])
+    await pg.evaluate('window.__holdSlot=null')
     return ab
 async def main():
   async with async_playwright() as p:
@@ -62,12 +65,13 @@ async def main():
     await jcheck(pg, 'xmnbDown')
     for key in ('B', 'A'): await door_check(pg, 'xmnb-' + key, key)
     # —— 2. 走回国铁 ——
-    await auto(pg, [[XO - 20, -80], [XO - 36, -80]]); await jreset(pg)
+    # 岛中立柱在 x=-22.5、z=-80（站台中线）上：从 z=-78.5 绕过去再回中线进端墙开口
+    await auto(pg, [[XO - 20, -78.5], [XO - 31, -78.5]]); await auto(pg, [[XO - 36, -80]]); await jreset(pg)
     await auto(pg, [[XO - 64, -80]]); await auto(pg, [[XO - 93, -80], [XO - 101, -80]]); await auto(pg, [[XO - 108.5, -80]])
     ok('backToRailwayByWalking', await wait(pg, '__game.east.info().loc==="xmn" && !__game.xmMetro.station', 6))
     s = await st(pg); ok('onRailwayConcourse', s['pos'][1] > -6.8 and s['zone'] == 'xmn')
     await auto(pg, [[XO - 108.5, -75.8], [XO - 99, -75.8]]); await auto(pg, [[XO - 99, -79.4], [XO - 92, -79.4]])
-    ok('outThroughGates', (await st(pg))['pos'][0] > XO - 95)
+    s = await st(pg); ok('outThroughGates', s['pos'][0] > XO - 95 and s['pos'][1] > -6.8 and (await pg.evaluate('__game.east.info().loc')) == 'xmn')
     await jcheck(pg, 'xmnbUp')
     # —— 3. 江头（岛式）：站台 ↔ 站厅；开门方向 ——
     await pg.evaluate("""(() => { const e=__game.east; e.cur.loc='xmmetro'; e.cur.area='metro'; __game.xmMetro.buildStation('jtou');
