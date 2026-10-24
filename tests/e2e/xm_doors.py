@@ -104,7 +104,7 @@ async def main():
     pg2 = await ctx.new_page(); logs2 = []
     pg2.on('pageerror', lambda e: logs2.append(('pageerror', str(e))))
     await pg2.goto(BASE + '?q=1'); await pg2.wait_for_function('window.__game', timeout=120000)
-    await pg2.evaluate(GCLOCK); await pg2.evaluate('__game.setDtMax(0.25)'); await asyncio.sleep(1)
+    await pg2.evaluate(GCLOCK); await pg2.evaluate(JUMP); await pg2.evaluate('__game.setDtMax(0.25)'); await asyncio.sleep(1)
     ok('resumeXmnb', await wait(pg2, '__game.xmMetro && __game.xmMetro.code==="xmnb"', 10))
     await door_check(pg2, 'resume-xmnb-B', 'B')
     R['errors'] += logs2; await b2.close()
