@@ -1933,5 +1933,23 @@
   "asr": "观音刷站附近有观音沙沙滩沙雕公园，欢迎下车游玩。请总事否出口出站。",
   "tries": 4,
   "flag": true
+ },
+ "voice.xmvisit.yxd.nan": {
+  "fp": "9b2d740e37ba16dadc59b3afdbdf3820b11dfe25547480cc28af1ac9746a75cc",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.88,
+  "asr": "伊秀东路站附近有新东风，欢迎下车游玩，请从三号出口出站。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.xmexit.yxd.nan": {
+  "fp": "63a2af87c9e4586c6497777574ff7ba96ea6098f7fb957df35e69e2f5463762a",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.812,
+  "asr": "前往新东方的乘客车从沙河出口出站。",
+  "tries": 4,
+  "flag": true
  }
 }
