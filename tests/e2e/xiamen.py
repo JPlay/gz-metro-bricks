@@ -183,15 +183,12 @@ async def main():
     await auto(pg, [[XO - 64, -80], [XO - 86, -80]]); await auto(pg, [[XO - 94, -80]])
     s = await st(pg); e = await E(pg); ok('metroGatesReach', e['area'] == 'passage'); await measure2(pg, 'xm-metro-gates')
     # —— 第三阶段：过闸进 1 号线 → 乘到吕厝 → 换乘 2 号线 → 再乘一站 → 尽量回厦门北 ——
-    await auto(pg, [[XO - 99, -80], [XO - 104, -80]])
-    await wait(pg, '__game.east.info().loc==="xmmetro" || (__game.xmMetro && __game.xmMetro.code)', 8)
-    if not await pg.evaluate('!!(__game.xmMetro && __game.xmMetro.station)'):
-        await pg.evaluate("""(() => {
-          __game.east.cur = __game.east.cur || {st:__game.station, loc:'xmn', area:'passage'};
-          __game.east.side='xm';
-          __game.xmMetro.enterFromRailway(__game.player);
-          __game.east.cur.loc='xmmetro'; __game.east.cur.area='metro';
-        })()""")
+    # 过闸（闸机柱在 z=-80，走 -79.4 的通道）→ 绕到楼梯口西头 → 顺楼梯往 +x 一路走下去 → 换乘通道 → 站台西端开口（全程步行，不传送）
+    await auto(pg, [[XO - 99, -79.4], [XO - 99, -75.8]]); await auto(pg, [[XO - 108.5, -75.8], [XO - 108.5, -80]])
+    await auto(pg, [[XO - 101, -80], [XO - 93, -80]])
+    ok('walkDownToMetro', await wait(pg, '__game.east.info().loc==="xmmetro" && !!(__game.xmMetro && __game.xmMetro.station)', 8))
+    await auto(pg, [[XO - 64, -80]]); await auto(pg, [[XO - 36, -80], [XO - 20, -78.5]])
+    s = await st(pg); ok('walkOntoXmnbPlatform', s['zone'] == 'platform' and abs(s['pos'][1] + 13) < 0.3)
     ok('enteredXmMetro', await wait(pg, '__game.xmMetro && __game.xmMetro.code==="xmnb"', 6))
     await measure3(pg, 's3-xmnb-platform')
     ok('boardL1', await xm_board(pg, 1, 1))

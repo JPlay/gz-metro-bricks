@@ -133,7 +133,7 @@ export class XmnStation {
     /* ===== 出站层（地下）：地面 / 吊顶 / 墙 ===== */
     k.floorWithHoles(H.x0, H.x1, H.z0, H.z1, HY - 0.3, HY, C.floor, [], true, 'floor');
     k.floorWithHoles(T.x0, T.x1, T.z0, T.z1, HY - 0.3, HY, C.floor, [], true, 'floor');
-    k.floorWithHoles(MT.x0, MT.x1, MT.z0, MT.z1, HY - 0.3, HY, C.floorM, [[-108, -100, -86, -74]], true, 'floor');
+    k.floorWithHoles(MT.x0, MT.x1, MT.z0, MT.z1, HY - 0.3, HY, C.floorM, [[-107, -101, -83, -77]], true, 'floor');
     // 吊顶：白色 + 木色椽子（闽南厝的檩条意思）+ 灯带；楼梯口上方开洞
     for (const r of [[H.x0, H.x1, H.z0, H.z1], [T.x0, T.x1, T.z0, T.z1], [MT.x0, MT.x1, MT.z0, MT.z1]]) {
       const holes = r === undefined ? [] : (r[0] === H.x0 ? [hole] : []);
@@ -208,10 +208,13 @@ export class XmnStation {
     this.hang(gxx + 0.4, HY + 3.4, -80, 6, 0.9, Math.PI / 2, board([{ metro: 1 }, { zh: '进站', en: 'Entrance' }, { l1: 1 }, { zh: '往 岩内 / 镇海路', en: 'To Yannei / Zhenhailu' }]), HC);
     for (const z of [-90.2, -88.6]) { P.rbox(-93, HY, z, 1.0, 1.9, 0.8, hex('#E9EBEC'), 0.05, Math.PI / 2, { ao: false }); at.quad(-92.48, HY + 1.35, z, 0.6, 0.45, Math.PI / 2, at.draw(0.6, 0.45, bigText('购票', 'Tickets', '#1D3F73', '#FFFFFF'))); k.colSlab(-93.5, -92.5, HY, HY + 1.9, z - 0.4, z + 0.4); }
     P.rbox(-92, HY, -70.2, 5, 1.1, 2.2, hex('#F3F1EC'), 0.05, 0, { ao: false }); k.colSlab(-94.5, -89.5, HY, HY + 1.1, -71.3, -68); at.quad(-92, HY + 2.6, -68.02, 4, 0.6, Math.PI, at.draw(4, 0.6, bigText('客服中心 Service Centre', null, L1, '#FFFFFF')));
-    // 下站台楼梯（付费区里，往下到黑处：站台层第三阶段做）
-    { const [x0, x1, z0, z1] = [-108, -100, -86, -74]; for (let i = 0; i < 18; i++) F.slab(x1 - (i + 1) * 0.44, x1 - i * 0.44, HY - 0.3 - i * 0.28 - 0.28, HY - 0.3 - i * 0.28, z0, z1, C.floorM, { ao: false });
-      P.slab(x0 - 0.2, x1, HY - 6, HY - 5.9, z0, z1, hex('#202428'), { ao: false });
-      k.rail(x0, z0 - 0.1, x1, z0 - 0.1, HY); k.rail(x0, z1 + 0.1, x1, z1 + 0.1, HY); k.rail(x0 - 0.1, z0, x0 - 0.1, z1, HY); }
+    // 下站台楼梯上半段：从洞口西头（x -107，站厅层）往 +x 下到 x -101.2（-9.2），在站厅地面底下接地铁那边的下半段 → 换乘通道 → 站台
+    { const [x0, x1, z0, z1] = [-107, -101, -83, -77];
+      k.stairs('x', x0, HY, -101.195, -9.195, z0, z1, -13, C.floorM, { nosing: '#4A3A32' });
+      for (const [a0, a1] of [[z0 - 0.3, z0], [z1, z1 + 0.3]]) { P.slab(x0, -101.195, -13, HY - 0.3, a0, a1, C.wall, { ao: false }); k.colSlab(x0, -101.195, -13, HY - 0.3, a0, a1); }
+      P.slab(x0 - 0.3, x0, -13, HY - 0.3, z0 - 0.3, z1 + 0.3, C.wall, { ao: false });
+      for (const z of [z0 + 0.02, z1 - 0.02]) G.slab(x0, -101.195, HY - 0.9, HY - 0.84, z - 0.02, z + 0.02, hex('#FFF4DE'), { ao: false });
+      k.rail(x0, z0 - 0.05, x1, z0 - 0.05, HY); k.rail(x0, z1 + 0.05, x1, z1 + 0.05, HY); k.rail(x1 + 0.05, z0, x1 + 0.05, z1, HY); }
     this.hang(-104, HY + 3.4, -80, 6, 0.9, Math.PI / 2, board([{ l1: 1 }, { zh: '站台  往岩内 / 往镇海路', en: 'Platforms · Yannei / Zhenhailu' }, { a: 'd' }]), HC);
     /* ===== 出站楼梯：从出站层上到南广场（露天楼梯井） ===== */
     k.stairs('z', S.z0, HY, S.z1, 0, S.x0, S.x1, HY, '#D6D1C7');

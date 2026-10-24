@@ -388,16 +388,21 @@ export class EastCtl {
       const a = XmnStation.area(p.x - XO.x, p.y, p.z);
       if (a !== this.cur.area) { const was = this.cur.area; this.cur.area = a; if (was) { const T = { hall: '出站层 · Arrivals', passage: '换乘地铁通道 · Metro transfer', plaza: '南广场 · South Square', platform: '站台 · Platforms' }; this.hud.toast('厦门北站 ' + T[a], 1800); } this.events.emit('east', { area: a }); }
       // 穿过地铁闸机、下到站台 → 交给厦门地铁
-      if (this.xmMetro && !this.xmMetro.station && a === 'passage' && p.y < -9 && (p.x - XO.x) < -98) {
-        this.xmMetro.enterFromRailway(pl); this.cur.loc = 'xmmetro'; this.cur.area = 'metro';
+      // 走楼梯（xmnStation 上半段 x -107..-101）往下：一踩到 -7.6 以下就把地铁站（下半段楼梯 / 通道 / 站台）建出来，人不动
+      { const lx = p.x - XO.x;
+        if (this.xmMetro && !this.xmMetro.station && a === 'passage' && p.y < -7.6 && lx > -108 && lx < -99 && Math.abs(p.z + 80) < 3.2) {
+          this.xmMetro.enterWalk(); this.cur.loc = 'xmmetro'; this.cur.area = 'metro';
         this.hud.toast('厦门地铁 1号线 · 厦门北站', 2200);
-      }
+      } }
     } else if (this.cur.loc === 'xmmetro') {
       // 在厦门北站台爬回站厅 → 回到国铁付费区
-      if (this.xmMetro && this.xmMetro.code === 'xmnb' && p.y > -7.2 && (p.x - XO.x) > -96 && (p.x - XO.x) < -88) {
-        this.xmMetro.exitToRailway(pl); this.cur.loc = 'xmn'; this.cur.area = 'passage';
+      // 在厦门北：顺着楼梯走回国铁地铁站厅（-7.0 以上），把地铁站拆掉，人留在原地（不传送）
+      if (this.xmMetro && this.xmMetro.code === 'xmnb' && !this.xmMetro.ride && p.y > -7.0 && (p.x - XO.x) > -111 && (p.x - XO.x) < -99 && Math.abs(p.z + 80) < 13) {
+        this.xmMetro.exitToRailway(pl, true); this.cur.loc = 'xmn'; this.cur.area = 'passage';
         this.hud.toast('厦门北站 · 换乘地铁通道', 1800);
       }
+      // 厦门北：楼梯 / 换乘通道西段（x < -60）才需要国铁站房（站厅地面、楼梯上半段）；站台上关掉省 draw
+      if (this.xmMetro && this.xmMetro.code === 'xmnb' && this.xmn && this.xmn.station) { const on = (p.x - XO.x) < -60; if (this.xmn.station.root.isEnabled() !== on) this.xmn.station.setEnabled(on); }
       // 人已经坐上厦门地铁离开厦门北：关掉国铁 cur 里的站台逻辑，但保留 side=xm 方便回程
       if (this.xmMetro && this.xmMetro.code && this.xmMetro.code !== 'xmnb' && this.xmn) this.xmn.show(null);
     }

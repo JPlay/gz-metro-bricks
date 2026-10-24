@@ -198,7 +198,7 @@ export async function start() {
       else { player.yaw = Math.atan2(dx, dz); input.virtual = { x: 0, y: d < 1 ? 0.5 : 1, run: !!a.run && d > 2 }; }
     }
     const inp = input.read(), p0 = player.position;
-    const inXm = !!(xmMetro && xmMetro.station);
+    let inXm = !!(xmMetro && xmMetro.station);
     const conv = (!inXm && !(east && east.cur)) ? G.station.conveyor(player.position) : 0;
     player.update(dt, inp, conv ? { x: conv * dt, z: 0 } : null);
     if (inXm) xmMetro.update(dt); else if (!(east && east.cur)) metro.update(dt);
@@ -207,6 +207,8 @@ export async function start() {
     if (!inXm && !(east && east.cur)) G.station.update(dt, player, cam, Audio, metro);
     // 动作按钮：车厢里优先“坐下 / 起身”，否则售票机 / 闸机
     const hotelAct = hotel ? hotel.update(dt) : null; if (clan) clan.update(dt); if (east) east.update(dt);
+    // 厦门北走楼梯回国铁：east.update 这一帧拆了地铁站，后面的区域 / HUD 要按国铁算
+    if (inXm && !xmMetro.station) inXm = false;
     const seatAct = seats.update(), ticketAct = tickets.update(dt, G.station, player), socialAct = social.update(dt);
     hud.action(seatAct || hotelAct || ticketAct || socialAct);
     // 车厢里的乘客动画（只动玩家所在 / 附近的车）
