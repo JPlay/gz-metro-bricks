@@ -54,7 +54,9 @@ export class XmMetro {
     if (rail) {
       if (code === 'xmnb') {
         rail.show('solo');
-        if (rail.station) rail.station.setEnabled(false);
+        // 国铁站房只在人走在楼梯 / 换乘通道西段时打开（east.js 每帧按位置切）；solo（动车外观、远景）关掉省 draw
+        const pp = this.ctx.player && this.ctx.player.position, near = !!pp && (pp.x - XO.x) < -60 && pp.y > XM_PY - 1 && pp.y < -5 && Math.abs(pp.z + 80) < 14;
+        if (rail.station) rail.station.setEnabled(!!near);
         if (rail.solo && rail.solo.root) rail.solo.root.setEnabled(false);
       } else { rail.show(null); }
     }
@@ -196,7 +198,8 @@ export class XmMetro {
     pl.spawn(XO.x + ex.x, 0.05, -34.4, 0);
     this.ctx.events.emit('xm', { street: false, code: this.code });
   }
-  zoneOf(p) { return this.street ? this.street.zoneOf(p) : this.station.zoneOf(p); }
+  // 走楼梯回国铁时，同一帧里 main 先算了 inXm 再由 east.update 拆站：station 可能已为 null
+  zoneOf(p) { return this.street ? this.street.zoneOf(p) : this.station ? this.station.zoneOf(p) : { kind: 'xmn', area: 'passage' }; }
   /** 从国铁付费区进入厦门北站地铁站台 */
   enterFromRailway(player) {
     this.buildStation('xmnb');
@@ -205,14 +208,20 @@ export class XmMetro {
     Ann.welcome('xmnb');
     this.ctx.events.emit('xm', { enter: true, code: 'xmnb' });
   }
-  exitToRailway(player) {
+  /** 走楼梯下来：只建站，不动人（人正踩在楼梯上） */
+  enterWalk() {
+    this.buildStation('xmnb');
+    Ann.welcome('xmnb');
+    this.ctx.events.emit('xm', { enter: true, code: 'xmnb', walk: true });
+  }
+  exitToRailway(player, walk = false) {
     // 回到国铁出站层换乘通道
     const rail = this.ctx.getRailway && this.ctx.getRailway();
     if (rail) rail.show('solo');
     if (this.station) { this.station.dispose(); this.station = null; this.code = null; this.slots = []; }
     this.trains.forEach(t => t.setVisible(false));
-    player.spawn(XO.x - 92, -6.45, -80, Math.PI / 2);
-    this.ctx.events.emit('xm', { enter: false });
+    if (!walk) player.spawn(XO.x - 92, -6.45, -80, Math.PI / 2);
+    this.ctx.events.emit('xm', { enter: false, walk });
   }
   louder(a, b) { if (!a) return b; return { speed: Math.max(a.speed, b.speed), inside: a.inside || b.inside, braking: a.braking || b.braking }; }
   call(line, step) { const s = this.slots.find(o => o.line === line && o.step === step); if (s && s.state === 'away') s.t = 0; return !!s; }
