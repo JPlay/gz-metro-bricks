@@ -2,11 +2,20 @@
  * 车厢里坐下：靠近一个空座位（烘焙的坐着的乘客占着的座位不算）时右下角出现「坐下」，
  * 坐下后玩家贴在座位上（髋部落在座垫上，坐姿动画），第一人称镜头降低；「起身」（或跳）站起来。
  * 列车进出隧道、到站都保持坐着，直到自己点起身。
+ * 广州 metro 与厦门 xmMetro 共用同一套坐下逻辑（trainAt 两边的列车都找）。
  */
 const HALL_TRAIN = { id: 'hall', root: { position: { x: 0, y: 0, z: 0 } }, pax: [] };
 export class SeatCtl {
   constructor({ player, metro, Audio, events }) { Object.assign(this, { player, metro, Audio, events }); this.count = { sit: 0, stand: 0 }; }
-  trainAt(p) { return this.metro.trains.find(t => t.root.isEnabled() && t.contains(p)); }
+  /** 广州 / 厦门两套列车池都查；先命中的那列（玩家只可能在一列里） */
+  trainAt(p) {
+    for (const m of [this.metro, this.xmMetro]) {
+      if (!m || !m.trains) continue;
+      const t = m.trains.find(t => t.root.isEnabled() && t.contains(p));
+      if (t) return t;
+    }
+    return null;
+  }
   update() {
     const pl = this.player;
     if (pl.seat) return { id: 'stand', label: '起身', icon: 'stand', run: () => this.stand() };

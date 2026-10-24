@@ -342,6 +342,7 @@ export async function start() {
     onNewTrain: t => t.shadowMeshes && t.shadowMeshes.forEach(m => R.addShadowCaster(m))
   });
   east.xmMetro = xmMetro;
+  seats.xmMetro = xmMetro;   // 厦门地铁车厢也走同一套「坐下 / 起身」
   // 续玩：厦门地铁（要等 east / xmMetro 建好）。跟从国铁走进厦门北地铁一样：广州场景关掉，xmMetro 接管
   if (G.pendingXm) {
     const sv = G.pendingXm; G.pendingXm = null;
