@@ -10,14 +10,16 @@ import { Kit } from './kit.js';
 import { hex, mix } from '../core/geo.js';
 import { FoodAtlas } from '../game/food-art.js';
 import * as D from './decor.js';
-import { XM_LINES } from '../data/xm-lines.js';
+import { XM_LINES, XM_STATIONS } from '../data/xm-lines.js';
 import { xinliEstate, Xinli256 } from './xmXinli.js';
 import { exitZh } from '../data/xm-visits.js';
 import { ATTR_EXITS, ATTR_BUILD } from './xmAttr.js';
+import { XM_PLAIN_EXITS } from '../data/xm-exits.js';
 
 export const XS = { x: 4000, z: 0 };
 /** 车站里的出口通道（站厅南墙 x 处开口 → 楼梯上到地面 → 进街区） */
 export const XM_EXITS = {
+  ...XM_PLAIN_EXITS,   // 每个站都有出口（没有专门街区的站走默认街口）；下面专门做的会覆盖
   jtou: { n: '2', x: 10, line: 2, road: '吕岭路', to: ['莲龙小学', '莲花小学'], toEn: ['Lianlong Primary School', 'Lianhua Primary School'] },
   lcu: { n: '12', x: 10, line: 1, road: '嘉禾路', to: ['莲花公园'], toEn: ['Lianhua Park'] },
   cyg: { n: '', x: 10, line: 1, road: '诚毅南路', to: ['莲花首岸'], toEn: ['Lianhua Shou\'an'] },
@@ -82,7 +84,7 @@ export class XmStreet {
     { const q = this.atlas.quad.bind(this.atlas); this.atlas.quad = (x, y, z, w, h, a, uv) => q(x, y, z, w, h, Math.PI - a, uv); }   // 本文件约定：a=0 朝 -z、π 朝 +z、±π/2 朝 ±x
     D.reseed(code.length * 97 + code.charCodeAt(0));
     this.ground(); this.kiosk();
-    if (code === 'jtou') this.jiangtou(); else if (code === 'lcu') this.lucuo(); else if (code === 'cyg') this.chengyi(); else if (code === 'hpu') this.houpu(); else if (ATTR_BUILD[code]) ATTR_BUILD[code](this);
+    if (code === 'jtou') this.jiangtou(); else if (code === 'lcu') this.lucuo(); else if (code === 'cyg') this.chengyi(); else if (code === 'hpu') this.houpu(); else if (ATTR_BUILD[code]) ATTR_BUILD[code](this); else this.plain();
     k.finish(true); this.atlas.finish(k.root, 'xmStreetSigns');
     if (this.after) this.after();   // 动画件（不冻结），如清水宫上空降落的飞机
     k.root.getChildMeshes(false).forEach(m => { m.receiveShadows = true; });
@@ -209,6 +211,20 @@ export class XmStreet {
     k.shade.shadeRoom(x - w / 2, x + w / 2, z - d / 2, z + d / 2, 0.012, 1.0, 0.25);
   }
   filler(list) { for (const [x, z, w, d, h, col] of list) D.building(this.kit, x, z, w, d, h, col); }
+
+  /** 默认街口（没有专门街区的站）：出口亭前一条东西向马路 + 行道树 / 路灯 + 两边楼；路名有资料才挂 */
+  plain() {
+    const k = this.kit, ex = this.ex;
+    this.road(-160, 160, -22, -8, true, ex.road || null);
+    for (let x = -150; x <= 150; x += 12) if (Math.abs(x) > 6) this.lightTree(x, -6.2, 0.8);
+    for (const x of [-8, 8]) D.lamp(k, x, 0, -6.6, Math.PI);
+    D.bench(k, -6, 0, 3, Math.PI / 2); D.bin(k, 5, 0, 3);
+    // 站名牌（出口亭旁）：让人知道出来的是哪一站
+    const st = XM_STATIONS[this.code];
+    if (st) { k.metal.cyl(6, 1.4, 1.5, 0.08, 2.8, hex('#8A9198'), 8); this.atlas.quad(6, 2.9, 1.48, 2.6, 0.6, Math.PI, this.atlas.draw(2.6, 0.6, textPaint([st.zh + '站'], { bg: '#20272E', fg: '#FFFFFF' }))); }
+    for (let x = -150; x <= 150; x += 12) if (Math.abs(x - 6) > 10) this.lightTree(x, 6.5, 0.8);
+    this.filler([[60, -40, 30, 14, 28, '#C9C2B6'], [-40, -42, 34, 14, 24, '#D8D2C6'], [-110, -40, 30, 14, 32, '#BFB6A8'], [110, -40, 26, 14, 22, '#CDC5B8'], [40, 40, 30, 24, 26, '#D2CABE'], [-50, 44, 34, 22, 20, '#C6BEB1'], [-120, 60, 26, 26, 30, '#D9D3C8'], [120, 70, 26, 24, 18, '#CFC8BC']]);
+  }
 
   /* ---------- 江头 2 号出口：莲龙小学 + 莲花小学 ---------- */
   jiangtou() {
