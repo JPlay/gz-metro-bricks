@@ -23,6 +23,7 @@ async def look(pg, x, y, z, yaw, pitch, name):
 async def main():
   async with async_playwright() as p:
     b, pg, logs = await open_game(p, URL + ('&' if '?' in URL else '?') + 'q=1&start=gzdz&line=1')
+    await pg.evaluate("window.__caps = []; addEventListener('gz-audio-caption', e => { if (e.detail) __caps.push([Math.round(performance.now()), e.detail.id, e.detail.lang]); })")
     await pg.evaluate(GCLOCK); await pg.evaluate('__game.setDtMax(0.25)'); await asyncio.sleep(0.8)
     await pg.evaluate("""(() => { const g=__game; g.east.ensure(); g.east.side='xm'; g.east.cur={st:g.station, loc:'xmmetro', area:'metro'}; g.station.kit.root.setEnabled(false); g.xmMetro.enterFromRailway(g.player); if (g.player.view!=='first') g.toggleView(); })()""")
     # 出口资料：4B 去 SM；乌石浦 7 个出口都在表里
@@ -31,7 +32,17 @@ async def main():
     log('meta', meta)
     ok('exit4B', meta['n'] == '4B' and any('SM' in s for s in meta['to'] or []))
     ok('exitTable7', len(meta['table']) == 7)
-    await pg.evaluate("() => { const m = __game.xmMetro; m.buildStation('wsp'); __game.player.spawn(3010, -6.45, -15, Math.PI); }"); await asyncio.sleep(1)
+    # 报站：广州东站开局时的粤语欢迎广播不能带进厦门；乌石浦站台自己的欢迎广播按 普通话 → 闽南语 → 英语
+    await pg.evaluate("__caps.push(['XM'])")
+    await pg.evaluate("() => { const m = __game.xmMetro; m.buildStation('wsp'); const P = m.station.platforms[0]; __game.player.spawn(3020, P.y + 0.05, P.zc + 2, Math.PI / 2); }")
+    for _ in range(40):
+      await asyncio.sleep(1)
+      if await pg.evaluate("__caps.some(c => c[1] === 'voice.welcome.wsp.en')"): break
+    caps = await pg.evaluate('__caps'); after = caps[[i for i, c in enumerate(caps) if c[0] == 'XM'][0] + 1:]
+    log('captions', after)
+    ok('annNoCantoneseInXm', not any(len(c) > 2 and (c[2] == 'yue' or 'gzdz' in c[1]) for c in after))
+    ok('annWelcomeWsp', [c[2] for c in after if len(c) > 2 and c[1].startswith('voice.welcome.wsp.')] == ['zh', 'nan', 'en'])
+    await pg.evaluate("() => { __game.player.spawn(3010, -6.45, -15, Math.PI); }"); await asyncio.sleep(1)
     await auto(pg, [[3010, -20], [3010, -30], [3010, -36.5]])
     s = await S(pg); ok('street', s['street'] and s['street']['code'] == 'wsp' and s['zone'] == 'street')
     ok('atlas', s['street'] and s['street']['atlasOverflow'] == 0)

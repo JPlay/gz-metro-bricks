@@ -209,6 +209,15 @@ export async function start() {
     const hotelAct = hotel ? hotel.update(dt) : null; if (clan) clan.update(dt); if (east) east.update(dt);
     // 厦门北走楼梯回国铁：east.update 这一帧拆了地铁站，后面的区域 / HUD 要按国铁算
     if (inXm && !xmMetro.station) inXm = false;
+    // 换城（广州地铁 ↔ 国铁 ↔ 厦门地铁）：上一个城市没播完的广播立刻停（厦门不能响粤语、广州不能响闽南语），
+    // 欢迎广播按新车站重新来（否则广州东站的「欢迎光临……先落后上」会一路跟到厦门，还把厦门站自己的欢迎广播挡掉）
+    { const net = inXm ? 'xm' : east && east.cur ? 'rail' : 'gz';
+      if (G.net && G.net !== net) { Audio.cancelLang(net === 'gz' ? 'nan' : 'yue'); if (net === 'xm') { G.welcomed = Audio.pendingKeys().includes('welcome'); G.welcomeWait = true; } }
+      G.net = net;
+      // 厦门地铁换了站（坐车到站 / 测试直接建站）：上一站的欢迎 / 进站 / 安全广播不带到这一站，这一站的欢迎广播重新播
+      const xc = inXm ? xmMetro.code : null;
+      if (xc && G.xmCode && xc !== G.xmCode) { Audio.cancelKeys(['welcome', 'platform', 'safety']); G.welcomed = false; G.welcomeWait = true; }
+      G.xmCode = xc; }
     const seatAct = seats.update(), ticketAct = tickets.update(dt, G.station, player), socialAct = social.update(dt);
     hud.action(seatAct || hotelAct || ticketAct || socialAct);
     // 车厢里的乘客动画（只动玩家所在 / 附近的车）
@@ -263,7 +272,8 @@ export async function start() {
       streetL *= 1 - 0.7 * ez;   // 沙面：过了沙基涌，车流声轻下去、榕树上有鸟叫
       Audio.setEnv({ metro: metroL, street: streetL * (1 - 0.65 * sm), birds: streetL * sm, restaurant: hallKind === 'restaurant' ? 1 : 0, sub: G.aboard || G.inTunnel || hallKind === 'emu' ? 'train' : G.zone.kind === 'platform' || (hallKind === 'xmn' && east.area === 'platform') || hallKind === 'xmmetro' ? 'platform' : 'concourse' }); }
     if (G.zone.kind === 'platform' && !G.welcomed && !G.aboard && !inXm) { G.welcomed = true; if (!Audio.isAnnouncing()) Ann.welcome(G.code); }
-    if (inXm && G.zone.kind === 'platform' && !G.welcomed && !G.aboard) { G.welcomed = true; if (!Audio.isAnnouncing()) Ann.welcome(xmMetro.code); }
+    // welcomeWait：刚换城 / 换站，被取消的旧广播这一帧还没收尾（isAnnouncing 仍为真），等它停了再播本站欢迎，别直接跳过
+    if (inXm && G.zone.kind === 'platform' && !G.welcomed && !G.aboard && !(G.welcomeWait && Audio.isAnnouncing())) { G.welcomed = true; G.welcomeWait = false; if (!Audio.isAnnouncing()) Ann.welcome(xmMetro.code); }
     // 出了车站（街面 / 纪念堂大会堂）：站内广播（欢迎 / 进站 / 关门）和字幕立刻停，不再跟着人走到街上
     if ((G.zone.kind === 'street' || G.zone.kind === 'hall') && !G.aboard && !(east && east.cur) && Audio.isAnnouncing()) Audio.cancelAnnouncements();
     const rlXm = inXm && xmMetro.ride && xmMetro.ride.train && G.aboard ? xmMetro.ride : null;
