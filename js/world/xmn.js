@@ -48,20 +48,24 @@ function paintBackdrop(c, pw, ph) {
 /** 站房立面上的大字 */
 function paintName(c, pw, ph) { c.fillStyle = '#1F5F8B'; c.fillRect(0, 0, pw, ph); c.fillStyle = '#FFFFFF'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `800 ${ph * 0.62}px ${FONT}`; c.fillText('厦 门 北 站', pw * 0.5, ph * 0.54); }
 
+/** 外地高铁站站台的配置（福州南等复用同一套站台：js/world/fzs.js）。O 场景原点；id kit 名前缀；name 站名牌；station(scene) 站房（下车后第一次 solo 才建） */
+export const XMN_CFG = { O: XO, id: 'xmn', name: ['厦门北', 'Xiamenbei'], C, backdrop: paintBackdrop, station: scene => new XmnStation(scene) };
+
 export class XmnPlatform {
-  /** 建在 XO；car 模式时 root 挪到车厢外 */
-  constructor(scene) {
-    this.scene = scene;
-    const k = this.kit = new Kit(scene, 'xmn'); k.root.position.set(XO.x, 0, 0);
+  /** 建在 cfg.O（厦门 = XO）；car 模式时 root 挪到车厢外 */
+  constructor(scene, cfg = XMN_CFG) {
+    this.scene = scene; this.cfg = cfg; this.O = cfg.O; this.C = cfg.C || C;
+    const id = cfg.id;
+    const k = this.kit = new Kit(scene, id); k.root.position.set(this.O.x, 0, 0);
     const atlas = this.atlas = new FoodAtlas(scene, 1024);
-    const s = this.solo = new Kit(scene, 'xmn-solo', k.root); const sa = this.soloAtlas = new FoodAtlas(scene, 1024);
+    const s = this.solo = new Kit(scene, id + '-solo', k.root); const sa = this.soloAtlas = new FoodAtlas(scene, 1024);
     this.build(k, atlas, s, sa);
-    k.finish(false); atlas.finish(k.root, 'xmnSigns');
-    s.finish(false); sa.finish(s.root, 'xmnSoloSigns'); noProbe(k.root);
+    k.finish(false); atlas.finish(k.root, id + 'Signs');
+    s.finish(false); sa.finish(s.root, id + 'SoloSigns'); noProbe(k.root);
     k.root.setEnabled(false); this.mode = null;
   }
   build(k, atlas, s, sa) {
-    const P = k.solid, G = k.glow, M = k.metal, { xw, xe, back, edge, tz } = XMN;
+    const P = k.solid, G = k.glow, M = k.metal, { xw, xe, back, edge, tz } = XMN, C = this.C;
     /* 岛式站台 */
     k.floorWithHoles(xw, xe, edge, back, -1.25, 0, C.plat, [XMN.hole], false, 'pave');   // 中间开一个楼梯口（往下到出站层）
     buildStairHole(k);
@@ -75,21 +79,10 @@ export class XmnPlatform {
       for (const sd of [-1, 1]) M.slab(xw - 40, xe + 40, -1.2, -1.08, zc + sd * 0.717 - 0.04, zc + sd * 0.717 + 0.04, C.rail, { ao: false });
     }
     P.slab(xw, xe, -1.3, -0.02, edge - 0.05, edge, hex('#B5B1A9'), { ao: false }); P.slab(xw, xe, -1.3, -0.02, back, back + 0.05, hex('#B5B1A9'), { ao: false });
-    /* 对面（站房一侧）的站台 + 站房立面：白石 + 红砖腰带 + 海蓝玻璃 + 燕尾脊轮廓 */
+    /* 对面（站房一侧）的站台 + 站房立面 */
     const z2 = back + 3.5, zb = back + 18;
     k.g('pave').slab(xw, xe, -1.25, 0, z2, zb - 2, C.plat, { ao: false }); P.slab(xw, xe, 0.002, 0.01, z2, z2 + 0.3, C.edge, { ao: false }); k.g('tactile').slab(xw, xe, 0.002, 0.014, z2 + 0.75, z2 + 1.05, hex('#F2C230'), { ao: false });
-    P.slab(xw - 20, xe + 20, -1.3, 1.4, zb - 2, zb, C.stone);                                    // 白石墙基
-    k.g('brick').slab(xw - 20, xe + 20, 1.4, 3.4, zb - 2, zb, C.brick);                          // 红砖腰带
-    P.slab(xw - 20, xe + 20, 3.4, 3.8, zb - 2.15, zb, C.stone);
-    k.glass.slab(xw - 20, xe + 20, 3.8, 13.5, zb - 1.6, zb - 1.5, C.glass);                       // 海蓝玻璃幕墙
-    for (let x = xw - 20; x <= xe + 20; x += 6) M.slab(x - 0.12, x + 0.12, 3.8, 13.5, zb - 1.75, zb - 1.55, hex('#D8DCDF'), { ao: false });
-    P.slab(xw - 20, xe + 20, 3.8, 13.5, zb - 0.3, zb, C.wall);
-    P.slab(xw - 22, xe + 22, 13.5, 14.3, zb - 2.6, zb + 0.5, C.stone);                            // 檐口
-    // 屋脊：中间平、两头高高翘起的燕尾（深红褐色瓦脊）
-    const rr = hex('#7A3426');
-    P.slab(xw - 10, xe + 10, 14.3, 14.9, zb - 1.4, zb - 0.6, rr);
-    for (const sd of [-1, 1]) { const x0 = sd < 0 ? xw - 10 : xe + 10; for (let i = 0; i < 6; i++) P.box(x0 + sd * (i * 1.1 + 0.5), 14.9 + i * 0.42 + i * i * 0.05, zb - 1.0, 1.25, 0.55, 0.8, rr, 0, 0, sd * (0.18 + i * 0.09), 1, { ao: false }); }
-    atlas.quad(0, 9.2, zb - 2.17, 16, 2.6, Math.PI, atlas.draw(16, 2.6, paintName, 56));
+    this.facade(k, atlas, xw, xe, zb);
     /* 大雨棚（海蓝色底面 + 白色顶面），白色树杈柱 */
     const r0 = tz - 6, r1 = zb - 2.2, RY = 8.6;
     P.slab(xw - 6, xe + 6, RY, RY + 0.12, r0, r1, C.roof, { ao: false }); P.slab(xw - 6, xe + 6, RY + 0.12, RY + 0.5, r0, r1, C.roofTop, { ao: false });
@@ -98,13 +91,13 @@ export class XmnPlatform {
     this.cols = [];
     for (let x = xw + 7; x < xe; x += 18) {
       // 红砖基座 + 白石压顶；白色钢柱；顶上四根斜撑（树杈）
-      k.g('brick').slab(x - 0.6, x + 0.6, 0, 1.1, zc - 0.6, zc + 0.6, C.brick); P.slab(x - 0.68, x + 0.68, 1.1, 1.22, zc - 0.68, zc + 0.68, C.stone);
+      this.colBase(k, x, zc);
       P.cyl(x, 1.22 + (RY - 2.6 - 1.22) / 2, zc, 0.5, RY - 2.6 - 1.22, C.col, 12);
       for (const [dx, dz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) P.tube([x, RY - 2.7, zc], [x + dx * 3.2, RY, zc + dz * 3.4], 0.22, C.col, 8);
       this.cols.push(x);
     }
     // 站名牌（吊在雨棚下，两面）+ 柱子上的小站名
-    const pu = atlas.draw(3.6, 1.0, plate('厦门北', 'Xiamenbei'));
+    const pu = atlas.draw(3.6, 1.0, plate(...this.cfg.name));
     for (const x of [xw + 16, xw + 52, xw + 88, xw + 124].filter(x => x < xe - 2)) for (const a of [0, Math.PI]) {
       atlas.quad(x, 3.4, zc + (a ? -0.05 : 0.05), 3.6, 1.0, a, pu);
       for (const sx of [-1, 1]) M.tube([x + sx * 1.3, 3.9, zc], [x + sx * 1.3, RY, zc], 0.03, hex('#9AA1A8'), 6);
@@ -119,7 +112,7 @@ export class XmnPlatform {
 
     /* ===== solo：独立场景才打开 ===== */
     buildEmuTrain(s, (x, y, z, w, h, zh, fg) => sa.sign(x, y, z, w, h, 0, (c, pw, ph) => { c.fillStyle = '#F4F5F3'; c.fillRect(0, 0, pw, ph); c.fillStyle = fg; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `800 ${ph * 0.7}px ${FONT}`; c.fillText(zh, pw / 2, ph * 0.54); }));
-    sa.quad(-5, 8, zs - 60, 260, 40, 0, sa.draw(260, 40, paintBackdrop, 4));
+    sa.quad(-5, 8, zs - 60, 260, 40, 0, sa.draw(260, 40, this.cfg.backdrop, 4));
     // 碰撞：站台地面、两条站台边（列车没挡住的地方）、两头、站房一侧股道
     { const [h0, h1, h2, h3] = XMN.hole; s.colSlab(xw, h0, -1.3, 0, back, edge); s.colSlab(h1, xe, -1.3, 0, back, edge); s.colSlab(h0, h1, -1.3, 0, edge, h2); s.colSlab(h0, h1, -1.3, 0, h3, back); }
     s.colSlab(xw, xe, 0, 1.4, back - 0.25, back);
@@ -127,15 +120,36 @@ export class XmnPlatform {
     s.colSlab(xw - 0.6, xw, 0, 2, back, edge); s.colSlab(xe, xe + 0.6, 0, 2, back, edge);
     for (const x of this.cols) s.col(x, 1.5, zc, 1.3, 3, 1.3);
   }
-  /** 'solo'：独立场景（在 XO）；'car'：车厢外的站台（ox = 车厢里看到的位置偏移） */
+  /** 站房一侧的立面（厦门北：白石 + 红砖腰带 + 海蓝玻璃 + 燕尾脊轮廓） */
+  facade(k, atlas, xw, xe, zb) {
+    const P = k.solid, M = k.metal, C = this.C;
+    P.slab(xw - 20, xe + 20, -1.3, 1.4, zb - 2, zb, C.stone);                                    // 白石墙基
+    k.g('brick').slab(xw - 20, xe + 20, 1.4, 3.4, zb - 2, zb, C.brick);                          // 红砖腰带
+    P.slab(xw - 20, xe + 20, 3.4, 3.8, zb - 2.15, zb, C.stone);
+    k.glass.slab(xw - 20, xe + 20, 3.8, 13.5, zb - 1.6, zb - 1.5, C.glass);                       // 海蓝玻璃幕墙
+    for (let x = xw - 20; x <= xe + 20; x += 6) M.slab(x - 0.12, x + 0.12, 3.8, 13.5, zb - 1.75, zb - 1.55, hex('#D8DCDF'), { ao: false });
+    P.slab(xw - 20, xe + 20, 3.8, 13.5, zb - 0.3, zb, C.wall);
+    P.slab(xw - 22, xe + 22, 13.5, 14.3, zb - 2.6, zb + 0.5, C.stone);                            // 檐口
+    // 屋脊：中间平、两头高高翘起的燕尾（深红褐色瓦脊）
+    const rr = hex('#7A3426');
+    P.slab(xw - 10, xe + 10, 14.3, 14.9, zb - 1.4, zb - 0.6, rr);
+    for (const sd of [-1, 1]) { const x0 = sd < 0 ? xw - 10 : xe + 10; for (let i = 0; i < 6; i++) P.box(x0 + sd * (i * 1.1 + 0.5), 14.9 + i * 0.42 + i * i * 0.05, zb - 1.0, 1.25, 0.55, 0.8, rr, 0, 0, sd * (0.18 + i * 0.09), 1, { ao: false }); }
+    atlas.quad(0, 9.2, zb - 2.17, 16, 2.6, Math.PI, atlas.draw(16, 2.6, paintName, 56));
+  }
+  /** 雨棚柱的基座（厦门北：红砖 + 白石压顶） */
+  colBase(k, x, zc) {
+    const P = k.solid, C = this.C;
+    k.g('brick').slab(x - 0.6, x + 0.6, 0, 1.1, zc - 0.6, zc + 0.6, C.brick); P.slab(x - 0.68, x + 0.68, 1.1, 1.22, zc - 0.68, zc + 0.68, C.stone);
+  }
+  /** 'solo'：独立场景（在 O）；'car'：车厢外的站台（ox = 车厢里看到的位置偏移） */
   show(mode, ox = 0) {
     const r = this.kit.root;
     if (!mode) { r.setEnabled(false); this.mode = null; if (this.station) this.station.setEnabled(false); return; }
     r.setEnabled(true); this.solo.root.setEnabled(mode === 'solo');
     // 站房（出站层 / 换乘通道 / 南广场）：厦门自己的一块区域，第一次下车才建，只在独立场景里打开
-    if (mode === 'solo' && !this.station) this.station = new XmnStation(this.scene);
+    if (mode === 'solo' && !this.station) this.station = this.cfg.station(this.scene);
     if (this.station) this.station.setEnabled(mode === 'solo');
-    if (mode === 'solo') r.position.set(XO.x, 0, 0);
+    if (mode === 'solo') r.position.set(this.O.x, 0, 0);
     this.mode = mode; this.ox = ox;
   }
   /** car 模式：站台坐标 → 车厢坐标（车厢中心 x = EO.x，站台在 +z 一侧），再往前挪 ox（进站时从前面滑过来） */

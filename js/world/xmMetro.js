@@ -65,7 +65,7 @@ export class XmStation {
     k.root.position.set(N.O.x, 0, 0);
     this.atlas = new FoodAtlas(scene, 2048);
     this.platforms = this.frames().map(f => ({ ...f, sides: this.sidesFor(f) }));
-    this.platforms.forEach(p => { p.up = this.upFor(p); if (code === N.rail) p.endOpen = true; });
+    this.platforms.forEach(p => { p.up = this.upFor(p); if (code === N.rail && !p.under) p.endOpen = true; });
     // 换乘楼梯洞口（跟着第一层站台的 zc 走；吕厝 zc=0 → 与原 XF 相同）
     { const z = this.platforms[0].zc; this.XF = { ...XF, z0: XF.z0 + z, z1: XF.z1 + z, zc: z }; }
     this.platforms.forEach(p => { this.buildPlatform(p); this.decor(p); });

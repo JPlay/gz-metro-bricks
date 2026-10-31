@@ -27,9 +27,8 @@ export const FZS_EXITS = [
 /** 每站一个出口（XmStation.buildConcourse / XmMetro.goStreet 用的格式：{ n, x, line, road, to, toEn }） */
 const E = (line, n = '', to = [], toEn = []) => ({ n, x: 10, line, road: '', to, toEn, verified: false });
 export const FZ_EXITS = {};
-for (const [id, L] of Object.entries(FZ_LINES)) for (const c of L.stations) if (!FZ_EXITS[c]) FZ_EXITS[c] = E(+id);
-// 福州火车南站：地铁站厅就是国铁出站层，出口通道单独做（FzsStation），这里只占位，出站去街区走 A 口
-FZ_EXITS.fzfzn = { n: 'A', x: 10, line: 5, road: '', to: FZS_EXITS[1].to, toEn: FZS_EXITS[1].toEn };
+for (const [id, L] of Object.entries(FZ_LINES)) for (const c of L.stations) if (!FZ_EXITS[c] && c !== 'fzfzn') FZ_EXITS[c] = E(+id);
+// 福州火车南站（fzfzn）不在这里：它的站厅就是国铁出站层，出口通道 A / B / F / D2 在 FzsStation 里（FZS_EXITS），不走街区
 
 /** 站厅出入口信息牌（只有核过的站才有） */
 export const FZ_EXIT_TABLE = {

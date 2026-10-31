@@ -82,24 +82,27 @@ export function doorHit(d, lx, lz) {
   const across = ax === 'z' ? lx - d.x : lz - d.z, along = (ax === 'z' ? lz - d.z : lx - d.x) * s;
   return Math.abs(across) < (d.halfW || 1.0) && along > (d.zLo ?? -0.5) && along < (d.zHi ?? 0.6);
 }
+/** 街区参数（厦门默认）；福州（js/world/fzStreet.js）传自己的：原点、出口表、线路 / 站表、地铁品牌名 */
+export const XM_STREET = { O: XS, net: 'xm', EXITS: XM_EXITS, LINES: XM_LINES, STATIONS: XM_STATIONS, brand: ['厦门地铁', 'Xiamen Metro'], exitZh, special: true };
 export class XmStreet {
-  constructor(scene, code) {
-    this.scene = scene; this.code = code; this.ex = XM_EXITS[code];
-    const k = this.kit = new Kit(scene, 'xmStreet-' + code); k.root.position.set(XS.x, 0, XS.z);
+  constructor(scene, code, N = XM_STREET) {
+    this.scene = scene; this.code = code; this.N = N; this.O = N.O; this.ex = N.EXITS[code];
+    const XS = this.O;
+    const k = this.kit = new Kit(scene, N.net + 'Street-' + code); k.root.position.set(XS.x, 0, XS.z);
     this.atlas = new FoodAtlas(scene, 2048);
     { const q = this.atlas.quad.bind(this.atlas); this.atlas.quad = (x, y, z, w, h, a, uv) => q(x, y, z, w, h, Math.PI - a, uv); }   // 本文件约定：a=0 朝 -z、π 朝 +z、±π/2 朝 ±x
     D.reseed(code.length * 97 + code.charCodeAt(0));
     this.ground(); this.kiosk();
-    if (code === 'jtou') this.jiangtou(); else if (code === 'lcu') this.lucuo(); else if (code === 'cyg') this.chengyi(); else if (code === 'hpu') this.houpu(); else if (ATTR_BUILD[code]) ATTR_BUILD[code](this); else this.plain();
-    k.finish(true); this.atlas.finish(k.root, 'xmStreetSigns');
+    if (!N.special) this.plain(); else if (code === 'jtou') this.jiangtou(); else if (code === 'lcu') this.lucuo(); else if (code === 'cyg') this.chengyi(); else if (code === 'hpu') this.houpu(); else if (ATTR_BUILD[code]) ATTR_BUILD[code](this); else this.plain();
+    k.finish(true); this.atlas.finish(k.root, N.net + 'StreetSigns');
     if (this.after) this.after();   // 动画件（不冻结），如清水宫上空降落的飞机
     k.root.getChildMeshes(false).forEach(m => { m.receiveShadows = true; });
   }
   dispose() { if (this.inside) { this.inside.dispose(); this.inside = null; } if (this.atlas) this.atlas.dispose(); this.kit.root.getChildMeshes(false).forEach(m => m.dispose()); this.kit.root.dispose(); }
   /** 回到出口亭（往里走）→ 回车站 */
-  wantsBack(p) { const lx = p.x - XS.x, lz = p.z - XS.z; return lz < -2.6 && lz > -6 && Math.abs(lx) < 1.9 && p.y < 1.5; }
-  spawn() { return [XS.x, 0.05, XS.z + 1.2, 0]; }
-  zoneOf(p) { return this.inside ? { ...this.inside.zoneOf(p), code: this.code, street: true } : { kind: 'street', net: 'xm', code: this.code, street: true }; }
+  wantsBack(p) { const XS = this.O, lx = p.x - XS.x, lz = p.z - XS.z; return lz < -2.6 && lz > -6 && Math.abs(lx) < 1.9 && p.y < 1.5; }
+  spawn() { return [this.O.x, 0.05, this.O.z + 1.2, 0]; }
+  zoneOf(p) { return this.inside ? { ...this.inside.zoneOf(p), code: this.code, street: true } : { kind: 'street', net: this.N.net, code: this.code, street: true }; }
   info() { return { code: this.code, meshes: this.kit.root.getChildMeshes(false).length, atlasOverflow: this.atlas.overflow, atlasY: this.atlas.y + this.atlas.row, inside: this.inside ? (this.inside.id || 256) : null }; }
   /** 每帧：楼内 ↔ 街面切换；返回 'back' = 回车站 */
   update(pl) {
@@ -107,7 +110,7 @@ export class XmStreet {
     if (this.tick) this.tick(Math.min(0.1, this.scene.getEngine().getDeltaTime() / 1000));
     if (this.inside) { if (this.inside.wantsOut(p)) this.leaveBuilding(pl); return null; }
     if (this.wantsBack(p)) return 'back';
-    const lx = p.x - XS.x, lz = p.z - XS.z;
+    const XS = this.O, lx = p.x - XS.x, lz = p.z - XS.z;
     if (p.y < 1.5) for (const door of this._doors()) if (doorHit(door, lx, lz)) { this.enterBuilding(pl, door); break; }
     return null;
   }
@@ -121,6 +124,7 @@ export class XmStreet {
   /** 进楼：单独加载室内（街区先隐藏） */
   enterBuilding(pl, door = this._enterDoor()) {
     if (!door) return;
+    const XS = this.O;
     this.kit.root.setEnabled(false); this.curDoor = door;
     this.inside = door.make(this.scene, { x: XS.x, y: 0, z: XS.z + 1000 });
     const [x, y, z, yaw] = this.inside.spawn(); pl.spawn(x, y, z, yaw);
@@ -129,6 +133,7 @@ export class XmStreet {
     const door = this.curDoor || this._enterDoor(); this.curDoor = null;
     this.inside.dispose(); this.inside = null; this.kit.root.setEnabled(true);
     if (!door) return;
+    const XS = this.O;
     if (door.outPos) pl.spawn(XS.x + door.outPos[0], 0.05, XS.z + door.outPos[1], door.outYaw ?? Math.PI);
     else pl.spawn(XS.x + door.x, 0.05, XS.z + door.z + (door.outDz ?? -1.6), door.outYaw ?? Math.PI);
   }
@@ -160,7 +165,7 @@ export class XmStreet {
   }
   /** 厦门地铁出入口亭：灰框玻璃 + 顶上线路色 + 出口号；往 -z 是下去的楼梯 */
   kiosk() {
-    const k = this.kit, ex = this.ex, lc = XM_LINES[ex.line].color, P = k.solid, M = k.metal;
+    const k = this.kit, ex = this.ex, lc = this.N.LINES[ex.line].color, P = k.solid, M = k.metal, [bz, be] = this.N.brand, ez = this.N.exitZh;
     P.slab(-2.6, 2.6, 0, 0.06, -6.4, 0.4, hex('#B9B5AD'), { ao: false });
     for (let i = 0; i < 10; i++) { const z = -2.8 - i * 0.36, y = -0.18 - i * 0.24; P.slab(-1.8, 1.8, y - 0.08, y, z - 0.36, z, hex(i % 2 ? '#C9C5BD' : '#BDB9B1'), { ao: false }); P.slab(-1.75, 1.75, y, y + 0.004, z - 0.06, z, hex('#3A3F45'), { ao: false }); }   // 往下的踏步（看得到，走不下去：走进去就回车站）
     P.slab(-1.9, 1.9, -3, -2.9, -6.4, -2.6, hex('#1B1E22'), { ao: false });
@@ -173,8 +178,8 @@ export class XmStreet {
       c.fillStyle = '#20272E'; c.fillRect(0, 0, pw, ph);
       c.fillStyle = lc; c.fillRect(0, 0, ph, ph); c.fillStyle = '#FFF'; c.textAlign = 'center'; c.textBaseline = 'middle';
       c.font = `800 ${ph * 0.6}px ${FONT_EN}`; c.fillText(ex.n || '出', ph / 2, ph * 0.54);
-      c.textAlign = 'left'; c.font = `800 ${ph * 0.36}px ${FONT}`; c.fillText('厦门地铁' + (ex.n ? `  ${exitZh(ex.n)}` : '  出口'), ph * 1.2, ph * 0.38);
-      c.font = `600 ${ph * 0.2}px ${FONT_EN}`; c.fillText('Xiamen Metro' + (ex.n ? ` · Exit ${ex.n}` : ' · Exit'), ph * 1.2, ph * 0.74);
+      c.textAlign = 'left'; c.font = `800 ${ph * 0.36}px ${FONT}`; c.fillText(bz + (ex.n ? `  ${ez(ex.n)}` : '  出口'), ph * 1.2, ph * 0.38);
+      c.font = `600 ${ph * 0.2}px ${FONT_EN}`; c.fillText(be + (ex.n ? ` · Exit ${ex.n}` : ' · Exit'), ph * 1.2, ph * 0.74);
     };
     this.atlas.quad(0, 3.55, 0.72, 5.4, 0.62, Math.PI, this.atlas.draw(5.4, 0.62, sign));
     M.slab(-2.7, 2.7, 3.25, 3.86, 0.6, 0.7, hex('#20272E'), { ao: false });
@@ -225,7 +230,7 @@ export class XmStreet {
     for (const x of [-8, 8]) D.lamp(k, x, 0, -6.6, Math.PI);
     D.bench(k, -6, 0, 3, Math.PI / 2); D.bin(k, 5, 0, 3);
     // 站名牌（出口亭旁）：让人知道出来的是哪一站
-    const st = XM_STATIONS[this.code];
+    const st = this.N.STATIONS[this.code];
     if (st) { k.metal.cyl(6, 1.4, 1.5, 0.08, 2.8, hex('#8A9198'), 8); this.atlas.quad(6, 2.9, 1.48, 2.6, 0.6, Math.PI, this.atlas.draw(2.6, 0.6, textPaint([st.zh + '站'], { bg: '#20272E', fg: '#FFFFFF' }))); }
     for (let x = -150; x <= 150; x += 12) if (Math.abs(x - 6) > 10) this.lightTree(x, 6.5, 0.8);
     this.filler([[60, -40, 30, 14, 28, '#C9C2B6'], [-40, -42, 34, 14, 24, '#D8D2C6'], [-110, -40, 30, 14, 32, '#BFB6A8'], [110, -40, 26, 14, 22, '#CDC5B8'], [40, 40, 30, 24, 26, '#D2CABE'], [-50, 44, 34, 22, 20, '#C6BEB1'], [-120, 60, 26, 26, 30, '#D9D3C8'], [120, 70, 26, 24, 18, '#CFC8BC']]);
