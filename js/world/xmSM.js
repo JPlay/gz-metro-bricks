@@ -447,11 +447,16 @@ function traffic(S) {
 /**
  * 局部坐标：原点在门内侧，门朝 −z 出楼。中庭中心 (0, CZ)；正 n 边形：中空 apothem 8、店面 15、外墙 21；层高 5.5，5 层。
  * variant 'topaz' = 二期黄宝石（16 边近似圆、金色）；'city' = 一期（方、蓝色）。
- * 1F → 2F 一部可走的扶梯（北侧），2F → 3F / 3F → 4F 交叉扶梯（只看）。
+ * 1F → 2F 一部可走的扶梯（北侧）。中空顶上是玻璃天窗（看得到蓝天白云），黄宝石的栏杆扶手 / 柱子包金色金属。
  */
-const CZ = 21, AV = 8, AS = 15, AW = 21, FH = 5.5, NF = 5;
+const CZ = 21, AV = 8, AS = 15, AW = 21, FH = 5.5, NF = 5, GOLD = hex('#D4A84A');
 const SHOPS = {
-  topaz: ['MUJI 无印良品', 'SWAROVSKI', '例外', '西贝莜面村', '花潮', '星巴克', 'ZARA', '周大福', 'Apple 授权店', 'NIKE', '泡泡玛特', '巴拉巴拉 童装', '喜茶', 'H&M', '名创优品', '海底捞', '玩具反斗城', '无印咖啡'],
+  // 黄宝石：每层 16 间、共 5 层；每个名字只出现一次（不在一圈里重复）
+  topaz: ['MUJI 无印良品', 'SWAROVSKI', '周大福', '星巴克', 'Apple 授权店', 'ZARA', '屈臣氏', '丝芙兰', '潘多拉', '周生生', 'Swatch', '雅诗兰黛', '兰蔻', 'COACH', '施华洛世奇童话', '老凤祥',
+    '例外', '花潮', 'UR', 'Lily', 'ONLY', 'VERO MODA', 'GAP', 'H&M', '优衣库', '太平鸟', '江南布衣', 'MO&Co.', 'Ochirly', '歌莉娅', '马克华菲', '森马',
+    'NIKE', 'adidas', '安踏', '李宁', '特步', '361°', 'New Balance', 'Skechers', 'FILA', '迪卡侬', '华为', '小米之家', 'OPPO', 'vivo', '大疆', '漫步者',
+    '巴拉巴拉 童装', '泡泡玛特', '名创优品', '乐高', '迪士尼童装', '小猪班纳', '好孩子', '奥特曼玩具', '西西弗书店', '言几又', '晨光文具', '酷乐潮玩', 'Hello Kitty', '万代', '孩子王', '布鲁可',
+    '西贝莜面村', '海底捞', '喜茶', '奈雪的茶', '必胜客', '外婆家', '绿茶餐厅', '太二酸菜鱼', '鼎泰丰', '吉野家', '味千拉面', '麦当劳', '肯德基', '黄则和花生汤', '沙县小吃', '万达影城'],
   city: ['麦当劳', '屈臣氏', 'KFC 肯德基', 'ESPRIT', '面包新语', 'SM百货', '沃尔玛 B1', '数码广场', '家居生活', '美食广场', '优衣库', '星巴克', '周大福', '名创优品', '泡泡玛特', '巴拉巴拉 童装'],
 };
 export class SmAtrium {
@@ -465,6 +470,9 @@ export class SmAtrium {
     const phi = s => -Math.PI / 2 + s * TAU / n;
     const vtx = (s, ap, e) => { const a = phi(s) + e * Math.PI / n, R = ap / Math.cos(Math.PI / n); return [Math.cos(a) * R, CZ + Math.sin(a) * R]; };   // e=−1/+1：这一边的两个角
     const aIn = s => Math.atan2(-Math.cos(phi(s)), -Math.sin(phi(s)));   // 朝中庭的 atlas 角（raw：法线 (sin a, cos a)）
+    // 黄宝石的金色金属单独一桶，带一点自发光：从下往上看时金边不会暗成深褐色（+1 draw）
+    const GM = topaz ? k.g('metal@gold') : k.metal;
+    if (topaz) bucketMat(scene, k.M, 'metal@gold').emissiveColor.set(0.32, 0.23, 0.07);
 
     // ---------- 地面 / 楼板 / 屋顶 ----------
     k.floorWithHoles(-AW - 1, AW + 1, 0, CZ + AW + 1, -0.15, 0, hex('#E8E4DC'), [], true, 'granite');
@@ -483,8 +491,13 @@ export class SmAtrium {
         const gap = f === 1 && s === n / 2;
         const segs = gap ? [[a, [-1.0, a[1] + (b[1] - a[1]) * ((-1.0 - a[0]) / (b[0] - a[0] || 1))]], [[1.0, a[1] + (b[1] - a[1]) * ((1.0 - a[0]) / (b[0] - a[0] || 1))], b]] : [[a, b]];
         for (const [p0, p1] of segs) {
-          if (f === 1) k.rail(p0[0], p0[1], p1[0], p1[1], y);
-          else { const len = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]), ry = Math.atan2(p1[0] - p0[0], p1[1] - p0[1]); GL.box((p0[0] + p1[0]) / 2, y + 0.55, (p0[1] + p1[1]) / 2, 0.03, 0.9, len, hex('#E2F2FA'), ry); k.metal.tube([p0[0], y + 1.08, p0[1]], [p1[0], y + 1.08, p1[1]], 0.06, hex('#C9CFD5'), 6); }
+        for (const ap of [10.5, 13.5]) for (const e of [-0.5, 0.5]) {   // 楼板底的筒灯（不让天花板一片空灰）
+          const a0 = phi(s) + e * Math.PI / n, R = ap / Math.cos(Math.PI / n), cx = Math.cos(a0) * R, cz = CZ + Math.sin(a0) * R, h = 0.22;
+          flatQ(G, [[cx - h, cz - h], [cx + h, cz - h], [cx + h, cz + h], [cx - h, cz + h]], y - 0.61, hex('#FFF6E0'), false); }
+        if (topaz) { const nx0 = Math.cos(phi(s)) * 0.03, nz0 = Math.sin(phi(s)) * 0.03;   // 楼板边包一条金色金属（略往中空外凸）
+          GM.quad([b[0] - nx0, y - 0.5, b[1] - nz0], [a[0] - nx0, y - 0.5, a[1] - nz0], [a[0] - nx0, y - 0.05, a[1] - nz0], [b[0] - nx0, y - 0.05, b[1] - nz0], GOLD); }
+          if (f === 1) { k.rail(p0[0], p0[1], p1[0], p1[1], y); if (topaz) GM.tube([p0[0], y + 1.12, p0[1]], [p1[0], y + 1.12, p1[1]], 0.09, GOLD, 8); }
+          else { const len = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]), ry = Math.atan2(p1[0] - p0[0], p1[1] - p0[1]); GL.box((p0[0] + p1[0]) / 2, y + 0.55, (p0[1] + p1[1]) / 2, 0.03, 0.9, len, hex('#E2F2FA'), ry); GM.tube([p0[0], y + 1.08, p0[1]], [p1[0], y + 1.08, p1[1]], topaz ? 0.09 : 0.06, topaz ? GOLD : hex('#C9CFD5'), 6); }
         }
         if (f === 1) { const mx = Math.cos(phi(s)) * (AV + AW) / 2, mz = CZ + Math.sin(phi(s)) * (AV + AW) / 2; k.col(mx, y - 0.3, mz, 2 * (AV + AW) / 2 * t + 0.6, 0.6, AW - AV, { ry: Math.atan2(Math.cos(phi(s)), Math.sin(phi(s))) }); }
       }
@@ -492,7 +505,14 @@ export class SmAtrium {
     const RY = NF * FH;
     for (let s = 0; s < n; s++) { const q = [vtx(s, AV, -1), vtx(s, AV, 1), vtx(s, AW, 1), vtx(s, AW, -1)]; flatQ(P, q, RY, white, false); flatQ(GL, [vtx(s, 0.01, -1), vtx(s, AV, -1), vtx(s, AV, 1), vtx(s, 0.01, 1)], RY + 1.2, hex('#CFE6F4'), false);
       const a = vtx(s, AV, -1), b = vtx(s, AV, 1); wallQ(P, b, a, RY, RY + 1.2, white); }
-    for (let i = -2; i <= 2; i++) G.slab(-AV * 0.9, AV * 0.9, RY + 1.1, RY + 1.15, CZ + i * 2.6 - 0.15, CZ + i * 2.6 + 0.15, hex('#F4FAFF'), { ao: false });
+    // 天窗：玻璃上方一块不受光照的天空（蓝天 + 几朵白云），玻璃分格用金色（黄宝石）/ 银色金属框
+    const SKY = RY + 1.7;
+    for (let s = 0; s < n; s++) flatQ(G, [vtx(s, 0.01, -1), vtx(s, AW, -1), vtx(s, AW, 1), vtx(s, 0.01, 1)], SKY, hex('#5FA8E6'), false);
+    for (const [cx, cz, rx, rz] of [[-3, CZ - 2, 2.6, 1.3], [3.5, CZ + 3, 3.2, 1.5], [-1, CZ + 5.5, 1.8, 0.9], [4.5, CZ - 4.5, 1.6, 0.8]])
+      for (let i = 0; i < 10; i++) { const a0 = i / 10 * TAU, a1 = (i + 1) / 10 * TAU; const c0 = [cx, SKY - 0.05, cz], p1 = [cx + Math.cos(a1) * rx, SKY - 0.05, cz + Math.sin(a1) * rz], p0 = [cx + Math.cos(a0) * rx, SKY - 0.05, cz + Math.sin(a0) * rz]; G.quad(c0, p1, p0, c0, hex('#F6FAFF')); G.quad(c0, p0, p1, c0, hex('#F6FAFF')); }
+    const MUL = topaz ? GOLD : hex('#C9CFD5');
+    for (let s = 0; s < n; s++) { const a = vtx(s, AV, -1), b = vtx(s, AV, 1); GM.tube([0, RY + 1.15, CZ], [a[0], RY + 1.15, a[1]], 0.12, MUL, 6); GM.tube([a[0], RY + 1.15, a[1]], [b[0], RY + 1.15, b[1]], 0.14, MUL, 6);
+      const m0 = vtx(s, AV * 0.5, -1), m1 = vtx(s, AV * 0.5, 1); GM.tube([m0[0], RY + 1.15, m0[1]], [m1[0], RY + 1.15, m1[1]], 0.1, MUL, 6); }
 
     // ---------- 店铺：每层每边一圈（店面 apothem 15），1F 南侧留门厅 ----------
     const glassUv = A.draw(9, 3.6, storefront(topaz ? '#F6E7C4' : '#E4EEF8'), 24);
@@ -513,7 +533,7 @@ export class SmAtrium {
           A.quad(x - nx * 0.05, y + 4.3, z - nz * 0.05, Math.min(w - 0.6, 6), 0.8, aIn(s), sUv(nm));
           P.box(x + nx * 0.1, y + 4.3, z + nz * 0.1, w, 1.4, 0.2, hex('#3A3F45'), Math.atan2(nx, nz), 0, 0, 1, { ao: false });
         }
-        for (const e of [-1, 1]) { const p = vtx(s, AS, e); P.slab(p[0] - 0.3, p[0] + 0.3, y, y + FH - 0.6, p[1] - 0.3, p[1] + 0.3, white, { ao: false }); }
+        for (const e of [-1, 1]) { const p = vtx(s, AS, e); (topaz ? GM : P).slab(p[0] - 0.3, p[0] + 0.3, y, y + FH - 0.6, p[1] - 0.3, p[1] + 0.3, topaz ? GOLD : white, { ao: false }); }   // 店间柱：黄宝石包金
         if (f < 2) { const mx = nx * (AS + 0.4), mz = CZ + nz * (AS + 0.4); if (!(f === 0 && s === 0)) k.col(mx, y + 2.6, mz, L + 1, 5.2, 0.6, { ry: Math.atan2(ex, ez) + Math.PI / 2 }); }
       }
     }
@@ -538,11 +558,7 @@ export class SmAtrium {
 
     // ---------- 扶梯 ----------
     escalator(k, [0, 0, CZ - 1.5], [0, FH, CZ + AV], 1.2, true);
-    // 2F→3F→4F 交叉扶梯（飞天梯）：两端落在楼板上（|x| = AV + 1.2，楼板边在 ~7.6），银灰色桁架 + 深色底条，不再是悬空白板
-    const xe = AV + 1.2, eo = { under: '#A9B1B9', th: 0.7, belly: '#5A6168' };
-    escalator(k, [-xe, FH, CZ - 2.5], [xe, 2 * FH, CZ - 2.5], 1.1, false, eo);
-    escalator(k, [xe, 2 * FH, CZ + 2.5], [-xe, 3 * FH, CZ + 2.5], 1.1, false, eo);
-    escalator(k, [-xe, 3 * FH, CZ - 2.5], [xe, 4 * FH, CZ - 2.5], 1.1, false, eo);
+    // 2F 以上的交叉扶梯（飞天梯）去掉了：从 1F 往上看是一块悬在中空里的深灰斜板，挡住天窗（小美审稿）
 
     // ---------- 中庭吊饰：宝石 ----------
     const gy = RY - 4;
