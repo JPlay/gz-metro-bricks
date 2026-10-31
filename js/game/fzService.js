@@ -19,7 +19,7 @@ export const FZ_SVC = {
   station: (scene, code) => new FzStation(scene, code),
   street: (scene, code) => new XmStreet(scene, code, FZ_STREET),
   next: fzNext,
-  ann: { platform: Ann.fzPlatform, depart: Ann.fzDepart, arrive: Ann.arrive, welcome: Ann.welcome, exit: Ann.fzExit },
+  ann: { platform: Ann.fzPlatform, depart: Ann.fzDepart, arrive: Ann.arrive, welcome: Ann.welcome, exit: Ann.fzExit, doorsClosing: Ann.fzDoorsClosing },
   exitSegs: fzExitSegs,
   /** 福州火车南站的出口在国铁换乘大厅里（FzsStation），不走地铁站厅出口街口 */
   streetAt: code => !!FZ_EXITS[code],

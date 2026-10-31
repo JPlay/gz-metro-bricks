@@ -9324,6 +9324,24 @@
   "file": "voice/fz-welcome-fzlj-en.mp3"
  },
  {
+  "id": "voice.fz.doorsClosing.zh",
+  "lang": "zh",
+  "text": "车门即将关闭，请注意安全。",
+  "file": "voice/fz-doorsClosing-zh.mp3"
+ },
+ {
+  "id": "voice.fz.doorsClosing.fzh",
+  "lang": "fzh",
+  "text": "车门即将关闭，请注意安全。",
+  "file": "voice/fz-doorsClosing-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.doorsClosing.en",
+  "lang": "en",
+  "text": "The doors are closing. Please stand clear of the doors.",
+  "file": "voice/fz-doorsClosing-en.mp3"
+ },
+ {
   "id": "voice.doorsClosing.zh",
   "lang": "zh",
   "text": "车门即将关闭，请注意安全，谨防被夹。",

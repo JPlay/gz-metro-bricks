@@ -18970,6 +18970,32 @@
       "bytes": 49580
     },
     {
+      "id": "voice.fz.doorsClosing.zh",
+      "file": "voice/fz-doorsClosing-zh.mp3",
+      "group": "voice",
+      "label": "fz.doorsClosing.zh",
+      "lang": "zh",
+      "text": "车门即将关闭，请注意安全。",
+      "model": "cosyvoice-v2",
+      "voice": "longxiaobai_v2",
+      "language_type": "Chinese",
+      "duration": 2.808,
+      "bytes": 22700
+    },
+    {
+      "id": "voice.fz.doorsClosing.en",
+      "file": "voice/fz-doorsClosing-en.mp3",
+      "group": "voice",
+      "label": "fz.doorsClosing.en",
+      "lang": "en",
+      "text": "The doors are closing. Please stand clear of the doors.",
+      "model": "cosyvoice-v2",
+      "voice": "longxiaobai_v2",
+      "language_type": "English",
+      "duration": 3.216,
+      "bytes": 25964
+    },
+    {
       "id": "voice.emu.doors.zh",
       "file": "voice/emu-doors-zh.mp3",
       "group": "voice",

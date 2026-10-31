@@ -7492,5 +7492,17 @@
     "style": "cosy",
     "model": "cosyvoice-v2",
     "voice": "longxiaobai_v2"
+  },
+  "voice.fz.doorsClosing.zh": {
+    "fp": "075f36ec9490d252953b85c929d10ca3909b85a5a8b73b77ea66562448ca9e57",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.doorsClosing.en": {
+    "fp": "5f7a18d60cff8050abea277db89bb1b30ea7de90215d52e1f6f5e69239f7bebf",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
   }
 }

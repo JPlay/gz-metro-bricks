@@ -18,4 +18,5 @@ export const xmPlatform = (line, dir, n) => say(P.xmPlatformSegs(line, dir, n), 
 export const xmExit = code => say(P.xmExitSegs(code), { key: 'xmexit' });
 export const fzDepart = (line, nextCode, dir, step, withDest) => say(P.fzDepartSegs(line, nextCode, dir, step, withDest), { key: 'next', interrupt: true });
 export const fzPlatform = (line, dir, n) => say(P.fzPlatformSegs(line, dir, n), { key: 'platform', interrupt: true });
+export const fzDoorsClosing = () => say(P.fzDoorsClosingSegs(), { key: 'doorsClosing', interrupt: true });
 export const fzExit = code => say(P.fzExitSegs(code), { key: 'fzexit' });

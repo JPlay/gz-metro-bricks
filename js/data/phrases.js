@@ -167,6 +167,8 @@ export function fzNextSegs(line, code) {
 const FZ_EXIT_T = {
   fzfzn: ['乘坐国铁的乘客，请从站厅南侧A口出站，左转约二十米到东站房七号进站口。去西广场请走D2口。', 'For China Railway trains, please take Exit A and turn left to Entrance 7 of the East Building. For the West Square, please take Exit D2.']
 };
+/** 福州地铁关门提示：普通话 → 福州话（空位）→ 英语，不播粤语 */
+export const fzDoorsClosingSegs = () => fseg('doorsClosing', '车门即将关闭，请注意安全。', 'The doors are closing. Please stand clear of the doors.');
 export const fzExitSegs = code => { const t = FZ_EXIT_T[code]; return t ? fseg('exit.' + code, t[0], t[1]) : []; };
 export function fzDepartSegs(line, nextCode, dir, step, withDestination) {
   const head = withDestination ? fzDestinationSegs(line, dir) : [];
@@ -189,6 +191,7 @@ export function allJobs() {
     for (const dir of Object.keys(L.dirs)) { add(fzDestinationSegs(line, dir)); add(fzTerminalSegs(line, dir)); add(fzPlatformSegs(line, dir, 1)); add(fzPlatformSegs(line, dir, 2)); }
     L.stations.forEach((c, i) => { if (i > 0 && i < L.stations.length - 1) add(fzNextSegs(line, c)); add(arriveSegs(c)); add(welcomeSegs(c)); add(fzExitSegs(c)); });
   }
+  add(fzDoorsClosingSegs());
   add(doorsClosingSegs()); add(gapSegs()); add(emuJobs()); Object.keys(SAFETY).forEach(k => add(safetySegs(k)));
   return [...out.values()].map(s => ({ ...s, file: 'voice/' + s.id.slice(6).replace(/\./g, '-') + '.mp3' }));
 }

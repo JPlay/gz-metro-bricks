@@ -144,13 +144,15 @@ async def main():
     await walk(pg, [[FO - 20, -50], [FO - 20, -62]]); await walk(pg, [[FO - 20, -70], [FO - 30, -80]])
     s = await st(pg); ok('downToPassage', s['pos'][1] < -6)
     await auto(pg, [[FO - 42, -80], [FO - 64, -80]]); await auto(pg, [[FO - 86, -80], [FO - 94, -80]])
-    # 上一个城市还在排队的站内广播（厦门地铁出口 / 闽南语）：进福州地铁要清掉
+    await auto(pg, [[FO - 99, -79.4], [FO - 99, -75.8]]); await auto(pg, [[FO - 108.5, -75.8], [FO - 108.5, -80]])
+    # 上一个城市还在排队的站内广播（厦门地铁出口 / 闽南语）：进福州地铁要清掉。
+    # 文字放长（无录音时按字数估时长，约 75 秒），慢机器上走到闸机前也还没播完。
+    R['locBeforeSwitch'] = await pg.evaluate('__game.east.info().loc')
     await pg.evaluate("""(async () => { const A = await import('/js/audio/announcements.js');
-      A.say([{id:'test.xm.exit.zh', lang:'zh', text:'测试厦门出口广播'.repeat(8)}], {key:'xmexit'});
+      A.say([{id:'test.xm.exit.zh', lang:'zh', text:'测试厦门出口广播'.repeat(40)}], {key:'xmexit'});
       A.say([{id:'test.xm.next.nan', lang:'nan', text:'测试闽南语'.repeat(8)}], {key:'next'}); })()""")
     await asyncio.sleep(0.3)
-    ok('queuedXm', 'xmexit' in await pg.evaluate("__game.Audio.pendingKeys()"))
-    await auto(pg, [[FO - 99, -79.4], [FO - 99, -75.8]]); await auto(pg, [[FO - 108.5, -75.8], [FO - 108.5, -80]])
+    ok('queuedXm', R['locBeforeSwitch'] != 'fzmetro' and 'xmexit' in await pg.evaluate("__game.Audio.pendingKeys()"))
     await auto(pg, [[FO - 101, -80], [FO - 93, -80]])
     ok('walkDownToMetro', await wait(pg, '__game.east.info().loc==="fzmetro" && !!(__game.fzMetro && __game.fzMetro.station)', 8))
     await asyncio.sleep(0.6)

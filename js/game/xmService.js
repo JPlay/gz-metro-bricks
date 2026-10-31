@@ -129,7 +129,7 @@ export class XmMetro {
           this.doors(s, 1);
           const terminalHold = !nx && aboard, hold = terminalHold || (!seated && tr.inDoorway(p));
           if (!hold) s.t = Math.min(s.t, 3.5);
-          if (!s.ann && s.t < 3.1 && (aboard || onPlat) && !terminalHold) { s.ann = true; Ann.doorsClosing(); A.sfx('doorChime'); }
+          if (!s.ann && s.t < 3.1 && (aboard || onPlat) && !terminalHold) { s.ann = true; (this.S.ann.doorsClosing || Ann.doorsClosing)(); A.sfx('doorChime'); }
           if (s.t <= 0 && !hold) { s.state = 'closing'; s.t = 1.4; }
           break;
         }
