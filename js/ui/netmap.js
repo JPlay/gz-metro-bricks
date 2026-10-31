@@ -6,6 +6,7 @@
  */
 import { LINES, STATIONS, OTHER_LINES } from '../data/lines.js';
 import { XM_LINES, XM_STATIONS } from '../data/xm-lines.js';
+import { FZ_LINES, FZ_STATIONS } from '../data/fz-lines.js';
 import { ATTRACTIONS } from '../data/attractions.js';
 import { XM_ATTRACTIONS } from '../data/xm-visits.js';
 import { iconSVG } from './mapicons.js';
@@ -396,6 +397,39 @@ export function xmNetworkSVG(here, { portrait = false } = {}) {
     s += `<line x1="${x}" y1="${y}" x2="${ix}" y2="${iy}" stroke="#9AA3AD" stroke-width="2" stroke-dasharray="2 4"/>`;
     s += `<g class="attr" data-attr="${a.id}" data-code="${a.code}"><circle cx="${ix}" cy="${iy}" r="${XR + 10}" fill="#fff" fill-opacity="0"/>${iconSVG(a.icon, ix, iy, XR, XM_LINES[S.lines[0]].color)}`;
     s += `<text x="${tx}" y="${ty}" font-size="10" font-weight="700" fill="#34404F" text-anchor="${anc}" paint-order="stroke" stroke="#fff" stroke-width="4" stroke-linejoin="round">${a.name}</text></g>`;
+  }
+  s += `</svg>`;
+  return s;
+}
+/**
+ * 福州地铁全网图（第一批只有 1 号线 + 5 号线）：1 号线一条长线（横版横排 / 竖版竖排），5 号线从福州火车南站斜着伸出去（两线只在这一站换乘）。
+ * 站名、颜色来自 js/data/fz-lines.js；“你在这里”同广州 / 厦门（红色呼吸圈）。
+ */
+export function fzNetworkSVG(here, { portrait = false } = {}) {
+  const W = portrait ? 720 : 1100, H = portrait ? 1100 : 720;
+  const L1 = FZ_LINES[1].stations, L5 = FZ_LINES[5].stations, hub = 'fzfzn', i1 = L1.indexOf(hub), i5 = L5.indexOf(hub);
+  const pos = {};
+  L1.forEach((c, i) => { pos[c] = portrait ? [0, (i - i1) * 40] : [(i - i1) * 40, 0]; });
+  L5.forEach((c, i) => { if (c === hub) return; const k = i - i5; pos[c] = portrait ? [k * 26, k * 22] : [k * 18, k * 26]; });
+  const xs = Object.values(pos).map(p => p[0]), ys = Object.values(pos).map(p => p[1]);
+  const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+  const pad = 80, sc = Math.min((W - 2 * pad) / Math.max(1, maxX - minX), (H - 2 * pad - 30) / Math.max(1, maxY - minY));
+  for (const c of Object.keys(pos)) pos[c] = [pad + (pos[c][0] - minX) * sc, pad + 30 + (pos[c][1] - minY) * sc];
+  let s = `<svg class="netmap" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
+  s += `<text x="${W / 2}" y="36" text-anchor="middle" font-size="22" font-weight="800" fill="#1B2530">福州地铁</text>`;
+  s += `<text x="${W / 2}" y="56" text-anchor="middle" font-size="13" fill="#6B7280">Fuzhou Metro · 1号线 · 5号线</text>`;
+  for (const L of Object.values(FZ_LINES)) s += `<polyline points="${L.stations.map(c => pos[c].join(',')).join(' ')}" fill="none" stroke="${L.color}" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>`;
+  for (const [c, [x, y]] of Object.entries(pos)) {
+    const S = FZ_STATIONS[c], both = c === hub, hereOn = c === here, on1 = S.lines.includes(1);
+    if (both) s += `<circle cx="${x}" cy="${y}" r="11" fill="#fff" stroke="${FZ_LINES[1].color}" stroke-width="5"/><circle cx="${x}" cy="${y}" r="5" fill="${FZ_LINES[5].color}"/>`;
+    else s += `<circle cx="${x}" cy="${y}" r="8" fill="#fff" stroke="${FZ_LINES[S.lines[0]].color}" stroke-width="5"/>`;
+    if (hereOn) s += `<circle cx="${x}" cy="${y}" r="16" fill="none" stroke="#FF5A4E" stroke-width="3"><animate attributeName="r" values="14;20;14" dur="1.6s" repeatCount="indefinite"/></circle>`;
+    const label = S.zh.length > 5 ? S.zh.slice(0, 5) : S.zh, idx = L1.indexOf(c);
+    let lx = x, ly = y, anc = 'middle';
+    if (on1 && !both) { if (portrait) { lx = x - 16; ly = y + 4; anc = 'end'; } else { ly = y + (idx % 2 ? 26 : -16); } }
+    else if (both) { if (portrait) { lx = x - 18; ly = y + 4; anc = 'end'; } else ly = y + 30; }
+    else { lx = x + (portrait ? 0 : -16); ly = y + (portrait ? 22 : 4); anc = portrait ? 'middle' : 'end'; }
+    s += `<text x="${lx}" y="${ly}" text-anchor="${anc}" font-size="${hereOn ? 13 : 10}" font-weight="${hereOn ? 800 : 600}" fill="#1B2530" paint-order="stroke" stroke="#fff" stroke-width="3" stroke-linejoin="round">${label}</text>`;
   }
   s += `</svg>`;
   return s;

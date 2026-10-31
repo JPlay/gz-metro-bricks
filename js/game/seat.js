@@ -9,7 +9,7 @@ export class SeatCtl {
   constructor({ player, metro, Audio, events }) { Object.assign(this, { player, metro, Audio, events }); this.count = { sit: 0, stand: 0 }; }
   /** 广州 / 厦门两套列车池都查；先命中的那列（玩家只可能在一列里） */
   trainAt(p) {
-    for (const m of [this.metro, this.xmMetro]) {
+    for (const m of [this.metro, this.xmMetro, this.fzMetro]) {
       if (!m || !m.trains) continue;
       const t = m.trains.find(t => t.root.isEnabled() && t.contains(p));
       if (t) return t;
