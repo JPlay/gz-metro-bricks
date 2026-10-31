@@ -386,6 +386,9 @@ function skybridge(S, br, gapsS, piers, label, sub) {
   const k = S.kit, P = k.solid, A = S.atlas, GL = k.glass, G = k.glow, GR = k.g('granite');
   const { x0, x1, z0, z1, y: Y } = br, white = hex('#F4F5F6'), zc = (z0 + z1) / 2, TOP = Y + 3.6;
   GR.slab(x0, x1, Y - 0.3, Y, z0, z1, hex('#DCD6CB'), { ao: false }); k.colSlab(x0, x1, Y - 0.6, Y, z0, z1);
+  // 天桥两侧玻璃墙单独一个材质、不反射环境贴图：通用 glass 反射的是户外 .env（里面有糊掉的绿树和暖色灯），
+  //   顺着桥走时侧窗是掠射角，菲涅尔把这些反射放大成窗外一团团发光的绿 / 橙色糊斑（小美 05 截图）
+  const GLW = k.g('glass@bridge'), gm = bucketMat(k.scene, k.M, 'glass@bridge'); gm.environmentIntensity = 0; gm.alpha = 0.22;
   for (let x = x0 + 1.2; x < x1; x += 1.2) P.quad([x, Y + 0.004, z0], [x + 0.05, Y + 0.004, z0], [x + 0.05, Y + 0.004, z1], [x, Y + 0.004, z1], hex('#B9B2A6'));
   for (const z of [z0 + 1.5, z1 - 1.5]) P.quad([x0, Y + 0.004, z], [x1, Y + 0.004, z], [x1, Y + 0.004, z + 0.05], [x0, Y + 0.004, z + 0.05], hex('#B9B2A6'));
   // 白钢箱梁 + 底板
@@ -394,7 +397,7 @@ function skybridge(S, br, gapsS, piers, label, sub) {
   // 立柱（每 4 m）+ 玻璃墙（楼梯口留洞）
   for (let x = x0; x <= x1 + 0.01; x += 4) for (const z of [z0, z1]) P.slab(x - 0.12, x + 0.12, Y, TOP, z - 0.12, z + 0.12, white, { ao: false });
   const segs = (side, gaps) => { let out = [[x0, x1]]; for (const [ga, gb] of gaps) out = out.flatMap(([a, b]) => gb <= a || ga >= b ? [[a, b]] : [[a, ga], [gb, b]].filter(([p, q]) => q - p > 0.2)); return out; };
-  for (const [z, gaps] of [[z0, gapsS], [z1, []]]) for (const [a, b] of segs(z, gaps)) { GL.slab(a, b, Y, TOP, z - 0.03, z + 0.03, hex('#D6EEF8'), { ao: false }); k.colSlab(a, b, Y, TOP, z - 0.1, z + 0.1); P.slab(a, b, Y + 0.95, Y + 1.0, z + (z === z0 ? 0.05 : -0.1), z + (z === z0 ? 0.1 : -0.05), hex('#C9CED3'), { ao: false }); }
+  for (const [z, gaps] of [[z0, gapsS], [z1, []]]) for (const [a, b] of segs(z, gaps)) { GLW.slab(a, b, Y, TOP, z - 0.03, z + 0.03, hex('#D6EEF8'), { ao: false }); k.colSlab(a, b, Y, TOP, z - 0.1, z + 0.1); P.slab(a, b, Y + 0.95, Y + 1.0, z + (z === z0 ? 0.05 : -0.1), z + (z === z0 ? 0.1 : -0.05), hex('#C9CED3'), { ao: false }); }
   for (const [ga, gb] of gapsS) P.slab(ga, gb, TOP - 0.6, TOP, z0 - 0.15, z0 + 0.15, white, { ao: false });
   k.colSlab(x0 - 0.2, x0, Y, TOP, z0, z1); k.colSlab(x1, x1 + 0.2, Y, TOP, z0, z1);   // 两头是商场的门（关着时也能当过街天桥：这里不进商场）
   // 屋面 + 夜景灯带
