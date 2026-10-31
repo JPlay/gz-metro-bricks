@@ -190,6 +190,17 @@ async def main():
     diag = await pg.evaluate('__game.Audio.diagnostics ? __game.Audio.diagnostics() : null')
     R['fallbacks'] = [f for f in (diag or {}).get('fallbacks', []) if 'voice.fz' in f]
     ok('noFzFallback', not [f for f in R['fallbacks'] if f.endswith('.fzh')])
+    # 7. 下车 → 站厅 → 出口楼梯 → 街面（小美要看的「出站口外面的街景」）
+    await pg.evaluate(OFF % (5, FO)); await asyncio.sleep(1)
+    zm = await pg.evaluate("(()=>{const P=__game.fzMetro.station.platforms.find(p=>p.up); return P?(P.up.z0+P.up.z1)/2:null})()")
+    exx = await pg.evaluate("(async()=>{const S=await import('/js/data/fz-exits.js'); const e=S.FZ_EXITS[__game.fzMetro.code]; return e?e.x:null})()")
+    if zm is not None and exx is not None:
+        await pg.evaluate(f"__game.player.spawn({FO}+2, -12.95, {zm}, -Math.PI/2)"); await asyncio.sleep(1)
+        await auto(pg, [[FO - 3, zm], [FO - 12, zm]]); await auto(pg, [[FO - 21.5, zm]]); await auto(pg, [[FO - 22, -6], [FO - 15, -12]])
+        await auto(pg, [[FO + exx, -16]]); await auto(pg, [[FO + exx, -20], [FO + exx, -36]])
+    s = await st(pg); ok('streetExit', s['zone'] == 'street' and abs(s['pos'][1]) < 0.5)
+    await asyncio.sleep(1.5); await view(pg, 'first'); await pg.evaluate('__game.player.pitch=0.05')
+    await shot(pg, 'fz-street-exit'); await view(pg, 'third')
     R['errors'] = errs(logs); await b.close()
   print(json.dumps(R, ensure_ascii=False, indent=1, default=str))
   good = all(R['checks'].values()) and not R['errors']
