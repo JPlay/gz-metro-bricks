@@ -20,10 +20,15 @@ export const DOOR_XS = CAR_X.flatMap(c => DOOR_DX.map(d => c + d));
 const WHITE = [1, 1, 1], STEEL = hex('#BFC6CE'), DARK = hex('#2A2E33'), INT = hex('#F1F0EC'), FLOORC = hex('#8E979F');
 // 涂装（对照实车）：1 号线 A1 型 = 黄色车身 + 红色腰带；2 号线 = 香槟色车身 + 线路蓝腰带
 const BODY = { 1: '#F4CF3A', 2: '#E9DEC6', xm1: '#F5E6D8', xm2: '#E6F3EA' }, STRIPE = { 1: '#D52B1E', 2: '#00629B', xm1: '#F2711C', xm2: '#00A651' };
-/** 当前列车跑哪张网：'gz' | 'xm'（厦门地铁线路图 / 站名来自 xm-lines） */
-function netLines(net) { return net === 'xm' ? XM_LINES : LINES; }
-function netStations(net) { return net === 'xm' ? XM_STATIONS : STATIONS; }
-function lineKey(net, line) { return net === 'xm' ? 'xm' + line : line; }
+/** 当前列车跑哪张网：'gz' | 'xm' | …（线路图 / 站名来自各城市的 *-lines.js）。新城市：registerNet(net, LINES, STATIONS) + BODY/STRIPE 加 `${net}${line}` */
+const NETS = { gz: { LINES, STATIONS }, xm: { LINES: XM_LINES, STATIONS: XM_STATIONS } };
+export function registerNet(net, lines, stations, colors) {
+  NETS[net] = { LINES: lines, STATIONS: stations };
+  if (colors) for (const [k, c] of Object.entries(colors)) { BODY[net + k] = c.body; STRIPE[net + k] = c.stripe; }
+}
+function netLines(net) { return (NETS[net] || NETS.gz).LINES; }
+function netStations(net) { return (NETS[net] || NETS.gz).STATIONS; }
+function lineKey(net, line) { return net && net !== 'gz' ? net + line : line; }
 // 外轮廓（右半，自下而上），左半镜像
 const R = [[1.34, -0.95], [1.45, -0.86], [1.5, -0.6], [1.52, 0.2], [1.53, 0.95], [1.515, 1.55], [1.48, 2.05], [1.43, 2.33], [1.33, 2.53], [1.13, 2.68], [0.8, 2.77], [0.4, 2.81], [0, 2.82]];
 const OUT = [...R, ...R.slice(0, -1).reverse().map(([z, y]) => [-z, y])];

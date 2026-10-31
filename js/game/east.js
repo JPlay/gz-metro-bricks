@@ -20,7 +20,7 @@ import { EMU, GZE, BF } from '../world/gze.js';
 import { EmuScenery } from '../world/emuScenery.js';
 import { XmnPlatform, XO } from '../world/xmn.js';
 import { XmnStation } from '../world/xmnStation.js';
-import { RAIL, TRIP, routeFor } from '../data/rail.js';
+import { RAIL, TRIP, CITIES, tripFor, destsFrom, routeFor } from '../data/rail.js';
 import * as Ann from '../audio/announcements.js';
 import * as PH from '../data/phrases.js';
 import { pressable } from './input.js';
@@ -254,6 +254,9 @@ export class EastCtl {
   constructor({ scene, M, player, hud, seats, Audio, events, getStation }) {
     Object.assign(this, { scene, M, player, hud, seats, Audio, events, getStation });
     this.interior = null; this.xmn = null; this.cur = null; this.side = 'gz'; this.ride = null; this.speed = 1;
+    // 外地高铁站（广州东以外）：city → { O: 场景原点, loc: cur.loc 名, plat(): 站台对象（show(mode) / place(x, ox) / mode） }
+    this.rails = { xm: { O: XO, loc: 'xmn', plat: () => this.xmn } };
+    this.dest = null; this.picker = null;
     this.count = { enter: 0, exit: 0, rides: 0, arrived: [] };
     const orig = seats.hall; seats.hall = () => (this.interior && this.interior.active ? this.interior : orig ? orig() : null);
     // 「快进」按钮（只在开车时、人在车厢里时出现）
@@ -268,16 +271,53 @@ export class EastCtl {
     if (!this.xmn) this.xmn = new XmnPlatform(this.scene);
     return this.interior;
   }
+  /** 车窗外 city 的站台：ox = 相对停稳位置的 x 偏移；null = 不显示（广州东 = 车厢里自带的那组；外地 = 各自站台对象的 car 模式） */
+  stopAt(city, ox) {
+    if (city === 'gz') { this.interior.showGz(ox); return; }
+    const r = this.rails[city], P = r && r.plat(); if (!P) return;
+    if (ox === null) { if (P.mode === 'car') P.show(null); return; }
+    if (P.mode !== 'car') P.show('car'); P.place(EO.x, ox);
+  }
   /** 车厢外现在停着哪个站台（side）：广州东 = 车厢里自带的那组；厦门北 = XmnPlatform 的 car 模式 */
   showStopped() {
     const I = this.interior;
-    if (this.side === 'gz') { I.showGz(0); this.xmn.show(null); }
-    else { I.showGz(null); this.xmn.show('car'); this.xmn.place(EO.x, 0); }
+    I.showGz(this.side === 'gz' ? 0 : null);
+    for (const [c, r] of Object.entries(this.rails)) { const P = r.plat(); if (!P) continue; if (c === this.side) { P.show('car'); P.place(EO.x, 0); } else P.show(null); }
   }
+  /** 从 side 出发去哪：选过的 > 第一个目的地 */
+  destFor(side = this.side) { const ds = destsFrom(side); return ds.includes(this.dest) ? this.dest : ds[0]; }
+  tripNow() { return tripFor(this.side, this.destFor()); }
+  /** 选目的地（多个目的地时坐下弹出的卡片调用；测试也可直接调用） */
+  pick(dest) {
+    if (!destsFrom(this.side).includes(dest)) return false;
+    this.dest = dest; this.closePicker();
+    if (this.interior) this.interior.setTrip(this.tripNow());
+    this.events.emit('emu', { phase: 'pick', dest });
+    return true;
+  }
+  openPicker() {
+    if (this.picker) return;
+    const ds = destsFrom(this.side), hud = document.getElementById('hud') || document.body;
+    const el = this.picker = document.createElement('div'); el.id = 'destPick'; el.className = 'destpick';
+    el.innerHTML = `<div class="dp-title">去哪个城市？<small>Where to?</small></div><div class="dp-cards">${ds.map(d => { const c = CITIES[d], t = tripFor(this.side, d);
+      return `<button class="dp-card" data-dest="${d}"><span class="dp-ico">${c.icon}</span><span class="dp-zh">${c.zh}</span><span class="dp-en">${c.en}</span><span class="dp-no">${t.train} · ${t.to}</span></button>`; }).join('')}</div>`;
+    el.style.cssText = 'position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:60;background:rgba(20,26,34,.92);color:#fff;border-radius:22px;padding:18px 22px;text-align:center;font-family:inherit';
+    hud.appendChild(el);
+    el.querySelector('.dp-title').style.cssText = 'font-size:26px;font-weight:800;margin-bottom:12px';
+    el.querySelector('.dp-title small').style.cssText = 'display:block;font-size:15px;font-weight:500;opacity:.75';
+    el.querySelector('.dp-cards').style.cssText = 'display:flex;gap:16px;justify-content:center';
+    el.querySelectorAll('.dp-card').forEach(b => {
+      b.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:4px;min-width:150px;padding:16px 18px;border:0;border-radius:18px;background:#fff;color:#1B2530;font-family:inherit;touch-action:manipulation';
+      b.querySelector('.dp-ico').style.fontSize = '44px'; b.querySelector('.dp-zh').style.cssText = 'font-size:28px;font-weight:800'; b.querySelector('.dp-en').style.cssText = 'font-size:15px;opacity:.7'; b.querySelector('.dp-no').style.cssText = 'font-size:14px;color:#D3121A;font-weight:700';
+      b.addEventListener('pointerup', e => { e.preventDefault(); e.stopPropagation(); this.Audio.blip && this.Audio.blip('tap'); this.pick(b.dataset.dest); });
+    });
+    this.events.emit('emu', { phase: 'picker', dests: ds });
+  }
+  closePicker() { if (this.picker) { this.picker.remove(); this.picker = null; } }
   /** 从站台走进车门（广州东站：st 是当前车站；厦门北站：st 不变，人在 XO） */
   enter(st, door) {
     const I = this.ensure(); I.setEnabled(true); st.kit.root.setEnabled(false);
-    I.setTrip(this.side === 'gz' ? RAIL.xm : RAIL.gz); I.setDoor(0); this.showStopped();
+    this.dest = null; I.setTrip(this.tripNow()); I.setDoor(0); this.showStopped();
     this.player.spawn(X(door.lx), 0.05, 0.75, door.lx > 0 ? -Math.PI / 2 : Math.PI / 2);   // 进门转身就是客室
     this.cur = { st, loc: 'car' }; this.count.enter++;
     this.hud.toast(`复兴号 ${I.trip.train} · ${EMU.car} 车 二等座`, 2200); this.Audio.blip && this.Audio.blip('tap');
@@ -288,28 +328,34 @@ export class EastCtl {
     const d = this.interior.doorAt(this.player.position);
     if (this.ride) this.cancelRide();
     this.interior.setEnabled(false); this.count.exit++;
-    if (this.side === 'xm') {   // 厦门北站：下车站在站台上（独立场景）
-      this.xmn.show('solo'); this.cur.loc = 'xmn'; this.cur.area = 'platform';
-      this.player.spawn(XO.x + d.x, 0.05, GZE.edge + 0.9, 0);
-      this.hud.toast('厦门北站 Xiamenbei', 2200);
-      this.events.emit('east', { enter: false, at: 'xm' }); return;
+    this.closePicker();
+    const r = this.rails[this.side];
+    if (r) {   // 外地高铁站（厦门北…）：下车站在站台上（独立场景）
+      r.plat().show('solo'); this.cur.loc = r.loc; this.cur.area = 'platform';
+      this.player.spawn(r.O.x + d.x, 0.05, GZE.edge + 0.9, 0);
+      this.hud.toast(`${CITIES[this.side].stn} ${CITIES[this.side].stnEn}`, 2200);
+      this.events.emit('east', { enter: false, at: this.side }); return;
     }
-    this.xmn.show(null); this.cur = null;
+    for (const r2 of Object.values(this.rails)) { const P = r2.plat(); if (P) P.show(null); }
+    this.cur = null;
     if (st === this.getStation()) { st.kit.root.setEnabled(true); this.player.spawn(d.x, 0.05, GZE.edge + 0.9, 0); }
     this.events.emit('east', { enter: false, at: 'gz' });
   }
-  /** 厦门北站台上走进车门 */
+  /** 外地高铁站（厦门北…）站台上走进车门 */
   board(door) {
-    const I = this.interior; this.xmn.show(null); I.setEnabled(true); I.setTrip(RAIL.gz); I.setDoor(0); this.showStopped();
+    const I = this.interior; this.rails[this.side].plat().show(null); I.setEnabled(true); this.dest = null; I.setTrip(this.tripNow()); I.setDoor(0); this.showStopped();
     this.player.spawn(X(door.lx), 0.05, 0.75, -Math.PI / 2); this.cur.loc = 'car'; this.count.enter++;
-    this.hud.toast(`复兴号 ${RAIL.gz.train} · ${EMU.car} 车 二等座`, 2200); this.Audio.blip && this.Audio.blip('tap');
-    this.events.emit('east', { enter: true, at: 'xm' });
+    this.hud.toast(`复兴号 ${I.trip.train} · ${EMU.car} 车 二等座`, 2200); this.Audio.blip && this.Audio.blip('tap');
+    this.events.emit('east', { enter: true, at: this.side });
   }
   /* ---------- 开车 ---------- */
   startRide() {
-    const dest = this.side === 'gz' ? 'xm' : 'gz', trip = RAIL[dest];
+    const from = this.side, ds = destsFrom(from);
+    // 有好几个目的地：先弹卡片选城市（选好以后坐着 1.2 秒照常开车）
+    if (ds.length > 1 && !ds.includes(this.dest)) { this.openPicker(); return; }
+    const dest = this.destFor(), trip = tripFor(from, dest);
     this.interior.setTrip(trip);
-    this.ride = { dest, trip, t: 0, s: 0, v: 0, rt: 0, phase: 'closing', seg: 0, route: routeFor(dest), braking: false, rem: 0, flags: {} };
+    this.ride = { from, dest, trip, t: 0, s: 0, v: 0, rt: 0, phase: 'closing', seg: 0, route: routeFor(from, dest), braking: false, rem: 0, flags: {} };
     this.count.rides++; this.setSpeed(1); this.speed = 1;
     // 起步前远景：近景先空着（站台还在旁边），中远景是出发城市
     const r0 = this.ride.route[0], Sc = this.interior.scenery;
@@ -331,7 +377,7 @@ export class EastCtl {
     if (!F.annDoors && R.t >= 0.6) { F.annDoors = true; Ann.say(PH.emuDoorsSegs(), { key: 'emu', interrupt: true }); }
     if (R.t >= 4.2) { if (!F.closeSfx) { F.closeSfx = true; A.sfx('doorClose'); } I.setDoor(Math.min(1, (R.t - 4.2) / 1.25)); }
     if (R.t < 6.5) return;
-    if (!F.departed) { F.departed = true; R.phase = 'run'; A.sfx('train.tractionStart', { volume: 0.7 }); Ann.say(PH.emuDepartSegs(R.dest), { key: 'emu' }); this.events.emit('emu', { phase: 'depart', dest: R.dest }); }
+    if (!F.departed) { F.departed = true; R.phase = 'run'; A.sfx('train.tractionStart', { volume: 0.7 }); Ann.say(PH.emuDepartSegs(R.trip.ann), { key: 'emu' }); this.events.emit('emu', { phase: 'depart', dest: R.dest }); }
     const rt = R.rt = R.t - 6.5;
     let v;
     if (!R.braking) {
@@ -344,13 +390,13 @@ export class EastCtl {
     if (seg.tunnel) for (const L of ['far', 'mid']) if (I.scenery[L].front(1) !== seg[L]) I.scenery[L].fill(seg[L]);   // 隧道里看不见远景 / 中景：整片换掉
     I.scenery.advance(v * dt, { far: seg.far, mid: seg.mid, near });
     // 出发站台往后滑走；目的地站台从前面滑进来
-    const from = R.dest === 'xm' ? 'gz' : 'xm', gone = R.s > 420;
-    if (from === 'gz') I.showGz(gone ? null : -R.s); else if (!gone) this.xmn.place(EO.x, -R.s); else if (!R.braking) this.xmn.show(null);
-    if (R.braking && R.rem < 450) { const ox = Math.max(0, R.rem); if (R.dest === 'gz') I.showGz(ox); else { if (this.xmn.mode !== 'car') this.xmn.show('car'); this.xmn.place(EO.x, ox); } }
+    const gone = R.s > 420;
+    if (!gone) this.stopAt(R.from, -R.s); else if (!R.braking || R.from !== R.dest) this.stopAt(R.from, null);
+    if (R.braking && R.rem < 450) this.stopAt(R.dest, Math.max(0, R.rem));
     // 路过的提示 / 广播
-    if (seg.bridge && !F.bridge) { F.bridge = true; this.hud.toast('九龙江特大桥 · 九龙江入海口', 3000); Ann.say(PH.emuBridgeSegs(), { key: 'emu', interrupt: true }); }
+    if (seg.bridge && !F.bridge) { F.bridge = true; const b = (typeof seg.bridge === 'object' ? seg.bridge : null) || R.trip.bridge || {}; this.hud.toast(b.toast || '过大桥啦', 3000); Ann.say(PH.emuBridgeSegs(b.ann), { key: 'emu', interrupt: true }); }
     if (seg.tunnel !== R.inTunnel) { R.inTunnel = seg.tunnel; if (seg.tunnel) this.hud.toast('进隧道啦', 1400); }
-    if (!F.annNext && rt >= TRIP.brakeAt - 14) { F.annNext = true; Ann.say(PH.emuNextSegs(R.dest), { key: 'emu', interrupt: true }); }
+    if (!F.annNext && rt >= TRIP.brakeAt - 14) { F.annNext = true; Ann.say(PH.emuNextSegs(R.trip.ann), { key: 'emu', interrupt: true }); }
     A.trainSound({ speed: Math.min(1, v / TRIP.vmax * 0.78 + (R.inTunnel ? 0.22 : 0)), inside: true, braking: R.braking && v < 30 });
     if (R.braking && R.rem <= 0) this.arrive();
   }
@@ -360,8 +406,8 @@ export class EastCtl {
     this.showStopped(); this.interior.scenery.near.fill('empty'); this.interior.scenery.resetBridge();
     this.doorOpenT = 1.25; this.count.arrived.push(R.dest);
     this.needStand = true;   // 到站后一直坐着不会自动关门返程：要先起身（再坐下才会开回去），不然广播还没播完门就关了
-    Ann.say(PH.emuArriveSegs(R.dest), { key: 'emu', interrupt: true });
-    this.hud.toast(R.dest === 'xm' ? '到站：厦门北站' : '到站：广州东站', 2400);
+    Ann.say(PH.emuArriveSegs(R.trip.ann), { key: 'emu', interrupt: true });
+    this.hud.toast('到站：' + CITIES[R.dest].stn, 2400);
     this.events.emit('emu', { phase: 'arrive', dest: R.dest }); this.events.emit('ride', { phase: 'arriveRail', to: R.dest });
   }
   update(dtWall = 0.016) {
@@ -376,10 +422,10 @@ export class EastCtl {
       if (p.z < GZE.edge - 0.05) { const d = EMU.doors.find(d => Math.abs(p.x - d.x) < 0.55); if (d) this.enter(st, d); }
       return null;
     }
-    if (st !== this.cur.st) { this.interior.setEnabled(false); this.xmn.show(null); this.ride = null; this.cur = null; return null; }
+    if (st !== this.cur.st) { this.interior.setEnabled(false); for (const r of Object.values(this.rails)) { const P = r.plat(); if (P) P.show(null); } this.closePicker(); this.ride = null; this.cur = null; return null; }
     if (this.cur.loc === 'car') {
       // 坐下（车停着、门开着）→ 关门开车
-      if (!pl.seat) this.needStand = false;
+      if (!pl.seat) { this.needStand = false; this.closePicker(); }
       if (!this.ride && !this.needStand && pl.seat && pl.seat.seat && pl.seat.seat.world && this.interior.doorF < 0.01 && !(this.doorOpenT > 0)) { this.sitT = (this.sitT || 0) + dtWall; if (this.sitT > 1.2) { this.sitT = 0; this.startRide(); } } else this.sitT = 0;
       if (this.interior.wantsExit(p) && !pl.seat && !this.ride) this.exit();
     } else if (this.cur.loc === 'xmn') {
@@ -415,7 +461,7 @@ export class EastCtl {
       return { badge: '国铁', zh: '厦门北站' + (A ? ' · ' + A[0] : ''), en: 'Xiamenbei' + (A ? ' · ' + A[1] : ''), color: '#1F5F8B' }; }
     const R = this.ride, trip = R ? R.trip : this.interior.trip;
     if (R && R.phase !== 'closing') return { badge: trip.train, zh: '复兴号 ' + EMU.car + ' 车', en: `${trip.fromEn} → ${trip.toEn}`, color: '#D3121A', next: { zh: trip.to, en: trip.toEn } };
-    return { badge: trip.train, zh: this.side === 'gz' ? '广州东站' : '厦门北站', en: this.side === 'gz' ? 'Guangzhoudong' : 'Xiamenbei', color: '#D3121A' };
+    return { badge: trip.train, zh: CITIES[this.side].stn, en: CITIES[this.side].stnEn, color: '#D3121A' };
   }
   get loc() { return this.cur ? this.cur.loc : null; }
   /** 厦门北站里的哪一块（platform / hall / passage / plaza），不在厦门北站 = null */
@@ -423,7 +469,8 @@ export class EastCtl {
   info() {
     const R = this.ride;
     return { inside: !!(this.cur && this.cur.loc === 'car'), loc: this.loc, area: this.area, side: this.side, speed: this.speed, door: this.interior ? +this.interior.doorF.toFixed(2) : 0,
-      ride: R ? { dest: R.dest, phase: R.phase, t: +R.t.toFixed(1), rt: +R.rt.toFixed(1), v: +R.v.toFixed(1), s: Math.round(R.s), rem: Math.round(R.rem), seg: this.segAt(R.rt), tunnel: !!R.inTunnel } : null,
+      dest: this.destFor(), dests: destsFrom(this.side), picker: !!this.picker,
+      ride: R ? { from: R.from, dest: R.dest, phase: R.phase, t: +R.t.toFixed(1), rt: +R.rt.toFixed(1), v: +R.v.toFixed(1), s: Math.round(R.s), rem: Math.round(R.rem), seg: this.segAt(R.rt), tunnel: !!R.inTunnel } : null,
       xmn: this.xmn ? this.xmn.info() : null, interior: this.interior ? this.interior.info() : null, count: this.count };
   }
 }

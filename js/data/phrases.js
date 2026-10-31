@@ -87,16 +87,19 @@ export const safetySegs = k => seg('safety.' + k, [SAFETY[k][0], SAFETY[k][1], n
  * 动车（国铁）车厢广播：只有普通话 + 英语（国铁列车不播粤语；js/data/rail.js）。时间压缩的一程里不报中途停站。
  * 车次按铁路播音习惯逐位读（D 二三一五）；英文站名用 Guangzhou East / Xiamen North（车站英文译名）。
  */
+/** 车次报站文字：键 = rail.js 里 trip.ann（广州⇄厦门沿用旧键 xm / gz） */
 const EMU_T = {
   xm: { no: 'D二三一五', noEn: 'D two three one five', from: '广州东站', to: '厦门北站', fromEn: 'Guangzhou East', toEn: 'Xiamen North', city: '厦门', cityEn: 'Xiamen' },
   gz: { no: 'D三三一一', noEn: 'D three three one one', from: '厦门北站', to: '广州东站', fromEn: 'Xiamen North', toEn: 'Guangzhou East', city: '广州', cityEn: 'Guangzhou' }
 };
 export const emuDoorsSegs = () => seg('emu.doors', ['列车即将出发，车门即将关闭，请注意安全。', null, 'The train is about to depart. The doors are closing.']);
 export const emuDepartSegs = d => { const t = EMU_T[d]; return seg('emu.depart.' + d, [`旅客们，欢迎乘坐${t.no}次列车。本次列车由${t.from}开往${t.to}。`, null, `Welcome aboard train ${t.noEn}, from ${t.fromEn} to ${t.toEn}.`]); };
-export const emuBridgeSegs = () => seg('emu.bridge', ['列车正在通过九龙江特大桥。', null, 'We are now crossing the Jiulong River Bridge.']);
+/** 途经大桥：key = 片段 id 后缀（'bridge' = 九龙江特大桥，旧 id emu.bridge） */
+const EMU_BRIDGE = { bridge: ['列车正在通过九龙江特大桥。', null, 'We are now crossing the Jiulong River Bridge.'] };
+export const emuBridgeSegs = (k = 'bridge') => EMU_BRIDGE[k] ? seg('emu.' + k, EMU_BRIDGE[k]) : [];
 export const emuNextSegs = d => { const t = EMU_T[d]; return seg('emu.next.' + d, [`前方到站，${t.to}。请您带好随身物品，准备下车。`, null, `We will soon arrive at ${t.toEn}. Please take your belongings and get ready to leave the train.`]); };
 export const emuArriveSegs = d => { const t = EMU_T[d]; return seg('emu.arrive.' + d, [`${t.to}到了。欢迎您来到${t.city}，下车时请注意列车与站台之间的空隙。`, null, `We have arrived at ${t.toEn}. Welcome to ${t.cityEn}. Please mind the gap when leaving the train.`]); };
-export function emuJobs() { return [...emuDoorsSegs(), ...emuBridgeSegs(), ...['xm', 'gz'].flatMap(d => [...emuDepartSegs(d), ...emuNextSegs(d), ...emuArriveSegs(d)])]; }
+export function emuJobs() { return [...emuDoorsSegs(), ...Object.keys(EMU_BRIDGE).flatMap(k => emuBridgeSegs(k)), ...Object.keys(EMU_T).flatMap(d => [...emuDepartSegs(d), ...emuNextSegs(d), ...emuArriveSegs(d)])]; }
 
 /** 全网需要的全部片段（用于生成缺失清单 / 语音生成任务） */
 /** 厦门地铁报站（普通话 → 闽南语 → 英语；线路方向 id 带 xm 前缀以免和广州撞） */

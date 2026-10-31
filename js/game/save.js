@@ -6,11 +6,13 @@
  * 存档带版本号；解析失败 / 版本不对 / 车站不存在 → 用默认开局（绝不白屏）。URL 带 ?start= 时不读存档（测试用）。
  */
 export const SAVE_KEY = 'gzmb.save', SAVE_V = 1;
+/** 能存档续玩的城市（地铁网）；加城市只往这里加，不用升版本号 */
+export const SAVE_CITIES = ['gz', 'xm'];
 export function readSave() {
   try {
     const raw = localStorage.getItem(SAVE_KEY); if (!raw) return null;
     const s = JSON.parse(raw);
-    if (!s || s.v !== SAVE_V || (s.city !== 'gz' && s.city !== 'xm') || typeof s.code !== 'string') return null;
+    if (!s || s.v !== SAVE_V || !SAVE_CITIES.includes(s.city) || typeof s.code !== 'string') return null;
     if (s.pos && !(Array.isArray(s.pos) && s.pos.length === 3 && s.pos.every(Number.isFinite))) s.pos = null;
     if (!Number.isFinite(s.yaw)) s.yaw = 0;
     return s;
