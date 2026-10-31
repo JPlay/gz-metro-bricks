@@ -58,18 +58,19 @@ function wallP1(c, pw, ph) {
   c.fillStyle = 'rgba(150,152,156,0.35)'; for (let i = 1; i < 4; i++) c.fillRect(pw * i / 4 - 2, 0, 4, ph);
   c.fillStyle = 'rgba(160,160,160,0.25)'; for (let i = 1; i < 5; i++) c.fillRect(0, ph * i / 5, pw, 3);
 }
-/** 二期外墙：白色菱形格（Arquitectonica 的“钻石”立面），accent 色做竖向彩带 */
-function wallDiamond(accent, glass = false) {
+/** 彩色金属钻石板（二期三颗「宝石」的主立面：整面是金属色，不是白墙加色框）；c0 底色、c1 亮面、c2 暗面、seam 板缝 */
+function metalDiamond(c0, c1, c2, seam) {
   return (c, pw, ph) => {
-    c.fillStyle = '#F2F1ED'; c.fillRect(0, 0, pw, ph);
+    c.fillStyle = c0; c.fillRect(0, 0, pw, ph);
     const s = pw / 4, hs = s * 0.75;
     for (let row = -1; row * hs < ph + hs; row++) for (let col = -1; col * s < pw + s; col++) {
       const x = col * s + (row % 2 ? s / 2 : 0), y = row * hs;
+      // 每块菱形上亮下暗（金属折板的受光），隔几块换一档，远看有闪光感
+      const g = c.createLinearGradient(x, y - hs, x, y + hs), t = (row * 3 + col * 5) % 4;
+      g.addColorStop(0, t === 0 ? c1 : c0); g.addColorStop(1, t === 2 ? c2 : c0);
       c.beginPath(); c.moveTo(x, y - hs); c.lineTo(x + s / 2, y); c.lineTo(x, y + hs); c.lineTo(x - s / 2, y); c.closePath();
-      c.fillStyle = (row + col) % 3 === 0 ? (glass ? '#9DB8C9' : '#E4E6E8') : '#F6F5F2'; c.fill();
-      c.strokeStyle = '#C3C8CD'; c.lineWidth = Math.max(1.5, s * 0.04); c.stroke();
+      c.fillStyle = g; c.fill(); c.strokeStyle = seam; c.lineWidth = Math.max(1.5, s * 0.035); c.stroke();
     }
-    if (accent) { c.fillStyle = accent; c.globalAlpha = 0.9; c.fillRect(pw * 0.06, 0, pw * 0.05, ph); c.fillRect(pw * 0.89, 0, pw * 0.05, ph); c.globalAlpha = 1; }
   };
 }
 /** 玻璃幕墙（竖梃 + 横梃） */
@@ -302,11 +303,11 @@ function phase1(S) {
 /* ---------- 二期：SM新生活广场（红宝石 + 玻璃中庭 + 黄宝石 + 蓝宝石） ---------- */
 function phase2(S) {
   const k = S.kit, P = k.solid, A = S.atlas, G = k.glow, GL = k.glass;
-  const white = A.draw(12, 16, wallDiamond('#C8102E'), 13), store = shopUv(S);
-  // 红宝石：长条楼，白钻石格 + 红色竖带 / 红色檐口
+  const ruby = A.draw(12, 16, metalDiamond('#A9152B', '#D3364A', '#820B1D', '#640816'), 13), store = shopUv(S);
+  // 红宝石：长条楼，整面红色金属钻石板 + 红色檐口
   { const { x0, x1, z0, z1, h } = RUBY;
-    P.slab(x0, x1, 0, h, z0, z1, hex('#E9E8E4'), { ao: false }); k.colSlab(x0, x1, 0, h, z0, z1);
-    for (const [axis, fixed, a0, a1, nrm] of [['z', x1, z0, z1, 1], ['x', z0, x0, x1, -1]]) { tileFace(A, white, axis, fixed, a0, a1, 5.5, h - 1.6, nrm, 12); tileFace(A, store, axis, fixed, a0, a1, 0, 4.6, nrm, 12); }
+    P.slab(x0, x1, 0, h, z0, z1, hex('#A3142C'), { ao: false }); k.colSlab(x0, x1, 0, h, z0, z1);
+    for (const [axis, fixed, a0, a1, nrm] of [['z', x1, z0, z1, 1], ['x', z0, x0, x1, -1]]) { tileFace(A, ruby, axis, fixed, a0, a1, 5.5, h - 1.6, nrm, 12); tileFace(A, store, axis, fixed, a0, a1, 0, 4.6, nrm, 12); }
     k.g('band').slab(x0 - 0.4, x1 + 0.4, h - 1.6, h, z0 - 0.4, z1 + 0.4, hex('#C8102E'), { ao: false });
     k.g('band').slab(x0 - 0.3, x1 + 0.3, 4.6, 5.5, z0 - 0.3, z1 + 0.3, hex('#B0122A'), { ao: false });
     A.quad(x1 + 0.45, 16, 20, 9, 5, aS(1, 0), A.draw(9, 5, (c, pw, ph) => { c.fillStyle = '#F4F2EE'; c.fillRect(0, 0, pw, ph); c.fillStyle = '#111'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `500 ${ph * 0.62}px Didot, "Bodoni 72", Georgia, serif`; c.fillText('ZARA', pw / 2, ph * 0.55); }, 30));
@@ -327,8 +328,8 @@ function phase2(S) {
     k.metal.slab(x1, x1 + 0.4, 6, 10.2, BR1.z0 - 0.6, BR1.z1 + 0.6, hex('#E6E8EA'), { ao: false }); }
   // 中庭和蓝宝石之间的裙房
   P.slab(-130, LINK.x0, 0, 14, 50, 72, hex('#E4E3DF'), { ao: false }); k.colSlab(-130, LINK.x0, 0, 14, 50, 72);
-  // 黄宝石：圆楼，白格立面 + 金色环带；东侧正门
-  { const { cx, cz, r, h } = TOPAZ, n = 24, gold = hex('#C9A24A'), gw = A.draw(6.3, 14, wallDiamond('#D9B45A'), 18), gs = A.draw(6.3, 4.6, storefront('#F6E7C4'), 26);
+  // 黄宝石：圆楼，整圈金色金属钻石板 + 金色环带；东侧正门
+  { const { cx, cz, r, h } = TOPAZ, n = 24, gold = hex('#C9A24A'), gw = A.draw(6.3, 14, metalDiamond('#C9A24A', '#EED58A', '#9C7A30', '#7E6226'), 18), gs = A.draw(6.3, 4.6, storefront('#F6E7C4'), 26);
     const ap = r * Math.cos(Math.PI / n);
     for (let i = 0; i < n; i++) {
       const a = (i + 0.5) / n * TAU, nx = Math.cos(a), nz = Math.sin(a), x = cx + nx * ap, z = cz + nz * ap, w = 2 * r * Math.sin(Math.PI / n);
@@ -336,7 +337,7 @@ function phase2(S) {
       for (let j = 0; j < 2; j++) A.quad(x, 5.5 + (h - 5.5) / 4 * (2 * j + 1), z, w, (h - 5.5) / 2, aS(nx, nz), gw);
       if (!door) A.quad(x, 2.3, z, w, 4.6, aS(nx, nz), gs);
     }
-    P.cyl(cx, h / 2, cz, 2 * r - 0.3, h, hex('#EEEDE8'), n, 0, 0, 0, undefined, { ao: false });
+    P.cyl(cx, h / 2, cz, 2 * r - 0.3, h, hex('#C29C48'), n, 0, 0, 0, undefined, { ao: false });
     for (const [y, t] of [[4.6, 0.9], [h - 0.2, 1.4]]) k.g('band').cyl(cx, y + t / 2, cz, 2 * r + 0.8, t, gold, n, 0, 0, 0, undefined, { ao: false });
     ringCol(k, cx, cz, r, r, 48, a => a < 0.1 || a > TAU - 0.1);
     k.colSlab(cx + r - 1.6, cx + r - 1.2, 0, 5, cz - 2, cz + 2);
@@ -347,9 +348,9 @@ function phase2(S) {
     A.quad(px + 0.55, 6.6, cz, 12, 1.6, aS(1, 0), A.draw(12, 1.6, textPaint(['黄宝石  TOPAZ', 'SM LIFESTYLE'], { bg: '#C9A24A', fg: '#FFFFFF' }), 40));
     [['MUJI 无印良品', -0.55], ['SWAROVSKI', 0.55], ['例外', 0.95], ['西贝莜面村', -0.95], ['花潮', 1.35]].forEach(([nm, a]) => { const x = cx + Math.cos(a) * (r + 0.3), z = cz + Math.sin(a) * (r + 0.3); A.quad(x, 5.05, z, 5.4, 0.85, aS(Math.cos(a), Math.sin(a)), A.draw(5.4, 0.85, brandPaint(nm), 40)); });
     k.shade.shadeBlob(px + 2, cz, 4, 6, 0.02, 0.2); }
-  // 蓝宝石：方楼，蓝色带 + 万达影城
-  { const { x0, x1, z0, z1, h } = SAPH, blue = A.draw(12, 14, wallDiamond('#2E5DA8', true), 13);
-    P.slab(x0, x1, 0, h, z0, z1, hex('#E6E8EC'), { ao: false }); k.colSlab(x0, x1, 0, h, z0, z1);
+  // 蓝宝石：方楼，蓝色金属钻石板 + 万达影城
+  { const { x0, x1, z0, z1, h } = SAPH, blue = A.draw(12, 14, metalDiamond('#2A5BAE', '#5A8BD6', '#1C3F7E', '#163266'), 13);
+    P.slab(x0, x1, 0, h, z0, z1, hex('#2A5BAE'), { ao: false }); k.colSlab(x0, x1, 0, h, z0, z1);
     tileFace(A, blue, 'z', x1, z0, z1, 14, h - 1.4, 1, 12); tileFace(A, blue, 'x', z0, x0, x1, 14, h - 1.4, -1, 12); tileFace(A, blue, 'x', z1, x0, x1, 4, h - 1.4, 1, 12);
     k.g('band').slab(x0 - 0.4, x1 + 0.4, h - 1.4, h, z0 - 0.4, z1 + 0.4, hex('#2E5DA8'), { ao: false });
     A.quad(x1 + 0.5, h - 5, 100, 14, 3.4, aS(1, 0), A.draw(14, 3.4, brandPaint('万达影城'), 30));
@@ -385,10 +386,10 @@ function phase3(S) {
 function skybridge(S, br, gapsS, piers, label, sub) {
   const k = S.kit, P = k.solid, A = S.atlas, GL = k.glass, G = k.glow, GR = k.g('granite');
   const { x0, x1, z0, z1, y: Y } = br, white = hex('#F4F5F6'), zc = (z0 + z1) / 2, TOP = Y + 3.6;
-  GR.slab(x0, x1, Y - 0.3, Y, z0, z1, hex('#DCD6CB'), { ao: false }); k.colSlab(x0, x1, Y - 0.6, Y, z0, z1);
   // 天桥两侧玻璃墙单独一个材质、不反射环境贴图：通用 glass 反射的是户外 .env（里面有糊掉的绿树和暖色灯），
   //   顺着桥走时侧窗是掠射角，菲涅尔把这些反射放大成窗外一团团发光的绿 / 橙色糊斑（小美 05 截图）
   const GLW = k.g('glass@bridge'), gm = bucketMat(k.scene, k.M, 'glass@bridge'); gm.environmentIntensity = 0; gm.alpha = 0.22;
+  GR.slab(x0, x1, Y - 0.3, Y, z0, z1, hex('#DCD6CB'), { ao: false }); k.colSlab(x0, x1, Y - 0.6, Y, z0, z1);
   for (let x = x0 + 1.2; x < x1; x += 1.2) P.quad([x, Y + 0.004, z0], [x + 0.05, Y + 0.004, z0], [x + 0.05, Y + 0.004, z1], [x, Y + 0.004, z1], hex('#B9B2A6'));
   for (const z of [z0 + 1.5, z1 - 1.5]) P.quad([x0, Y + 0.004, z], [x1, Y + 0.004, z], [x1, Y + 0.004, z + 0.05], [x0, Y + 0.004, z + 0.05], hex('#B9B2A6'));
   // 白钢箱梁 + 底板
@@ -469,13 +470,13 @@ export class SmAtrium {
     const A = this.atlas = new FoodAtlas(scene, 1024), P = k.solid, GL = k.glass, G = k.glow, GR = k.g('granite');
     const topaz = variant === 'topaz', n = topaz ? 16 : 4, accent = hex(topaz ? '#C9A24A' : '#2E5DA8'), white = hex('#F3F1EC');
     preseed(topaz ? 6161 : 6262);
+    // 黄宝石的金色金属单独一桶，带一点自发光：从下往上看时金边不会暗成深褐色（+1 draw）
+    const GM = topaz ? k.g('metal@gold') : k.metal;
+    if (topaz) bucketMat(scene, k.M, 'metal@gold').emissiveColor.set(0.32, 0.23, 0.07);
     const t = Math.tan(Math.PI / n);
     const phi = s => -Math.PI / 2 + s * TAU / n;
     const vtx = (s, ap, e) => { const a = phi(s) + e * Math.PI / n, R = ap / Math.cos(Math.PI / n); return [Math.cos(a) * R, CZ + Math.sin(a) * R]; };   // e=−1/+1：这一边的两个角
     const aIn = s => Math.atan2(-Math.cos(phi(s)), -Math.sin(phi(s)));   // 朝中庭的 atlas 角（raw：法线 (sin a, cos a)）
-    // 黄宝石的金色金属单独一桶，带一点自发光：从下往上看时金边不会暗成深褐色（+1 draw）
-    const GM = topaz ? k.g('metal@gold') : k.metal;
-    if (topaz) bucketMat(scene, k.M, 'metal@gold').emissiveColor.set(0.32, 0.23, 0.07);
 
     // ---------- 地面 / 楼板 / 屋顶 ----------
     k.floorWithHoles(-AW - 1, AW + 1, 0, CZ + AW + 1, -0.15, 0, hex('#E8E4DC'), [], true, 'granite');
@@ -490,15 +491,15 @@ export class SmAtrium {
         const a = vtx(s, AV, -1), b = vtx(s, AV, 1);
         wallQ(P, b, a, y - 0.6, y, white);                      // 中空边的楼板侧面（朝中庭）
         G.quad([b[0], y - 0.62, b[1]], [a[0], y - 0.62, a[1]], [a[0], y - 0.55, a[1]], [b[0], y - 0.55, b[1]], hex('#FFF4DA'));
-        // 栏杆：2F 可走（带碰撞），往上只做玻璃 + 扶手
-        const gap = f === 1 && s === n / 2;
-        const segs = gap ? [[a, [-1.0, a[1] + (b[1] - a[1]) * ((-1.0 - a[0]) / (b[0] - a[0] || 1))]], [[1.0, a[1] + (b[1] - a[1]) * ((1.0 - a[0]) / (b[0] - a[0] || 1))], b]] : [[a, b]];
-        for (const [p0, p1] of segs) {
         for (const ap of [10.5, 13.5]) for (const e of [-0.5, 0.5]) {   // 楼板底的筒灯（不让天花板一片空灰）
           const a0 = phi(s) + e * Math.PI / n, R = ap / Math.cos(Math.PI / n), cx = Math.cos(a0) * R, cz = CZ + Math.sin(a0) * R, h = 0.22;
           flatQ(G, [[cx - h, cz - h], [cx + h, cz - h], [cx + h, cz + h], [cx - h, cz + h]], y - 0.61, hex('#FFF6E0'), false); }
         if (topaz) { const nx0 = Math.cos(phi(s)) * 0.03, nz0 = Math.sin(phi(s)) * 0.03;   // 楼板边包一条金色金属（略往中空外凸）
           GM.quad([b[0] - nx0, y - 0.5, b[1] - nz0], [a[0] - nx0, y - 0.5, a[1] - nz0], [a[0] - nx0, y - 0.05, a[1] - nz0], [b[0] - nx0, y - 0.05, b[1] - nz0], GOLD); }
+        // 栏杆：2F 可走（带碰撞），往上只做玻璃 + 扶手
+        const gap = f === 1 && s === n / 2;
+        const segs = gap ? [[a, [-1.0, a[1] + (b[1] - a[1]) * ((-1.0 - a[0]) / (b[0] - a[0] || 1))]], [[1.0, a[1] + (b[1] - a[1]) * ((1.0 - a[0]) / (b[0] - a[0] || 1))], b]] : [[a, b]];
+        for (const [p0, p1] of segs) {
           if (f === 1) { k.rail(p0[0], p0[1], p1[0], p1[1], y); if (topaz) GM.tube([p0[0], y + 1.12, p0[1]], [p1[0], y + 1.12, p1[1]], 0.09, GOLD, 8); }
           else { const len = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]), ry = Math.atan2(p1[0] - p0[0], p1[1] - p0[1]); GL.box((p0[0] + p1[0]) / 2, y + 0.55, (p0[1] + p1[1]) / 2, 0.03, 0.9, len, hex('#E2F2FA'), ry); GM.tube([p0[0], y + 1.08, p0[1]], [p1[0], y + 1.08, p1[1]], topaz ? 0.09 : 0.06, topaz ? GOLD : hex('#C9CFD5'), 6); }
         }
