@@ -267,7 +267,7 @@ export class FzsStation {
       for (const zz of [za, zb]) P.slab(xa, xb, 0.02, 0.03, zz - 0.08, zz + 0.08, hex('#F2C230'), { ao: false });
       for (let x = xa + 2; x < xb - 2; x += 6) P.slab(x, x + 3, 0.02, 0.03, (za + zb) / 2 - 0.06, (za + zb) / 2 + 0.06, hex('#F2F2F2'), { ao: false });
       P.slab(xa, xb, 0, 0.16, za - 0.4, za, hex('#BFC2C4'), { ao: false });
-      taxi(k, 58, 31.6, -1, '#2F7FC1', PL); taxi(k, 66, 31.6, -1, '#3B8E5A', PL); taxi(k, 76, 31.6, -1, '#2F7FC1', PL); taxi(k, 88, 35.4, -1, '#3B8E5A', PL);
+      taxi(k, 58, 31.6, -1, '#2F7FC1', PL); taxi(k, 66, 31.6, -1, '#3B8E5A', PL); taxi(k, 76, 31.6, -1, '#2F7FC1', PL); taxi(k, 52, 35.4, -1, '#3B8E5A', PL);
       M.cyl(50, 1.6, 28.6, 0.1, 3.2, C.lamp, 8); k.colSlab(49.8, 50.2, 0, 3.2, 28.4, 28.8);
       for (const a of [0, Math.PI]) at.quad(50, 3.0, 28.6 + (a ? -0.03 : 0.03), 2.6, 0.9, a, at.draw(2.6, 0.9, bigText('出租车上客点', 'Taxi', '#F2C230', '#1B2530'), 60));
       for (let i = 0; i < 3; i++) traveler(PL, 54 + i * 1.6, 27.4 - (i % 2) * 0.6, 0, 30 + i); }
@@ -443,7 +443,7 @@ export class FzsStation {
     const sw = 56, sy0 = yb(-5) + T + 0.1, sh = 9, sz = zfR(-5) - 1.2;
     P.slab(-5 - sw / 2, -5 + sw / 2, sy0, sy0 + 0.5, sz - 1.4, sz + 0.6, hex('#D9DEE3'), NO);
     P.slab(-5 - sw / 2, -5 + sw / 2, sy0, sy0 + sh, sz - 0.4, sz, C.roof, NO);
-    at.quad(-5, sy0 + sh / 2, sz + 0.02, sw, sh, 0, at.draw(sw, sh, (c, pw, ph) => {
+    at.quad(-5, sy0 + sh / 2, sz + 0.15, sw, sh, 0, at.draw(sw, sh, (c, pw, ph) => {
       c.fillStyle = '#F6F7F8'; c.fillRect(0, 0, pw, ph); c.fillStyle = '#C8161D'; c.textAlign = 'center'; c.textBaseline = 'middle';
       c.font = `900 ${ph * 0.8}px ${FONT}`; ['福', '州', '南', '站'].forEach((t, i) => c.fillText(t, pw * (0.125 + i * 0.25), ph * 0.54));
     }, 20));

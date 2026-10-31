@@ -133,16 +133,16 @@ async def main():
     s = await st(pg); e = await E(pg); ok('upToPlaza', s['pos'][1] > -0.3 and e['area'] == 'plaza')
     await walk(pg, [[FO - 5, -20], [FO - 5, 5]]); await walk(pg, [[FO - 5, 30]])
     # 站房外观：从广场东南斜着看（船头大屋檐两端上翘 + 波浪玻璃幕墙 + 大红「福州南站」）
-    await pg.evaluate(f"__game.player.spawn({FO}+98, 0.05, 38.6, -2.3)"); await asyncio.sleep(1.5)
-    await view(pg, 'first'); await pg.evaluate('__game.player.yaw=-2.3; __game.player.pitch=-0.12')
+    await pg.evaluate(f"__game.player.spawn({FO}+98, 0.05, 38.6, -2.25)"); await asyncio.sleep(1.5)
+    await view(pg, 'first'); await pg.evaluate('__game.player.yaw=-2.25; __game.player.pitch=-0.14')
     await shot(pg, 'fz-exterior-v3'); await view(pg, 'third')
     await pg.evaluate(f"__game.player.spawn({FO}-5, 0.05, 30, Math.PI)"); await asyncio.sleep(1)
     await walk(pg, [[FO + 20, 0], [FO + 20, -50]]); await walk(pg, [[FO + 20, -62], [FO + 20, -72]])
     s = await st(pg); e = await E(pg); ok('enterWaiting', e['area'] == 'wait' and abs(s['pos'][1]) < 0.4)
     await walk(pg, [[FO + 22, -69]])
     # 候车室镜头：从东头往西看（左边检票口 A1…，右边玻璃幕墙 + 小店，前景蓝色座椅坐满旅客）
-    await pg.evaluate(f"__game.player.spawn({FO}+33, 0.05, -71, -2.18)"); await asyncio.sleep(1.5)
-    await view(pg, 'first'); await pg.evaluate('__game.player.yaw=-2.18; __game.player.pitch=0.0')
+    await pg.evaluate(f"__game.player.spawn({FO}+14, 0.05, -71.5, -2.6)"); await asyncio.sleep(1.5)
+    await view(pg, 'first'); await pg.evaluate('__game.player.yaw=-2.6; __game.player.pitch=-0.04')
     await shot(pg, 'fz-waiting-v3'); await view(pg, 'third')
     await pg.evaluate(f"__game.player.spawn({FO}+22, 0.05, -69, Math.PI)"); await asyncio.sleep(1)
     # 4. 回到东广场 → 楼梯下换乘通道 → 地铁闸机 → 福州火车南站
