@@ -31,6 +31,9 @@ export const XM_TUNNEL_X = 90;
 export const XF = { x0: 4, x1: 20, z0: -1.9, z1: 1.9 };   // 吕厝换乘楼梯（L1 地面开洞 → L2）
 import { DOOR_XS as TRAIN_DOORS } from './train.js';
 
+/** 网络描述（厦门默认）：新城市（福州）传自己的 N 进来，几何 / 状态机共用。
+ *  O 场景原点；net 列车 / 区域网络 id；LINES / STATIONS 线路；EXITS 每站出口（单个出口，可走到街区）；TABLE 出入口信息牌；rail 与国铁站相连的那个地铁站 code */
+export const XM_NET = { O: XO, net: 'xm', LINES: XM_LINES, STATIONS: XM_STATIONS, EXITS: XM_EXITS, TABLE: XM_EXIT_TABLE, rail: 'xmnb', exitZh };
 const THEME = {
   minnan: { wall: '#F1EEE8', dado: '#B5452F', beam: '#9A6A43', accent: '#2C6E9E', floor: '#D8D3CA' },
   transfer: { wall: '#F4F2EE', dado: '#B5452F', beam: '#8B6914', accent: '#00A651', floor: '#DAD6CE' },
@@ -52,43 +55,46 @@ function namePaint(zh, en, lc, ink) {
 }
 
 export class XmStation {
-  constructor(scene, code) {
-    this.scene = scene; this.code = code;
-    this.s = XM_STATIONS[code];
-    this.themeKey = this.s.theme || 'minnan';
-    this.th = THEME[this.themeKey] || THEME.minnan;
-    const k = this.kit = new Kit(scene, 'xmSt-' + code);
-    k.root.position.set(XO.x, 0, 0);
+  constructor(scene, code, N = XM_NET) {
+    this.scene = scene; this.code = code; this.N = N;
+    this.s = N.STATIONS[code];
+    this.themeKey = this.s.theme || N.theme || 'minnan';
+    this.th = (N.THEME && N.THEME[this.themeKey]) || THEME[this.themeKey] || THEME.minnan;
+    this.dadoG = N.dado || 'brick';
+    const k = this.kit = new Kit(scene, N.net + 'St-' + code);
+    k.root.position.set(N.O.x, 0, 0);
     this.atlas = new FoodAtlas(scene, 2048);
     this.platforms = this.frames().map(f => ({ ...f, sides: this.sidesFor(f) }));
-    this.platforms.forEach(p => { p.up = this.upFor(p); if (code === 'xmnb') p.endOpen = true; });
+    this.platforms.forEach(p => { p.up = this.upFor(p); if (code === N.rail) p.endOpen = true; });
+    // 换乘楼梯洞口（跟着第一层站台的 zc 走；吕厝 zc=0 → 与原 XF 相同）
+    { const z = this.platforms[0].zc; this.XF = { ...XF, z0: XF.z0 + z, z1: XF.z1 + z, zc: z }; }
     this.platforms.forEach(p => { this.buildPlatform(p); this.decor(p); });
     if (this.platforms.length > 1) this.buildTransfer();
-    if (code === 'xmnb') this.linkRailway();
+    if (code === N.rail) this.linkRailway();
     else this.buildConcourse();
-    k.finish(true); this.atlas.finish(k.root, 'xmStSigns'); noProbe(k.root);
+    k.finish(true); this.atlas.finish(k.root, N.net + 'StSigns'); noProbe(k.root);
     { const m = scene.getMaterialByName('brick@xm'); if (m) { m.environmentIntensity = 0.06; m.metallicF0Factor = 0; m.roughness = 1; if (m.bumpTexture) m.bumpTexture.level = 1.2; } }   // 哑光红砖（不要塑料感）
   }
   frames() {
-    const lines = this.s.lines;
+    const lines = this.s.lines, zc = this.code === this.N.rail ? -80 : 0;
     if (lines.length > 1) return [
-      { line: 1, y: XM_PY, zc: 0, hole: true },
-      { line: 2, y: XM_PY2, zc: 0, under: true }   // 吕厝：2 号线在 1 号线正下方（真实 1 号线地下二层、2 号线地下三层）
+      { line: lines[0], y: XM_PY, zc, hole: true },
+      { line: lines[1], y: XM_PY2, zc, under: true }   // 吕厝：2 号线在 1 号线正下方（真实 1 号线地下二层、2 号线地下三层）
     ];
     // 厦门北站：侧式站台对准国铁出站层地铁站厅（z≈-80），轨在 -z（往站房外）
-    if (this.code === 'xmnb') return [{ line: 1, y: XM_PY, zc: -80 }];   // 游戏用岛式（双边可乘）；真实为侧式
+    if (this.code === this.N.rail) return [{ line: lines[0], y: XM_PY, zc: -80 }];   // 游戏用岛式（双边可乘）；真实为侧式
     if (this.s.side) return [{ line: lines[0], y: XM_PY, zc: 0, sideOnly: true }];
     return [{ line: lines[0], y: XM_PY, zc: 0 }];
   }
   /** 普通站：站台 → 站厅的楼梯（沿 x，脚在 x=-6，顶在 x=-20 / 站厅层 -6.5），z 范围在站台中间的可走区 */
   upFor(P) {
-    if (this.code === 'xmnb' || P.y !== XM_PY) return null;
+    if (this.code === this.N.rail || P.y !== XM_PY) return null;
     const zc = P.zc, so = P.sideOnly;
     const [z0, z1] = so === 'A' ? [zc - 3.2, zc - 0.2] : so ? [zc + 0.2, zc + 3.2] : [zc - 2, zc + 2];
     return { x0: -20, x1: -6, z0, z1, hole: [-20, -9.4, z0 - 0.3, z1 + 0.3] };
   }
   sidesFor(P) {
-    const L = XM_LINES[P.line], dirs = Object.values(L.dirs);
+    const L = this.N.LINES[P.line], dirs = Object.values(L.dirs);
     // A = -z 侧（step 取 dirs[0]），B = +z 侧
     const mk = (key, step, n) => ({
       key, step, n, trackZ: P.zc + (key === 'A' ? -1 : 1) * XM_TRACK,
@@ -104,14 +110,14 @@ export class XmStation {
     return { A: mk('A', dirs[0].step, 1), B: mk('B', dirs[1].step, 2) };
   }
   buildPlatform(P) {
-    const k = this.kit, y = P.y, zc = P.zc, L = XM_LINES[P.line], lc = L.color, th = this.th;
-    const Pv = k.solid, W = k.g('wall'), BR = k.g('brick'), F = k.g('floor'), G = k.glow, M = k.metal;
+    const k = this.kit, y = P.y, zc = P.zc, L = this.N.LINES[P.line], lc = L.color, th = this.th;
+    const Pv = k.solid, W = k.g('wall'), BR = k.g(this.dadoG), F = k.g('floor'), G = k.glow, M = k.metal;
     const sideOnly = P.sideOnly;
     let z0 = zc - XM_PSD, z1 = zc + XM_PSD;
     if (sideOnly === 'B') { z0 = zc - 0.4; z1 = zc + XM_PSD; }
     else if (sideOnly === 'A') { z0 = zc - XM_PSD; z1 = zc + 0.4; }
     else if (sideOnly) { z0 = zc - 0.5; z1 = zc + XM_PSD; }
-    k.floorWithHoles(-XM_HALL_X, XM_HALL_X, z0, z1, y - 1.3, y, hex(th.floor), P.hole ? [[XF.x0, XF.x1, XF.z0 - 0.1, XF.z1 + 0.1]] : [], true, 'floor');
+    k.floorWithHoles(-XM_HALL_X, XM_HALL_X, z0, z1, y - 1.3, y, hex(th.floor), P.hole ? [[this.XF.x0, this.XF.x1, this.XF.z0 - 0.1, this.XF.z1 + 0.1]] : [], true, 'floor');
     // 盲道 + 石材收边
     for (const sz of (sideOnly === 'A' ? [-1] : sideOnly === 'B' ? [1] : sideOnly ? [1] : [-1, 1])) {
       k.g('tactile').slab(-XM_HALL_X, XM_HALL_X, y, y + 0.006, zc + sz * 5.2 - 0.2, zc + sz * 5.2 + 0.2, hex('#F2C230'), { ao: false });
@@ -152,8 +158,8 @@ export class XmStation {
           c.font = `600 ${ph * 0.16}px ${FONT_EN}`; c.fillText(this.s.en, ph * 0.95, ph * 0.7);
           if (prevC || nextC) {
             c.fillStyle = '#9AA3AD'; c.font = `600 ${ph * 0.12}px ${FONT}`;
-            if (prevC) c.fillText('← ' + XM_STATIONS[prevC].zh, ph * 0.95, ph * 0.88);
-            if (nextC) { c.textAlign = 'right'; c.fillText(XM_STATIONS[nextC].zh + ' →', pw - 16, ph * 0.88); }
+            if (prevC) c.fillText('← ' + this.N.STATIONS[prevC].zh, ph * 0.95, ph * 0.88);
+            if (nextC) { c.textAlign = 'right'; c.fillText(this.N.STATIONS[nextC].zh + ' →', pw - 16, ph * 0.88); }
           }
         };
         this.atlas.quad(x, y + 2.2, wz - sz * 0.05, 7.2, 1.5, sz > 0 ? Math.PI : 0, this.atlas.draw(7.2, 1.5, paint));
@@ -257,7 +263,7 @@ export class XmStation {
   }
   /** 站台装修：端墙（闽南红砖山墙 / 岩壁）、岛中立柱、屏蔽门上方门楣、燕尾脊吊牌框 */
   decor(P) {
-    const k = this.kit, y = P.y, zc = P.zc, th = this.th, Pv = k.solid, BR = k.g('brick'), GR = k.g('granite'), G = k.glow;
+    const k = this.kit, y = P.y, zc = P.zc, th = this.th, Pv = k.solid, BR = k.g(this.dadoG), GR = k.g('granite'), G = k.glow;
     const rock = this.themeKey === 'rock', CY = y + 4.2, SEA = hex('#1F6FA8'), STONE = hex('#E9E3D6'), TILE = hex('#D99A84');
     const so = P.sideOnly;
     const z0 = so === 'A' ? zc - XM_PSD : so ? zc - 0.5 : zc - XM_PSD, z1 = so === 'A' ? zc + 0.4 : zc + XM_PSD;
@@ -323,7 +329,7 @@ export class XmStation {
     }
     // 2) 岛中立柱（侧式站贴墙不放）
     if (!so) for (let x = -22.5; x <= 22.6; x += 9) {
-      if (Math.abs(x) < 3 || ((P.hole || P.under) && x > XF.x0 - 1.5 && x < XF.x1 + 3.5)) continue;
+      if (Math.abs(x) < 3 || ((P.hole || P.under) && x > this.XF.x0 - 1.5 && x < this.XF.x1 + 3.5)) continue;
       if (P.up && x > P.up.x0 - 1 && x < P.up.x1 + 2) continue;
       k.colSlab(x - 0.45, x + 0.45, y, CY, zc - 0.45, zc + 0.45);
       if (rock) {
@@ -371,7 +377,7 @@ export class XmStation {
       if (rock) GR.slab(-XM_HALL_X + 0.3, XM_HALL_X - 0.3, y + 2.97, CY, za, zb, hex('#8C8276'), { ao: false });
       else Pv.slab(-XM_HALL_X + 0.3, XM_HALL_X - 0.3, y + 2.97, CY, za, zb, hex('#3A2C26'), { ao: false });   // 深色木门楣
       // 站名牌（中英 + 线路色），挂在屏蔽门上方，面向站台
-      const L = XM_LINES[P.line], stn = this.s;
+      const L = this.N.LINES[P.line], stn = this.s;
       const paint = (c, pw, ph) => {
         c.fillStyle = '#FFFFFF'; c.fillRect(0, 0, pw, ph);
         c.fillStyle = L.color; c.fillRect(0, ph * 0.84, pw, ph * 0.16); c.fillRect(0, 0, ph * 0.62, ph * 0.84);
@@ -396,7 +402,7 @@ export class XmStation {
     const k = this.kit, y = P.y, zc = P.zc, th = this.th, CY = y + 4.2, Pv = k.solid, G = k.glow;
     const z0 = P.sideOnly ? zc - 0.5 : zc - XM_PSD, z1 = zc + XM_PSD;
     const holes = [];
-    if (P.under) holes.push([XF.x0 - 0.2, XF.x1, XF.z0 - 0.3, XF.z1 + 0.3]);
+    if (P.under) holes.push([this.XF.x0 - 0.2, this.XF.x1, this.XF.z0 - 0.3, this.XF.z1 + 0.3]);
     if (P.up) holes.push(P.up.hole);
     if (holes.length) k.floorWithHoles(-XM_HALL_X, XM_HALL_X, z0, z1, CY, CY + 0.25, hex('#F4F2EE'), holes, false, 'ceiling');
     else k.g('ceiling').slab(-XM_HALL_X, XM_HALL_X, CY, CY + 0.25, z0, z1, hex('#F4F2EE'), { ao: false });
@@ -416,7 +422,7 @@ export class XmStation {
       for (let x = -XM_HALL_X + 2; x < XM_HALL_X; x += 3.2) for (const [a, b, za, zb] of zSplit(x - 0.2, x + 0.2)) Pv.slab(a, b, CY - 0.5, CY, za, zb, hex(th.beam), { ao: false });
     } else {
       // 人字梁 / 木椽（闽南古厝意象）
-      for (let x = -XM_HALL_X + 2; x < XM_HALL_X; x += 3.6) { if (P.under && x > XF.x0 - 0.5 && x < XF.x1 + 0.5) { Pv.slab(x - 0.09, x + 0.09, CY - 0.35, CY, z0, XF.z0 - 0.3, hex(th.beam), { ao: false }); Pv.slab(x - 0.09, x + 0.09, CY - 0.35, CY, XF.z1 + 0.3, z1, hex(th.beam), { ao: false }); } else for (const [a, b, za, zb] of zSplit(x - 0.09, x + 0.09)) Pv.slab(a, b, CY - 0.35, CY, za, zb, hex(th.beam), { ao: false }); }
+      for (let x = -XM_HALL_X + 2; x < XM_HALL_X; x += 3.6) { if (P.under && x > this.XF.x0 - 0.5 && x < this.XF.x1 + 0.5) { Pv.slab(x - 0.09, x + 0.09, CY - 0.35, CY, z0, this.XF.z0 - 0.3, hex(th.beam), { ao: false }); Pv.slab(x - 0.09, x + 0.09, CY - 0.35, CY, this.XF.z1 + 0.3, z1, hex(th.beam), { ao: false }); } else for (const [a, b, za, zb] of zSplit(x - 0.09, x + 0.09)) Pv.slab(a, b, CY - 0.35, CY, za, zb, hex(th.beam), { ao: false }); }
       for (const z of (P.under ? [-3, 3] : [-3, 0, 3])) for (const [a, b, za, zb] of xSplit(-XM_HALL_X + 1, XM_HALL_X - 1, zc + z - 0.2, zc + z + 0.2)) G.slab(a, b, CY - 0.4, CY - 0.36, za, zb, hex('#FFF8EC'), { ao: false });
     }
   }
@@ -459,7 +465,7 @@ export class XmStation {
     G.slab(hx0 - 2.4, hx0 - 1.9, RY - 0.04, RY, -7.5, hz1 - 0.5, hex('#FFF8EC'), { ao: false });
   }
   psdBuild(P, side) {
-    const k = this.kit, y = P.y, z = side.psdZ, sgn = side.key === 'A' ? -1 : 1, lc = XM_LINES[P.line].color, Pv = k.solid;
+    const k = this.kit, y = P.y, z = side.psdZ, sgn = side.key === 'A' ? -1 : 1, lc = this.N.LINES[P.line].color, Pv = k.solid;
     const doors = TRAIN_DOORS;
     let x = -XM_HALL_X;
     const ops = doors.map(d => [d - 0.8, d + 0.8]);
@@ -493,54 +499,54 @@ export class XmStation {
   buildTransfer() {
     const k = this.kit, Pv = k.solid, SEA = hex('#1F6FA8');
     // 一半步行楼梯（深色防滑边）+ 一半扶梯（深灰梯级 + 黄边），中间玻璃隔板 + 扶手
-    k.stairs('x', XF.x0, XM_PY2, XF.x1, XM_PY, XF.z0, -0.12, XM_PY2, '#D6D1C7', { nosing: '#4A3A32' });
-    k.stairs('x', XF.x0, XM_PY2, XF.x1, XM_PY, 0.12, XF.z1, XM_PY2, '#8C9298', { nosing: '#F2C230' });
-    { const L = XF.x1 - XF.x0, dy = XM_PY - XM_PY2, len = Math.hypot(L, dy), ang = Math.atan2(dy, L), mx = (XF.x0 + XF.x1) / 2, my = (XM_PY + XM_PY2) / 2;
-      k.glass.box(mx, my + 0.5, 0, len, 0.9, 0.03, hex('#D6EEF8'), 0, 0, ang);
-      k.metal.box(mx, my + 0.98, 0, len, 0.07, 0.16, hex('#C4CBD2'), 0, 0, ang);
-      k.metal.box(mx, my + 0.06, 0, len, 0.12, 0.24, hex('#3A3F45'), 0, 0, ang); }
+    k.stairs('x', this.XF.x0, XM_PY2, this.XF.x1, XM_PY, this.XF.z0, this.XF.zc - 0.12, XM_PY2, '#D6D1C7', { nosing: '#4A3A32' });
+    k.stairs('x', this.XF.x0, XM_PY2, this.XF.x1, XM_PY, this.XF.zc + 0.12, this.XF.z1, XM_PY2, '#8C9298', { nosing: '#F2C230' });
+    { const L = this.XF.x1 - this.XF.x0, dy = XM_PY - XM_PY2, len = Math.hypot(L, dy), ang = Math.atan2(dy, L), mx = (this.XF.x0 + this.XF.x1) / 2, my = (XM_PY + XM_PY2) / 2;
+      k.glass.box(mx, my + 0.5, this.XF.zc, len, 0.9, 0.03, hex('#D6EEF8'), 0, 0, ang);
+      k.metal.box(mx, my + 0.98, this.XF.zc, len, 0.07, 0.16, hex('#C4CBD2'), 0, 0, ang);
+      k.metal.box(mx, my + 0.06, this.XF.zc, len, 0.12, 0.24, hex('#3A3F45'), 0, 0, ang); }
     // 洞口栏杆（两侧 + 楼梯起点对面一头），白石栏板 + 海蓝扶手
     // 洞口：玻璃栏板 + 不锈钢扶手（两侧 + 尽头），能看到下面的踏步和 2 号线站台
-    for (const z of [XF.z0 - 0.05, XF.z1 + 0.05]) { k.rail(XF.x0, z, XF.x1, z, XM_PY); k.glass.slab(XF.x0, XF.x1, XM_PY + 0.05, XM_PY + 1.0, z - 0.015, z + 0.015, hex('#D6EEF8')); k.metal.slab(XF.x0, XF.x1, XM_PY + 1.0, XM_PY + 1.07, z - 0.05, z + 0.05, hex('#C4CBD2'), { ao: false }); k.metal.slab(XF.x0, XF.x1, XM_PY, XM_PY + 0.06, z - 0.05, z + 0.05, hex('#9AA1A8'), { ao: false }); }
-    k.rail(XF.x0, XF.z0, XF.x0, XF.z1, XM_PY);
-    k.glass.slab(XF.x0 - 0.015, XF.x0 + 0.015, XM_PY + 0.05, XM_PY + 1.0, XF.z0, XF.z1, hex('#D6EEF8'));
-    k.metal.slab(XF.x0 - 0.05, XF.x0 + 0.05, XM_PY + 1.0, XM_PY + 1.07, XF.z0, XF.z1, hex('#C4CBD2'), { ao: false });
+    for (const z of [this.XF.z0 - 0.05, this.XF.z1 + 0.05]) { k.rail(this.XF.x0, z, this.XF.x1, z, XM_PY); k.glass.slab(this.XF.x0, this.XF.x1, XM_PY + 0.05, XM_PY + 1.0, z - 0.015, z + 0.015, hex('#D6EEF8')); k.metal.slab(this.XF.x0, this.XF.x1, XM_PY + 1.0, XM_PY + 1.07, z - 0.05, z + 0.05, hex('#C4CBD2'), { ao: false }); k.metal.slab(this.XF.x0, this.XF.x1, XM_PY, XM_PY + 0.06, z - 0.05, z + 0.05, hex('#9AA1A8'), { ao: false }); }
+    k.rail(this.XF.x0, this.XF.z0, this.XF.x0, this.XF.z1, XM_PY);
+    k.glass.slab(this.XF.x0 - 0.015, this.XF.x0 + 0.015, XM_PY + 0.05, XM_PY + 1.0, this.XF.z0, this.XF.z1, hex('#D6EEF8'));
+    k.metal.slab(this.XF.x0 - 0.05, this.XF.x0 + 0.05, XM_PY + 1.0, XM_PY + 1.07, this.XF.z0, this.XF.z1, hex('#C4CBD2'), { ao: false });
     // 楼梯井侧面：浅色石材（不再是红/蓝色块），一道灯带照亮踏步
-    for (const z of [XF.z0 - 0.3, XF.z1 + 0.3]) Pv.slab(XF.x0 - 0.2, XF.x1, XM_PY2 + 4.2, XM_PY - 1.3, z - 0.1, z + 0.1, hex('#E4DDD0'), { ao: false });
-    for (const z of [XF.z0 - 0.18, XF.z1 + 0.18]) k.glow.slab(XF.x0, XF.x1, XM_PY - 1.5, XM_PY - 1.42, z - 0.03, z + 0.03, hex('#FFF4DE'), { ao: false });
+    for (const z of [this.XF.z0 - 0.3, this.XF.z1 + 0.3]) Pv.slab(this.XF.x0 - 0.2, this.XF.x1, XM_PY2 + 4.2, XM_PY - 1.3, z - 0.1, z + 0.1, hex('#E4DDD0'), { ao: false });
+    for (const z of [this.XF.z0 - 0.18, this.XF.z1 + 0.18]) k.glow.slab(this.XF.x0, this.XF.x1, XM_PY - 1.5, XM_PY - 1.42, z - 0.03, z + 0.03, hex('#FFF4DE'), { ao: false });
     const sign = (to) => (c, pw, ph) => {
       c.fillStyle = '#1B2530'; c.fillRect(0, 0, pw, ph);
-      const L = XM_LINES[to]; c.fillStyle = L.color; c.fillRect(10, 10, ph - 20, ph - 20);
+      const L = this.N.LINES[to]; c.fillStyle = L.color; c.fillRect(10, 10, ph - 20, ph - 20);
       c.fillStyle = '#FFF'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `800 ${ph * 0.55}px ${FONT_EN}`; c.fillText(String(to), 10 + (ph - 20) / 2, ph * 0.54);
       c.textAlign = 'left'; c.font = `800 ${ph * 0.34}px ${FONT}`; c.fillText(`换乘 ${to}号线`, ph * 1.05, ph * 0.38);
       c.fillStyle = '#C9D2DB'; c.font = `600 ${ph * 0.17}px ${FONT_EN}`; c.fillText(`Transfer to Line ${to}  ·  往 ${Object.values(L.dirs).map(d => d.zh).join(' / ')}`, ph * 1.05, ph * 0.74);
     };
     // 楼梯脚在 x0（L2），顶在 x1（L1）：从 -x 看过去能看到踏步/踢面往上；L1 牌在洞口近端，L2 牌在楼梯脚
-    this.atlas.quad(XF.x0 - 0.6, XM_PY + 3.3, 0, 5.2, 1.0, -Math.PI / 2, this.atlas.draw(5.2, 1.0, sign(2)));
-    this.atlas.quad(XF.x0 - 0.8, XM_PY2 + 3.3, 0, 5.2, 1.0, -Math.PI / 2, this.atlas.draw(5.2, 1.0, sign(1)));
+    { const ls = this.s.lines; this.atlas.quad(this.XF.x0 - 0.6, XM_PY + 3.3, this.XF.zc, 5.2, 1.0, -Math.PI / 2, this.atlas.draw(5.2, 1.0, sign(ls[1])));
+    this.atlas.quad(this.XF.x0 - 0.8, XM_PY2 + 3.3, this.XF.zc, 5.2, 1.0, -Math.PI / 2, this.atlas.draw(5.2, 1.0, sign(ls[0]))); }
   }
   /** 普通站：小站厅 + 出入口（游戏里出到黑处即可） */
   buildConcourse() {
     const k = this.kit, y = XM_PY + 6.5, Pv = k.solid, G = k.glow, th = this.th;
     // 站厅 x -24.3..20：西北角（x -24.3..-20）接楼梯通道下站台
     k.floorWithHoles(-24.3, 20, -18, -8, y - 0.3, y, hex(th.floor), [], true, 'floor');
-    const ex = XM_EXITS[this.code];
-    if (!ex) { Pv.slab(-24.6, 20, y, y + 3.5, -18.4, -18, hex(th.wall)); k.g('brick').slab(-24.3, 20, y, y + 1.4, -18.35, -18.05, hex(th.dado), { ao: false }); k.colSlab(-24.6, 20, y, y + 3.5, -18.4, -18); }
+    const ex = this.N.EXITS[this.code];
+    if (!ex) { Pv.slab(-24.6, 20, y, y + 3.5, -18.4, -18, hex(th.wall)); k.g(this.dadoG).slab(-24.3, 20, y, y + 1.4, -18.35, -18.05, hex(th.dado), { ao: false }); k.colSlab(-24.6, 20, y, y + 3.5, -18.4, -18); }
     else {
       // 南墙在出口通道处开口（宽 4.4 m）
       const g0 = ex.x - 2.2, g1 = ex.x + 2.2;
-      for (const [a0, a1] of [[-24.6, g0], [g1, 20]]) { Pv.slab(a0, a1, y, y + 3.5, -18.4, -18, hex(th.wall)); k.g('brick').slab(a0, a1, y, y + 1.4, -18.35, -18.05, hex(th.dado), { ao: false }); k.colSlab(a0, a1, y, y + 3.5, -18.4, -18); }
+      for (const [a0, a1] of [[-24.6, g0], [g1, 20]]) { Pv.slab(a0, a1, y, y + 3.5, -18.4, -18, hex(th.wall)); k.g(this.dadoG).slab(a0, a1, y, y + 1.4, -18.35, -18.05, hex(th.dado), { ao: false }); k.colSlab(a0, a1, y, y + 3.5, -18.4, -18); }
       this.buildExit(ex, y);
     }
     Pv.slab(20, 20.4, y, y + 3.5, -18.4, -7.7, hex(th.wall)); k.colSlab(20, 20.4, y, y + 3.5, -18.4, -7.7);
     // 北墙（站台在它北边的地下），西头留通道口；墙裙红砖
     Pv.slab(-20, 20.4, y, y + 3.5, -8, -7.7, hex(th.wall)); k.colSlab(-20, 20.4, y, y + 3.5, -8, -7.7);
-    k.g('brick').slab(-20, 20, y, y + 1.4, -8.05, -8, hex(th.dado), { ao: false });
+    k.g(this.dadoG).slab(-20, 20, y, y + 1.4, -8.05, -8, hex(th.dado), { ao: false });
     // 站厅吊顶 + 灯带
     Pv.slab(-24.6, 20.4, y + 3.5, y + 3.75, -18.4, -7.7, hex('#F4F2EE'), { ao: false });
     for (const z of [-15.5, -10.5]) G.slab(-23.5, 19.5, y + 3.46, y + 3.5, z - 0.2, z + 0.2, hex('#FFF8EC'), { ao: false });
     // 通道口上方：去站台的牌（面向站厅 -z 看过来的人）
-    const L = XM_LINES[this.s.lines[0]];
+    const L = this.N.LINES[this.s.lines[0]];
     const paint = (c, pw, ph) => {
       c.fillStyle = '#1B2530'; c.fillRect(0, 0, pw, ph);
       c.fillStyle = L.color; c.fillRect(8, 8, ph - 16, ph - 16);
@@ -564,17 +570,17 @@ export class XmStation {
     k.glow.slab(x0 + 0.2, x1 - 0.2, 0.2, 3.3, -36.98, -36.94, hex('#FFF8E8'), { ao: false });   // 地面出口的天光
     for (let z = -33; z < -19; z += 3.2) k.glow.slab(ex.x - 0.15, ex.x + 0.15, 3.55, 3.6, z, z + 2, hex('#FFF6E0'), { ao: false });
     // 站厅里的出口牌（黄底黑字，地铁出口导向）
-    const lc = XM_LINES[ex.line].color;
+    const lc = this.N.LINES[ex.line].color;
     const paint = (c, pw, ph) => {
       c.fillStyle = '#F2C230'; c.fillRect(0, 0, pw, ph); c.fillStyle = '#1B2530'; c.fillRect(8, 8, ph - 16, ph - 16);
       c.fillStyle = '#F2C230'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `800 ${ph * (ex.n.length > 1 ? 0.36 : 0.48)}px ${FONT_EN}`; c.fillText(ex.n || '出', 8 + (ph - 16) / 2, ph * 0.52);
-      c.fillStyle = '#1B2530'; c.textAlign = 'left'; c.font = `800 ${ph * 0.3}px ${FONT}`; c.fillText(`${ex.n ? exitZh(ex.n) : '出口'}${ex.road ? '  ' + ex.road : ''}`, ph * 0.95, ex.to.length ? ph * 0.36 : ph * 0.5);
+      c.fillStyle = '#1B2530'; c.textAlign = 'left'; c.font = `800 ${ph * 0.3}px ${FONT}`; c.fillText(`${ex.n ? this.N.exitZh(ex.n) : '出口'}${ex.road ? '  ' + ex.road : ''}`, ph * 0.95, ex.to.length ? ph * 0.36 : ph * 0.5);
       if (ex.to.length) { c.font = `600 ${ph * 0.2}px ${FONT}`; c.fillText(ex.to.join(' · '), ph * 0.95, ph * 0.72); }
     };
     this.atlas.quad(ex.x, y + 2.9, -18.5, 4.2, 0.85, 0, this.atlas.draw(4.2, 0.85, paint));
     k.g('band').slab(x0, x1, y + 3.3, y + 3.45, -18.55, -18.45, hex(lc), { ao: false });
     // 有真实出入口表的站：站厅南墙挂一块“出入口信息”牌（全部出口；能走出去的那个高亮）
-    const tab = XM_EXIT_TABLE[this.code];
+    const tab = this.N.TABLE[this.code];
     if (tab) {
       const info = (c, pw, ph) => {
         c.fillStyle = '#1B2530'; c.fillRect(0, 0, pw, ph); c.fillStyle = '#F2C230'; c.fillRect(0, 0, pw, ph * 0.16);
@@ -598,7 +604,7 @@ export class XmStation {
   linkRailway() {
     const k = this.kit, y = XM_PY, Pv = k.solid, G = k.glow, P = this.platforms[0], th = this.th;
     const z0 = P.zc - 3, z1 = P.zc + 3, xa = -XM_HALL_X, xs = -93, xt = -101.195, yt = -9.195, cy = -9.7;
-    const WALL = hex('#E9E4DA'), STONE = hex('#E4DDD0'), L1 = hex(XM_LINES[1].color);
+    const WALL = hex('#E9E4DA'), STONE = hex('#E4DDD0'), L1 = hex(this.N.LINES[1].color);
     // 楼梯下半段（踏步高 0.1585 / 宽 0.341，和上半段一样）
     k.stairs('x', xs, y, xt, yt, z0, z1, y, '#D6D1C7', { nosing: '#4A3A32' });
     for (const [a0, a1] of [[z0 - 0.3, z0], [z1, z1 + 0.3]]) { Pv.slab(xt, xs, y, -6.8, a0, a1, WALL, { ao: false }); k.colSlab(xt, xs, y, -6.8, a0, a1); }
@@ -624,13 +630,13 @@ export class XmStation {
     Pv.slab(-64.04, -64.01, cy - 0.9, cy, P.zc - 2.25, P.zc + 2.25, hex('#1B2530'), { ao: false });
   }
   zoneOf(p) {
-    const lx = p.x - XO.x;
+    const lx = p.x - this.N.O.x, net = this.N.net;
     for (const P of this.platforms) {
       if (Math.abs(p.y - P.y) < 2.2 && Math.abs(lx) < XM_HALL_X && Math.abs(p.z - P.zc) < XM_WALL)
-        return { kind: 'platform', P, code: this.code, net: 'xm' };
+        return { kind: 'platform', P, code: this.code, net };
     }
-    if (p.y > XM_PY + 4 && p.y < XM_PY + 9 && lx > -25 && lx < 22) return { kind: 'concourse', code: this.code, net: 'xm' };
-    return { kind: 'xm', code: this.code, net: 'xm' };
+    if (p.y > XM_PY + 4 && p.y < XM_PY + 9 && lx > -25 && lx < 22) return { kind: 'concourse', code: this.code, net };
+    return { kind: net, code: this.code, net };
   }
   platformFor(line) { return this.platforms.find(p => p.line === line); }
   dispose() {

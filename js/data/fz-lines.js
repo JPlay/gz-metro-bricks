@@ -90,3 +90,4 @@ export function fzNext(line, code, step) {
   return i >= 0 && i < L.length ? L[i] : null;
 }
 export function fzTransfers(code, exceptLine) { const s = FZ_STATIONS[code]; return [...s.lines.filter(l => l !== exceptLine), ...s.x]; }
+export function fzIsTerminal(line, code, step) { return fzNext(line, code, step) === null; }

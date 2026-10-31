@@ -7,31 +7,43 @@ import { Train, HALF } from '../world/train.js';
 import { Geo, hex } from '../core/geo.js';
 import { mats } from '../core/mats.js';
 import { XM_LINES, xmNext, xmDirFor } from '../data/xm-lines.js';
-import { XmStation, XM_PY } from '../world/xmMetro.js';
+import { XmStation, XM_PY, XM_NET } from '../world/xmMetro.js';
 import { XmStreet, XM_EXITS, XS } from '../world/xmStreet.js';
 import { XO } from '../world/xmn.js';
 import * as Ann from '../audio/announcements.js';
 import { xmExitSegs } from '../data/phrases.js';
 const B = window.BABYLON;
 const TUN_Y = -300, ARR_T = 9, D0 = 100, VMAX = 22;
-const dirKey = (line, step) => Object.keys(XM_LINES[line].dirs).find(d => XM_LINES[line].dirs[d].step === step);
+/** 城市地铁描述（厦门默认）：福州传自己的一份（js/game/fzService.js）。状态机、隧道、出站 / 回国铁流程两城共用 */
+export const XM_SVC = {
+  N: XM_NET, net: 'xm', ev: 'xm', ids: [10, 11],
+  station: (scene, code) => new XmStation(scene, code),
+  street: (scene, code) => new XmStreet(scene, code),
+  next: xmNext,
+  ann: { platform: Ann.xmPlatform, depart: Ann.xmDepart, arrive: Ann.arrive, welcome: Ann.welcome, exit: Ann.xmExit },
+  exitSegs: xmExitSegs,
+  /** 这个站能不能从站厅出口走到街区（厦门北没有出口街区：XM_EXITS 里本来就没有 xmnb） */
+  streetAt: code => !!XM_EXITS[code],
+};
 
 export class XmMetro {
-  constructor(scene, ctx) {
+  constructor(scene, ctx, S = XM_SVC) {
     this.scene = scene; this.ctx = ctx; // { player, Audio, events, onTunnel, getRailway }
-    this.trains = [10, 11].map(i => this.makeTrain(i));
+    this.S = S; this.N = S.N; this.net = S.net;
+    this.dirKey = (line, step) => Object.keys(this.N.LINES[line].dirs).find(d => this.N.LINES[line].dirs[d].step === step);
+    this.trains = S.ids.map(i => this.makeTrain(i));
     this.slots = []; this.ride = null; this.legs = 0; this.station = null; this.code = null;
     this.buildTunnel();
   }
   makeTrain(i) {
-    const t = new Train(this.scene, i); t.net = 'xm'; t.setVisible(false);
+    const t = new Train(this.scene, i); t.net = this.net; t.setVisible(false);
     t.root.getChildMeshes(false).forEach(m => { m.layerMask = 0x10000000; });
     (t.pax || []).forEach(({ p }) => { if (p && p.mesh) p.mesh.setEnabled(false); });  // 少乘客省 draw
     if (this.ctx.onNewTrain) this.ctx.onNewTrain(t);
     return t;
   }
   buildTunnel() {
-    const M = mats(this.scene), g = new Geo(), gl = new Geo(), root = this.tunnel = new B.TransformNode('xmRideTunnel', this.scene);
+    const M = mats(this.scene), g = new Geo(), gl = new Geo(), root = this.tunnel = new B.TransformNode(this.net + 'RideTunnel', this.scene);
     g.slab(-90, 90, -1.75, -1.35, -2.6, 2.6, hex('#4A5260'));
     for (const z of [-0.72, 0.72]) g.slab(-90, 90, -1.35, -1.2, z - 0.05, z + 0.05, hex('#B8C0C8'));
     for (const s of [-1, 1]) g.slab(-90, 90, -1.75, 3.6, s * 2.3, s * 2.6, hex('#596170'));
@@ -46,21 +58,21 @@ export class XmMetro {
   buildStation(code) {
     if (this.street) { this.street.dispose(); this.street = null; }
     if (this.station) this.station.dispose();
-    const st = new XmStation(this.scene, code);
+    const st = this.S.station(this.scene, code);
     this.station = st; this.code = code;
     this.attach(st);
     // 离开厦门北站台时关掉国铁站房；回到厦门北再打开
     const rail = this.ctx.getRailway && this.ctx.getRailway();
     if (rail) {
-      if (code === 'xmnb') {
+      if (code === this.N.rail) {
         rail.show('solo');
         // 国铁站房只在人走在楼梯 / 换乘通道西段时打开（east.js 每帧按位置切）；solo（动车外观、远景）关掉省 draw
-        const pp = this.ctx.player && this.ctx.player.position, near = !!pp && (pp.x - XO.x) < -60 && pp.y > XM_PY - 1 && pp.y < -5 && Math.abs(pp.z + 80) < 14;
+        const pp = this.ctx.player && this.ctx.player.position, near = !!pp && (pp.x - this.N.O.x) < -60 && pp.y > XM_PY - 1 && pp.y < -5 && Math.abs(pp.z + 80) < 14;
         if (rail.station) rail.station.setEnabled(!!near);
         if (rail.solo && rail.solo.root) rail.solo.root.setEnabled(false);
       } else { rail.show(null); }
     }
-    this.ctx.events.emit('xm', { code, station: st.info() });
+    this.ctx.events.emit(this.S.ev, { code, station: st.info() });
     return st;
   }
   attach(station) {
@@ -70,7 +82,7 @@ export class XmMetro {
     for (const P of station.platforms) for (const side of Object.values(P.sides)) {
       const slot = { P, side, line: P.line, step: side.step, state: 'away', t: 2 + Math.random() * 6, train: null, u: 0, f: 0, ann: false };
       if (this.ride && this.ride.line === P.line && this.ride.step === side.step) { slot.train = this.ride.train; this.ride.slot = slot; }
-      else slot.train = free.shift() || (this.trains.push(this.makeTrain(10 + this.trains.length)), this.trains[this.trains.length - 1]);   // 吕厝 4 个站台侧：按需补车
+      else slot.train = free.shift() || (this.trains.push(this.makeTrain(this.S.ids[0] + this.trains.length)), this.trains[this.trains.length - 1]);   // 吕厝 4 个站台侧：按需补车
       this.slots.push(slot);
     }
     this.slots.forEach((s, i) => { if (s.state === 'away') s.t = 2 + i * 2.5; });
@@ -78,7 +90,7 @@ export class XmMetro {
   playerOn(train) { return train.contains(this.ctx.player.position); }
   setX(slot, x) {
     // 列车世界 x = XO.x + 局部 x；站台 root 已在 XO
-    const t = slot.train; t.setPos(XO.x + x, slot.P.y, slot.side.trackZ);
+    const t = slot.train; t.setPos(this.N.O.x + x, slot.P.y, slot.side.trackZ);
   }
   doors(slot, f) { slot.f = f; slot.train.setDoors(slot.side.doorSg, f); this.station.setPSD(slot.side, f); }
   update(dt) {
@@ -86,12 +98,12 @@ export class XmMetro {
     const p = this.ctx.player.position, A = this.ctx.Audio, seated = !!this.ctx.player.seat;
     if (this.street) { if (this.street.update(this.ctx.player) === 'back') this.backFromStreet(); return; }
     if (this.ride && this.ride.phase === 'cruise') return this.cruise(dt);
-    { const ex = XM_EXITS[this.code], p = this.ctx.player.position; if (ex && !this.ride && p.z < -35.2 && p.y > -1 && Math.abs(p.x - XO.x - ex.x) < 2.4) { this.goStreet(); return; } }
+    { const ex = this.S.streetAt(this.code) && this.N.EXITS[this.code], p = this.ctx.player.position; if (ex && !this.ride && p.z < -35.2 && p.y > -1 && Math.abs(p.x - this.N.O.x - ex.x) < 2.4) { this.goStreet(); return; } }
     let sound = null;
     const inCar = this.slots.some(o => o.train.root.isEnabled() && this.playerOn(o.train));
     const multi = this.station.platforms.length > 1;
     for (const s of this.slots) {
-      const tr = s.train, nx = xmNext(s.line, this.code, s.step);
+      const tr = s.train, nx = this.S.next(s.line, this.code, s.step);
       const aboard = this.playerOn(tr), onPlat = !inCar && this.ctx.zone && this.ctx.zone.kind === 'platform' && this.ctx.zone.P === s.P;
       s.t -= dt;
       // 坐在车里时对面那趟车先不进站（iPad 预算：车厢里 ≤50 draws）
@@ -101,9 +113,9 @@ export class XmMetro {
       switch (s.state) {
         case 'away':
           if (s.t <= 0) {
-            s.state = 'arriving'; s.u = 0; tr.setLine(s.line, 'xm'); tr.setMap(s.line, this.code, s.step, nx); tr.setDoors(1, 0); tr.setDoors(-1, 0);
+            s.state = 'arriving'; s.u = 0; tr.setLine(s.line, this.net); tr.setMap(s.line, this.code, s.step, nx); tr.setDoors(1, 0); tr.setDoors(-1, 0);
             tr.setVisible(true); this.setX(s, -D0 * s.step);
-            if (onPlat) { Ann.xmPlatform(s.line, dirKey(s.line, s.step), s.side.n); A.sfx('train.approach', { volume: 0.8 }); }
+            if (onPlat) { this.S.ann.platform(s.line, this.dirKey(s.line, s.step), s.side.n); A.sfx('train.approach', { volume: 0.8 }); }
           }
           break;
         case 'arriving': {
@@ -123,7 +135,7 @@ export class XmMetro {
         }
         case 'closing': this.doors(s, Math.max(0, s.t) / 1.4); if (s.t <= 0) {
           s.state = 'departing'; s.u = 0;
-          if (aboard && nx) { this.legs++; Ann.xmDepart(s.line, nx, dirKey(s.line, s.step), s.step, this.legs === 1 || this.ride?.line !== s.line); A.sfx('train.tractionStart', { volume: 0.7 }); this.ride = { train: tr, line: s.line, step: s.step, phase: 'out', slot: s, next: nx }; }
+          if (aboard && nx) { this.legs++; this.S.ann.depart(s.line, nx, this.dirKey(s.line, s.step), s.step, this.legs === 1 || this.ride?.line !== s.line); A.sfx('train.tractionStart', { volume: 0.7 }); this.ride = { train: tr, line: s.line, step: s.step, phase: 'out', slot: s, next: nx }; }
           else if (!nx && aboard) { /* 终点：门再开 */ s.state = 'opening'; s.t = 1.2; }
         } break;
         case 'departing': {
@@ -143,11 +155,11 @@ export class XmMetro {
   /** 下车了：有景点出口的站再播一句“前往××的乘客，请从N号出口出站”（每到一次站播一次） */
   alighted() {
     const from = this.ride; this.ride = null;
-    if (from && this.guided !== this.code && xmExitSegs(this.code).length) { this.guided = this.code; Ann.xmExit(this.code); }
+    if (from && this.guided !== this.code && this.S.exitSegs(this.code).length) { this.guided = this.code; this.S.ann.exit(this.code); }
   }
   move(s, x) {
     const tr = s.train, pl = this.ctx.player, aboard = this.playerOn(tr);
-    const prev = tr.root.position.x, worldX = XO.x + x; tr.setPos(worldX, s.P.y, s.side.trackZ); this.refresh(tr);
+    const prev = tr.root.position.x, worldX = this.N.O.x + x; tr.setPos(worldX, s.P.y, s.side.trackZ); this.refresh(tr);
     if (aboard) pl.position.x += worldX - prev;
   }
   refresh(tr) { tr.root.computeWorldMatrix(true); tr.kit.colliders.forEach(c => c.computeWorldMatrix(true)); }
@@ -159,7 +171,7 @@ export class XmMetro {
     this.slots.forEach(o => { if (o.train !== tr) o.train.setVisible(false); });
     this.ctx.onTunnel(true);
     this.buildStation(nx);
-    this.ctx.events.emit('ride', { phase: 'cruise', from: this.ride.from, to: nx, line: s.line, net: 'xm' });
+    this.ctx.events.emit('ride', { phase: 'cruise', from: this.ride.from, to: nx, line: s.line, net: this.net });
   }
   cruise(dt) {
     const r = this.ride, A = this.ctx.Audio; r.t += dt;
@@ -172,47 +184,49 @@ export class XmMetro {
     const r = this.ride, tr = r.train, pl = this.ctx.player, s = r.slot;
     const off = pl.position.subtract(tr.root.position);
     s.state = 'arriving'; s.u = 1 - Math.sqrt(0.8);
-    tr.setLine(r.line, 'xm'); tr.setMap(r.line, this.code, r.step, xmNext(r.line, this.code, r.step));
+    tr.setLine(r.line, this.net); tr.setMap(r.line, this.code, r.step, this.S.next(r.line, this.code, r.step));
     const x = -D0 * r.step * (1 - s.u) ** 2;
-    tr.setPos(XO.x + x, s.P.y, s.side.trackZ); this.refresh(tr);
+    tr.setPos(this.N.O.x + x, s.P.y, s.side.trackZ); this.refresh(tr);
     pl.position.copyFrom(tr.root.position.add(off)); pl.collider.computeWorldMatrix(true);
     this.tunnel.setEnabled(false); r.phase = 'in';
     this.ctx.onTunnel(false);
-    Ann.arrive(this.code); this.ctx.Audio.sfx('train.brake', { volume: 0.5 });
-    this.ctx.events.emit('ride', { phase: 'arrive', to: this.code, line: r.line, net: 'xm' });
+    this.S.ann.arrive(this.code); this.ctx.Audio.sfx('train.brake', { volume: 0.5 });
+    this.ctx.events.emit('ride', { phase: 'arrive', to: this.code, line: r.line, net: this.net });
   }
   /** 出站：关掉车站，加载出口外的街区（独立场景） */
   goStreet() {
     const pl = this.ctx.player;
     this.station.kit.root.setEnabled(false); this.trains.forEach(t => t.setVisible(false));
     this.slots.forEach(s => { s.state = 'away'; s.t = 6 + Math.random() * 6; });
-    this.street = new XmStreet(this.scene, this.code);
+    this.street = this.S.street(this.scene, this.code);
     const [x, y, z, yaw] = this.street.spawn(); pl.spawn(x, y, z, yaw);
     try { this.ctx.Audio.cancelAnnouncements(); this.ctx.Audio.trainSound({ speed: 0 }); } catch (_) {}
-    this.ctx.events.emit('xm', { street: true, code: this.code });
+    this.ctx.events.emit(this.S.ev, { street: true, code: this.code });
   }
   backFromStreet() {
-    const pl = this.ctx.player, ex = XM_EXITS[this.code];
+    const pl = this.ctx.player, ex = this.N.EXITS[this.code];
     this.street.dispose(); this.street = null;
     this.station.kit.root.setEnabled(true);
-    pl.spawn(XO.x + ex.x, 0.05, -34.4, 0);
-    this.ctx.events.emit('xm', { street: false, code: this.code });
+    pl.spawn(this.N.O.x + ex.x, 0.05, -34.4, 0);
+    this.ctx.events.emit(this.S.ev, { street: false, code: this.code });
   }
   // 走楼梯回国铁时，同一帧里 main 先算了 inXm 再由 east.update 拆站：station 可能已为 null
   zoneOf(p) { return this.street ? this.street.zoneOf(p) : this.station ? this.station.zoneOf(p) : { kind: 'xmn', area: 'passage' }; }
   /** 从国铁付费区进入厦门北站地铁站台 */
   enterFromRailway(player) {
-    this.buildStation('xmnb');
+    const rc = this.N.rail;
+    this.buildStation(rc);
     const P = this.station.platformFor(1) || this.station.platforms[0];
-    player.spawn(XO.x - 20, P.y + 0.05, P.zc + 1.5, Math.PI);
-    Ann.welcome('xmnb');
-    this.ctx.events.emit('xm', { enter: true, code: 'xmnb' });
+    player.spawn(this.N.O.x - 20, P.y + 0.05, P.zc + 1.5, Math.PI);
+    this.S.ann.welcome(rc);
+    this.ctx.events.emit(this.S.ev, { enter: true, code: rc });
   }
   /** 走楼梯下来：只建站，不动人（人正踩在楼梯上） */
   enterWalk() {
-    this.buildStation('xmnb');
-    Ann.welcome('xmnb');
-    this.ctx.events.emit('xm', { enter: true, code: 'xmnb', walk: true });
+    const rc = this.N.rail;
+    this.buildStation(rc);
+    this.S.ann.welcome(rc);
+    this.ctx.events.emit(this.S.ev, { enter: true, code: rc, walk: true });
   }
   exitToRailway(player, walk = false) {
     // 回到国铁出站层换乘通道
@@ -220,14 +234,14 @@ export class XmMetro {
     if (rail) rail.show('solo');
     if (this.station) { this.station.dispose(); this.station = null; this.code = null; this.slots = []; }
     this.trains.forEach(t => t.setVisible(false));
-    if (!walk) player.spawn(XO.x - 92, -6.45, -80, Math.PI / 2);
-    this.ctx.events.emit('xm', { enter: false, walk });
+    if (!walk) player.spawn(this.N.O.x - 92, -6.45, -80, Math.PI / 2);
+    this.ctx.events.emit(this.S.ev, { enter: false, walk });
   }
   louder(a, b) { if (!a) return b; return { speed: Math.max(a.speed, b.speed), inside: a.inside || b.inside, braking: a.braking || b.braking }; }
   call(line, step) { const s = this.slots.find(o => o.line === line && o.step === step); if (s && s.state === 'away') s.t = 0; return !!s; }
   info() {
     return { code: this.code, ride: this.ride ? { phase: this.ride.phase, line: this.ride.line, step: this.ride.step, next: this.ride.next } : null,
-      slots: this.slots.map(s => ({ line: s.line, side: s.side.key, step: s.step, state: s.state, t: +s.t.toFixed(1), x: +(s.train.root.position.x - XO.x).toFixed(1), doors: +s.f.toFixed(2) })),
+      slots: this.slots.map(s => ({ line: s.line, side: s.side.key, step: s.step, state: s.state, t: +s.t.toFixed(1), x: +(s.train.root.position.x - this.N.O.x).toFixed(1), doors: +s.f.toFixed(2) })),
       station: this.station ? this.station.info() : null, street: this.street ? this.street.info() : null };
   }
 }
