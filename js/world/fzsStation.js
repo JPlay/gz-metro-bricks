@@ -247,7 +247,7 @@ export class FzsStation {
       P.cyl(x, 2.4, z, 0.9 * s, 3.8, C.trunk, 8, 0, 0, 0, 0.6 * s);
       for (const [dx, dy, dz, d] of [[0, 6.2, 0, 6], [2.2, 5.2, 1, 4.4], [-2.3, 5.3, -0.6, 4.6], [0.6, 5, -2.2, 4.2], [-0.8, 5.1, 2.1, 4]]) k.solid.sphere(x + dx * s, dy * s, z + dz * s, d * s, (dx + dz) > 0 ? C.leaf2 : C.leaf, 1);
     };
-    for (const [x, z] of [[-75, -30], [-45, -10], [-70, 10], [40, -30], [15, -10], [40, 10], [28, 26], [70, -10]]) tree(x, z);
+    for (const [x, z, sc] of [[-75, -30], [-45, -10], [-70, 10], [40, -30, 0.8], [15, -10, 0.8], [40, 10, 0.75], [-20, 30], [95, -50, 0.8]]) tree(x, z, sc || 1);   // 东南边的树挪开 / 缩小，别挡站房
     for (const x of [-90, -40, 0, 55, 90]) for (const z of [-40, 0, 30]) if (!(Math.abs(x + 20) < 10 && z < -30) && !(z === 30 && (x === 0 || x >= 55))) { M.cyl(x, 4, z, 0.16, 8, C.lamp, 8); G.box(x, 8.1, z, 0.9, 0.18, 0.4, hex('#FFF6DC'), 0, 0, 0, 1, { ao: false }); }
     { const x = -30, z = -40; for (const sx of [-1.9, 1.9]) M.slab(x + sx - 0.07, x + sx + 0.07, 0, 2.2, z - 0.07, z + 0.07, C.lamp, { ao: false }); k.colSlab(x - 2, x + 2, 0, 3.3, z - 0.1, z + 0.1);
       at.quad(x, 2.75, z + 0.03, 4.6, 1.1, 0, at.draw(4.6, 1.1, board([{ a: 'l' }, { metro: 1 }, { l: 1 }, { l: 5 }, { zh: '地铁 F A B口', en: 'Metro Exits F A B' }]))); P.slab(x - 2.35, x + 2.35, 2.15, 3.35, z - 0.05, z + 0.02, hex('#1B2530'), { ao: false }); }
@@ -256,6 +256,9 @@ export class FzsStation {
     [[-60, -34, Math.PI - 0.2], [-48, -18, Math.PI], [-30, -4, 0.4], [-16, 14, Math.PI], [10, 22, -2.5], [32, -20, Math.PI], [36, -46, Math.PI + 0.3], [52, -52, Math.PI],
       [60, 2, Math.PI / 2], [-86, 2, Math.PI], [-36, -54, Math.PI - 0.4], [8, -57, Math.PI], [-80, -50, Math.PI + 0.2], [70, -40, -Math.PI / 2], [-12, -24, 0.2], [44, 22, Math.PI]]
       .forEach(([x, z, ry], i) => (i % 5 === 2 ? family : traveler)(PL, x, z, ry, i));
+    // 东半边再多些人（广场看起来热闹）
+    [[80, 20, -2.4], [72, 12, Math.PI], [64, 24, 0.6], [50, -2, Math.PI], [45, -40, -2.8], [30, -50, Math.PI], [60, -35, 0.3], [84, -20, Math.PI], [24, -30, 2.6], [66, -55, Math.PI], [18, 6, -0.5], [90, 0, Math.PI / 2], [36, -12, Math.PI], [76, -42, 0.2]]
+      .forEach(([x, z, ry], i) => (i % 3 === 1 ? family : traveler)(PL, x, z, ry, 50 + i));
     // 花坛
     [[-88, -20, 7, 2.6], [-40, -28, 8, 2.6], [-35, 22, 9, 2.6], [56, -26, 8, 2.6], [80, 8, 8, 2.6], [-92, 24, 8, 2.6]].forEach(([x, z, w, d], i) => flowerBed(k, x, z, w, d, i));
     // 出租车上客区（东南角）：车道 + 黄线 + 三辆出租车 + 牌子
@@ -336,7 +339,7 @@ export class FzsStation {
       // 坐着的旅客：大约一半座位有人；每组里有几家大人 + 小孩
       for (const sz of [-1, 1]) for (let x = xa + 0.35; x < xb; x += 0.7) {
         pi++; const r = (pi * 37 + Math.round(z) * 11) % 100;
-        if (r < (xa > 20 ? 55 : xa > -20 ? 75 : 85)) continue;   // 镜头前（东头）那组坐得满一点，远处的稀一点（面数）
+        if (r < (xa > 20 ? 62 : xa > -20 ? 75 : 85) || (Math.floor((x - xa) / 3.5) % 3 === 1 && r < 90)) continue;   // 一段段空着（不像开会）   // 镜头前（东头）那组坐得满一点，远处的稀一点（面数）
         const ry = sz > 0 ? 0 : Math.PI, kid = (r > 92 || (xa > 20 && x > 60 && pi % 4 === 0)) && x > xa + 1;   // 镜头前那组多几个小孩（挨着大人坐）
         sitter(CR, x, 0.52, z + sz * 0.26, ry, pi, kid);
         if (r > 86 && r <= 92) suitcase(CR, x + 0.2, z + sz * 0.95, ry, pi, 0.9);
@@ -344,6 +347,11 @@ export class FzsStation {
     }
     // 过道里走着的一家人（大人拉箱子 + 小孩），镜头前看得到
     family(CR, 64, -82.9, Math.PI / 2, 3); family(CR, 57, -88.3, -Math.PI / 2, 8); traveler(CR, 50, -81.8, Math.PI / 2, 11);
+    // 过道里拉箱子走的人 + 牵着小孩的大人
+    [[20, -82.2, -Math.PI / 2], [12, -88.1, Math.PI / 2], [-22, -82, Math.PI / 2], [26, -77.4, -Math.PI / 2], [-6, -77.6, Math.PI / 2], [0, -88.2, -Math.PI / 2]].forEach(([x, z, ry], i) => traveler(CR, x, z, ry, 20 + i));
+    family(CR, 22, -77.2, -2.0, 1); family(CR, 4, -82.0, Math.PI / 2, 4); family(CR, -26, -88.0, -Math.PI / 2, 6);
+    // 检票口前排队的人（A4 两个、A3 一个）
+    for (const [x, zq, i] of [[7.6, -93.4, 40], [7.7, -92.3, 41], [-17.4, -93.4, 42]]) lowPerson(CR, x, 0, zq, Math.PI, i, false);
     // 金色榕树柱：主干在 6 m 处分叉，枝头托住吊顶
     for (const x of [-52, -22, 18, 48]) for (const z of [-88, -82]) this.banyan(x, z, 0, 6, 12.55, 4.4, 0.9);
     // 北侧：检票口 A1–A6（每个 4 通道闸机 + 号码牌）
@@ -416,21 +424,23 @@ export class FzsStation {
       }, 60));
     }
     P.slab(X0, X1, 13.4, 22, back - 2.4, back - 2.0, C.wall, NO);   // 站台那边的立面（xmn.js 到 14.9 m）往上补
-    // 大屋檐：中间低（檐底 21.2）两端往上翘（+9 m），前沿往外挑到 z+17（两端收回，像船头），厚 3 m
-    const xa = X0 - 22, xb = X1 + 22, xc = (xa + xb) / 2, half = (xb - xa) / 2, n = 44, zaR = back - 4;
-    const yb = x => 21.2 + 9 * Math.pow(Math.abs((x - xc) / half), 2.6), zfR = x => z + 17 - 9 * Math.pow((x - xc) / half, 2);
+    // 大屋檐（船头）：厚 4.6 m，前沿往外挑到 z+22（两端收回到 z+8，像船头），两端往上翘 +14 m；
+    // 檐口上浅下深两道（一眼看出厚度），檐底暖色 + 几道灯带（站在广场上看得见檐底）
+    const T = 4.6, xa = X0 - 14, xb = X1 + 14, xc = (xa + xb) / 2, half = (xb - xa) / 2, n = 44, zaR = back - 4;
+    const yb = x => 21.2 + 14 * Math.pow(Math.abs((x - xc) / half), 2.2), zfR = x => z + 22 - 14 * Math.pow((x - xc) / half, 2);
     for (let i = 0; i < n; i++) {
       const x0 = xa + (xb - xa) * i / n, x1 = xa + (xb - xa) * (i + 1) / n, ya = yb(x0), yc = yb(x1), L = Math.hypot(x1 - x0, yc - ya), ang = Math.atan2(yc - ya, x1 - x0);
       const xm = (x0 + x1) / 2, ym = (ya + yc) / 2, zf = zfR(xm);
-      P.box(xm, ym + 0.15, (zaR + zf) / 2, L + 0.1, 0.3, zf - zaR, C.roofU, 0, 0, ang, 1, NO);   // 檐底
-      P.box(xm, ym + 2.85, (zaR + zf) / 2 - 0.4, L + 0.1, 0.3, zf - zaR - 0.8, C.roof, 0, 0, ang, 1, NO);   // 屋面
-      const zf0 = zfR(x0), zf1 = zfR(x1), rf = Math.atan2(-(zf1 - zf0), x1 - x0);
-      P.box(xm, ym + 1.5, zf + 0.1, Math.hypot(L, zf1 - zf0) + 0.1, 3.0, 0.4, hex('#D5DCE2'), rf, 0, ang, 1, NO);   // 厚檐口（银灰）
-      M.box(xm, ym + 0.12, zf + 0.33, Math.hypot(L, zf1 - zf0) + 0.1, 0.24, 0.06, hex('#5E6A75'), rf, 0, ang, 1, NO);   // 檐口底边深色线
-      M.box(xm, ym + 0.4, zf + 0.32, Math.hypot(L, zf1 - zf0) + 0.1, 0.16, 0.06, hex('#B9C3CC'), rf, 0, ang, 1, NO);   // 檐口银线
+      P.box(xm, ym + 0.15, (zaR + zf) / 2, L + 0.1, 0.3, zf - zaR, hex('#E4D6BC'), 0, 0, ang, 1, NO);   // 檐底（暖色）
+      for (const f of [0.3, 0.55, 0.8]) M.box(xm, ym - 0.02, zaR + (zf - zaR) * f + 8 * (1 - f), L + 0.1, 0.08, 0.35, hex('#FFF4D8'), 0, 0, ang, 1, NO);   // 檐底灯带
+      P.box(xm, ym + T - 0.15, (zaR + zf) / 2 - 0.4, L + 0.1, 0.3, zf - zaR - 0.8, C.roof, 0, 0, ang, 1, NO);   // 屋面
+      const zf0 = zfR(x0), zf1 = zfR(x1), rf = Math.atan2(-(zf1 - zf0), x1 - x0), Lf = Math.hypot(L, zf1 - zf0) + 0.1;
+      P.box(xm, ym + T - 1.3, zf + 0.1, Lf, 2.6, 0.5, hex('#E6EBEF'), rf, 0, ang, 1, NO);   // 厚檐口：上段浅银
+      P.box(xm, ym + 1.0, zf + 0.1, Lf, 2.0, 0.5, hex('#7F8C98'), rf, 0, ang, 1, NO);   // 下段深灰（读出厚度）
+      M.box(xm, ym + 2.0, zf + 0.37, Lf, 0.14, 0.06, hex('#F4F6F8'), rf, 0, ang, 1, NO);   // 中间亮线
     }
     // 檐口上的大红字「福州南站」：立在船头檐口最前沿的顶上（白色字座），从广场上整块看得见
-    const sw = 56, sy0 = yb(-5) + 3.0, sh = 9, sz = zfR(-5) - 1.2;
+    const sw = 56, sy0 = yb(-5) + T + 0.1, sh = 9, sz = zfR(-5) - 1.2;
     P.slab(-5 - sw / 2, -5 + sw / 2, sy0, sy0 + 0.5, sz - 1.4, sz + 0.6, hex('#D9DEE3'), NO);
     P.slab(-5 - sw / 2, -5 + sw / 2, sy0, sy0 + sh, sz - 0.4, sz, C.roof, NO);
     at.quad(-5, sy0 + sh / 2, sz + 0.02, sw, sh, 0, at.draw(sw, sh, (c, pw, ph) => {

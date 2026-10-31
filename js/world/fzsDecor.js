@@ -41,8 +41,10 @@ export function traveler(P, x, z, ry, i, kid = false) {
 }
 /** 一家人：大人 + 小孩并排（小孩在大人右手边） */
 export function family(P, x, z, ry, i) {
-  traveler(P, x, z, ry, i);
-  lowPerson(P, x + Math.cos(ry) * 0.7, 0, z - Math.sin(ry) * 0.7, ry, i + 5, true);
+  traveler(P, x, z, ry, i * 2);   // 偶数号：箱子在左手边，右手牵小孩
+  const sx = Math.cos(ry), sz = -Math.sin(ry);
+  lowPerson(P, x + sx * 0.7, 0, z + sz * 0.7, ry, i + 5, true);
+  P.tube([x + sx * 0.3, 0.78, z + sz * 0.3], [x + sx * 0.5, 0.5, z + sz * 0.5], 0.045, hex('#F1C9A5'), 4);   // 牵着的手
 }
 /** 出租车：车身 + 车顶灯（沿 x 方向，dir = ±1 车头朝向） */
 export function taxi(k, x, z, dir, col = '#2F7FC1', P = k.solid) {
