@@ -468,6 +468,22 @@ export function cancelKeys(keys) {
   keep.forEach(q => { q.epoch = epoch; queue.push(q); });
   if (keep.length) pump();
 }
+/** 换城时用：取消含某种语言片段的广播（进厦门 / 国铁时停掉还在播的粤语广播，回广州时停掉闽南语），其余照常播 */
+const itemLangs = q => q.ids.map(x => typeof x === 'string' ? (assets[x] && assets[x].lang) : (x.lang || (assets[x.id] && assets[x.id].lang)));
+export function cancelLang(lang) {
+  const keep = [];
+  queue.splice(0).forEach(q => { if (itemLangs(q).includes(lang)) q.resolve({ cancelled: true }); else keep.push(q); });
+  if (current && itemLangs(current).includes(lang)) {
+    epoch++;
+    active.slice().forEach(a => { if (a.kind === 'voice') { try { a.source.stop(); } catch (_) {} a.finish(); } });
+    if (sleepToken && sleepToken.cancel) sleepToken.cancel();
+    WebSpeech.cancel(); if (ctx) resetPA(); caption(null);
+  }
+  keep.forEach(q => { q.epoch = epoch; queue.push(q); });
+  if (keep.length) pump();
+}
+/** 正在播 + 排队中的广播类别（key） */
+export function pendingKeys() { return [current, ...queue].filter(q => q && q.epoch === epoch).map(q => q.key); }
 export function isAnnouncing() { return pumping || queue.length > 0; }
 
 /* ---------- 解锁 / 生命周期 ---------- */

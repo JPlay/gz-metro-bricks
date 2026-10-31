@@ -16,6 +16,7 @@ import { FoodAtlas } from '../game/food-art.js';
 import { XM_LINES, XM_STATIONS, xmNext, xmDirFor } from '../data/xm-lines.js';
 import { XO } from './xmn.js';
 import { XM_EXITS } from './xmStreet.js';
+import { XM_EXIT_TABLE } from '../data/xm-exits.js';
 import { exitZh } from '../data/xm-visits.js';
 import { noProbe } from './xmnStation.js';
 
@@ -572,6 +573,25 @@ export class XmStation {
     };
     this.atlas.quad(ex.x, y + 2.9, -18.5, 4.2, 0.85, 0, this.atlas.draw(4.2, 0.85, paint));
     k.g('band').slab(x0, x1, y + 3.3, y + 3.45, -18.55, -18.45, hex(lc), { ao: false });
+    // 有真实出入口表的站：站厅南墙挂一块“出入口信息”牌（全部出口；能走出去的那个高亮）
+    const tab = XM_EXIT_TABLE[this.code];
+    if (tab) {
+      const info = (c, pw, ph) => {
+        c.fillStyle = '#1B2530'; c.fillRect(0, 0, pw, ph); c.fillStyle = '#F2C230'; c.fillRect(0, 0, pw, ph * 0.16);
+        c.fillStyle = '#1B2530'; c.textBaseline = 'middle'; c.textAlign = 'left'; c.font = `800 ${ph * 0.1}px ${FONT}`; c.fillText('出入口信息  Exits', pw * 0.03, ph * 0.085);
+        const rh = ph * 0.82 / tab.length;
+        tab.forEach(([n, to], i) => {
+          const yy = ph * 0.17 + rh * i, on = n === ex.n;
+          if (on) { c.fillStyle = '#2E4A66'; c.fillRect(0, yy, pw, rh); }
+          c.fillStyle = '#F2C230'; c.fillRect(pw * 0.03, yy + rh * 0.12, rh * 1.3, rh * 0.76);
+          c.fillStyle = '#1B2530'; c.textAlign = 'center'; c.font = `800 ${rh * 0.55}px ${FONT_EN}`; c.fillText(n, pw * 0.03 + rh * 0.65, yy + rh * 0.52);
+          c.fillStyle = on ? '#FFFFFF' : '#D5DCE3'; c.textAlign = 'left'; c.font = `${on ? 800 : 600} ${rh * 0.5}px ${FONT}`;
+          c.fillText(to + (on ? '  ← 本出口' : ''), pw * 0.03 + rh * 1.6, yy + rh * 0.52);
+        });
+      };
+      Pv.slab(-6.8, -1.2, y + 0.9, y + 3.1, -18.0, -17.92, hex('#1B2530'), { ao: false });
+      this.atlas.quad(-4, y + 2.0, -17.9, 5.4, 2.0, 0, this.atlas.draw(5.4, 2.0, info, 90));
+    }
   }
   /** 厦门北站：站台 -x 端墙门洞 → 换乘通道（x -93..-36，z -83..-77，平地 -13）→ 楼梯下半段（x -93..-101.2）
    *  接上国铁地铁站厅里的楼梯上半段（xmnStation：x -101.2..-107，顶在 -6.5）。全程走路，不传送。 */
