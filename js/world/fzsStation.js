@@ -337,11 +337,13 @@ export class FzsStation {
       for (const sz of [-1, 1]) for (let x = xa + 0.35; x < xb; x += 0.7) {
         pi++; const r = (pi * 37 + Math.round(z) * 11) % 100;
         if (r < (xa > 20 ? 55 : xa > -20 ? 75 : 85)) continue;   // 镜头前（东头）那组坐得满一点，远处的稀一点（面数）
-        const ry = sz > 0 ? 0 : Math.PI, kid = r > 92 && x > xa + 1;
+        const ry = sz > 0 ? 0 : Math.PI, kid = (r > 92 || (xa > 20 && x > 60 && pi % 4 === 0)) && x > xa + 1;   // 镜头前那组多几个小孩（挨着大人坐）
         sitter(CR, x, 0.52, z + sz * 0.26, ry, pi, kid);
         if (r > 86 && r <= 92) suitcase(CR, x + 0.2, z + sz * 0.95, ry, pi, 0.9);
       }
     }
+    // 过道里走着的一家人（大人拉箱子 + 小孩），镜头前看得到
+    family(CR, 64, -82.9, Math.PI / 2, 3); family(CR, 57, -88.3, -Math.PI / 2, 8); traveler(CR, 50, -81.8, Math.PI / 2, 11);
     // 金色榕树柱：主干在 6 m 处分叉，枝头托住吊顶
     for (const x of [-52, -22, 18, 48]) for (const z of [-88, -82]) this.banyan(x, z, 0, 6, 12.55, 4.4, 0.9);
     // 北侧：检票口 A1–A6（每个 4 通道闸机 + 号码牌）
