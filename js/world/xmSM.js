@@ -35,6 +35,19 @@ export function smLogo(c, pw, ph, { bg = SM_SKY, label = null } = {}) {
   c.fillStyle = SM_NAVY; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `italic 900 ${r * 0.95}px ${FONT_EN}`; c.fillText('SM', cx, cy + r * 0.05);
   if (label) { c.font = `800 ${Math.min(pw * 0.8 / label.length, ph * 0.12)}px ${FONT}`; c.fillText(label, cx, ph * 0.86); }
 }
+/** 一期 SM CITY 竖向灯箱（照实拍）：浅蓝底，白圆 + 深蓝圈 + 深蓝 SM（白内线），下方深蓝 CITY / 福建厦门 */
+export function smCityPanel(c, pw, ph) {
+  const g = c.createLinearGradient(0, 0, pw, 0); g.addColorStop(0, '#86BCE2'); g.addColorStop(0.5, '#9CCBEA'); g.addColorStop(1, '#86BCE2');
+  c.fillStyle = g; c.fillRect(0, 0, pw, ph); c.strokeStyle = '#6FA8D4'; c.lineWidth = pw * 0.025; c.strokeRect(0, 0, pw, ph);
+  const cx = pw / 2, cy = ph * 0.3, r = pw * 0.4;
+  c.fillStyle = '#F2F4F6'; c.beginPath(); c.arc(cx, cy, r, 0, TAU); c.fill();
+  c.strokeStyle = SM_NAVY; c.lineWidth = r * 0.1; c.beginPath(); c.arc(cx, cy, r * 0.94, 0, TAU); c.stroke();
+  c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `500 ${r * 1.0}px ${FONT_EN}`; c.lineJoin = 'round';
+  c.save(); c.translate(cx, cy + r * 0.06); c.scale(0.85, 1.2);   // 粗深蓝笔画 + 细白芯 ≈ 实拍里的白色内线
+  c.strokeStyle = SM_NAVY; c.lineWidth = r * 0.2; c.strokeText('SM', 0, 0); c.fillStyle = '#FFFFFF'; c.fillText('SM', 0, 0); c.restore();
+  c.fillStyle = SM_NAVY; c.font = `900 ${pw * 0.3}px ${FONT_EN}`; c.fillText('CITY', cx, ph * 0.66);
+  c.font = `800 ${pw * 0.15}px ${FONT}`; c.fillText('福建厦门', cx, ph * 0.79);
+}
 /** 一期外墙：浅灰白面砖 + 竖向凹槽 + 楼层线 */
 function wallP1(c, pw, ph) {
   c.fillStyle = '#E3E1DB'; c.fillRect(0, 0, pw, ph);
@@ -146,12 +159,14 @@ function family(P, x, y, z, ry, i, lo = false) {
  * 自动扶梯（可选可走）：a → b 底 / 顶中点 [x,y,z]，w 梯级宽。
  * 银色桁架 + 深色梯级带（细横纹）+ 两侧玻璃栏板 + 黑扶手 + 上下梳齿板；walk 时沿 z 向加坡道碰撞（不放台阶）。
  */
-export function escalator(k, a, b, w = 1.1, walk = false) {
+export function escalator(k, a, b, w = 1.1, walk = false, o = {}) {
   const P = k.solid, Mt = k.metal, GL = k.glass;
   const dx = b[0] - a[0], dz = b[2] - a[2], dy = b[1] - a[1], H = Math.hypot(dx, dz), L = Math.hypot(H, dy);
   const ux = dx / H, uz = dz / H, sx = uz, sz = -ux, ry = Math.atan2(dx, dz), rx = -Math.atan2(dy, H);
   const m = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2], steel = hex('#C3C9CF'), dark = hex('#2B3036'), ink = hex('#1E2226');
-  P.box(m[0], m[1] - 0.5, m[2], w + 0.36, 0.95, L + 0.5, hex('#E6E8EA'), ry, rx, 0, 1, { ao: false });
+  const th = o.th || 0.95;
+  P.box(m[0], m[1] - th / 2 - 0.03, m[2], w + 0.36, th, L + 0.5, hex(o.under || '#E6E8EA'), ry, rx, 0, 1, { ao: false });
+  if (o.belly) P.box(m[0], m[1] - th - 0.05, m[2], w + 0.2, 0.04, L + 0.3, hex(o.belly), ry, rx, 0, 1, { ao: false });   // 桁架底面深色条
   P.box(m[0], m[1] + 0.0, m[2], w, 0.05, L, dark, ry, rx, 0, 1, { ao: false });
   const nR = Math.floor(L / 0.7);
   for (let i = 1; i < nR; i++) { const t = i / nR; P.box(a[0] + dx * t, a[1] + dy * t + 0.03, a[2] + dz * t, w * 0.94, 0.012, 0.05, hex('#8A9199'), ry, rx, 0, 1, { ao: false }); }
@@ -257,10 +272,11 @@ function phase1(S) {
     if (axis === 'x') P.slab(a0, a1, 4.6, 6, fixed - 0.25, fixed, hex('#BFC3C8'), { ao: false }); else P.slab(fixed + (nrm < 0 ? -0.25 : 0), fixed + (nrm < 0 ? 0 : 0.25), 4.6, 6, a0, a1, hex('#BFC3C8'), { ao: false });
   }
   // SM 圆标竖牌：西南角两面 + 东南角
-  const logo = A.draw(7, 12, (c, pw, ph) => smLogo(c, pw, ph, { label: 'SM CITY' }), 22);
-  A.quad(x0 + 4.5, 19, z0 - 0.1, 7, 12, aS(0, -1), logo);
-  A.quad(x0 - 0.1, 19, z0 + 4.5, 7, 12, aS(-1, 0), logo);
-  for (const [x, z] of [[x0 + 4.5, z0 - 0.06], [x0 - 0.06, z0 + 4.5]]) k.g('band').slab(x - (z === z0 - 0.06 ? 3.6 : 0.05), x + (z === z0 - 0.06 ? 3.6 : 0.05), 12.8, 25.2, z - (z === z0 - 0.06 ? 0.05 : 3.6), z + (z === z0 - 0.06 ? 0.05 : 3.6), hex('#7FB4DD'), { ao: false });
+  // 对照 2026 实拍（Wikimedia Commons「SM Xiamen 2026.jpg」）：浅蓝竖向灯箱 + 白底深蓝圈「SM」圆标（字母带白色内线）+ 深蓝「CITY」+「福建厦门」
+  const logo = A.draw(7, 12, smCityPanel, 34);
+  A.quad(x0 + 4.5, 19, z0 - 0.08, 7, 12, aS(0, -1), logo);
+  A.quad(x0 - 0.08, 19, z0 + 4.5, 7, 12, aS(-1, 0), logo);
+  // （原来的发光灯箱板 g('band') 是半透明排序，会按视角盖住圆标 → 删掉，边框直接画进贴图）
   // 沃尔玛蓝招牌（南立面东段）+ 西立面大字
   A.quad(68, 18.5, z0 - 0.1, 26, 5, aS(0, -1), A.draw(26, 5, (c, pw, ph) => { c.fillStyle = '#0071CE'; c.fillRect(0, 0, pw, ph); c.fillStyle = '#FFF'; c.textBaseline = 'middle'; c.textAlign = 'left';
     c.font = `800 ${ph * 0.52}px ${FONT_EN}`; c.fillText('Walmart', pw * 0.05, ph * 0.52); c.font = `800 ${ph * 0.5}px ${FONT}`; c.fillText('沃尔玛', pw * 0.56, ph * 0.52);
@@ -522,10 +538,11 @@ export class SmAtrium {
 
     // ---------- 扶梯 ----------
     escalator(k, [0, 0, CZ - 1.5], [0, FH, CZ + AV], 1.2, true);
-    const xe = AV * 0.95;
-    escalator(k, [-xe, FH, CZ - 2.5], [xe, 2 * FH, CZ - 2.5], 1.1, false);
-    escalator(k, [xe, 2 * FH, CZ + 2.5], [-xe, 3 * FH, CZ + 2.5], 1.1, false);
-    escalator(k, [-xe, 3 * FH, CZ - 2.5], [xe, 4 * FH, CZ - 2.5], 1.1, false);
+    // 2F→3F→4F 交叉扶梯（飞天梯）：两端落在楼板上（|x| = AV + 1.2，楼板边在 ~7.6），银灰色桁架 + 深色底条，不再是悬空白板
+    const xe = AV + 1.2, eo = { under: '#A9B1B9', th: 0.7, belly: '#5A6168' };
+    escalator(k, [-xe, FH, CZ - 2.5], [xe, 2 * FH, CZ - 2.5], 1.1, false, eo);
+    escalator(k, [xe, 2 * FH, CZ + 2.5], [-xe, 3 * FH, CZ + 2.5], 1.1, false, eo);
+    escalator(k, [-xe, 3 * FH, CZ - 2.5], [xe, 4 * FH, CZ - 2.5], 1.1, false, eo);
 
     // ---------- 中庭吊饰：宝石 ----------
     const gy = RY - 4;
