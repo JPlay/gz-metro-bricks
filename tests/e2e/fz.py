@@ -17,6 +17,13 @@ EO, XO, FO = 2200, 3000, 5000
 BUDGET = {'draws': 50, 'tris': 90000}
 R = {'perf': {}, 'checks': {}}
 def ok(name, v): R['checks'][name] = bool(v); log('check', name, bool(v)); return v
+async def walk(pg, pts, leg=20.0):
+    """autopilot 每段只给 12 秒游戏时间（约 30 m）：长段切成 ≤ leg 米的小段"""
+    s = await st(pg); x, z = s['pos'][0], s['pos'][2]; out = []
+    for tx, tz in pts:
+        d = ((tx - x) ** 2 + (tz - z) ** 2) ** 0.5; n = max(1, int(d // leg) + 1)
+        out += [[x + (tx - x) * k / n, z + (tz - z) * k / n] for k in range(1, n + 1)]; x, z = tx, tz
+    return await auto(pg, out)
 async def E(pg): return await pg.evaluate('__game.east.info()')
 async def view(pg, v):
     if await pg.evaluate('__game.player.view') != v: await pg.evaluate('__game.toggleView()')
@@ -122,19 +129,19 @@ async def main():
     await view(pg, 'first'); await pg.evaluate('__game.player.yaw=-Math.PI/2; __game.player.pitch=0.02')
     await shot(pg, 'fz-transfer'); await view(pg, 'third')
     # 3. 楼梯上东广场 → 站房外观 → 4 号进站口 → 候车室
-    await auto(pg, [[FO - 30, -80], [FO - 20, -70]]); await auto(pg, [[FO - 20, -62], [FO - 20, -50]]); await auto(pg, [[FO - 20, -36]])
+    await walk(pg, [[FO - 30, -80], [FO - 20, -70]]); await walk(pg, [[FO - 20, -62], [FO - 20, -50]]); await walk(pg, [[FO - 20, -36]])
     s = await st(pg); e = await E(pg); ok('upToPlaza', s['pos'][1] > -0.3 and e['area'] == 'plaza')
-    await auto(pg, [[FO - 5, -20], [FO - 5, 5]]); await auto(pg, [[FO - 5, 30]])
+    await walk(pg, [[FO - 5, -20], [FO - 5, 5]]); await walk(pg, [[FO - 5, 30]])
     await view(pg, 'first'); await pg.evaluate('__game.player.yaw=Math.PI; __game.player.pitch=-0.16')
     await shot(pg, 'fz-exterior'); await view(pg, 'third')
-    await auto(pg, [[FO + 20, 0], [FO + 20, -50]]); await auto(pg, [[FO + 20, -62], [FO + 20, -72]])
+    await walk(pg, [[FO + 20, 0], [FO + 20, -50]]); await walk(pg, [[FO + 20, -62], [FO + 20, -72]])
     s = await st(pg); e = await E(pg); ok('enterWaiting', e['area'] == 'wait' and abs(s['pos'][1]) < 0.4)
-    await auto(pg, [[FO + 6, -78]])
-    await view(pg, 'first'); await pg.evaluate('__game.player.yaw=-2.3; __game.player.pitch=-0.02')
+    await walk(pg, [[FO + 22, -69]])
+    await view(pg, 'first'); await pg.evaluate('__game.player.yaw=3.6; __game.player.pitch=0.12')
     await shot(pg, 'fz-waiting'); await view(pg, 'third')
     # 4. 回到东广场 → 楼梯下换乘通道 → 地铁闸机 → 福州火车南站
-    await auto(pg, [[FO + 20, -72], [FO + 20, -50]]); await auto(pg, [[FO - 20, -36]])
-    await auto(pg, [[FO - 20, -50], [FO - 20, -62]]); await auto(pg, [[FO - 20, -70], [FO - 30, -80]])
+    await walk(pg, [[FO + 20, -72], [FO + 20, -50]]); await walk(pg, [[FO - 20, -36]])
+    await walk(pg, [[FO - 20, -50], [FO - 20, -62]]); await walk(pg, [[FO - 20, -70], [FO - 30, -80]])
     s = await st(pg); ok('downToPassage', s['pos'][1] < -6)
     await auto(pg, [[FO - 42, -80], [FO - 64, -80]]); await auto(pg, [[FO - 86, -80], [FO - 94, -80]])
     # 上一个城市还在排队的站内广播（厦门地铁出口 / 闽南语）：进福州地铁要清掉

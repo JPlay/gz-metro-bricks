@@ -276,7 +276,9 @@ export class FzsStation {
     // 座椅（蓝色，背靠背两排一组）
     for (const [xa, xb] of [[-74, -30], [-14, 8], [30, 72]]) for (const z of [-90, -82, -74]) {
       M.slab(xa, xb, 0.38, 0.44, z - 0.5, z + 0.5, hex('#8D949B'), { ao: false });
-      for (let x = xa + 0.35; x < xb; x += 0.7) for (const sz of [-1, 1]) { P.rbox(x, 0.44, z + sz * 0.26, 0.56, 0.08, 0.46, C.seat, 0.03, 0, { ao: false }); P.slab(x - 0.27, x + 0.27, 0.5, 1.0, z + sz * 0.5 - 0.03, z + sz * 0.5 + 0.03, C.seat, { ao: false }); }
+      // 面数预算：坐垫每排一整条，靠背一块一块（只有 12 个三角形），不用圆角盒
+      for (const sz of [-1, 1]) P.slab(xa + 0.05, xb - 0.05, 0.44, 0.52, z + sz * 0.03, z + sz * 0.49, C.seat, { ao: false });
+      for (let x = xa + 0.35; x < xb; x += 0.7) for (const sz of [-1, 1]) P.slab(x - 0.27, x + 0.27, 0.52, 1.0, z + sz * 0.5 - 0.03, z + sz * 0.5 + 0.03, C.seat, { ao: false });
       k.colSlab(xa, xb, 0, 0.9, z - 0.55, z + 0.55);
     }
     // 金色榕树柱（室内，顶到吊顶）
