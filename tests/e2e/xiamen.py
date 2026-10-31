@@ -259,6 +259,8 @@ async def main():
     await auto(pg, [[XO - 5.8, -126.2], [XO - 5.8, -127.3], [XO - 5.8, -128.6]])
     ok('reboard', await wait(pg, '__game.east.info().inside', 4))
     ok('seated2', await sit_row14(pg))
+    # 厦门北有两个目的地（广州东 / 福州南）：坐下后先弹「去哪个城市」卡片，选广州
+    ok('picker', await wait(pg, '__game.east.info().picker', 6)); await pg.evaluate("__game.east.pick('gz')")
     ok('rideBack', await wait(pg, '!!__game.east.info().ride && __game.east.info().ride.dest === "gz"', 6))
     await wait(pg, '__game.east.info().ride.phase === "run"', 10)
     await until_rt(pg, 60)

@@ -5656,5 +5656,1841 @@
     "style": "cosy",
     "model": "cosyvoice-v2",
     "voice": "longxiaobai_v2"
+  },
+  "voice.fz.destination.sjk.zh": {
+    "fp": "e1ad018d560859edd9da568929c19be5a2dd35ed1deee002c09748453cfd0464",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.destination.sjk.en": {
+    "fp": "676938fa26041e2ffb9c8e6bb44b9d268cad8278afcb273a6cda0f15b795b65e",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.terminal.sjk.en": {
+    "fp": "9b7eeb5a2c60ba6a262538b1f17d08ad1766b739bca9a72c9c3fe9996fff59b7",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.terminal.sjk.zh": {
+    "fp": "b31562b34b1c77e22e60c07c31b726819b0c933a982b86db11fa40e14862d797",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.platform.sjk.1.zh": {
+    "fp": "8f463889bef87cf54511fe6afecc95d2ef03e71f4c90b6944004adbda7a0f1cc",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.platform.sjk.1.en": {
+    "fp": "bb77512b8b3cf8e95cb69f14853c600d65b5ccc45057e41f75f0ae3e90437873",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.platform.sjk.2.zh": {
+    "fp": "19ae019b109344c96bfb30c3319186f265c986c46d479f0305fe3aa4fe450a5b",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.platform.sjk.2.en": {
+    "fp": "5504379e699c345e1047a993c8d33278b3030dbcd20983553ab8b6a4ed9cf4a4",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.destination.xf.zh": {
+    "fp": "c6dff9526e8325553e8b6f14a2e8dc74a6084420412e1ae94c98b909da38fbde",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.destination.xf.en": {
+    "fp": "b9672794cacdb4d8c73ead798f2c0f5864735e19530197753b42b9432c5ead72",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.platform.xf.1.zh": {
+    "fp": "869a7e790a04704a9155f5d7e3a4f26d09925eee2557fc29a25860a7352cd209",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.terminal.xf.en": {
+    "fp": "9a6060e05da70eb80b335c27de253df2fe08d85431e6918f8d54d93a3a187a77",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.terminal.xf.zh": {
+    "fp": "4fc58c12e2dcafb1ddaa7e5ce28ad742ac3b5421d18dca7b96e6ee301a115f05",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.platform.xf.1.en": {
+    "fp": "1663491228e171d44428247a786cf1ef5727d65c9d00e1ab988b3463ea8ed536",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.platform.xf.2.zh": {
+    "fp": "f76b58465ee8add56a6bcfde365e6bb01b80a2b36d5e887d43c39d19299b8e05",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.platform.xf.2.en": {
+    "fp": "75682494acb7efabff1be4a3b70a549fb57b0fdcd0f5495315fd7b9ed1fd2747",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzxf.en": {
+    "fp": "b3c332b0f3af143ab2363e03aed601646d592b4fcb6c64e9983b2b376b452880",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzxf.zh": {
+    "fp": "4dc81df24e888b88c5b698b1ab55d4f4dd353b1cedaffb0c83d7053bd67ad927",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzxf.zh": {
+    "fp": "34594267c36c43e4c0164ec063e6103d2ecf819a12c54d252821f5cdf7d6ec5a",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzxs.zh": {
+    "fp": "c2965d4c9864c8803081971fe0daff1bda019c6ba7e1ea73d85f8d5f6c57b702",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzxs.en": {
+    "fp": "466f622c4a4a5a47c17437d77cbe6ff2fe890e1e5655568008876bd7ee591a1b",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzxf.en": {
+    "fp": "82d60ed5c79fa2c34e9016b26d22ad42270938a19ea5cb830162db479f459251",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzxs.zh": {
+    "fp": "3b8fc810cd0bb63eee77c2b2a12410bf18a0c27f46ac5e3ef29df9d79c3e198a",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzxs.en": {
+    "fp": "0054912d3f5f861b24e1606c38da97851c699339ff0cf5386bb0efe0765e27eb",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzlhs.zh": {
+    "fp": "51dc525f05c35dfdc0c6fa74d26832176d836e768b097c5675275d4e4320850b",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzxs.zh": {
+    "fp": "0869fff9d86d8a9c3a7f01642495724309fbf853e932cced636ebe71be129fe7",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzxs.en": {
+    "fp": "85aa8d01e5e6bf64f41dc8596de0254f03768fdb0c6a5262ce0cd4c561c1c288",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzlhs.en": {
+    "fp": "1ffc4c41f7bc806dc8dd0053c8e6c3194f3844dac604233ec842ad1b32472886",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzlhs.en": {
+    "fp": "1e578e680957e40d6fa066dfdd9f2dc093a26f749f4a3ad5c91f5b02e022dd76",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzlhs.zh": {
+    "fp": "cd25b41f39a79f6a6d238968ef3c9633daff1ff0ffb9afe7a6bdffbb3ab80dbf",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzlhs.zh": {
+    "fp": "46e2498fe1c13d4f7028336772da7b6e5ce085ed8bd39a511e54b16aac9273c8",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzfz.zh": {
+    "fp": "3fd12086112ca31ceb7002a42f107dc12cdd09a827c4f4d713940f254b607e10",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzfz.en": {
+    "fp": "11383dffb5bf6d0168a1692333ef7b844ca7b2383f117ffc3e9b7d3dc889577e",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzlhs.en": {
+    "fp": "ce1c2a11a893a1d0580b40bf1b1c4e410be3783e634f0432090cfac098befd55",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzfz.zh": {
+    "fp": "c4288768a6bee3c5f2c4568c689395fcd8805f8ec6d8bf40197a1b81bc264bcc",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzfz.en": {
+    "fp": "2017ad439142ae696f9fe3902c29bec60a54ec7a7eb69844a2dcd061fb4afef0",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzfz.zh": {
+    "fp": "3dcafff9aa115520a11c2a55f6444c3d0beefbb1b5cd719af68c04004d183f01",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzfz.en": {
+    "fp": "03fb253c0ac9b71597fd06d6355b9d1a760c4da7908104f7132648ef55c8545a",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzdm.zh": {
+    "fp": "1ec7df2ff3be6aea46ffab9a353dd8914c5b3b3bd4ce1eec6103bdd4ebd022ef",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzdm.en": {
+    "fp": "715a4a9ae92531d31e4c24252ee5f690c00e63314bc2adb42b995acde17f1cec",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzdm.zh": {
+    "fp": "71b04b17972dd3f0aa53d999f439f2672dbb9b48c6301e8972de711dca566717",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzdm.zh": {
+    "fp": "40b5d25685de5c47ff2fbc7b8126a82804a93b04cb71e8914bb5d8b6b3cf63ed",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzdm.en": {
+    "fp": "a5910554b77d83799c7657d4e6b04154eb19b12f3b6bb31e0486db2ca416ae0b",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzsd.zh": {
+    "fp": "58dfc28011d4049babc21591904cba4eea0703b192fee6c2d1b1b73ca13ff8ab",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzsd.en": {
+    "fp": "2b38895b73eb92eb87c61877f4b8f16ab460417877bf15f5276cad14d43b4758",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzdm.en": {
+    "fp": "0181ae5a2f2e85cad5910fc3656534d9b40b7dc5c0fb9c299bf440f52b49bb8e",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzsd.zh": {
+    "fp": "9130ff32b058609033427b27b5614c34a9145a7fb8a032c38b4130e74deda829",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzsd.en": {
+    "fp": "397ce6d310a521d9de12769610b13e2321af91cdb03c9e651c50b278729be372",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzsd.zh": {
+    "fp": "7aaf13c44c74d04b7dcade92ed955cb1828adf765f22ffa937c5b97c8b21fc8a",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzps.zh": {
+    "fp": "c78e0a31c308cc4e5ef054285223c20ab343c2ff2c69d097a16a520abe6799e9",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzps.en": {
+    "fp": "de3f75d36489b81eb132a6e1da4c2f442367ba5a3b96dac2c195f2b7936654ce",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzsd.en": {
+    "fp": "336a40f4612cf42dc5379add8b23e7c85a1fbaa1f15ad17f8d0e7379ece7a26c",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzps.zh": {
+    "fp": "dc4a1f57d9abca262ba71dc0aa617cc59ecca5db4d11a1c46c6756a6f4402441",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzps.zh": {
+    "fp": "b8fac9db8fbb3eaa9baf5c7ebd22660e64f1039bba5a27808ae8352970dd14a3",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzps.en": {
+    "fp": "c95fec73ba8d024684a24c8a27d55f07fca0b05c68313a398004fe22fff94e94",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzps.en": {
+    "fp": "b04e6f737433f3158b7b2ef7651a4323738b76e3794d3561458919eea2fb3b9c",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzdjk.zh": {
+    "fp": "c1e90ed5d907f60c5fd21b3451e146318f4380cd398dd28ca4d5af0274ce2e58",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzdjk.en": {
+    "fp": "74b4c35030eb0a2eb87d502fbe3988ffe19995ce914ac43607ee170c67adae06",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzdjk.zh": {
+    "fp": "4b1345c821a93d6e8e43295a799d42de30f746168a36cc61e1fb2283ce3b3b40",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzdjk.en": {
+    "fp": "be8d25ee68466199c00944ccaf2a8057ee36266a18336a4fb42eb35a36b335dd",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzdjk.zh": {
+    "fp": "6cc57087800a6cbb1ae7743730264585d0c2b1f30f21c78b940ddcf184af8e16",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzdjk.en": {
+    "fp": "580b5f616b7386b9bb917e7a0a12c8ff3afe75a249a970a0bc2f184a63d6a08d",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fznmd.en": {
+    "fp": "0feb45b3350cad9653adaeec89682b9319a4a48d10eae4f32d5d6fc0e76b052e",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fznmd.zh": {
+    "fp": "47dd72aa42a04dc172d44e526b87dcb26c06782eb488d6606174b2ba242fd31d",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fznmd.zh": {
+    "fp": "51474e1eceeaa611b5e5650c56e32f359051e32b005dd98883a5465418748d9a",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fznmd.en": {
+    "fp": "593a2c05d9a547e8ff15577c581550b93c88b5cd613452440368e2516f855458",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fznmd.zh": {
+    "fp": "b586d06e97881f0b8db0917577af7e8823cfae83e86325a38bca9ddfaeea00bb",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fznmd.en": {
+    "fp": "ee3346e8492d65abc416921a25f262d776cbdabcb4fa1bd9a9b74cba2afcaf50",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzct.zh": {
+    "fp": "e6f692edae5a4fd9cf08aadc327f20d3d05480482e7aa72739c7b20b2a197f1b",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzct.en": {
+    "fp": "1832f0c56cf972facbb0ddb145dad95041f296576342aa7154376879569972d8",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzct.zh": {
+    "fp": "b5405757ceb86adbf70173c39fb1fcc7a0bab8342c9d058e12fa6a661073c89f",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzct.en": {
+    "fp": "d2719fcf4354eb6fcdb10e2fba1f104f7a31f85025e2e3c996df9482ca2c42a6",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzct.zh": {
+    "fp": "496659b9612de98b06d2845ecb663512659d1439639829485c3a10d5a85f54aa",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzct.en": {
+    "fp": "76bcf6da88731ffbcc5f1a48e23a6688df555198c03cb3df7d8a470acb86b3f8",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzdd.zh": {
+    "fp": "7a0b45558936198deeefabfc62d257978ce099a8a9f89d2068deea299b127017",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzdd.en": {
+    "fp": "5c5b912a3db97c9d8011eb5ee5f5b1a806740e1ed09aacec199eb9add54995cd",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzdd.en": {
+    "fp": "da428cb27c39f802952b43f38545ecbf11bfc02d6a4b144d1e1006fd7f3da709",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzdd.zh": {
+    "fp": "c9d5d5ec7795137680fee9b1ad4b65a2ca9a2a9da021eece68b75f735cc7fbef",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzdd.zh": {
+    "fp": "cd326a1df52d48fd7a20ee997896ab61a1baca1c83b327c3db1f612e9fe674cd",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzdd.en": {
+    "fp": "6bbdb6d616cf8457a8a7dd5d35938ecad613d46e08d8c3d8908dbaf2cfbdeef9",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzst.zh": {
+    "fp": "1ee72f67641fd5ce9b2f45412261bab856f13ff08a8af9cc1909bd9e28c0d379",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzst.en": {
+    "fp": "4d907619fe351f2cea4b2e7da31d4ec913e79125d915ffe1cf492c1f71480d87",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzst.en": {
+    "fp": "d56843e66ecc64e96197fc1315be1739cfd6e84fb96878d55273ecc924235bec",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzst.zh": {
+    "fp": "bd91da0d0344e80790092a77f54f0c9e9fdc9a4a8d09c7b3fdbb7356a16556b9",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzst.zh": {
+    "fp": "90454b7ec58fd3e36d9644df0d3edf0cae06de9499a07170fe5de29431e4f5a5",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzscj.zh": {
+    "fp": "bd6b8d2568048eaa1cea70964363310ffd129bc952a9a6ea7119bc861ff3979d",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzst.en": {
+    "fp": "34b88f4934433d79f263c21a1e93f6abaa6b9b267946804188ea166cfdc797eb",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzscj.en": {
+    "fp": "dcfa81f210c575340d04c182caf3ca7c322a5694bdd5b16b975827db35fc255e",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzscj.zh": {
+    "fp": "03e61a29155b1c94e967681172b1d26e4a78a796e3f2f490f08ac8994415b81a",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzscj.en": {
+    "fp": "5b68577fde6f18958b87b861b491c4534d72f1ae18f561b4108c24b7e1e7a478",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzscj.zh": {
+    "fp": "800f6236eebed96e0e95982797fade87ca3fc2e7f8e24b96d9b614bd248a857a",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzscj.en": {
+    "fp": "0fde30b196cd2258bebdf49c27b7d20f43c80a5c71ab63906ee8fd0498238423",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzbht.en": {
+    "fp": "695848af99b7799ef5ae1f26f0652748333586198b134001ab3fd267579cd55a",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzbht.zh": {
+    "fp": "20988d6665585ac5d468758c4b39ea7efc0aa5a9e320e260a3309432212f2d56",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzbht.zh": {
+    "fp": "54b117fd04ec087ddb12b802ba23d27a86ae250102047bf0a471e496ef88e467",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzbht.en": {
+    "fp": "6852ee318f30d64ad3f42a1770616a004a1051be7b525a1204a97d4ee09d83c8",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzbht.zh": {
+    "fp": "dde106a5f7eba5f9090d6cc4aa754f00bade08bdee43d60197f771a7c41d56e7",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzbht.en": {
+    "fp": "4c620b694054be7606971731f0b97a7249349850c9590d1dd086978e4bf9c030",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzhlz.zh": {
+    "fp": "e1b858aa0ee49d2f73223ecccbddc545859983d95cf0fc8ac876f8078297769e",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzhlz.en": {
+    "fp": "c57f30ac3aa919613356d691a37fb0f9ef3949ac5fb0bab015fc9edb1b4b7363",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzhlz.en": {
+    "fp": "c34d2592890c33429943eddec9070d34fc79bbb8446997ad9e47dcdae0e52986",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzhlz.zh": {
+    "fp": "b272385b5ea8d7bf04591d5ec646ef51eaf9563bb14b737a1dfeada0c693a316",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzhlz.zh": {
+    "fp": "aa94a139783408e8a2d617f81c5cd737296c1335c7110f31d17a076ca50dfb89",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzhlz.en": {
+    "fp": "a42b2ce0a71f658e20ce648ddc6c51fadea223d32e76abc72ab96cd4bb0ebd84",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzhs.zh": {
+    "fp": "e97fdbed68d99c3fd5f8d9a51f95eb94e24eba222707a1e7ec8d18517ebbd68c",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzhs.en": {
+    "fp": "73f2c7ec1d14628fe470b26cdf32fd0e2cab41c898983755372ea4d5444ea456",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzhs.zh": {
+    "fp": "4541a391eaa71c582dc93230121dd3e7163bfc43b86a213364595a5b1a8cbbc7",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzhs.en": {
+    "fp": "9cefd7397ec1ccd32312d0c7a4992272924be60ba17e56938ce72b66999f6532",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzhs.zh": {
+    "fp": "48d41d688693b9f5660f981646849d96999611a973b62db36e9c8a17775ec592",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzpx.zh": {
+    "fp": "020eaf3badcd492b2bf9cb7fe53050dd5aaa9c7e22ce22f7f9d0c8dec2589af4",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzhs.en": {
+    "fp": "fd3f9c7f24de6f69c667bb4a5bb0b5a0df035eaf911784609a400f7a36289fa0",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzpx.en": {
+    "fp": "0662ba910d8390ce09b31884a959038eda5375b7070d2aff62f4ae94672a1d26",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzpx.zh": {
+    "fp": "454b6e2b17514a27708b76b5d57c6772c0e367e54762cbfb8c98cfaf6025c4c7",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzpx.en": {
+    "fp": "da3de45716d3955ba89a5aa9ef3fb3f0156da4b5a7f5dc46507c8c9045cf1deb",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzpx.zh": {
+    "fp": "f6c91d0bb97f71d95cc06b904c9a180add2ab94530798786ec6a01df183a8fd5",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzpx.en": {
+    "fp": "f8df70653d56b5dff3ab34a6c53e401ffee3c47ebdfbd39363f46342de7eac6c",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzcm.zh": {
+    "fp": "a24c780c60e53248f53e43a1ef75cade8a758a6c439be126ec3dcf32ec97a51b",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzcm.zh": {
+    "fp": "e9f44b317f4ad36b1c1a4adc418b023bf9f625a3b3952dcf12fe8e15f8f443cb",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzcm.en": {
+    "fp": "b2a04030722a0eb093d37068d57c85759acb99df5d59b22d08392d8546e659f9",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzcm.en": {
+    "fp": "04c6ed78f325c1ccddb89387cec3178d32877ae2fb64ec1987fe321d834a8d68",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzcm.zh": {
+    "fp": "23d9899c383f272ac393a50b456cd3831b95c1a3a9cc7c9b33a877f855da01a9",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzsjc.zh": {
+    "fp": "9e891684d79df90a95f0cd58259bcfa0f5bcd528d3405e2df8caac1d4dbeef6f",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzsjc.en": {
+    "fp": "c7d95413b7e0ffe4d74899ca29219c28ba57bed56fa3c5f929a306e373b7b1c3",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzcm.en": {
+    "fp": "6c9a9b0bf996fea5b075f69eae59895ef2a88d9d45137b52be3cfbc0dfc251ec",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzsjc.zh": {
+    "fp": "10b8421782aaf9c430c56e2981b0fccfe675147509b6ba11aa75a55c417d0b83",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzsjc.en": {
+    "fp": "65c02ac4e0300812a4d10beca2699be0164636903118caa2b9442bc23ffb0ae6",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzsjc.zh": {
+    "fp": "4f03cff0bd183b0bb695217a3c12a9c8b0164fef21cd9648b4f63ff1c47939a5",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzll.zh": {
+    "fp": "ffc605b0816c87a4f7499a6e9b530d8619ab679daa2b0f723d2e8b9f8f7495c9",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzll.en": {
+    "fp": "eefa7335a36870372d11f1f0a4e6bc1f2ee5cb835293efcf7c04330864054ff0",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzsjc.en": {
+    "fp": "570507f7633309c2e8a901be9670d2e36fd8b53231130ecb9874bff25934d8e0",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzll.zh": {
+    "fp": "6c48a302708e559bc4263e6f74410c39c4078ff31a52e2b58f7d9ff230854def",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzll.en": {
+    "fp": "52940c37ae7b2eb20a592b9ec1871dd32bef1cadf53117384c9de447878dfe4f",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzll.zh": {
+    "fp": "9ec6b785ffead48007b8745e418cccfeab350c4642ef2ff4d03675d83e09c9da",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzll.en": {
+    "fp": "905018e7c3fb92a61a4ed1b4f72409e23ea3639ac951bc4b9d915bdf5731238f",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzfzn1.en": {
+    "fp": "dd0773f084c65652d837c3feb22706a5fc6503963b7a2e2fa8738884d1211136",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzfzn1.zh": {
+    "fp": "4c46227b5ea83813458e8fdceace3ab8ef30ae43f48647017982f720ec142a9d",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzfzn.zh": {
+    "fp": "bcefdb73833f4b98107bd81fd1b65266f86a7257d8a18db821cc6453eff2918e",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzfzn.en": {
+    "fp": "4df2935fc53d2035577cc1feb3262d4a4d565f076c4af69d4e0e455061623d46",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzfzn.zh": {
+    "fp": "d6a25149b0723ab147bbb28ff616d8afa961e322f197394be85f8f84d8b9e239",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzfzn.en": {
+    "fp": "313d26e90f6a840631e366049d118c4d2b1d3e8b012a6305ea19217b71ef7748",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.exit.fzfzn.zh": {
+    "fp": "c1edf056d3bd077a0439a811bdff3d90c31237f82f18fed5a60d22fc10c0aa37",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzap.zh": {
+    "fp": "09af145c82eba8b551463dfb0925985f2c9906ab6789ae81b6cb602ab07d7d40",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzap.en": {
+    "fp": "4c0ee9316bf43689c76602224222a6e691de46550e110f09866bbe2e44d308d1",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.exit.fzfzn.en": {
+    "fp": "cbcc630bb1ba160d518cc6dcf19412575cb4a73420c83547392345dbbf7decf1",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzap.zh": {
+    "fp": "f70d363450955e6407ec339a2bcef1638bfb2d286984ea6712d34c0fed8f252c",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzap.en": {
+    "fp": "fb4176174cf0fb28777732c965609f951b7f9d1f93b7f5f7807642031081a02e",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzap.en": {
+    "fp": "73cea3668918330b8ac1c9059069c832c8703289d9bb04ac1441bb746d92680b",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzap.zh": {
+    "fp": "fe02b63204c4ca62577c5645309ce4e5bca5b93b7f14057d60accd05cb383839",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzlc.zh": {
+    "fp": "a6cc5bbd2e47b30b419c89f731350e4c3c71f6ce8c1c7f3c8412881ae9cd2326",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzlc.en": {
+    "fp": "69b2d15c839a719966c93eaa281e6f915d48453e06e47f7a9560c2e50cd22eae",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzlc.zh": {
+    "fp": "803bd6b67d4c8e2317671380a78704281a495eeca11643eed1cf7c6341651c74",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzlc.en": {
+    "fp": "610da4ffee37e47644fbe010033af36ec6e1727718f69973cc7a2270d480a2a8",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzlc.en": {
+    "fp": "73a0506e5559a85feef23801bd64108a3695ea222305a8a18fdd7a9d9264639f",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzlc.zh": {
+    "fp": "5c0a32aa6bdfe81744f651a0311705cf9e62780bc4b9b2355cd5252d73a24179",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzxy.zh": {
+    "fp": "7c329073baa03b6d51a3dff0842d68663e079bae09ea091353a0e6dc757a7a28",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzxy.en": {
+    "fp": "f671176c421bc87281f1cc59f1c70dc33fdc86a90e1faef33737670930dc3079",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzxy.zh": {
+    "fp": "bb284a37ef63f4731af3b2c9a62768c59527822c1c2656d882e17692470bd8e5",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzxy.en": {
+    "fp": "fdfa93489322f84ac5f7dcb99c91998e987d6fb90e94f6e9dacf803488d92022",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzxy.zh": {
+    "fp": "66016079e4acbb1509d3c165c3a212af5efa0b3bb1b9b1a41aee51c831c512a5",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzxy.en": {
+    "fp": "cfcc8bab1462cdcb8b22380764f4ca260558e5e30e6cc8713c1fed9b6d78e888",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzsjk.zh": {
+    "fp": "3a8186ff7a106c7f8835597c335e75b724d6c2f7fc2aace01fafaadf67387f33",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzsjk.en": {
+    "fp": "df908c4989263a7c1667283097401df7d8b445e56532ce58e4f84f6f38aa0221",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzsjk.zh": {
+    "fp": "8af5edcc7d06afd5c2137c5b72b93e9c6f8711d56eb23b30a34e78149bab42b6",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzsjk.en": {
+    "fp": "6ff36b223245067ebb63f3da5077830aac1101f75a11b84c54b0b70a8effd1f3",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.destination.fzn.en": {
+    "fp": "947e492021909c1f1f5a88be76152627c7b65bb1ce9c86a8db7fcf3267907c71",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.destination.fzn.zh": {
+    "fp": "a9251c6709d85a442f7fb6202bdec76bcb387956a3e4fba5a14b6e7376827b91",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.terminal.fzn.zh": {
+    "fp": "a731392b9018c6af94555a5fbbc8d836eabc1a6dffcaf3d36d02b2f1b8541171",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.terminal.fzn.en": {
+    "fp": "65bbe2a412e4f6596fa0897f47d22cf77b0cc28ea0a60df361947e3abb567dec",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.platform.fzn.1.en": {
+    "fp": "693e061ac03a70cf88b724aa593d5067f352bb501c5d2cc5cea805b5870e5ab8",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.platform.fzn.1.zh": {
+    "fp": "d8c10b7242a5ee9f8163cb2db0eeb52cb6f3c9622c2f06d9bbf1e634120c576d",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.platform.fzn.2.zh": {
+    "fp": "be777db05763b287ff572df54873af8b735f755efda06b302cdbf10d191749bf",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.destination.jxhy.zh": {
+    "fp": "446ed2a4603419d463e47037d21c962dfadfdabe2a87aef62e843fdddf7325a9",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.platform.fzn.2.en": {
+    "fp": "994e4f804013b42da4904df41fa6244dcdef1fee58c5de6ac28866678792e73c",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.destination.jxhy.en": {
+    "fp": "b14bc7510decaf774196aa66bb430f6de179e35a740d2936c99ef12b8f1e094d",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.platform.jxhy.1.zh": {
+    "fp": "71b3f1896c94d9293d0fe770ab7abc59076ec0321d74a5931f7354a4dd7d975f",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.platform.jxhy.1.en": {
+    "fp": "6d0694bfe79e8f6eff6bfcaf75f589d281839c04dd75681db92f05c575d6bd93",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.terminal.jxhy.zh": {
+    "fp": "c32099b910dad3beac59d3d46ec100ced968ddfb21326abd167011e8ce27e0d5",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.terminal.jxhy.en": {
+    "fp": "7b40f6b162fda0c7be1d6798358ca519519421b798ede8148d4cde986d46fc64",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.platform.jxhy.2.zh": {
+    "fp": "8c6dac98fc0aa844fe9f3208b5930793d513611563fd54c8a5784ba093de6f20",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.platform.jxhy.2.en": {
+    "fp": "0b047abdf19340a3deed9a83229b598ffc7c13f09cb63d11216f5dba3665fe27",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzjxhy.en": {
+    "fp": "c2ef1bed4981fe582355b1092fa2a3c33e4677c9f30b3b491a504beba6419acf",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzjxhy.zh": {
+    "fp": "b0c34c855e9aa679ec23d4f674c4c7dac9d80a5b1ef2f15a60450f84dd34cc05",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzjxhy.zh": {
+    "fp": "cd29bb857c0133d1bf82558cca2ad7f3c28c25b3f2db08dd1b3fa07a2bc10c6f",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fznldx.zh": {
+    "fp": "dfbfe4f7e4b81e604a9049648f86f7360848be947b4b5b4d5c7943e389b08bb9",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fznldx.en": {
+    "fp": "1447457156e65f60eca97b8671861478ef6a212194596c63971849186cce32ff",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzjxhy.en": {
+    "fp": "ea2c8e9bff3c54840c2802fcaab027d241a7a3f4e7d35a7581b70d432171be37",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fznldx.en": {
+    "fp": "79c027e41176ada75658e1dcb3bdf45dd0cb9f97798e1e5205b2520c5a662413",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fznldx.zh": {
+    "fp": "29f4861326a8978e9d6de2952e0ef0d70f206b99a29149dddb45be9a161fff78",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fznldx.zh": {
+    "fp": "6ff2157f793128abaff4e730f7696512faff5d85f8f2d5e19a778d8c3dc7d837",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fznldx.en": {
+    "fp": "70ca7a447c27afedb3b3f7be6ab93fdd49d729cca967a7c65f58876e2e20c965",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzht.zh": {
+    "fp": "160095526f6f041868cfe5a36fb6634b0109eff7c1b140052ee27adddcb3bc3f",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzht.en": {
+    "fp": "cd2fbaa859665295d1d7058742dce65a10efde9ff595ea5dfa0b8b6ceb11674d",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzht.zh": {
+    "fp": "88132f464593dd02f40c91c492687ad7f10c357c7e9b451edc28dc6b6a2466ad",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzht.en": {
+    "fp": "76df17348df66d50c4ba5e9e5c87e6eb7ff1d6eeb7ba912df723cba2d6b1b3ee",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzzb.zh": {
+    "fp": "c4be047a965742414937c2dcf1257d7a29ff67a564f614970495abc8e142e15b",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzht.zh": {
+    "fp": "5bb2d1780ccfede7dc78294149eb7326eab8ca60f020712b53ea883e78dec201",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzht.en": {
+    "fp": "2867ac892366e18d7b113d7d502ae01358cebdbe96ddc707b5e672c1dee03838",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzzb.en": {
+    "fp": "7a70756475892c2b6a6805c15306f103b2c161958b17101322c04f26e2894326",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzzb.zh": {
+    "fp": "c25c5b2918e8c49b432df37bcd13a5fea7ca91444fe73b92d86abaca507f4e5d",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzzb.zh": {
+    "fp": "26f69f25c65a72017da2725c38dddfdc04605b151e8792f60a6d7695c5da3ae3",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzzb.en": {
+    "fp": "b9ce47913f19bc71897df67445fe78d4caaebcb0831c2970230fd6a822b344d5",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzzb.en": {
+    "fp": "d0243020334ff0ce4b25859e05cbdc0bbdcdf3a949357dd9ed24b6f5c0567c9a",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzmr.zh": {
+    "fp": "dbd84ea94040601f3ae9df436513704033ec7fe5f2b9fda607b064785fa533f8",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzmr.en": {
+    "fp": "7c9e9545f1d765e2515866a7a09e59c264f985d773a51b93dbeee3f755c41893",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzmr.zh": {
+    "fp": "7ae3f1b62230d3009c297d5c51aab22aeb05497d670fd9505aa033279735a42e",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzmr.en": {
+    "fp": "3f4f16ad1c078b62cf0c5ed6bd5c1a17e7927df94e47a55fd4edad9a6f9a41a6",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzmr.zh": {
+    "fp": "c0caef82a3477cdbf4885a8a0aad0492cdc7c49d1ceba76dc925e8304e9295ed",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzmr.en": {
+    "fp": "d902741e8491d5e0ef06f7444acd8751f6c95e21235927d57a4d1d86f8514c3f",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzjs.zh": {
+    "fp": "fcb827c9a3e53faeafd9cb86938dde24612935903a60d18b586dc40310a00db2",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzjs.en": {
+    "fp": "e5815452e167769b4efa816df6988792a4fc9967ed0b9f08d1f9c80823a35639",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzjs.zh": {
+    "fp": "bd0a0381ee879a2679af8a51a887696592e4a51a9355d95cc00b33d41148b24e",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzjs.en": {
+    "fp": "012bb3353b99ad0bae64bbb5cadf6530fa781123248b5cf691f22f4f64dd695f",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzjs.zh": {
+    "fp": "ebaecdae6f57219ef2838b0b44aab74a63a2ed199cae4bd00a513823d8526589",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzjs.en": {
+    "fp": "f901685de49283ae4adb280578caa4b25e7c46a8cde531f606c879d574ce7a48",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzfgl.zh": {
+    "fp": "195e12a0a16cd7a53228f273697e2bfec0851441a65f3d093850e3c4b3a4e2ac",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzfgl.en": {
+    "fp": "08520ff462801ffc40861983892f231b4fc9f5707f5cddaee7851fffd63ee90d",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzfgl.zh": {
+    "fp": "c2f1922192b9f0ea2bfa27f4c54847492695bc08fca47a367351fea7b85ee1c1",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzfgl.en": {
+    "fp": "ee31b215ecea766aef3a62cf4dcc4119831c6506beb473dc0ca1e70e221d12ff",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzfgl.zh": {
+    "fp": "39c1fc80e2ed4aa7d55a3b762b3dc212f0390585e005bd4ea1f4e6a44fe3c3cf",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzpsdd.zh": {
+    "fp": "464b38ec386779c5da0d8a4b607e48fc1d719af198dc3e53066ff9fc48797574",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzfgl.en": {
+    "fp": "d06d2137f8e621bdd8853b947fe252254ffd37140a054a4b3c5b9b583d2b73f7",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzpsdd.en": {
+    "fp": "43f988d6425fe419f207702a6d058e2953a680da03a1ebf904b20667f84bd1b9",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzpsdd.zh": {
+    "fp": "6eb73c7956189980b30102c13fc5c3cdfe61d43e21a54868e1c4235e6cc018c9",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzpsdd.en": {
+    "fp": "bfdb0b521bf4c429c38724db87fdfe3def418ede41369c9aa77e89fdfa6be734",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzpsdd.zh": {
+    "fp": "633501f3f39e1f08d94e08b5225460024becc416326f567177f0cb94045473d3",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzxj.en": {
+    "fp": "337883b6829dc58c37f6183788d501aa7076bffb37f733ac6eeee7623dae8801",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzxj.zh": {
+    "fp": "cc11071ba2021de73880984a2d58730c0da87902b85e802d5961a174369da45f",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzpsdd.en": {
+    "fp": "b7c5ce4a604699e7b3d2ef75fa29ae9ee4d0a76ff57d5ed673632cd14d7d21e8",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzxj.zh": {
+    "fp": "124ac90442399d7bf615f2a765f957e9e4e5031b9be348bcb07f78816a357bac",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzxj.zh": {
+    "fp": "2e048de9d4114b0e552c8e875bbd8fa3b5c26c6b7f1de117b14303cce7b69792",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzxj.en": {
+    "fp": "1bff2ff23597e1b00cdd5e46c1c44c6083c7266072d8fa970936831c33310ed0",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzdl.zh": {
+    "fp": "c91f73878e20e348892cc9c6e250a2b00004991daa5fd739eddc957853294ae3",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzxj.en": {
+    "fp": "70e2e3d5180042fab3ab034970fee2e3232c0b7aa461e75e3435c296352a5254",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzdl.en": {
+    "fp": "2b7e0e32482e5071345ee3c5e1ceef9a9aff96362f49930be144b870aa4f7454",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzdl.zh": {
+    "fp": "0bb5b520b782f571bbf003e9abfa2d75a5de8b91285341b53b0f54fb9d300145",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzdl.en": {
+    "fp": "75dde359820022cb9357f757f94798a2a81deff37de919c198d5c86ca800d288",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzdl.zh": {
+    "fp": "44cbdaa6d5e2e33feded7eeb07c249110db43bfdd3ea62b6ac1224b95088ca8f",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzty.zh": {
+    "fp": "477a27457e4741237ead87ae0bd5eab1bf8df48373e155e0641c3c302e562fdb",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzdl.en": {
+    "fp": "f1b21cb89a9012bc5e7253fc720b62e4aa1db5180bfbd07763ea3a6fe6cba29d",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzty.en": {
+    "fp": "f4b8f54f3da07e18602e15b8f1b6b53bd1ba885f4feeb92c658cdedd02663e34",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzty.zh": {
+    "fp": "30198c854cf4c47978940d4590c7bb85a3d373b4f18b0afaf67c543693588815",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzty.en": {
+    "fp": "2981cb5234dda868948954f955da68cd775a807e1aad0e4d0df08df34d7d2cfd",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzty.zh": {
+    "fp": "676682a767c6844ca5ec4a400b8ad378a68326a2f75bdb61f626dbfc612e37cd",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzty.en": {
+    "fp": "552a318dbcf9f61cf8bb9fd7988adb1b6dce119d793be0b5623520af20ba3289",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzpy.en": {
+    "fp": "58be5cf63ec2f32352c32ea86651052fd722e64cda5fa82e919285b1301500ba",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzpy.zh": {
+    "fp": "a1dbdaf642a87f8b08a25d46c7dac65b47f4016f98aa73aca7f96ee96308b9b7",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzpy.zh": {
+    "fp": "a3f539700958010311f0d934555fd0ed62e8d28446cfb4836b84971a0eef01a4",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzpy.en": {
+    "fp": "1d75d9cd2f114715c7aef36037d794d80ad7dd8425103bb5b015798c543d82e3",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzpy.zh": {
+    "fp": "f5200c7eca63b1809ef9a4da427d0fe0f7b2806de59681392cea700264e79838",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzws.zh": {
+    "fp": "8b0d3e73de248e38a4efc402326943bea4e548936ff208ebafac5b3bf450ecb0",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzpy.en": {
+    "fp": "a0f28fee5d3078a44a634da4b5649e910070bb5640998f98e2eb634a69a0ff76",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzws.en": {
+    "fp": "cdbacc1e50167734d3c3ba0baf6170e22fca738a834172b2c0c9ad224c22c847",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzws.zh": {
+    "fp": "3c4135c4e0ff7ac06cb8358e0e4f884d1c031cdd45b075da2a43654a870ba77a",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzws.en": {
+    "fp": "e8479fba27dfcde5606ab7728553fd87a1b070f661f00a49ee4e9e29ef13984a",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzws.zh": {
+    "fp": "880df8c2e7d18ed0150cfe2b958438502919716f7cdd1ac49f260fe290112e4a",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzgszl.zh": {
+    "fp": "0658f267554eacbc0909ae06b31ce75c2c6e433171d7746e6e1a3da55f651cf8",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzws.en": {
+    "fp": "92a62e8de95b2049151033d9b203c3614ab9b56c5f9d6c9f4a5a9ca9ed7655a7",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzgszl.en": {
+    "fp": "1a7e73e8b50215222ee49267151cbea3feb5e875c53e2949fdab6652945ad19c",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzgszl.zh": {
+    "fp": "3b19400dbe031ea6e60ed6f33ad6a5f6b910b469b3fb00bdfa95cb95b03fbf38",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzgszl.zh": {
+    "fp": "e1efd89eb11dfafadc82908c2b6819e326449e80c41fc00b786cede46d85780e",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzgszl.en": {
+    "fp": "827e96c3f00ce8c1e5fbf9165118e41d4bb4da52c2db73f492125891a7633fbb",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzyx.zh": {
+    "fp": "194a18f463bf2e47ebde74c623b3c388d683394b5a8772a7c24c209c663e0981",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzgszl.en": {
+    "fp": "96e66212be8b16a6e0412674b363403bf087417fd97e451effbeb5e5e287ea55",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzyx.en": {
+    "fp": "8c125cae561f207c77f04e8889a3ae770b973628cc4c1cc713f815a929a06b22",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzyx.zh": {
+    "fp": "d193c9dff628980f20df5130b7c3bad8750e0f1f95c0b03e21cce9cb311e18e7",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzyx.zh": {
+    "fp": "e991bda5624d0b647841697d8f9cb079bfdaeeb2dc47f2148beacf304b970d93",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzyx.en": {
+    "fp": "a32a3d3778360a98a3a9e96098eb4326fbd8e79231e5d0c3721c5321fc7c89ac",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzyx.en": {
+    "fp": "650e0bc119e8c6cb9d4be0442cf88bb19b98d33f11419768fc5cdfd523f344ca",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzdfj.zh": {
+    "fp": "7e30037ef17f2c095d8317140e14cf42b6fe4e526f7cf3b07d3621368bd4bad3",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzdfj.en": {
+    "fp": "b421c7edebf0059fe6f75fc2c018c61f465f3fa6a639dd1b3d4324e8fc7ac088",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzdfj.zh": {
+    "fp": "3e26e4ab28d0bddf194a45eb65dac4b43719887ec57b69d96ec9881718e83096",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzdfj.en": {
+    "fp": "dbdb6dea0557ab369ef75bc4178d259f547ac52f4e2004115f9eaf6c6c8cc52c",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzlzgz.zh": {
+    "fp": "93413265cb7ed4e4edec070cb66cb80d75724ba5473ee5924f88532ee1dcac90",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzdfj.en": {
+    "fp": "9eeee2f7f06bb13b856197f7203522636078b9224fb696c58e55638b5358750f",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzdfj.zh": {
+    "fp": "d6e297cf5c889bf7fd9d95d915ca20303bc35cc28a230e4263e74ded1a7c4a79",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzlzgz.en": {
+    "fp": "e8e016ac19f265ab9000fc7cd7351640944dd2d4e08b8a77fc5a6b3ce10beb39",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzlzgz.zh": {
+    "fp": "b190afe2c76f2e733b104f758580b3aebd4e5214a45ce5cd9b90909c6fabf71b",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzlzgz.en": {
+    "fp": "b9244bdcbda804b09605825c6ceb3e7d0308934bdfd56e95919d11afe68bc26a",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzlzgz.zh": {
+    "fp": "19a82934fbcd77d04de1e90deb4763eacafbbd6ad8b3d7ffa8afa1ecd11526b4",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzlzgz.en": {
+    "fp": "6d8e39ee78989fdb16ae897924a39f021d53f47920cdde8ffe804bfd0942b3a4",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzqj.zh": {
+    "fp": "8e3934828afb513402469e08c02065b5bdb1bffbcc6ffdcd843833625ea9c5ba",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzqj.en": {
+    "fp": "8ed228b5d018b55bfb2eedad8a9d399b9eaadf393934a06184fad58056f96bfa",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzqj.zh": {
+    "fp": "70fb3046a2e2d92f7113f81696928bcf7d4a2567fbee68ee56a47d0172e34ee4",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzqj.en": {
+    "fp": "3cc7370081cf5c48f38a0a1ad2c531a9e21fc1097afb89008ef33e339b13443c",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzqj.zh": {
+    "fp": "07045581d7c5dd5dcc5fbd55baa52e4fa6f1f9bd1306807f86d523b1bf9fbec6",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzlj.zh": {
+    "fp": "50aa919043b4028556db316498e036c0b54755e5c3a8557b90a58d4664d62a1d",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.next.fzlj.en": {
+    "fp": "5ffe8e2e80d53e183da3f93867ef6d4c84cb19c2fd1a6d81a77fb72091cbb190",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzqj.en": {
+    "fp": "e33958a523d9a340347591d9211b2caa16339755142ce1fdaed8db5994e1f718",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzlj.zh": {
+    "fp": "cfb755e842e86e537e96fa014a60b742087ce20c6f6d9cdcbd954eddfc34b9a6",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.arrive.fzlj.en": {
+    "fp": "8d391683f4198cdea1c080519f72197fc3c1680a07b6fd239457b61f46a249ae",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzlj.zh": {
+    "fp": "f183e57c9ec9f3d9c56f9f3629392496469b1ab8f09f9f5cc71a6e1ba0be1ed3",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.welcome.fzlj.en": {
+    "fp": "111ec12ba7d8c781271fec5ff9b0a079fdbb1cfd9806be210e8ac055477e5939",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.emu.depart.fz.zh": {
+    "fp": "4d34a82922df0efa0f259d4496585e247b041a4aa418c2c6194f484429f7a6cf",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.emu.depart.fz.en": {
+    "fp": "26cc624bc5c51932f5bc77f1f675970aa4fe08f5cfaf3bafb0b70a2afde362aa",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.emu.next.fz.zh": {
+    "fp": "25e9f282b1a879236d6906a54500616b1c17840233c1704ed44b6c9a5584ccab",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.emu.next.fz.en": {
+    "fp": "5154751ce2f19ac9e42fe68c6110e930c567bb01beb9731d68f01b4d74319b88",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.emu.arrive.fz.en": {
+    "fp": "b74899cdde66b2a0f4e3118f075ef21450c7e7d0df4b4620a6c12b2212a909e8",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.emu.arrive.fz.zh": {
+    "fp": "cfd56354137153aa0b610bd35207c43daac752c3835a36d816d55fee96f391be",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.emu.depart.xmf.en": {
+    "fp": "4fa70740371df7453d84f001f72ae49b6e482bc3b30da1fa48756705d024a15e",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.emu.next.xmf.en": {
+    "fp": "91f0ab40321ea4f16d833bfaab7fa4b5ebaec7c7794a593e07626fa155b460cf",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.emu.depart.xmf.zh": {
+    "fp": "eae51da27da4a3cc1a3991cd677daf5eef67d73d1392b14ac3e6693b60d82fc9",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.emu.next.xmf.zh": {
+    "fp": "e4c71f2c5acb1502b45028bba4a395fc0a982c61ca615c4cb80dc53e24c0c39d",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.emu.arrive.xmf.en": {
+    "fp": "91ce22ebde483a0c0f1bd4fd7963d8320578c28550220b52ed42ab50779c0f0b",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.emu.arrive.xmf.zh": {
+    "fp": "92124f16754190f2e21ae8a929cdce697b6dc1ffba81b8db62367436ab0f67b7",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.emu.qzw.en": {
+    "fp": "ed38e9bd00cca41a7284cab34928c0cf7810079983fd2d2cd32e633382442c24",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.emu.qzw.zh": {
+    "fp": "7934e45ddca7857092de3be6ac1e27caf54d362860d7bab89c56deebbc533ea8",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
   }
 }

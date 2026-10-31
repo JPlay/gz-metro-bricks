@@ -181,7 +181,7 @@ if __name__=='__main__':
     if not host.endswith('/api/v1'):host+='/api/v1'
     stamp=ROOT/'tools/audio/voice-cache.json'
     if stamp.exists():CACHE=json.loads(stamp.read_text())
-    jobs=[j for j in JOBS if (not args.only or args.only in j['id']) and j['lang']!='nan']   # nan 由 generate_minnan.py 生成
+    jobs=[j for j in JOBS if (not args.only or args.only in j['id']) and j['lang'] not in ('nan','fzh')]   # nan 由 generate_minnan.py 生成；fzh（福州话）暂缺：不合成、不克隆任何人的声音，等真人录音
     with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
         futures=[pool.submit(generate,j,key,host) for j in jobs]
         for n,f in enumerate(concurrent.futures.as_completed(futures),1):
