@@ -449,7 +449,7 @@ export class EastCtl {
         if (!pl.seat && p.y > -1 && p.y < 2 && p.z < GZE.edge - 0.05) { const d = EMU.doors.find(d => Math.abs(p.x - (O.x + d.x)) < 0.55); if (d) this.board(d); }
         if (p.y < -12 && !(Mt && Mt.station)) { pl.spawn(O.x - 5.8, 0.05, GZE.edge + 1.5, 0); }
         const a = r.Area(lx, p.y, p.z);
-        if (a !== this.cur.area) { const was = this.cur.area; this.cur.area = a; if (was) this.hud.toast(r.stn[0] + ' ' + (r.T[a] || ''), 1800); this.events.emit('east', { area: a }); }
+        if (a !== this.cur.area) { const was = this.cur.area; this.cur.area = a; if (was) this.hud.toast(r.stn[0] + ' ' + (r.T[a] || ''), 1800); this.events.emit('east', { area: a }); const ps = r.plat(); if (ps && ps.station && ps.station.onArea) ps.station.onArea(a); }
         // 穿过地铁闸机、下到站台 → 交给这个城市的地铁
         // 走楼梯（站房上半段 x -107..-101）往下：一踩到 -7.6 以下就把地铁站（下半段楼梯 / 通道 / 站台）建出来，人不动
         if (Mt && !Mt.station && a === 'passage' && p.y < -7.6 && lx > -108 && lx < -99 && Math.abs(p.z + 80) < 3.2) {

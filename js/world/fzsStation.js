@@ -16,6 +16,8 @@ import { FoodAtlas } from '../game/food-art.js';
 import { XST, noProbe, rr, arrow, exitIcon, bigText } from './xmnStation.js';
 import { FZS_EXITS } from '../data/fz-exits.js';
 import { FO } from './fzZones.js';
+import { sitter, suitcase, traveler, family, taxi, flowerBed } from './fzsDecor.js';
+import { lowPerson } from './xmSM.js';
 
 const HY = XST.HY, HC = XST.HC;
 const L1 = '#CB333B', L5 = '#893B67', NAVY = '#163A5F', GOLD = '#C9A24A';
@@ -92,9 +94,15 @@ export class FzsStation {
     const at = this.atlas = new FoodAtlas(scene, 2048);
     this.build(k, at);
     k.finish(true); at.finish(k.root, 'fzsStSigns'); noProbe(k.root);
-    this.root = k.root;
+    this.root = k.root; this.onArea(null);
   }
   setEnabled(v) { this.root.setEnabled(v); }
+  /** 换区域时（js/game/east.js）开关人群网格：候车室旅客只在候车室里画，广场旅客 / 出租车只在广场上画 —— 站台上看不到，省面数 */
+  onArea(a) {
+    const b = this.kit.byBucket;
+    if (b.crowd) b.crowd.setEnabled(a === 'wait');
+    if (b.plazaLife) b.plazaLife.setEnabled(a === 'plaza');
+  }
   hang(x, y, z, w, h, a, paint, top = HC, back) {
     const k = this.kit, at = this.atlas, nx = Math.sin(a), nz = Math.cos(a), uv = at.draw(w, h, paint);
     at.quad(x, y, z, w, h, a, uv);
@@ -240,9 +248,35 @@ export class FzsStation {
       for (const [dx, dy, dz, d] of [[0, 6.2, 0, 6], [2.2, 5.2, 1, 4.4], [-2.3, 5.3, -0.6, 4.6], [0.6, 5, -2.2, 4.2], [-0.8, 5.1, 2.1, 4]]) k.solid.sphere(x + dx * s, dy * s, z + dz * s, d * s, (dx + dz) > 0 ? C.leaf2 : C.leaf, 1);
     };
     for (const [x, z] of [[-75, -30], [-45, -10], [-70, 10], [40, -30], [15, -10], [40, 10], [28, 26], [70, -10]]) tree(x, z);
-    for (const x of [-90, -40, 0, 55, 90]) for (const z of [-40, 0, 30]) if (!(Math.abs(x + 20) < 10 && z < -30)) { M.cyl(x, 4, z, 0.16, 8, C.lamp, 8); G.box(x, 8.1, z, 0.9, 0.18, 0.4, hex('#FFF6DC'), 0, 0, 0, 1, { ao: false }); }
+    for (const x of [-90, -40, 0, 55, 90]) for (const z of [-40, 0, 30]) if (!(Math.abs(x + 20) < 10 && z < -30) && !(z === 30 && (x === 0 || x >= 55))) { M.cyl(x, 4, z, 0.16, 8, C.lamp, 8); G.box(x, 8.1, z, 0.9, 0.18, 0.4, hex('#FFF6DC'), 0, 0, 0, 1, { ao: false }); }
     { const x = -30, z = -40; for (const sx of [-1.9, 1.9]) M.slab(x + sx - 0.07, x + sx + 0.07, 0, 2.2, z - 0.07, z + 0.07, C.lamp, { ao: false }); k.colSlab(x - 2, x + 2, 0, 3.3, z - 0.1, z + 0.1);
       at.quad(x, 2.75, z + 0.03, 4.6, 1.1, 0, at.draw(4.6, 1.1, board([{ a: 'l' }, { metro: 1 }, { l: 1 }, { l: 5 }, { zh: '地铁 F A B口', en: 'Metro Exits F A B' }]))); P.slab(x - 2.35, x + 2.35, 2.15, 3.35, z - 0.05, z + 0.02, hex('#1B2530'), { ao: false }); }
+    const PL = k.g('plazaLife');   // 广场上的人 + 出租车：只在广场上打开
+    // 广场上的人：拉行李箱的旅客（几家带小孩）
+    [[-60, -34, Math.PI - 0.2], [-48, -18, Math.PI], [-30, -4, 0.4], [-16, 14, Math.PI], [10, 22, -2.5], [32, -20, Math.PI], [36, -46, Math.PI + 0.3], [52, -52, Math.PI],
+      [60, 2, Math.PI / 2], [-86, 2, Math.PI], [-36, -54, Math.PI - 0.4], [8, -57, Math.PI], [-80, -50, Math.PI + 0.2], [70, -40, -Math.PI / 2], [-12, -24, 0.2], [44, 22, Math.PI]]
+      .forEach(([x, z, ry], i) => (i % 5 === 2 ? family : traveler)(PL, x, z, ry, i));
+    // 花坛
+    [[-88, -20, 7, 2.6], [-40, -28, 8, 2.6], [-35, 22, 9, 2.6], [56, -26, 8, 2.6], [80, 8, 8, 2.6], [-92, 24, 8, 2.6]].forEach(([x, z, w, d], i) => flowerBed(k, x, z, w, d, i));
+    // 出租车上客区（东南角）：车道 + 黄线 + 三辆出租车 + 牌子
+    { const za = 29.5, zb = 37.5, xa = 46, xb = 99;
+      k.g('asphalt').slab(xa, xb, 0, 0.02, za, zb, hex('#55585C'), { ao: false });
+      for (const zz of [za, zb]) P.slab(xa, xb, 0.02, 0.03, zz - 0.08, zz + 0.08, hex('#F2C230'), { ao: false });
+      for (let x = xa + 2; x < xb - 2; x += 6) P.slab(x, x + 3, 0.02, 0.03, (za + zb) / 2 - 0.06, (za + zb) / 2 + 0.06, hex('#F2F2F2'), { ao: false });
+      P.slab(xa, xb, 0, 0.16, za - 0.4, za, hex('#BFC2C4'), { ao: false });
+      taxi(k, 58, 31.6, -1, '#2F7FC1', PL); taxi(k, 66, 31.6, -1, '#3B8E5A', PL); taxi(k, 76, 31.6, -1, '#2F7FC1', PL); taxi(k, 88, 35.4, -1, '#3B8E5A', PL);
+      M.cyl(50, 1.6, 28.6, 0.1, 3.2, C.lamp, 8); k.colSlab(49.8, 50.2, 0, 3.2, 28.4, 28.8);
+      for (const a of [0, Math.PI]) at.quad(50, 3.0, 28.6 + (a ? -0.03 : 0.03), 2.6, 0.9, a, at.draw(2.6, 0.9, bigText('出租车上客点', 'Taxi', '#F2C230', '#1B2530'), 60));
+      for (let i = 0; i < 3; i++) traveler(PL, 54 + i * 1.6, 27.4 - (i % 2) * 0.6, 0, 30 + i); }
+    // 进站口号码立牌（广场上，7 号 / 4 号旁边）
+    for (const [x, nn] of [[FZS.E7 - 6.6, 7], [FZS.E4 + 6.6, 4]]) {
+      const z = FZS.face + 6; P.slab(x - 0.7, x + 0.7, 0, 4.6, z - 0.25, z + 0.25, hex('#163A5F'), { ao: false }); k.colSlab(x - 0.7, x + 0.7, 0, 4.6, z - 0.25, z + 0.25);
+      for (const a of [0, Math.PI]) at.quad(x, 2.6, z + (a ? -0.26 : 0.26), 1.3, 3.8, a, at.draw(1.3, 3.8, (c, pw, ph) => {
+        c.fillStyle = '#163A5F'; c.fillRect(0, 0, pw, ph); c.fillStyle = '#FFFFFF'; c.textAlign = 'center'; c.textBaseline = 'middle';
+        c.font = `800 ${pw * 0.9}px ${FONT_EN}`; c.fillText(String(nn), pw / 2, ph * 0.22); c.font = `800 ${pw * 0.26}px ${FONT}`;
+        ['进', '站', '口'].forEach((t, i) => c.fillText(t, pw / 2, ph * (0.5 + i * 0.12))); c.font = `600 ${pw * 0.14}px ${FONT_EN}`; c.fillText('Entrance', pw / 2, ph * 0.9);
+      }, 60));
+    }
     at.quad(-5, 22, PZ.z1 + 110, 360, 60, Math.PI, at.draw(360, 60, backdrop, 3));
     /* ===== 西广场 + 老站房（背景） ===== */
     const SQ = FZS.square, WB = FZS.west;
@@ -265,70 +299,142 @@ export class FzsStation {
     this.buildHall(k, at);
     this.buildFacade(k, at);
   }
-  /** 候车室（东站房里面，地面 y = 0）：蓝色座椅、金色榕树柱、发车屏；检票口“暂停检票”（进站走站台，不在这里检票） */
+  /** 候车室（东站房里面，地面 y = 0）：
+   *   北墙（站台那边）整面玻璃幕墙（透进天光，外面是站台雨棚）；南面是波浪玻璃幕墙，看得到东广场；
+   *   金色榕树柱分叉托住浅色格栅吊顶（一排排条形灯）；蓝色座椅坐满旅客（有带小孩的家长）；
+   *   北侧一排检票口 A1–A6（闸机，暂停检票 —— 进站坐车走站台楼梯）；南侧便利店和几家小吃店。 */
   buildHall(k, at) {
-    const P = k.solid, G = k.glow, M = k.metal, { face, back, x0, x1 } = FZS, zf = face - 0.6;
+    const P = k.solid, G = k.glow, M = k.metal, GL = k.glass, { face, back, x0, x1 } = FZS, zf = face - 0.6, NO = { ao: false };
     k.floorWithHoles(x0 + 0.4, x1 - 0.4, back, face, -0.3, 0, C.hall, [], true, 'floor');
-    P.slab(x0, x1, 13, 13.4, back, zf, C.ceil, { ao: false });
-    for (let z = back + 3; z < zf - 1; z += 4) G.slab(x0 + 2, x1 - 2, 12.9, 13, z - 0.2, z + 0.2, hex('#FFF8EC'), { ao: false });
-    P.slab(x0, x1, 0, 22, back - 0.4, back, C.wall, { ao: false }); k.colSlab(x0, x1, 0, 14, back - 0.4, back);
+    P.slab(x0, x1, 13, 13.4, back, zf, C.ceil, NO);
+    // 浅色格栅吊顶 + 一排排条形灯
+    for (let z = back + 0.9; z < zf - 0.3; z += 0.9) M.slab(x0 + 0.4, x1 - 0.4, 12.55, 12.8, z - 0.05, z + 0.05, hex('#ECE7DC'), NO);
+    for (let z = back + 2.7; z < zf - 1; z += 3.6) G.slab(x0 + 1.5, x1 - 1.5, 12.42, 12.5, z - 0.12, z + 0.12, hex('#FFF8EC'), NO);
+    // 北墙：下面 3.2 m 实墙（检票口靠着），上面整面玻璃幕墙 + 竖梃；外面一张“站台雨棚 + 天空”的远景
+    P.slab(x0, x1, 0, 3.2, back - 0.4, back, C.wall, NO); k.colSlab(x0, x1, 0, 14, back - 0.4, back);
+    GL.slab(x0, x1, 3.2, 13, back - 0.25, back - 0.2, hex('#CFE6F2'));
+    for (let x = x0 + 4; x < x1 - 1; x += 4) M.slab(x - 0.09, x + 0.09, 3.2, 13, back - 0.3, back - 0.1, C.mull, NO);
+    M.slab(x0, x1, 8.05, 8.2, back - 0.3, back - 0.1, C.mull, NO);
+    at.quad((x0 + x1) / 2, 8.1, back - 1.4, x1 - x0, 10, 0, at.draw(x1 - x0, 10, (c, pw, ph) => {
+      const g = c.createLinearGradient(0, 0, 0, ph); g.addColorStop(0, '#8DBDE6'); g.addColorStop(0.75, '#E4EFF6'); c.fillStyle = g; c.fillRect(0, 0, pw, ph);
+      c.fillStyle = '#F7F8F8'; for (let i = 0; i < 6; i++) { const x = pw * i / 6; c.beginPath(); c.moveTo(x, ph * 0.52); c.quadraticCurveTo(x + pw / 12, ph * 0.36, x + pw / 6, ph * 0.52); c.lineTo(x + pw / 6, ph * 0.6); c.lineTo(x, ph * 0.6); c.fill(); }
+      c.fillStyle = '#C9CED3'; c.fillRect(0, ph * 0.6, pw, ph * 0.04); c.fillStyle = '#9AA3AB'; for (let x = 6; x < pw; x += pw / 24) c.fillRect(x, ph * 0.6, 2, ph * 0.3);
+      c.fillStyle = '#F2F4F5'; c.fillRect(pw * 0.1, ph * 0.74, pw * 0.5, ph * 0.1); c.fillStyle = '#2C5E9E'; c.fillRect(pw * 0.1, ph * 0.8, pw * 0.5, ph * 0.015);
+      c.fillStyle = '#B8BEC4'; c.fillRect(0, ph * 0.9, pw, ph * 0.1);
+    }, 6));
     for (const [a, b] of [[x0 - 0.4, x0 + 0.4], [x1 - 0.4, x1 + 0.4]]) { P.slab(a, b, 0, 22, back, face, C.stone); k.colSlab(a, b, 0, 14, back, face); }
-    // 座椅（蓝色，背靠背两排一组）
-    for (const [xa, xb] of [[-74, -30], [-14, 8], [30, 72]]) for (const z of [-90, -82, -74]) {
-      M.slab(xa, xb, 0.38, 0.44, z - 0.5, z + 0.5, hex('#8D949B'), { ao: false });
-      // 面数预算：坐垫每排一整条，靠背一块一块（只有 12 个三角形），不用圆角盒
-      for (const sz of [-1, 1]) P.slab(xa + 0.05, xb - 0.05, 0.44, 0.52, z + sz * 0.03, z + sz * 0.49, C.seat, { ao: false });
-      for (let x = xa + 0.35; x < xb; x += 0.7) for (const sz of [-1, 1]) P.slab(x - 0.27, x + 0.27, 0.52, 1.0, z + sz * 0.5 - 0.03, z + sz * 0.5 + 0.03, C.seat, { ao: false });
+    // 座椅：背靠背两排一组（一整条坐垫 + 一整条靠背，每 3 个座位一道扶手 —— 面数省给旅客）
+    const CR = k.g('crowd');   // 坐着 / 排队的旅客单独一个网格：只在候车室里打开（FzsStation.onArea）
+    const rowsZ = [-91, -85, -79], groups = [[-74, -30], [-14, 8], [30, 72]];
+    let pi = 0;
+    for (const [xa, xb] of groups) for (const z of rowsZ) {
+      M.slab(xa, xb, 0.38, 0.44, z - 0.5, z + 0.5, hex('#8D949B'), NO);
+      P.slab(xa + 0.05, xb - 0.05, 0.44, 1.02, z - 0.07, z + 0.07, C.seat, NO);   // 中间共用靠背
+      for (const sz of [-1, 1]) P.slab(xa + 0.05, xb - 0.05, 0.44, 0.52, z + sz * 0.07, z + sz * 0.5, C.seat, NO);
+      for (let x = xa; x <= xb + 0.01; x += 2.1) M.slab(x - 0.04, x + 0.04, 0.52, 0.72, z - 0.5, z + 0.5, hex('#8D949B'), NO);
       k.colSlab(xa, xb, 0, 0.9, z - 0.55, z + 0.55);
+      // 坐着的旅客：大约一半座位有人；每组里有几家大人 + 小孩
+      for (const sz of [-1, 1]) for (let x = xa + 0.35; x < xb; x += 0.7) {
+        pi++; const r = (pi * 37 + Math.round(z) * 11) % 100;
+        if (r < (xa > 20 ? 55 : xa > -20 ? 75 : 85)) continue;   // 镜头前（东头）那组坐得满一点，远处的稀一点（面数）
+        const ry = sz > 0 ? 0 : Math.PI, kid = r > 92 && x > xa + 1;
+        sitter(CR, x, 0.52, z + sz * 0.26, ry, pi, kid);
+        if (r > 86 && r <= 92) suitcase(CR, x + 0.2, z + sz * 0.95, ry, pi, 0.9);
+      }
     }
-    // 金色榕树柱（室内，顶到吊顶）
-    for (const x of [-52, -22, 18, 48]) for (const z of [-86, -78]) this.banyan(x, z, 0, 7.5, 13, 3.2, 0.8);
-    // 检票口（暂停检票）+ 发车显示屏
-    for (const gx of [-58, -8, 44]) { for (let i = 0; i < 6; i++) { const x = gx + i * 1.2; P.rbox(x, 0, back + 2.2, 0.3, 1.0, 1.7, C.gate, 0.04, 0, { ao: false }); G.slab(x - 0.12, x + 0.12, 1.031, 1.04, back + 1.45, back + 1.57, hex('#E04A3A'), { ao: false }); }
-      k.colSlab(gx - 0.6, gx + 6.6, 0, 1.2, back + 1.2, back + 3.2);
-      this.hang(gx + 3, 3.4, back + 3.4, 6, 0.9, 0, bigText('检票口 · 暂停检票', 'Gate closed · Board from the platform', '#2B3640', '#FFD27A', '#FFFFFF'), null); }
-    at.quad(-5, 8, back + 0.05, 18, 4, 0, at.draw(18, 4, (c, pw, ph) => {
+    // 金色榕树柱：主干在 6 m 处分叉，枝头托住吊顶
+    for (const x of [-52, -22, 18, 48]) for (const z of [-88, -82]) this.banyan(x, z, 0, 6, 12.55, 4.4, 0.9);
+    // 北侧：检票口 A1–A6（每个 4 通道闸机 + 号码牌）
+    ['A1', 'A2', 'A3', 'A4', 'A5', 'A6'].forEach((n, j) => {
+      const gx = -70 + j * 25;
+      for (let i = 0; i <= 4; i++) { const x = gx + i * 1.3; P.slab(x - 0.14, x + 0.14, 0, 1.05, back + 1.4, back + 3.0, C.gate, NO); G.slab(x - 0.1, x + 0.1, 1.05, 1.07, back + 2.7, back + 2.85, hex('#E04A3A'), NO); }
+      for (let i = 0; i < 4; i++) { const x = gx + 0.65 + i * 1.3; P.slab(x - 0.46, x + 0.46, 0.62, 0.66, back + 2.15, back + 2.2, hex('#D33C2F'), NO); }   // 闸门挡板（关着）
+      k.colSlab(gx - 0.3, gx + 5.5, 0, 1.2, back + 1.2, back + 3.2);
+      this.hang(gx + 2.6, 3.6, back + 3.4, 5.2, 1.2, 0, (c, pw, ph) => {
+        c.fillStyle = '#163A5F'; c.fillRect(0, 0, pw, ph); c.fillStyle = '#FFD27A'; rr(c, ph * 0.1, ph * 0.1, ph * 1.3, ph * 0.8, ph * 0.1); c.fill();
+        c.fillStyle = '#163A5F'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `800 ${ph * 0.56}px ${FONT_EN}`; c.fillText(n, ph * 0.75, ph * 0.53);
+        c.fillStyle = '#FFFFFF'; c.textAlign = 'left'; c.font = `700 ${ph * 0.34}px ${FONT}`; c.fillText(`${n} 检票口`, ph * 1.6, ph * 0.36);
+        c.fillStyle = '#FFD27A'; c.font = `600 ${ph * 0.17}px ${FONT}`; c.fillText('暂停检票 · 请从站台楼梯进站', ph * 1.6, ph * 0.72);
+      }, 12.4);
+    });
+    // 南侧（玻璃幕墙前）：便利店 + 小吃店（避开 7 号 / 4 号进站口）
+    const shops = [[-68, '便利店', 'Convenience Store', '#1E8E4E'], [-58, '福州鱼丸', 'Fish Balls', '#C8102E'], [-44, '肉燕', 'Rouyan Wontons', '#D9822B'], [42, '沙县小吃', 'Shaxian Snacks', '#2B6CB0'], [52, '便利店', 'Convenience Store', '#1E8E4E'], [62, '奶茶 · 咖啡', 'Tea & Coffee', '#8E5A3C']];
+    for (const [sx, zh, en, col] of shops) {
+      const za = -76, zb = -72.6, w = 8.4;
+      P.slab(sx - w / 2, sx + w / 2, 0, 0.9, za, za + 0.6, hex('#F2EFE8'), NO);   // 柜台
+      P.slab(sx - w / 2, sx + w / 2, 3.2, 3.5, za - 0.2, zb, hex('#F4F2EE'), NO);   // 顶棚
+      for (const ex of [sx - w / 2, sx + w / 2 - 0.2]) P.slab(ex, ex + 0.2, 0, 3.2, za, zb, hex('#F4F2EE'), NO);
+      P.slab(sx - w / 2 + 0.2, sx + w / 2 - 0.2, 0, 3.2, zb - 0.2, zb, hex('#E7E2D8'), NO);
+      for (const y of [1.2, 1.9, 2.6]) { P.slab(sx - w / 2 + 0.4, sx + w / 2 - 0.4, y, y + 0.05, zb - 0.7, zb - 0.2, hex('#D7D2C8'), NO);
+        for (let x = sx - w / 2 + 0.6; x < sx + w / 2 - 0.6; x += 0.9) P.slab(x, x + 0.6, y + 0.05, y + 0.42, zb - 0.6, zb - 0.3, hex(['#E8505B', '#F5B841', '#3E8EDE', '#42B883', '#F28C38'][Math.abs(Math.round(x * 3 + y * 7)) % 5]), NO); }
+      G.slab(sx - w / 2 + 0.3, sx + w / 2 - 0.3, 3.15, 3.2, za + 0.4, zb - 0.4, hex('#FFF4DE'), NO);
+      at.quad(sx, 3.85, za - 0.21, w, 0.7, Math.PI, at.draw(w, 0.7, bigText(zh, en, col, '#FFFFFF'), 70));
+      k.colSlab(sx - w / 2, sx + w / 2, 0, 3.5, za, zb);
+      if (zh === '福州鱼丸' || zh === '沙县小吃') for (let i = 0; i < 3; i++) lowPerson(CR, sx - 2.4 + i * 1.6, 0, za - 1.2 - (i % 2) * 0.5, Math.PI, pi + i * 3, i === 2);
+    }
+    // 发车显示屏 + 站名（挂在北面玻璃前）
+    P.slab(-14.3, 4.3, 5.8, 10.2, back + 0.1, back + 0.3, hex('#1B2530'), NO);
+    at.quad(-5, 8, back + 0.32, 18, 4, 0, at.draw(18, 4, (c, pw, ph) => {
       c.fillStyle = '#10161C'; c.fillRect(0, 0, pw, ph); c.textBaseline = 'middle';
       const rows = [['车次 Train', '终到 To', '开点 Dep', '状态 Status'], ['G3027', '厦门北 Xiamenbei', '11:55', '正在候车'], ['G3028', '福州南 到达 Arr.', '14:35', '已到达']];
       rows.forEach((r, i) => { const y = ph * (0.18 + i * 0.3); c.font = `${i ? 700 : 600} ${ph * (i ? 0.15 : 0.11)}px ${FONT}`; [0.04, 0.24, 0.62, 0.78].forEach((fx, j) => { c.fillStyle = i === 0 ? '#9FB4C8' : j === 3 ? '#55E07A' : '#FFC54A'; c.textAlign = 'left'; c.fillText(r[j], pw * fx, y); }); });
     }, 40));
-    at.quad(-5, 11.2, back + 0.05, 22, 1.6, 0, at.draw(22, 1.6, bigText('候车室 Waiting Hall', null, '#F2F2EF', '#1D3F73')));
+    P.slab(-16, 6, 10.4, 12, back + 0.1, back + 0.3, hex('#F2F2EF'), NO);
+    at.quad(-5, 11.2, back + 0.32, 22, 1.6, 0, at.draw(22, 1.6, bigText('候车室 Waiting Hall', null, '#F2F2EF', '#1D3F73')));
   }
-  /** 东站房立面：波浪玻璃幕墙、金色榕树柱撑起白色“船帆”屋面；7 号 / 4 号进站口 */
+  /** 东站房立面：
+   *   一整片很厚、往前挑得很远的大屋檐（像船头，两端往上翘），檐上大红字「福州南站」；
+   *   檐下波浪形玻璃幕墙（起伏 1.4 m）；7 号 / 4 号进站口：门头大号码 + 广场上的号码立牌。榕树柱只在室内。 */
   buildFacade(k, at) {
-    const P = k.solid, M = k.metal, GL = k.glass, z = FZS.face, { x0: X0, x1: X1, E7, E4, ew, back } = FZS;
+    const P = k.solid, M = k.metal, GL = k.glass, z = FZS.face, { x0: X0, x1: X1, E7, E4, ew, back } = FZS, NO = { ao: false };
+    // 波浪玻璃幕墙：z 按正弦起伏（进站口两边收平），每 1.6 m 一个折点；碰撞跟着每一段走
+    const amp = x => Math.min(1, ...[E7, E4].map(e => Math.max(0, (Math.abs(x - e) - ew / 2 - 1) / 5)));
+    const zw = x => z - 0.5 - amp(x) * 1.4 * (1 - Math.cos((x - X0) * 2 * Math.PI / 16)) / 2;
     const open = x => [E7, E4].some(e => Math.abs(x - e) < ew / 2);
-    // 碰撞：立面一道墙，两个进站口留开
-    { let x = X0; for (const e of [E7, E4]) { k.colSlab(x, e - ew / 2, 0, 14, z - 0.9, z - 0.1); x = e + ew / 2; } k.colSlab(x, X1, 0, 14, z - 0.9, z - 0.1); }
-    k.colSlab(E7 - ew / 2, E7 + ew / 2, 6.2, 14, z - 0.9, z - 0.1); k.colSlab(E4 - ew / 2, E4 + ew / 2, 6.2, 14, z - 0.9, z - 0.1);
-    // 波浪玻璃幕墙：每 3.2 m 一个折点，z 按正弦起伏
-    const zw = x => z - 0.5 + 0.38 * Math.sin((x - X0) * 2 * Math.PI / 12.8);
-    for (let xa = X0 + 0.4; xa < X1 - 0.4 - 0.01; xa += 3.2) {
-      const xb = Math.min(xa + 3.2, X1 - 0.4), za = zw(xa), zb = zw(xb), L = Math.hypot(xb - xa, zb - za), ry = Math.atan2(-(zb - za), xb - xa), xm = (xa + xb) / 2, zm = (za + zb) / 2;
+    const top = 21.2;
+    for (let xa = X0 + 0.4; xa < X1 - 0.4 - 0.01; xa += 1.6) {
+      const xb = Math.min(xa + 1.6, X1 - 0.4), za = zw(xa), zb = zw(xb), L = Math.hypot(xb - xa, zb - za), ry = Math.atan2(-(zb - za), xb - xa), xm = (xa + xb) / 2, zm = (za + zb) / 2;
       const y0 = open(xm) ? 6.2 : 0;
-      GL.box(xm, (y0 + 18) / 2, zm, L, 18 - y0, 0.06, C.glass, ry, 0, 0, 1, { ao: false });
-      M.slab(xa - 0.1, xa + 0.1, 0, 18, za - 0.12, za + 0.12, C.mull, { ao: false });
-      for (const y of [6, 12]) P.box(xm, y, zm + 0.06, L + 0.05, 0.16, 0.12, C.gold, ry, 0, 0, 1, { ao: false });
+      GL.box(xm, (y0 + top) / 2, zm, L, top - y0, 0.06, C.glass, ry, 0, 0, 1, NO);
+      if (Math.round((xa - X0 - 0.4) / 1.6) % 2 === 0) M.slab(xa - 0.08, xa + 0.08, 0, top, za - 0.1, za + 0.1, C.mull, NO);
+      P.box(xm, 7, zm + 0.06, L + 0.05, 0.16, 0.12, C.gold, ry, 0, 0, 1, NO);
+      const c0 = Math.min(za, zb) - 0.12, c1 = Math.max(za, zb) + 0.12;
+      if (!open(xm)) k.colSlab(xa, xb, 0, 14, c0, Math.max(c1, z - 0.1)); else k.colSlab(xa, xb, 6.2, 14, c0, c1);
     }
-    // 进站口：金色门框 + 雨篷 + 号码牌
+    // 进站口：金色门框 + 雨篷 + 号码牌 + 门头大号码
     for (const [e, n] of [[E7, 7], [E4, 4]]) {
       P.slab(e - ew / 2 - 0.3, e - ew / 2, 0, 6.2, z - 0.9, z - 0.1, C.gold); P.slab(e + ew / 2, e + ew / 2 + 0.3, 0, 6.2, z - 0.9, z - 0.1, C.gold);
-      P.slab(e - ew / 2 - 1, e + ew / 2 + 1, 6.2, 6.6, z - 0.9, z + 4, C.roof, { ao: false });
+      P.slab(e - ew / 2 - 1, e + ew / 2 + 1, 6.2, 6.6, z - 0.9, z + 4, C.roof, NO);
       at.quad(e, 5.4, z + 0.02, 6.4, 0.9, 0, at.draw(6.4, 0.9, board([{ zh: `${n}号进站口`, en: `Entrance ${n}` }, { a: 'u' }])));
+      P.slab(e - 3.2, e + 3.2, 6.6, 9.4, z + 3.3, z + 3.6, hex('#1B2530'), NO);
+      at.quad(e, 8, z + 3.62, 6.2, 2.6, 0, at.draw(6.2, 2.6, (c, pw, ph) => {
+        c.fillStyle = '#163A5F'; c.fillRect(0, 0, pw, ph); c.fillStyle = '#FFFFFF'; c.textBaseline = 'middle';
+        c.textAlign = 'center'; c.font = `800 ${ph * 0.86}px ${FONT_EN}`; c.fillText(String(n), pw * 0.22, ph * 0.54);
+        c.textAlign = 'left'; c.font = `800 ${ph * 0.3}px ${FONT}`; c.fillText('进站口', pw * 0.42, ph * 0.36); c.font = `600 ${ph * 0.17}px ${FONT_EN}`; c.fillText(`Entrance ${n}`, pw * 0.42, ph * 0.7);
+      }, 60));
     }
-    P.slab(X0, X1, 18, 22.6, z - 0.9, z - 0.3, C.roof);   // 檐下白带 + 站名
-    at.quad(-5, 20.3, z - 0.28, 28, 3.6, 0, at.draw(28, 3.6, bigText('福 州 南 站', 'FUZHOUNAN', '#F6F7F8', '#8B1E1E', '#1D3F73'), 34));
-    P.slab(X0, X1, 13.4, 22, back - 2.4, back - 2.0, C.wall, { ao: false });   // 站台那边的立面（xmn.js 到 14.9 m）往上补
-    // 船帆屋面：沿 x 一排起伏的帆（每段一个弧顶），白色屋面 + 浅灰蓝檐底
-    const xa = X0 - 16, xb = X1 + 16, nS = 6, n = 72, za = back - 4, zb = z + 9, sail = x => 22.6 + 4.2 * Math.pow(Math.abs(Math.sin(Math.PI * (x - xa) / ((xb - xa) / nS))), 0.6);
+    P.slab(X0, X1, 13.4, 22, back - 2.4, back - 2.0, C.wall, NO);   // 站台那边的立面（xmn.js 到 14.9 m）往上补
+    // 大屋檐：中间低（檐底 21.2）两端往上翘（+9 m），前沿往外挑到 z+17（两端收回，像船头），厚 3 m
+    const xa = X0 - 22, xb = X1 + 22, xc = (xa + xb) / 2, half = (xb - xa) / 2, n = 44, zaR = back - 4;
+    const yb = x => 21.2 + 9 * Math.pow(Math.abs((x - xc) / half), 2.6), zfR = x => z + 17 - 9 * Math.pow((x - xc) / half, 2);
     for (let i = 0; i < n; i++) {
-      const x0 = xa + (xb - xa) * i / n, x1 = xa + (xb - xa) * (i + 1) / n, ya = sail(x0), yb = sail(x1), L = Math.hypot(x1 - x0, yb - ya), ang = Math.atan2(yb - ya, x1 - x0);
-      P.box((x0 + x1) / 2, (ya + yb) / 2, (za + zb) / 2, L + 0.08, 0.3, zb - za, C.roofU, 0, 0, ang, 1, { ao: false });
-      P.box((x0 + x1) / 2, (ya + yb) / 2 + 0.45, (za + zb) / 2 - 0.3, L + 0.08, 0.6, zb - za - 0.6, C.roof, 0, 0, ang, 1, { ao: false });
-      P.box((x0 + x1) / 2, (ya + yb) / 2 + 0.2, zb + 0.05, L + 0.08, 0.9, 0.25, C.mull, 0, 0, ang, 1, { ao: false });
+      const x0 = xa + (xb - xa) * i / n, x1 = xa + (xb - xa) * (i + 1) / n, ya = yb(x0), yc = yb(x1), L = Math.hypot(x1 - x0, yc - ya), ang = Math.atan2(yc - ya, x1 - x0);
+      const xm = (x0 + x1) / 2, ym = (ya + yc) / 2, zf = zfR(xm);
+      P.box(xm, ym + 0.15, (zaR + zf) / 2, L + 0.1, 0.3, zf - zaR, C.roofU, 0, 0, ang, 1, NO);   // 檐底
+      P.box(xm, ym + 2.85, (zaR + zf) / 2 - 0.4, L + 0.1, 0.3, zf - zaR - 0.8, C.roof, 0, 0, ang, 1, NO);   // 屋面
+      const zf0 = zfR(x0), zf1 = zfR(x1), rf = Math.atan2(-(zf1 - zf0), x1 - x0);
+      P.box(xm, ym + 1.5, zf + 0.1, Math.hypot(L, zf1 - zf0) + 0.1, 3.0, 0.4, hex('#D5DCE2'), rf, 0, ang, 1, NO);   // 厚檐口（银灰）
+      M.box(xm, ym + 0.12, zf + 0.33, Math.hypot(L, zf1 - zf0) + 0.1, 0.24, 0.06, hex('#5E6A75'), rf, 0, ang, 1, NO);   // 檐口底边深色线
+      M.box(xm, ym + 0.4, zf + 0.32, Math.hypot(L, zf1 - zf0) + 0.1, 0.16, 0.06, hex('#B9C3CC'), rf, 0, ang, 1, NO);   // 檐口银线
     }
-    // 檐下金色榕树柱（立面前面一排）
-    for (const x of [-46, -6, 30, 62]) this.banyan(x, z + 6.5, 0, 12, 22.4, 4.2, 1.0);
+    // 檐口上的大红字「福州南站」：立在船头檐口最前沿的顶上（白色字座），从广场上整块看得见
+    const sw = 56, sy0 = yb(-5) + 3.0, sh = 9, sz = zfR(-5) - 1.2;
+    P.slab(-5 - sw / 2, -5 + sw / 2, sy0, sy0 + 0.5, sz - 1.4, sz + 0.6, hex('#D9DEE3'), NO);
+    P.slab(-5 - sw / 2, -5 + sw / 2, sy0, sy0 + sh, sz - 0.4, sz, C.roof, NO);
+    at.quad(-5, sy0 + sh / 2, sz + 0.02, sw, sh, 0, at.draw(sw, sh, (c, pw, ph) => {
+      c.fillStyle = '#F6F7F8'; c.fillRect(0, 0, pw, ph); c.fillStyle = '#C8161D'; c.textAlign = 'center'; c.textBaseline = 'middle';
+      c.font = `900 ${ph * 0.8}px ${FONT}`; ['福', '州', '南', '站'].forEach((t, i) => c.fillText(t, pw * (0.125 + i * 0.25), ph * 0.54));
+    }, 20));
   }
   /** 人在哪一块：passage / hall / wait（候车室）/ plaza（东广场）/ square（西广场）/ platform */
   static area(lx, y, z) {

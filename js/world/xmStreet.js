@@ -93,7 +93,7 @@ export class XmStreet {
     { const q = this.atlas.quad.bind(this.atlas); this.atlas.quad = (x, y, z, w, h, a, uv) => q(x, y, z, w, h, Math.PI - a, uv); }   // 本文件约定：a=0 朝 -z、π 朝 +z、±π/2 朝 ±x
     D.reseed(code.length * 97 + code.charCodeAt(0));
     this.ground(); this.kiosk();
-    if (!N.special) this.plain(); else if (code === 'jtou') this.jiangtou(); else if (code === 'lcu') this.lucuo(); else if (code === 'cyg') this.chengyi(); else if (code === 'hpu') this.houpu(); else if (ATTR_BUILD[code]) ATTR_BUILD[code](this); else this.plain();
+    if (N.build) N.build(this); else if (!N.special) this.plain(); else if (code === 'jtou') this.jiangtou(); else if (code === 'lcu') this.lucuo(); else if (code === 'cyg') this.chengyi(); else if (code === 'hpu') this.houpu(); else if (ATTR_BUILD[code]) ATTR_BUILD[code](this); else this.plain();
     k.finish(true); this.atlas.finish(k.root, N.net + 'StreetSigns');
     if (this.after) this.after();   // 动画件（不冻结），如清水宫上空降落的飞机
     k.root.getChildMeshes(false).forEach(m => { m.receiveShadows = true; });
