@@ -76,6 +76,12 @@ export function textPaint(lines, { bg = '#B3261E', fg = '#F6D36B', font = FONT, 
   };
 }
 
+/** 门的触发区：默认门朝 -z（玩家往 +z 走进去）；ax:'x' 时门朝 ∓x，s=±1 是走进去的方向 */
+export function doorHit(d, lx, lz) {
+  const ax = d.ax || 'z', s = d.s || 1;
+  const across = ax === 'z' ? lx - d.x : lz - d.z, along = (ax === 'z' ? lz - d.z : lx - d.x) * s;
+  return Math.abs(across) < (d.halfW || 1.0) && along > (d.zLo ?? -0.5) && along < (d.zHi ?? 0.6);
+}
 export class XmStreet {
   constructor(scene, code) {
     this.scene = scene; this.code = code; this.ex = XM_EXITS[code];
@@ -101,31 +107,30 @@ export class XmStreet {
     if (this.tick) this.tick(Math.min(0.1, this.scene.getEngine().getDeltaTime() / 1000));
     if (this.inside) { if (this.inside.wantsOut(p)) this.leaveBuilding(pl); return null; }
     if (this.wantsBack(p)) return 'back';
-    const door = this._enterDoor();
-    if (door) {
-      const lx = p.x - XS.x, lz = p.z - XS.z;
-      if (Math.abs(lx - door.x) < (door.halfW || 1.0) && lz > door.z + (door.zLo ?? -0.5) && lz < door.z + (door.zHi ?? 0.6) && p.y < 1.5) this.enterBuilding(pl);
-    }
+    const lx = p.x - XS.x, lz = p.z - XS.z;
+    if (p.y < 1.5) for (const door of this._doors()) if (doorHit(door, lx, lz)) { this.enterBuilding(pl, door); break; }
     return null;
   }
-  /** 可进建筑的门：鑫利 256 / 新东方大厅（enterDoor） */
+  /** 可进建筑的门：鑫利 256 / 新东方大厅（enterDoor）；一个街区多扇门用 enterDoors（SM 一期 / 二期黄宝石） */
   _enterDoor() {
     if (this.enterDoor) return this.enterDoor;
     if (this.xinli && this.xinli.door256) return { ...this.xinli.door256, make: (scene, o) => new Xinli256(scene, o), outYaw: Math.PI, outDz: -1.6, id: 256 };
     return null;
   }
+  _doors() { if (this.enterDoors) return this.enterDoors; const d = this._enterDoor(); return d ? [d] : []; }
   /** 进楼：单独加载室内（街区先隐藏） */
-  enterBuilding(pl) {
-    const door = this._enterDoor(); if (!door) return;
-    this.kit.root.setEnabled(false);
+  enterBuilding(pl, door = this._enterDoor()) {
+    if (!door) return;
+    this.kit.root.setEnabled(false); this.curDoor = door;
     this.inside = door.make(this.scene, { x: XS.x, y: 0, z: XS.z + 1000 });
     const [x, y, z, yaw] = this.inside.spawn(); pl.spawn(x, y, z, yaw);
   }
   leaveBuilding(pl) {
-    const door = this._enterDoor();
+    const door = this.curDoor || this._enterDoor(); this.curDoor = null;
     this.inside.dispose(); this.inside = null; this.kit.root.setEnabled(true);
     if (!door) return;
-    pl.spawn(XS.x + door.x, 0.05, XS.z + door.z + (door.outDz ?? -1.6), door.outYaw ?? Math.PI);
+    if (door.outPos) pl.spawn(XS.x + door.outPos[0], 0.05, XS.z + door.outPos[1], door.outYaw ?? Math.PI);
+    else pl.spawn(XS.x + door.x, 0.05, XS.z + door.z + (door.outDz ?? -1.6), door.outYaw ?? Math.PI);
   }
 
   /* ---------- 通用 ---------- */

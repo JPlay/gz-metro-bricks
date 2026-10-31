@@ -50,6 +50,8 @@ const ICONS = {
   xdf: [['M18 22h64v56H18z', '#026A60'], ['M26 34h48v8H26z', '#FFFFFF'], ['M26 48h36v6H26z', '#F6AB04'], ['M26 58h40v6H26z', '#CFE6E2'], ['M26 68h28v6H26z', '#CFE6E2'], ['M50 8h2v14h-2z', '#6B7787'], ['M52 8h16v10H52z', '#E53935']],
   // 园博苑：园林亭子
   pavilion: [['M46 8h8v14h-8z', '#2F7D6D'], ['M8 38Q22 36 30 22L70 22Q78 36 92 38Z', '#2F7D6D'], ['M24 38h6v38h-6zM70 38h6v38h-6z', '#C0392B'], ['M20 46h60v5H20z', '#C0392B'], ['M14 76h72v8H14z', '#9AA3AD']],
+  // SM 城市广场：一期方楼（浅灰）+ 天桥（玻璃）+ 二期圆楼（黄宝石），楼顶 SM 圆标
+  sm: [['M4 82h92v6H4z', '#9AA3AD'], ['M6 36h30v46H6z', '#C9CFD6'], ['M64 82V40a15 6 0 0 1 30 0V82z', '#E9C46A'], ['M36 50h28v9H36z', '#9FD3EE'], ['M36 48h28v3H36zM36 58h28v3H36z', '#7E8A96'], ['M21 14a10 10 0 1 0 0.01 0z', '#1F3B73'], ['M21 18a6 6 0 1 0 0.01 0z', '#FFFFFF']],
 };
 export const ICON_KINDS = Object.keys(ICONS);
 const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');

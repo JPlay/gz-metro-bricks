@@ -27,7 +27,7 @@ export function randomLook(o = {}) {
     bag: o.bag ?? (prnd() < 0.35 ? pick(['backpack', 'shoulder']) : null), bagCol: o.bagCol || pick(['#2B2D31', '#C0392B', '#F5B841', '#3E8EDE', '#7A4E36']),
     glasses: o.glasses ?? prnd() < 0.2, cap: o.cap || null, capCol: o.capCol || '#E8505B',
     scale: o.scale || (0.94 + prnd() * 0.12), kid: !!o.kid, uniform: o.uniform || null, phone: !!o.phone,
-    prop: o.prop || null, tie: o.tie || null, collar: !!o.collar, hunch: o.hunch || 0, role: o.role || null, pattern: o.pattern || null
+    prop: o.prop || null, shopBags: o.shopBags || null, tie: o.tie || null, collar: !!o.collar, hunch: o.hunch || 0, role: o.role || null, pattern: o.pattern || null
   };
 }
 /**
@@ -148,6 +148,11 @@ function parts(L) {
     g.tube([0.06, by + 0.02, 0.1], [0.13, by + 0.1, 0.13], 0.022, '#F28C38', 5);
   }
   if (L.prop === 'briefcase') { const g = out.find(q => q.bone === 6).g, by = -d.farm - 0.2; g.rbox(0, by - 0.14, 0.0, 0.08, 0.26, 0.36, '#4A3426', 0.03, 0, { ao: false, bottom: true }); g.tube([0, by + 0.12, -0.06], [0, by + 0.12, 0.06], 0.015, '#2B2D31', 5); g.box(0.042, by - 0.02, 0, 0.005, 0.03, 0.06, '#E0B84A', 0, 0, 0, 1, { ao: false }); }
+  if (L.shopBags) L.shopBags.forEach((c, j) => { // 商场购物袋：纸袋 + 两根提绳，挂在左 / 右手（c 为 null 就空手）
+    if (!c) return; const g = out.find(q => q.bone === 5 + j).g, by = -d.farm - 0.12, w = L.kid ? 0.2 : 0.3;
+    g.box(0, by - 0.2, 0.0, 0.1, 0.34, w, c, 0, 0, 0, 1, { ao: false });
+    g.tube([0, by - 0.03, -w * 0.3], [0, by + 0.07, 0], 0.012, '#2B2D31', 4); g.tube([0, by - 0.03, w * 0.3], [0, by + 0.07, 0], 0.012, '#2B2D31', 4);
+  });
   if (L.phone) out.find(q => q.bone === 6).g.rbox(0, -d.farm - 0.1, 0.035, 0.075, 0.14, 0.012, '#1B1D20', 0.01, 0, { ao: false });
   if (L.bag === 'shoulder') out.find(q => q.bone === 1).g.rbox(-d.chestW * 0.62, -0.12, 0.02, 0.08, 0.26, 0.3, L.bagCol, 0.05, 0, { ao: false, bottom: true });
   return out;

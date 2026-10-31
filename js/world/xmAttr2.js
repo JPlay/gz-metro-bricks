@@ -16,6 +16,7 @@ import * as D from './decor.js';
 import { textPaint, pillarText, facadePaint, FONT } from './xmStreet.js';
 import { q2, disc, ring, ringCol, roof, palm, figure } from './xmAttr.js';
 import { yuxiuXdf } from './xmXdf.js';
+import { smCity } from './xmSM.js';
 
 const ALL_EXITS = {
   zhl: { n: '1', x: 10, line: 1, road: '和平码头', to: ['和平码头', '中山路步行街 3B'], toEn: ['Heping Pier', 'Zhongshan Road (Exit 3B)'] },
@@ -28,6 +29,7 @@ const ALL_EXITS = {
   ylz: { n: '6', x: 10, line: 2, road: '厦鼓码头', to: ['厦鼓码头'], toEn: ['Xiamen–Gulangyu Ferry Pier'] },
   hcw: { n: '2', x: 10, line: 2, road: '海沧湾公园', to: ['海沧湾公园', '海沧大桥'], toEn: ['Haicang Bay Park', 'Haicang Bridge'] },
   yxd: { n: '3', x: 10, line: 2, road: '湖滨北路', to: ['新东方'], toEn: ['New Oriental'] },
+  wsp: { n: '4B', x: 10, line: 1, road: '嘉禾路', to: ['厦门SM城市广场', 'SM新生活广场（天桥）'], toEn: ['SM City Xiamen', 'SM Lifestyle (skybridge)'] },
 };
 
 const TAU = Math.PI * 2;
@@ -509,9 +511,9 @@ function haicangBay(S) {
   S.filler([[-80, -42, 40, 16, 50, '#D2CABE'], [10, -44, 40, 16, 70, '#C9C2B6'], [90, -42, 40, 16, 60, '#CDC5B8']]);
 }
 
-const ALL_BUILD = { zhl: zhenhaiRoad, lbn: bookCity, gqi: seawallPark, yby: gardenExpo, grn: sciTech, ctg: zhonglunPark, hbz: bailuzhou, ylz: ferryPier, hcw: haicangBay, yxd: yuxiuXdf };
+const ALL_BUILD = { zhl: zhenhaiRoad, lbn: bookCity, gqi: seawallPark, yby: gardenExpo, grn: sciTech, ctg: zhonglunPark, hbz: bailuzhou, ylz: ferryPier, hcw: haicangBay, yxd: yuxiuXdf, wsp: smCity };
 // 分批接入：LIVE 里的站才建景点街区，其余仍是普通街面
-const LIVE = Object.keys(ALL_BUILD);   // 全部接入（含育秀东路新东方）
+const LIVE = Object.keys(ALL_BUILD);   // 全部接入（含育秀东路新东方、乌石浦 SM）
 
 export const ATTR_EXITS2 = Object.fromEntries(LIVE.map(c => [c, ALL_EXITS[c]]));
 export const ATTR_BUILD2 = Object.fromEntries(LIVE.map(c => [c, ALL_BUILD[c]]));

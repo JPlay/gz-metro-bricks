@@ -22,6 +22,7 @@ export const XM_VISITS = {
   ylz: { zh: ['厦鼓码头'], en: ['the Xiamen-Gulangyu Ferry Terminal'], exit: '6', icon: 'ferry', name: '厦鼓码头' },
   hbz: { zh: ['白鹭洲公园'], en: ['Bailuzhou Park'], exit: '2', icon: 'egret', name: '白鹭洲' },
   yxd: { zh: ['新东方'], en: ['New Oriental'], exit: '3', icon: 'xdf', name: '新东方' },
+  wsp: { zh: ['厦门SM城市广场'], en: ['SM City Xiamen'], exit: '4B', icon: 'sm', name: 'SM广场' },
   jtou: { zh: ['莲龙小学'], en: ['Lianlong Primary School'], exit: '2', icon: 'school', name: '莲龙小学' },
   hpu: { zh: ['忠仑公园'], en: ['Zhonglun Park'], exit: '4', icon: 'park', name: '忠仑公园' },
   ctg: { zh: ['忠仑公园'], en: ['Zhonglun Park'], exit: '2', icon: 'park', name: '忠仑公园' },
