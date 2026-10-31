@@ -16,14 +16,21 @@
  */
 export const CITIES = {
   gz: { zh: '广州', en: 'Guangzhou', icon: '🏙️', stn: '广州东站', stnEn: 'Guangzhoudong', dests: ['xm'] },
-  xm: { zh: '厦门', en: 'Xiamen', icon: '🌊', stn: '厦门北站', stnEn: 'Xiamenbei', dests: ['gz'] }
+  xm: { zh: '厦门', en: 'Xiamen', icon: '🌊', stn: '厦门北站', stnEn: 'Xiamenbei', dests: ['gz', 'fz'] },
+  fz: { zh: '福州', en: 'Fuzhou', icon: '🌳', stn: '福州南站', stnEn: 'Fuzhounan', dests: ['xm'] }
 };
 /** 车次表：键 = 'from>to'（城市代码）。ann = 报站片段 id 用的键（广州⇄厦门沿用旧 id：emu.depart.xm / emu.depart.gz，已有 MP3） */
 export const TRIPS = {
   'gz>xm': { fromCity: 'gz', toCity: 'xm', ann: 'xm', train: 'D2315', from: '广州东', to: '厦门北', fromEn: 'Guangzhoudong', toEn: 'Xiamenbei', dep: '14:20', arr: '18:57', car: '05',
     bridge: { toast: '九龙江特大桥 · 九龙江入海口', ann: 'bridge' } },
   'xm>gz': { fromCity: 'xm', toCity: 'gz', ann: 'gz', train: 'D3311', from: '厦门北', to: '广州东', fromEn: 'Xiamenbei', toEn: 'Guangzhoudong', dep: '15:18', arr: '19:17', car: '05',
-    bridge: { toast: '九龙江特大桥 · 九龙江入海口', ann: 'bridge' } }
+    bridge: { toast: '九龙江特大桥 · 九龙江入海口', ann: 'bridge' } },
+  // 福厦高铁（2023-09-28 开通）：G3028 厦门北 13:25 → 福州南 14:35（继续开往南京南）；回程 G3027 福州南 11:55 → 厦门北 13:05（南京南始发）。
+  //   途经泉州湾跨海大桥（福厦高铁跨海段，全长约 20.3 km）。时刻按 brief（js 里只是显示用，游戏里约 3 分钟一程）
+  'xm>fz': { fromCity: 'xm', toCity: 'fz', ann: 'fz', train: 'G3028', from: '厦门北', to: '福州南', fromEn: 'Xiamenbei', toEn: 'Fuzhounan', dep: '13:25', arr: '14:35', car: '05',
+    bridge: { toast: '泉州湾跨海大桥', ann: 'qzw' } },
+  'fz>xm': { fromCity: 'fz', toCity: 'xm', ann: 'xmf', train: 'G3027', from: '福州南', to: '厦门北', fromEn: 'Fuzhounan', toEn: 'Xiamenbei', dep: '11:55', arr: '13:05', car: '05',
+    bridge: { toast: '泉州湾跨海大桥', ann: 'qzw' } }
 };
 // trip.from / trip.to = 车厢显示屏 / HUD 上的站名（不带“站”）；fromCity / toCity = 城市代码
 for (const t of Object.values(TRIPS)) t.key = t.fromCity + '>' + t.toCity;
@@ -62,7 +69,34 @@ const BACK = [
 ];
 /** 行驶 TRIP 秒后开始进站制动 */
 export const TRIP = { brakeAt: 166, brakeDist: 600, vmax: 70 };
-const ROUTES = { 'gz>xm': OUT, 'xm>gz': BACK };
+/** 厦门北 → 福州南：厦门城区 → 同安的田野 → 山和隧道 → 泉州湾跨海大桥 → 莆田的田野和山 → 福州（远景暂用通用城市，没有福州专属远景板） */
+const XM_FZ = [
+  { t: 0, far: 'xiamen', mid: 'xiamen', near: 'fields' },
+  { t: 30, far: 'fields', mid: 'fields', near: 'fields' },
+  { t: 52, far: 'mount', mid: 'mount', near: 'mount' },
+  { t: 62, near: 'tunnel', tunnel: true },
+  { t: 70, near: 'mount', far: 'sea', mid: 'sea' },
+  { t: 80, far: 'sea', mid: 'sea', near: 'bridge', bridge: true },
+  { t: 104, far: 'fields', mid: 'fields', near: 'fields' },
+  { t: 118, far: 'mount', mid: 'mount', near: 'mount' },
+  { t: 128, near: 'tunnel', tunnel: true },
+  { t: 136, near: 'mount' },
+  { t: 146, far: 'city', mid: 'city', near: 'city' }
+];
+const FZ_XM = [
+  { t: 0, far: 'city', mid: 'city', near: 'city' },
+  { t: 26, far: 'mount', mid: 'mount', near: 'mount' },
+  { t: 36, near: 'tunnel', tunnel: true },
+  { t: 44, near: 'mount' },
+  { t: 54, far: 'fields', mid: 'fields', near: 'fields' },
+  { t: 70, far: 'sea', mid: 'sea', near: 'bridge', bridge: true },
+  { t: 94, far: 'mount', mid: 'mount', near: 'mount' },
+  { t: 104, near: 'tunnel', tunnel: true },
+  { t: 112, near: 'mount' },
+  { t: 122, far: 'fields', mid: 'fields', near: 'fields' },
+  { t: 146, far: 'xiamen', mid: 'xiamen', near: 'fields' }
+];
+const ROUTES = { 'gz>xm': OUT, 'xm>gz': BACK, 'xm>fz': XM_FZ, 'fz>xm': FZ_XM };
 /** 一程的路段：routeFor(from, to)；旧写法 routeFor(dest) 仍可用（广州⇄厦门） */
 export function routeFor(from, to) {
   if (to === undefined) { to = from; from = to === 'xm' ? 'gz' : 'xm'; }

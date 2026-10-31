@@ -20,6 +20,9 @@ import { EMU, GZE, BF } from '../world/gze.js';
 import { EmuScenery } from '../world/emuScenery.js';
 import { XmnPlatform, XO } from '../world/xmn.js';
 import { XmnStation } from '../world/xmnStation.js';
+import { FzsPlatform } from '../world/fzs.js';
+import { FzsStation } from '../world/fzsStation.js';
+import { FO } from '../world/fzZones.js';
 import { RAIL, TRIP, CITIES, tripFor, destsFrom, routeFor } from '../data/rail.js';
 import * as Ann from '../audio/announcements.js';
 import * as PH from '../data/phrases.js';
@@ -255,7 +258,17 @@ export class EastCtl {
     Object.assign(this, { scene, M, player, hud, seats, Audio, events, getStation });
     this.interior = null; this.xmn = null; this.cur = null; this.side = 'gz'; this.ride = null; this.speed = 1;
     // 外地高铁站（广州东以外）：city → { O: 场景原点, loc: cur.loc 名, plat(): 站台对象（show(mode) / place(x, ox) / mode） }
-    this.rails = { xm: { O: XO, loc: 'xmn', plat: () => this.xmn } };
+    //   mloc：走进地铁以后的 cur.loc；metro()：该城市的地铁（XmMetro / FzMetro）；rail：地铁那边的国铁换乘站代码；Area：站房分区；stn / T / A：提示文字
+    this.rails = {
+      xm: { O: XO, loc: 'xmn', mloc: 'xmmetro', plat: () => this.xmn, metro: () => this.xmMetro, rail: 'xmnb', Area: XmnStation.area, stn: ['厦门北站', 'Xiamenbei'], metroToast: '厦门地铁 1号线 · 厦门北站',
+        T: { hall: '出站层 · Arrivals', passage: '换乘地铁通道 · Metro transfer', plaza: '南广场 · South Square', platform: '站台 · Platforms' },
+        A: { hall: ['出站层', 'Arrivals'], passage: ['换乘地铁', 'Metro transfer'], plaza: ['南广场', 'South Square'] } },
+      fz: { O: FO, loc: 'fzs', mloc: 'fzmetro', plat: make => (make && !this.fzs ? (this.fzs = new FzsPlatform(this.scene)) : this.fzs), metro: () => this.fzMetro, rail: 'fzfzn', Area: FzsStation.area,
+        stn: ['福州南站', 'Fuzhounan'], metroToast: '福州地铁 1号线 · 5号线 · 福州火车南站',
+        T: { hall: '出站层 · Arrivals', passage: '换乘地铁通道 · 出站口5', plaza: '东广场 · East Square', platform: '站台 · Platforms', wait: '候车室 · Waiting Hall', square: '西广场 · West Square' },
+        A: { hall: ['出站层', 'Arrivals'], passage: ['换乘地铁', 'Metro transfer'], plaza: ['东广场', 'East Square'], wait: ['候车室', 'Waiting Hall'], square: ['西广场', 'West Square'] } }
+    };
+    this.fzs = null;
     this.dest = null; this.picker = null;
     this.count = { enter: 0, exit: 0, rides: 0, arrived: [] };
     const orig = seats.hall; seats.hall = () => (this.interior && this.interior.active ? this.interior : orig ? orig() : null);
@@ -274,7 +287,7 @@ export class EastCtl {
   /** 车窗外 city 的站台：ox = 相对停稳位置的 x 偏移；null = 不显示（广州东 = 车厢里自带的那组；外地 = 各自站台对象的 car 模式） */
   stopAt(city, ox) {
     if (city === 'gz') { this.interior.showGz(ox); return; }
-    const r = this.rails[city], P = r && r.plat(); if (!P) return;
+    const r = this.rails[city], P = r && r.plat(ox !== null); if (!P) return;
     if (ox === null) { if (P.mode === 'car') P.show(null); return; }
     if (P.mode !== 'car') P.show('car'); P.place(EO.x, ox);
   }
@@ -282,7 +295,7 @@ export class EastCtl {
   showStopped() {
     const I = this.interior;
     I.showGz(this.side === 'gz' ? 0 : null);
-    for (const [c, r] of Object.entries(this.rails)) { const P = r.plat(); if (!P) continue; if (c === this.side) { P.show('car'); P.place(EO.x, 0); } else P.show(null); }
+    for (const [c, r] of Object.entries(this.rails)) { const P = r.plat(c === this.side); if (!P) continue; if (c === this.side) { const Q = r.plat(true); Q.show('car'); Q.place(EO.x, 0); } else P.show(null); }
   }
   /** 从 side 出发去哪：选过的 > 第一个目的地 */
   destFor(side = this.side) { const ds = destsFrom(side); return ds.includes(this.dest) ? this.dest : ds[0]; }
@@ -331,7 +344,7 @@ export class EastCtl {
     this.closePicker();
     const r = this.rails[this.side];
     if (r) {   // 外地高铁站（厦门北…）：下车站在站台上（独立场景）
-      r.plat().show('solo'); this.cur.loc = r.loc; this.cur.area = 'platform';
+      r.plat(true).show('solo'); this.cur.loc = r.loc; this.cur.area = 'platform';
       this.player.spawn(r.O.x + d.x, 0.05, GZE.edge + 0.9, 0);
       this.hud.toast(`${CITIES[this.side].stn} ${CITIES[this.side].stnEn}`, 2200);
       this.events.emit('east', { enter: false, at: this.side }); return;
@@ -354,6 +367,7 @@ export class EastCtl {
     // 有好几个目的地：先弹卡片选城市（选好以后坐着 1.2 秒照常开车）
     if (ds.length > 1 && !ds.includes(this.dest)) { this.openPicker(); return; }
     const dest = this.destFor(), trip = tripFor(from, dest);
+    if (this.rails[dest]) this.rails[dest].plat(true);   // 目的地站台先建好（福州南是第一次用到才建；开车前建，免得进站时卡一下）
     this.interior.setTrip(trip);
     this.ride = { from, dest, trip, t: 0, s: 0, v: 0, rt: 0, phase: 'closing', seg: 0, route: routeFor(from, dest), braking: false, rem: 0, flags: {} };
     this.count.rides++; this.setSpeed(1); this.speed = 1;
@@ -428,49 +442,54 @@ export class EastCtl {
       if (!pl.seat) { this.needStand = false; this.closePicker(); }
       if (!this.ride && !this.needStand && pl.seat && pl.seat.seat && pl.seat.seat.world && this.interior.doorF < 0.01 && !(this.doorOpenT > 0)) { this.sitT = (this.sitT || 0) + dtWall; if (this.sitT > 1.2) { this.sitT = 0; this.startRide(); } } else this.sitT = 0;
       if (this.interior.wantsExit(p) && !pl.seat && !this.ride) this.exit();
-    } else if (this.cur.loc === 'xmn') {
-      if (!pl.seat && p.y > -1 && p.y < 2 && p.z < GZE.edge - 0.05) { const d = EMU.doors.find(d => Math.abs(p.x - (XO.x + d.x)) < 0.55); if (d) this.board(d); }
-      if (p.y < -12 && !(this.xmMetro && this.xmMetro.station)) { pl.spawn(XO.x - 5.8, 0.05, GZE.edge + 1.5, 0); }
-      const a = XmnStation.area(p.x - XO.x, p.y, p.z);
-      if (a !== this.cur.area) { const was = this.cur.area; this.cur.area = a; if (was) { const T = { hall: '出站层 · Arrivals', passage: '换乘地铁通道 · Metro transfer', plaza: '南广场 · South Square', platform: '站台 · Platforms' }; this.hud.toast('厦门北站 ' + T[a], 1800); } this.events.emit('east', { area: a }); }
-      // 穿过地铁闸机、下到站台 → 交给厦门地铁
-      // 走楼梯（xmnStation 上半段 x -107..-101）往下：一踩到 -7.6 以下就把地铁站（下半段楼梯 / 通道 / 站台）建出来，人不动
-      { const lx = p.x - XO.x;
-        if (this.xmMetro && !this.xmMetro.station && a === 'passage' && p.y < -7.6 && lx > -108 && lx < -99 && Math.abs(p.z + 80) < 3.2) {
-          this.xmMetro.enterWalk(); this.cur.loc = 'xmmetro'; this.cur.area = 'metro';
-        this.hud.toast('厦门地铁 1号线 · 厦门北站', 2200);
-      } }
-    } else if (this.cur.loc === 'xmmetro') {
-      // 在厦门北站台爬回站厅 → 回到国铁付费区
-      // 在厦门北：顺着楼梯走回国铁地铁站厅（-7.0 以上），把地铁站拆掉，人留在原地（不传送）
-      if (this.xmMetro && this.xmMetro.code === 'xmnb' && !this.xmMetro.ride && p.y > -7.0 && (p.x - XO.x) > -111 && (p.x - XO.x) < -99 && Math.abs(p.z + 80) < 13) {
-        this.xmMetro.exitToRailway(pl, true); this.cur.loc = 'xmn'; this.cur.area = 'passage';
-        this.hud.toast('厦门北站 · 换乘地铁通道', 1800);
+    } else {
+      const r = Object.values(this.rails).find(q => q.loc === this.cur.loc || q.mloc === this.cur.loc); if (!r) return null;
+      const O = r.O, Mt = r.metro(), plat = r.plat(), lx = p.x - O.x;
+      if (this.cur.loc === r.loc) {
+        if (!pl.seat && p.y > -1 && p.y < 2 && p.z < GZE.edge - 0.05) { const d = EMU.doors.find(d => Math.abs(p.x - (O.x + d.x)) < 0.55); if (d) this.board(d); }
+        if (p.y < -12 && !(Mt && Mt.station)) { pl.spawn(O.x - 5.8, 0.05, GZE.edge + 1.5, 0); }
+        const a = r.Area(lx, p.y, p.z);
+        if (a !== this.cur.area) { const was = this.cur.area; this.cur.area = a; if (was) this.hud.toast(r.stn[0] + ' ' + (r.T[a] || ''), 1800); this.events.emit('east', { area: a }); }
+        // 穿过地铁闸机、下到站台 → 交给这个城市的地铁
+        // 走楼梯（站房上半段 x -107..-101）往下：一踩到 -7.6 以下就把地铁站（下半段楼梯 / 通道 / 站台）建出来，人不动
+        if (Mt && !Mt.station && a === 'passage' && p.y < -7.6 && lx > -108 && lx < -99 && Math.abs(p.z + 80) < 3.2) {
+          Mt.enterWalk(); this.cur.loc = r.mloc; this.cur.area = 'metro';
+          this.hud.toast(r.metroToast, 2200);
+        }
+      } else {
+        // 在换乘站：顺着楼梯走回国铁地铁站厅（-7.0 以上），把地铁站拆掉，人留在原地（不传送）
+        if (Mt && Mt.code === r.rail && !Mt.ride && p.y > -7.0 && lx > -111 && lx < -99 && Math.abs(p.z + 80) < 13) {
+          Mt.exitToRailway(pl, true); this.cur.loc = r.loc; this.cur.area = 'passage';
+          this.hud.toast(r.stn[0] + ' · 换乘地铁通道', 1800);
+        }
+        // 楼梯 / 换乘通道西段（x < -60）才需要国铁站房（站厅地面、楼梯上半段）；站台上关掉省 draw
+        if (Mt && Mt.code === r.rail && plat && plat.station) { const on = lx < -60; if (plat.station.root.isEnabled() !== on) plat.station.setEnabled(on); }
+        // 人已经坐上地铁离开换乘站：关掉国铁站台，但保留 side 方便回程
+        if (Mt && Mt.code && Mt.code !== r.rail && plat) plat.show(null);
       }
-      // 厦门北：楼梯 / 换乘通道西段（x < -60）才需要国铁站房（站厅地面、楼梯上半段）；站台上关掉省 draw
-      if (this.xmMetro && this.xmMetro.code === 'xmnb' && this.xmn && this.xmn.station) { const on = (p.x - XO.x) < -60; if (this.xmn.station.root.isEnabled() !== on) this.xmn.station.setEnabled(on); }
-      // 人已经坐上厦门地铁离开厦门北：关掉国铁 cur 里的站台逻辑，但保留 side=xm 方便回程
-      if (this.xmMetro && this.xmMetro.code && this.xmMetro.code !== 'xmnb' && this.xmn) this.xmn.show(null);
     }
     return null;
   }
   /** HUD 左上角：动车里 / 厦门北站台上显示车次和站名（不是地铁线路） */
   railHud() {
     if (!this.cur) return null;
-    if (this.cur.loc === 'xmn') { const A = { hall: ['出站层', 'Arrivals'], passage: ['换乘地铁', 'Metro transfer'], plaza: ['南广场', 'South Square'] }[this.cur.area];
-      return { badge: '国铁', zh: '厦门北站' + (A ? ' · ' + A[0] : ''), en: 'Xiamenbei' + (A ? ' · ' + A[1] : ''), color: '#1F5F8B' }; }
+    const rl = this.railLoc();
+    if (rl) { const A = rl.A[this.cur.area];
+      return { badge: '国铁', zh: rl.stn[0] + (A ? ' · ' + A[0] : ''), en: rl.stn[1] + (A ? ' · ' + A[1] : ''), color: '#1F5F8B' }; }
     const R = this.ride, trip = R ? R.trip : this.interior.trip;
     if (R && R.phase !== 'closing') return { badge: trip.train, zh: '复兴号 ' + EMU.car + ' 车', en: `${trip.fromEn} → ${trip.toEn}`, color: '#D3121A', next: { zh: trip.to, en: trip.toEn } };
     return { badge: trip.train, zh: CITIES[this.side].stn, en: CITIES[this.side].stnEn, color: '#D3121A' };
   }
   get loc() { return this.cur ? this.cur.loc : null; }
   /** 厦门北站里的哪一块（platform / hall / passage / plaza），不在厦门北站 = null */
-  get area() { return this.cur && this.cur.loc === 'xmn' ? this.cur.area || 'platform' : null; }
+  get area() { return this.railLoc() ? this.cur.area || 'platform' : null; }
+  /** 人在哪个外地高铁站的站房 / 站台（cur.loc = rails[].loc）：返回那条 rails 记录，否则 null */
+  railLoc() { return this.cur ? Object.values(this.rails).find(r => r.loc === this.cur.loc) || null : null; }
   info() {
     const R = this.ride;
     return { inside: !!(this.cur && this.cur.loc === 'car'), loc: this.loc, area: this.area, side: this.side, speed: this.speed, door: this.interior ? +this.interior.doorF.toFixed(2) : 0,
       dest: this.destFor(), dests: destsFrom(this.side), picker: !!this.picker,
       ride: R ? { from: R.from, dest: R.dest, phase: R.phase, t: +R.t.toFixed(1), rt: +R.rt.toFixed(1), v: +R.v.toFixed(1), s: Math.round(R.s), rem: Math.round(R.rem), seg: this.segAt(R.rt), tunnel: !!R.inTunnel } : null,
-      xmn: this.xmn ? this.xmn.info() : null, interior: this.interior ? this.interior.info() : null, count: this.count };
+      xmn: this.xmn ? this.xmn.info() : null, fzs: this.fzs ? this.fzs.info() : null, interior: this.interior ? this.interior.info() : null, count: this.count };
   }
 }

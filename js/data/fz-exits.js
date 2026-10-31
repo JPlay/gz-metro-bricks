@@ -16,12 +16,13 @@
  */
 import { FZ_LINES, FZ_STATIONS } from './fz-lines.js';
 
-/** 福州火车南站：地铁站厅（国铁出站层 B1）里的出口通道（x = 站厅南 / 北墙开口中心，站厅坐标同 xmnStation 的 MT 区） */
+/** 福州火车南站：出口通道（站房局部坐标，同 xmnStation）。A / B / F：换乘通道（z -84..-76）南墙开口 x 中心，往南上到东广场；
+ *  D2：地铁站厅北墙开口 x 中心，往北穿过股道下面上到西广场。位置是示意（真实站的出口在地铁站厅 B1 / 各广场，相对位置未核实） */
 export const FZS_EXITS = [
-  { n: 'F', x: -105.5, side: 'S', line: 1, to: ['东广场', '东站房'], toEn: ['East Square', 'East Building'], verified: false },
-  { n: 'A', x: -98.5, side: 'S', line: 5, to: ['东站房7号进站口（左转约20米）'], toEn: ['East Building Entrance 7 (turn left, about 20 m)'] },
-  { n: 'B', x: -91.5, side: 'S', line: 5, to: ['东广场公交', '机场大巴'], toEn: ['East Square buses', 'Airport coach'] },
-  { n: 'D2', x: -99, side: 'N', line: 1, to: ['西广场公交'], toEn: ['West Square buses'] },
+  { n: 'F', x: -70, side: 'S', line: 1, to: ['东广场', '东站房'], toEn: ['East Square', 'East Building'], verified: false },
+  { n: 'A', x: -62, side: 'S', line: 5, to: ['东站房7号进站口（左转约20米）'], toEn: ['East Building Entrance 7 (turn left, about 20 m)'] },
+  { n: 'B', x: -54, side: 'S', line: 5, to: ['东广场公交', '机场大巴'], toEn: ['East Square buses', 'Airport coach'] },
+  { n: 'D2', x: -93.1, side: 'N', line: 1, to: ['西广场公交'], toEn: ['West Square buses'] },
 ];
 
 /** 每站一个出口（XmStation.buildConcourse / XmMetro.goStreet 用的格式：{ n, x, line, road, to, toEn }） */
