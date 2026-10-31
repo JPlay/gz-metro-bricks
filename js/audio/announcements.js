@@ -16,3 +16,6 @@ export const safety = k => say(P.safetySegs(k), { key: 'safety' });
 export const xmDepart = (line, nextCode, dir, step, withDest) => say(P.xmDepartSegs(line, nextCode, dir, step, withDest), { key: 'next', interrupt: true });
 export const xmPlatform = (line, dir, n) => say(P.xmPlatformSegs(line, dir, n), { key: 'platform', interrupt: true });
 export const xmExit = code => say(P.xmExitSegs(code), { key: 'xmexit' });
+export const fzDepart = (line, nextCode, dir, step, withDest) => say(P.fzDepartSegs(line, nextCode, dir, step, withDest), { key: 'next', interrupt: true });
+export const fzPlatform = (line, dir, n) => say(P.fzPlatformSegs(line, dir, n), { key: 'platform', interrupt: true });
+export const fzExit = code => say(P.fzExitSegs(code), { key: 'fzexit' });

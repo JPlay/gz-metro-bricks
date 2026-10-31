@@ -264,7 +264,7 @@ export class XmStation {
   /** 站台装修：端墙（闽南红砖山墙 / 岩壁）、岛中立柱、屏蔽门上方门楣、燕尾脊吊牌框 */
   decor(P) {
     const k = this.kit, y = P.y, zc = P.zc, th = this.th, Pv = k.solid, BR = k.g(this.dadoG), GR = k.g('granite'), G = k.glow;
-    const rock = this.themeKey === 'rock', CY = y + 4.2, SEA = hex('#1F6FA8'), STONE = hex('#E9E3D6'), TILE = hex('#D99A84');
+    const rock = this.themeKey === 'rock', CY = y + 4.2, SEA = hex(this.N.sea || '#1F6FA8'), STONE = hex('#E9E3D6'), TILE = hex('#D99A84');
     const so = P.sideOnly;
     const z0 = so === 'A' ? zc - XM_PSD : so ? zc - 0.5 : zc - XM_PSD, z1 = so === 'A' ? zc + 0.4 : zc + XM_PSD;
     let seed = (this.code.charCodeAt(0) * 31 + P.line * 7) | 0;
@@ -311,7 +311,8 @@ export class XmStation {
         }
       }
       // 燕尾脊：贴在端墙上沿（沿 z 方向做脊）
-      // 山墙上的大燕尾脊：深色瓦脊 + 白灰线，两端长长上翘分叉（低于天花梁，正面能看见）
+      // 山墙上的大燕尾脊：深色瓦脊 + 白灰线，两端长长上翘分叉（低于天花梁，正面能看见）；N.plain（福州）不做
+      if (this.N.plain) continue;
       const xr = xi - e * 0.16, col = hex('#2F2723'), line = STONE;
       const ya = y + 2.75, za = z0 + 3.0, zb = z1 - 3.0;
       Pv.slab(xr - 0.14, xr + 0.14, ya, ya + 0.5, za, zb, col, { ao: false });
@@ -375,7 +376,7 @@ export class XmStation {
       const za = Math.min(zf, zf - sg * 0.05), zb = Math.max(zf, zf - sg * 0.05);
       Pv.slab(-XM_HALL_X + 0.3, XM_HALL_X - 0.3, y + 2.82, y + 2.97, za - 0.02, zb + 0.02, SEA, { ao: false });
       if (rock) GR.slab(-XM_HALL_X + 0.3, XM_HALL_X - 0.3, y + 2.97, CY, za, zb, hex('#8C8276'), { ao: false });
-      else Pv.slab(-XM_HALL_X + 0.3, XM_HALL_X - 0.3, y + 2.97, CY, za, zb, hex('#3A2C26'), { ao: false });   // 深色木门楣
+      else Pv.slab(-XM_HALL_X + 0.3, XM_HALL_X - 0.3, y + 2.97, CY, za, zb, hex(this.N.header || '#3A2C26'), { ao: false });   // 深色木门楣（福州：N.header）
       // 站名牌（中英 + 线路色），挂在屏蔽门上方，面向站台
       const L = this.N.LINES[P.line], stn = this.s;
       const paint = (c, pw, ph) => {

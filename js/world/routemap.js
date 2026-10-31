@@ -8,7 +8,11 @@
  */
 import { LINES, STATIONS, OTHER_LINES } from '../data/lines.js';
 import { XM_LINES, XM_STATIONS } from '../data/xm-lines.js';
+import { FZ_LINES, FZ_STATIONS } from '../data/fz-lines.js';
 const NET = { gz: { LINES, STATIONS, OTHER: OTHER_LINES }, xm: { LINES: XM_LINES, STATIONS: XM_STATIONS, OTHER: { 3: { zh: '3号线', en: 'Line 3', color: '#00A0E9' }, 4: { zh: '4号线', en: 'Line 4', color: '#E60012' }, 6: { zh: '6号线', en: 'Line 6', color: '#8B5CF6' } } } };
+// 福州：本游戏只做 1、5 号线；其他换乘线（2/4/6）线路色未核实，统一画中性灰
+const FZ_OTHER = { 2: { zh: '2号线', en: 'Line 2', color: '#8A9098' }, 4: { zh: '4号线', en: 'Line 4', color: '#8A9098' }, 6: { zh: '6号线', en: 'Line 6', color: '#8A9098' } };
+NET.fz = { LINES: FZ_LINES, STATIONS: FZ_STATIONS, OTHER: FZ_OTHER };
 function N(net = 'gz') { return NET[net] || NET.gz; }
 import { FONT, FONT_EN, roundRect } from './kit.js';
 import { VISITS, visitBanner } from '../data/visits.js';

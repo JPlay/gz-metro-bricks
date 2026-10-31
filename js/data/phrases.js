@@ -7,14 +7,17 @@ import { LINES, STATIONS, OTHER_LINES, isTerminal, transfersAt } from './lines.j
 import { XM_LINES, XM_STATIONS, xmNext, xmIsTerminal, xmTransfers } from './xm-lines.js';
 import { VISITS, visitTexts } from './visits.js';
 import { xmVisitTexts, xmExitTexts } from './xm-visits.js';
+import { FZ_LINES, FZ_STATIONS, fzIsTerminal, fzTransfers } from './fz-lines.js';
 
 export const LANGS = ['zh', 'yue', 'en'];
 /** 播放顺序：普通话 → 粤语（广州）/ 闽南语（厦门地铁）→ 英语。粤语只在广州、闽南语只在厦门地铁 1/2 号线；动车只有普通话 + 英语 */
-export const ORDER = ['zh', 'yue', 'nan', 'en'];
+export const ORDER = ['zh', 'yue', 'nan', 'fzh', 'en'];
 const LEGACY = new Set(['gyq', 'njs', 'lsly', 'dsk']);
 const seg = (key, texts) => LANGS.map((l, i) => ({ id: `voice.${key}.${l}`, lang: l, text: texts[i] })).filter(s => s.text);
 /** 厦门地铁：[普通话, 英语] → 普通话 → 闽南语（同一段中文文字，用闽南话念）→ 英语 */
 const xseg = (key, zh, en) => [{ id: `voice.${key}.zh`, lang: 'zh', text: zh }, { id: `voice.${key}.nan`, lang: 'nan', text: zh }, { id: `voice.${key}.en`, lang: 'en', text: en }].filter(s => s.text);
+/** 福州地铁：普通话 → 福州话（fzh，第一批没有录音：没有 MP3 就整段跳过，不用 Web Speech、也不拿闽南语代替）→ 英语。key 统一 fz. 前缀 */
+const fseg = (key, zh, en) => [{ id: `voice.fz.${key}.zh`, lang: 'zh', text: zh }, { id: `voice.fz.${key}.fzh`, lang: 'fzh', text: zh }, { id: `voice.fz.${key}.en`, lang: 'en', text: en }].filter(s => s.text);
 
 function xZh(list) { return list.map(k => { const o = OTHER_LINES[k]; return o.name || o.num + '号线'; }).join('、'); }
 function xEn(list) {
@@ -56,16 +59,19 @@ export function departSegs(line, nextCode, dir, step, withDestination) {
   const head = withDestination ? destinationSegs(line, dir) : [];
   return isTerminal(line, nextCode, step) ? [...head, ...terminalSegs(line, dir), ...visitSegs(nextCode)] : [...head, ...nextSegs(line, nextCode)];
 }
-function stnOf(code) { return STATIONS[code] || XM_STATIONS[code]; }
+function stnOf(code) { return STATIONS[code] || XM_STATIONS[code] || FZ_STATIONS[code]; }
 function isXm(code) { return !!XM_STATIONS[code] && !STATIONS[code]; }
+const isFz = code => !!FZ_STATIONS[code];
 export function arriveSegs(code) {
   const s = stnOf(code);
+  if (isFz(code)) return fseg('arrive.' + code, `列车即将到达${zhStn(s.zh)}，请小心列车与站台之间的空隙。`, `The train is arriving at ${s.en}. Please mind the gap between the train and the platform.`);
   // 厦门地铁：普通话 → 闽南语 → 英语（不播粤语）
   if (isXm(code)) return xseg('arrive.' + code, `列车即将到达${zhStn(s.zh)}，请小心列车与站台之间的空隙。`, `The train is arriving at ${s.en}. Please mind the gap between the train and the platform.`);
   return [...seg('arrive.' + code, [`列车即将到达${zhStn(s.zh)}，请小心列车与站台之间的空隙。`, `列车即将到达${zhStn(s.zh)}，请小心列车同站台之间的空隙。`, `The train is arriving at ${s.en}. Please mind the gap between the train and the platform.`])];
 }
 export function welcomeSegs(code) {
   const s = stnOf(code);
+  if (isFz(code)) return fseg('welcome.' + code, `欢迎光临${zhStn(s.zh)}。请排队候车，先下后上。`, `Welcome to ${enStn(s)}. Please line up for the train. Let the passengers get off first before you get on.`);
   if (isXm(code)) return xseg('welcome.' + code, `欢迎光临${zhStn(s.zh)}。请排队候车，先下后上。`, `Welcome to ${enStn(s)}. Please line up for the train. Let the passengers get off first before you get on.`);
   return seg('welcome.' + code, [`欢迎光临${zhStn(s.zh)}。请排队候车，先下后上。`, `欢迎光临${zhStn(s.zh)}。请排队候车，先落后上。`, `Welcome to ${enStn(s)}. Please line up for the train. Let the passengers get off first before you get on.`]);
 }
@@ -90,12 +96,16 @@ export const safetySegs = k => seg('safety.' + k, [SAFETY[k][0], SAFETY[k][1], n
 /** 车次报站文字：键 = rail.js 里 trip.ann（广州⇄厦门沿用旧键 xm / gz） */
 const EMU_T = {
   xm: { no: 'D二三一五', noEn: 'D two three one five', from: '广州东站', to: '厦门北站', fromEn: 'Guangzhou East', toEn: 'Xiamen North', city: '厦门', cityEn: 'Xiamen' },
-  gz: { no: 'D三三一一', noEn: 'D three three one one', from: '厦门北站', to: '广州东站', fromEn: 'Xiamen North', toEn: 'Guangzhou East', city: '广州', cityEn: 'Guangzhou' }
+  gz: { no: 'D三三一一', noEn: 'D three three one one', from: '厦门北站', to: '广州东站', fromEn: 'Xiamen North', toEn: 'Guangzhou East', city: '广州', cityEn: 'Guangzhou' },
+  // 厦门北⇄福州南（福厦高铁）：G3028 厦门北 → 南京南（福州南下车），G3027 南京南 → 厦门北（福州南上车）。end / start = 全程终到 / 始发站
+  fz: { no: 'G三零二八', noEn: 'G three zero two eight', from: '厦门北站', to: '福州南站', end: '南京南站', fromEn: 'Xiamen North', toEn: 'Fuzhou South', endEn: 'Nanjing South', city: '福州', cityEn: 'Fuzhou' },
+  xmf: { no: 'G三零二七', noEn: 'G three zero two seven', from: '福州南站', to: '厦门北站', start: '南京南站', fromEn: 'Fuzhou South', toEn: 'Xiamen North', startEn: 'Nanjing South', city: '厦门', cityEn: 'Xiamen' }
 };
 export const emuDoorsSegs = () => seg('emu.doors', ['列车即将出发，车门即将关闭，请注意安全。', null, 'The train is about to depart. The doors are closing.']);
-export const emuDepartSegs = d => { const t = EMU_T[d]; return seg('emu.depart.' + d, [`旅客们，欢迎乘坐${t.no}次列车。本次列车由${t.from}开往${t.to}。`, null, `Welcome aboard train ${t.noEn}, from ${t.fromEn} to ${t.toEn}.`]); };
+export const emuDepartSegs = d => { const t = EMU_T[d]; return seg('emu.depart.' + d, [`旅客们，欢迎乘坐${t.no}次列车。本次列车由${t.start || t.from}开往${t.end || t.to}。`, null, `Welcome aboard train ${t.noEn}, from ${t.startEn || t.fromEn} to ${t.endEn || t.toEn}.`]); };
 /** 途经大桥：key = 片段 id 后缀（'bridge' = 九龙江特大桥，旧 id emu.bridge） */
-const EMU_BRIDGE = { bridge: ['列车正在通过九龙江特大桥。', null, 'We are now crossing the Jiulong River Bridge.'] };
+const EMU_BRIDGE = { bridge: ['列车正在通过九龙江特大桥。', null, 'We are now crossing the Jiulong River Bridge.'],
+  qzw: ['列车正在通过泉州湾跨海大桥。', null, 'We are now crossing the Quanzhou Bay Bridge.'] };
 export const emuBridgeSegs = (k = 'bridge') => EMU_BRIDGE[k] ? seg('emu.' + k, EMU_BRIDGE[k]) : [];
 export const emuNextSegs = d => { const t = EMU_T[d]; return seg('emu.next.' + d, [`前方到站，${t.to}。请您带好随身物品，准备下车。`, null, `We will soon arrive at ${t.toEn}. Please take your belongings and get ready to leave the train.`]); };
 export const emuArriveSegs = d => { const t = EMU_T[d]; return seg('emu.arrive.' + d, [`${t.to}到了。欢迎您来到${t.city}，下车时请注意列车与站台之间的空隙。`, null, `We have arrived at ${t.toEn}. Welcome to ${t.cityEn}. Please mind the gap when leaving the train.`]); };
@@ -132,6 +142,36 @@ export function xmDepartSegs(line, nextCode, dir, step, withDestination) {
   const head = withDestination ? xmDestinationSegs(line, dir) : [];
   return xmIsTerminal(line, nextCode, step) ? [...head, ...xmTerminalSegs(line, dir)] : [...head, ...xmNextSegs(line, nextCode), ...xmVisitSegs(nextCode)];
 }
+/** 福州地铁报站（普通话 → 福州话（暂缺，跳过）→ 英语）；方向 / 站 id 都带 fz. 前缀 */
+export function fzDestinationSegs(line, dir) {
+  const d = FZ_LINES[line].dirs[dir];
+  return fseg('destination.' + dir, `本次列车终点站为${d.zh}。`, `The destination of this train is ${d.en}.`);
+}
+export function fzTerminalSegs(line, dir) {
+  const d = FZ_LINES[line].dirs[dir];
+  return fseg('terminal.' + dir, `下一站是本次列车的终点站，${d.zh}。请全部乘客带齐行李物品在此站下车，欢迎再次乘坐福州地铁。`,
+    `The next station is ${d.en}, the terminal of this journey. Please take all your belongings and leave the train. Thank you for travelling on Fuzhou Metro.`);
+}
+export function fzPlatformSegs(line, dir, n) {
+  const d = FZ_LINES[line].dirs[dir], num = ['一', '二'][n - 1];
+  return fseg(`platform.${dir}.${n}`, `${num}站台，${d.zh}方向列车即将进站。`, `The train bound for ${d.en} is approaching at Platform ${n}.`);
+}
+export function fzNextSegs(line, code) {
+  const s = FZ_STATIONS[code], xs = fzTransfers(code, line);
+  const xZh = xs.map(k => k + '号线').join('、'), xEn = xs.map(k => 'Line ' + k).join(' and ');
+  const zx = xs.length ? '，可换乘' + xZh : '', ex = xs.length ? ', the interchange with ' + xEn : '';
+  const both = Object.values(FZ_LINES).filter(L => L.stations.includes(code)).length > 1;
+  return fseg('next.' + code + (both ? line : ''), `下一站，${s.zh}${zx}。`, `The next station is ${s.en}${ex}.`);
+}
+/** 福州：到站后的出口提示（只有福州火车南站：去国铁 / 东广场） */
+const FZ_EXIT_T = {
+  fzfzn: ['乘坐国铁的乘客，请从站厅南侧A口出站，左转约二十米到东站房七号进站口。去西广场请走D2口。', 'For China Railway trains, please take Exit A and turn left to Entrance 7 of the East Building. For the West Square, please take Exit D2.']
+};
+export const fzExitSegs = code => { const t = FZ_EXIT_T[code]; return t ? fseg('exit.' + code, t[0], t[1]) : []; };
+export function fzDepartSegs(line, nextCode, dir, step, withDestination) {
+  const head = withDestination ? fzDestinationSegs(line, dir) : [];
+  return fzIsTerminal(line, nextCode, step) ? [...head, ...fzTerminalSegs(line, dir)] : [...head, ...fzNextSegs(line, nextCode)];
+}
 export function allJobs() {
   const out = new Map(), add = list => list.forEach(s => out.set(s.id, s));
   for (const [id, L] of Object.entries(LINES)) {
@@ -143,6 +183,11 @@ export function allJobs() {
     const line = +id;
     for (const dir of Object.keys(L.dirs)) { add(xmDestinationSegs(line, dir)); add(xmTerminalSegs(line, dir)); add(xmPlatformSegs(line, dir, 1)); add(xmPlatformSegs(line, dir, 2)); }
     L.stations.forEach((c, i) => { if (i > 0 && i < L.stations.length - 1) add(xmNextSegs(line, c)); add(arriveSegs(c)); add(welcomeSegs(c)); add(xmVisitSegs(c)); add(xmExitSegs(c)); });
+  }
+  for (const [id, L] of Object.entries(FZ_LINES)) {
+    const line = +id;
+    for (const dir of Object.keys(L.dirs)) { add(fzDestinationSegs(line, dir)); add(fzTerminalSegs(line, dir)); add(fzPlatformSegs(line, dir, 1)); add(fzPlatformSegs(line, dir, 2)); }
+    L.stations.forEach((c, i) => { if (i > 0 && i < L.stations.length - 1) add(fzNextSegs(line, c)); add(arriveSegs(c)); add(welcomeSegs(c)); add(fzExitSegs(c)); });
   }
   add(doorsClosingSegs()); add(gapSegs()); add(emuJobs()); Object.keys(SAFETY).forEach(k => add(safetySegs(k)));
   return [...out.values()].map(s => ({ ...s, file: 'voice/' + s.id.slice(6).replace(/\./g, '-') + '.mp3' }));

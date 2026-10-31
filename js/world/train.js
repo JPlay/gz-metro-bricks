@@ -11,6 +11,7 @@ import { Geo, hex, mix } from '../core/geo.js';
 import { randomLook, preseed, Person } from './people.js';
 import { LINES, STATIONS } from '../data/lines.js';
 import { XM_LINES, XM_STATIONS } from '../data/xm-lines.js';
+import { FZ_LINES, FZ_STATIONS } from '../data/fz-lines.js';
 import { drawStrip, drawLcd, hotUV, STRIP_W, STRIP_H } from './routemap.js';
 const TEX_K = 0.75; // 车内两块屏贴图的缩放（见 build）
 const B = window.BABYLON;
@@ -19,9 +20,9 @@ export const CAR_X = [-18.6, 0, 18.6], DOOR_DX = [-6, 0, 6], HALF = 27.9, DOOR_W
 export const DOOR_XS = CAR_X.flatMap(c => DOOR_DX.map(d => c + d));
 const WHITE = [1, 1, 1], STEEL = hex('#BFC6CE'), DARK = hex('#2A2E33'), INT = hex('#F1F0EC'), FLOORC = hex('#8E979F');
 // 涂装（对照实车）：1 号线 A1 型 = 黄色车身 + 红色腰带；2 号线 = 香槟色车身 + 线路蓝腰带
-const BODY = { 1: '#F4CF3A', 2: '#E9DEC6', xm1: '#F5E6D8', xm2: '#E6F3EA' }, STRIPE = { 1: '#D52B1E', 2: '#00629B', xm1: '#F2711C', xm2: '#00A651' };
+const BODY = { 1: '#F4CF3A', 2: '#E9DEC6', xm1: '#F5E6D8', xm2: '#E6F3EA', fz1: '#F4F5F3', fz5: '#F4F5F3' }, STRIPE = { 1: '#D52B1E', 2: '#00629B', xm1: '#F2711C', xm2: '#00A651', fz1: '#CB333B', fz5: '#893B67' };   // 福州：白车身 + 线路色腰带
 /** 当前列车跑哪张网：'gz' | 'xm' | …（线路图 / 站名来自各城市的 *-lines.js）。新城市：registerNet(net, LINES, STATIONS) + BODY/STRIPE 加 `${net}${line}` */
-const NETS = { gz: { LINES, STATIONS }, xm: { LINES: XM_LINES, STATIONS: XM_STATIONS } };
+const NETS = { gz: { LINES, STATIONS }, xm: { LINES: XM_LINES, STATIONS: XM_STATIONS }, fz: { LINES: FZ_LINES, STATIONS: FZ_STATIONS } };
 export function registerNet(net, lines, stations, colors) {
   NETS[net] = { LINES: lines, STATIONS: stations };
   if (colors) for (const [k, c] of Object.entries(colors)) { BODY[net + k] = c.body; STRIPE[net + k] = c.stripe; }

@@ -419,6 +419,8 @@ async function pump() {
         // 片段可以是清单 id，也可以是 {id, lang, text}（新车站：清单里没有 MP3 时直接走 Web Speech 回退）
         const x = item.ids[i], a = typeof x === 'string' ? assets[x] : (assets[x.id] || x);
         if (!a) { log.errors.push('未知片段 ' + x); continue; }
+        // 福州话（福州地铁）第一批没有录音：没 MP3 就整段跳过（不显示字幕、不用 Web Speech、不拿闽南语代替）
+        if (a.lang === 'fzh' && !(a.file && assets[a.id])) { log.skipped = (log.skipped || []).concat(a.id); continue; }
         if (!canPlay() || muted) {
           // 未解锁/静音/后台：照样按时长显示字幕，保证游戏节奏一致
           caption(a, { silent: true }); sleepToken = {}; await sleep(estimate(a) + (i ? 220 : 70), sleepToken); continue;
