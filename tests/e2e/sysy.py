@@ -16,6 +16,8 @@ OUT=(sys.argv[2] if len(sys.argv)>2 else '/workspace/gz-shots-polish/sysy-r3/').
 Q=sys.argv[3] if len(sys.argv)>3 else '1'
 # 预算 = 现有站厅（公园前站厅闸机机位，a904278，q=1，同一测法）的最大值
 BUDGET={'draws':66,'tris':186754}
+# 街面镜头另有更严的预算（iPad Air 3：每个画面 ≤ 9 万三角形、≤ 50 次绘制）
+STREET=('02-gate-front','03-axis','04-fence','05-arrival'); STREET_BUDGET={'draws':50,'tris':90000}
 R={'perf':{}}
 
 BTNS_JS = """(()=>{const vw=innerWidth,vh=innerHeight,out=[];
@@ -127,6 +129,7 @@ async def main():
     R['errors']=errs(logs); R['gameSeconds']=round(await gt(pg),1)
     # 预算只管 r3 要求的镜头；x* 是原有车站内景（站台 / 站厅导向牌），只记录
     R['overBudget']=[k for k,v in R['perf'].items() if not k.startswith('x') and (v['draws']>BUDGET['draws'] or v['tris']>BUDGET['tris'])]
+    R['overBudget']+=[k+'(street)' for k in STREET if k in R['perf'] and (R['perf'][k]['draws']>STREET_BUDGET['draws'] or R['perf'][k]['tris']>STREET_BUDGET['tris'])]
     print(json.dumps(R, ensure_ascii=False, indent=1, default=str))
     ok=R['noChip'] and R['noMapDest'] and R['board'] and R['arriving'] and R['noPlatformAnnInCar'] and len(R['visitAnn'])>=3 and R['offAt'][0]=='jnt' and not R['offAt'][2] \
        and R['street'][0]=='street' and R['noStreetHint'] and R['arrived'] and R['framed'] and R['cheer'] and R['cardSoon'] and R['cardClosed'] \
