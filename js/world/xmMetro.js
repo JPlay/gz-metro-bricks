@@ -520,8 +520,8 @@ export class XmStation {
     const k = this.kit, Pv = k.solid, SEA = hex('#1F6FA8');
     const XFo = lvl ? this.XF2 : this.XF, XM_PY = lvl ? XM_PY2_ : XM_PY_, XM_PY2 = lvl ? XM_PY3 : XM_PY2_;
     // 一半步行楼梯（深色防滑边）+ 一半扶梯（深灰梯级 + 黄边），中间玻璃隔板 + 扶手
-    k.stairs('x', XFo.x0, XM_PY2, XFo.x1, XM_PY, XFo.z0, XFo.zc - 0.12, XM_PY2, '#D6D1C7', { nosing: '#4A3A32' });
-    k.stairs('x', XFo.x0, XM_PY2, XFo.x1, XM_PY, XFo.zc + 0.12, XFo.z1, XM_PY2, '#8C9298', { nosing: '#F2C230' });
+    k.stairs('x', XFo.x0, XM_PY2, XFo.x1, XM_PY, XFo.z0, XFo.zc - 0.12, XM_PY2, '#D6D1C7', { nosing: '#4A3A32', railWall: true });
+    k.stairs('x', XFo.x0, XM_PY2, XFo.x1, XM_PY, XFo.zc + 0.12, XFo.z1, XM_PY2, '#8C9298', { nosing: '#F2C230', railWall: true });
     { const L = XFo.x1 - XFo.x0, dy = XM_PY - XM_PY2, len = Math.hypot(L, dy), ang = Math.atan2(dy, L), mx = (XFo.x0 + XFo.x1) / 2, my = (XM_PY + XM_PY2) / 2;
       k.glass.box(mx, my + 0.5, XFo.zc, len, 0.9, 0.03, hex('#D6EEF8'), 0, 0, ang);
       k.metal.box(mx, my + 0.98, XFo.zc, len, 0.07, 0.16, hex('#C4CBD2'), 0, 0, ang);

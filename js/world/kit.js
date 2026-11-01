@@ -64,7 +64,7 @@ export class Kit {
    * 楼梯：沿 x 轴（axis='x'）或 z 轴，从 (a, ya) 到 (b, yb)，宽度方向范围 [w0,w1]。
    * 视觉：花岗岩踏步 + 深色防滑条（踏步前缘）+ 不锈钢扶手；碰撞：一块倾斜薄板 + 两侧扶手墙。
    */
-  stairs(axis, a, ya, b, yb, w0, w1, baseY, col, { rails = true, steps = true, nosing = '#3A3F45', visual = null } = {}) {
+  stairs(axis, a, ya, b, yb, w0, w1, baseY, col, { rails = true, steps = true, nosing = '#3A3F45', visual = null, railWall = false } = {}) {
     if (visual) steps = false;
     const L = Math.abs(b - a), dy = yb - ya, n = Math.max(2, Math.round(Math.abs(dy) / 0.16)), dir = Math.sign(b - a);
     const c = typeof col === 'string' ? hex(col) : col, F = this.g('floor'), P = this.g('paint'), nc = hex(nosing);
@@ -95,8 +95,19 @@ export class Kit {
       for (const w of [w0, w1]) {
         const off = w === w0 ? -0.06 : 0.06;
         // 玻璃栏板 + 不锈钢扶手 + 立柱
-        if (axis === 'x') { this.col(mid, my + 0.7, w + off, len, 1.4, 0.12, { rz: ang }); this.glass.box(mid, my + 0.55, w + off, len, 0.9, 0.03, hex('#DDEFF7'), 0, 0, ang); }
-        else { this.col(w + off, my + 0.7, mid, 0.12, 1.4, len, { rx: -ang }); this.glass.box(w + off, my + 0.55, mid, 0.03, 0.9, len, hex('#DDEFF7'), 0, -ang, 0); }
+        if (railWall) {
+          // 扶手顶不可站：不用随坡度旋转的 1.4 m 碰撞盒（其上端面是个 ~60° 的斜坡，人能从楼梯口踩上扶手顶走），
+          // 改为分段竖直隐形挡墙：从楼梯底一直到该段梯面 +3 m（跳跃最高约 1.2 m，够不着顶），端面竖直，没有可踩的斜面
+          const segN = Math.max(2, Math.ceil(L / 1.0)), yAt = s => ya + dy * (s - a) / (b - a), z0 = w + Math.min(0, 2 * off), z1 = w + Math.max(0, 2 * off);
+          for (let k = 0; k < segN; k++) {
+            const s0 = a + (b - a) * k / segN, s1 = a + (b - a) * (k + 1) / segN, y1 = Math.max(yAt(s0), yAt(s1)) + 3.0, y0 = Math.min(baseY, yAt(s0), yAt(s1));
+            const m = axis === 'x' ? this.colSlab(s0, s1, y0, y1, z0, z1) : this.colSlab(z0, z1, y0, y1, s0, s1);
+            if (m) m.metadata = { ...(m.metadata || {}), noCam: true };
+          }
+        } else if (axis === 'x') this.col(mid, my + 0.7, w + off, len, 1.4, 0.12, { rz: ang });
+        else this.col(w + off, my + 0.7, mid, 0.12, 1.4, len, { rx: -ang });
+        if (axis === 'x') this.glass.box(mid, my + 0.55, w + off, len, 0.9, 0.03, hex('#DDEFF7'), 0, 0, ang);
+        else this.glass.box(w + off, my + 0.55, mid, 0.03, 0.9, len, hex('#DDEFF7'), 0, -ang, 0);
         const pt = s => axis === 'x' ? [s, ya + dy * (s - a) / (b - a), w + off] : [w + off, ya + dy * (s - a) / (b - a), s];
         const A = pt(a), Bp = pt(b);
         this.metal.tube([A[0], A[1] + 1.02, A[2]], [Bp[0], Bp[1] + 1.02, Bp[2]], 0.055, STEEL);
