@@ -23,6 +23,20 @@ export const VISIT_MARGIN = 1.5;
 // 只算带“请从×出口出站”的景点广播（诚毅广场那种只有“欢迎下车游玩”、没有出口的不算）
 const isExitVisit = x => typeof x !== 'string' && /^voice\.(xm)?visit\./.test(x.id) && /出口|Exit/.test(x.text || '');
 export function departHold(segs) { return segs.some(isExitVisit) ? seconds(segs) + VISIT_MARGIN : 0; }
+/** 景点出口广播还在播（或还在等下载）时，行车保底上限从“还差的 + 6 s”放宽到“还差的 + VISIT_CAP s”（见 service.js cruiseDone） */
+export const VISIT_CAP = 20;
+const asSeg = x => typeof x === 'string' ? (Audio.getAsset(x) || { id: x }) : x;
+export function visitLeft() { return Audio.pendingSegs().some(x => isExitVisit(asSeg(x))); }
+/**
+ * 预取：车停在上一站（或刚开出）时，把下一段“下一站……前往××请从×出口”整段广播的 MP3（所有会播的语种）先下载、解码好，
+ * iPad 网络慢、没缓存时也不用开车后才一个个下载。只对有景点出口广播的段（departHold > 0）做；返回预取的片段 id。
+ */
+export function prefetchDepart(segs) {
+  if (!departHold(segs)) return [];
+  const ids = segs.map(x => typeof x === 'string' ? x : x.id).filter(id => { const a = Audio.getAsset(id); return a && a.file; });
+  Audio.prefetch(ids);
+  return ids;
+}
 export const arrive = code => say(P.arriveSegs(code), { key: 'arrive', interrupt: true });
 export const welcome = code => say(P.welcomeSegs(code), { key: 'welcome' });
 export const platform = (line, dir, n) => say(P.platformSegs(line, dir, n), { key: 'platform', interrupt: true });

@@ -104,6 +104,8 @@ export class XmMetro {
       if (s.state === 'away' && s.step !== s.side.step) s.step = s.side.step;   // 借来终到的槽位（见 attach）：清客开走后恢复这一侧本来的方向
       const tr = s.train, nx = xmNext(s.line, this.code, s.step);
       const aboard = this.playerOn(tr), onPlat = !inCar && this.ctx.zone && this.ctx.zone.kind === 'platform' && this.ctx.zone.P === s.P;
+      // 人在车上、车停在这一站：先把下一段景点出口广播的 MP3 下载、解码好（同广州 service.js）
+      if (aboard && nx && s.pre !== s.step && s.state !== 'away' && s.state !== 'departing') { s.pre = s.step; this.preloadNext(s, nx); }
       s.t -= dt;
       // 坐在车里时对面那趟车先不进站（iPad 预算：车厢里 ≤50 draws）
       if (inCar && !aboard) {
@@ -184,11 +186,15 @@ export class XmMetro {
     const step = r.step;
     for (const l of this.lamps) { l.position.x -= step * VMAX * dt; if (l.position.x < -90) l.position.x += 180; if (l.position.x > 90) l.position.x -= 180; }
     A.trainSound({ speed: 1, inside: true, braking: false });
-    if (cruiseDone(r, A.isAnnouncing())) this.exitTunnel();
+    if (cruiseDone(r, A.isAnnouncing(), r.hold > 0 && Ann.visitLeft())) this.exitTunnel();
+  }
+  preloadNext(s, nx) {
+    const ids = Ann.prefetchDepart(xmDepartSegs(s.line, nx, dirKey(s.line, s.step), s.step, this.legs === 0 || this.ride?.line !== s.line));
+    if (ids.length) this.preload = { at: this.code, next: nx, ids };
   }
   exitTunnel() {
     const r = this.ride, tr = r.train, pl = this.ctx.player, s = r.slot;
-    this.lastLeg = { from: r.from, to: this.code, hold: +(r.hold || 0).toFixed(2), out: +(r.el || 0).toFixed(2), cruise: +r.t.toFixed(2), total: +((r.el || 0) + r.t).toFixed(2) };
+    this.lastLeg = { from: r.from, to: this.code, hold: +(r.hold || 0).toFixed(2), out: +(r.el || 0).toFixed(2), cruise: +r.t.toFixed(2), total: +((r.el || 0) + r.t).toFixed(2), ext: !!r.hold && r.t > Math.max(14, r.hold - (r.el || 0) + 6) };
     const off = pl.position.subtract(tr.root.position);
     s.state = 'arriving'; s.u = 1 - Math.sqrt(0.8);
     tr.setLine(r.line, 'xm'); tr.setMap(r.line, this.code, r.step, xmNext(r.line, this.code, r.step));
@@ -245,7 +251,7 @@ export class XmMetro {
   louder(a, b) { if (!a) return b; return { speed: Math.max(a.speed, b.speed), inside: a.inside || b.inside, braking: a.braking || b.braking }; }
   call(line, step) { const s = this.slots.find(o => o.line === line && o.step === step); if (s && s.state === 'away') s.t = 0; return !!s; }
   info() {
-    return { code: this.code, ride: this.ride ? { phase: this.ride.phase, line: this.ride.line, step: this.ride.step, next: this.ride.next, hold: this.ride.hold, el: this.ride.el, t: this.ride.t } : null, lastLeg: this.lastLeg || null,
+    return { code: this.code, ride: this.ride ? { phase: this.ride.phase, line: this.ride.line, step: this.ride.step, next: this.ride.next, hold: this.ride.hold, el: this.ride.el, t: this.ride.t } : null, lastLeg: this.lastLeg || null, preload: this.preload || null,
       slots: this.slots.map(s => ({ line: s.line, side: s.side.key, step: s.step, state: s.state, t: +s.t.toFixed(1), x: +(s.train.root.position.x - XO.x).toFixed(1), doors: +s.f.toFixed(2) })),
       station: this.station ? this.station.info() : null, street: this.street ? this.street.info() : null };
   }

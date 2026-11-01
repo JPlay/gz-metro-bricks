@@ -419,6 +419,7 @@ async function pump() {
       const item = queue.shift(); current = item;
       if (item.epoch !== epoch) { item.resolve({ cancelled: true }); continue; }
       for (let i = 0; i < item.ids.length && item.epoch === epoch; i++) {
+        item.i = i;   // pendingSegs() 用：这一组播到第几段
         // 片段可以是清单 id，也可以是 {id, lang, text}（新车站：清单里没有 MP3 时直接走 Web Speech 回退）
         const x = item.ids[i], a = typeof x === 'string' ? assets[x] : (assets[x.id] || x);
         if (!a) { log.errors.push('未知片段 ' + x); continue; }
@@ -489,6 +490,15 @@ export function cancelLang(lang) {
 /** 正在播 + 排队中的广播类别（key） */
 export function pendingKeys() { return [current, ...queue].filter(q => q && q.epoch === epoch).map(q => q.key); }
 export function isAnnouncing() { return pumping || queue.length > 0; }
+/** 还没播完的报站片段（当前这组从正在播/正在下载的那段起 + 排队中的），原样返回（id 字符串或 {id, lang, text}） */
+export function pendingSegs() {
+  const out = [];
+  if (current && current.epoch === epoch) out.push(...current.ids.slice(current.i || 0));
+  for (const q of queue) if (q.epoch === epoch) out.push(...q.ids);
+  return out;
+}
+/** 片段的 MP3 是否已在本地（已解码，或压缩数据已下载、只差解码） */
+export function isReady(id) { return !!(buffers[id] || compressed[id]); }
 
 /* ---------- 解锁 / 生命周期 ---------- */
 // 0.5 秒 8kHz 8-bit 静音 WAV（运行时生成 data URI）。在手势里播放它：iOS 会把页面音频切到媒体（playback）通道
