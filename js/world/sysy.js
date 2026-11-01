@@ -10,7 +10,7 @@
  *   用 Geo 的整体缩放（xz ×1.5、y ×1.15）放大到真实比例（宽:高 ≈ 65:48）。
  * 性能：园区单独一个 Kit（站里在地面时才启用），只用合批的静态桶 + 烘焙暗影，不加灯；树用低面数版本。
  */
-import { hex } from '../core/geo.js';
+import { hex, mix } from '../core/geo.js';
 import * as D from './decor.js';
 
 export const AX = 72;
@@ -150,6 +150,8 @@ function buildHall(k) {
 /** 地面：中轴大道、铜像前庭、纪念堂周围的平台广场、大草坪（带路缘）、园内小路 */
 function grounds(k) {
   const P = k.solid, Pv = k.g('pave'), G = k.g('grass'), S = k.shade;
+  // 花坛的花朵贴图层（有场景时；node 统计脚本没有场景，花丛退回 paint 桶的纯色锥）
+  if (k.scene && k.M) { k.mats = k.mats || {}; k.mats.flowers = flowerMat(k); k.flowers = k.g('flowers'); }
   const lawn = (x0, x1, z0, z1) => {
     G.slab(x0, x1, 0, 0.1, z0, z1, hex('#FFFFFF'), { ao: false });
     for (const [a0, a1, b0, b1] of [[x0 - 0.15, x1 + 0.15, z0 - 0.15, z0], [x0 - 0.15, x1 + 0.15, z1, z1 + 0.15], [x0 - 0.15, x0, z0, z1], [x1, x1 + 0.15, z0, z1]]) P.slab(a0, a1, 0, 0.17, b0, b1, C.curb, { ao: false });
@@ -176,22 +178,50 @@ function grounds(k) {
     P.slab(xa, xb, 0.32, 0.36, z0, z1, hex('#5B4632'), { ao: false });
     k.colSlab(xa - 0.12, xb + 0.12, 0, 0.72, z0 - 0.12, z1 + 0.12);
     P.slab(sx > 0 ? xb - 0.42 : xa, sx > 0 ? xb : xa + 0.42, 0.36, 0.72, z0, z1, hex('#3E7A3C'), { ao: true });
-    // 每 6 棵一段同色：一段画成一条（以前是一棵一个小方块，约 5 千个三角形）
-    let nStep = 0; for (let z = z0 + 0.3; z < z1 - 0.2; z += 0.42) nStep++;
-    for (let r0 = 0; r0 < nStep; r0 += 6) {
-      const r1 = Math.min(nStep, r0 + 6) - 1, c = hex(FL[Math.floor(r0 / 6) % FL.length]);
-      for (const [o, dz] of [[0.35, 0], [0.8, 0.21]]) {
-        const za = z0 + 0.3 + r0 * 0.42 + dz - 0.17, zb = z0 + 0.3 + r1 * 0.42 + dz + 0.17;
-        P.box(xi + sx * o, 0.47, (za + zb) / 2, 0.3, 0.22, zb - za, c, 0, 0, 0, 1, { ao: false });
-      }
+    // 花丛（美术意见：不要平平的色条，也不要回到一朵一个网格）：
+    //   底下一条深绿“叶丛”垫层；上面每 0.42 m 一丛矮四棱锥（4 个三角形，前后相邻两丛搭一截，高矮、锥尖位置随机，
+    //   锥尖在内 / 外两排之间交替 → 顶上一高一低的锯齿轮廓），锥面贴“花朵图集”（绿叶打底 + 满满的五瓣小花，每种花色一列）
+    //   → 远看一团团花，近看是一朵朵花。两边合计 816 + 24 个三角形，多 1 次绘制。
+    const FLW = k.flowers || P, LEAF2 = mix(LEAF, hex('#1F3D1E'), 0.45);
+    P.slab(Math.min(xi + sx * 0.1, xi + sx * 1.0), Math.max(xi + sx * 0.1, xi + sx * 1.0), 0.36, 0.47, z0 + 0.05, z1 - 0.05, LEAF2, { ao: false });
+    let i = 0;
+    for (let z = z0 + 0.3; z < z1 - 0.2; z += 0.42, i++) {
+      const h = hash(i * 7.13 + sx * 3.1), h2 = hash(i * 3.7 + sx * 1.9), h3 = hash(i * 5.3 - sx * 2.3);
+      const c = hex(FL[Math.floor(i / 6) % FL.length]).map(v => Math.min(1, v * (0.88 + h3 * 0.24)));
+      const ox = (i % 2 ? 0.74 : 0.42) + (h - 0.5) * 0.14, oz = (h2 - 0.5) * 0.24, L = 0.3 + h2 * 0.1;
+      const fc = FL[Math.floor(i / 6) % FL.length], tex = k.flowers ? { ci: FLC.indexOf(fc), off: h3 * 0.5 } : null;
+      flowerClump(FLW, xi + sx * 0.08, xi + sx * 1.02, z - L, z + L, xi + sx * ox, z + oz, 0.4, 0.56 + h * 0.14, c, tex);
     }
   }
+  k.flowers = null;
   // 榕树 / 白兰（低面数），沿围栏内侧和纪念堂两侧
   const trees = [];
   for (let z = -50; z <= 58; z += 12) trees.push([PARK.x0 + 3.2, z, 1.25], [PARK.x1 - 3.2, z + 6, 1.25]);
   for (const x of [26, 38, 50, 94, 106, 118]) trees.push([x, -57.6, 1.1]);
   trees.push([X0 - 36, Z0 - 4, 1.7], [X0 + 37, Z0 - 8, 1.6], [X0 - 30, Z0 + 26, 1.4], [X0 - 12, Z0 + 36, 1.3], [X0 + 12, Z0 + 37, 1.3]);
   for (const [x, z, s] of trees) cheapTree(k, x, z, s);
+}
+
+const LEAF = hex('#3E7A3C');
+function hash(v) { const x = Math.sin(v * 12.9898) * 43758.5453; return x - Math.floor(x); }
+/** 一丛花：底面 (xa..xb, za..zb) 四角在 y0，锥尖 (ax, y1, az)；4 个面各自的法线（有棱角的“花团”）。
+ *  tex = {ci, off}：花朵图集第 ci 列（顶点色只管明暗：锥尖亮、锥脚暗），UV 按俯视投影铺在这一列里（off 错开，免得每丛一样）；
+ *  tex = null（node 统计没有场景）：纯色锥，锥尖花色、锥脚混叶绿 */
+function flowerClump(P, xa, xb, za, zb, ax, az, y0, y1, col, tex) {
+  const lo = tex ? [0.74, 0.74, 0.74] : [0, 1, 2].map(j => col[j] * 0.3 + LEAF[j] * 0.7), hi = tex ? [1, 1, 1] : [0, 1, 2].map(j => Math.min(1, col[j] * 1.04));
+  const A = [ax, y1, az], Q = [[xa, y0, za], [xb, y0, za], [xb, y0, zb], [xa, y0, zb]];
+  const uv = q => { const t = (q[2] - za) / (zb - za), w = (q[0] - xa) / (xb - xa); return [(tex.ci + FLM + (tex.off + t * 0.5) * (1 - 2 * FLM)) / FLN, 0.06 + w * 0.88]; };
+  for (let j = 0; j < 4; j++) {
+    const p0 = Q[j], p1 = Q[(j + 1) % 4];
+    const e1 = [p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]], e2 = [A[0] - p0[0], A[1] - p0[1], A[2] - p0[2]];
+    // Geo 的正面法线 = (c - a) × (b - a)（同 quad）；朝下就换绕向，保证四个面都朝外
+    let n = [e2[1] * e1[2] - e2[2] * e1[1], e2[2] * e1[0] - e2[0] * e1[2], e2[0] * e1[1] - e2[1] * e1[0]], flip = n[1] < 0;
+    if (flip) n = n.map(v => -v);
+    const l = Math.hypot(...n) || 1, k = P.p.length / 3;
+    P.push(p0[0], p0[1], p0[2], n[0] / l, n[1] / l, n[2] / l, lo); P.push(p1[0], p1[1], p1[2], n[0] / l, n[1] / l, n[2] / l, lo); P.push(A[0], A[1], A[2], n[0] / l, n[1] / l, n[2] / l, hi);
+    if (tex) { const u = P.u, b = u.length - 6; [p0, p1, A].forEach((q, m) => { const [a, c] = uv(q); u[b + m * 2] = a; u[b + m * 2 + 1] = c; }); }
+    if (flip) P.i.push(k, k + 2, k + 1); else P.i.push(k, k + 1, k + 2);
+  }
 }
 
 /** 低面数的树：树干 + 一个主树冠 + 三团小树冠（约 170 个三角形） */
@@ -312,6 +342,31 @@ function grilleMat(k) {
   tex.update(false); tex.hasAlpha = true; tex.wrapU = tex.wrapV = B.Texture.CLAMP_ADDRESSMODE; tex.anisotropicFilteringLevel = 4;
   const m = M.paint.clone('grille'); m.albedoTexture = tex; m.useAlphaFromAlbedoTexture = true;
   m.transparencyMode = B.PBRMaterial.PBRMATERIAL_ALPHATEST; m.alphaCutOff = 0.4; m.backFaceCulling = false; m.twoSidedLighting = true;
+  return (M.colored[key] = m);
+}
+/** 花朵图集（不透明，一列一种花色：深浅绿叶子打底 + 满满的五瓣小花，花瓣有亮面 / 暗面、花心黄 / 褐）。
+ *  不用 alpha 测试：花朵贴图缩小（mipmap）后透明度被平均掉，远处会整片消失；锯齿轮廓交给锥体本身 */
+const FLC = ['#E8443A', '#F2B33D', '#EF6FA0', '#FFFFFF'], FLN = FLC.length, FLM = 0.04;
+function flowerMat(k) {
+  const B = window.BABYLON, M = k.M, key = 'sysy:flowers';
+  if (M.colored[key]) return M.colored[key];
+  const CW = 256, W = CW * FLN, H = 256, tex = new B.DynamicTexture('sysyFlowers', { width: W, height: H }, k.scene, true), c = tex.getContext();
+  let seed = 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const shade = (h, f) => { const v = B.Color3.FromHexString(h); return `rgb(${[v.r, v.g, v.b].map(q => Math.round(Math.min(1, q * f) * 255)).join(',')})`; };
+  for (let ci = 0; ci < FLN; ci++) {
+    const x0 = ci * CW; c.save(); c.beginPath(); c.rect(x0, 0, CW, H); c.clip();
+    c.fillStyle = '#2C5A2A'; c.fillRect(x0, 0, CW, H);
+    for (let n = 0; n < 140; n++) { c.fillStyle = ['#3E7A3C', '#356C33', '#4C8C45'][n % 3]; c.beginPath(); c.ellipse(x0 + rnd() * CW, rnd() * H, 4 + rnd() * 6, 2 + rnd() * 3, rnd() * 3.14, 0, Math.PI * 2); c.fill(); }
+    const fc = FLC[ci], white = fc === '#FFFFFF';
+    for (let n = 0; n < 150; n++) {
+      const cx = x0 + rnd() * CW, cy = rnd() * H, r = 6 + rnd() * 5, a0 = rnd() * 6.28, f = 0.82 + rnd() * 0.3;
+      for (let p = 0; p < 5; p++) { const a = a0 + p * 1.2566; c.fillStyle = shade(fc, (p % 2 ? 0.9 : 1.05) * f * (white ? 0.97 : 1)); c.beginPath(); c.ellipse(cx + Math.cos(a) * r * 0.5, cy + Math.sin(a) * r * 0.5, r * 0.55, r * 0.36, a, 0, Math.PI * 2); c.fill(); }
+      c.fillStyle = white || fc === '#F2B33D' ? '#C98A1E' : '#F6D24A'; c.beginPath(); c.arc(cx, cy, r * 0.22, 0, Math.PI * 2); c.fill();
+    }
+    c.restore();
+  }
+  tex.update(false); tex.wrapU = tex.wrapV = B.Texture.CLAMP_ADDRESSMODE; tex.anisotropicFilteringLevel = 4;
+  const m = M.paint.clone('flowers'); m.albedoTexture = tex;
   return (M.colored[key] = m);
 }
 function fences(k) {

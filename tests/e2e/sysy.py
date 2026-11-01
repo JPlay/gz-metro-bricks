@@ -17,7 +17,8 @@ Q=sys.argv[3] if len(sys.argv)>3 else '1'
 # 预算 = 现有站厅（公园前站厅闸机机位，a904278，q=1，同一测法）的最大值
 BUDGET={'draws':66,'tris':186754}
 # 街面镜头另有更严的预算（iPad Air 3：每个画面 ≤ 9 万三角形、≤ 50 次绘制）
-STREET=('02-gate-front','03-axis','04-fence','05-arrival'); STREET_BUDGET={'draws':50,'tris':90000}
+# 街面 + 小美 PR#18 评审要求的两个车站镜头（站台 x1 / 站厅 x2）同一预算
+STREET=('02-gate-front','03-axis','04-fence','05-arrival','x1-platform-sign','x2-exit-sign'); STREET_BUDGET={'draws':50,'tris':90000}
 R={'perf':{}}
 
 BTNS_JS = """(()=>{const vw=innerWidth,vh=innerHeight,out=[];
