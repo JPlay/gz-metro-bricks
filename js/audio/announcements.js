@@ -7,6 +7,22 @@ import * as P from '../data/phrases.js';
 
 export function say(segs, meta = {}) { return Audio.announceIds(segs, meta).catch(e => ({ error: String(e) })); }
 export const depart = (line, nextCode, dir, step, withDest) => say(P.departSegs(line, nextCode, dir, step, withDest), { key: 'next', interrupt: true });
+/** 一组片段按清单时长要播多久（秒，含段间停顿；和 audio.js pump 的节奏一致：首段 0.07 s、其余 0.22 s；闽南语没 MP3 会被跳过） */
+export function seconds(segs) {
+  return segs.reduce((t, x, i) => {
+    const id = typeof x === 'string' ? x : x.id, m = Audio.getAsset(id), a = m || (typeof x === 'string' ? null : x);
+    if (!a || (!m && a.lang === 'nan')) return t;
+    return t + (a.duration || Math.max(1.5, (a.text || '').length * (a.lang === 'en' ? 0.07 : 0.24))) + (i ? 0.22 : 0.07);
+  }, 0);
+}
+/**
+ * 开出后报“下一站”：下一站有“前往××请从×出口”的景点广播时，这一段行车（出站 + 隧道）要等整段三语广播播完 + 一点余量才进站，
+ * 不然进站广播（interrupt）会把景点那句掐掉。返回需要的最短行车时间（秒）；这段广播里没有景点出口那句（普通站、或终点前的“终点站”广播）返回 0 → 行车时长照旧（不变）。
+ */
+export const VISIT_MARGIN = 1.5;
+// 只算带“请从×出口出站”的景点广播（诚毅广场那种只有“欢迎下车游玩”、没有出口的不算）
+const isExitVisit = x => typeof x !== 'string' && /^voice\.(xm)?visit\./.test(x.id) && /出口|Exit/.test(x.text || '');
+export function departHold(segs) { return segs.some(isExitVisit) ? seconds(segs) + VISIT_MARGIN : 0; }
 export const arrive = code => say(P.arriveSegs(code), { key: 'arrive', interrupt: true });
 export const welcome = code => say(P.welcomeSegs(code), { key: 'welcome' });
 export const platform = (line, dir, n) => say(P.platformSegs(line, dir, n), { key: 'platform', interrupt: true });

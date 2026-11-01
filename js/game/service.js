@@ -10,8 +10,19 @@ import { Geo, hex } from '../core/geo.js';
 import { mats } from '../core/mats.js';
 import { LINES, STATIONS, nextStation, dirFor } from '../data/lines.js';
 import * as Ann from '../audio/announcements.js';
+import { departSegs } from '../data/phrases.js';
 const B = window.BABYLON;
 const TUN_Y = -300, ACC_T = 8, ARR_T = 9, D0 = 100, VMAX = 22;
+/**
+ * 隧道里什么时候进站：
+ *  - 普通站（hold=0）：照旧 —— 至少 5 s 且广播播完，最多 14 s（出站加速 ~7.2 s + 隧道 ≤14 s ≈ 21 s）。
+ *  - 下一站有景点出口广播（hold>0）：出站 + 隧道合计至少 hold 秒、且广播播完才进站；保底上限 max(14, 还差的 + 6) s，防止音频卡住永远不进站。
+ */
+export function cruiseDone(r, announcing) {
+  if (!r.hold) return (r.t > 5 && !announcing) || r.t > 14;
+  const need = r.hold - (r.el || 0);
+  return (r.t > 5 && r.t >= need && !announcing) || r.t > Math.max(14, need + 6);
+}
 const dirKey = (line, step) => Object.keys(LINES[line].dirs).find(d => LINES[line].dirs[d].step === step);
 
 export class Metro {
@@ -90,12 +101,19 @@ export class Metro {
           if (s.t <= 0) {
             this.doors(s, 0); s.state = 'departing'; s.u = 0;
             if (nx) tr.setMap(s.line, this.station.code, s.step, nx, true); // 关门开出：线路图高亮下一站，LCD“下一站”
-            if (aboard && nx) { this.legs++; Ann.depart(s.line, nx, dirKey(s.line, s.step), s.step, this.legs === 1 || this.ride?.line !== s.line); A.sfx('train.tractionStart', { volume: 0.7 }); this.ride = { train: tr, line: s.line, step: s.step, phase: 'out', slot: s, next: nx }; }
+            if (aboard && nx) {
+              this.legs++; const dk = dirKey(s.line, s.step), wd = this.legs === 1 || this.ride?.line !== s.line;
+              Ann.depart(s.line, nx, dk, s.step, wd); A.sfx('train.tractionStart', { volume: 0.7 });
+              // 下一站有景点出口广播：这段行车至少要等整段广播播完（hold 秒，见 announcements.js departHold）；其它站 hold=0，行车时长不变
+              const hold = Ann.departHold(departSegs(s.line, nx, dk, s.step, wd));
+              this.ride = { train: tr, line: s.line, step: s.step, phase: 'out', slot: s, next: nx, hold, el: 0, from: this.station.code };
+            }
           }
           break;
         case 'departing': {
           s.u = Math.min(1, s.u + dt / ACC_T); const x = D0 * s.step * s.u * s.u;
           this.move(s, x); sound = this.louder(sound, { speed: s.u * 0.9, inside: aboard, braking: false, near: this.near(tr, p) });
+          if (aboard && this.ride && this.ride.train === tr) this.ride.el += dt;
           if (aboard && nx && Math.abs(x) >= 80) { this.enterTunnel(s, nx); return; }
           if (s.u >= 1) { s.state = 'away'; s.t = 8 + Math.random() * 10; tr.setVisible(false); if (this.ride && this.ride.train === tr && !aboard) this.ride = null; }
           break;
@@ -137,10 +155,11 @@ export class Metro {
     const step = r.step;
     for (const l of this.lamps) { l.position.x -= step * VMAX * dt; if (l.position.x < -90) l.position.x += 180; if (l.position.x > 90) l.position.x -= 180; }
     A.trainSound({ speed: 1, inside: true, braking: false });
-    if ((r.t > 5 && !A.isAnnouncing()) || r.t > 14) this.exitTunnel();
+    if (cruiseDone(r, A.isAnnouncing())) this.exitTunnel();
   }
   exitTunnel() {
     const r = this.ride, tr = r.train, pl = this.ctx.player, s = r.slot; // attach() 已把列车分到新站对应槽位
+    this.lastLeg = { from: r.from, to: this.station.code, hold: +(r.hold || 0).toFixed(2), out: +(r.el || 0).toFixed(2), cruise: +r.t.toFixed(2), total: +((r.el || 0) + r.t).toFixed(2) };
     const off = pl.position.subtract(tr.root.position);
     s.state = 'arriving'; s.u = 1 - Math.sqrt(0.8);
     tr.setLine(r.line); tr.setMap(r.line, this.station.code, r.step, nextStation(r.line, this.station.code, r.step));
@@ -152,7 +171,7 @@ export class Metro {
     this.ctx.events.emit('ride', { phase: 'arrive', to: this.station.code, line: r.line });
   }
   info() {
-    return { ride: this.ride ? { phase: this.ride.phase, line: this.ride.line, step: this.ride.step, next: this.ride.next } : null,
+    return { ride: this.ride ? { phase: this.ride.phase, line: this.ride.line, step: this.ride.step, next: this.ride.next, hold: this.ride.hold, el: this.ride.el, t: this.ride.t } : null, lastLeg: this.lastLeg || null,
       slots: this.slots.map(s => ({ line: s.line, side: s.side.key, step: s.step, state: s.state, t: +s.t.toFixed(1), x: +s.train.root.position.x.toFixed(1), doors: +s.f.toFixed(2) })) };
   }
   /** 测试：让某一侧马上来车 */

@@ -38,7 +38,10 @@ let train = { speed: 0, inside: true, braking: false, near: 1 }, lastTrainAt = -
 // 声音分区：metro 地铁声 0..1（站内 1，出口楼梯上渐弱，街面 0）；street 街面车流；restaurant 饭店嘈杂；sub 站内哪种环境床
 const env = { metro: 1, street: 0, restaurant: 0, birds: 0, sub: 'concourse' };   // birds：沙面榕树下的鸟叫（合成）
 const steps = { count: 0, last: null, times: [] };
-const log = { played: [], announced: [], fallbacks: [], errors: [] };
+const log = { played: [], announced: [], fallbacks: [], errors: [], done: [], cut: [] };
+// done：完整播完（没被打断）的广播片段；cut：播到一半被新广播（interrupt）打断的片段 —— 测试用来确认景点出口广播没被进站广播掐掉
+function mark(list, id) { list.push(id); if (list.length > 80) list.shift(); }
+const finished = (item, id) => mark(item.epoch === epoch ? log.done : log.cut, id);
 
 function clamp(n, a, b) { return Math.max(a, Math.min(b, Number.isFinite(n) ? n : a)); }
 function smooth(param, target, seconds) {
@@ -421,16 +424,17 @@ async function pump() {
         if (!a) { log.errors.push('未知片段 ' + x); continue; }
         if (!canPlay() || muted) {
           // 未解锁/静音/后台：照样按时长显示字幕，保证游戏节奏一致
-          caption(a, { silent: true }); sleepToken = {}; await sleep(estimate(a) + (i ? 220 : 70), sleepToken); continue;
+          caption(a, { silent: true }); sleepToken = {}; await sleep(estimate(a) + (i ? 220 : 70), sleepToken); finished(item, a.id); continue;
         }
         let ok = !!(a.file && assets[a.id]);
         if (ok) { try { await ensureBuffer(a.id); } catch (e) { ok = false; } }
         if (item.epoch !== epoch) break;
         if (!ok && a.lang === 'nan') { log.skipped = (log.skipped || []).concat(a.id); continue; }   // 闽南语没有 MP3 时不能让 Web Speech 用普通话念：直接跳过
-        if (!ok) { await fallbackClip(a, item.epoch); continue; }
+        if (!ok) { await fallbackClip(a, item.epoch); finished(item, a.id); continue; }
         caption(a);
         log.announced.push(a.id);
         await new Promise(res => { const d = play(a.id, buses.voice, { pa: true, volume: 1, delay: i ? 0.22 : 0.07, kind: 'voice' }, res); if (!d) res(); });
+        finished(item, a.id);
       }
       item.resolve({ cancelled: item.epoch !== epoch });
     }
@@ -671,6 +675,6 @@ export function getState() {
     zone, ducked, env: { ...env }, gains: gains(), steps: { count: steps.count, last: steps.last, times: steps.times.slice(-12) }, train: { ...train }, announcing: current ? current.key : null, queued: queue.length, active: active.length,
     decoded: Object.keys(buffers).length, missing: [...missing], voiceCacheBytes: voiceBytes,
     sampleRate: ctx ? ctx.sampleRate : null, fallbackMode: CONFIG.VOICE_FALLBACK, diag: diag(),
-    log: { played: log.played.slice(), announced: log.announced.slice(), fallbacks: log.fallbacks.slice(), errors: log.errors.slice() }
+    log: { played: log.played.slice(), announced: log.announced.slice(), fallbacks: log.fallbacks.slice(), errors: log.errors.slice(), done: log.done.slice(), cut: log.cut.slice() }
   };
 }
