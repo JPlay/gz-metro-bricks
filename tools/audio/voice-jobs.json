@@ -6984,22 +6984,22 @@
   "file": "voice/fz-welcome-fzlhs-en.mp3"
  },
  {
-  "id": "voice.fz.next.fzfz.zh",
+  "id": "voice.fz.next.fzfz1.zh",
   "lang": "zh",
-  "text": "下一站，福州火车站。",
-  "file": "voice/fz-next-fzfz-zh.mp3"
+  "text": "下一站，福州火车站，可换乘滨海快线。",
+  "file": "voice/fz-next-fzfz1-zh.mp3"
  },
  {
-  "id": "voice.fz.next.fzfz.fzh",
+  "id": "voice.fz.next.fzfz1.fzh",
   "lang": "fzh",
-  "text": "下一站，福州火车站。",
-  "file": "voice/fz-next-fzfz-fzh.mp3"
+  "text": "下一站，福州火车站，可换乘滨海快线。",
+  "file": "voice/fz-next-fzfz1-fzh.mp3"
  },
  {
-  "id": "voice.fz.next.fzfz.en",
+  "id": "voice.fz.next.fzfz1.en",
   "lang": "en",
-  "text": "The next station is Fuzhou Railway Station.",
-  "file": "voice/fz-next-fzfz-en.mp3"
+  "text": "The next station is Fuzhou Railway Station, the interchange with Binhai Express.",
+  "file": "voice/fz-next-fzfz1-en.mp3"
  },
  {
   "id": "voice.fz.arrive.fzfz.zh",
@@ -7290,22 +7290,22 @@
   "file": "voice/fz-fzexit-fzdjk-en.mp3"
  },
  {
-  "id": "voice.fz.next.fznmd.zh",
+  "id": "voice.fz.next.fznmd1.zh",
   "lang": "zh",
   "text": "下一站，南门兜，可换乘2号线。",
-  "file": "voice/fz-next-fznmd-zh.mp3"
+  "file": "voice/fz-next-fznmd1-zh.mp3"
  },
  {
-  "id": "voice.fz.next.fznmd.fzh",
+  "id": "voice.fz.next.fznmd1.fzh",
   "lang": "fzh",
   "text": "下一站，南门兜，可换乘2号线。",
-  "file": "voice/fz-next-fznmd-fzh.mp3"
+  "file": "voice/fz-next-fznmd1-fzh.mp3"
  },
  {
-  "id": "voice.fz.next.fznmd.en",
+  "id": "voice.fz.next.fznmd1.en",
   "lang": "en",
   "text": "The next station is Nanmendou, the interchange with Line 2.",
-  "file": "voice/fz-next-fznmd-en.mp3"
+  "file": "voice/fz-next-fznmd1-en.mp3"
  },
  {
   "id": "voice.fz.arrive.fznmd.zh",
@@ -7346,37 +7346,37 @@
  {
   "id": "voice.fz.fzvisit.fznmd.zh",
   "lang": "zh",
-  "text": "南门兜站附近有于山风景区、白塔，欢迎下车游玩，请从G1出口出站。",
+  "text": "南门兜站附近有于山风景区、白塔、乌山风景区，欢迎下车游玩，去于山风景区、白塔请从G1出口出站，去乌山风景区请从B出口出站。",
   "file": "voice/fz-fzvisit-fznmd-zh.mp3"
  },
  {
   "id": "voice.fz.fzvisit.fznmd.fzh",
   "lang": "fzh",
-  "text": "南门兜站附近有于山风景区、白塔，欢迎下车游玩，请从G1出口出站。",
+  "text": "南门兜站附近有于山风景区、白塔、乌山风景区，欢迎下车游玩，去于山风景区、白塔请从G1出口出站，去乌山风景区请从B出口出站。",
   "file": "voice/fz-fzvisit-fznmd-fzh.mp3"
  },
  {
   "id": "voice.fz.fzvisit.fznmd.en",
   "lang": "en",
-  "text": "Nanmendou station is near Yushan Hill and the White Pagoda. You are welcome to get off and visit. Please use Exit G1.",
+  "text": "Nanmendou station is near Yushan Hill, the White Pagoda and Wushan Hill. You are welcome to get off and visit. For Yushan Hill and the White Pagoda, please use Exit G1. For Wushan Hill, please use Exit B.",
   "file": "voice/fz-fzvisit-fznmd-en.mp3"
  },
  {
   "id": "voice.fz.fzexit.fznmd.zh",
   "lang": "zh",
-  "text": "前往于山风景区、白塔的乘客，请从G1出口出站。",
+  "text": "前往于山风景区、白塔的乘客，请从G1出口出站；前往乌山风景区的乘客，请从B出口出站。",
   "file": "voice/fz-fzexit-fznmd-zh.mp3"
  },
  {
   "id": "voice.fz.fzexit.fznmd.fzh",
   "lang": "fzh",
-  "text": "前往于山风景区、白塔的乘客，请从G1出口出站。",
+  "text": "前往于山风景区、白塔的乘客，请从G1出口出站；前往乌山风景区的乘客，请从B出口出站。",
   "file": "voice/fz-fzexit-fznmd-fzh.mp3"
  },
  {
   "id": "voice.fz.fzexit.fznmd.en",
   "lang": "en",
-  "text": "Passengers for Yushan Hill and the White Pagoda, please use Exit G1.",
+  "text": "Passengers for Yushan Hill and the White Pagoda, please use Exit G1. Passengers for Wushan Hill, please use Exit B.",
   "file": "voice/fz-fzexit-fznmd-en.mp3"
  },
  {
@@ -7578,21 +7578,57 @@
   "file": "voice/fz-welcome-fzst-en.mp3"
  },
  {
+  "id": "voice.fz.fzvisit.fzst.zh",
+  "lang": "zh",
+  "text": "上藤站附近有烟台山，欢迎下车游玩，请从B出口出站。",
+  "file": "voice/fz-fzvisit-fzst-zh.mp3"
+ },
+ {
+  "id": "voice.fz.fzvisit.fzst.fzh",
+  "lang": "fzh",
+  "text": "上藤站附近有烟台山，欢迎下车游玩，请从B出口出站。",
+  "file": "voice/fz-fzvisit-fzst-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.fzvisit.fzst.en",
+  "lang": "en",
+  "text": "Shangteng station is near Yantai Hill. You are welcome to get off and visit. Please use Exit B.",
+  "file": "voice/fz-fzvisit-fzst-en.mp3"
+ },
+ {
+  "id": "voice.fz.fzexit.fzst.zh",
+  "lang": "zh",
+  "text": "前往烟台山的乘客，请从B出口出站。",
+  "file": "voice/fz-fzexit-fzst-zh.mp3"
+ },
+ {
+  "id": "voice.fz.fzexit.fzst.fzh",
+  "lang": "fzh",
+  "text": "前往烟台山的乘客，请从B出口出站。",
+  "file": "voice/fz-fzexit-fzst-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.fzexit.fzst.en",
+  "lang": "en",
+  "text": "Passengers for Yantai Hill, please use Exit B.",
+  "file": "voice/fz-fzexit-fzst-en.mp3"
+ },
+ {
   "id": "voice.fz.next.fzscj.zh",
   "lang": "zh",
-  "text": "下一站，三叉街。",
+  "text": "下一站，三叉街，可出站换乘滨海快线。",
   "file": "voice/fz-next-fzscj-zh.mp3"
  },
  {
   "id": "voice.fz.next.fzscj.fzh",
   "lang": "fzh",
-  "text": "下一站，三叉街。",
+  "text": "下一站，三叉街，可出站换乘滨海快线。",
   "file": "voice/fz-next-fzscj-fzh.mp3"
  },
  {
   "id": "voice.fz.next.fzscj.en",
   "lang": "en",
-  "text": "The next station is Sanchajie.",
+  "text": "The next station is Sanchajie, Passengers may transfer to Binhai Express outside the station.",
   "file": "voice/fz-next-fzscj-en.mp3"
  },
  {
@@ -8136,22 +8172,22 @@
   "file": "voice/fz-welcome-fzap-en.mp3"
  },
  {
-  "id": "voice.fz.next.fzlc.zh",
+  "id": "voice.fz.next.fzlc1.zh",
   "lang": "zh",
   "text": "下一站，梁厝，可换乘6号线。",
-  "file": "voice/fz-next-fzlc-zh.mp3"
+  "file": "voice/fz-next-fzlc1-zh.mp3"
  },
  {
-  "id": "voice.fz.next.fzlc.fzh",
+  "id": "voice.fz.next.fzlc1.fzh",
   "lang": "fzh",
   "text": "下一站，梁厝，可换乘6号线。",
-  "file": "voice/fz-next-fzlc-fzh.mp3"
+  "file": "voice/fz-next-fzlc1-fzh.mp3"
  },
  {
-  "id": "voice.fz.next.fzlc.en",
+  "id": "voice.fz.next.fzlc1.en",
   "lang": "en",
   "text": "The next station is Liangcuo, the interchange with Line 6.",
-  "file": "voice/fz-next-fzlc-en.mp3"
+  "file": "voice/fz-next-fzlc1-en.mp3"
  },
  {
   "id": "voice.fz.arrive.fzlc.zh",
@@ -8190,22 +8226,22 @@
   "file": "voice/fz-welcome-fzlc-en.mp3"
  },
  {
-  "id": "voice.fz.next.fzxy.zh",
+  "id": "voice.fz.next.fzxy1.zh",
   "lang": "zh",
   "text": "下一站，下洋，可换乘6号线。",
-  "file": "voice/fz-next-fzxy-zh.mp3"
+  "file": "voice/fz-next-fzxy1-zh.mp3"
  },
  {
-  "id": "voice.fz.next.fzxy.fzh",
+  "id": "voice.fz.next.fzxy1.fzh",
   "lang": "fzh",
   "text": "下一站，下洋，可换乘6号线。",
-  "file": "voice/fz-next-fzxy-fzh.mp3"
+  "file": "voice/fz-next-fzxy1-fzh.mp3"
  },
  {
-  "id": "voice.fz.next.fzxy.en",
+  "id": "voice.fz.next.fzxy1.en",
   "lang": "en",
   "text": "The next station is Xiayang, the interchange with Line 6.",
-  "file": "voice/fz-next-fzxy-en.mp3"
+  "file": "voice/fz-next-fzxy1-en.mp3"
  },
  {
   "id": "voice.fz.arrive.fzxy.zh",
@@ -8278,6 +8314,1302 @@
   "lang": "en",
   "text": "Welcome to Sanjiangkou station. Please line up for the train. Let the passengers get off first before you get on.",
   "file": "voice/fz-welcome-fzsjk-en.mp3"
+ },
+ {
+  "id": "voice.fz.destination.yl.zh",
+  "lang": "zh",
+  "text": "本次列车终点站为洋里。",
+  "file": "voice/fz-destination-yl-zh.mp3"
+ },
+ {
+  "id": "voice.fz.destination.yl.fzh",
+  "lang": "fzh",
+  "text": "本次列车终点站为洋里。",
+  "file": "voice/fz-destination-yl-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.destination.yl.en",
+  "lang": "en",
+  "text": "The destination of this train is Yangli.",
+  "file": "voice/fz-destination-yl-en.mp3"
+ },
+ {
+  "id": "voice.fz.terminal.yl.zh",
+  "lang": "zh",
+  "text": "下一站是本次列车的终点站，洋里。请全部乘客带齐行李物品在此站下车，欢迎再次乘坐福州地铁。",
+  "file": "voice/fz-terminal-yl-zh.mp3"
+ },
+ {
+  "id": "voice.fz.terminal.yl.fzh",
+  "lang": "fzh",
+  "text": "下一站是本次列车的终点站，洋里。请全部乘客带齐行李物品在此站下车，欢迎再次乘坐福州地铁。",
+  "file": "voice/fz-terminal-yl-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.terminal.yl.en",
+  "lang": "en",
+  "text": "The next station is Yangli, the terminal of this journey. Please take all your belongings and leave the train. Thank you for travelling on Fuzhou Metro.",
+  "file": "voice/fz-terminal-yl-en.mp3"
+ },
+ {
+  "id": "voice.fz.platform.yl.1.zh",
+  "lang": "zh",
+  "text": "一站台，洋里方向列车即将进站。",
+  "file": "voice/fz-platform-yl-1-zh.mp3"
+ },
+ {
+  "id": "voice.fz.platform.yl.1.fzh",
+  "lang": "fzh",
+  "text": "一站台，洋里方向列车即将进站。",
+  "file": "voice/fz-platform-yl-1-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.platform.yl.1.en",
+  "lang": "en",
+  "text": "The train bound for Yangli is approaching at Platform 1.",
+  "file": "voice/fz-platform-yl-1-en.mp3"
+ },
+ {
+  "id": "voice.fz.platform.yl.2.zh",
+  "lang": "zh",
+  "text": "二站台，洋里方向列车即将进站。",
+  "file": "voice/fz-platform-yl-2-zh.mp3"
+ },
+ {
+  "id": "voice.fz.platform.yl.2.fzh",
+  "lang": "fzh",
+  "text": "二站台，洋里方向列车即将进站。",
+  "file": "voice/fz-platform-yl-2-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.platform.yl.2.en",
+  "lang": "en",
+  "text": "The train bound for Yangli is approaching at Platform 2.",
+  "file": "voice/fz-platform-yl-2-en.mp3"
+ },
+ {
+  "id": "voice.fz.destination.suy.zh",
+  "lang": "zh",
+  "text": "本次列车终点站为苏洋。",
+  "file": "voice/fz-destination-suy-zh.mp3"
+ },
+ {
+  "id": "voice.fz.destination.suy.fzh",
+  "lang": "fzh",
+  "text": "本次列车终点站为苏洋。",
+  "file": "voice/fz-destination-suy-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.destination.suy.en",
+  "lang": "en",
+  "text": "The destination of this train is Suyang.",
+  "file": "voice/fz-destination-suy-en.mp3"
+ },
+ {
+  "id": "voice.fz.terminal.suy.zh",
+  "lang": "zh",
+  "text": "下一站是本次列车的终点站，苏洋。请全部乘客带齐行李物品在此站下车，欢迎再次乘坐福州地铁。",
+  "file": "voice/fz-terminal-suy-zh.mp3"
+ },
+ {
+  "id": "voice.fz.terminal.suy.fzh",
+  "lang": "fzh",
+  "text": "下一站是本次列车的终点站，苏洋。请全部乘客带齐行李物品在此站下车，欢迎再次乘坐福州地铁。",
+  "file": "voice/fz-terminal-suy-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.terminal.suy.en",
+  "lang": "en",
+  "text": "The next station is Suyang, the terminal of this journey. Please take all your belongings and leave the train. Thank you for travelling on Fuzhou Metro.",
+  "file": "voice/fz-terminal-suy-en.mp3"
+ },
+ {
+  "id": "voice.fz.platform.suy.1.zh",
+  "lang": "zh",
+  "text": "一站台，苏洋方向列车即将进站。",
+  "file": "voice/fz-platform-suy-1-zh.mp3"
+ },
+ {
+  "id": "voice.fz.platform.suy.1.fzh",
+  "lang": "fzh",
+  "text": "一站台，苏洋方向列车即将进站。",
+  "file": "voice/fz-platform-suy-1-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.platform.suy.1.en",
+  "lang": "en",
+  "text": "The train bound for Suyang is approaching at Platform 1.",
+  "file": "voice/fz-platform-suy-1-en.mp3"
+ },
+ {
+  "id": "voice.fz.platform.suy.2.zh",
+  "lang": "zh",
+  "text": "二站台，苏洋方向列车即将进站。",
+  "file": "voice/fz-platform-suy-2-zh.mp3"
+ },
+ {
+  "id": "voice.fz.platform.suy.2.fzh",
+  "lang": "fzh",
+  "text": "二站台，苏洋方向列车即将进站。",
+  "file": "voice/fz-platform-suy-2-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.platform.suy.2.en",
+  "lang": "en",
+  "text": "The train bound for Suyang is approaching at Platform 2.",
+  "file": "voice/fz-platform-suy-2-en.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzsuy.zh",
+  "lang": "zh",
+  "text": "列车即将到达苏洋站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzsuy-zh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzsuy.fzh",
+  "lang": "fzh",
+  "text": "列车即将到达苏洋站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzsuy-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzsuy.en",
+  "lang": "en",
+  "text": "The train is arriving at Suyang. Please mind the gap between the train and the platform.",
+  "file": "voice/fz-arrive-fzsuy-en.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzsuy.zh",
+  "lang": "zh",
+  "text": "欢迎光临苏洋站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzsuy-zh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzsuy.fzh",
+  "lang": "fzh",
+  "text": "欢迎光临苏洋站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzsuy-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzsuy.en",
+  "lang": "en",
+  "text": "Welcome to Suyang station. Please line up for the train. Let the passengers get off first before you get on.",
+  "file": "voice/fz-welcome-fzsuy-en.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzsdi.zh",
+  "lang": "zh",
+  "text": "下一站，沙堤。",
+  "file": "voice/fz-next-fzsdi-zh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzsdi.fzh",
+  "lang": "fzh",
+  "text": "下一站，沙堤。",
+  "file": "voice/fz-next-fzsdi-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzsdi.en",
+  "lang": "en",
+  "text": "The next station is Shadi.",
+  "file": "voice/fz-next-fzsdi-en.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzsdi.zh",
+  "lang": "zh",
+  "text": "列车即将到达沙堤站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzsdi-zh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzsdi.fzh",
+  "lang": "fzh",
+  "text": "列车即将到达沙堤站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzsdi-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzsdi.en",
+  "lang": "en",
+  "text": "The train is arriving at Shadi. Please mind the gap between the train and the platform.",
+  "file": "voice/fz-arrive-fzsdi-en.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzsdi.zh",
+  "lang": "zh",
+  "text": "欢迎光临沙堤站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzsdi-zh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzsdi.fzh",
+  "lang": "fzh",
+  "text": "欢迎光临沙堤站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzsdi-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzsdi.en",
+  "lang": "en",
+  "text": "Welcome to Shadi station. Please line up for the train. Let the passengers get off first before you get on.",
+  "file": "voice/fz-welcome-fzsdi-en.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzsj.zh",
+  "lang": "zh",
+  "text": "下一站，上街。",
+  "file": "voice/fz-next-fzsj-zh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzsj.fzh",
+  "lang": "fzh",
+  "text": "下一站，上街。",
+  "file": "voice/fz-next-fzsj-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzsj.en",
+  "lang": "en",
+  "text": "The next station is Shangjie.",
+  "file": "voice/fz-next-fzsj-en.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzsj.zh",
+  "lang": "zh",
+  "text": "列车即将到达上街站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzsj-zh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzsj.fzh",
+  "lang": "fzh",
+  "text": "列车即将到达上街站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzsj-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzsj.en",
+  "lang": "en",
+  "text": "The train is arriving at Shangjie. Please mind the gap between the train and the platform.",
+  "file": "voice/fz-arrive-fzsj-en.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzsj.zh",
+  "lang": "zh",
+  "text": "欢迎光临上街站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzsj-zh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzsj.fzh",
+  "lang": "fzh",
+  "text": "欢迎光临上街站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzsj-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzsj.en",
+  "lang": "en",
+  "text": "Welcome to Shangjie station. Please line up for the train. Let the passengers get off first before you get on.",
+  "file": "voice/fz-welcome-fzsj-en.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzjy.zh",
+  "lang": "zh",
+  "text": "下一站，金屿。",
+  "file": "voice/fz-next-fzjy-zh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzjy.fzh",
+  "lang": "fzh",
+  "text": "下一站，金屿。",
+  "file": "voice/fz-next-fzjy-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzjy.en",
+  "lang": "en",
+  "text": "The next station is Jinyu.",
+  "file": "voice/fz-next-fzjy-en.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzjy.zh",
+  "lang": "zh",
+  "text": "列车即将到达金屿站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzjy-zh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzjy.fzh",
+  "lang": "fzh",
+  "text": "列车即将到达金屿站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzjy-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzjy.en",
+  "lang": "en",
+  "text": "The train is arriving at Jinyu. Please mind the gap between the train and the platform.",
+  "file": "voice/fz-arrive-fzjy-en.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzjy.zh",
+  "lang": "zh",
+  "text": "欢迎光临金屿站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzjy-zh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzjy.fzh",
+  "lang": "fzh",
+  "text": "欢迎光临金屿站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzjy-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzjy.en",
+  "lang": "en",
+  "text": "Welcome to Jinyu station. Please line up for the train. Let the passengers get off first before you get on.",
+  "file": "voice/fz-welcome-fzjy-en.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzfzdx.zh",
+  "lang": "zh",
+  "text": "下一站，福州大学。",
+  "file": "voice/fz-next-fzfzdx-zh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzfzdx.fzh",
+  "lang": "fzh",
+  "text": "下一站，福州大学。",
+  "file": "voice/fz-next-fzfzdx-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzfzdx.en",
+  "lang": "en",
+  "text": "The next station is Fuzhou University.",
+  "file": "voice/fz-next-fzfzdx-en.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzfzdx.zh",
+  "lang": "zh",
+  "text": "列车即将到达福州大学站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzfzdx-zh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzfzdx.fzh",
+  "lang": "fzh",
+  "text": "列车即将到达福州大学站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzfzdx-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzfzdx.en",
+  "lang": "en",
+  "text": "The train is arriving at Fuzhou University. Please mind the gap between the train and the platform.",
+  "file": "voice/fz-arrive-fzfzdx-en.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzfzdx.zh",
+  "lang": "zh",
+  "text": "欢迎光临福州大学站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzfzdx-zh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzfzdx.fzh",
+  "lang": "fzh",
+  "text": "欢迎光临福州大学站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzfzdx-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzfzdx.en",
+  "lang": "en",
+  "text": "Welcome to Fuzhou University station. Please line up for the train. Let the passengers get off first before you get on.",
+  "file": "voice/fz-welcome-fzfzdx-en.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzdysd.zh",
+  "lang": "zh",
+  "text": "下一站，董屿·福建师大。",
+  "file": "voice/fz-next-fzdysd-zh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzdysd.fzh",
+  "lang": "fzh",
+  "text": "下一站，董屿·福建师大。",
+  "file": "voice/fz-next-fzdysd-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzdysd.en",
+  "lang": "en",
+  "text": "The next station is Dongyu / Fujian Normal University.",
+  "file": "voice/fz-next-fzdysd-en.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzdysd.zh",
+  "lang": "zh",
+  "text": "列车即将到达董屿·福建师大站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzdysd-zh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzdysd.fzh",
+  "lang": "fzh",
+  "text": "列车即将到达董屿·福建师大站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzdysd-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzdysd.en",
+  "lang": "en",
+  "text": "The train is arriving at Dongyu / Fujian Normal University. Please mind the gap between the train and the platform.",
+  "file": "voice/fz-arrive-fzdysd-en.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzdysd.zh",
+  "lang": "zh",
+  "text": "欢迎光临董屿·福建师大站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzdysd-zh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzdysd.fzh",
+  "lang": "fzh",
+  "text": "欢迎光临董屿·福建师大站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzdysd-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzdysd.en",
+  "lang": "en",
+  "text": "Welcome to Dongyu / Fujian Normal University station. Please line up for the train. Let the passengers get off first before you get on.",
+  "file": "voice/fz-welcome-fzdysd-en.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzhting.zh",
+  "lang": "zh",
+  "text": "下一站，厚庭。",
+  "file": "voice/fz-next-fzhting-zh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzhting.fzh",
+  "lang": "fzh",
+  "text": "下一站，厚庭。",
+  "file": "voice/fz-next-fzhting-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzhting.en",
+  "lang": "en",
+  "text": "The next station is Houting.",
+  "file": "voice/fz-next-fzhting-en.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzhting.zh",
+  "lang": "zh",
+  "text": "列车即将到达厚庭站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzhting-zh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzhting.fzh",
+  "lang": "fzh",
+  "text": "列车即将到达厚庭站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzhting-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzhting.en",
+  "lang": "en",
+  "text": "The train is arriving at Houting. Please mind the gap between the train and the platform.",
+  "file": "voice/fz-arrive-fzhting-en.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzhting.zh",
+  "lang": "zh",
+  "text": "欢迎光临厚庭站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzhting-zh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzhting.fzh",
+  "lang": "fzh",
+  "text": "欢迎光临厚庭站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzhting-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzhting.en",
+  "lang": "en",
+  "text": "Welcome to Houting station. Please line up for the train. Let the passengers get off first before you get on.",
+  "file": "voice/fz-welcome-fzhting-en.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzjyz.zh",
+  "lang": "zh",
+  "text": "下一站，桔园洲。",
+  "file": "voice/fz-next-fzjyz-zh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzjyz.fzh",
+  "lang": "fzh",
+  "text": "下一站，桔园洲。",
+  "file": "voice/fz-next-fzjyz-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzjyz.en",
+  "lang": "en",
+  "text": "The next station is Juyuanzhou.",
+  "file": "voice/fz-next-fzjyz-en.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzjyz.zh",
+  "lang": "zh",
+  "text": "列车即将到达桔园洲站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzjyz-zh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzjyz.fzh",
+  "lang": "fzh",
+  "text": "列车即将到达桔园洲站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzjyz-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzjyz.en",
+  "lang": "en",
+  "text": "The train is arriving at Juyuanzhou. Please mind the gap between the train and the platform.",
+  "file": "voice/fz-arrive-fzjyz-en.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzjyz.zh",
+  "lang": "zh",
+  "text": "欢迎光临桔园洲站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzjyz-zh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzjyz.fzh",
+  "lang": "fzh",
+  "text": "欢迎光临桔园洲站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzjyz-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzjyz.en",
+  "lang": "en",
+  "text": "Welcome to Juyuanzhou station. Please line up for the train. Let the passengers get off first before you get on.",
+  "file": "voice/fz-welcome-fzjyz-en.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzhw.zh",
+  "lang": "zh",
+  "text": "下一站，洪湾。",
+  "file": "voice/fz-next-fzhw-zh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzhw.fzh",
+  "lang": "fzh",
+  "text": "下一站，洪湾。",
+  "file": "voice/fz-next-fzhw-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzhw.en",
+  "lang": "en",
+  "text": "The next station is Hongwan.",
+  "file": "voice/fz-next-fzhw-en.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzhw.zh",
+  "lang": "zh",
+  "text": "列车即将到达洪湾站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzhw-zh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzhw.fzh",
+  "lang": "fzh",
+  "text": "列车即将到达洪湾站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzhw-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzhw.en",
+  "lang": "en",
+  "text": "The train is arriving at Hongwan. Please mind the gap between the train and the platform.",
+  "file": "voice/fz-arrive-fzhw-en.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzhw.zh",
+  "lang": "zh",
+  "text": "欢迎光临洪湾站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzhw-zh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzhw.fzh",
+  "lang": "fzh",
+  "text": "欢迎光临洪湾站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzhw-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzhw.en",
+  "lang": "en",
+  "text": "Welcome to Hongwan station. Please line up for the train. Let the passengers get off first before you get on.",
+  "file": "voice/fz-welcome-fzhw-en.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzjs2.zh",
+  "lang": "zh",
+  "text": "下一站，金山，可换乘5号线。",
+  "file": "voice/fz-next-fzjs2-zh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzjs2.fzh",
+  "lang": "fzh",
+  "text": "下一站，金山，可换乘5号线。",
+  "file": "voice/fz-next-fzjs2-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzjs2.en",
+  "lang": "en",
+  "text": "The next station is Jinshan, the interchange with Line 5.",
+  "file": "voice/fz-next-fzjs2-en.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzjs.zh",
+  "lang": "zh",
+  "text": "列车即将到达金山站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzjs-zh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzjs.fzh",
+  "lang": "fzh",
+  "text": "列车即将到达金山站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzjs-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzjs.en",
+  "lang": "en",
+  "text": "The train is arriving at Jinshan. Please mind the gap between the train and the platform.",
+  "file": "voice/fz-arrive-fzjs-en.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzjs.zh",
+  "lang": "zh",
+  "text": "欢迎光临金山站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzjs-zh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzjs.fzh",
+  "lang": "fzh",
+  "text": "欢迎光临金山站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzjs-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzjs.en",
+  "lang": "en",
+  "text": "Welcome to Jinshan station. Please line up for the train. Let the passengers get off first before you get on.",
+  "file": "voice/fz-welcome-fzjs-en.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzjxg.zh",
+  "lang": "zh",
+  "text": "下一站，金祥。",
+  "file": "voice/fz-next-fzjxg-zh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzjxg.fzh",
+  "lang": "fzh",
+  "text": "下一站，金祥。",
+  "file": "voice/fz-next-fzjxg-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzjxg.en",
+  "lang": "en",
+  "text": "The next station is Jinxiang.",
+  "file": "voice/fz-next-fzjxg-en.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzjxg.zh",
+  "lang": "zh",
+  "text": "列车即将到达金祥站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzjxg-zh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzjxg.fzh",
+  "lang": "fzh",
+  "text": "列车即将到达金祥站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzjxg-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzjxg.en",
+  "lang": "en",
+  "text": "The train is arriving at Jinxiang. Please mind the gap between the train and the platform.",
+  "file": "voice/fz-arrive-fzjxg-en.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzjxg.zh",
+  "lang": "zh",
+  "text": "欢迎光临金祥站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzjxg-zh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzjxg.fzh",
+  "lang": "fzh",
+  "text": "欢迎光临金祥站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzjxg-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzjxg.en",
+  "lang": "en",
+  "text": "Welcome to Jinxiang station. Please line up for the train. Let the passengers get off first before you get on.",
+  "file": "voice/fz-welcome-fzjxg-en.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzxb.zh",
+  "lang": "zh",
+  "text": "下一站，祥坂。",
+  "file": "voice/fz-next-fzxb-zh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzxb.fzh",
+  "lang": "fzh",
+  "text": "下一站，祥坂。",
+  "file": "voice/fz-next-fzxb-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzxb.en",
+  "lang": "en",
+  "text": "The next station is Xiangban.",
+  "file": "voice/fz-next-fzxb-en.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzxb.zh",
+  "lang": "zh",
+  "text": "列车即将到达祥坂站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzxb-zh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzxb.fzh",
+  "lang": "fzh",
+  "text": "列车即将到达祥坂站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzxb-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzxb.en",
+  "lang": "en",
+  "text": "The train is arriving at Xiangban. Please mind the gap between the train and the platform.",
+  "file": "voice/fz-arrive-fzxb-en.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzxb.zh",
+  "lang": "zh",
+  "text": "欢迎光临祥坂站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzxb-zh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzxb.fzh",
+  "lang": "fzh",
+  "text": "欢迎光临祥坂站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzxb-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzxb.en",
+  "lang": "en",
+  "text": "Welcome to Xiangban station. Please line up for the train. Let the passengers get off first before you get on.",
+  "file": "voice/fz-welcome-fzxb-en.mp3"
+ },
+ {
+  "id": "voice.fz.next.fznh.zh",
+  "lang": "zh",
+  "text": "下一站，宁化。",
+  "file": "voice/fz-next-fznh-zh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fznh.fzh",
+  "lang": "fzh",
+  "text": "下一站，宁化。",
+  "file": "voice/fz-next-fznh-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fznh.en",
+  "lang": "en",
+  "text": "The next station is Ninghua.",
+  "file": "voice/fz-next-fznh-en.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fznh.zh",
+  "lang": "zh",
+  "text": "列车即将到达宁化站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fznh-zh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fznh.fzh",
+  "lang": "fzh",
+  "text": "列车即将到达宁化站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fznh-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fznh.en",
+  "lang": "en",
+  "text": "The train is arriving at Ninghua. Please mind the gap between the train and the platform.",
+  "file": "voice/fz-arrive-fznh-en.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fznh.zh",
+  "lang": "zh",
+  "text": "欢迎光临宁化站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fznh-zh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fznh.fzh",
+  "lang": "fzh",
+  "text": "欢迎光临宁化站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fznh-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fznh.en",
+  "lang": "en",
+  "text": "Welcome to Ninghua station. Please line up for the train. Let the passengers get off first before you get on.",
+  "file": "voice/fz-welcome-fznh-en.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzxiy.zh",
+  "lang": "zh",
+  "text": "下一站，西洋。",
+  "file": "voice/fz-next-fzxiy-zh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzxiy.fzh",
+  "lang": "fzh",
+  "text": "下一站，西洋。",
+  "file": "voice/fz-next-fzxiy-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzxiy.en",
+  "lang": "en",
+  "text": "The next station is Xiyang.",
+  "file": "voice/fz-next-fzxiy-en.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzxiy.zh",
+  "lang": "zh",
+  "text": "列车即将到达西洋站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzxiy-zh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzxiy.fzh",
+  "lang": "fzh",
+  "text": "列车即将到达西洋站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzxiy-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzxiy.en",
+  "lang": "en",
+  "text": "The train is arriving at Xiyang. Please mind the gap between the train and the platform.",
+  "file": "voice/fz-arrive-fzxiy-en.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzxiy.zh",
+  "lang": "zh",
+  "text": "欢迎光临西洋站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzxiy-zh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzxiy.fzh",
+  "lang": "fzh",
+  "text": "欢迎光临西洋站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzxiy-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzxiy.en",
+  "lang": "en",
+  "text": "Welcome to Xiyang station. Please line up for the train. Let the passengers get off first before you get on.",
+  "file": "voice/fz-welcome-fzxiy-en.mp3"
+ },
+ {
+  "id": "voice.fz.next.fznmd2.zh",
+  "lang": "zh",
+  "text": "下一站，南门兜，可换乘1号线。",
+  "file": "voice/fz-next-fznmd2-zh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fznmd2.fzh",
+  "lang": "fzh",
+  "text": "下一站，南门兜，可换乘1号线。",
+  "file": "voice/fz-next-fznmd2-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fznmd2.en",
+  "lang": "en",
+  "text": "The next station is Nanmendou, the interchange with Line 1.",
+  "file": "voice/fz-next-fznmd2-en.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzsb.zh",
+  "lang": "zh",
+  "text": "下一站，水部，可出站换乘滨海快线。",
+  "file": "voice/fz-next-fzsb-zh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzsb.fzh",
+  "lang": "fzh",
+  "text": "下一站，水部，可出站换乘滨海快线。",
+  "file": "voice/fz-next-fzsb-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzsb.en",
+  "lang": "en",
+  "text": "The next station is Shuibu, Passengers may transfer to Binhai Express outside the station.",
+  "file": "voice/fz-next-fzsb-en.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzsb.zh",
+  "lang": "zh",
+  "text": "列车即将到达水部站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzsb-zh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzsb.fzh",
+  "lang": "fzh",
+  "text": "列车即将到达水部站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzsb-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzsb.en",
+  "lang": "en",
+  "text": "The train is arriving at Shuibu. Please mind the gap between the train and the platform.",
+  "file": "voice/fz-arrive-fzsb-en.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzsb.zh",
+  "lang": "zh",
+  "text": "欢迎光临水部站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzsb-zh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzsb.fzh",
+  "lang": "fzh",
+  "text": "欢迎光临水部站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzsb-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzsb.en",
+  "lang": "en",
+  "text": "Welcome to Shuibu station. Please line up for the train. Let the passengers get off first before you get on.",
+  "file": "voice/fz-welcome-fzsb-en.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzzyg.zh",
+  "lang": "zh",
+  "text": "下一站，紫阳。",
+  "file": "voice/fz-next-fzzyg-zh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzzyg.fzh",
+  "lang": "fzh",
+  "text": "下一站，紫阳。",
+  "file": "voice/fz-next-fzzyg-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzzyg.en",
+  "lang": "en",
+  "text": "The next station is Ziyang.",
+  "file": "voice/fz-next-fzzyg-en.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzzyg.zh",
+  "lang": "zh",
+  "text": "列车即将到达紫阳站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzzyg-zh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzzyg.fzh",
+  "lang": "fzh",
+  "text": "列车即将到达紫阳站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzzyg-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzzyg.en",
+  "lang": "en",
+  "text": "The train is arriving at Ziyang. Please mind the gap between the train and the platform.",
+  "file": "voice/fz-arrive-fzzyg-en.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzzyg.zh",
+  "lang": "zh",
+  "text": "欢迎光临紫阳站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzzyg-zh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzzyg.fzh",
+  "lang": "fzh",
+  "text": "欢迎光临紫阳站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzzyg-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzzyg.en",
+  "lang": "en",
+  "text": "Welcome to Ziyang station. Please line up for the train. Let the passengers get off first before you get on.",
+  "file": "voice/fz-welcome-fzzyg-en.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzwlt.zh",
+  "lang": "zh",
+  "text": "下一站，五里亭。",
+  "file": "voice/fz-next-fzwlt-zh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzwlt.fzh",
+  "lang": "fzh",
+  "text": "下一站，五里亭。",
+  "file": "voice/fz-next-fzwlt-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzwlt.en",
+  "lang": "en",
+  "text": "The next station is Wuliting.",
+  "file": "voice/fz-next-fzwlt-en.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzwlt.zh",
+  "lang": "zh",
+  "text": "列车即将到达五里亭站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzwlt-zh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzwlt.fzh",
+  "lang": "fzh",
+  "text": "列车即将到达五里亭站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzwlt-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzwlt.en",
+  "lang": "en",
+  "text": "The train is arriving at Wuliting. Please mind the gap between the train and the platform.",
+  "file": "voice/fz-arrive-fzwlt-en.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzwlt.zh",
+  "lang": "zh",
+  "text": "欢迎光临五里亭站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzwlt-zh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzwlt.fzh",
+  "lang": "fzh",
+  "text": "欢迎光临五里亭站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzwlt-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzwlt.en",
+  "lang": "en",
+  "text": "Welcome to Wuliting station. Please line up for the train. Let the passengers get off first before you get on.",
+  "file": "voice/fz-welcome-fzwlt-en.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzqy2.zh",
+  "lang": "zh",
+  "text": "下一站，前屿，可换乘4号线。",
+  "file": "voice/fz-next-fzqy2-zh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzqy2.fzh",
+  "lang": "fzh",
+  "text": "下一站，前屿，可换乘4号线。",
+  "file": "voice/fz-next-fzqy2-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzqy2.en",
+  "lang": "en",
+  "text": "The next station is Qianyu, the interchange with Line 4.",
+  "file": "voice/fz-next-fzqy2-en.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzqy.zh",
+  "lang": "zh",
+  "text": "列车即将到达前屿站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzqy-zh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzqy.fzh",
+  "lang": "fzh",
+  "text": "列车即将到达前屿站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzqy-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzqy.en",
+  "lang": "en",
+  "text": "The train is arriving at Qianyu. Please mind the gap between the train and the platform.",
+  "file": "voice/fz-arrive-fzqy-en.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzqy.zh",
+  "lang": "zh",
+  "text": "欢迎光临前屿站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzqy-zh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzqy.fzh",
+  "lang": "fzh",
+  "text": "欢迎光临前屿站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzqy-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzqy.en",
+  "lang": "en",
+  "text": "Welcome to Qianyu station. Please line up for the train. Let the passengers get off first before you get on.",
+  "file": "voice/fz-welcome-fzqy-en.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzsy.zh",
+  "lang": "zh",
+  "text": "下一站，上洋。",
+  "file": "voice/fz-next-fzsy-zh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzsy.fzh",
+  "lang": "fzh",
+  "text": "下一站，上洋。",
+  "file": "voice/fz-next-fzsy-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzsy.en",
+  "lang": "en",
+  "text": "The next station is Shangyang.",
+  "file": "voice/fz-next-fzsy-en.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzsy.zh",
+  "lang": "zh",
+  "text": "列车即将到达上洋站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzsy-zh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzsy.fzh",
+  "lang": "fzh",
+  "text": "列车即将到达上洋站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzsy-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzsy.en",
+  "lang": "en",
+  "text": "The train is arriving at Shangyang. Please mind the gap between the train and the platform.",
+  "file": "voice/fz-arrive-fzsy-en.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzsy.zh",
+  "lang": "zh",
+  "text": "欢迎光临上洋站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzsy-zh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzsy.fzh",
+  "lang": "fzh",
+  "text": "欢迎光临上洋站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzsy-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzsy.en",
+  "lang": "en",
+  "text": "Welcome to Shangyang station. Please line up for the train. Let the passengers get off first before you get on.",
+  "file": "voice/fz-welcome-fzsy-en.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzgs.zh",
+  "lang": "zh",
+  "text": "下一站，鼓山。",
+  "file": "voice/fz-next-fzgs-zh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzgs.fzh",
+  "lang": "fzh",
+  "text": "下一站，鼓山。",
+  "file": "voice/fz-next-fzgs-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzgs.en",
+  "lang": "en",
+  "text": "The next station is Gushan.",
+  "file": "voice/fz-next-fzgs-en.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzgs.zh",
+  "lang": "zh",
+  "text": "列车即将到达鼓山站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzgs-zh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzgs.fzh",
+  "lang": "fzh",
+  "text": "列车即将到达鼓山站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzgs-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzgs.en",
+  "lang": "en",
+  "text": "The train is arriving at Gushan. Please mind the gap between the train and the platform.",
+  "file": "voice/fz-arrive-fzgs-en.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzgs.zh",
+  "lang": "zh",
+  "text": "欢迎光临鼓山站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzgs-zh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzgs.fzh",
+  "lang": "fzh",
+  "text": "欢迎光临鼓山站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzgs-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzgs.en",
+  "lang": "en",
+  "text": "Welcome to Gushan station. Please line up for the train. Let the passengers get off first before you get on.",
+  "file": "voice/fz-welcome-fzgs-en.mp3"
+ },
+ {
+  "id": "voice.fz.fzvisit.fzgs.zh",
+  "lang": "zh",
+  "text": "鼓山站附近有鼓山风景区，欢迎下车游玩，请从A出口出站。",
+  "file": "voice/fz-fzvisit-fzgs-zh.mp3"
+ },
+ {
+  "id": "voice.fz.fzvisit.fzgs.fzh",
+  "lang": "fzh",
+  "text": "鼓山站附近有鼓山风景区，欢迎下车游玩，请从A出口出站。",
+  "file": "voice/fz-fzvisit-fzgs-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.fzvisit.fzgs.en",
+  "lang": "en",
+  "text": "Gushan station is near Gushan Mountain. You are welcome to get off and visit. Please use Exit A.",
+  "file": "voice/fz-fzvisit-fzgs-en.mp3"
+ },
+ {
+  "id": "voice.fz.fzexit.fzgs.zh",
+  "lang": "zh",
+  "text": "前往鼓山风景区的乘客，请从A出口出站。",
+  "file": "voice/fz-fzexit-fzgs-zh.mp3"
+ },
+ {
+  "id": "voice.fz.fzexit.fzgs.fzh",
+  "lang": "fzh",
+  "text": "前往鼓山风景区的乘客，请从A出口出站。",
+  "file": "voice/fz-fzexit-fzgs-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.fzexit.fzgs.en",
+  "lang": "en",
+  "text": "Passengers for Gushan Mountain, please use Exit A.",
+  "file": "voice/fz-fzexit-fzgs-en.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzyl.zh",
+  "lang": "zh",
+  "text": "列车即将到达洋里站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzyl-zh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzyl.fzh",
+  "lang": "fzh",
+  "text": "列车即将到达洋里站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzyl-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzyl.en",
+  "lang": "en",
+  "text": "The train is arriving at Yangli. Please mind the gap between the train and the platform.",
+  "file": "voice/fz-arrive-fzyl-en.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzyl.zh",
+  "lang": "zh",
+  "text": "欢迎光临洋里站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzyl-zh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzyl.fzh",
+  "lang": "fzh",
+  "text": "欢迎光临洋里站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzyl-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzyl.en",
+  "lang": "en",
+  "text": "Welcome to Yangli station. Please line up for the train. Let the passengers get off first before you get on.",
+  "file": "voice/fz-welcome-fzyl-en.mp3"
  },
  {
   "id": "voice.fz.destination.dfj.zh",
@@ -8892,22 +10224,22 @@
   "file": "voice/fz-welcome-fzslyy-en.mp3"
  },
  {
-  "id": "voice.fz.next.fzdmn.zh",
+  "id": "voice.fz.next.fzdmn4.zh",
   "lang": "zh",
-  "text": "下一站，东门。",
-  "file": "voice/fz-next-fzdmn-zh.mp3"
+  "text": "下一站，东门，可换乘滨海快线。",
+  "file": "voice/fz-next-fzdmn4-zh.mp3"
  },
  {
-  "id": "voice.fz.next.fzdmn.fzh",
+  "id": "voice.fz.next.fzdmn4.fzh",
   "lang": "fzh",
-  "text": "下一站，东门。",
-  "file": "voice/fz-next-fzdmn-fzh.mp3"
+  "text": "下一站，东门，可换乘滨海快线。",
+  "file": "voice/fz-next-fzdmn4-fzh.mp3"
  },
  {
-  "id": "voice.fz.next.fzdmn.en",
+  "id": "voice.fz.next.fzdmn4.en",
   "lang": "en",
-  "text": "The next station is Dongmen.",
-  "file": "voice/fz-next-fzdmn-en.mp3"
+  "text": "The next station is Dongmen, the interchange with Binhai Express.",
+  "file": "voice/fz-next-fzdmn4-en.mp3"
  },
  {
   "id": "voice.fz.arrive.fzdmn.zh",
@@ -9162,58 +10494,22 @@
   "file": "voice/fz-welcome-fzhoy-en.mp3"
  },
  {
-  "id": "voice.fz.next.fzqy.zh",
+  "id": "voice.fz.next.fzqy4.zh",
   "lang": "zh",
   "text": "下一站，前屿，可换乘2号线。",
-  "file": "voice/fz-next-fzqy-zh.mp3"
+  "file": "voice/fz-next-fzqy4-zh.mp3"
  },
  {
-  "id": "voice.fz.next.fzqy.fzh",
+  "id": "voice.fz.next.fzqy4.fzh",
   "lang": "fzh",
   "text": "下一站，前屿，可换乘2号线。",
-  "file": "voice/fz-next-fzqy-fzh.mp3"
+  "file": "voice/fz-next-fzqy4-fzh.mp3"
  },
  {
-  "id": "voice.fz.next.fzqy.en",
+  "id": "voice.fz.next.fzqy4.en",
   "lang": "en",
   "text": "The next station is Qianyu, the interchange with Line 2.",
-  "file": "voice/fz-next-fzqy-en.mp3"
- },
- {
-  "id": "voice.fz.arrive.fzqy.zh",
-  "lang": "zh",
-  "text": "列车即将到达前屿站，请小心列车与站台之间的空隙。",
-  "file": "voice/fz-arrive-fzqy-zh.mp3"
- },
- {
-  "id": "voice.fz.arrive.fzqy.fzh",
-  "lang": "fzh",
-  "text": "列车即将到达前屿站，请小心列车与站台之间的空隙。",
-  "file": "voice/fz-arrive-fzqy-fzh.mp3"
- },
- {
-  "id": "voice.fz.arrive.fzqy.en",
-  "lang": "en",
-  "text": "The train is arriving at Qianyu. Please mind the gap between the train and the platform.",
-  "file": "voice/fz-arrive-fzqy-en.mp3"
- },
- {
-  "id": "voice.fz.welcome.fzqy.zh",
-  "lang": "zh",
-  "text": "欢迎光临前屿站。请排队候车，先下后上。",
-  "file": "voice/fz-welcome-fzqy-zh.mp3"
- },
- {
-  "id": "voice.fz.welcome.fzqy.fzh",
-  "lang": "fzh",
-  "text": "欢迎光临前屿站。请排队候车，先下后上。",
-  "file": "voice/fz-welcome-fzqy-fzh.mp3"
- },
- {
-  "id": "voice.fz.welcome.fzqy.en",
-  "lang": "en",
-  "text": "Welcome to Qianyu station. Please line up for the train. Let the passengers get off first before you get on.",
-  "file": "voice/fz-welcome-fzqy-en.mp3"
+  "file": "voice/fz-next-fzqy4-en.mp3"
  },
  {
   "id": "voice.fz.next.fzgmg.zh",
@@ -9432,22 +10728,22 @@
   "file": "voice/fz-welcome-fzhzzx-en.mp3"
  },
  {
-  "id": "voice.fz.next.fzlp.zh",
+  "id": "voice.fz.next.fzlp4.zh",
   "lang": "zh",
   "text": "下一站，林浦，可换乘6号线。",
-  "file": "voice/fz-next-fzlp-zh.mp3"
+  "file": "voice/fz-next-fzlp4-zh.mp3"
  },
  {
-  "id": "voice.fz.next.fzlp.fzh",
+  "id": "voice.fz.next.fzlp4.fzh",
   "lang": "fzh",
   "text": "下一站，林浦，可换乘6号线。",
-  "file": "voice/fz-next-fzlp-fzh.mp3"
+  "file": "voice/fz-next-fzlp4-fzh.mp3"
  },
  {
-  "id": "voice.fz.next.fzlp.en",
+  "id": "voice.fz.next.fzlp4.en",
   "lang": "en",
   "text": "The next station is Linpu, the interchange with Line 6.",
-  "file": "voice/fz-next-fzlp-en.mp3"
+  "file": "voice/fz-next-fzlp4-en.mp3"
  },
  {
   "id": "voice.fz.arrive.fzlp.zh",
@@ -9954,69 +11250,33 @@
   "file": "voice/fz-welcome-fzmr-en.mp3"
  },
  {
-  "id": "voice.fz.next.fzjs.zh",
+  "id": "voice.fz.next.fzjs5.zh",
   "lang": "zh",
   "text": "下一站，金山，可换乘2号线。",
-  "file": "voice/fz-next-fzjs-zh.mp3"
+  "file": "voice/fz-next-fzjs5-zh.mp3"
  },
  {
-  "id": "voice.fz.next.fzjs.fzh",
+  "id": "voice.fz.next.fzjs5.fzh",
   "lang": "fzh",
   "text": "下一站，金山，可换乘2号线。",
-  "file": "voice/fz-next-fzjs-fzh.mp3"
+  "file": "voice/fz-next-fzjs5-fzh.mp3"
  },
  {
-  "id": "voice.fz.next.fzjs.en",
+  "id": "voice.fz.next.fzjs5.en",
   "lang": "en",
   "text": "The next station is Jinshan, the interchange with Line 2.",
-  "file": "voice/fz-next-fzjs-en.mp3"
- },
- {
-  "id": "voice.fz.arrive.fzjs.zh",
-  "lang": "zh",
-  "text": "列车即将到达金山站，请小心列车与站台之间的空隙。",
-  "file": "voice/fz-arrive-fzjs-zh.mp3"
- },
- {
-  "id": "voice.fz.arrive.fzjs.fzh",
-  "lang": "fzh",
-  "text": "列车即将到达金山站，请小心列车与站台之间的空隙。",
-  "file": "voice/fz-arrive-fzjs-fzh.mp3"
- },
- {
-  "id": "voice.fz.arrive.fzjs.en",
-  "lang": "en",
-  "text": "The train is arriving at Jinshan. Please mind the gap between the train and the platform.",
-  "file": "voice/fz-arrive-fzjs-en.mp3"
- },
- {
-  "id": "voice.fz.welcome.fzjs.zh",
-  "lang": "zh",
-  "text": "欢迎光临金山站。请排队候车，先下后上。",
-  "file": "voice/fz-welcome-fzjs-zh.mp3"
- },
- {
-  "id": "voice.fz.welcome.fzjs.fzh",
-  "lang": "fzh",
-  "text": "欢迎光临金山站。请排队候车，先下后上。",
-  "file": "voice/fz-welcome-fzjs-fzh.mp3"
- },
- {
-  "id": "voice.fz.welcome.fzjs.en",
-  "lang": "en",
-  "text": "Welcome to Jinshan station. Please line up for the train. Let the passengers get off first before you get on.",
-  "file": "voice/fz-welcome-fzjs-en.mp3"
+  "file": "voice/fz-next-fzjs5-en.mp3"
  },
  {
   "id": "voice.fz.next.fzfgl.zh",
   "lang": "zh",
-  "text": "下一站，凤冈里。",
+  "text": "下一站，凤岗里。",
   "file": "voice/fz-next-fzfgl-zh.mp3"
  },
  {
   "id": "voice.fz.next.fzfgl.fzh",
   "lang": "fzh",
-  "text": "下一站，凤冈里。",
+  "text": "下一站，凤岗里。",
   "file": "voice/fz-next-fzfgl-fzh.mp3"
  },
  {
@@ -10028,13 +11288,13 @@
  {
   "id": "voice.fz.arrive.fzfgl.zh",
   "lang": "zh",
-  "text": "列车即将到达凤冈里站，请小心列车与站台之间的空隙。",
+  "text": "列车即将到达凤岗里站，请小心列车与站台之间的空隙。",
   "file": "voice/fz-arrive-fzfgl-zh.mp3"
  },
  {
   "id": "voice.fz.arrive.fzfgl.fzh",
   "lang": "fzh",
-  "text": "列车即将到达凤冈里站，请小心列车与站台之间的空隙。",
+  "text": "列车即将到达凤岗里站，请小心列车与站台之间的空隙。",
   "file": "voice/fz-arrive-fzfgl-fzh.mp3"
  },
  {
@@ -10046,13 +11306,13 @@
  {
   "id": "voice.fz.welcome.fzfgl.zh",
   "lang": "zh",
-  "text": "欢迎光临凤冈里站。请排队候车，先下后上。",
+  "text": "欢迎光临凤岗里站。请排队候车，先下后上。",
   "file": "voice/fz-welcome-fzfgl-zh.mp3"
  },
  {
   "id": "voice.fz.welcome.fzfgl.fzh",
   "lang": "fzh",
-  "text": "欢迎光临凤冈里站。请排队候车，先下后上。",
+  "text": "欢迎光临凤岗里站。请排队候车，先下后上。",
   "file": "voice/fz-welcome-fzfgl-fzh.mp3"
  },
  {
@@ -10222,6 +11482,42 @@
   "lang": "en",
   "text": "Welcome to Dongling station. Please line up for the train. Let the passengers get off first before you get on.",
   "file": "voice/fz-welcome-fzdl-en.mp3"
+ },
+ {
+  "id": "voice.fz.fzvisit.fzdl.zh",
+  "lang": "zh",
+  "text": "东岭站附近有海峡奥体中心，欢迎下车游玩，请从A出口出站。",
+  "file": "voice/fz-fzvisit-fzdl-zh.mp3"
+ },
+ {
+  "id": "voice.fz.fzvisit.fzdl.fzh",
+  "lang": "fzh",
+  "text": "东岭站附近有海峡奥体中心，欢迎下车游玩，请从A出口出站。",
+  "file": "voice/fz-fzvisit-fzdl-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.fzvisit.fzdl.en",
+  "lang": "en",
+  "text": "Dongling station is near the Straits Olympic Sports Center. You are welcome to get off and visit. Please use Exit A.",
+  "file": "voice/fz-fzvisit-fzdl-en.mp3"
+ },
+ {
+  "id": "voice.fz.fzexit.fzdl.zh",
+  "lang": "zh",
+  "text": "前往海峡奥体中心的乘客，请从A出口出站。",
+  "file": "voice/fz-fzexit-fzdl-zh.mp3"
+ },
+ {
+  "id": "voice.fz.fzexit.fzdl.fzh",
+  "lang": "fzh",
+  "text": "前往海峡奥体中心的乘客，请从A出口出站。",
+  "file": "voice/fz-fzexit-fzdl-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.fzexit.fzdl.en",
+  "lang": "en",
+  "text": "Passengers for the Straits Olympic Sports Center, please use Exit A.",
+  "file": "voice/fz-fzexit-fzdl-en.mp3"
  },
  {
   "id": "voice.fz.next.fzty.zh",
@@ -10496,19 +11792,19 @@
  {
   "id": "voice.fz.next.fzdfj5.zh",
   "lang": "zh",
-  "text": "下一站，帝封江，可换乘4号线。",
+  "text": "下一站，帝封江，可换乘4号线、滨海快线。",
   "file": "voice/fz-next-fzdfj5-zh.mp3"
  },
  {
   "id": "voice.fz.next.fzdfj5.fzh",
   "lang": "fzh",
-  "text": "下一站，帝封江，可换乘4号线。",
+  "text": "下一站，帝封江，可换乘4号线、滨海快线。",
   "file": "voice/fz-next-fzdfj5-fzh.mp3"
  },
  {
   "id": "voice.fz.next.fzdfj5.en",
   "lang": "en",
-  "text": "The next station is Difengjiang, the interchange with Line 4.",
+  "text": "The next station is Difengjiang, the interchange with Line 4 and Binhai Express.",
   "file": "voice/fz-next-fzdfj5-en.mp3"
  },
  {
@@ -10672,6 +11968,1410 @@
   "lang": "en",
   "text": "Welcome to Longjiang station. Please line up for the train. Let the passengers get off first before you get on.",
   "file": "voice/fz-welcome-fzlj-en.mp3"
+ },
+ {
+  "id": "voice.fz.destination.wsh.zh",
+  "lang": "zh",
+  "text": "本次列车终点站为万寿。",
+  "file": "voice/fz-destination-wsh-zh.mp3"
+ },
+ {
+  "id": "voice.fz.destination.wsh.fzh",
+  "lang": "fzh",
+  "text": "本次列车终点站为万寿。",
+  "file": "voice/fz-destination-wsh-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.destination.wsh.en",
+  "lang": "en",
+  "text": "The destination of this train is Wanshou.",
+  "file": "voice/fz-destination-wsh-en.mp3"
+ },
+ {
+  "id": "voice.fz.terminal.wsh.zh",
+  "lang": "zh",
+  "text": "下一站是本次列车的终点站，万寿。请全部乘客带齐行李物品在此站下车，欢迎再次乘坐福州地铁。",
+  "file": "voice/fz-terminal-wsh-zh.mp3"
+ },
+ {
+  "id": "voice.fz.terminal.wsh.fzh",
+  "lang": "fzh",
+  "text": "下一站是本次列车的终点站，万寿。请全部乘客带齐行李物品在此站下车，欢迎再次乘坐福州地铁。",
+  "file": "voice/fz-terminal-wsh-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.terminal.wsh.en",
+  "lang": "en",
+  "text": "The next station is Wanshou, the terminal of this journey. Please take all your belongings and leave the train. Thank you for travelling on Fuzhou Metro.",
+  "file": "voice/fz-terminal-wsh-en.mp3"
+ },
+ {
+  "id": "voice.fz.platform.wsh.1.zh",
+  "lang": "zh",
+  "text": "一站台，万寿方向列车即将进站。",
+  "file": "voice/fz-platform-wsh-1-zh.mp3"
+ },
+ {
+  "id": "voice.fz.platform.wsh.1.fzh",
+  "lang": "fzh",
+  "text": "一站台，万寿方向列车即将进站。",
+  "file": "voice/fz-platform-wsh-1-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.platform.wsh.1.en",
+  "lang": "en",
+  "text": "The train bound for Wanshou is approaching at Platform 1.",
+  "file": "voice/fz-platform-wsh-1-en.mp3"
+ },
+ {
+  "id": "voice.fz.platform.wsh.2.zh",
+  "lang": "zh",
+  "text": "二站台，万寿方向列车即将进站。",
+  "file": "voice/fz-platform-wsh-2-zh.mp3"
+ },
+ {
+  "id": "voice.fz.platform.wsh.2.fzh",
+  "lang": "fzh",
+  "text": "二站台，万寿方向列车即将进站。",
+  "file": "voice/fz-platform-wsh-2-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.platform.wsh.2.en",
+  "lang": "en",
+  "text": "The train bound for Wanshou is approaching at Platform 2.",
+  "file": "voice/fz-platform-wsh-2-en.mp3"
+ },
+ {
+  "id": "voice.fz.destination.pd.zh",
+  "lang": "zh",
+  "text": "本次列车终点站为潘墩。",
+  "file": "voice/fz-destination-pd-zh.mp3"
+ },
+ {
+  "id": "voice.fz.destination.pd.fzh",
+  "lang": "fzh",
+  "text": "本次列车终点站为潘墩。",
+  "file": "voice/fz-destination-pd-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.destination.pd.en",
+  "lang": "en",
+  "text": "The destination of this train is Pandun.",
+  "file": "voice/fz-destination-pd-en.mp3"
+ },
+ {
+  "id": "voice.fz.terminal.pd.zh",
+  "lang": "zh",
+  "text": "下一站是本次列车的终点站，潘墩。请全部乘客带齐行李物品在此站下车，欢迎再次乘坐福州地铁。",
+  "file": "voice/fz-terminal-pd-zh.mp3"
+ },
+ {
+  "id": "voice.fz.terminal.pd.fzh",
+  "lang": "fzh",
+  "text": "下一站是本次列车的终点站，潘墩。请全部乘客带齐行李物品在此站下车，欢迎再次乘坐福州地铁。",
+  "file": "voice/fz-terminal-pd-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.terminal.pd.en",
+  "lang": "en",
+  "text": "The next station is Pandun, the terminal of this journey. Please take all your belongings and leave the train. Thank you for travelling on Fuzhou Metro.",
+  "file": "voice/fz-terminal-pd-en.mp3"
+ },
+ {
+  "id": "voice.fz.platform.pd.1.zh",
+  "lang": "zh",
+  "text": "一站台，潘墩方向列车即将进站。",
+  "file": "voice/fz-platform-pd-1-zh.mp3"
+ },
+ {
+  "id": "voice.fz.platform.pd.1.fzh",
+  "lang": "fzh",
+  "text": "一站台，潘墩方向列车即将进站。",
+  "file": "voice/fz-platform-pd-1-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.platform.pd.1.en",
+  "lang": "en",
+  "text": "The train bound for Pandun is approaching at Platform 1.",
+  "file": "voice/fz-platform-pd-1-en.mp3"
+ },
+ {
+  "id": "voice.fz.platform.pd.2.zh",
+  "lang": "zh",
+  "text": "二站台，潘墩方向列车即将进站。",
+  "file": "voice/fz-platform-pd-2-zh.mp3"
+ },
+ {
+  "id": "voice.fz.platform.pd.2.fzh",
+  "lang": "fzh",
+  "text": "二站台，潘墩方向列车即将进站。",
+  "file": "voice/fz-platform-pd-2-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.platform.pd.2.en",
+  "lang": "en",
+  "text": "The train bound for Pandun is approaching at Platform 2.",
+  "file": "voice/fz-platform-pd-2-en.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzpd.zh",
+  "lang": "zh",
+  "text": "列车即将到达潘墩站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzpd-zh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzpd.fzh",
+  "lang": "fzh",
+  "text": "列车即将到达潘墩站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzpd-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzpd.en",
+  "lang": "en",
+  "text": "The train is arriving at Pandun. Please mind the gap between the train and the platform.",
+  "file": "voice/fz-arrive-fzpd-en.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzpd.zh",
+  "lang": "zh",
+  "text": "欢迎光临潘墩站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzpd-zh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzpd.fzh",
+  "lang": "fzh",
+  "text": "欢迎光临潘墩站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzpd-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzpd.en",
+  "lang": "en",
+  "text": "Welcome to Pandun station. Please line up for the train. Let the passengers get off first before you get on.",
+  "file": "voice/fz-welcome-fzpd-en.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzlp6.zh",
+  "lang": "zh",
+  "text": "下一站，林浦，可换乘4号线。",
+  "file": "voice/fz-next-fzlp6-zh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzlp6.fzh",
+  "lang": "fzh",
+  "text": "下一站，林浦，可换乘4号线。",
+  "file": "voice/fz-next-fzlp6-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzlp6.en",
+  "lang": "en",
+  "text": "The next station is Linpu, the interchange with Line 4.",
+  "file": "voice/fz-next-fzlp6-en.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzzl.zh",
+  "lang": "zh",
+  "text": "下一站，樟岚。",
+  "file": "voice/fz-next-fzzl-zh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzzl.fzh",
+  "lang": "fzh",
+  "text": "下一站，樟岚。",
+  "file": "voice/fz-next-fzzl-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzzl.en",
+  "lang": "en",
+  "text": "The next station is Zhanglan.",
+  "file": "voice/fz-next-fzzl-en.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzzl.zh",
+  "lang": "zh",
+  "text": "列车即将到达樟岚站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzzl-zh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzzl.fzh",
+  "lang": "fzh",
+  "text": "列车即将到达樟岚站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzzl-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzzl.en",
+  "lang": "en",
+  "text": "The train is arriving at Zhanglan. Please mind the gap between the train and the platform.",
+  "file": "voice/fz-arrive-fzzl-en.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzzl.zh",
+  "lang": "zh",
+  "text": "欢迎光临樟岚站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzzl-zh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzzl.fzh",
+  "lang": "fzh",
+  "text": "欢迎光临樟岚站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzzl-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzzl.en",
+  "lang": "en",
+  "text": "Welcome to Zhanglan station. Please line up for the train. Let the passengers get off first before you get on.",
+  "file": "voice/fz-welcome-fzzl-en.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzlc6.zh",
+  "lang": "zh",
+  "text": "下一站，梁厝，可换乘1号线。",
+  "file": "voice/fz-next-fzlc6-zh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzlc6.fzh",
+  "lang": "fzh",
+  "text": "下一站，梁厝，可换乘1号线。",
+  "file": "voice/fz-next-fzlc6-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzlc6.en",
+  "lang": "en",
+  "text": "The next station is Liangcuo, the interchange with Line 1.",
+  "file": "voice/fz-next-fzlc6-en.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzxy6.zh",
+  "lang": "zh",
+  "text": "下一站，下洋，可换乘1号线。",
+  "file": "voice/fz-next-fzxy6-zh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzxy6.fzh",
+  "lang": "fzh",
+  "text": "下一站，下洋，可换乘1号线。",
+  "file": "voice/fz-next-fzxy6-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzxy6.en",
+  "lang": "en",
+  "text": "The next station is Xiayang, the interchange with Line 1.",
+  "file": "voice/fz-next-fzxy6-en.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzyq.zh",
+  "lang": "zh",
+  "text": "下一站，营前。",
+  "file": "voice/fz-next-fzyq-zh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzyq.fzh",
+  "lang": "fzh",
+  "text": "下一站，营前。",
+  "file": "voice/fz-next-fzyq-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzyq.en",
+  "lang": "en",
+  "text": "The next station is Yingqian.",
+  "file": "voice/fz-next-fzyq-en.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzyq.zh",
+  "lang": "zh",
+  "text": "列车即将到达营前站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzyq-zh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzyq.fzh",
+  "lang": "fzh",
+  "text": "列车即将到达营前站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzyq-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzyq.en",
+  "lang": "en",
+  "text": "The train is arriving at Yingqian. Please mind the gap between the train and the platform.",
+  "file": "voice/fz-arrive-fzyq-en.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzyq.zh",
+  "lang": "zh",
+  "text": "欢迎光临营前站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzyq-zh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzyq.fzh",
+  "lang": "fzh",
+  "text": "欢迎光临营前站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzyq-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzyq.en",
+  "lang": "en",
+  "text": "Welcome to Yingqian station. Please line up for the train. Let the passengers get off first before you get on.",
+  "file": "voice/fz-welcome-fzyq-en.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzhc.zh",
+  "lang": "zh",
+  "text": "下一站，航城。",
+  "file": "voice/fz-next-fzhc-zh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzhc.fzh",
+  "lang": "fzh",
+  "text": "下一站，航城。",
+  "file": "voice/fz-next-fzhc-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzhc.en",
+  "lang": "en",
+  "text": "The next station is Hangcheng.",
+  "file": "voice/fz-next-fzhc-en.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzhc.zh",
+  "lang": "zh",
+  "text": "列车即将到达航城站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzhc-zh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzhc.fzh",
+  "lang": "fzh",
+  "text": "列车即将到达航城站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzhc-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzhc.en",
+  "lang": "en",
+  "text": "The train is arriving at Hangcheng. Please mind the gap between the train and the platform.",
+  "file": "voice/fz-arrive-fzhc-en.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzhc.zh",
+  "lang": "zh",
+  "text": "欢迎光临航城站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzhc-zh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzhc.fzh",
+  "lang": "fzh",
+  "text": "欢迎光临航城站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzhc-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzhc.en",
+  "lang": "en",
+  "text": "Welcome to Hangcheng station. Please line up for the train. Let the passengers get off first before you get on.",
+  "file": "voice/fz-welcome-fzhc-en.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzzh.zh",
+  "lang": "zh",
+  "text": "下一站，郑和。",
+  "file": "voice/fz-next-fzzh-zh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzzh.fzh",
+  "lang": "fzh",
+  "text": "下一站，郑和。",
+  "file": "voice/fz-next-fzzh-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzzh.en",
+  "lang": "en",
+  "text": "The next station is Zhenghe.",
+  "file": "voice/fz-next-fzzh-en.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzzh.zh",
+  "lang": "zh",
+  "text": "列车即将到达郑和站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzzh-zh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzzh.fzh",
+  "lang": "fzh",
+  "text": "列车即将到达郑和站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzzh-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzzh.en",
+  "lang": "en",
+  "text": "The train is arriving at Zhenghe. Please mind the gap between the train and the platform.",
+  "file": "voice/fz-arrive-fzzh-en.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzzh.zh",
+  "lang": "zh",
+  "text": "欢迎光临郑和站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzzh-zh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzzh.fzh",
+  "lang": "fzh",
+  "text": "欢迎光临郑和站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzzh-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzzh.en",
+  "lang": "en",
+  "text": "Welcome to Zhenghe station. Please line up for the train. Let the passengers get off first before you get on.",
+  "file": "voice/fz-welcome-fzzh-en.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzsxy.zh",
+  "lang": "zh",
+  "text": "下一站，十洋。",
+  "file": "voice/fz-next-fzsxy-zh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzsxy.fzh",
+  "lang": "fzh",
+  "text": "下一站，十洋。",
+  "file": "voice/fz-next-fzsxy-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzsxy.en",
+  "lang": "en",
+  "text": "The next station is Shiyang.",
+  "file": "voice/fz-next-fzsxy-en.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzsxy.zh",
+  "lang": "zh",
+  "text": "列车即将到达十洋站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzsxy-zh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzsxy.fzh",
+  "lang": "fzh",
+  "text": "列车即将到达十洋站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzsxy-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzsxy.en",
+  "lang": "en",
+  "text": "The train is arriving at Shiyang. Please mind the gap between the train and the platform.",
+  "file": "voice/fz-arrive-fzsxy-en.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzsxy.zh",
+  "lang": "zh",
+  "text": "欢迎光临十洋站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzsxy-zh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzsxy.fzh",
+  "lang": "fzh",
+  "text": "欢迎光临十洋站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzsxy-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzsxy.en",
+  "lang": "en",
+  "text": "Welcome to Shiyang station. Please line up for the train. Let the passengers get off first before you get on.",
+  "file": "voice/fz-welcome-fzsxy-en.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzwh.zh",
+  "lang": "zh",
+  "text": "下一站，吴航。",
+  "file": "voice/fz-next-fzwh-zh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzwh.fzh",
+  "lang": "fzh",
+  "text": "下一站，吴航。",
+  "file": "voice/fz-next-fzwh-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzwh.en",
+  "lang": "en",
+  "text": "The next station is Wuhang.",
+  "file": "voice/fz-next-fzwh-en.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzwh.zh",
+  "lang": "zh",
+  "text": "列车即将到达吴航站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzwh-zh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzwh.fzh",
+  "lang": "fzh",
+  "text": "列车即将到达吴航站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzwh-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzwh.en",
+  "lang": "en",
+  "text": "The train is arriving at Wuhang. Please mind the gap between the train and the platform.",
+  "file": "voice/fz-arrive-fzwh-en.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzwh.zh",
+  "lang": "zh",
+  "text": "欢迎光临吴航站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzwh-zh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzwh.fzh",
+  "lang": "fzh",
+  "text": "欢迎光临吴航站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzwh-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzwh.en",
+  "lang": "en",
+  "text": "Welcome to Wuhang station. Please line up for the train. Let the passengers get off first before you get on.",
+  "file": "voice/fz-welcome-fzwh-en.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzhsh.zh",
+  "lang": "zh",
+  "text": "下一站，鹤上。",
+  "file": "voice/fz-next-fzhsh-zh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzhsh.fzh",
+  "lang": "fzh",
+  "text": "下一站，鹤上。",
+  "file": "voice/fz-next-fzhsh-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzhsh.en",
+  "lang": "en",
+  "text": "The next station is Heshang.",
+  "file": "voice/fz-next-fzhsh-en.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzhsh.zh",
+  "lang": "zh",
+  "text": "列车即将到达鹤上站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzhsh-zh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzhsh.fzh",
+  "lang": "fzh",
+  "text": "列车即将到达鹤上站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzhsh-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzhsh.en",
+  "lang": "en",
+  "text": "The train is arriving at Heshang. Please mind the gap between the train and the platform.",
+  "file": "voice/fz-arrive-fzhsh-en.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzhsh.zh",
+  "lang": "zh",
+  "text": "欢迎光临鹤上站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzhsh-zh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzhsh.fzh",
+  "lang": "fzh",
+  "text": "欢迎光临鹤上站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzhsh-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzhsh.en",
+  "lang": "en",
+  "text": "Welcome to Heshang station. Please line up for the train. Let the passengers get off first before you get on.",
+  "file": "voice/fz-welcome-fzhsh-en.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzsjg.zh",
+  "lang": "zh",
+  "text": "下一站，沙京。",
+  "file": "voice/fz-next-fzsjg-zh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzsjg.fzh",
+  "lang": "fzh",
+  "text": "下一站，沙京。",
+  "file": "voice/fz-next-fzsjg-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzsjg.en",
+  "lang": "en",
+  "text": "The next station is Shajing.",
+  "file": "voice/fz-next-fzsjg-en.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzsjg.zh",
+  "lang": "zh",
+  "text": "列车即将到达沙京站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzsjg-zh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzsjg.fzh",
+  "lang": "fzh",
+  "text": "列车即将到达沙京站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzsjg-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzsjg.en",
+  "lang": "en",
+  "text": "The train is arriving at Shajing. Please mind the gap between the train and the platform.",
+  "file": "voice/fz-arrive-fzsjg-en.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzsjg.zh",
+  "lang": "zh",
+  "text": "欢迎光临沙京站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzsjg-zh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzsjg.fzh",
+  "lang": "fzh",
+  "text": "欢迎光临沙京站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzsjg-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzsjg.en",
+  "lang": "en",
+  "text": "Welcome to Shajing station. Please line up for the train. Let the passengers get off first before you get on.",
+  "file": "voice/fz-welcome-fzsjg-en.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzxw.zh",
+  "lang": "zh",
+  "text": "下一站，下吴。",
+  "file": "voice/fz-next-fzxw-zh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzxw.fzh",
+  "lang": "fzh",
+  "text": "下一站，下吴。",
+  "file": "voice/fz-next-fzxw-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzxw.en",
+  "lang": "en",
+  "text": "The next station is Xiawu.",
+  "file": "voice/fz-next-fzxw-en.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzxw.zh",
+  "lang": "zh",
+  "text": "列车即将到达下吴站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzxw-zh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzxw.fzh",
+  "lang": "fzh",
+  "text": "列车即将到达下吴站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzxw-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzxw.en",
+  "lang": "en",
+  "text": "The train is arriving at Xiawu. Please mind the gap between the train and the platform.",
+  "file": "voice/fz-arrive-fzxw-en.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzxw.zh",
+  "lang": "zh",
+  "text": "欢迎光临下吴站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzxw-zh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzxw.fzh",
+  "lang": "fzh",
+  "text": "欢迎光临下吴站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzxw-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzxw.en",
+  "lang": "en",
+  "text": "Welcome to Xiawu station. Please line up for the train. Let the passengers get off first before you get on.",
+  "file": "voice/fz-welcome-fzxw-en.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzwsh.zh",
+  "lang": "zh",
+  "text": "列车即将到达万寿站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzwsh-zh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzwsh.fzh",
+  "lang": "fzh",
+  "text": "列车即将到达万寿站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzwsh-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzwsh.en",
+  "lang": "en",
+  "text": "The train is arriving at Wanshou. Please mind the gap between the train and the platform.",
+  "file": "voice/fz-arrive-fzwsh-en.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzwsh.zh",
+  "lang": "zh",
+  "text": "欢迎光临万寿站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzwsh-zh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzwsh.fzh",
+  "lang": "fzh",
+  "text": "欢迎光临万寿站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzwsh-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzwsh.en",
+  "lang": "en",
+  "text": "Welcome to Wanshou station. Please line up for the train. Let the passengers get off first before you get on.",
+  "file": "voice/fz-welcome-fzwsh-en.mp3"
+ },
+ {
+  "id": "voice.fz.destination.wl.zh",
+  "lang": "zh",
+  "text": "本次列车终点站为文岭。",
+  "file": "voice/fz-destination-wl-zh.mp3"
+ },
+ {
+  "id": "voice.fz.destination.wl.fzh",
+  "lang": "fzh",
+  "text": "本次列车终点站为文岭。",
+  "file": "voice/fz-destination-wl-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.destination.wl.en",
+  "lang": "en",
+  "text": "The destination of this train is Wenling.",
+  "file": "voice/fz-destination-wl-en.mp3"
+ },
+ {
+  "id": "voice.fz.terminal.wl.zh",
+  "lang": "zh",
+  "text": "下一站是本次列车的终点站，文岭。请全部乘客带齐行李物品在此站下车，欢迎再次乘坐福州地铁。",
+  "file": "voice/fz-terminal-wl-zh.mp3"
+ },
+ {
+  "id": "voice.fz.terminal.wl.fzh",
+  "lang": "fzh",
+  "text": "下一站是本次列车的终点站，文岭。请全部乘客带齐行李物品在此站下车，欢迎再次乘坐福州地铁。",
+  "file": "voice/fz-terminal-wl-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.terminal.wl.en",
+  "lang": "en",
+  "text": "The next station is Wenling, the terminal of this journey. Please take all your belongings and leave the train. Thank you for travelling on Fuzhou Metro.",
+  "file": "voice/fz-terminal-wl-en.mp3"
+ },
+ {
+  "id": "voice.fz.platform.wl.1.zh",
+  "lang": "zh",
+  "text": "一站台，文岭方向列车即将进站。",
+  "file": "voice/fz-platform-wl-1-zh.mp3"
+ },
+ {
+  "id": "voice.fz.platform.wl.1.fzh",
+  "lang": "fzh",
+  "text": "一站台，文岭方向列车即将进站。",
+  "file": "voice/fz-platform-wl-1-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.platform.wl.1.en",
+  "lang": "en",
+  "text": "The train bound for Wenling is approaching at Platform 1.",
+  "file": "voice/fz-platform-wl-1-en.mp3"
+ },
+ {
+  "id": "voice.fz.platform.wl.2.zh",
+  "lang": "zh",
+  "text": "二站台，文岭方向列车即将进站。",
+  "file": "voice/fz-platform-wl-2-zh.mp3"
+ },
+ {
+  "id": "voice.fz.platform.wl.2.fzh",
+  "lang": "fzh",
+  "text": "二站台，文岭方向列车即将进站。",
+  "file": "voice/fz-platform-wl-2-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.platform.wl.2.en",
+  "lang": "en",
+  "text": "The train bound for Wenling is approaching at Platform 2.",
+  "file": "voice/fz-platform-wl-2-en.mp3"
+ },
+ {
+  "id": "voice.fz.destination.fzhcz.zh",
+  "lang": "zh",
+  "text": "本次列车终点站为福州火车站。",
+  "file": "voice/fz-destination-fzhcz-zh.mp3"
+ },
+ {
+  "id": "voice.fz.destination.fzhcz.fzh",
+  "lang": "fzh",
+  "text": "本次列车终点站为福州火车站。",
+  "file": "voice/fz-destination-fzhcz-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.destination.fzhcz.en",
+  "lang": "en",
+  "text": "The destination of this train is Fuzhou Railway Station.",
+  "file": "voice/fz-destination-fzhcz-en.mp3"
+ },
+ {
+  "id": "voice.fz.terminal.fzhcz.zh",
+  "lang": "zh",
+  "text": "下一站是本次列车的终点站，福州火车站。请全部乘客带齐行李物品在此站下车，欢迎再次乘坐福州地铁。",
+  "file": "voice/fz-terminal-fzhcz-zh.mp3"
+ },
+ {
+  "id": "voice.fz.terminal.fzhcz.fzh",
+  "lang": "fzh",
+  "text": "下一站是本次列车的终点站，福州火车站。请全部乘客带齐行李物品在此站下车，欢迎再次乘坐福州地铁。",
+  "file": "voice/fz-terminal-fzhcz-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.terminal.fzhcz.en",
+  "lang": "en",
+  "text": "The next station is Fuzhou Railway Station, the terminal of this journey. Please take all your belongings and leave the train. Thank you for travelling on Fuzhou Metro.",
+  "file": "voice/fz-terminal-fzhcz-en.mp3"
+ },
+ {
+  "id": "voice.fz.platform.fzhcz.1.zh",
+  "lang": "zh",
+  "text": "一站台，福州火车站方向列车即将进站。",
+  "file": "voice/fz-platform-fzhcz-1-zh.mp3"
+ },
+ {
+  "id": "voice.fz.platform.fzhcz.1.fzh",
+  "lang": "fzh",
+  "text": "一站台，福州火车站方向列车即将进站。",
+  "file": "voice/fz-platform-fzhcz-1-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.platform.fzhcz.1.en",
+  "lang": "en",
+  "text": "The train bound for Fuzhou Railway Station is approaching at Platform 1.",
+  "file": "voice/fz-platform-fzhcz-1-en.mp3"
+ },
+ {
+  "id": "voice.fz.platform.fzhcz.2.zh",
+  "lang": "zh",
+  "text": "二站台，福州火车站方向列车即将进站。",
+  "file": "voice/fz-platform-fzhcz-2-zh.mp3"
+ },
+ {
+  "id": "voice.fz.platform.fzhcz.2.fzh",
+  "lang": "fzh",
+  "text": "二站台，福州火车站方向列车即将进站。",
+  "file": "voice/fz-platform-fzhcz-2-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.platform.fzhcz.2.en",
+  "lang": "en",
+  "text": "The train bound for Fuzhou Railway Station is approaching at Platform 2.",
+  "file": "voice/fz-platform-fzhcz-2-en.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzdmn20.zh",
+  "lang": "zh",
+  "text": "下一站，东门，可换乘4号线。",
+  "file": "voice/fz-next-fzdmn20-zh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzdmn20.fzh",
+  "lang": "fzh",
+  "text": "下一站，东门，可换乘4号线。",
+  "file": "voice/fz-next-fzdmn20-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzdmn20.en",
+  "lang": "en",
+  "text": "The next station is Dongmen, the interchange with Line 4.",
+  "file": "voice/fz-next-fzdmn20-en.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzmd.zh",
+  "lang": "zh",
+  "text": "下一站，闽都，可出站换乘2号线。",
+  "file": "voice/fz-next-fzmd-zh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzmd.fzh",
+  "lang": "fzh",
+  "text": "下一站，闽都，可出站换乘2号线。",
+  "file": "voice/fz-next-fzmd-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzmd.en",
+  "lang": "en",
+  "text": "The next station is Mindu, Passengers may transfer to Line 2 outside the station.",
+  "file": "voice/fz-next-fzmd-en.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzmd.zh",
+  "lang": "zh",
+  "text": "列车即将到达闽都站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzmd-zh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzmd.fzh",
+  "lang": "fzh",
+  "text": "列车即将到达闽都站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzmd-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzmd.en",
+  "lang": "en",
+  "text": "The train is arriving at Mindu. Please mind the gap between the train and the platform.",
+  "file": "voice/fz-arrive-fzmd-en.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzmd.zh",
+  "lang": "zh",
+  "text": "欢迎光临闽都站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzmd-zh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzmd.fzh",
+  "lang": "fzh",
+  "text": "欢迎光临闽都站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzmd-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzmd.en",
+  "lang": "en",
+  "text": "Welcome to Mindu station. Please line up for the train. Let the passengers get off first before you get on.",
+  "file": "voice/fz-welcome-fzmd-en.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzngy.zh",
+  "lang": "zh",
+  "text": "下一站，南公园。",
+  "file": "voice/fz-next-fzngy-zh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzngy.fzh",
+  "lang": "fzh",
+  "text": "下一站，南公园。",
+  "file": "voice/fz-next-fzngy-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzngy.en",
+  "lang": "en",
+  "text": "The next station is Nangongyuan.",
+  "file": "voice/fz-next-fzngy-en.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzngy.zh",
+  "lang": "zh",
+  "text": "列车即将到达南公园站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzngy-zh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzngy.fzh",
+  "lang": "fzh",
+  "text": "列车即将到达南公园站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzngy-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzngy.en",
+  "lang": "en",
+  "text": "The train is arriving at Nangongyuan. Please mind the gap between the train and the platform.",
+  "file": "voice/fz-arrive-fzngy-en.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzngy.zh",
+  "lang": "zh",
+  "text": "欢迎光临南公园站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzngy-zh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzngy.fzh",
+  "lang": "fzh",
+  "text": "欢迎光临南公园站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzngy-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzngy.en",
+  "lang": "en",
+  "text": "Welcome to Nangongyuan station. Please line up for the train. Let the passengers get off first before you get on.",
+  "file": "voice/fz-welcome-fzngy-en.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzscjb.zh",
+  "lang": "zh",
+  "text": "下一站，三叉街，可出站换乘1号线。",
+  "file": "voice/fz-next-fzscjb-zh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzscjb.fzh",
+  "lang": "fzh",
+  "text": "下一站，三叉街，可出站换乘1号线。",
+  "file": "voice/fz-next-fzscjb-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzscjb.en",
+  "lang": "en",
+  "text": "The next station is Sanchajie, Passengers may transfer to Line 1 outside the station.",
+  "file": "voice/fz-next-fzscjb-en.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzscjb.zh",
+  "lang": "zh",
+  "text": "列车即将到达三叉街站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzscjb-zh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzscjb.fzh",
+  "lang": "fzh",
+  "text": "列车即将到达三叉街站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzscjb-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzscjb.en",
+  "lang": "en",
+  "text": "The train is arriving at Sanchajie. Please mind the gap between the train and the platform.",
+  "file": "voice/fz-arrive-fzscjb-en.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzscjb.zh",
+  "lang": "zh",
+  "text": "欢迎光临三叉街站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzscjb-zh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzscjb.fzh",
+  "lang": "fzh",
+  "text": "欢迎光临三叉街站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzscjb-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzscjb.en",
+  "lang": "en",
+  "text": "Welcome to Sanchajie station. Please line up for the train. Let the passengers get off first before you get on.",
+  "file": "voice/fz-welcome-fzscjb-en.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzdfj20.zh",
+  "lang": "zh",
+  "text": "下一站，帝封江，可换乘4号线、5号线。",
+  "file": "voice/fz-next-fzdfj20-zh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzdfj20.fzh",
+  "lang": "fzh",
+  "text": "下一站，帝封江，可换乘4号线、5号线。",
+  "file": "voice/fz-next-fzdfj20-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzdfj20.en",
+  "lang": "en",
+  "text": "The next station is Difengjiang, the interchange with Line 4 and Line 5.",
+  "file": "voice/fz-next-fzdfj20-en.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzxq.zh",
+  "lang": "zh",
+  "text": "下一站，祥谦。",
+  "file": "voice/fz-next-fzxq-zh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzxq.fzh",
+  "lang": "fzh",
+  "text": "下一站，祥谦。",
+  "file": "voice/fz-next-fzxq-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzxq.en",
+  "lang": "en",
+  "text": "The next station is Xiangqian.",
+  "file": "voice/fz-next-fzxq-en.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzxq.zh",
+  "lang": "zh",
+  "text": "列车即将到达祥谦站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzxq-zh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzxq.fzh",
+  "lang": "fzh",
+  "text": "列车即将到达祥谦站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzxq-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzxq.en",
+  "lang": "en",
+  "text": "The train is arriving at Xiangqian. Please mind the gap between the train and the platform.",
+  "file": "voice/fz-arrive-fzxq-en.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzxq.zh",
+  "lang": "zh",
+  "text": "欢迎光临祥谦站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzxq-zh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzxq.fzh",
+  "lang": "fzh",
+  "text": "欢迎光临祥谦站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzxq-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzxq.en",
+  "lang": "en",
+  "text": "Welcome to Xiangqian station. Please line up for the train. Let the passengers get off first before you get on.",
+  "file": "voice/fz-welcome-fzxq-en.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzsz.zh",
+  "lang": "zh",
+  "text": "下一站，首占。",
+  "file": "voice/fz-next-fzsz-zh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzsz.fzh",
+  "lang": "fzh",
+  "text": "下一站，首占。",
+  "file": "voice/fz-next-fzsz-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzsz.en",
+  "lang": "en",
+  "text": "The next station is Shouzhan.",
+  "file": "voice/fz-next-fzsz-en.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzsz.zh",
+  "lang": "zh",
+  "text": "列车即将到达首占站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzsz-zh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzsz.fzh",
+  "lang": "fzh",
+  "text": "列车即将到达首占站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzsz-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzsz.en",
+  "lang": "en",
+  "text": "The train is arriving at Shouzhan. Please mind the gap between the train and the platform.",
+  "file": "voice/fz-arrive-fzsz-en.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzsz.zh",
+  "lang": "zh",
+  "text": "欢迎光临首占站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzsz-zh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzsz.fzh",
+  "lang": "fzh",
+  "text": "欢迎光临首占站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzsz-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzsz.en",
+  "lang": "en",
+  "text": "Welcome to Shouzhan station. Please line up for the train. Let the passengers get off first before you get on.",
+  "file": "voice/fz-welcome-fzsz-en.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzdsj.zh",
+  "lang": "zh",
+  "text": "下一站，大数据。",
+  "file": "voice/fz-next-fzdsj-zh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzdsj.fzh",
+  "lang": "fzh",
+  "text": "下一站，大数据。",
+  "file": "voice/fz-next-fzdsj-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzdsj.en",
+  "lang": "en",
+  "text": "The next station is Dashuju.",
+  "file": "voice/fz-next-fzdsj-en.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzdsj.zh",
+  "lang": "zh",
+  "text": "列车即将到达大数据站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzdsj-zh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzdsj.fzh",
+  "lang": "fzh",
+  "text": "列车即将到达大数据站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzdsj-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzdsj.en",
+  "lang": "en",
+  "text": "The train is arriving at Dashuju. Please mind the gap between the train and the platform.",
+  "file": "voice/fz-arrive-fzdsj-en.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzdsj.zh",
+  "lang": "zh",
+  "text": "欢迎光临大数据站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzdsj-zh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzdsj.fzh",
+  "lang": "fzh",
+  "text": "欢迎光临大数据站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzdsj-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzdsj.en",
+  "lang": "en",
+  "text": "Welcome to Dashuju station. Please line up for the train. Let the passengers get off first before you get on.",
+  "file": "voice/fz-welcome-fzdsj-en.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzbhcbd.zh",
+  "lang": "zh",
+  "text": "下一站，滨海中央商务区。",
+  "file": "voice/fz-next-fzbhcbd-zh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzbhcbd.fzh",
+  "lang": "fzh",
+  "text": "下一站，滨海中央商务区。",
+  "file": "voice/fz-next-fzbhcbd-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzbhcbd.en",
+  "lang": "en",
+  "text": "The next station is Binhai CBD.",
+  "file": "voice/fz-next-fzbhcbd-en.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzbhcbd.zh",
+  "lang": "zh",
+  "text": "列车即将到达滨海中央商务区站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzbhcbd-zh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzbhcbd.fzh",
+  "lang": "fzh",
+  "text": "列车即将到达滨海中央商务区站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzbhcbd-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzbhcbd.en",
+  "lang": "en",
+  "text": "The train is arriving at Binhai CBD. Please mind the gap between the train and the platform.",
+  "file": "voice/fz-arrive-fzbhcbd-en.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzbhcbd.zh",
+  "lang": "zh",
+  "text": "欢迎光临滨海中央商务区站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzbhcbd-zh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzbhcbd.fzh",
+  "lang": "fzh",
+  "text": "欢迎光临滨海中央商务区站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzbhcbd-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzbhcbd.en",
+  "lang": "en",
+  "text": "Welcome to Binhai CBD station. Please line up for the train. Let the passengers get off first before you get on.",
+  "file": "voice/fz-welcome-fzbhcbd-en.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzjc.zh",
+  "lang": "zh",
+  "text": "下一站，机场。",
+  "file": "voice/fz-next-fzjc-zh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzjc.fzh",
+  "lang": "fzh",
+  "text": "下一站，机场。",
+  "file": "voice/fz-next-fzjc-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.next.fzjc.en",
+  "lang": "en",
+  "text": "The next station is Airport.",
+  "file": "voice/fz-next-fzjc-en.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzjc.zh",
+  "lang": "zh",
+  "text": "列车即将到达机场站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzjc-zh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzjc.fzh",
+  "lang": "fzh",
+  "text": "列车即将到达机场站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzjc-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzjc.en",
+  "lang": "en",
+  "text": "The train is arriving at Airport. Please mind the gap between the train and the platform.",
+  "file": "voice/fz-arrive-fzjc-en.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzjc.zh",
+  "lang": "zh",
+  "text": "欢迎光临机场站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzjc-zh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzjc.fzh",
+  "lang": "fzh",
+  "text": "欢迎光临机场站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzjc-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzjc.en",
+  "lang": "en",
+  "text": "Welcome to Airport station. Please line up for the train. Let the passengers get off first before you get on.",
+  "file": "voice/fz-welcome-fzjc-en.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzwl.zh",
+  "lang": "zh",
+  "text": "列车即将到达文岭站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzwl-zh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzwl.fzh",
+  "lang": "fzh",
+  "text": "列车即将到达文岭站，请小心列车与站台之间的空隙。",
+  "file": "voice/fz-arrive-fzwl-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.arrive.fzwl.en",
+  "lang": "en",
+  "text": "The train is arriving at Wenling. Please mind the gap between the train and the platform.",
+  "file": "voice/fz-arrive-fzwl-en.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzwl.zh",
+  "lang": "zh",
+  "text": "欢迎光临文岭站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzwl-zh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzwl.fzh",
+  "lang": "fzh",
+  "text": "欢迎光临文岭站。请排队候车，先下后上。",
+  "file": "voice/fz-welcome-fzwl-fzh.mp3"
+ },
+ {
+  "id": "voice.fz.welcome.fzwl.en",
+  "lang": "en",
+  "text": "Welcome to Wenling station. Please line up for the train. Let the passengers get off first before you get on.",
+  "file": "voice/fz-welcome-fzwl-en.mp3"
  },
  {
   "id": "voice.fz.doorsClosing.zh",

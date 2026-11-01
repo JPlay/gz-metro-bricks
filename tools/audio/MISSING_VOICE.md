@@ -1,18 +1,14 @@
 # 缺失的报站语音片段
 
-由 `node tools/audio/export_jobs.mjs` 生成。全网共需 1832 条片段，已有 MP3 1440 条，缺 392 条（普通话 84 / 粤语 0 / 英语 84）。
+由 `node tools/audio/export_jobs.mjs` 生成。全网共需 2282 条片段，已有 MP3 1908 条，缺 374 条（普通话 0 / 粤语 0 / 英语 0）。
 缺失片段在游戏里自动用 Web Speech 朗读（zh-CN → zh-HK（若有）→ en-US（若有），语速 0.95），并照常显示字幕。
 
 生成方法：设置环境变量 DASHSCOPE_API_KEY 后运行 `python3 tools/audio/generate_voice.py`（会读取 voice-jobs.json，只生成缺的）。
 
 | id | 语言 | 文本 |
 | --- | --- | --- |
-| voice.xmvisit.wsp.zh | zh | 乌石浦站附近有厦门SM城市广场，欢迎下车游玩，请从4B出口出站。 |
 | voice.xmvisit.wsp.nan | nan | 乌石浦站附近有厦门SM城市广场，欢迎下车游玩，请从4B出口出站。 |
-| voice.xmvisit.wsp.en | en | Wushipu station is near SM City Xiamen. You are welcome to get off and visit. Please use Exit 4B. |
-| voice.xmexit.wsp.zh | zh | 前往厦门SM城市广场的乘客，请从4B出口出站。 |
 | voice.xmexit.wsp.nan | nan | 前往厦门SM城市广场的乘客，请从4B出口出站。 |
-| voice.xmexit.wsp.en | en | Passengers for SM City Xiamen, please use Exit 4B. |
 | voice.fz.destination.sjk.fzh | fzh | 本次列车终点站为三江口。 |
 | voice.fz.terminal.sjk.fzh | fzh | 下一站是本次列车的终点站，三江口。请全部乘客带齐行李物品在此站下车，欢迎再次乘坐福州地铁。 |
 | voice.fz.platform.sjk.1.fzh | fzh | 一站台，三江口方向列车即将进站。 |
@@ -29,7 +25,7 @@
 | voice.fz.next.fzlhs.fzh | fzh | 下一站，罗汉山。 |
 | voice.fz.arrive.fzlhs.fzh | fzh | 列车即将到达罗汉山站，请小心列车与站台之间的空隙。 |
 | voice.fz.welcome.fzlhs.fzh | fzh | 欢迎光临罗汉山站。请排队候车，先下后上。 |
-| voice.fz.next.fzfz.fzh | fzh | 下一站，福州火车站。 |
+| voice.fz.next.fzfz1.fzh | fzh | 下一站，福州火车站，可换乘滨海快线。 |
 | voice.fz.arrive.fzfz.fzh | fzh | 列车即将到达福州火车站，请小心列车与站台之间的空隙。 |
 | voice.fz.welcome.fzfz.fzh | fzh | 欢迎光临福州火车站。请排队候车，先下后上。 |
 | voice.fz.next.fzdm.fzh | fzh | 下一站，斗门。 |
@@ -41,42 +37,30 @@
 | voice.fz.next.fzps.fzh | fzh | 下一站，屏山。 |
 | voice.fz.arrive.fzps.fzh | fzh | 列车即将到达屏山站，请小心列车与站台之间的空隙。 |
 | voice.fz.welcome.fzps.fzh | fzh | 欢迎光临屏山站。请排队候车，先下后上。 |
-| voice.fz.next.fzdjk1.zh | zh | 下一站，东街口，可换乘4号线。 |
 | voice.fz.next.fzdjk1.fzh | fzh | 下一站，东街口，可换乘4号线。 |
-| voice.fz.next.fzdjk1.en | en | The next station is Dongjiekou, the interchange with Line 4. |
 | voice.fz.arrive.fzdjk.fzh | fzh | 列车即将到达东街口站，请小心列车与站台之间的空隙。 |
 | voice.fz.welcome.fzdjk.fzh | fzh | 欢迎光临东街口站。请排队候车，先下后上。 |
-| voice.fz.fzvisit.fzdjk.zh | zh | 东街口站附近有三坊七巷，欢迎下车游玩，请从C出口出站。 |
 | voice.fz.fzvisit.fzdjk.fzh | fzh | 东街口站附近有三坊七巷，欢迎下车游玩，请从C出口出站。 |
-| voice.fz.fzvisit.fzdjk.en | en | Dongjiekou station is near Three Lanes and Seven Alleys. You are welcome to get off and visit. Please use Exit C. |
-| voice.fz.fzexit.fzdjk.zh | zh | 前往三坊七巷的乘客，请从C出口出站。 |
 | voice.fz.fzexit.fzdjk.fzh | fzh | 前往三坊七巷的乘客，请从C出口出站。 |
-| voice.fz.fzexit.fzdjk.en | en | Passengers for Three Lanes and Seven Alleys, please use Exit C. |
-| voice.fz.next.fznmd.fzh | fzh | 下一站，南门兜，可换乘2号线。 |
+| voice.fz.next.fznmd1.fzh | fzh | 下一站，南门兜，可换乘2号线。 |
 | voice.fz.arrive.fznmd.fzh | fzh | 列车即将到达南门兜站，请小心列车与站台之间的空隙。 |
 | voice.fz.welcome.fznmd.fzh | fzh | 欢迎光临南门兜站。请排队候车，先下后上。 |
-| voice.fz.fzvisit.fznmd.zh | zh | 南门兜站附近有于山风景区、白塔，欢迎下车游玩，请从G1出口出站。 |
-| voice.fz.fzvisit.fznmd.fzh | fzh | 南门兜站附近有于山风景区、白塔，欢迎下车游玩，请从G1出口出站。 |
-| voice.fz.fzvisit.fznmd.en | en | Nanmendou station is near Yushan Hill and the White Pagoda. You are welcome to get off and visit. Please use Exit G1. |
-| voice.fz.fzexit.fznmd.zh | zh | 前往于山风景区、白塔的乘客，请从G1出口出站。 |
-| voice.fz.fzexit.fznmd.fzh | fzh | 前往于山风景区、白塔的乘客，请从G1出口出站。 |
-| voice.fz.fzexit.fznmd.en | en | Passengers for Yushan Hill and the White Pagoda, please use Exit G1. |
+| voice.fz.fzvisit.fznmd.fzh | fzh | 南门兜站附近有于山风景区、白塔、乌山风景区，欢迎下车游玩，去于山风景区、白塔请从G1出口出站，去乌山风景区请从B出口出站。 |
+| voice.fz.fzexit.fznmd.fzh | fzh | 前往于山风景区、白塔的乘客，请从G1出口出站；前往乌山风景区的乘客，请从B出口出站。 |
 | voice.fz.next.fzct.fzh | fzh | 下一站，茶亭。 |
 | voice.fz.arrive.fzct.fzh | fzh | 列车即将到达茶亭站，请小心列车与站台之间的空隙。 |
 | voice.fz.welcome.fzct.fzh | fzh | 欢迎光临茶亭站。请排队候车，先下后上。 |
 | voice.fz.next.fzdd.fzh | fzh | 下一站，达道。 |
 | voice.fz.arrive.fzdd.fzh | fzh | 列车即将到达达道站，请小心列车与站台之间的空隙。 |
 | voice.fz.welcome.fzdd.fzh | fzh | 欢迎光临达道站。请排队候车，先下后上。 |
-| voice.fz.fzvisit.fzdd.zh | zh | 达道站附近有上下杭，欢迎下车游玩，请从C出口出站。 |
 | voice.fz.fzvisit.fzdd.fzh | fzh | 达道站附近有上下杭，欢迎下车游玩，请从C出口出站。 |
-| voice.fz.fzvisit.fzdd.en | en | Dadao station is near Shangxiahang Historic District. You are welcome to get off and visit. Please use Exit C. |
-| voice.fz.fzexit.fzdd.zh | zh | 前往上下杭的乘客，请从C出口出站。 |
 | voice.fz.fzexit.fzdd.fzh | fzh | 前往上下杭的乘客，请从C出口出站。 |
-| voice.fz.fzexit.fzdd.en | en | Passengers for Shangxiahang Historic District, please use Exit C. |
 | voice.fz.next.fzst.fzh | fzh | 下一站，上藤。 |
 | voice.fz.arrive.fzst.fzh | fzh | 列车即将到达上藤站，请小心列车与站台之间的空隙。 |
 | voice.fz.welcome.fzst.fzh | fzh | 欢迎光临上藤站。请排队候车，先下后上。 |
-| voice.fz.next.fzscj.fzh | fzh | 下一站，三叉街。 |
+| voice.fz.fzvisit.fzst.fzh | fzh | 上藤站附近有烟台山，欢迎下车游玩，请从B出口出站。 |
+| voice.fz.fzexit.fzst.fzh | fzh | 前往烟台山的乘客，请从B出口出站。 |
+| voice.fz.next.fzscj.fzh | fzh | 下一站，三叉街，可出站换乘滨海快线。 |
 | voice.fz.arrive.fzscj.fzh | fzh | 列车即将到达三叉街站，请小心列车与站台之间的空隙。 |
 | voice.fz.welcome.fzscj.fzh | fzh | 欢迎光临三叉街站。请排队候车，先下后上。 |
 | voice.fz.next.fzbht.fzh | fzh | 下一站，白湖亭。 |
@@ -91,9 +75,7 @@
 | voice.fz.next.fzpx.fzh | fzh | 下一站，排下。 |
 | voice.fz.arrive.fzpx.fzh | fzh | 列车即将到达排下站，请小心列车与站台之间的空隙。 |
 | voice.fz.welcome.fzpx.fzh | fzh | 欢迎光临排下站。请排队候车，先下后上。 |
-| voice.fz.next.fzcm1.zh | zh | 下一站，城门，可换乘4号线。 |
 | voice.fz.next.fzcm1.fzh | fzh | 下一站，城门，可换乘4号线。 |
-| voice.fz.next.fzcm1.en | en | The next station is Chengmen, the interchange with Line 4. |
 | voice.fz.arrive.fzcm.fzh | fzh | 列车即将到达城门站，请小心列车与站台之间的空隙。 |
 | voice.fz.welcome.fzcm.fzh | fzh | 欢迎光临城门站。请排队候车，先下后上。 |
 | voice.fz.next.fzsjc.fzh | fzh | 下一站，三角埕。 |
@@ -109,223 +91,155 @@
 | voice.fz.next.fzap.fzh | fzh | 下一站，安平。 |
 | voice.fz.arrive.fzap.fzh | fzh | 列车即将到达安平站，请小心列车与站台之间的空隙。 |
 | voice.fz.welcome.fzap.fzh | fzh | 欢迎光临安平站。请排队候车，先下后上。 |
-| voice.fz.next.fzlc.fzh | fzh | 下一站，梁厝，可换乘6号线。 |
+| voice.fz.next.fzlc1.fzh | fzh | 下一站，梁厝，可换乘6号线。 |
 | voice.fz.arrive.fzlc.fzh | fzh | 列车即将到达梁厝站，请小心列车与站台之间的空隙。 |
 | voice.fz.welcome.fzlc.fzh | fzh | 欢迎光临梁厝站。请排队候车，先下后上。 |
-| voice.fz.next.fzxy.fzh | fzh | 下一站，下洋，可换乘6号线。 |
+| voice.fz.next.fzxy1.fzh | fzh | 下一站，下洋，可换乘6号线。 |
 | voice.fz.arrive.fzxy.fzh | fzh | 列车即将到达下洋站，请小心列车与站台之间的空隙。 |
 | voice.fz.welcome.fzxy.fzh | fzh | 欢迎光临下洋站。请排队候车，先下后上。 |
 | voice.fz.arrive.fzsjk.fzh | fzh | 列车即将到达三江口站，请小心列车与站台之间的空隙。 |
 | voice.fz.welcome.fzsjk.fzh | fzh | 欢迎光临三江口站。请排队候车，先下后上。 |
-| voice.fz.destination.dfj.zh | zh | 本次列车终点站为帝封江。 |
+| voice.fz.destination.yl.fzh | fzh | 本次列车终点站为洋里。 |
+| voice.fz.terminal.yl.fzh | fzh | 下一站是本次列车的终点站，洋里。请全部乘客带齐行李物品在此站下车，欢迎再次乘坐福州地铁。 |
+| voice.fz.platform.yl.1.fzh | fzh | 一站台，洋里方向列车即将进站。 |
+| voice.fz.platform.yl.2.fzh | fzh | 二站台，洋里方向列车即将进站。 |
+| voice.fz.destination.suy.fzh | fzh | 本次列车终点站为苏洋。 |
+| voice.fz.terminal.suy.fzh | fzh | 下一站是本次列车的终点站，苏洋。请全部乘客带齐行李物品在此站下车，欢迎再次乘坐福州地铁。 |
+| voice.fz.platform.suy.1.fzh | fzh | 一站台，苏洋方向列车即将进站。 |
+| voice.fz.platform.suy.2.fzh | fzh | 二站台，苏洋方向列车即将进站。 |
+| voice.fz.arrive.fzsuy.fzh | fzh | 列车即将到达苏洋站，请小心列车与站台之间的空隙。 |
+| voice.fz.welcome.fzsuy.fzh | fzh | 欢迎光临苏洋站。请排队候车，先下后上。 |
+| voice.fz.next.fzsdi.fzh | fzh | 下一站，沙堤。 |
+| voice.fz.arrive.fzsdi.fzh | fzh | 列车即将到达沙堤站，请小心列车与站台之间的空隙。 |
+| voice.fz.welcome.fzsdi.fzh | fzh | 欢迎光临沙堤站。请排队候车，先下后上。 |
+| voice.fz.next.fzsj.fzh | fzh | 下一站，上街。 |
+| voice.fz.arrive.fzsj.fzh | fzh | 列车即将到达上街站，请小心列车与站台之间的空隙。 |
+| voice.fz.welcome.fzsj.fzh | fzh | 欢迎光临上街站。请排队候车，先下后上。 |
+| voice.fz.next.fzjy.fzh | fzh | 下一站，金屿。 |
+| voice.fz.arrive.fzjy.fzh | fzh | 列车即将到达金屿站，请小心列车与站台之间的空隙。 |
+| voice.fz.welcome.fzjy.fzh | fzh | 欢迎光临金屿站。请排队候车，先下后上。 |
+| voice.fz.next.fzfzdx.fzh | fzh | 下一站，福州大学。 |
+| voice.fz.arrive.fzfzdx.fzh | fzh | 列车即将到达福州大学站，请小心列车与站台之间的空隙。 |
+| voice.fz.welcome.fzfzdx.fzh | fzh | 欢迎光临福州大学站。请排队候车，先下后上。 |
+| voice.fz.next.fzdysd.fzh | fzh | 下一站，董屿·福建师大。 |
+| voice.fz.arrive.fzdysd.fzh | fzh | 列车即将到达董屿·福建师大站，请小心列车与站台之间的空隙。 |
+| voice.fz.welcome.fzdysd.fzh | fzh | 欢迎光临董屿·福建师大站。请排队候车，先下后上。 |
+| voice.fz.next.fzhting.fzh | fzh | 下一站，厚庭。 |
+| voice.fz.arrive.fzhting.fzh | fzh | 列车即将到达厚庭站，请小心列车与站台之间的空隙。 |
+| voice.fz.welcome.fzhting.fzh | fzh | 欢迎光临厚庭站。请排队候车，先下后上。 |
+| voice.fz.next.fzjyz.fzh | fzh | 下一站，桔园洲。 |
+| voice.fz.arrive.fzjyz.fzh | fzh | 列车即将到达桔园洲站，请小心列车与站台之间的空隙。 |
+| voice.fz.welcome.fzjyz.fzh | fzh | 欢迎光临桔园洲站。请排队候车，先下后上。 |
+| voice.fz.next.fzhw.fzh | fzh | 下一站，洪湾。 |
+| voice.fz.arrive.fzhw.fzh | fzh | 列车即将到达洪湾站，请小心列车与站台之间的空隙。 |
+| voice.fz.welcome.fzhw.fzh | fzh | 欢迎光临洪湾站。请排队候车，先下后上。 |
+| voice.fz.next.fzjs2.fzh | fzh | 下一站，金山，可换乘5号线。 |
+| voice.fz.arrive.fzjs.fzh | fzh | 列车即将到达金山站，请小心列车与站台之间的空隙。 |
+| voice.fz.welcome.fzjs.fzh | fzh | 欢迎光临金山站。请排队候车，先下后上。 |
+| voice.fz.next.fzjxg.fzh | fzh | 下一站，金祥。 |
+| voice.fz.arrive.fzjxg.fzh | fzh | 列车即将到达金祥站，请小心列车与站台之间的空隙。 |
+| voice.fz.welcome.fzjxg.fzh | fzh | 欢迎光临金祥站。请排队候车，先下后上。 |
+| voice.fz.next.fzxb.fzh | fzh | 下一站，祥坂。 |
+| voice.fz.arrive.fzxb.fzh | fzh | 列车即将到达祥坂站，请小心列车与站台之间的空隙。 |
+| voice.fz.welcome.fzxb.fzh | fzh | 欢迎光临祥坂站。请排队候车，先下后上。 |
+| voice.fz.next.fznh.fzh | fzh | 下一站，宁化。 |
+| voice.fz.arrive.fznh.fzh | fzh | 列车即将到达宁化站，请小心列车与站台之间的空隙。 |
+| voice.fz.welcome.fznh.fzh | fzh | 欢迎光临宁化站。请排队候车，先下后上。 |
+| voice.fz.next.fzxiy.fzh | fzh | 下一站，西洋。 |
+| voice.fz.arrive.fzxiy.fzh | fzh | 列车即将到达西洋站，请小心列车与站台之间的空隙。 |
+| voice.fz.welcome.fzxiy.fzh | fzh | 欢迎光临西洋站。请排队候车，先下后上。 |
+| voice.fz.next.fznmd2.fzh | fzh | 下一站，南门兜，可换乘1号线。 |
+| voice.fz.next.fzsb.fzh | fzh | 下一站，水部，可出站换乘滨海快线。 |
+| voice.fz.arrive.fzsb.fzh | fzh | 列车即将到达水部站，请小心列车与站台之间的空隙。 |
+| voice.fz.welcome.fzsb.fzh | fzh | 欢迎光临水部站。请排队候车，先下后上。 |
+| voice.fz.next.fzzyg.fzh | fzh | 下一站，紫阳。 |
+| voice.fz.arrive.fzzyg.fzh | fzh | 列车即将到达紫阳站，请小心列车与站台之间的空隙。 |
+| voice.fz.welcome.fzzyg.fzh | fzh | 欢迎光临紫阳站。请排队候车，先下后上。 |
+| voice.fz.next.fzwlt.fzh | fzh | 下一站，五里亭。 |
+| voice.fz.arrive.fzwlt.fzh | fzh | 列车即将到达五里亭站，请小心列车与站台之间的空隙。 |
+| voice.fz.welcome.fzwlt.fzh | fzh | 欢迎光临五里亭站。请排队候车，先下后上。 |
+| voice.fz.next.fzqy2.fzh | fzh | 下一站，前屿，可换乘4号线。 |
+| voice.fz.arrive.fzqy.fzh | fzh | 列车即将到达前屿站，请小心列车与站台之间的空隙。 |
+| voice.fz.welcome.fzqy.fzh | fzh | 欢迎光临前屿站。请排队候车，先下后上。 |
+| voice.fz.next.fzsy.fzh | fzh | 下一站，上洋。 |
+| voice.fz.arrive.fzsy.fzh | fzh | 列车即将到达上洋站，请小心列车与站台之间的空隙。 |
+| voice.fz.welcome.fzsy.fzh | fzh | 欢迎光临上洋站。请排队候车，先下后上。 |
+| voice.fz.next.fzgs.fzh | fzh | 下一站，鼓山。 |
+| voice.fz.arrive.fzgs.fzh | fzh | 列车即将到达鼓山站，请小心列车与站台之间的空隙。 |
+| voice.fz.welcome.fzgs.fzh | fzh | 欢迎光临鼓山站。请排队候车，先下后上。 |
+| voice.fz.fzvisit.fzgs.fzh | fzh | 鼓山站附近有鼓山风景区，欢迎下车游玩，请从A出口出站。 |
+| voice.fz.fzexit.fzgs.fzh | fzh | 前往鼓山风景区的乘客，请从A出口出站。 |
+| voice.fz.arrive.fzyl.fzh | fzh | 列车即将到达洋里站，请小心列车与站台之间的空隙。 |
+| voice.fz.welcome.fzyl.fzh | fzh | 欢迎光临洋里站。请排队候车，先下后上。 |
 | voice.fz.destination.dfj.fzh | fzh | 本次列车终点站为帝封江。 |
-| voice.fz.destination.dfj.en | en | The destination of this train is Difengjiang. |
-| voice.fz.terminal.dfj.zh | zh | 下一站是本次列车的终点站，帝封江。请全部乘客带齐行李物品在此站下车，欢迎再次乘坐福州地铁。 |
 | voice.fz.terminal.dfj.fzh | fzh | 下一站是本次列车的终点站，帝封江。请全部乘客带齐行李物品在此站下车，欢迎再次乘坐福州地铁。 |
-| voice.fz.terminal.dfj.en | en | The next station is Difengjiang, the terminal of this journey. Please take all your belongings and leave the train. Thank you for travelling on Fuzhou Metro. |
-| voice.fz.platform.dfj.1.zh | zh | 一站台，帝封江方向列车即将进站。 |
 | voice.fz.platform.dfj.1.fzh | fzh | 一站台，帝封江方向列车即将进站。 |
-| voice.fz.platform.dfj.1.en | en | The train bound for Difengjiang is approaching at Platform 1. |
-| voice.fz.platform.dfj.2.zh | zh | 二站台，帝封江方向列车即将进站。 |
 | voice.fz.platform.dfj.2.fzh | fzh | 二站台，帝封江方向列车即将进站。 |
-| voice.fz.platform.dfj.2.en | en | The train bound for Difengjiang is approaching at Platform 2. |
-| voice.fz.destination.bz.zh | zh | 本次列车终点站为半洲。 |
 | voice.fz.destination.bz.fzh | fzh | 本次列车终点站为半洲。 |
-| voice.fz.destination.bz.en | en | The destination of this train is Banzhou. |
-| voice.fz.terminal.bz.zh | zh | 下一站是本次列车的终点站，半洲。请全部乘客带齐行李物品在此站下车，欢迎再次乘坐福州地铁。 |
 | voice.fz.terminal.bz.fzh | fzh | 下一站是本次列车的终点站，半洲。请全部乘客带齐行李物品在此站下车，欢迎再次乘坐福州地铁。 |
-| voice.fz.terminal.bz.en | en | The next station is Banzhou, the terminal of this journey. Please take all your belongings and leave the train. Thank you for travelling on Fuzhou Metro. |
-| voice.fz.platform.bz.1.zh | zh | 一站台，半洲方向列车即将进站。 |
 | voice.fz.platform.bz.1.fzh | fzh | 一站台，半洲方向列车即将进站。 |
-| voice.fz.platform.bz.1.en | en | The train bound for Banzhou is approaching at Platform 1. |
-| voice.fz.platform.bz.2.zh | zh | 二站台，半洲方向列车即将进站。 |
 | voice.fz.platform.bz.2.fzh | fzh | 二站台，半洲方向列车即将进站。 |
-| voice.fz.platform.bz.2.en | en | The train bound for Banzhou is approaching at Platform 2. |
-| voice.fz.arrive.fzbz.zh | zh | 列车即将到达半洲站，请小心列车与站台之间的空隙。 |
 | voice.fz.arrive.fzbz.fzh | fzh | 列车即将到达半洲站，请小心列车与站台之间的空隙。 |
-| voice.fz.arrive.fzbz.en | en | The train is arriving at Banzhou. Please mind the gap between the train and the platform. |
-| voice.fz.welcome.fzbz.zh | zh | 欢迎光临半洲站。请排队候车，先下后上。 |
 | voice.fz.welcome.fzbz.fzh | fzh | 欢迎光临半洲站。请排队候车，先下后上。 |
-| voice.fz.welcome.fzbz.en | en | Welcome to Banzhou station. Please line up for the train. Let the passengers get off first before you get on. |
-| voice.fz.next.fzjx.zh | zh | 下一站，建新。 |
 | voice.fz.next.fzjx.fzh | fzh | 下一站，建新。 |
-| voice.fz.next.fzjx.en | en | The next station is Jianxin. |
-| voice.fz.arrive.fzjx.zh | zh | 列车即将到达建新站，请小心列车与站台之间的空隙。 |
 | voice.fz.arrive.fzjx.fzh | fzh | 列车即将到达建新站，请小心列车与站台之间的空隙。 |
-| voice.fz.arrive.fzjx.en | en | The train is arriving at Jianxin. Please mind the gap between the train and the platform. |
-| voice.fz.welcome.fzjx.zh | zh | 欢迎光临建新站。请排队候车，先下后上。 |
 | voice.fz.welcome.fzjx.fzh | fzh | 欢迎光临建新站。请排队候车，先下后上。 |
-| voice.fz.welcome.fzjx.en | en | Welcome to Jianxin station. Please line up for the train. Let the passengers get off first before you get on. |
-| voice.fz.next.fzht4.zh | zh | 下一站，洪塘，可换乘5号线。 |
 | voice.fz.next.fzht4.fzh | fzh | 下一站，洪塘，可换乘5号线。 |
-| voice.fz.next.fzht4.en | en | The next station is Hongtang, the interchange with Line 5. |
 | voice.fz.arrive.fzht.fzh | fzh | 列车即将到达洪塘站，请小心列车与站台之间的空隙。 |
 | voice.fz.welcome.fzht.fzh | fzh | 欢迎光临洪塘站。请排队候车，先下后上。 |
-| voice.fz.next.fzjns.zh | zh | 下一站，金牛山。 |
 | voice.fz.next.fzjns.fzh | fzh | 下一站，金牛山。 |
-| voice.fz.next.fzjns.en | en | The next station is Jinniushan. |
-| voice.fz.arrive.fzjns.zh | zh | 列车即将到达金牛山站，请小心列车与站台之间的空隙。 |
 | voice.fz.arrive.fzjns.fzh | fzh | 列车即将到达金牛山站，请小心列车与站台之间的空隙。 |
-| voice.fz.arrive.fzjns.en | en | The train is arriving at Jinniushan. Please mind the gap between the train and the platform. |
-| voice.fz.welcome.fzjns.zh | zh | 欢迎光临金牛山站。请排队候车，先下后上。 |
 | voice.fz.welcome.fzjns.fzh | fzh | 欢迎光临金牛山站。请排队候车，先下后上。 |
-| voice.fz.welcome.fzjns.en | en | Welcome to Jinniushan station. Please line up for the train. Let the passengers get off first before you get on. |
-| voice.fz.next.fzfhc.zh | zh | 下一站，凤凰池。 |
 | voice.fz.next.fzfhc.fzh | fzh | 下一站，凤凰池。 |
-| voice.fz.next.fzfhc.en | en | The next station is Fenghuangchi. |
-| voice.fz.arrive.fzfhc.zh | zh | 列车即将到达凤凰池站，请小心列车与站台之间的空隙。 |
 | voice.fz.arrive.fzfhc.fzh | fzh | 列车即将到达凤凰池站，请小心列车与站台之间的空隙。 |
-| voice.fz.arrive.fzfhc.en | en | The train is arriving at Fenghuangchi. Please mind the gap between the train and the platform. |
-| voice.fz.welcome.fzfhc.zh | zh | 欢迎光临凤凰池站。请排队候车，先下后上。 |
 | voice.fz.welcome.fzfhc.fzh | fzh | 欢迎光临凤凰池站。请排队候车，先下后上。 |
-| voice.fz.welcome.fzfhc.en | en | Welcome to Fenghuangchi station. Please line up for the train. Let the passengers get off first before you get on. |
-| voice.fz.next.fzlz.zh | zh | 下一站，陆庄。 |
 | voice.fz.next.fzlz.fzh | fzh | 下一站，陆庄。 |
-| voice.fz.next.fzlz.en | en | The next station is Luzhuang. |
-| voice.fz.arrive.fzlz.zh | zh | 列车即将到达陆庄站，请小心列车与站台之间的空隙。 |
 | voice.fz.arrive.fzlz.fzh | fzh | 列车即将到达陆庄站，请小心列车与站台之间的空隙。 |
-| voice.fz.arrive.fzlz.en | en | The train is arriving at Luzhuang. Please mind the gap between the train and the platform. |
-| voice.fz.welcome.fzlz.zh | zh | 欢迎光临陆庄站。请排队候车，先下后上。 |
 | voice.fz.welcome.fzlz.fzh | fzh | 欢迎光临陆庄站。请排队候车，先下后上。 |
-| voice.fz.welcome.fzlz.en | en | Welcome to Luzhuang station. Please line up for the train. Let the passengers get off first before you get on. |
-| voice.fz.next.fzxm.zh | zh | 下一站，西门。 |
 | voice.fz.next.fzxm.fzh | fzh | 下一站，西门。 |
-| voice.fz.next.fzxm.en | en | The next station is Ximen. |
-| voice.fz.arrive.fzxm.zh | zh | 列车即将到达西门站，请小心列车与站台之间的空隙。 |
 | voice.fz.arrive.fzxm.fzh | fzh | 列车即将到达西门站，请小心列车与站台之间的空隙。 |
-| voice.fz.arrive.fzxm.en | en | The train is arriving at Ximen. Please mind the gap between the train and the platform. |
-| voice.fz.welcome.fzxm.zh | zh | 欢迎光临西门站。请排队候车，先下后上。 |
 | voice.fz.welcome.fzxm.fzh | fzh | 欢迎光临西门站。请排队候车，先下后上。 |
-| voice.fz.welcome.fzxm.en | en | Welcome to Ximen station. Please line up for the train. Let the passengers get off first before you get on. |
-| voice.fz.fzvisit.fzxm.zh | zh | 西门站附近有西湖公园，欢迎下车游玩，请从B出口出站。 |
 | voice.fz.fzvisit.fzxm.fzh | fzh | 西门站附近有西湖公园，欢迎下车游玩，请从B出口出站。 |
-| voice.fz.fzvisit.fzxm.en | en | Ximen station is near West Lake Park. You are welcome to get off and visit. Please use Exit B. |
-| voice.fz.fzexit.fzxm.zh | zh | 前往西湖公园的乘客，请从B出口出站。 |
 | voice.fz.fzexit.fzxm.fzh | fzh | 前往西湖公园的乘客，请从B出口出站。 |
-| voice.fz.fzexit.fzxm.en | en | Passengers for West Lake Park, please use Exit B. |
-| voice.fz.next.fzdjk4.zh | zh | 下一站，东街口，可换乘1号线。 |
 | voice.fz.next.fzdjk4.fzh | fzh | 下一站，东街口，可换乘1号线。 |
-| voice.fz.next.fzdjk4.en | en | The next station is Dongjiekou, the interchange with Line 1. |
-| voice.fz.next.fzslyy.zh | zh | 下一站，省立医院。 |
 | voice.fz.next.fzslyy.fzh | fzh | 下一站，省立医院。 |
-| voice.fz.next.fzslyy.en | en | The next station is Provincial Hospital. |
-| voice.fz.arrive.fzslyy.zh | zh | 列车即将到达省立医院站，请小心列车与站台之间的空隙。 |
 | voice.fz.arrive.fzslyy.fzh | fzh | 列车即将到达省立医院站，请小心列车与站台之间的空隙。 |
-| voice.fz.arrive.fzslyy.en | en | The train is arriving at Provincial Hospital. Please mind the gap between the train and the platform. |
-| voice.fz.welcome.fzslyy.zh | zh | 欢迎光临省立医院站。请排队候车，先下后上。 |
 | voice.fz.welcome.fzslyy.fzh | fzh | 欢迎光临省立医院站。请排队候车，先下后上。 |
-| voice.fz.welcome.fzslyy.en | en | Welcome to Provincial Hospital station. Please line up for the train. Let the passengers get off first before you get on. |
-| voice.fz.next.fzdmn.zh | zh | 下一站，东门。 |
-| voice.fz.next.fzdmn.fzh | fzh | 下一站，东门。 |
-| voice.fz.next.fzdmn.en | en | The next station is Dongmen. |
-| voice.fz.arrive.fzdmn.zh | zh | 列车即将到达东门站，请小心列车与站台之间的空隙。 |
+| voice.fz.next.fzdmn4.fzh | fzh | 下一站，东门，可换乘滨海快线。 |
 | voice.fz.arrive.fzdmn.fzh | fzh | 列车即将到达东门站，请小心列车与站台之间的空隙。 |
-| voice.fz.arrive.fzdmn.en | en | The train is arriving at Dongmen. Please mind the gap between the train and the platform. |
-| voice.fz.welcome.fzdmn.zh | zh | 欢迎光临东门站。请排队候车，先下后上。 |
 | voice.fz.welcome.fzdmn.fzh | fzh | 欢迎光临东门站。请排队候车，先下后上。 |
-| voice.fz.welcome.fzdmn.en | en | Welcome to Dongmen station. Please line up for the train. Let the passengers get off first before you get on. |
-| voice.fz.next.fzsjch.zh | zh | 下一站，三角池。 |
 | voice.fz.next.fzsjch.fzh | fzh | 下一站，三角池。 |
-| voice.fz.next.fzsjch.en | en | The next station is Sanjiaochi. |
-| voice.fz.arrive.fzsjch.zh | zh | 列车即将到达三角池站，请小心列车与站台之间的空隙。 |
 | voice.fz.arrive.fzsjch.fzh | fzh | 列车即将到达三角池站，请小心列车与站台之间的空隙。 |
-| voice.fz.arrive.fzsjch.en | en | The train is arriving at Sanjiaochi. Please mind the gap between the train and the platform. |
-| voice.fz.welcome.fzsjch.zh | zh | 欢迎光临三角池站。请排队候车，先下后上。 |
 | voice.fz.welcome.fzsjch.fzh | fzh | 欢迎光临三角池站。请排队候车，先下后上。 |
-| voice.fz.welcome.fzsjch.en | en | Welcome to Sanjiaochi station. Please line up for the train. Let the passengers get off first before you get on. |
-| voice.fz.next.fzzy.zh | zh | 下一站，竹屿。 |
 | voice.fz.next.fzzy.fzh | fzh | 下一站，竹屿。 |
-| voice.fz.next.fzzy.en | en | The next station is Zhuyu. |
-| voice.fz.arrive.fzzy.zh | zh | 列车即将到达竹屿站，请小心列车与站台之间的空隙。 |
 | voice.fz.arrive.fzzy.fzh | fzh | 列车即将到达竹屿站，请小心列车与站台之间的空隙。 |
-| voice.fz.arrive.fzzy.en | en | The train is arriving at Zhuyu. Please mind the gap between the train and the platform. |
-| voice.fz.welcome.fzzy.zh | zh | 欢迎光临竹屿站。请排队候车，先下后上。 |
 | voice.fz.welcome.fzzy.fzh | fzh | 欢迎光临竹屿站。请排队候车，先下后上。 |
-| voice.fz.welcome.fzzy.en | en | Welcome to Zhuyu station. Please line up for the train. Let the passengers get off first before you get on. |
-| voice.fz.next.fzhy.zh | zh | 下一站，横屿。 |
 | voice.fz.next.fzhy.fzh | fzh | 下一站，横屿。 |
-| voice.fz.next.fzhy.en | en | The next station is Hengyu. |
-| voice.fz.arrive.fzhy.zh | zh | 列车即将到达横屿站，请小心列车与站台之间的空隙。 |
 | voice.fz.arrive.fzhy.fzh | fzh | 列车即将到达横屿站，请小心列车与站台之间的空隙。 |
-| voice.fz.arrive.fzhy.en | en | The train is arriving at Hengyu. Please mind the gap between the train and the platform. |
-| voice.fz.welcome.fzhy.zh | zh | 欢迎光临横屿站。请排队候车，先下后上。 |
 | voice.fz.welcome.fzhy.fzh | fzh | 欢迎光临横屿站。请排队候车，先下后上。 |
-| voice.fz.welcome.fzhy.en | en | Welcome to Hengyu station. Please line up for the train. Let the passengers get off first before you get on. |
-| voice.fz.next.fzhoy.zh | zh | 下一站，后屿。 |
 | voice.fz.next.fzhoy.fzh | fzh | 下一站，后屿。 |
-| voice.fz.next.fzhoy.en | en | The next station is Houyu. |
-| voice.fz.arrive.fzhoy.zh | zh | 列车即将到达后屿站，请小心列车与站台之间的空隙。 |
 | voice.fz.arrive.fzhoy.fzh | fzh | 列车即将到达后屿站，请小心列车与站台之间的空隙。 |
-| voice.fz.arrive.fzhoy.en | en | The train is arriving at Houyu. Please mind the gap between the train and the platform. |
-| voice.fz.welcome.fzhoy.zh | zh | 欢迎光临后屿站。请排队候车，先下后上。 |
 | voice.fz.welcome.fzhoy.fzh | fzh | 欢迎光临后屿站。请排队候车，先下后上。 |
-| voice.fz.welcome.fzhoy.en | en | Welcome to Houyu station. Please line up for the train. Let the passengers get off first before you get on. |
-| voice.fz.next.fzqy.zh | zh | 下一站，前屿，可换乘2号线。 |
-| voice.fz.next.fzqy.fzh | fzh | 下一站，前屿，可换乘2号线。 |
-| voice.fz.next.fzqy.en | en | The next station is Qianyu, the interchange with Line 2. |
-| voice.fz.arrive.fzqy.zh | zh | 列车即将到达前屿站，请小心列车与站台之间的空隙。 |
-| voice.fz.arrive.fzqy.fzh | fzh | 列车即将到达前屿站，请小心列车与站台之间的空隙。 |
-| voice.fz.arrive.fzqy.en | en | The train is arriving at Qianyu. Please mind the gap between the train and the platform. |
-| voice.fz.welcome.fzqy.zh | zh | 欢迎光临前屿站。请排队候车，先下后上。 |
-| voice.fz.welcome.fzqy.fzh | fzh | 欢迎光临前屿站。请排队候车，先下后上。 |
-| voice.fz.welcome.fzqy.en | en | Welcome to Qianyu station. Please line up for the train. Let the passengers get off first before you get on. |
-| voice.fz.next.fzgmg.zh | zh | 下一站，光明港。 |
+| voice.fz.next.fzqy4.fzh | fzh | 下一站，前屿，可换乘2号线。 |
 | voice.fz.next.fzgmg.fzh | fzh | 下一站，光明港。 |
-| voice.fz.next.fzgmg.en | en | The next station is Guangminggang. |
-| voice.fz.arrive.fzgmg.zh | zh | 列车即将到达光明港站，请小心列车与站台之间的空隙。 |
 | voice.fz.arrive.fzgmg.fzh | fzh | 列车即将到达光明港站，请小心列车与站台之间的空隙。 |
-| voice.fz.arrive.fzgmg.en | en | The train is arriving at Guangminggang. Please mind the gap between the train and the platform. |
-| voice.fz.welcome.fzgmg.zh | zh | 欢迎光临光明港站。请排队候车，先下后上。 |
 | voice.fz.welcome.fzgmg.fzh | fzh | 欢迎光临光明港站。请排队候车，先下后上。 |
-| voice.fz.welcome.fzgmg.en | en | Welcome to Guangminggang station. Please line up for the train. Let the passengers get off first before you get on. |
-| voice.fz.next.fzafz.zh | zh | 下一站，鳌峰洲。 |
 | voice.fz.next.fzafz.fzh | fzh | 下一站，鳌峰洲。 |
-| voice.fz.next.fzafz.en | en | The next station is Aofengzhou. |
-| voice.fz.arrive.fzafz.zh | zh | 列车即将到达鳌峰洲站，请小心列车与站台之间的空隙。 |
 | voice.fz.arrive.fzafz.fzh | fzh | 列车即将到达鳌峰洲站，请小心列车与站台之间的空隙。 |
-| voice.fz.arrive.fzafz.en | en | The train is arriving at Aofengzhou. Please mind the gap between the train and the platform. |
-| voice.fz.welcome.fzafz.zh | zh | 欢迎光临鳌峰洲站。请排队候车，先下后上。 |
 | voice.fz.welcome.fzafz.fzh | fzh | 欢迎光临鳌峰洲站。请排队候车，先下后上。 |
-| voice.fz.welcome.fzafz.en | en | Welcome to Aofengzhou station. Please line up for the train. Let the passengers get off first before you get on. |
-| voice.fz.next.fzhhgy.zh | zh | 下一站，花海公园。 |
 | voice.fz.next.fzhhgy.fzh | fzh | 下一站，花海公园。 |
-| voice.fz.next.fzhhgy.en | en | The next station is Huahai Park. |
-| voice.fz.arrive.fzhhgy.zh | zh | 列车即将到达花海公园站，请小心列车与站台之间的空隙。 |
 | voice.fz.arrive.fzhhgy.fzh | fzh | 列车即将到达花海公园站，请小心列车与站台之间的空隙。 |
-| voice.fz.arrive.fzhhgy.en | en | The train is arriving at Huahai Park. Please mind the gap between the train and the platform. |
-| voice.fz.welcome.fzhhgy.zh | zh | 欢迎光临花海公园站。请排队候车，先下后上。 |
 | voice.fz.welcome.fzhhgy.fzh | fzh | 欢迎光临花海公园站。请排队候车，先下后上。 |
-| voice.fz.welcome.fzhhgy.en | en | Welcome to Huahai Park station. Please line up for the train. Let the passengers get off first before you get on. |
-| voice.fz.next.fzhzzx.zh | zh | 下一站，会展中心。 |
 | voice.fz.next.fzhzzx.fzh | fzh | 下一站，会展中心。 |
-| voice.fz.next.fzhzzx.en | en | The next station is Exhibition Center. |
-| voice.fz.arrive.fzhzzx.zh | zh | 列车即将到达会展中心站，请小心列车与站台之间的空隙。 |
 | voice.fz.arrive.fzhzzx.fzh | fzh | 列车即将到达会展中心站，请小心列车与站台之间的空隙。 |
-| voice.fz.arrive.fzhzzx.en | en | The train is arriving at Exhibition Center. Please mind the gap between the train and the platform. |
-| voice.fz.welcome.fzhzzx.zh | zh | 欢迎光临会展中心站。请排队候车，先下后上。 |
 | voice.fz.welcome.fzhzzx.fzh | fzh | 欢迎光临会展中心站。请排队候车，先下后上。 |
-| voice.fz.welcome.fzhzzx.en | en | Welcome to Exhibition Center station. Please line up for the train. Let the passengers get off first before you get on. |
-| voice.fz.next.fzlp.zh | zh | 下一站，林浦，可换乘6号线。 |
-| voice.fz.next.fzlp.fzh | fzh | 下一站，林浦，可换乘6号线。 |
-| voice.fz.next.fzlp.en | en | The next station is Linpu, the interchange with Line 6. |
-| voice.fz.arrive.fzlp.zh | zh | 列车即将到达林浦站，请小心列车与站台之间的空隙。 |
+| voice.fz.next.fzlp4.fzh | fzh | 下一站，林浦，可换乘6号线。 |
 | voice.fz.arrive.fzlp.fzh | fzh | 列车即将到达林浦站，请小心列车与站台之间的空隙。 |
-| voice.fz.arrive.fzlp.en | en | The train is arriving at Linpu. Please mind the gap between the train and the platform. |
-| voice.fz.welcome.fzlp.zh | zh | 欢迎光临林浦站。请排队候车，先下后上。 |
 | voice.fz.welcome.fzlp.fzh | fzh | 欢迎光临林浦站。请排队候车，先下后上。 |
-| voice.fz.welcome.fzlp.en | en | Welcome to Linpu station. Please line up for the train. Let the passengers get off first before you get on. |
-| voice.fz.next.fzcm4.zh | zh | 下一站，城门，可换乘1号线。 |
 | voice.fz.next.fzcm4.fzh | fzh | 下一站，城门，可换乘1号线。 |
-| voice.fz.next.fzcm4.en | en | The next station is Chengmen, the interchange with Line 1. |
-| voice.fz.next.fzlzwq.zh | zh | 下一站，螺洲温泉。 |
 | voice.fz.next.fzlzwq.fzh | fzh | 下一站，螺洲温泉。 |
-| voice.fz.next.fzlzwq.en | en | The next station is Luozhou Hot Spring. |
-| voice.fz.arrive.fzlzwq.zh | zh | 列车即将到达螺洲温泉站，请小心列车与站台之间的空隙。 |
 | voice.fz.arrive.fzlzwq.fzh | fzh | 列车即将到达螺洲温泉站，请小心列车与站台之间的空隙。 |
-| voice.fz.arrive.fzlzwq.en | en | The train is arriving at Luozhou Hot Spring. Please mind the gap between the train and the platform. |
-| voice.fz.welcome.fzlzwq.zh | zh | 欢迎光临螺洲温泉站。请排队候车，先下后上。 |
 | voice.fz.welcome.fzlzwq.fzh | fzh | 欢迎光临螺洲温泉站。请排队候车，先下后上。 |
-| voice.fz.welcome.fzlzwq.en | en | Welcome to Luozhou Hot Spring station. Please line up for the train. Let the passengers get off first before you get on. |
 | voice.fz.arrive.fzdfj.fzh | fzh | 列车即将到达帝封江站，请小心列车与站台之间的空隙。 |
 | voice.fz.welcome.fzdfj.fzh | fzh | 欢迎光临帝封江站。请排队候车，先下后上。 |
 | voice.fz.destination.fzn.fzh | fzh | 本次列车终点站为福州火车南站。 |
@@ -341,21 +255,17 @@
 | voice.fz.next.fznldx.fzh | fzh | 下一站，农林大学。 |
 | voice.fz.arrive.fznldx.fzh | fzh | 列车即将到达农林大学站，请小心列车与站台之间的空隙。 |
 | voice.fz.welcome.fznldx.fzh | fzh | 欢迎光临农林大学站。请排队候车，先下后上。 |
-| voice.fz.next.fzht5.zh | zh | 下一站，洪塘，可换乘4号线。 |
 | voice.fz.next.fzht5.fzh | fzh | 下一站，洪塘，可换乘4号线。 |
-| voice.fz.next.fzht5.en | en | The next station is Hongtang, the interchange with Line 4. |
 | voice.fz.next.fzzb.fzh | fzh | 下一站，阵坂。 |
 | voice.fz.arrive.fzzb.fzh | fzh | 列车即将到达阵坂站，请小心列车与站台之间的空隙。 |
 | voice.fz.welcome.fzzb.fzh | fzh | 欢迎光临阵坂站。请排队候车，先下后上。 |
 | voice.fz.next.fzmr.fzh | fzh | 下一站，马榕。 |
 | voice.fz.arrive.fzmr.fzh | fzh | 列车即将到达马榕站，请小心列车与站台之间的空隙。 |
 | voice.fz.welcome.fzmr.fzh | fzh | 欢迎光临马榕站。请排队候车，先下后上。 |
-| voice.fz.next.fzjs.fzh | fzh | 下一站，金山，可换乘2号线。 |
-| voice.fz.arrive.fzjs.fzh | fzh | 列车即将到达金山站，请小心列车与站台之间的空隙。 |
-| voice.fz.welcome.fzjs.fzh | fzh | 欢迎光临金山站。请排队候车，先下后上。 |
-| voice.fz.next.fzfgl.fzh | fzh | 下一站，凤冈里。 |
-| voice.fz.arrive.fzfgl.fzh | fzh | 列车即将到达凤冈里站，请小心列车与站台之间的空隙。 |
-| voice.fz.welcome.fzfgl.fzh | fzh | 欢迎光临凤冈里站。请排队候车，先下后上。 |
+| voice.fz.next.fzjs5.fzh | fzh | 下一站，金山，可换乘2号线。 |
+| voice.fz.next.fzfgl.fzh | fzh | 下一站，凤岗里。 |
+| voice.fz.arrive.fzfgl.fzh | fzh | 列车即将到达凤岗里站，请小心列车与站台之间的空隙。 |
+| voice.fz.welcome.fzfgl.fzh | fzh | 欢迎光临凤岗里站。请排队候车，先下后上。 |
 | voice.fz.next.fzpsdd.fzh | fzh | 下一站，浦上大道。 |
 | voice.fz.arrive.fzpsdd.fzh | fzh | 列车即将到达浦上大道站，请小心列车与站台之间的空隙。 |
 | voice.fz.welcome.fzpsdd.fzh | fzh | 欢迎光临浦上大道站。请排队候车，先下后上。 |
@@ -365,6 +275,8 @@
 | voice.fz.next.fzdl.fzh | fzh | 下一站，东岭。 |
 | voice.fz.arrive.fzdl.fzh | fzh | 列车即将到达东岭站，请小心列车与站台之间的空隙。 |
 | voice.fz.welcome.fzdl.fzh | fzh | 欢迎光临东岭站。请排队候车，先下后上。 |
+| voice.fz.fzvisit.fzdl.fzh | fzh | 东岭站附近有海峡奥体中心，欢迎下车游玩，请从A出口出站。 |
+| voice.fz.fzexit.fzdl.fzh | fzh | 前往海峡奥体中心的乘客，请从A出口出站。 |
 | voice.fz.next.fzty.fzh | fzh | 下一站，台屿。 |
 | voice.fz.arrive.fzty.fzh | fzh | 列车即将到达台屿站，请小心列车与站台之间的空隙。 |
 | voice.fz.welcome.fzty.fzh | fzh | 欢迎光临台屿站。请排队候车，先下后上。 |
@@ -380,9 +292,7 @@
 | voice.fz.next.fzyx.fzh | fzh | 下一站，义序。 |
 | voice.fz.arrive.fzyx.fzh | fzh | 列车即将到达义序站，请小心列车与站台之间的空隙。 |
 | voice.fz.welcome.fzyx.fzh | fzh | 欢迎光临义序站。请排队候车，先下后上。 |
-| voice.fz.next.fzdfj5.zh | zh | 下一站，帝封江，可换乘4号线。 |
-| voice.fz.next.fzdfj5.fzh | fzh | 下一站，帝封江，可换乘4号线。 |
-| voice.fz.next.fzdfj5.en | en | The next station is Difengjiang, the interchange with Line 4. |
+| voice.fz.next.fzdfj5.fzh | fzh | 下一站，帝封江，可换乘4号线、滨海快线。 |
 | voice.fz.next.fzlzgz.fzh | fzh | 下一站，螺洲古镇。 |
 | voice.fz.arrive.fzlzgz.fzh | fzh | 列车即将到达螺洲古镇站，请小心列车与站台之间的空隙。 |
 | voice.fz.welcome.fzlzgz.fzh | fzh | 欢迎光临螺洲古镇站。请排队候车，先下后上。 |
@@ -392,10 +302,82 @@
 | voice.fz.next.fzlj.fzh | fzh | 下一站，龙江。 |
 | voice.fz.arrive.fzlj.fzh | fzh | 列车即将到达龙江站，请小心列车与站台之间的空隙。 |
 | voice.fz.welcome.fzlj.fzh | fzh | 欢迎光临龙江站。请排队候车，先下后上。 |
+| voice.fz.destination.wsh.fzh | fzh | 本次列车终点站为万寿。 |
+| voice.fz.terminal.wsh.fzh | fzh | 下一站是本次列车的终点站，万寿。请全部乘客带齐行李物品在此站下车，欢迎再次乘坐福州地铁。 |
+| voice.fz.platform.wsh.1.fzh | fzh | 一站台，万寿方向列车即将进站。 |
+| voice.fz.platform.wsh.2.fzh | fzh | 二站台，万寿方向列车即将进站。 |
+| voice.fz.destination.pd.fzh | fzh | 本次列车终点站为潘墩。 |
+| voice.fz.terminal.pd.fzh | fzh | 下一站是本次列车的终点站，潘墩。请全部乘客带齐行李物品在此站下车，欢迎再次乘坐福州地铁。 |
+| voice.fz.platform.pd.1.fzh | fzh | 一站台，潘墩方向列车即将进站。 |
+| voice.fz.platform.pd.2.fzh | fzh | 二站台，潘墩方向列车即将进站。 |
+| voice.fz.arrive.fzpd.fzh | fzh | 列车即将到达潘墩站，请小心列车与站台之间的空隙。 |
+| voice.fz.welcome.fzpd.fzh | fzh | 欢迎光临潘墩站。请排队候车，先下后上。 |
+| voice.fz.next.fzlp6.fzh | fzh | 下一站，林浦，可换乘4号线。 |
+| voice.fz.next.fzzl.fzh | fzh | 下一站，樟岚。 |
+| voice.fz.arrive.fzzl.fzh | fzh | 列车即将到达樟岚站，请小心列车与站台之间的空隙。 |
+| voice.fz.welcome.fzzl.fzh | fzh | 欢迎光临樟岚站。请排队候车，先下后上。 |
+| voice.fz.next.fzlc6.fzh | fzh | 下一站，梁厝，可换乘1号线。 |
+| voice.fz.next.fzxy6.fzh | fzh | 下一站，下洋，可换乘1号线。 |
+| voice.fz.next.fzyq.fzh | fzh | 下一站，营前。 |
+| voice.fz.arrive.fzyq.fzh | fzh | 列车即将到达营前站，请小心列车与站台之间的空隙。 |
+| voice.fz.welcome.fzyq.fzh | fzh | 欢迎光临营前站。请排队候车，先下后上。 |
+| voice.fz.next.fzhc.fzh | fzh | 下一站，航城。 |
+| voice.fz.arrive.fzhc.fzh | fzh | 列车即将到达航城站，请小心列车与站台之间的空隙。 |
+| voice.fz.welcome.fzhc.fzh | fzh | 欢迎光临航城站。请排队候车，先下后上。 |
+| voice.fz.next.fzzh.fzh | fzh | 下一站，郑和。 |
+| voice.fz.arrive.fzzh.fzh | fzh | 列车即将到达郑和站，请小心列车与站台之间的空隙。 |
+| voice.fz.welcome.fzzh.fzh | fzh | 欢迎光临郑和站。请排队候车，先下后上。 |
+| voice.fz.next.fzsxy.fzh | fzh | 下一站，十洋。 |
+| voice.fz.arrive.fzsxy.fzh | fzh | 列车即将到达十洋站，请小心列车与站台之间的空隙。 |
+| voice.fz.welcome.fzsxy.fzh | fzh | 欢迎光临十洋站。请排队候车，先下后上。 |
+| voice.fz.next.fzwh.fzh | fzh | 下一站，吴航。 |
+| voice.fz.arrive.fzwh.fzh | fzh | 列车即将到达吴航站，请小心列车与站台之间的空隙。 |
+| voice.fz.welcome.fzwh.fzh | fzh | 欢迎光临吴航站。请排队候车，先下后上。 |
+| voice.fz.next.fzhsh.fzh | fzh | 下一站，鹤上。 |
+| voice.fz.arrive.fzhsh.fzh | fzh | 列车即将到达鹤上站，请小心列车与站台之间的空隙。 |
+| voice.fz.welcome.fzhsh.fzh | fzh | 欢迎光临鹤上站。请排队候车，先下后上。 |
+| voice.fz.next.fzsjg.fzh | fzh | 下一站，沙京。 |
+| voice.fz.arrive.fzsjg.fzh | fzh | 列车即将到达沙京站，请小心列车与站台之间的空隙。 |
+| voice.fz.welcome.fzsjg.fzh | fzh | 欢迎光临沙京站。请排队候车，先下后上。 |
+| voice.fz.next.fzxw.fzh | fzh | 下一站，下吴。 |
+| voice.fz.arrive.fzxw.fzh | fzh | 列车即将到达下吴站，请小心列车与站台之间的空隙。 |
+| voice.fz.welcome.fzxw.fzh | fzh | 欢迎光临下吴站。请排队候车，先下后上。 |
+| voice.fz.arrive.fzwsh.fzh | fzh | 列车即将到达万寿站，请小心列车与站台之间的空隙。 |
+| voice.fz.welcome.fzwsh.fzh | fzh | 欢迎光临万寿站。请排队候车，先下后上。 |
+| voice.fz.destination.wl.fzh | fzh | 本次列车终点站为文岭。 |
+| voice.fz.terminal.wl.fzh | fzh | 下一站是本次列车的终点站，文岭。请全部乘客带齐行李物品在此站下车，欢迎再次乘坐福州地铁。 |
+| voice.fz.platform.wl.1.fzh | fzh | 一站台，文岭方向列车即将进站。 |
+| voice.fz.platform.wl.2.fzh | fzh | 二站台，文岭方向列车即将进站。 |
+| voice.fz.destination.fzhcz.fzh | fzh | 本次列车终点站为福州火车站。 |
+| voice.fz.terminal.fzhcz.fzh | fzh | 下一站是本次列车的终点站，福州火车站。请全部乘客带齐行李物品在此站下车，欢迎再次乘坐福州地铁。 |
+| voice.fz.platform.fzhcz.1.fzh | fzh | 一站台，福州火车站方向列车即将进站。 |
+| voice.fz.platform.fzhcz.2.fzh | fzh | 二站台，福州火车站方向列车即将进站。 |
+| voice.fz.next.fzdmn20.fzh | fzh | 下一站，东门，可换乘4号线。 |
+| voice.fz.next.fzmd.fzh | fzh | 下一站，闽都，可出站换乘2号线。 |
+| voice.fz.arrive.fzmd.fzh | fzh | 列车即将到达闽都站，请小心列车与站台之间的空隙。 |
+| voice.fz.welcome.fzmd.fzh | fzh | 欢迎光临闽都站。请排队候车，先下后上。 |
+| voice.fz.next.fzngy.fzh | fzh | 下一站，南公园。 |
+| voice.fz.arrive.fzngy.fzh | fzh | 列车即将到达南公园站，请小心列车与站台之间的空隙。 |
+| voice.fz.welcome.fzngy.fzh | fzh | 欢迎光临南公园站。请排队候车，先下后上。 |
+| voice.fz.next.fzscjb.fzh | fzh | 下一站，三叉街，可出站换乘1号线。 |
+| voice.fz.arrive.fzscjb.fzh | fzh | 列车即将到达三叉街站，请小心列车与站台之间的空隙。 |
+| voice.fz.welcome.fzscjb.fzh | fzh | 欢迎光临三叉街站。请排队候车，先下后上。 |
+| voice.fz.next.fzdfj20.fzh | fzh | 下一站，帝封江，可换乘4号线、5号线。 |
+| voice.fz.next.fzxq.fzh | fzh | 下一站，祥谦。 |
+| voice.fz.arrive.fzxq.fzh | fzh | 列车即将到达祥谦站，请小心列车与站台之间的空隙。 |
+| voice.fz.welcome.fzxq.fzh | fzh | 欢迎光临祥谦站。请排队候车，先下后上。 |
+| voice.fz.next.fzsz.fzh | fzh | 下一站，首占。 |
+| voice.fz.arrive.fzsz.fzh | fzh | 列车即将到达首占站，请小心列车与站台之间的空隙。 |
+| voice.fz.welcome.fzsz.fzh | fzh | 欢迎光临首占站。请排队候车，先下后上。 |
+| voice.fz.next.fzdsj.fzh | fzh | 下一站，大数据。 |
+| voice.fz.arrive.fzdsj.fzh | fzh | 列车即将到达大数据站，请小心列车与站台之间的空隙。 |
+| voice.fz.welcome.fzdsj.fzh | fzh | 欢迎光临大数据站。请排队候车，先下后上。 |
+| voice.fz.next.fzbhcbd.fzh | fzh | 下一站，滨海中央商务区。 |
+| voice.fz.arrive.fzbhcbd.fzh | fzh | 列车即将到达滨海中央商务区站，请小心列车与站台之间的空隙。 |
+| voice.fz.welcome.fzbhcbd.fzh | fzh | 欢迎光临滨海中央商务区站。请排队候车，先下后上。 |
+| voice.fz.next.fzjc.fzh | fzh | 下一站，机场。 |
+| voice.fz.arrive.fzjc.fzh | fzh | 列车即将到达机场站，请小心列车与站台之间的空隙。 |
+| voice.fz.welcome.fzjc.fzh | fzh | 欢迎光临机场站。请排队候车，先下后上。 |
+| voice.fz.arrive.fzwl.fzh | fzh | 列车即将到达文岭站，请小心列车与站台之间的空隙。 |
+| voice.fz.welcome.fzwl.fzh | fzh | 欢迎光临文岭站。请排队候车，先下后上。 |
 | voice.fz.doorsClosing.fzh | fzh | 车门即将关闭，请注意安全。 |
-| voice.emu.depart.gzf.zh | zh | 旅客们，欢迎乘坐D三三零九次列车。本次列车由广州东站开往福州南站。 |
-| voice.emu.depart.gzf.en | en | Welcome aboard train D three three zero nine, from Guangzhou East to Fuzhou South. |
-| voice.emu.next.gzf.zh | zh | 前方到站，福州南站。请您带好随身物品，准备下车。 |
-| voice.emu.next.gzf.en | en | We will soon arrive at Fuzhou South. Please take your belongings and get ready to leave the train. |
-| voice.emu.arrive.gzf.zh | zh | 福州南站到了。欢迎您来到福州，下车时请注意列车与站台之间的空隙。 |
-| voice.emu.arrive.gzf.en | en | We have arrived at Fuzhou South. Welcome to Fuzhou. Please mind the gap when leaving the train. |

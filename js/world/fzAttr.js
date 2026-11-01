@@ -376,6 +376,7 @@ function villa(S, x, z, w, d, wall, trim, roofC, alongZ, faceA) {
   const fw = alongZ ? d : w, uv = A.draw(fw - 0.6, 7.4, villaPaint(wall, trim), 30);
   const fx = alongZ ? x + (faceA > 0 ? w / 2 : -w / 2) + Math.sign(faceA) * 0.03 : x, fz = alongZ ? z : z - d / 2 - 0.03;
   A.quad(fx, 4, fz, fw - 0.6, 7.4, faceA, uv);
+  if (alongZ) A.quad(x, 4, z - d / 2 - 0.03, w - 0.6, 7.4, 0, A.draw(w - 0.6, 7.4, villaPaint(wall, trim), 30));   // 朝马路那面也有券廊
 }
 function yantai(S) {
   const k = S.kit, P = k.solid, A = S.atlas, GR = k.g('granite');
@@ -451,7 +452,7 @@ function gushan(S) {
   const dir = [TOP[0] - BX, TOP[1] - BY, TOP[2] - BZ], LEN = Math.hypot(...dir), u = dir.map(v => v / LEN);
   for (const off of [-1.6, 1.6]) { const a = [BX + off, BY - 0.6, BZ], b = [TOP[0] + off, TOP[1], TOP[2]]; k.metal.tube(a, b, 0.08, hex('#3A3F45'), 4); }
   for (let t = 0.22; t < 0.95; t += 0.24) { const x = BX + dir[0] * t, y = BY + dir[1] * t, z = BZ + dir[2] * t;
-    k.metal.tube([x, y - 26 - t * 10, z], [x, y + 0.6, z], 0.9, hex('#9AA3AD'), 4); k.metal.box(x, y + 0.6, z, 4.4, 0.4, 0.5, hex('#9AA3AD')); }
+    k.metal.tube([x, -2, z], [x, y + 0.6, z], 0.9, hex('#9AA3AD'), 4); k.metal.box(x, y + 0.6, z, 4.4, 0.4, 0.5, hex('#9AA3AD')); }
   const SP = 18, NCAB = Math.floor(LEN / SP), cab = sgn => { const g = new Geo();
     for (let i = 0; i < NCAB; i++) { const d = i * SP, x = BX + sgn * 1.6 + u[0] * d, y = BY - 0.6 + u[1] * d, z = BZ + u[2] * d;
       g.box(x, y - 0.9, z, 0.06, 1.8, 0.06, hex('#3A3F45')); g.box(x, y - 2.6, z, 1.8, 1.6, 1.8, hex(i % 2 ? '#D7262E' : '#E9C46A')); g.box(x, y - 2.4, z, 1.84, 0.6, 1.4, hex('#BFDCEB')); }
