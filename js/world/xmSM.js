@@ -6,7 +6,7 @@
  *   第二座过街天桥：一期 ↔ 三期（嘉禾路401号，在二期北侧）。
  * 资料与出入口核对见 /workspace/xmlogs/sm/research.md（PR 描述里有摘要）。
  * 坐标同 xmStreet：出口亭（4B）在原点、开口朝 +z（北）；+x = 东。仙岳路 z −40..−14（东西向，带高架），嘉禾路 x −46..−14（南北向）。
- * 室内：一期 / 二期黄宝石的正门走进去单独加载 SmAtrium（多层中庭 + 扶梯 + 一圈店铺 + 逛街的人）。
+ * 室内：五栋楼（一期 / 红宝石 / 黄宝石 / 蓝宝石 / 三期）都能进，单独加载 SmMall（xmSMMall.js）；SM 天桥两头的 2F 玻璃门直接进楼内 2F。
  */
 import { Geo, hex } from '../core/geo.js';
 import * as D from './decor.js';
@@ -14,6 +14,7 @@ import { Kit, bucketMat } from './kit.js';
 import { FoodAtlas } from '../game/food-art.js';
 import { textPaint, FONT, FONT_EN } from './xmStreet.js';
 import { ringCol } from './xmAttr.js';
+import { SmMall } from './xmSMMall.js';
 import { bakePerson, randomLook, archetypeLook, preseed, prnd, POSES } from './people.js';
 
 const TAU = Math.PI * 2;
@@ -82,7 +83,7 @@ function curtain(tint = '#8FB3C8') {
   };
 }
 /** 底层店面：暖光橱窗 + 竖梃 + 几个模特 / 货架剪影 */
-function storefront(warm = '#F6E3C0') {
+export function storefront(warm = '#F6E3C0') {
   return (c, pw, ph) => {
     c.fillStyle = '#3A3F45'; c.fillRect(0, 0, pw, ph);
     const g = c.createLinearGradient(0, 0, 0, ph); g.addColorStop(0, '#FFF7E6'); g.addColorStop(1, warm); c.fillStyle = g; c.fillRect(pw * 0.02, ph * 0.08, pw * 0.96, ph * 0.9);
@@ -102,15 +103,15 @@ const BRANDS = {
   '家居生活': ['#5B7F64', '#FFFFFF'], '沃尔玛 B1': ['#0071CE', '#FFFFFF'], 'Apple 授权店': ['#F2F2F2', '#222222'], 'NIKE': ['#111111', '#FFFFFF'],
   '泡泡玛特': ['#E8306B', '#FFFFFF'], '巴拉巴拉 童装': ['#F3B71A', '#1F3B73'], '周大福': ['#B3001B', '#F7D57A'], '无印咖啡': ['#6B4C3B', '#FFFFFF'],
 };
-const brandPaint = n => { const [bg, fg] = BRANDS[n] || ['#2B2F35', '#FFFFFF']; return textPaint([n], { bg, fg }); };
+export const brandPaint = n => { const [bg, fg] = BRANDS[n] || ['#2B2F35', '#FFFFFF']; return textPaint([n], { bg, fg }); };
 
 /* ---------------- 小工具 ---------------- */
 /** 街面底层店面（一 / 二 / 三期共用一张） */
 const shopUv = S => S._smShop || (S._smShop = S.atlas.draw(12, 4.6, storefront(), 26));
 /** 竖直四边形：p0→p1（水平端点 [x,z]），法线朝 (ez, −ex) 一侧 */
-function wallQ(B, p0, p1, y0, y1, col) { B.quad([p0[0], y0, p0[1]], [p1[0], y0, p1[1]], [p1[0], y1, p1[1]], [p0[0], y1, p0[1]], col); }
+export function wallQ(B, p0, p1, y0, y1, col) { B.quad([p0[0], y0, p0[1]], [p1[0], y0, p1[1]], [p1[0], y1, p1[1]], [p0[0], y1, p0[1]], col); }
 /** 水平四边形（朝上 up=true / 朝下），四点按 [x,z] 给 */
-function flatQ(B, pts, y, col, up = true) {
+export function flatQ(B, pts, y, col, up = true) {
   const P = pts.map(p => [p[0], y, p[1]]);
   // 先算这一圈的朝向，保证法线朝上 / 朝下
   const cr = (P[1][0] - P[0][0]) * (P[3][2] - P[0][2]) - (P[1][2] - P[0][2]) * (P[3][0] - P[0][0]);
@@ -140,7 +141,7 @@ export function lowPerson(P, x, y, z, ry, i, kid = false) {
   if (!kid && i % 2 === 0) P.box(x + sx * 0.33, y + 0.68, z + sz * 0.33, 0.12, 0.34, 0.3, hex(BAGS[i % BAGS.length]), ry, 0, 0, 1, { ao: false });
 }
 /** 逛街的人：成人多数拎购物袋，偶尔带小孩 / 看手机 */
-function shopper(P, x, y, z, ry, i, o = {}) {
+export function shopper(P, x, y, z, ry, i, o = {}) {
   if (o.lo) return lowPerson(P, x, y, z, ry, i, o.kid || i % 5 === 2);
   const r = prnd();
   if (o.kid || i % 6 === 2) return bakePerson(P, x, y, z, ry, randomLook({ kid: true, scale: 0.92, bag: r < 0.4 ? 'backpack' : null }), r < 0.5 ? WALK : POSES.stand);
@@ -150,7 +151,7 @@ function shopper(P, x, y, z, ry, i, o = {}) {
   return bakePerson(P, x, y, z, ry, randomLook({ shopBags: bags, bag: bags ? null : (r > 0.75 ? 'shoulder' : null), phone }), phone ? PHONE : (o.stand ? POSES.stand : WALK));
 }
 /** 一家人：大人 + 小孩（并排走） */
-function family(P, x, y, z, ry, i, lo = false) {
+export function family(P, x, y, z, ry, i, lo = false) {
   const sx = Math.cos(ry), sz = -Math.sin(ry);
   shopper(P, x, y, z, ry, i * 7 + 1, { lo });
   if (lo) lowPerson(P, x + sx * 0.75, y, z + sz * 0.75, ry, i, true); else bakePerson(P, x + sx * 0.75, y, z + sz * 0.75, ry, randomLook({ kid: true, scale: 0.9, bag: 'backpack' }), WALK);
@@ -255,9 +256,19 @@ export function smCity(S) {
 
   traffic(S);
   // ---------- 进门 ----------
+  // 每栋楼都能进：地面正门 + 天桥两头的 2F 玻璃门（y: 6，进楼内 2F；gate = 楼里对应的那扇门）
+  const mall = id => (scene, o) => new SmMall(scene, o, id);
   S.enterDoors = [
-    { x: 51, z: P1.z0 - 0.3, halfW: 1.6, zLo: -0.4, zHi: 0.8, outPos: [51, P1.z0 - 2.4], outYaw: Math.PI, id: 'sm-city', make: (scene, o) => new SmAtrium(scene, o, 'city') },
-    { ax: 'x', s: -1, x: TOPAZ.cx + TOPAZ.r + 0.3, z: TOPAZ.cz, halfW: 1.6, zLo: -0.4, zHi: 0.8, outPos: [TOPAZ.cx + TOPAZ.r + 2.6, TOPAZ.cz], outYaw: Math.PI / 2, id: 'sm-topaz', make: (scene, o) => new SmAtrium(scene, o, 'topaz') },
+    { x: 51, z: P1.z0 - 0.3, halfW: 1.6, zLo: -0.4, zHi: 0.8, outPos: [51, P1.z0 - 2.4], outYaw: Math.PI, id: 'sm-city', make: mall('sm-city') },
+    { ax: 'x', s: -1, x: TOPAZ.cx + TOPAZ.r + 0.3, z: TOPAZ.cz, halfW: 1.6, zLo: -0.4, zHi: 0.8, outPos: [TOPAZ.cx + TOPAZ.r + 2.6, TOPAZ.cz], outYaw: Math.PI / 2, id: 'sm-topaz', make: mall('sm-topaz') },
+    { ax: 'x', s: -1, x: RUBY.x1 + 0.3, z: 24, halfW: 1.7, zLo: -0.5, zHi: 0.8, outPos: [RUBY.x1 + 2.4, 24], outYaw: Math.PI / 2, id: 'sm-ruby', make: mall('sm-ruby') },
+    { s: -1, x: -144, z: SAPH.z1 + 0.3, halfW: 1.7, zLo: -0.5, zHi: 0.8, outPos: [-144, SAPH.z1 + 2.4], outYaw: 0, id: 'sm-sapphire', make: mall('sm-sapphire') },
+    { ax: 'x', s: -1, x: P3.x1 + 0.3, z: 176, halfW: 1.7, zLo: -0.5, zHi: 0.8, outPos: [P3.x1 + 2.4, 176], outYaw: Math.PI / 2, id: 'sm-p3', make: mall('sm-p3') },
+    // 天桥门（桥面 y = 6）
+    { ax: 'x', s: 1, x: P1.x0 - 0.4, z: (BR1.z0 + BR1.z1) / 2, y: BR1.y, halfW: 2.6, zLo: -0.6, zHi: 0.8, outPos: [P1.x0 - 2.4, (BR1.z0 + BR1.z1) / 2], outY: BR1.y + 0.05, outYaw: -Math.PI / 2, id: 'sm-city', gate: 'br1', make: mall('sm-city') },
+    { ax: 'x', s: 1, x: P1.x0 - 0.4, z: (BR2.z0 + BR2.z1) / 2, y: BR2.y, halfW: 2.6, zLo: -0.6, zHi: 0.8, outPos: [P1.x0 - 2.4, (BR2.z0 + BR2.z1) / 2], outY: BR2.y + 0.05, outYaw: -Math.PI / 2, id: 'sm-city', gate: 'br2', make: mall('sm-city') },
+    { ax: 'x', s: -1, x: BR1.x0 + 0.4, z: (BR1.z0 + BR1.z1) / 2, y: BR1.y, halfW: 2.6, zLo: -0.6, zHi: 0.8, outPos: [BR1.x0 + 2.4, (BR1.z0 + BR1.z1) / 2], outY: BR1.y + 0.05, outYaw: Math.PI / 2, id: 'sm-topaz', gate: 'br1', make: mall('sm-topaz') },
+    { ax: 'x', s: -1, x: BR2.x0 + 0.4, z: (BR2.z0 + BR2.z1) / 2, y: BR2.y, halfW: 2.6, zLo: -0.6, zHi: 0.8, outPos: [BR2.x0 + 2.4, (BR2.z0 + BR2.z1) / 2], outY: BR2.y + 0.05, outYaw: Math.PI / 2, id: 'sm-p3', gate: 'br2', make: mall('sm-p3') },
   ];
 }
 
@@ -295,9 +306,9 @@ function phase1(S) {
   A.quad(dx, 2.0, z0 - 0.08, 4.4, 4.0, aS(0, -1), A.draw(4.4, 4.0, (c, pw, ph) => { c.fillStyle = '#4A5056'; c.fillRect(0, 0, pw, ph); c.fillStyle = '#CDE6F2'; c.fillRect(pw * 0.05, ph * 0.05, pw * 0.42, ph * 0.95); c.fillRect(pw * 0.53, ph * 0.05, pw * 0.42, ph * 0.95);
     c.fillStyle = '#FFF4DA'; c.globalAlpha = 0.6; c.fillRect(pw * 0.08, ph * 0.3, pw * 0.84, ph * 0.7); c.globalAlpha = 1; c.fillStyle = '#9AA3AB'; c.fillRect(pw * 0.43, ph * 0.45, pw * 0.03, ph * 0.12); c.fillRect(pw * 0.54, ph * 0.45, pw * 0.03, ph * 0.12); }, 32));
   k.shade.shadeBlob(dx, z0 - 1.6, 14, 3.4, 0.02, 0.2);
-  // 天桥接口（西立面 2F）：入口框 + 灯箱
-  for (const br of [BR1, BR2]) { k.metal.slab(x0 - 0.4, x0, br.y, br.y + 4.2, br.z0 - 0.6, br.z1 + 0.6, hex('#E6E8EA'), { ao: false });
-    A.quad(x0 - 0.45, br.y + 1.6, (br.z0 + br.z1) / 2, 4.2, 3.0, aS(-1, 0), A.draw(4.2, 3.0, textPaint(['SM城市广场 2F', 'SM City · Level 2'], { bg: '#2B3036', fg: '#FFFFFF' }), 40)); }
+  // 天桥接口（西立面 2F）：玻璃门 + 门头（走到门口进 SM城市广场 2F）
+  bridgeGate(S, P1.x0, BR1, -1, 'SM城市广场 2F', 'SM CITY · LEVEL 2', SM_NAVY);
+  bridgeGate(S, P1.x0, BR2, -1, 'SM城市广场 2F', 'SM CITY · LEVEL 2', SM_NAVY);
 }
 
 /* ---------- 二期：SM新生活广场（红宝石 + 玻璃中庭 + 黄宝石 + 蓝宝石） ---------- */
@@ -317,7 +328,8 @@ function phase2(S) {
     A.quad(-110, 15, z0 - 0.45, 12, 3, aS(0, -1), A.draw(12, 3, brandPaint('SEPHORA'), 30));
     A.quad(-132, 15, z0 - 0.45, 12, 3, aS(0, -1), A.draw(12, 3, brandPaint('Massimo Dutti'), 30));
     [['H&M', 30], ['海底捞', 44]].forEach(([n, z]) => A.quad(x1 + 0.3, 5.05, z, 6, 0.9, aS(1, 0), A.draw(6, 0.9, brandPaint(n), 40)));
-    A.quad(-94, 5.05, z0 - 0.3, 6, 0.9, aS(0, -1), A.draw(6, 0.9, brandPaint('喜茶'), 40)); }
+    A.quad(-94, 5.05, z0 - 0.3, 6, 0.9, aS(0, -1), A.draw(6, 0.9, brandPaint('喜茶'), 40));
+    groundDoor(S, x1, 24, 1, '红宝石 RUBY', '#C8102E'); }
   // 玻璃连接中庭（天桥落在这里）+ 「SM新生活广场」
   { const { x0, x1, z0, z1, h } = LINK, cw = A.draw(11, 16, curtain(), 12);
     P.slab(x0, x1, 0, h, z0, z1, hex('#B9CAD6'), { ao: false }); k.colSlab(x0, x1, 0, h, z0, z1);
@@ -325,7 +337,7 @@ function phase2(S) {
     P.slab(x0 - 0.3, x1 + 0.6, h, h + 0.8, z0 - 0.3, z1 + 0.3, hex('#E6E8EA'), { ao: false });
     A.quad(x1 + 0.7, h - 3.5, 52.5, 4.6, 4.6, aS(1, 0), A.draw(4.6, 4.6, (c, pw, ph) => smLogo(c, pw, ph, { bg: '#FFFFFF' }), 40));
     A.quad(x1 + 0.7, h - 3.5, 66, 18, 3.0, aS(1, 0), A.draw(18, 3, textPaint(['SM新生活广场', 'SM LIFESTYLE CENTER'], { bg: '#FFFFFF', fg: SM_NAVY }), 22));
-    k.metal.slab(x1, x1 + 0.4, 6, 10.2, BR1.z0 - 0.6, BR1.z1 + 0.6, hex('#E6E8EA'), { ao: false }); }
+    bridgeGate(S, x1, BR1, 1, 'SM新生活广场 · 黄宝石 2F', 'SM LIFESTYLE · TOPAZ L2', '#C9A24A'); }
   // 中庭和蓝宝石之间的裙房
   P.slab(-130, LINK.x0, 0, 14, 50, 72, hex('#E4E3DF'), { ao: false }); k.colSlab(-130, LINK.x0, 0, 14, 50, 72);
   // 黄宝石：圆楼，整圈金色金属钻石板 + 金色环带；东侧正门
@@ -354,7 +366,8 @@ function phase2(S) {
     tileFace(A, blue, 'z', x1, z0, z1, 14, h - 1.4, 1, 12); tileFace(A, blue, 'x', z0, x0, x1, 14, h - 1.4, -1, 12); tileFace(A, blue, 'x', z1, x0, x1, 4, h - 1.4, 1, 12);
     k.g('band').slab(x0 - 0.4, x1 + 0.4, h - 1.4, h, z0 - 0.4, z1 + 0.4, hex('#2E5DA8'), { ao: false });
     A.quad(x1 + 0.5, h - 5, 100, 14, 3.4, aS(1, 0), A.draw(14, 3.4, brandPaint('万达影城'), 30));
-    A.quad(x1 + 0.5, h - 9, 100, 14, 2.2, aS(1, 0), A.draw(14, 2.2, textPaint(['蓝宝石  SAPPHIRE', '影城 · 健身'], { bg: '#2E5DA8', fg: '#FFFFFF' }), 30)); }
+    A.quad(x1 + 0.5, h - 9, 100, 14, 2.2, aS(1, 0), A.draw(14, 2.2, textPaint(['蓝宝石  SAPPHIRE', '影城 · 健身'], { bg: '#2E5DA8', fg: '#FFFFFF' }), 30));
+    groundDoor(S, -144, z1, 'z', '蓝宝石 SAPPHIRE', '#2A5BAE'); }
   // 天桥西头的「欢迎」灯箱
   A.quad(-47.5, 2.4, 40, 2.4, 3.2, aS(1, 0), A.draw(2.4, 3.2, (c, pw, ph) => smLogo(c, pw, ph, { label: 'SM新生活广场' }), 45));
   k.metal.slab(-47.75, -47.55, 0, 4.0, 38.7, 41.3, hex('#5C646C'), { ao: false }); k.colSlab(-47.8, -47.5, 0, 4, 38.7, 41.3);
@@ -379,7 +392,36 @@ function phase3(S) {
   // 三期 ↔ 二期 3F 连廊（落在黄宝石北侧）
   const cy = 11; S.kit.glass.slab(-108, -100, cy, cy + 4, TOPAZ.cz + TOPAZ.r - 3, z0 + 0.1, hex('#CFE6F2'), { ao: false });
   P.slab(-108.3, -99.7, cy - 0.6, cy, TOPAZ.cz + TOPAZ.r - 3, z0, hex('#EEF0F2'), { ao: false }); P.slab(-108.3, -99.7, cy + 4, cy + 4.4, TOPAZ.cz + TOPAZ.r - 3, z0, hex('#EEF0F2'), { ao: false });
-  k.metal.slab(x1, x1 + 0.4, BR2.y, BR2.y + 4.2, BR2.z0 - 0.6, BR2.z1 + 0.6, hex('#E6E8EA'), { ao: false });
+  bridgeGate(S, x1, BR2, 1, 'SM 三期 2F', 'SM PHASE III · L2', '#4F7F8F');
+  groundDoor(S, x1, 176, 1, 'SM 三期', '#4F7F8F');
+  // 注：上面 3F 那条三期 ↔ 黄宝石连廊只是外观（两头没有门、楼内也没有 3F 接口）；三期室内从天桥 2F 门或这扇地面门进
+}
+
+/* ---------- 楼门（街面一侧） ---------- */
+const doorArt = (c, pw, ph) => { c.fillStyle = '#5C646C'; c.fillRect(0, 0, pw, ph);
+  const g = c.createLinearGradient(0, 0, 0, ph); g.addColorStop(0, '#CFE6F2'); g.addColorStop(0.35, '#B9D8E8'); g.addColorStop(1, '#FFF1D6');
+  for (const [a, b] of [[0.04, 0.48], [0.52, 0.96]]) { c.fillStyle = g; c.fillRect(pw * a, ph * 0.04, pw * (b - a), ph * 0.96); c.fillStyle = 'rgba(255,255,255,0.35)'; c.fillRect(pw * (a + 0.04), ph * 0.08, pw * 0.05, ph * 0.85); }
+  c.fillStyle = '#9AA3AB'; c.fillRect(pw * 0.42, ph * 0.42, pw * 0.03, ph * 0.16); c.fillRect(pw * 0.55, ph * 0.42, pw * 0.03, ph * 0.16);
+  c.fillStyle = 'rgba(60,50,40,0.25)'; for (let i = 0; i < 3; i++) c.fillRect(pw * (0.15 + i * 0.3), ph * 0.55, pw * 0.06, ph * 0.4); };
+/** 天桥桥头的商场门：钢门框 + 自动玻璃门（门后亮着商场）+ 门头招牌；fx = 楼面 x，dir = 门朝向（+1 朝东 / −1 朝西） */
+function bridgeGate(S, fx, br, dir, zh, en, col) {
+  const k = S.kit, A = S.atlas, Y = br.y, zc = (br.z0 + br.z1) / 2, x = fx + dir * 0.06, steel = hex('#C3C9CF');
+  for (const z of [br.z0 - 0.15, zc - 1.75, zc + 1.6, br.z1]) k.metal.slab(x - 0.12, x + 0.12, Y, Y + 3.0, z, z + 0.15, steel, { ao: false });
+  k.metal.slab(x - 0.15, x + 0.15, Y + 3.0, Y + 3.7, br.z0 - 0.15, br.z1 + 0.15, hex(col), { ao: false });
+  A.quad(x + dir * 0.17, Y + 3.35, zc, 5.6, 0.62, aS(dir, 0), A.draw(5.6, 0.62, textPaint([zh, en], { bg: col, fg: '#FFFFFF' }), 50));
+  A.quad(x + dir * 0.02, Y + 1.5, zc, 3.2, 3.0, aS(dir, 0), S._smDoorUv || (S._smDoorUv = A.draw(3.2, 3.0, doorArt, 40)));
+  for (const [a, b] of [[br.z0, zc - 1.75], [zc + 1.75, br.z1]]) k.glass.slab(x - 0.02, x + 0.02, Y, Y + 3.0, a, b, hex('#D6EEF8'), { ao: false });
+  k.glow.slab(x + dir * 0.18 - 0.02, x + dir * 0.18 + 0.02, Y + 2.95, Y + 3.0, zc - 1.6, zc + 1.6, hex('#FFF4DA'), { ao: false });
+}
+/** 地面的楼门（红宝石 / 蓝宝石 / 三期）：门框 + 玻璃门 + 门头；ax 'z' = 门在北立面（z = fixed），否则 dir = ±1 东 / 西立面 */
+function groundDoor(S, a, b, dir, label, col) {
+  const k = S.kit, A = S.atlas, steel = hex('#C3C9CF'), north = dir === 'z';
+  const nx = north ? 0 : dir, nz = north ? 1 : 0, cx = north ? a : a + dir * 0.06, cz = north ? b + 0.06 : b;
+  const box = (u0, u1, y0, y1, t = 0.12) => north ? k.metal.slab(cx + u0, cx + u1, y0, y1, cz - t, cz + t, steel, { ao: false }) : k.metal.slab(cx - t, cx + t, y0, y1, cz + u0, cz + u1, steel, { ao: false });
+  box(-1.95, -1.75, 0, 3.4); box(1.75, 1.95, 0, 3.4); box(-1.95, 1.95, 3.0, 3.4);
+  A.quad(cx + nx * 0.02, 1.5, cz + nz * 0.02, 3.5, 3.0, aS(nx, nz), S._smDoorUv || (S._smDoorUv = A.draw(3.2, 3.0, doorArt, 40)));
+  A.quad(cx + nx * 0.14, 3.95, cz + nz * 0.14, 5, 0.8, aS(nx, nz), A.draw(5, 0.8, textPaint([label, '入口 ENTRANCE'], { bg: col, fg: '#FFFFFF' }), 50));
+  if (north) k.metal.slab(cx - 2.6, cx + 2.6, 3.5, 3.6, cz, cz + 2.2, hex('#D5DADF'), { ao: false }); else k.metal.slab(Math.min(cx, cx + dir * 2.2), Math.max(cx, cx + dir * 2.2), 3.5, 3.6, cz - 2.6, cz + 2.6, hex('#D5DADF'), { ao: false });
 }
 
 /* ---------- 天桥 ---------- */
@@ -400,7 +442,7 @@ function skybridge(S, br, gapsS, piers, label, sub) {
   const segs = (side, gaps) => { let out = [[x0, x1]]; for (const [ga, gb] of gaps) out = out.flatMap(([a, b]) => gb <= a || ga >= b ? [[a, b]] : [[a, ga], [gb, b]].filter(([p, q]) => q - p > 0.2)); return out; };
   for (const [z, gaps] of [[z0, gapsS], [z1, []]]) for (const [a, b] of segs(z, gaps)) { GLW.slab(a, b, Y, TOP, z - 0.03, z + 0.03, hex('#D6EEF8'), { ao: false }); k.colSlab(a, b, Y, TOP, z - 0.1, z + 0.1); P.slab(a, b, Y + 0.95, Y + 1.0, z + (z === z0 ? 0.05 : -0.1), z + (z === z0 ? 0.1 : -0.05), hex('#C9CED3'), { ao: false }); }
   for (const [ga, gb] of gapsS) P.slab(ga, gb, TOP - 0.6, TOP, z0 - 0.15, z0 + 0.15, white, { ao: false });
-  k.colSlab(x0 - 0.2, x0, Y, TOP, z0, z1); k.colSlab(x1, x1 + 0.2, Y, TOP, z0, z1);   // 两头是商场的门（关着时也能当过街天桥：这里不进商场）
+  // 两头不再封墙：桥头是商场的自动玻璃门（bridgeGate），走到门口进楼内 2F（见 S.enterDoors 里 y: 6 的门）
   // 屋面 + 夜景灯带
   P.slab(x0 - 0.3, x1 + 0.3, TOP, TOP + 0.35, z0 - 0.45, z1 + 0.45, white, { ao: false });
   for (const z of [z0 - 0.47, z1 + 0.43]) G.slab(x0, x1, TOP + 0.05, TOP + 0.13, z, z + 0.04, hex('#BFE6FF'), { ao: false });
@@ -447,142 +489,5 @@ function traffic(S) {
     if (c.vz) { if (p.z > c.hi) p.z = c.lo; if (p.z < c.lo) p.z = c.hi; } else { if (p.x > c.hi) p.x = c.lo; if (p.x < c.lo) p.x = c.hi; } } };
 }
 
-/* ====================== 室内：多层中庭（单独加载） ====================== */
-/**
- * 局部坐标：原点在门内侧，门朝 −z 出楼。中庭中心 (0, CZ)；正 n 边形：中空 apothem 8、店面 15、外墙 21；层高 5.5，5 层。
- * variant 'topaz' = 二期黄宝石（16 边近似圆、金色）；'city' = 一期（方、蓝色）。
- * 1F → 2F 一部可走的扶梯（北侧）。中空顶上是玻璃天窗（看得到蓝天白云），黄宝石的栏杆扶手 / 柱子包金色金属。
- */
-const CZ = 21, AV = 8, AS = 15, AW = 21, FH = 5.5, NF = 5, GOLD = hex('#D4A84A');
-const SHOPS = {
-  // 黄宝石：每层 16 间、共 5 层；每个名字只出现一次（不在一圈里重复）
-  topaz: ['MUJI 无印良品', 'SWAROVSKI', '周大福', '星巴克', 'Apple 授权店', 'ZARA', '屈臣氏', '丝芙兰', '潘多拉', '周生生', 'Swatch', '雅诗兰黛', '兰蔻', 'COACH', '施华洛世奇童话', '老凤祥',
-    '例外', '花潮', 'UR', 'Lily', 'ONLY', 'VERO MODA', 'GAP', 'H&M', '优衣库', '太平鸟', '江南布衣', 'MO&Co.', 'Ochirly', '歌莉娅', '马克华菲', '森马',
-    'NIKE', 'adidas', '安踏', '李宁', '特步', '361°', 'New Balance', 'Skechers', 'FILA', '迪卡侬', '华为', '小米之家', 'OPPO', 'vivo', '大疆', '漫步者',
-    '巴拉巴拉 童装', '泡泡玛特', '名创优品', '乐高', '迪士尼童装', '小猪班纳', '好孩子', '奥特曼玩具', '西西弗书店', '言几又', '晨光文具', '酷乐潮玩', 'Hello Kitty', '万代', '孩子王', '布鲁可',
-    '西贝莜面村', '海底捞', '喜茶', '奈雪的茶', '必胜客', '外婆家', '绿茶餐厅', '太二酸菜鱼', '鼎泰丰', '吉野家', '味千拉面', '麦当劳', '肯德基', '黄则和花生汤', '沙县小吃', '万达影城'],
-  city: ['麦当劳', '屈臣氏', 'KFC 肯德基', 'ESPRIT', '面包新语', 'SM百货', '沃尔玛 B1', '数码广场', '家居生活', '美食广场', '优衣库', '星巴克', '周大福', '名创优品', '泡泡玛特', '巴拉巴拉 童装'],
-};
-export class SmAtrium {
-  constructor(scene, origin, variant = 'topaz') {
-    this.variant = variant; this.id = variant === 'topaz' ? 'sm-topaz' : 'sm-city';
-    const k = this.kit = new Kit(scene, 'smAtrium'); k.root.position.set(origin.x, origin.y, origin.z); this.o = origin;
-    const A = this.atlas = new FoodAtlas(scene, 1024), P = k.solid, GL = k.glass, G = k.glow, GR = k.g('granite');
-    const topaz = variant === 'topaz', n = topaz ? 16 : 4, accent = hex(topaz ? '#C9A24A' : '#2E5DA8'), white = hex('#F3F1EC');
-    preseed(topaz ? 6161 : 6262);
-    // 黄宝石的金色金属单独一桶，带一点自发光：从下往上看时金边不会暗成深褐色（+1 draw）
-    const GM = topaz ? k.g('metal@gold') : k.metal;
-    if (topaz) bucketMat(scene, k.M, 'metal@gold').emissiveColor.set(0.32, 0.23, 0.07);
-    const t = Math.tan(Math.PI / n);
-    const phi = s => -Math.PI / 2 + s * TAU / n;
-    const vtx = (s, ap, e) => { const a = phi(s) + e * Math.PI / n, R = ap / Math.cos(Math.PI / n); return [Math.cos(a) * R, CZ + Math.sin(a) * R]; };   // e=−1/+1：这一边的两个角
-    const aIn = s => Math.atan2(-Math.cos(phi(s)), -Math.sin(phi(s)));   // 朝中庭的 atlas 角（raw：法线 (sin a, cos a)）
-
-    // ---------- 地面 / 楼板 / 屋顶 ----------
-    k.floorWithHoles(-AW - 1, AW + 1, 0, CZ + AW + 1, -0.15, 0, hex('#E8E4DC'), [], true, 'granite');
-    for (let r = 0; r < 3; r++) for (let s = 0; s < n; s++) {   // 中庭地面的金 / 蓝色圈（不是导向线）
-      const ap = 2 + r * 2.2, p = [vtx(s, ap, -1), vtx(s, ap, 1), vtx(s, ap + 0.25, 1), vtx(s, ap + 0.25, -1)]; flatQ(P, p, 0.005, accent);
-    }
-    for (let f = 1; f < NF; f++) {
-      const y = f * FH;
-      for (let s = 0; s < n; s++) {
-        const q = [vtx(s, AV, -1), vtx(s, AV, 1), vtx(s, AW, 1), vtx(s, AW, -1)];
-        flatQ(GR, q, y, hex('#E9E5DD'), true); flatQ(P, q, y - 0.6, white, false);
-        const a = vtx(s, AV, -1), b = vtx(s, AV, 1);
-        wallQ(P, b, a, y - 0.6, y, white);                      // 中空边的楼板侧面（朝中庭）
-        G.quad([b[0], y - 0.62, b[1]], [a[0], y - 0.62, a[1]], [a[0], y - 0.55, a[1]], [b[0], y - 0.55, b[1]], hex('#FFF4DA'));
-        for (const ap of [10.5, 13.5]) for (const e of [-0.5, 0.5]) {   // 楼板底的筒灯（不让天花板一片空灰）
-          const a0 = phi(s) + e * Math.PI / n, R = ap / Math.cos(Math.PI / n), cx = Math.cos(a0) * R, cz = CZ + Math.sin(a0) * R, h = 0.22;
-          flatQ(G, [[cx - h, cz - h], [cx + h, cz - h], [cx + h, cz + h], [cx - h, cz + h]], y - 0.61, hex('#FFF6E0'), false); }
-        if (topaz) { const nx0 = Math.cos(phi(s)) * 0.03, nz0 = Math.sin(phi(s)) * 0.03;   // 楼板边包一条金色金属（略往中空外凸）
-          GM.quad([b[0] - nx0, y - 0.5, b[1] - nz0], [a[0] - nx0, y - 0.5, a[1] - nz0], [a[0] - nx0, y - 0.05, a[1] - nz0], [b[0] - nx0, y - 0.05, b[1] - nz0], GOLD); }
-        // 栏杆：2F 可走（带碰撞），往上只做玻璃 + 扶手
-        const gap = f === 1 && s === n / 2;
-        const segs = gap ? [[a, [-1.0, a[1] + (b[1] - a[1]) * ((-1.0 - a[0]) / (b[0] - a[0] || 1))]], [[1.0, a[1] + (b[1] - a[1]) * ((1.0 - a[0]) / (b[0] - a[0] || 1))], b]] : [[a, b]];
-        for (const [p0, p1] of segs) {
-          if (f === 1) { k.rail(p0[0], p0[1], p1[0], p1[1], y); if (topaz) GM.tube([p0[0], y + 1.12, p0[1]], [p1[0], y + 1.12, p1[1]], 0.09, GOLD, 8); }
-          else { const len = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]), ry = Math.atan2(p1[0] - p0[0], p1[1] - p0[1]); GL.box((p0[0] + p1[0]) / 2, y + 0.55, (p0[1] + p1[1]) / 2, 0.03, 0.9, len, hex('#E2F2FA'), ry); GM.tube([p0[0], y + 1.08, p0[1]], [p1[0], y + 1.08, p1[1]], topaz ? 0.09 : 0.06, topaz ? GOLD : hex('#C9CFD5'), 6); }
-        }
-        if (f === 1) { const mx = Math.cos(phi(s)) * (AV + AW) / 2, mz = CZ + Math.sin(phi(s)) * (AV + AW) / 2; k.col(mx, y - 0.3, mz, 2 * (AV + AW) / 2 * t + 0.6, 0.6, AW - AV, { ry: Math.atan2(Math.cos(phi(s)), Math.sin(phi(s))) }); }
-      }
-    }
-    const RY = NF * FH;
-    for (let s = 0; s < n; s++) { const q = [vtx(s, AV, -1), vtx(s, AV, 1), vtx(s, AW, 1), vtx(s, AW, -1)]; flatQ(P, q, RY, white, false); flatQ(GL, [vtx(s, 0.01, -1), vtx(s, AV, -1), vtx(s, AV, 1), vtx(s, 0.01, 1)], RY + 1.2, hex('#CFE6F4'), false);
-      const a = vtx(s, AV, -1), b = vtx(s, AV, 1); wallQ(P, b, a, RY, RY + 1.2, white); }
-    // 天窗：玻璃上方一块不受光照的天空（蓝天 + 几朵白云），玻璃分格用金色（黄宝石）/ 银色金属框
-    const SKY = RY + 1.7;
-    for (let s = 0; s < n; s++) flatQ(G, [vtx(s, 0.01, -1), vtx(s, AW, -1), vtx(s, AW, 1), vtx(s, 0.01, 1)], SKY, hex('#5FA8E6'), false);
-    for (const [cx, cz, rx, rz] of [[-3, CZ - 2, 2.6, 1.3], [3.5, CZ + 3, 3.2, 1.5], [-1, CZ + 5.5, 1.8, 0.9], [4.5, CZ - 4.5, 1.6, 0.8]])
-      for (let i = 0; i < 10; i++) { const a0 = i / 10 * TAU, a1 = (i + 1) / 10 * TAU; const c0 = [cx, SKY - 0.05, cz], p1 = [cx + Math.cos(a1) * rx, SKY - 0.05, cz + Math.sin(a1) * rz], p0 = [cx + Math.cos(a0) * rx, SKY - 0.05, cz + Math.sin(a0) * rz]; G.quad(c0, p1, p0, c0, hex('#F6FAFF')); G.quad(c0, p0, p1, c0, hex('#F6FAFF')); }
-    const MUL = topaz ? GOLD : hex('#C9CFD5');
-    for (let s = 0; s < n; s++) { const a = vtx(s, AV, -1), b = vtx(s, AV, 1); GM.tube([0, RY + 1.15, CZ], [a[0], RY + 1.15, a[1]], 0.12, MUL, 6); GM.tube([a[0], RY + 1.15, a[1]], [b[0], RY + 1.15, b[1]], 0.14, MUL, 6);
-      const m0 = vtx(s, AV * 0.5, -1), m1 = vtx(s, AV * 0.5, 1); GM.tube([m0[0], RY + 1.15, m0[1]], [m1[0], RY + 1.15, m1[1]], 0.1, MUL, 6); }
-
-    // ---------- 店铺：每层每边一圈（店面 apothem 15），1F 南侧留门厅 ----------
-    const glassUv = A.draw(9, 3.6, storefront(topaz ? '#F6E7C4' : '#E4EEF8'), 24);
-    const names = SHOPS[variant], signUv = {};
-    const sUv = nm => signUv[nm] || (signUv[nm] = A.draw(6, 0.8, brandPaint(nm), 36));
-    let si = 0;
-    for (let f = 0; f < NF; f++) {
-      const y = f * FH;
-      for (let s = 0; s < n; s++) {
-        const half = AS * t, L = 2 * half, per = Math.max(1, Math.round(L / 9));
-        let parts = []; for (let i = 0; i < per; i++) parts.push([-half + L * i / per, -half + L * (i + 1) / per]);
-        if (f === 0 && s === 0) parts = parts.flatMap(([a, b]) => b <= -3 || a >= 3 ? [[a, b]] : [[a, -3], [3, b]].filter(([p, q]) => q - p > 1.5 && (q <= -3 || p >= 3)));
-        const ph = phi(s), nx = Math.cos(ph), nz = Math.sin(ph), ex = -Math.sin(ph), ez = Math.cos(ph);   // e：沿这一边（逆时针）
-        for (const [a, b] of parts) {
-          const c = (a + b) / 2, w = b - a, x = nx * AS + ex * c, z = CZ + nz * AS + ez * c;
-          A.quad(x, y + 2.0, z, w - 0.3, 3.6, aIn(s), glassUv);
-          const nm = (f === 4 && !topaz) ? '美食广场' : (f === 3 && !topaz && s % 2) ? '家居生活' : names[si++ % names.length];
-          A.quad(x - nx * 0.05, y + 4.3, z - nz * 0.05, Math.min(w - 0.6, 6), 0.8, aIn(s), sUv(nm));
-          P.box(x + nx * 0.1, y + 4.3, z + nz * 0.1, w, 1.4, 0.2, hex('#3A3F45'), Math.atan2(nx, nz), 0, 0, 1, { ao: false });
-        }
-        for (const e of [-1, 1]) { const p = vtx(s, AS, e); (topaz ? GM : P).slab(p[0] - 0.3, p[0] + 0.3, y, y + FH - 0.6, p[1] - 0.3, p[1] + 0.3, topaz ? GOLD : white, { ao: false }); }   // 店间柱：黄宝石包金
-        if (f < 2) { const mx = nx * (AS + 0.4), mz = CZ + nz * (AS + 0.4); if (!(f === 0 && s === 0)) k.col(mx, y + 2.6, mz, L + 1, 5.2, 0.6, { ry: Math.atan2(ex, ez) + Math.PI / 2 }); }
-      }
-    }
-    // 1F 门厅：x ±3，z 0..6（南侧店面之间），门洞 |x|<2.4
-    const zV = CZ - AS;
-    for (const sx of [-1, 1]) { P.slab(sx * 3 - 0.15, sx * 3 + 0.15, 0, FH - 0.6, 0, zV, white, { ao: false }); k.colSlab(sx * 3 - 0.2, sx * 3 + 0.2, 0, FH, -0.2, zV); }
-    if (!topaz) for (const sx of [-1, 1]) k.colSlab(sx * 3, sx * AS, 0, FH, zV - 0.6, zV - 0.2);
-    P.slab(-3, 3, FH - 0.6, FH - 0.4, 0, zV, white, { ao: false });
-    P.slab(-3.2, -2.4, 0, FH - 0.6, -0.2, 0.1, accent, { ao: false }); P.slab(2.4, 3.2, 0, FH - 0.6, -0.2, 0.1, accent, { ao: false }); P.slab(-3.2, 3.2, 3.6, FH - 0.6, -0.2, 0.1, white, { ao: false });
-    k.colSlab(-3.3, -2.4, 0, FH, -0.3, 0.1); k.colSlab(2.4, 3.3, 0, FH, -0.3, 0.1);
-    A.quad(0, 4.4, 0.15, 4.6, 0.7, 0, A.draw(4.6, 0.7, textPaint([topaz ? 'SM新生活广场 · 黄宝石' : 'SM城市广场'], { bg: topaz ? '#C9A24A' : SM_NAVY, fg: '#FFFFFF' }), 60));
-    // 门外一小块地面 + 天光（同 XdfLobby）
-    k.floorWithHoles(-3, 3, -5, 0, -0.15, 0, hex('#8E8A82'), [], true, 'pave');
-    G.slab(-3, 3, 0, 3.2, -5.05, -5.0, hex('#DDE8F0'), { ao: false });
-    k.colSlab(-3.1, 3.1, 0, 3.2, -5.2, -5.0); k.colSlab(-3.1, -3, 0, 3.2, -5, 0); k.colSlab(3, 3.1, 0, 3.2, -5, 0);
-    // 楼层指引牌（门厅里，朝 +z 进来的人看得到；只写楼层，不画箭头）
-    const dir = topaz ? [['5F', '影城 · 美食'], ['4F', '玩具反斗城（在红宝石）· 童装'], ['3F', '运动 · 数码'], ['2F', '女装 · 例外 · 花潮'], ['1F', 'MUJI · SWAROVSKI · 西贝']]
-                      : [['5F', '美食广场'], ['4F', '家居生活'], ['3F', '数码广场'], ['2F', 'ESPRIT · SM百货'], ['1F', '麦当劳 · 屈臣氏 · KFC'], ['B1', '沃尔玛']];
-    A.quad(-2.83, 2.0, 3.0, 2.6, 2.2, Math.PI / 2, A.draw(2.6, 2.2, (c, pw, ph) => { c.fillStyle = '#20262C'; c.fillRect(0, 0, pw, ph); const rh = ph / (dir.length + 1);
-      c.fillStyle = topaz ? '#C9A24A' : '#2E5DA8'; c.fillRect(0, 0, pw, rh); c.fillStyle = '#FFF'; c.textBaseline = 'middle'; c.textAlign = 'center'; c.font = `800 ${rh * 0.55}px ${FONT}`; c.fillText('楼层指引 Directory', pw / 2, rh / 2);
-      dir.forEach(([f, txt], i) => { c.textAlign = 'left'; c.fillStyle = '#F2C230'; c.font = `800 ${rh * 0.55}px ${FONT_EN}`; c.fillText(f, pw * 0.05, rh * (i + 1.5)); c.fillStyle = '#E8ECEF'; c.font = `600 ${rh * 0.42}px ${FONT}`; c.fillText(txt, pw * 0.2, rh * (i + 1.5)); }); }, 80));
-
-    // ---------- 扶梯 ----------
-    escalator(k, [0, 0, CZ - 1.5], [0, FH, CZ + AV], 1.2, true);
-    // 2F 以上的交叉扶梯（飞天梯）去掉了：从 1F 往上看是一块悬在中空里的深灰斜板，挡住天窗（小美审稿）
-
-    // ---------- 中庭吊饰：宝石 ----------
-    const gy = RY - 4;
-    k.metal.tube([0, RY, CZ], [0, gy + 1.6, CZ], 0.05, hex('#9AA1A8'), 4);
-    P.cyl(0, gy, CZ, 2.6, 2.2, accent, 8, 0, 0, 0, 0.2, { ao: false }); P.cyl(0, gy + 1.4, CZ, 1.2, 0.6, accent, 8, 0, 0, 0, 2.6, { ao: false });
-    for (let i = 0; i < 6; i++) { const a = i / 6 * TAU, r = 4.5, y = gy - 1 - (i % 3) * 1.2; k.metal.tube([Math.cos(a) * r, RY, CZ + Math.sin(a) * r], [Math.cos(a) * r, y + 0.5, CZ + Math.sin(a) * r], 0.03, hex('#9AA1A8'), 4);
-      k.glass.cyl(Math.cos(a) * r, y, CZ + Math.sin(a) * r, 0.9, 1.0, hex(topaz ? '#F2D48A' : '#9CC7EE'), 6, 0, 0, 0, 0.1, { ao: false }); }
-
-    // ---------- 人 ----------
-    let pi = 0;
-    for (let i = 0; i < 14; i++) { const a = i / 14 * TAU + 0.2, r = 10 + (i % 3) * 1.6, x = Math.cos(a) * r, z = CZ + Math.sin(a) * r; if (z < 7 && Math.abs(x) < 4) continue; shopper(P, x, 0, z, a + (i % 2 ? Math.PI / 2 : -Math.PI / 2), pi++, { lo: i % 2 === 1 }); }
-    for (let i = 0; i < 6; i++) shopper(P, (i - 2.5) * 1.6, 0, 6 + (i % 3) * 2.5, i % 2 ? 0 : Math.PI, pi++);
-    for (let f = 1; f < 4; f++) for (let i = 0; i < 6; i++) { const a = i / 6 * TAU + f, r = 11 + (i % 2), x = Math.cos(a) * r, z = CZ + Math.sin(a) * r; shopper(P, x, f * FH, z, a + Math.PI / 2, pi++, { lo: true }); }
-    family(P, -5, 0, CZ - 6, 0.4, 9); family(P, 6, 0, CZ + 9, Math.PI + 0.3, 10, true);
-    bakePerson(P, 0.1, 1.7, CZ + 1.4, 0, randomLook({ shopBags: ['#1F3B73', null] }), POSES.stand);   // 扶梯上
-
-    k.finish(true); A.finish(k.root, 'smAtriumSigns');
-  }
-  wantsOut(p) { const lz = p.z - this.o.z, lx = p.x - this.o.x; return lz < -2.6 && Math.abs(lx) < 3 && p.y - this.o.y < 1.5; }
-  spawn() { return [this.o.x, this.o.y + 0.05, this.o.z - 0.4, 0]; }
-  zoneOf(p) { const f = Math.max(1, Math.min(NF, Math.round((p.y - this.o.y) / FH) + 1)); return { kind: 'interior', net: 'xm', building: this.id, floor: f, inUnit: false }; }
-  dispose() { this.atlas.dispose(); this.kit.root.getChildMeshes(false).forEach(m => m.dispose()); this.kit.root.dispose(); }
-}
+/* 室内：见 xmSMMall.js（SmMall：每栋楼单独加载，多层 + 扶梯 + 观光电梯 + 楼梯 + 天桥门） */
+export { SmMall } from './xmSMMall.js';

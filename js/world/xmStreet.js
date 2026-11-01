@@ -104,11 +104,13 @@ export class XmStreet {
   /** 每帧：楼内 ↔ 街面切换；返回 'back' = 回车站 */
   update(pl) {
     const p = pl.position;
-    if (this.tick) this.tick(Math.min(0.1, this.scene.getEngine().getDeltaTime() / 1000));
-    if (this.inside) { if (this.inside.wantsOut(p)) this.leaveBuilding(pl); return null; }
+    const dt = Math.min(0.1, this.scene.getEngine().getDeltaTime() / 1000);
+    if (this.tick) this.tick(dt);
+    if (this.inside) { if (this.inside.update) this.inside.update(pl, dt); const g = this.inside.wantsOut(p); if (g) this.leaveBuilding(pl, g); return null; }
     if (this.wantsBack(p)) return 'back';
     const lx = p.x - XS.x, lz = p.z - XS.z;
-    if (p.y < 1.5) for (const door of this._doors()) if (doorHit(door, lx, lz)) { this.enterBuilding(pl, door); break; }
+    // 门可以在地面，也可以在天桥上（door.y = 6：天桥那一层的玻璃门）
+    for (const door of this._doors()) if (Math.abs(p.y - (door.y || 0)) < 1.5 && doorHit(door, lx, lz)) { this.enterBuilding(pl, door); break; }
     return null;
   }
   /** 可进建筑的门：鑫利 256 / 新东方大厅（enterDoor）；一个街区多扇门用 enterDoors（SM 一期 / 二期黄宝石） */
@@ -122,14 +124,16 @@ export class XmStreet {
   enterBuilding(pl, door = this._enterDoor()) {
     if (!door) return;
     this.kit.root.setEnabled(false); this.curDoor = door;
-    this.inside = door.make(this.scene, { x: XS.x, y: 0, z: XS.z + 1000 });
+    this.inside = door.make(this.scene, { x: XS.x, y: 0, z: XS.z + 1000, gate: door.gate || 'main' });
     const [x, y, z, yaw] = this.inside.spawn(); pl.spawn(x, y, z, yaw);
   }
-  leaveBuilding(pl) {
-    const door = this.curDoor || this._enterDoor(); this.curDoor = null;
+  /** 出楼：gate = 从哪扇门出去（'main' 地面大门 / 'br1'、'br2' 天桥门），找同一栋楼同名的门；找不到就原路回去 */
+  leaveBuilding(pl, gate) {
+    let door = this.curDoor || this._enterDoor(); this.curDoor = null;
+    if (door && typeof gate === 'string' && this.enterDoors) door = this.enterDoors.find(d => d.id === door.id && (d.gate || 'main') === gate) || door;
     this.inside.dispose(); this.inside = null; this.kit.root.setEnabled(true);
     if (!door) return;
-    if (door.outPos) pl.spawn(XS.x + door.outPos[0], 0.05, XS.z + door.outPos[1], door.outYaw ?? Math.PI);
+    if (door.outPos) pl.spawn(XS.x + door.outPos[0], door.outY ?? 0.05, XS.z + door.outPos[1], door.outYaw ?? Math.PI);
     else pl.spawn(XS.x + door.x, 0.05, XS.z + door.z + (door.outDz ?? -1.6), door.outYaw ?? Math.PI);
   }
 
