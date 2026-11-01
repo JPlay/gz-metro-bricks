@@ -12,11 +12,12 @@
 import asyncio, sys, json, os, time
 sys.path.insert(0, os.path.dirname(__file__))
 from common import *
-from journey import GCLOCK, auto, wait, log
+from journey import GCLOCK, gt, auto, wait, log
 from perfhud import perf
 BASE = sys.argv[1] if len(sys.argv) > 1 else 'http://localhost:8123/'
 PART = sys.argv[2] if len(sys.argv) > 2 else 'xm'
 EO, XO, FO, FS = 2200, 3000, 5000, 6000
+DTMAX = 0.25   # main() 给整套测试设的每帧 dt 上限；动车 1 倍速段临时改 0.2，结束后恢复成这个值
 R = {'part': PART, 'checks': {}, 'emu': {}, 'hops': [], 'perf': {}, 'times': {}}
 T0 = time.time()
 def ok(name, v): R['checks'][name] = bool(v); log('check', name, bool(v), f'{time.time() - T0:.0f}s'); return v
@@ -82,7 +83,7 @@ async def emu_ride(pg, key, wall=1500):
         if r: samples.append({'w': round(time.time() - t0), 'rt': r['rt'], 's': r['s'], 'v': r['v'], 'rem': r['rem'], 'phase': r['phase'], 'speed': e['speed'], 'inside': e['inside'],
                               'seated': bool(s['seat'].get('seated')), 'x': s['pos'][0], 'scn': round(await pg.evaluate('__scn.d')), 'far': r['seg']['far'], 'mid': r['seg']['mid'], 'near': r['seg']['near']})
         await asyncio.sleep(4)
-    await pg.evaluate('__game.setDtMax(0.05)')
+    await pg.evaluate(f'__game.setDtMax({DTMAX})')   # 恢复全局上限（以前误设回 0.05，之后的地铁段游戏钟只走墙钟 ~5%，L1a 240 s 墙钟内车都没出站）
     R['emu'][key] = {'samples': samples, 'wall': round(time.time() - t0), 'scn': await pg.evaluate('__scn.d')}
     log(key, 'samples', len(samples), 'wall', R['emu'][key]['wall'])
     ok(key + ':arrived', arrived)
@@ -112,8 +113,12 @@ async def board(pg, line, step, tag):
     return ok(f'{tag}:aboard', await wait(pg, '__game.state().aboard', 6))
 async def ride_to(pg, line, step, code, tag, hops):
     """坐着不动，一站一站自然开（关门 → 出站 → 隧道 → 进站 → 开门 → 停站 → 关门 ……）直到 code 站开门"""
-    seen, phases, t0 = [], set(), time.time()
-    while time.time() - t0 < 120 * hops + 120:
+    # 预算按游戏时间计（每站 120 s 游戏时间 + 120 s）：低帧率下墙钟会远超这个数；游戏钟 180 s 墙钟不动或总墙钟 2 h 才算卡死
+    seen, phases, t0 = [], set(), time.time(); g0 = await gt(pg); last = (g0, t0)
+    while await gt(pg) - g0 < 120 * hops + 120 and time.time() - t0 < 7200:
+        g = await gt(pg)
+        if g != last[0]: last = (g, time.time())
+        elif time.time() - last[1] > 180: log(tag, 'game clock stalled 180s at', round(g, 1)); break
         i = await pg.evaluate(f"""(() => {{ const m=__game.fzMetro, s={SLOT % (line, step)}; return {{code:m.code, ride:m.ride?m.ride.phase:null, st:s?s.state:null, ab:__game.state().aboard}}; }})()""")
         if i['ride']: phases.add(i['ride'])
         if not seen or seen[-1] != i['code']: seen.append(i['code']); log(tag, 'at', i['code'], round(time.time() - t0))
@@ -283,7 +288,7 @@ async def part_b3dev(pg):
 async def main():
   async with async_playwright() as p:
     b, pg, logs = await open_game(p, BASE + '?q=1&start=gzdz&line=1')
-    await pg.evaluate(GCLOCK); await pg.evaluate('__game.setDtMax(0.25)'); await pg.evaluate(HOOKS); await asyncio.sleep(1.5)
+    await pg.evaluate(GCLOCK); await pg.evaluate(f'__game.setDtMax({DTMAX})'); await pg.evaluate(HOOKS); await asyncio.sleep(1.5)
     await view(pg, 'third')
     try:
       await {'gz': part_gz, 'xm': part_xm, 'b3dev': part_b3dev}[PART](pg)
