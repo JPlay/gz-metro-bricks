@@ -92,7 +92,7 @@ export class Train {
       P.slab(x0 + 2.5, x1 - 2.5, -0.95, -0.2, -1.2, 1.2, hex('#3A3E44'), { ao: false });
       for (const bx of [cx - 6.3, cx + 6.3]) {
         P.rbox(bx, -1.25, 0, 2.6, 0.45, 2.1, DARK, 0.1, 0, { ao: false });
-        for (const wx of [-0.85, 0.85]) for (const wz of [-0.72, 0.72]) Mt.cyl(bx + wx, -1.15, wz, 0.84, 0.13, STEEL, 16, 0, Math.PI / 2, 0, undefined, { ao: false });
+        for (const wx of [-0.85, 0.85]) for (const wz of [-0.72, 0.72]) Mt.cyl(bx + wx, -1.15, wz, 0.84, 0.13, STEEL, 10, 0, Math.PI / 2, 0, undefined, { ao: false });
       }
       // 车门 / 窗户分段
       const doors = DOOR_DX.map(d => cx + d), segs = [];
@@ -120,14 +120,14 @@ export class Train {
           for (let q = 1; q < nSeat; q++) P.slab(qa + (qb - qa) * q / nSeat - 0.006, qa + (qb - qa) * q / nSeat + 0.006, 0.47, 0.475, sd * 0.97, sd * 1.36, hex('#2A2E33'), { ao: false });
           k.col((qa + qb) / 2, 0.25, sd * 1.2, qb - qa, 0.5, 0.5, { parent: this.root, dynamic: true });
           // 横杆 + 三角吊环
-          Mt.tube([qa, 1.92, sd * 1.0], [qb, 1.92, sd * 1.0], 0.032, STEEL, 8);
-          for (let hx = qa + 0.3; hx < qb - 0.2; hx += 0.45) {
+          Mt.tube([qa, 1.92, sd * 1.0], [qb, 1.92, sd * 1.0], 0.032, STEEL, 6);
+          for (let hx = qa + 0.3; hx < qb - 0.2; hx += 0.6) {
             P.box(hx, 1.8, sd * 1.0, 0.025, 0.22, 0.012, hex('#E9ECEF'), 0, 0, 0, 1, { ao: false });
-            for (const [p1, p2] of [[[hx - 0.07, 1.62, sd], [hx + 0.07, 1.62, sd]], [[hx - 0.07, 1.62, sd], [hx, 1.72, sd]], [[hx + 0.07, 1.62, sd], [hx, 1.72, sd]]]) P.tube(p1, p2, 0.025, hex('#F2C230'), 5);
+            for (const [p1, p2] of [[[hx - 0.07, 1.62, sd], [hx + 0.07, 1.62, sd]], [[hx - 0.07, 1.62, sd], [hx, 1.72, sd]], [[hx + 0.07, 1.62, sd], [hx, 1.72, sd]]]) P.tube(p1, p2, 0.025, hex('#F2C230'), 3);   // 2.5 cm 的吊环杆用三棱柱就够（两列车同时进站时站台视角 ≤ 90k 面）
           }
           // 座椅两端的立柱
           // 立柱上端弯进横杆（不再通到车顶）：门上方线路图左端的“1号线”色块不会被立柱挡住
-          for (const [qx, qe] of [[qa - 0.1, qa], [qb + 0.1, qb]]) { Mt.tube([qx, 0, sd * 1.12], [qx, 1.76, sd * 1.12], 0.038, STEEL, 8); Mt.tube([qx, 1.76, sd * 1.12], [qx + (qe - qx) * 0.45, 1.88, sd * 1.06], 0.038, STEEL, 8); Mt.tube([qx + (qe - qx) * 0.45, 1.88, sd * 1.06], [qe, 1.92, sd * 1.0], 0.036, STEEL, 8); }
+          for (const [qx, qe] of [[qa - 0.1, qa], [qb + 0.1, qb]]) { Mt.tube([qx, 0, sd * 1.12], [qx, 1.76, sd * 1.12], 0.038, STEEL, 6); Mt.tube([qx, 1.76, sd * 1.12], [qx + (qe - qx) * 0.45, 1.88, sd * 1.06], 0.038, STEEL, 6); Mt.tube([qx + (qe - qx) * 0.45, 1.88, sd * 1.06], [qe, 1.92, sd * 1.0], 0.036, STEEL, 6); }
         }
       }
       for (const d of doors) {
@@ -135,7 +135,7 @@ export class Train {
         band(d - 0.7, d + 0.7, 2.0, 3, 0);
         ibandI(d - 0.7, d + 0.7, 2.0, 2.4, 0);
         for (const sd of [-1, 1]) { P.slab(d - 0.74, d - 0.68, 0, 2.02, sd * 1.5 - 0.03, sd * 1.5 + 0.03, DARK, { ao: false }); P.slab(d + 0.68, d + 0.74, 0, 2.02, sd * 1.5 - 0.03, sd * 1.5 + 0.03, DARK, { ao: false }); P.slab(d - 0.74, d + 0.74, 1.99, 2.04, sd * 1.5 - 0.03, sd * 1.5 + 0.03, DARK, { ao: false }); Mt.slab(d - 0.7, d + 0.7, -0.005, 0.004, sd * 1.25, sd * 1.5, STEEL, { ao: false }); }
-        Mt.tube([d, 0, 0], [d, 2.3, 0], 0.045, STEEL, 10); // 门区中间立柱
+        Mt.tube([d, 0, 0], [d, 2.3, 0], 0.045, STEEL, 8); // 门区中间立柱
       }
       // 车顶内部：双排灯带 + 中间送风口
       for (const lz of [-0.62, 0.62]) Gl.slab(x0 + 0.4, x1 - 0.4, 2.27, 2.29, lz - 0.09, lz + 0.09, hex('#FFFBF2'), { ao: false });

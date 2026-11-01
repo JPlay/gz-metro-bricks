@@ -191,10 +191,11 @@ function shangxiahang(S) {
     const shop = SHOP[si++ % SHOP.length];
     A.quad(xf - side * 0.06, 4.15, zc, 3.4, 0.75, ry, uvF['s' + shop] || (uvF['s' + shop] = A.draw(3.4, 0.75, textPaint([shop], { bg: '#2E1F14', fg: '#E9C46A' }), 60)));
     for (const dz of [-3.8, 3.8]) P.ellipsoid(xf - side * 1.5, 2.85, zc + dz, 0.55, 0.62, 0.55, hex('#D7262E'), 1);
+    if (z1 > 40) A.quad((xf + xb) / 2, h / 2, z1 + 0.03, Math.abs(xb - xf), h, Math.PI, fac(fl, br));   // 临河山墙也有门窗（站在河边回头看不是一面白墙）
   };
   for (const side of [-1, 1]) for (let z = 4, i = 0; z < 41; z += 12.5, i++) house(side * 6, side * 20, z, z + 12.5, side, 2 + ((i + (side > 0 ? 1 : 0)) % 2), (i + (side > 0 ? 0 : 1)) % 2 === 0);
   // 星安河：东西向小河（z 44..56），地面挖开、水面低 1.8 米；两岸条石驳岸 + 矮石栏（碰撞墙 1.2 米高，看不见）
-  const R0 = 44, R1 = 56, WY = -1.8;
+  const R0 = 44, R1 = 56, WY = -2.6;
   WA.slab(-160, 160, WY - 0.05, WY, R0, R1, hex('#2F6670'), NO);
   for (let i = 0; i < 18; i++) { const x = -150 + i * 17 + (i % 3) * 2; WA.slab(x, x + 6, WY + 0.002, WY + 0.006, R0 + 1.6 + (i % 4) * 2.6, R0 + 1.9 + (i % 4) * 2.6, hex('#8FC0C8'), NO); }
   for (const [z0, z1] of [[R0, R0 + 0.4], [R1 - 0.4, R1]]) GR.slab(-160, 160, WY - 0.3, 0, z0, z1, hex('#8A8476'), NO);
@@ -203,7 +204,7 @@ function shangxiahang(S) {
     GR.slab(a, b, 0, 0.18, z - 0.5, z + 0.5, hex('#9A9385'), NO); GR.slab(a, b, 0.62, 0.72, z - 0.07, z + 0.07, hex('#B5AE9F'), NO); k.colSlab(a, b, 0, 1.2, z - 0.25, z + 0.25);
     for (let x = a + 1.2; x < b - 0.6; x += 2.6) GR.slab(x - 0.12, x + 0.12, 0.18, 0.62, z - 0.12, z + 0.12, hex('#A8A193'), NO); }   // 望柱 + 扶手（通透，看得见河）
   // 三通桥：花岗岩石拱桥 —— 桥身下面一个拱洞（看得见水），桥面平（好走），两边石栏
-  { const half = 5.6, zc = (R0 + R1) / 2, DY = 0.1, n = 24;
+  { const half = 5.2, zc = (R0 + R1) / 2, DY = 0.1, n = 36;
     for (let i = 0; i < n; i++) { const z0 = R0 - 0.6 + (R1 - R0 + 1.2) * i / n, z1 = R0 - 0.6 + (R1 - R0 + 1.2) * (i + 1) / n, u = ((z0 + z1) / 2 - zc) / half;
       const yA = Math.abs(u) < 1 ? WY + (-0.12 - WY) * Math.sqrt(1 - u * u) : (z1 <= R0 || z0 >= R1 ? 0 : WY);
       GR.slab(-3.4, 3.4, yA, DY, z0, z1, hex('#9A9384'), NO);
@@ -313,6 +314,6 @@ export const FZ_ATTR_BUILD = { fzdjk: sanfang, fznmd: yushan, fzdd: shangxiahang
 export const FZ_ATTR_GOAL = {
   fzdjk: { x: 0, z: 32, r: 4, name: '三坊七巷（南后街）', path: [[0, 10], [0, 20], [0, 32]], view: [0, 4, 0, -0.1] },
   fznmd: { x: -22, z: 60, r: 4, name: '于山白塔', path: [[0, 12], [-10, 36], [-22, 60]], view: [-14, 30, -0.18, -0.34] },
-  fzdd: { x: 0, z: 50, r: 3, name: '上下杭（三通桥）', path: [[0, 14], [0, 30], [0, 42], [0, 50]], view: [-16, 42.4, 1.25, 0.16] },
+  fzdd: { x: 0, z: 50, r: 3, name: '上下杭（三通桥）', path: [[0, 14], [0, 30], [0, 42], [0, 50]], view: [-16, 42.4, 1.25, 0.16], back: [0, 50, Math.PI, 0.04] },
   fzxm: { x: 0, z: 49, r: 3, name: '西湖公园（观湖亭）', path: [[0, 10], [0, 26], [0, 40], [0, 49]], view: [0, 36, 0, 0.02] },
 };

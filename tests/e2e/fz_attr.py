@@ -86,7 +86,11 @@ async def main():
           Image.open(f'{OUT}fz-attr-{c}.png').convert('RGB').save(f'{OUT}fz-attr-{c}.jpg', quality=88)
         except Exception as e: log('jpg', e)
         # 回头看街区（从景点看回出口方向）
-        await pg.evaluate("__game.player.yaw = Math.PI; __game.player.pitch = 0.02"); await asyncio.sleep(1.0)
+        if G.get('back'):   # 景点自定义的回头镜头（站在桥上 / 空地上看回街区）
+          B = G['back']; await pg.evaluate(f"__game.player.spawn({FS + B[0]}, 0.2, {B[1]}, {B[2]})"); await asyncio.sleep(1.0)
+          await pg.evaluate(f"__game.player.yaw = {B[2]}; __game.player.pitch = {B[3]}"); await asyncio.sleep(1.0)
+        else:
+          await pg.evaluate("__game.player.yaw = Math.PI; __game.player.pitch = 0.02"); await asyncio.sleep(1.0)
         d2 = await perf(pg, 3, 0.25); R['perf'][c + '-back'] = d2
         ok(c + ':budgetBack', d2['draws'] <= BUDGET['draws'] and d2['tris'] <= BUDGET['tris'])
         await overlay(pg, d2, m['code'] + ' (back)'); await pg.screenshot(path=f'{OUT}fz-attr-{c}-back.png', timeout=180000); await overlay_off(pg)
