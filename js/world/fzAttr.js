@@ -431,6 +431,15 @@ function gushan(S) {
   const HILLS = [[0, 230, 300, 180, 160, '#3F6E35'], [-90, 190, 160, 110, 120, '#46753A'], [90, 200, 170, 120, 120, '#4A7A3C'], [20, 150, 140, 50, 60, '#557F3E']];
   for (const [x, z, sx, sy, sz, c] of HILLS) P.ellipsoid(x, 0, z, sx, sy, sz, hex(c), 2);
   k.colSlab(-100, 100, 0, 8, 96, 97);
+  // 山坡上：露出来的花岗岩石头 + 一棵棵松树（贴着山体表面放）
+  { const hy = (x, z) => Math.max(0, ...HILLS.map(([cx, cz, sx, sy, sz]) => { const u = 1 - ((x - cx) / (sx / 2)) ** 2 - ((z - cz) / (sz / 2)) ** 2; return u > 0 ? sy / 2 * Math.sqrt(u) : 0; }));
+    let r = 7; const rnd = () => (r = (r * 16807) % 2147483647) / 2147483647;
+    for (let i = 0; i < 34; i++) { const x = -120 + rnd() * 240, z = 140 + rnd() * 120, y = hy(x, z); if (y < 6) continue;
+      const h = 7 + rnd() * 5; P.cyl(x, y + h * 0.2, z, 0.6, h * 0.4, hex('#5A4232'), 5, 0, 0, 0, undefined, NO);
+      P.cyl(x, y + h * 0.5, z, h * 0.55, h * 0.45, hex(['#2F5A2E', '#2A5229', '#356334'][i % 3]), 7, 0, 0, 0, 0.3, NO);
+      P.cyl(x, y + h * 0.82, z, h * 0.36, h * 0.36, hex('#38693A'), 7, 0, 0, 0, 0.05, NO); }
+    for (let i = 0; i < 16; i++) { const x = -110 + rnd() * 220, z = 128 + rnd() * 110, y = hy(x, z); if (y < 4) continue;
+      const w = 6 + rnd() * 8; P.ellipsoid(x, y - 0.5, z, w, w * 0.45, w * 0.7, hex(['#9A958B', '#8C877E', '#A8A398'][i % 3]), 1, rnd() * 3); } }
   for (const [x, z, s, i] of [[-40, 100, 1.2, 0], [-10, 96, 1.0, 1], [44, 100, 1.1, 2], [-64, 120, 1.1, 3], [70, 124, 1.0, 1]]) banyan(P, x, z, s, i);
   // 大石刻“鼓山”
   { const x = 0, z = 60; GR.box(x, 2.6, z, 9, 5.2, 2.2, hex('#8C877E'), 0.1); k.col(x, 2.6, z, 9, 5.2, 2.2, { ry: 0.1 });
@@ -472,26 +481,80 @@ function aoti(S) {
   stone(S, 12, 14, 6.4, 1.8, '海峡奥体中心', 'Straits Olympic Sports Center', { bg: '#2D5C8A', fg: '#FFFFFF' });
   // 旗杆一排
   for (let i = 0; i < 6; i++) { const x = -25 + i * 10; M.cyl(x, 7, 40, 0.24, 14, hex('#C9CED3'), 6); P.box(x + 1.1, 12.8, 40, 2.0, 1.3, 0.05, hex(['#DE2910', '#2D6FA8', '#3E9A4A', '#E9C46A', '#DE2910', '#2D6FA8'][i]), 0, 0, 0, 1, NO); k.colSlab(x - 0.2, x + 0.2, 0, 14, 39.8, 40.2); }
-  // 体育场：中心 (0,150)，外椭圆 rx 70 / rz 56，高 34
-  const CX = 0, CZ = 150, RX = 70, RZ = 56, H = 34, N = 48, WH = hex('#F2F3F4'), BL = hex('#2D6FA8');
+  // 体育场：中心 (0,150)，外椭圆 rx 70 / rz 56。真实海峡奥体体育场 = 白色：一圈往外挑的拱形白色挑棚（边缘起伏），
+  // 立面一根根竖向弯曲的白色板（鳍片），后面是深色玻璃。下面都是“形制示意”，不是测绘
+  const CX = 0, CZ = 150, RX = 70, RZ = 56, H = 30, WH = hex('#F4F5F6'), WH2 = hex('#E2E6EA'), GL = hex('#4E5D6C');
   const pt = (a, s = 1) => [CX + Math.cos(a) * RX * s, CZ + Math.sin(a) * RZ * s];
-  for (let i = 0; i < N; i++) {
-    const a0 = i / N * TAU, a1 = (i + 1) / N * TAU, [x0, z0] = pt(a0), [x1, z1] = pt(a1), [x0t, z0t] = pt(a0, 1.06), [x1t, z1t] = pt(a1, 1.06);
-    q2(P, [x0, 0, z0], [x1, 0, z1], [x1t, H, z1t], [x0t, H, z0t], i % 2 ? WH : hex('#E4E7EA'));   // 外壳板（往外微倾）
-    const xm = (x0 + x1t) / 2, zm = (z0 + z1t) / 2;
-    if (i % 2 === 0) M.tube([x0, 0, z0], [x1t, H, z1t], 0.7, BL, 4);   // 蓝色斜肋
+  // 1) 深色玻璃筒身（鳍片的背景）+ 筒顶一圈
+  for (let i = 0, N = 48; i < N; i++) { const a0 = i / N * TAU, a1 = (i + 1) / N * TAU, [x0, z0] = pt(a0, 0.96), [x1, z1] = pt(a1, 0.96);
+    q2(P, [x0, 0, z0], [x1, 0, z1], [x1, H - 1, z1], [x0, H - 1, z0], i % 2 ? GL : hex('#55636F')); }
+  ring(P, CX, CZ, RX * 0.6, RZ * 0.56, RX * 0.96, RZ * 0.96, 0.2, hex('#7C8892'), 32);   // 看台（从挑棚中间能看到一点）
+  ring(P, CX, CZ, 0, 0, RX * 0.6, RZ * 0.56, 0.25, hex('#4F9A45'), 24);                  // 球场草坪
+  // 2) 立面鳍片：72 片竖向白板，中段往外鼓（弯），往上略扭
+  for (let i = 0, NF = 72; i < NF; i++) {
+    const a = (i + 0.5) / NF * TAU, prof = [[0, 1.0], [9, 1.035], [19, 1.04], [H - 0.5, 1.0]], tw = 0.012;
+    for (let j = 0; j < prof.length - 1; j++) {
+      const [y0, s0] = prof[j], [y1, s1] = prof[j + 1], b0 = a + tw * y0 / H, b1 = a + tw * y1 / H;
+      const [ix0, iz0] = pt(b0, s0 - 0.04), [ox0, oz0] = pt(b0, s0), [ix1, iz1] = pt(b1, s1 - 0.04), [ox1, oz1] = pt(b1, s1);
+      q2(P, [ix0, y0, iz0], [ox0, y0, oz0], [ox1, y1, oz1], [ix1, y1, iz1], j === 1 ? WH : WH2);
+    }
   }
-  // 环形挑棚（屋面）：外圈 H → 内圈稍低
-  ring(P, CX, CZ, RX * 0.62, RZ * 0.58, RX * 1.06, RZ * 1.06, H, WH, N);
-  ring(P, CX, CZ, RX * 0.62, RZ * 0.58, RX * 0.66, RZ * 0.62, H - 0.6, BL, N);
-  // 入口（南面正中）：玻璃大门 + 名字
-  { const z = CZ - RZ - 0.4; k.glass.slab(-10, 10, 0, 6, z - 0.2, z, hex('#9CC8E0'));
-    A.quad(0, 10, z - 1.2, 22, 3, 0, A.draw(22, 3, textPaint(['海峡奥体中心 · 体育场', 'Straits Olympic Sports Center Stadium'], { bg: '#2D5C8A', fg: '#FFFFFF' }), 40)); }
-  ringCol(k, CX, CZ, RX, RZ, 40);
+  // 3) 环形拱形挑棚：18 跨，每跨的外沿往上拱（边缘起伏），从筒身往外挑出去
+  { const NB = 18, M = 6, N = NB * M;
+    const yo = (i) => H + 0.5 + 3.4 * Math.sin(Math.PI * ((i % M) / M));   // 外沿高度：跨中高、肋处低 → 一个个拱
+    for (let i = 0; i < N; i++) {
+      const a0 = i / N * TAU, a1 = (i + 1) / N * TAU, y0 = yo(i), y1 = yo(i + 1), m0 = H + 1.8 + 0.5 * Math.sin(Math.PI * ((i % M) / M)), m1 = H + 1.8 + 0.5 * Math.sin(Math.PI * (((i + 1) % M) / M));
+      const I0 = pt(a0, 0.64), I1 = pt(a1, 0.64), M0 = pt(a0, 0.98), M1 = pt(a1, 0.98), O0 = pt(a0, 1.15), O1 = pt(a1, 1.15);
+      q2(P, [I0[0], H - 1.2, I0[1]], [I1[0], H - 1.2, I1[1]], [M1[0], m1, M1[1]], [M0[0], m0, M0[1]], WH);
+      q2(P, [M0[0], m0, M0[1]], [M1[0], m1, M1[1]], [O1[0], y1, O1[1]], [O0[0], y0, O0[1]], WH);
+      q2(P, [O0[0], y0 - 0.7, O0[1]], [O1[0], y1 - 0.7, O1[1]], [O1[0], y1, O1[1]], [O0[0], y0, O0[1]], WH2);   // 外沿封边（看得出起伏的边线）
+      if (i % M === 0) { const R0 = pt(a0, 0.99), R1 = pt(a0, 1.15); P.tube([R0[0], H - 5, R0[1]], [R1[0], y0 - 0.3, R1[1]], 0.7, WH, 6); }   // 挑棚悬挑肋
+    }
+    ring(P, CX, CZ, RX * 0.62, RZ * 0.58, RX * 0.645, RZ * 0.605, H - 1.25, hex('#2D6FA8'), 48);   // 内沿一圈蓝边
+  }
+  // 4) 入口（南面正中）：鳍片之间的玻璃大门 + 名字
+  { const z = CZ - RZ * 0.96 - 0.3; k.glass.slab(-12, 12, 0, 6, z - 0.2, z, hex('#9CC8E0'));
+    A.quad(0, 22, CZ - RZ * 1.05 - 1.2, 24, 3, 0, A.draw(24, 3, textPaint(['海峡奥体中心 · 体育场', 'Straits Olympic Sports Center Stadium'], { bg: '#2D5C8A', fg: '#FFFFFF' }), 40)); }
+  ringCol(k, CX, CZ, RX * 1.0, RZ * 1.0, 40);
+  // 5) 前面：检票闸机一排（有顶棚）+ 售票亭 + 两边栏杆
+  { const GZ = 84, GX = 14, G = k.glow;
+    GR.slab(-60, 60, 0.005, 0.03, 80, 92, hex('#D3CEC4'), NO);
+    for (let x = -GX; x <= GX + 0.01; x += 2.8) {
+      P.slab(x - 0.18, x + 0.18, 0, 1.05, GZ - 0.7, GZ + 0.7, hex('#A7B0B8'), NO); k.colSlab(x - 0.18, x + 0.18, 0, 1.05, GZ - 0.7, GZ + 0.7);
+      G.slab(x - 0.12, x + 0.12, 1.05, 1.1, GZ - 0.6, GZ - 0.3, hex(Math.round(x / 2.8) % 2 ? '#3FD07A' : '#FF5A4E'), NO);
+      if (x < GX) k.glass.slab(x + 0.18, x + 0.75, 0.45, 1.0, GZ - 0.03, GZ + 0.03, hex('#CDE8F4'));   // 闸门挡板
+    }
+    for (const x of [-GX - 0.2, GX + 0.2]) M.cyl(x, 1.9, GZ, 0.22, 3.8, hex('#C9CED3'), 6);
+    P.slab(-GX - 1, GX + 1, 3.8, 4.1, GZ - 2.2, GZ + 2.2, WH, NO);
+    A.quad(0, 4.6, GZ - 0.05, 8, 1.0, 0, A.draw(8, 1.0, textPaint(['检票口 · Ticket Gates'], { bg: '#2D5C8A', fg: '#FFFFFF' }), 60));
+    P.slab(-0.9, 0.9, 4.1, 5.1, GZ - 0.05, GZ + 0.05, hex('#2D5C8A'), NO);
+    for (const sx of [-1, 1]) { M.tube([sx * (GX + 0.4), 1.0, GZ], [sx * 44, 1.0, GZ], 0.07, hex('#C4CBD2'), 4);
+      for (let x = GX + 4; x <= 44; x += 5) M.tube([sx * x, 0, GZ], [sx * x, 1.0, GZ], 0.07, hex('#C4CBD2'), 4);
+      k.colSlab(Math.min(sx * (GX + 0.4), sx * 44), Math.max(sx * (GX + 0.4), sx * 44), 0, 1.1, GZ - 0.1, GZ + 0.1); }
+    // 售票亭：白色小房子 + 蓝色顶 + 窗口
+    const BX = -24, BZ = 78;
+    P.slab(BX - 2.6, BX + 2.6, 0, 3, BZ - 1.6, BZ + 1.6, WH, NO); k.colSlab(BX - 2.6, BX + 2.6, 0, 3, BZ - 1.6, BZ + 1.6);
+    P.slab(BX - 3, BX + 3, 3, 3.35, BZ - 2.1, BZ + 2.1, hex('#2D6FA8'), NO);
+    for (const wx of [-1.3, 1.3]) { k.glass.slab(BX + wx - 0.8, BX + wx + 0.8, 1.0, 2.2, BZ - 1.63, BZ - 1.6, hex('#7FA9C4')); P.slab(BX + wx - 0.9, BX + wx + 0.9, 0.95, 1.0, BZ - 1.9, BZ - 1.6, hex('#B8BEC4'), NO); }
+    A.quad(BX, 2.65, BZ - 1.66, 4.6, 0.6, 0, A.draw(4.6, 0.6, textPaint(['售票处 · Tickets'], { bg: '#2D5C8A', fg: '#FFFFFF' }), 60)); }
   // 周边：两座矮一点的场馆（示意）+ 绿化
   for (const [x, z, w, h, c] of [[-110, 120, 50, 16, '#E9ECEE'], [110, 120, 50, 18, '#DDE3E8']]) { P.cyl(x, h / 2, z, w, h, hex(c), 16, 0, 0, 0, w * 0.8); k.colSlab(x - w / 2, x + w / 2, 0, h, z - w / 2, z + w / 2); }
   for (let x = -80; x <= 80; x += 16) if (Math.abs(x) > 12) S.lightTree(x, 86, 0.9);
-  for (const [x, z, r, j] of [[-4, 30, 0.5, 1], [5, 24, -2.5, 2], [-16, 52, 1.3, 3], [16, 60, 2.9, 4], [2, 70, 0.2, 5], [-30, 66, 3.1, 6], [28, 46, 0, 7], [-8, 76, 2.8, 8]]) lowPerson(P, x, 0, z, r, j * 4 + 5, j % 3 === 0);
+  // 人：广场上散步的、排队检票的、买票的；有几个穿球衣的球迷（红 / 蓝白条，背后白号码）
+  const JER = ['#D7262E', '#1F5BB0', '#D7262E', '#F4F5F6'];
+  const fan = (x, z, ry, j, jc) => { lowPerson(P, x, 0, z, ry, j, false); if (jc === undefined) return;
+    const col = hex(JER[jc % JER.length]), sx = Math.cos(ry), sz = -Math.sin(ry), fx = Math.sin(ry), fz = Math.cos(ry);
+    P.box(x, 1.13, z, 0.45, 0.64, 0.27, col, ry, 0, 0, 1, NO);
+    for (const s of [-1, 1]) P.box(x + sx * 0.27 * s, 1.27, z + sz * 0.27 * s, 0.13, 0.28, 0.14, col, ry, 0, 0, 1, NO);
+    P.box(x - fx * 0.14, 1.18, z - fz * 0.14, 0.18, 0.24, 0.01, hex(jc % JER.length === 3 ? '#1F5BB0' : '#FFFFFF'), ry, 0, 0, 1, NO); };
+  const PEOPLE = [[-4, 30, 0.5], [5, 24, -2.5], [-16, 52, 1.3], [16, 60, 2.9], [2, 70, 0.2], [-30, 66, 3.1], [28, 46, 0], [-8, 76, 2.8],
+    [-10, 18, 0.1], [12, 36, -0.3], [-22, 40, 0.6], [24, 72, 0.1], [-36, 52, -0.4], [36, 64, 2.6], [8, 54, 3.0], [-2, 44, 0.0],
+    // 排队检票（面朝 +z）
+    [-8.4, 81.5, 0], [-8.4, 80.3, 0], [-2.8, 81.5, 0], [-2.8, 80.2, 0], [-2.8, 79, 0], [2.8, 81.5, 0], [8.4, 81.6, 0], [8.4, 80.4, 0], [11.2, 81.5, 0],
+    // 售票亭窗口前
+    [-25.3, 75.6, 0], [-22.7, 75.4, 0], [-22.7, 74.2, 0]];
+  const JERSEY = { 1: 0, 4: 1, 9: 2, 13: 3, 16: 0, 17: 1, 19: 2, 21: 0, 24: 1, 26: 2 };
+  PEOPLE.forEach(([x, z, r], j) => fan(x, z, r, j * 4 + 5, JERSEY[j]));
   S.filler([[-130, -40, 40, 14, 26, '#C9C2B6'], [130, -40, 40, 14, 20, '#D2CABE']]);
 }
 

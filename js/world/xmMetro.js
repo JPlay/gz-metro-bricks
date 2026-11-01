@@ -472,6 +472,10 @@ export class XmStation {
     this.atlas.quad(U.x1 + 0.6, y + 3.2, zm, 3.6, 0.7, Math.PI / 2, this.atlas.draw(3.6, 0.7, this.exitPaint('出站 · 站厅', 'Exit · Concourse')));
     Pv.slab(U.x1 + 0.56, U.x1 + 0.59, y + 2.83, y + 3.57, zm - 1.85, zm + 1.85, hex('#1B2530'), { ao: false });
     for (const s of [-1.5, 1.5]) k.metal.tube([U.x1 + 0.58, y + 3.55, zm + s], [U.x1 + 0.58, CY, zm + s], 0.03, hex('#9AA1A8'), 6);
+    // 三线站（帝封江）：同一块吊牌背面（从站厅下来的人迎面看到）= 换乘另外两条线（↓ 下楼）
+    if ((this.s?.lines?.length || 0) > 2) {
+      const w = 5.6, h = 0.8; Pv.slab(U.x1 + 0.55, U.x1 + 0.555, y + 3.2 - h / 2 - 0.04, y + 3.2 + h / 2 + 0.04, zm - w / 2 - 0.04, zm + w / 2 + 0.04, hex('#1B2530'), { ao: false });
+      this.atlas.quad(U.x1 + 0.545, y + 3.2, zm, w, h, -Math.PI / 2, this.atlas.draw(w, h, this.xferPaint(this.s.lines.slice(1).map(l => [l, 'down'])))); }
     // 楼梯顶：通道（x -24.3..-20，z -8..hz1）连到站厅西北角
     k.floorWithHoles(hx0 - 4.3, hx0, -8, hz1, HY - 0.3, HY, hex(th.floor), [], true, 'floor');
     Pv.slab(hx0 - 4.6, hx0 - 4.3, HY - 0.3, RY, -18, hz1 + 0.3, WALL, { ao: false }); k.colSlab(hx0 - 4.6, hx0 - 4.3, HY - 0.3, RY, -18, hz1 + 0.3);
@@ -540,9 +544,60 @@ export class XmStation {
     };
     // 楼梯脚在 x0（L2），顶在 x1（L1）：从 -x 看过去能看到踏步/踢面往上；L1 牌在洞口近端，L2 牌在楼梯脚
     // 两面都贴正字：背靠背两块（同一块贴图区域），从楼梯上 / 下来的人（往 -x 看）也不会看到反字
-    { const ls = this.s.lines, up = this.atlas.draw(5.2, 1.0, sign(ls[lvl + 1])), dn = this.atlas.draw(5.2, 1.0, sign(ls[lvl]));
-    this.atlas.quad(XFo.x0 - 0.6, XM_PY + 3.3, XFo.zc, 5.2, 1.0, -Math.PI / 2, up); this.atlas.quad(XFo.x0 - 0.56, XM_PY + 3.3, XFo.zc, 5.2, 1.0, Math.PI / 2, up);
-    this.atlas.quad(XFo.x0 - 0.8, XM_PY2 + 3.3, XFo.zc, 5.2, 1.0, -Math.PI / 2, dn); this.atlas.quad(XFo.x0 - 0.76, XM_PY2 + 3.3, XFo.zc, 5.2, 1.0, Math.PI / 2, dn); }
+    const ls = this.s.lines;
+    if (ls.length < 3) {
+      const up = this.atlas.draw(5.2, 1.0, sign(ls[lvl + 1])), dn = this.atlas.draw(5.2, 1.0, sign(ls[lvl]));
+      this.atlas.quad(XFo.x0 - 0.6, XM_PY + 3.3, XFo.zc, 5.2, 1.0, -Math.PI / 2, up); this.atlas.quad(XFo.x0 - 0.56, XM_PY + 3.3, XFo.zc, 5.2, 1.0, Math.PI / 2, up);
+      this.atlas.quad(XFo.x0 - 0.8, XM_PY2 + 3.3, XFo.zc, 5.2, 1.0, -Math.PI / 2, dn); this.atlas.quad(XFo.x0 - 0.76, XM_PY2 + 3.3, XFo.zc, 5.2, 1.0, Math.PI / 2, dn);
+      return;
+    }
+    // 三线站（帝封江）：每层的换乘吊牌都列出另外两条线（线色块 + 上楼 ↑ / 下楼 ↓ 箭头），背靠背两块同一贴图 → 两面都是正字
+    // 只做吊牌，不做地面导向带 / 地面箭头
+    const lv = [XM_PY_, XM_PY2_, XM_PY3], items = (i) => ls.map((l, j) => [l, j < i ? 'up' : 'down']).filter((_, j) => j !== i);
+    if (lvl === 0) {
+      // 第一层（4 号线）：洞口两头各一块（下楼去 5 号线 / 滨海快线）
+      for (const x of [XFo.x0 - 0.6, XFo.x1 + 0.9]) this.hangXfer(x, lv[0], XFo.zc, items(0));
+      // 第二层（5 号线）：4 号线楼梯脚
+      this.hangXfer(XFo.x0 - 0.8, lv[1], XFo.zc, items(1));
+    } else {
+      // 第二层：去第三层的洞口两头
+      for (const x of [XFo.x0 - 0.6, XFo.x1 + 0.9]) this.hangXfer(x, lv[1], XFo.zc, items(1));
+      // 第三层（滨海快线）：楼梯脚 + 楼梯高端外侧
+      for (const x of [XFo.x0 - 0.8, XFo.x1 + 2.2]) this.hangXfer(x, lv[2], XFo.zc, items(2));
+    }
+  }
+  /** 换乘吊牌：深色底，「换乘 Transfer」+ 每条线一个线色块（线号）+ 线名 + 上/下箭头；两块背靠背 + 两根吊杆 */
+  hangXfer(x, y, z, items, w = 6.6, h = 1.0) {
+    const uv = this.atlas.draw(w, h, this.xferPaint(items));
+    this.atlas.quad(x - 0.02, y + 3.3, z, w, h, -Math.PI / 2, uv); this.atlas.quad(x + 0.02, y + 3.3, z, w, h, Math.PI / 2, uv);
+    this.kit.solid.slab(x - 0.015, x + 0.015, y + 3.3 - h / 2 - 0.04, y + 3.3 + h / 2 + 0.04, z - w / 2 - 0.04, z + w / 2 + 0.04, hex('#1B2530'), { ao: false });
+    for (const s of [-w * 0.36, w * 0.36]) this.kit.metal.tube([x, y + 3.3 + h / 2, z + s], [x, y + 4.2, z + s], 0.03, hex('#9AA1A8'), 6);
+  }
+  xferPaint(items) {
+    return (c, pw, ph) => {
+      c.fillStyle = '#1B2530'; c.fillRect(0, 0, pw, ph);
+      c.textBaseline = 'middle'; c.fillStyle = '#FFF'; c.textAlign = 'center';
+      const hw = ph * 1.25; c.font = `800 ${ph * 0.36}px ${FONT}`; c.fillText('换乘', hw / 2, ph * 0.4);
+      c.fillStyle = '#C9D2DB'; c.font = `600 ${ph * 0.17}px ${FONT_EN}`; c.fillText('Transfer', hw / 2, ph * 0.76);
+      c.fillStyle = '#5A6672'; c.fillRect(hw, ph * 0.12, 3, ph * 0.76);
+      const sw = (pw - hw) / items.length;
+      items.forEach(([key, dir], i) => {
+        const L = this.N.LINES[key], x0 = hw + sw * i + ph * 0.12, b = ph - 24;
+        c.fillStyle = L.color; c.fillRect(x0, 12, b, b);
+        const bd = String(L.badge || key); c.fillStyle = '#FFF'; c.textAlign = 'center';
+        c.font = `800 ${ph * (bd.length > 1 ? 0.42 : 0.55)}px ${FONT_EN}`; c.fillText(bd, x0 + b / 2, ph * 0.54);
+        const tx = x0 + b + ph * 0.12, aw = ph * 0.62, maxW = sw - (tx - hw - sw * i) - aw - ph * 0.15;
+        c.textAlign = 'left'; let fs = ph * 0.34; c.font = `800 ${fs}px ${FONT}`; const mw = c.measureText(L.zh).width; if (mw > maxW) { fs *= maxW / mw; c.font = `800 ${fs}px ${FONT}`; }
+        c.fillText(L.zh, tx, ph * 0.38);
+        c.fillStyle = '#C9D2DB'; c.font = `600 ${ph * 0.16}px ${FONT_EN}`; c.fillText(`${L.en} · ${dir === 'up' ? 'upstairs' : 'downstairs'}`, tx, ph * 0.76, maxW);
+        // 箭头：↑ 上楼 / ↓ 下楼（竖箭头两面看都一样，不会因背面而反向）
+        const ax = hw + sw * (i + 1) - aw * 0.5 - ph * 0.12, ay = ph / 2, s = ph * 0.36, sg = dir === 'up' ? -1 : 1;
+        c.fillStyle = '#FFF'; c.beginPath();
+        c.moveTo(ax, ay + sg * s); c.lineTo(ax - s * 0.78, ay + sg * s * 0.05); c.lineTo(ax - s * 0.28, ay + sg * s * 0.05); c.lineTo(ax - s * 0.28, ay - sg * s);
+        c.lineTo(ax + s * 0.28, ay - sg * s); c.lineTo(ax + s * 0.28, ay + sg * s * 0.05); c.lineTo(ax + s * 0.78, ay + sg * s * 0.05); c.closePath(); c.fill();
+        if (i < items.length - 1) { c.fillStyle = '#3A4652'; c.fillRect(hw + sw * (i + 1) - 1, ph * 0.18, 2, ph * 0.64); }
+      });
+    };
   }
   /** 普通站：小站厅 + 出入口（游戏里出到黑处即可） */
   buildConcourse() {

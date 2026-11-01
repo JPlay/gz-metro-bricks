@@ -34,6 +34,8 @@ for (const [id, L] of Object.entries(FZ_LINES)) for (const c of L.stations) if (
 Object.assign(FZ_EXITS, {
   fzdjk: { n: 'C', x: 10, line: 1, road: '杨桥东路', to: ['三坊七巷（南后街）', '达明美食街'], toEn: ['Three Lanes and Seven Alleys (Nanhou Street)', 'Daming Food Street'] },
   // 南门兜：两个能走出去的口 —— G1 于山（主出口，x 10）+ B 乌山（站厅南墙西段 x -14，街区键 fznmd_B）
+  //   乌山出口核对（第三批复核）：东南网/福州新闻网 2019-12 南门兜出入口表「B出入口：乌山风景区、乌塔公园、冠亚广场」，B 口步行约 150 m 到乌塔公园（大洋晶典旁）；
+  //   三坊七巷官网交通页：D2 西南口约 500 m 到乌山历史风貌区南大门、A1 西北口约 450 m 到北门。我们的景点是乌塔 + 山脚广场 → 用 B。
   fznmd: { n: 'G1', x: 10, line: 1, road: '', to: ['于山风景区（白塔）', '五一广场'], toEn: ['Yushan Hill (White Pagoda)', 'Wuyi Square'],
     more: [{ n: 'B', x: -14, line: 2, road: '', to: ['乌山风景区（乌塔）'], toEn: ['Wushan Hill (Black Pagoda)'], attr: 'fznmd_B' }] },
   // 第三批（brief 景点表 #7 #9 #13）

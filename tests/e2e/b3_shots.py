@@ -70,6 +70,22 @@ async def main():
         await pg.evaluate(f"__game.player.spawn({FO + 2}, {y + 0.05}, {s['zc']}, -Math.PI/2); __game.player.pitch=0.12")
         await shot(pg, f'fz-dfj-L{line}-transfer')
       await pg.evaluate('__game.setDtMax(0.25)')
+    # —— 帝封江换乘吊牌（每层都拍：读得清、不反字）——
+    if 'signs' in PARTS:
+      await pg.evaluate('__game.setDtMax(0.25)')
+      await pg.evaluate("(() => { const m=__game.fzMetro; m.buildStation('fzdfj'); m.slots.forEach(s => { s.state='away'; s.t=999; s.train.setVisible(false); }); })()")
+      await asyncio.sleep(1.5); await view(pg, 'first')
+      R['xferSigns'] = await pg.evaluate("__game.fzMetro.slots.length")
+      # L4：从站厅下楼梯（楼梯上 x -10）往 +x 看：出站牌背面 + 洞口两头的换乘牌；L4b：从 +x 那头往回看
+      # L5：站台西头往 +x 看（下 F1 的洞口 + 4 号线楼梯脚），L5b 从东头往回看；L20（F1）：西头往 +x 看楼梯脚，L20b 东头往回看楼梯高端外侧
+      for name, x, y, z, yaw, pitch in [('fz-dfj-signs-L4', -12, -10.6, 0.6, 'Math.PI/2', -0.02), ('fz-dfj-signs-L4b', 28, -12.95, 3.2, '-Math.PI/2 - 0.12', 0.06),
+                                        ('fz-dfj-signs-L5', -25.2, -21.95, 3.6, 'Math.PI/2 + 0.5', 0.1), ('fz-dfj-signs-L5b', 26, -21.95, 4.8, '-Math.PI/2 - 0.16', 0.07),
+                                        ('fz-dfj-signs-L20', -25.2, -30.95, 3.6, 'Math.PI/2 + 0.5', 0.1), ('fz-dfj-signs-L20b', 14, -30.95, 3.6, '-Math.PI/2 - 0.22', 0.07)]:
+        await pg.evaluate(f"__game.player.spawn({FO} + {x}, {y}, {z}, {yaw}); __game.player.pitch={pitch}")
+        await pg.evaluate('__game.setDtMax(1e-6)')
+        R['scene'][name] = await pg.evaluate(SCENE_TRIS)
+        await shot(pg, name)
+        await pg.evaluate('__game.setDtMax(0.25)')
     if 'map' in PARTS:
       await pg.evaluate("(() => { const m=__game.fzMetro; m.buildStation('fzdjk'); m.slots.forEach(s => { s.state='away'; s.t=999; s.train.setVisible(false); }); })()")
       await asyncio.sleep(1)
