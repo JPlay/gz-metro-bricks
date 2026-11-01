@@ -27,6 +27,8 @@ import { drawLineCanvas, networkSVG } from '../ui/netmap.js';
 import { buildFoodStreet } from '../game/food-street.js';
 const B = window.BABYLON;
 
+/** 街面 / 地下分组显示的车站（按 signature） */
+const SPLIT_ZONES = new Set(['sysy']);
 export const YC = -6, HALL_X = 46, TUNNEL_X = 140, TRACK_OFF = 7.6, PSD_OFF = 6, WALL_OFF = 10.6;
 export const MAIN = { y: -12, zc: 14 }, GYQ2 = { y: -22, zc: 44 };
 export const SPAWN = { x: 0, y: 0, z: -48, yaw: 0 };
@@ -71,11 +73,16 @@ export class Station {
       A: { key: 'A', step: 1, trackZ: f.zc - TRACK_OFF, psdZ: f.zc - PSD_OFF, doorSg: 1, n: 1 },
       B: { key: 'B', step: -1, trackZ: f.zc + TRACK_OFF, psdZ: f.zc + PSD_OFF, doorSg: -1, n: 2 } } }));
     this.gates = []; this.mv = []; this.escalators = []; this.psd = []; this.pids = []; this.greeters = [];
-    this.street(); this.passage(); this.concourse();
+    // 街面 / 出入口通道 / 地下（站厅、站台、换乘）分成三组网格，按玩家位置开关（见 zoneVis）：
+    //   纪念堂站的街面很重（园区外的行道树、路灯、骑楼……），站在街上时地下那 1 万多个三角形不用画
+    const split = SPLIT_ZONES.has(this.s.signature);
+    this.street(); if (split) k.group('street');
+    this.passage(); if (split) k.group('passage');
+    this.concourse();
     this.platforms.forEach(p => this.platform(p));
     if (this.platforms.length > 1) this.transfer();
     if (this.s.attraction) this.sysyWayfinding();
-    k.finish();
+    k.finish(true, 'under');
     if (this.park) this.park.finish();
     this.root = k.root;
   }
@@ -936,10 +943,22 @@ export class Station {
       e.steps.forEach((st, i) => { let u = ((i / n) * L + e.off * e.dir) % L; if (u < 0) u += L; const f = u / L; st.position.x = e.x0 + (e.x1 - e.x0) * f; st.position.y = e.y0 + (e.y1 - e.y0) * f + 0.06; });
     }
     for (const m of this.mv) m.update(dt, cam, this.events, player);
+    if (this.kit.groupNodes) this.zoneVis(p);
     if (this.park) this.parkUpdate(dt, player, cam);
     if (this.gze) updateGze(this.gze, dt, player, Audio);
     this.crowd.update(dt, p);
     for (const pd of this.pids) { pd.t -= dt; if (pd.t <= 0) { pd.t = 1; this.drawPids(pd, metro); } }
+  }
+  /**
+   * 分区显示：地下组 = 在地下，或者站在出入口楼梯附近（往下能看到站厅）；街面组 = 在地面附近，或者在站厅中间靠出入口那半边（顺着通道往上能看到街口雨棚）。
+   *   出入口通道组一直显示。前几帧全开（反射探针只渲染一次，要拍到完整的站厅）。
+   */
+  zoneVis(p) {
+    if ((this._zvF = (this._zvF || 0) + 1) < 4) return;
+    const G = this.kit.groupNodes, nearStair = Math.abs(p.x) < 8 && p.z < -12 && p.z > -44;
+    const under = p.y < -1 || nearStair, street = p.y > -5 || (p.y > YC - 1.5 && Math.abs(p.x) < 10 && p.z < 12);
+    if (G.under && G.under.isEnabled(false) !== under) G.under.setEnabled(under);
+    if (G.street && G.street.isEnabled(false) !== street) G.street.setEnabled(street);
   }
   /** 纪念堂园区：只在地面上时启用园区网格；走进正门 → 进纪念堂内部（单独的场景，第一次进去时才搭），从内部南门出来回到门口 */
   parkUpdate(dt, player, cam) {
