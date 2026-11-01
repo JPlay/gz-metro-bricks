@@ -28,10 +28,11 @@ import { ClanCtl } from './game/clan.js';
 import { EastCtl } from './game/east.js';
 import { XmMetro } from './game/xmService.js';
 import { FzMetro } from './game/fzService.js';
-import { FZ_STATIONS } from './data/fz-lines.js';
+import { FZ_STATIONS, FZ_LINES } from './data/fz-lines.js';
 import { XM_LINES, XM_STATIONS } from './data/xm-lines.js';
 import { XO } from './world/xmn.js';
 import { XM_ATTRACTIONS } from './data/xm-visits.js';
+import { FZ_ATTRACTIONS } from './data/fz-visits.js';
 import { readSave, writeSave, clearSave, installAutosave } from './game/save.js';
 const B = window.BABYLON;
 
@@ -145,8 +146,9 @@ export async function start() {
   const attrCard = document.createElement('div'); attrCard.className = 'attrcard'; attrCard.hidden = true; mapEl.querySelector('.sheet').appendChild(attrCard);
   const hideCard = () => { attrCard.hidden = true; G.attrCard = null; };
   const showCard = (id, cx, cy) => {
-    const xa = XM_ATTRACTIONS.find(t => t.id === id), a = xa || ATTRACTIONS.find(t => t.id === id); if (!a) return false;
-    attrCard.innerHTML = xa ? `<b>${a.names.join('<br>')}</b><span>${XM_STATIONS[a.code].zh}站 · ${a.exit ? `从 <em>${a.exit}</em> 号出口出站` : '在本站下车'}</span>`
+    const fa = FZ_ATTRACTIONS.find(t => t.id === id), xa = XM_ATTRACTIONS.find(t => t.id === id), a = fa || xa || ATTRACTIONS.find(t => t.id === id); if (!a) return false;
+    attrCard.innerHTML = fa ? `<b>${a.names.join('<br>')}</b><span>${FZ_STATIONS[a.code].zh}站 · ${a.exit ? `从 <em>${a.exit}</em> 出口出站` : '在本站下车'}</span>`
+      : xa ? `<b>${a.names.join('<br>')}</b><span>${XM_STATIONS[a.code].zh}站 · ${a.exit ? `从 <em>${a.exit}</em> 号出口出站` : '在本站下车'}</span>`
       : `<b>${a.names.join('<br>')}</b><span>${STATIONS[a.code].zh.replace(/站$/, '')}站 · 从 <em>${attractionExit(a.code)}</em> 出口出站</span>`;
     attrCard.hidden = false; const sh = mapEl.querySelector('.sheet').getBoundingClientRect(), w = attrCard.offsetWidth, h = attrCard.offsetHeight;
     attrCard.style.left = Math.max(8, Math.min(sh.width - w - 8, cx - sh.left - w / 2)) + 'px'; attrCard.style.top = Math.max(8, Math.min(sh.height - h - 8, cy - sh.top - h - 30)) + 'px';
@@ -154,12 +156,16 @@ export async function start() {
   };
   const mapTap = (x, y) => { const g = document.elementsFromPoint(x, y).map(e => e.closest && e.closest('g.attr')).find(Boolean); if (g) return showCard(g.dataset.attr, x, y); hideCard(); return false; };
   const mapBox = mapEl.querySelector('.mapbox'), mapPZ = panZoom(mapBox, mapTap);
+  const lineList = (L) => Object.values(L).map(l => l.zh.replace(/号线$/, ' 号线')).join(' · '), fzLineList = () => lineList(FZ_LINES), xmLineList = () => lineList(XM_LINES);
+  const gzSub = mapEl.querySelector('.ttl small') ? mapEl.querySelector('.ttl small').textContent : '';
   const drawMap = () => {
     G.mapPortrait = innerHeight > innerWidth;
     const cm = curMetro();
     if (cm && cm.net === 'fz') mapBox.innerHTML = fzNetworkSVG(cm.code, { portrait: G.mapPortrait });
     else if (cm) mapBox.innerHTML = xmNetworkSVG(cm.code, { portrait: G.mapPortrait });
     else mapBox.innerHTML = networkSVG(G.code, { portrait: G.mapPortrait });
+    // 标题小字跟着城市走（福州 1/4/5 号线，厦门 1/2 号线，广州 1 号线…）
+    const sub = mapEl.querySelector('.ttl small'); if (sub) sub.textContent = cm && cm.net === 'fz' ? fzLineList() : cm ? xmLineList() : gzSub;
     mapPZ.reset(); hideCard();
   };
   const openMap = () => { drawMap(); mapEl.classList.remove('out'); mapEl.hidden = false; G.mapOpen = true; Audio.blip && Audio.blip('tap'); };

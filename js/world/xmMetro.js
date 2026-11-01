@@ -523,8 +523,10 @@ export class XmStation {
       c.fillStyle = '#C9D2DB'; c.font = `600 ${ph * 0.17}px ${FONT_EN}`; c.fillText(`Transfer to Line ${to}  ·  往 ${Object.values(L.dirs).map(d => d.zh).join(' / ')}`, ph * 1.05, ph * 0.74);
     };
     // 楼梯脚在 x0（L2），顶在 x1（L1）：从 -x 看过去能看到踏步/踢面往上；L1 牌在洞口近端，L2 牌在楼梯脚
-    { const ls = this.s.lines; this.atlas.quad(this.XF.x0 - 0.6, XM_PY + 3.3, this.XF.zc, 5.2, 1.0, -Math.PI / 2, this.atlas.draw(5.2, 1.0, sign(ls[1])));
-    this.atlas.quad(this.XF.x0 - 0.8, XM_PY2 + 3.3, this.XF.zc, 5.2, 1.0, -Math.PI / 2, this.atlas.draw(5.2, 1.0, sign(ls[0]))); }
+    // 两面都贴正字：背靠背两块（同一块贴图区域），从楼梯上 / 下来的人（往 -x 看）也不会看到反字
+    { const ls = this.s.lines, up = this.atlas.draw(5.2, 1.0, sign(ls[1])), dn = this.atlas.draw(5.2, 1.0, sign(ls[0]));
+    this.atlas.quad(this.XF.x0 - 0.6, XM_PY + 3.3, this.XF.zc, 5.2, 1.0, -Math.PI / 2, up); this.atlas.quad(this.XF.x0 - 0.56, XM_PY + 3.3, this.XF.zc, 5.2, 1.0, Math.PI / 2, up);
+    this.atlas.quad(this.XF.x0 - 0.8, XM_PY2 + 3.3, this.XF.zc, 5.2, 1.0, -Math.PI / 2, dn); this.atlas.quad(this.XF.x0 - 0.76, XM_PY2 + 3.3, this.XF.zc, 5.2, 1.0, Math.PI / 2, dn); }
   }
   /** 普通站：小站厅 + 出入口（游戏里出到黑处即可） */
   buildConcourse() {

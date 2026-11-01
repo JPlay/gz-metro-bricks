@@ -409,7 +409,7 @@ export function xmNetworkSVG(here, { portrait = false } = {}) {
  */
 export const FZ_ANCHOR = {
   fzxf: [0, -13], fzfz: [0, -9.4], fzdjk: [0, -5], fznmd: [0, -3.6], fzscj: [0.6, 1], fzcm: [1.6, 6.5], fzfzn: [2.2, 9.5], fzap: [3.4, 10], fzsjk: [7.5, 10.6],
-  fzbz: [-8, 2.4], fzht: [-6.6, -1.6], fzjns: [-5.6, -3.8], fzxm: [-1.6, -5], fzdmn: [1.6, -5], fzsjch: [3, -5], fzqy: [5.6, -3.2], fzgmg: [5.8, -1.6], fzhhgy: [5.2, 2.4], fzlp: [4.2, 6.6], fzlzwq: [-0.2, 7.4], fzdfj: [-2.2, 8],
+  fzbz: [-8, 2.4], fzht: [-6.6, -1.6], fzjns: [-5.6, -3.8], fzxm: [-2.4, -5], fzdmn: [3.2, -5], fzsjch: [4.4, -5], fzqy: [5.6, -3.2], fzgmg: [5.8, -1.6], fzhhgy: [5.2, 2.4], fzlp: [4.2, 6.6], fzlzwq: [-0.2, 7.4], fzdfj: [-2.2, 8],
   fzjxhy: [-9.4, -9.4], fznldx: [-8.6, -6], fzjs: [-5.6, 1.4], fzdl: [-4, 3.6], fzyx: [-3, 6.6], fzlzgz: [-1, 9.4], fzlj: [1, 9.8]
 };
 export function fzLayout() {
@@ -428,6 +428,10 @@ export function fzLayout() {
   }
   return pos;
 }
+/** 景点图标相对车站的偏移（像素）：东街口/西门/南门兜/达道挤在一起，各放一边免得图标和字叠在一起 */
+const FZ_ATTR_OFF = { fzxm: [-58, -32], fzdjk: [-24, -52], fznmd: [-50, 4], fzdd: [-50, 12] };
+/** 这几站的站名换个位置（默认在点的右上方，这几处太挤）：[dx, dy, text-anchor] */
+const FZ_LABEL_AT = { fzfhc: [0, 19, 'middle'], fzzy: [-9, 4, 'end'], fzjns: [-9, -2, 'end'], fzslyy: [8, 19, 'start'] };
 export function fzNetworkSVG(here, { portrait = false } = {}) {
   const W = portrait ? 720 : 1100, H = portrait ? 1100 : 720;
   const raw = fzLayout(), pos = {};
@@ -448,10 +452,11 @@ export function fzNetworkSVG(here, { portrait = false } = {}) {
     else s += `<circle cx="${x}" cy="${y}" r="5.5" fill="#fff" stroke="${FZ_LINES[S.lines[0]].color}" stroke-width="3.5"/>`;
     if (hereOn) s += `<circle cx="${x}" cy="${y}" r="15" fill="none" stroke="#FF5A4E" stroke-width="3"><animate attributeName="r" values="13;19;13" dur="1.6s" repeatCount="indefinite"/></circle>`;
     const label = S.zh.length > 5 ? S.zh.slice(0, 5) : S.zh;
-    s += `<text x="${x + 9}" y="${y - 8}" font-size="${hereOn ? 14 : hub ? 11 : 9.5}" font-weight="${hereOn || hub ? 800 : 600}" fill="#1B2530" paint-order="stroke" stroke="#fff" stroke-width="3" stroke-linejoin="round">${label}</text>`;
+    const [ldx, ldy, lan] = FZ_LABEL_AT[c] || [9, -8, 'start'];
+    s += `<text x="${x + ldx}" y="${y + ldy}" text-anchor="${lan}" font-size="${hereOn ? 14 : hub ? 11 : 9.5}" font-weight="${hereOn || hub ? 800 : 600}" fill="#1B2530" paint-order="stroke" stroke="#fff" stroke-width="3" stroke-linejoin="round">${label}</text>`;
   }
   for (const a of FZ_ATTRACTIONS) { const p = pos[a.code]; if (!p) continue;
-    const [ix, iy] = [p[0] - 22, p[1] + 20];
+    const [dx, dy] = FZ_ATTR_OFF[a.code] || [-22, 20], [ix, iy] = [p[0] + dx, p[1] + dy];
     s += `<line x1="${p[0]}" y1="${p[1]}" x2="${ix}" y2="${iy}" stroke="#9AA3AD" stroke-width="2" stroke-dasharray="2 4"/>`;
     s += `<g class="attr" data-attr="${a.id}" data-code="${a.code}">${iconSVG(a.icon, ix, iy, 13, FZ_LINES[FZ_STATIONS[a.code].lines[0]].color)}`;
     s += `<text x="${ix}" y="${iy + 25}" font-size="10" font-weight="700" fill="#34404F" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="4" stroke-linejoin="round">${a.name}</text></g>`; }

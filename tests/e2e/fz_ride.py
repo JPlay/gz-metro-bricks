@@ -31,9 +31,9 @@ async def walk(pg, pts, leg=14.0):
 HOOKS = """(() => {
   window.__caps=[]; addEventListener('gz-audio-caption', e => { if (e.detail && e.detail.id && __caps[__caps.length-1] !== e.detail.id) __caps.push(e.detail.id); });
   window.__emu=[]; __game.events.on('emu', d => __emu.push(d));
-  // 车窗外景物走过的距离：道床贴图 uOffset 每帧 += d/2.6（取模 1）→ 累加回米数
-  window.__scn={d:0, last:null}; __game.scene.onAfterRenderObservable.add(() => { const I=__game.east.interior, t=I && I.scenery && I.scenery.bedTex; if (!t) return;
-    const u=t.uOffset, S=__game.east.ride; if (!S) { __scn.last=u; return; } if (__scn.last!==null) { let du=u-__scn.last; if (du<-0.5) du+=1; if (du>=0) __scn.d+=du*2.6; } __scn.last=u; });
+  // 景物真的在往后跑：直接累计 scenery.advance(d) 的 d（低帧率下每帧 d 很大，量 uOffset 会绕圈失真）
+  window.__scn={d:0, n:0}; __game.scene.onAfterRenderObservable.add(() => { const I=__game.east.interior, sc=I && I.scenery; if (!sc || sc.__scnHook) return;
+    const orig=sc.advance.bind(sc); sc.advance=(d, seg) => { if (__game.east.ride && d > 0) { __scn.d+=d; __scn.n++; } return orig(d, seg); }; sc.__scnHook=true; });
 })()"""
 
 # ---------- 动车 ----------
