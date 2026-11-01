@@ -85,8 +85,9 @@ export function doorHit(d, lx, lz) {
 /** 街区参数（厦门默认）；福州（js/world/fzStreet.js）传自己的：原点、出口表、线路 / 站表、地铁品牌名 */
 export const XM_STREET = { O: XS, net: 'xm', EXITS: XM_EXITS, LINES: XM_LINES, STATIONS: XM_STATIONS, brand: ['厦门地铁', 'Xiamen Metro'], exitZh, special: true };
 export class XmStreet {
-  constructor(scene, code, N = XM_STREET) {
-    this.scene = scene; this.code = code; this.N = N; this.O = N.O; this.ex = N.EXITS[code];
+  /** ex：走出来的那个出口（一站多个可走出口时由 XmMetro.goStreet 传入）；key：景点街区表的键（默认站码，第二个出口用 ex.attr） */
+  constructor(scene, code, N = XM_STREET, ex = null) {
+    this.scene = scene; this.code = code; this.N = N; this.O = N.O; this.ex = ex || N.EXITS[code]; this.key = (this.ex && this.ex.attr) || code;
     const XS = this.O;
     const k = this.kit = new Kit(scene, N.net + 'Street-' + code); k.root.position.set(XS.x, 0, XS.z);
     this.atlas = new FoodAtlas(scene, 2048);
@@ -141,7 +142,7 @@ export class XmStreet {
   /* ---------- 通用 ---------- */
   ground() {
     const k = this.kit;
-    k.floorWithHoles(-160, 160, -60, 200, -0.6, 0, hex('#D6D2CA'), (this.N.holes && this.N.holes[this.code]) || [], true, 'pave');   // holes：景点街区里下沉的河道 / 湖面
+    k.floorWithHoles(-160, 160, -60, 200, -0.6, 0, hex('#D6D2CA'), (this.N.holes && this.N.holes[this.key]) || [], true, 'pave');   // holes：景点街区里下沉的河道 / 湖面
     k.colSlab(-161, -160, 0, 8, -60, 200); k.colSlab(160, 161, 0, 8, -60, 200); k.colSlab(-160, 160, 0, 8, -61, -60); k.colSlab(-160, 160, 0, 8, 200, 201);
   }
   road(x0, x1, z0, z1, alongX, name) {

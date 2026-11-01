@@ -410,7 +410,13 @@ export function xmNetworkSVG(here, { portrait = false } = {}) {
 export const FZ_ANCHOR = {
   fzxf: [0, -13], fzfz: [0, -9.4], fzdjk: [0, -5], fznmd: [0, -3.6], fzscj: [0.6, 1], fzcm: [1.6, 6.5], fzfzn: [2.2, 9.5], fzap: [3.4, 10], fzsjk: [7.5, 10.6],
   fzbz: [-8, 2.4], fzht: [-6.6, -1.6], fzjns: [-5.6, -3.8], fzxm: [-2.4, -5], fzdmn: [3.2, -5], fzsjch: [4.4, -5], fzqy: [5.6, -3.2], fzgmg: [5.8, -1.6], fzhhgy: [5.2, 2.4], fzlp: [4.2, 6.6], fzlzwq: [-0.2, 7.4], fzdfj: [-2.2, 8],
-  fzjxhy: [-9.4, -9.4], fznldx: [-8.6, -6], fzjs: [-5.6, 1.4], fzdl: [-4, 3.6], fzyx: [-3, 6.6], fzlzgz: [-1.4, 9.4], fzlj: [1, 9.8]
+  fzjxhy: [-9.4, -9.4], fznldx: [-8.6, -6], fzjs: [-5.6, 1.4], fzdl: [-4, 3.6], fzyx: [-3, 6.6], fzlzgz: [-1.4, 9.4], fzlj: [1, 9.8],
+  // 第三批：2 号线（西边苏洋 → 金山 → 南门兜 → 前屿 → 东边洋里）
+  fzsuy: [-12.4, -2.6], fzhw: [-8.2, 0.2], fzyl: [10, -3.4],
+  // 6 号线（潘墩 → 林浦 → 梁厝 / 下洋 → 东去长乐万寿）
+  fzpd: [3.2, 5], fzlc: [5, 10.2], fzxy: [6.3, 10.4], fzyq: [8.6, 9.2], fzwsh: [15, 8.2],
+  // 滨海快线（福州火车站 → 东门 → 闽都 → 南公园 → 三叉街 → 帝封江 → 南下东去机场 / 文岭）
+  fzmd: [2.2, -2.4], fzngy: [2.3, -0.6], fzscjb: [1.9, 1.5], fzxq: [-0.6, 12.6], fzjc: [13, 13.2], fzwl: [15, 12.4]
 };
 export function fzLayout() {
   const pos = {};
@@ -443,10 +449,14 @@ export function fzNetworkSVG(here, { portrait = false } = {}) {
   const ox = (W - (maxX - minX) * sc) / 2, oy = 40 + (H - 40 - (maxY - minY) * sc) / 2;
   for (const c of Object.keys(pos)) pos[c] = [ox + (pos[c][0] - minX) * sc, oy + (pos[c][1] - minY) * sc];
   const lines = Object.values(FZ_LINES);
+  const flat = {};   // 站点所在线段偏水平（|dx| > 1.3|dy|）
+  for (const L of lines) L.stations.forEach((c, i) => { const a = raw[L.stations[Math.max(0, i - 1)]], b = raw[L.stations[Math.min(L.stations.length - 1, i + 1)]]; if (Math.abs(b[0] - a[0]) > 1.3 * Math.abs(b[1] - a[1])) flat[c] = true; });
   let s = `<svg class="netmap" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
   s += `<text x="${W / 2}" y="34" text-anchor="middle" font-size="22" font-weight="800" fill="#1B2530">福州地铁</text>`;
   s += `<text x="${W / 2}" y="54" text-anchor="middle" font-size="13" fill="#6B7280">Fuzhou Metro · ${lines.map(L => L.zh).join(' · ')}</text>`;
   for (const L of lines) s += `<polyline class="fzline" data-line="${L.id}" points="${L.stations.map(c => pos[c].map(v => v.toFixed(1)).join(',')).join(' ')}" fill="none" stroke="${L.color}" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>`;
+  // 出站换乘（水部↔闽都、1 号线三叉街↔滨海快线三叉街）：两站之间画灰色虚线
+  for (const [c, S] of Object.entries(FZ_STATIONS)) if (S.twin && c < S.twin && pos[c] && pos[S.twin]) s += `<line class="ox" x1="${pos[c][0].toFixed(1)}" y1="${pos[c][1].toFixed(1)}" x2="${pos[S.twin][0].toFixed(1)}" y2="${pos[S.twin][1].toFixed(1)}" stroke="#6B7280" stroke-width="3" stroke-dasharray="3 3"/>`;
   for (const [c, [x, y]] of Object.entries(pos)) {
     const S = FZ_STATIONS[c], hub = S.lines.length > 1, hereOn = c === here;
     if (hub) s += `<circle cx="${x}" cy="${y}" r="9" fill="#fff" stroke="#1B2530" stroke-width="3.5"/>`;
@@ -454,6 +464,9 @@ export function fzNetworkSVG(here, { portrait = false } = {}) {
     if (hereOn) s += `<circle cx="${x}" cy="${y}" r="15" fill="none" stroke="#FF5A4E" stroke-width="3"><animate attributeName="r" values="13;19;13" dur="1.6s" repeatCount="indefinite"/></circle>`;
     const label = S.zh.length > 5 ? S.zh.slice(0, 5) : S.zh;
     const [ldx, ldy, lan] = FZ_LABEL_AT[c] || [9, -8, 'start'];
+    // 横着走的线段（2 号线西段、6 号线 / 滨海快线东段）站距很密：站名斜着写（-40°），不会一个压一个
+    const slant = !FZ_LABEL_AT[c] && !hub && flat[c];
+    if (slant) { s += `<text transform="translate(${(x + 3).toFixed(1)},${(y - 8).toFixed(1)}) rotate(-40)" font-size="${hereOn ? 14 : 9.5}" font-weight="${hereOn ? 800 : 600}" fill="#1B2530" paint-order="stroke" stroke="#fff" stroke-width="3" stroke-linejoin="round">${label}</text>`; continue; }
     s += `<text x="${x + ldx}" y="${y + ldy}" text-anchor="${lan}" font-size="${hereOn ? 14 : hub ? 11 : 9.5}" font-weight="${hereOn || hub ? 800 : 600}" fill="#1B2530" paint-order="stroke" stroke="#fff" stroke-width="3" stroke-linejoin="round">${label}</text>`;
   }
   for (const a of FZ_ATTRACTIONS) { const p = pos[a.code]; if (!p) continue;

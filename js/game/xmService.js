@@ -7,7 +7,7 @@ import { Train, HALF } from '../world/train.js';
 import { Geo, hex } from '../core/geo.js';
 import { mats } from '../core/mats.js';
 import { XM_LINES, xmNext, xmDirFor } from '../data/xm-lines.js';
-import { XmStation, XM_PY, XM_NET } from '../world/xmMetro.js';
+import { XmStation, XM_PY, XM_NET, exitList } from '../world/xmMetro.js';
 import { XmStreet, XM_EXITS, XS } from '../world/xmStreet.js';
 import { XO } from '../world/xmn.js';
 import * as Ann from '../audio/announcements.js';
@@ -98,7 +98,7 @@ export class XmMetro {
     const p = this.ctx.player.position, A = this.ctx.Audio, seated = !!this.ctx.player.seat;
     if (this.street) { if (this.street.update(this.ctx.player) === 'back') this.backFromStreet(); return; }
     if (this.ride && this.ride.phase === 'cruise') return this.cruise(dt);
-    { const ex = this.S.streetAt(this.code) && this.N.EXITS[this.code], p = this.ctx.player.position; if (ex && !this.ride && p.z < -35.2 && p.y > -1 && Math.abs(p.x - this.N.O.x - ex.x) < 2.4) { this.goStreet(); return; } }
+    { const p = this.ctx.player.position; if (!this.ride && p.z < -35.2 && p.y > -1 && this.S.streetAt(this.code)) { const ex = exitList(this.N.EXITS[this.code]).find(e => Math.abs(p.x - this.N.O.x - e.x) < 2.4); if (ex) { this.goStreet(ex); return; } } }
     let sound = null;
     const inCar = this.slots.some(o => o.train.root.isEnabled() && this.playerOn(o.train));
     const multi = this.station.platforms.length > 1;
@@ -194,17 +194,17 @@ export class XmMetro {
     this.ctx.events.emit('ride', { phase: 'arrive', to: this.code, line: r.line, net: this.net });
   }
   /** 出站：关掉车站，加载出口外的街区（独立场景） */
-  goStreet() {
-    const pl = this.ctx.player;
+  goStreet(ex = this.N.EXITS[this.code]) {
+    const pl = this.ctx.player; this.streetEx = ex;
     this.station.kit.root.setEnabled(false); this.trains.forEach(t => t.setVisible(false));
     this.slots.forEach(s => { s.state = 'away'; s.t = 6 + Math.random() * 6; });
-    this.street = this.S.street(this.scene, this.code);
+    this.street = this.S.street(this.scene, this.code, ex);
     const [x, y, z, yaw] = this.street.spawn(); pl.spawn(x, y, z, yaw);
     try { this.ctx.Audio.cancelAnnouncements(); this.ctx.Audio.trainSound({ speed: 0 }); } catch (_) {}
     this.ctx.events.emit(this.S.ev, { street: true, code: this.code });
   }
   backFromStreet() {
-    const pl = this.ctx.player, ex = this.N.EXITS[this.code];
+    const pl = this.ctx.player, ex = this.streetEx || this.N.EXITS[this.code];
     this.street.dispose(); this.street = null;
     this.station.kit.root.setEnabled(true);
     pl.spawn(this.N.O.x + ex.x, 0.05, -34.4, 0);

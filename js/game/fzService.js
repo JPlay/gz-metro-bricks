@@ -14,12 +14,12 @@ import { FZ_ATTR_BUILD, FZ_ATTR_HOLES } from '../world/fzAttr.js';
 import { XmMetro } from './xmService.js';
 import { FS } from '../world/fzZones.js';
 
-export const FZ_STREET = { O: FS, net: 'fz', EXITS: FZ_EXITS, LINES: FZ_LINES, STATIONS: FZ_STATIONS, brand: ['福州地铁', 'Fuzhou Metro'], exitZh: fzExitZh, special: false, holes: FZ_ATTR_HOLES, build: s => (FZ_ATTR_BUILD[s.code] ? FZ_ATTR_BUILD[s.code](s) : fzStreet(s)) };
+export const FZ_STREET = { O: FS, net: 'fz', EXITS: FZ_EXITS, LINES: FZ_LINES, STATIONS: FZ_STATIONS, brand: ['福州地铁', 'Fuzhou Metro'], exitZh: fzExitZh, special: false, holes: FZ_ATTR_HOLES, build: s => (FZ_ATTR_BUILD[s.key] ? FZ_ATTR_BUILD[s.key](s) : fzStreet(s)) };
 
 export const FZ_SVC = {
   N: FZ_NET, net: 'fz', ev: 'fz', ids: [20, 21],
   station: (scene, code) => new FzStation(scene, code),
-  street: (scene, code) => new XmStreet(scene, code, FZ_STREET),
+  street: (scene, code, ex) => new XmStreet(scene, code, FZ_STREET, ex),
   next: fzNext,
   ann: { platform: Ann.fzPlatform, depart: Ann.fzDepart, arrive: Ann.arrive, welcome: Ann.welcome, exit: Ann.fzExit, doorsClosing: Ann.fzDoorsClosing },
   exitSegs: fzExitSegs,

@@ -4,14 +4,19 @@
  *   南门兜 G1 → 于山 / 白塔：五一广场 → 于山（满山榕树）脚下的白塔（七层八角、白墙灰檐）+ 定光寺屋顶
  *   达道 C   → 上下杭：老街两边 2–3 层青砖 / 灰白墙老商行（木板店面、招牌、灯笼）→ 星安河（下沉河道）+ 三通桥（石拱桥）
  *   西门 B   → 西湖公园：牌楼式大门 → 湖岸垂柳 → 木栈桥 → 立在水上的观湖亭；远处柳堤 + 白石拱桥、湖心岛开化寺
+ * 第三批（2 / 5 / 6 号线）：
+ *   上藤 B   → 烟台山：上山石板路，两边红砖 / 米黄近代洋楼（两层券廊）→ 灰色花岗岩石厝教堂 + 方塔尖顶钟楼；山上榕树
+ *   鼓山 A   → 鼓山风景区：入口广场（车站在广场下）、“鼓山”大石刻、登山古道石门 + 石阶、鼓山索道下站 + 缆绳 / 铁塔 / 来回动的吊厢
+ *   东岭 A   → 海峡奥体中心：大广场 + 旗杆 → 椭圆体育场（白壳、蓝斜肋、环形挑棚）——外观未核实，按示意
+ *   南门兜 B → 乌山：广场、樱花、榕树山丘 → 灰黑花岗岩七层八角乌塔（石栏围着）；FZ_ATTR_BUILD 键 'fznmd_B'（多出口，见 fz-exits.js more）
  * 外观依据 /workspace/fuzhou-research/brief.md（白塔外观、马鞍墙细节在 brief 里标了“未核实”——按常见照片做示意，不追求测绘级）。
  * FZ_ATTR_GOAL：每个景点的“到达点”（街区局部坐标），fz_attr.py / fz_ride.py 走到这里算到达；从出亭点 (0, 1.2) 到这里一路没有碰撞体。
  * 面数：每个街区 ≤ 9 万三角形、≤ 50 draw（fz_attr.py 量）。
  */
-import { hex } from '../core/geo.js';
+import { Geo, hex } from '../core/geo.js';
 import * as D from './decor.js';
 import { textPaint, facadePaint, FONT } from './xmStreet.js';
-import { q2, roof, figure } from './xmAttr.js';
+import { q2, roof, figure, ring, ringCol, animMesh } from './xmAttr.js';
 import { lowPerson } from './xmSM.js';
 
 const TAU = Math.PI * 2, NO = { ao: false };
@@ -100,22 +105,22 @@ function sanfang(S) {
 }
 
 /* ============== 南门兜 G1 口：于山风景区（白塔）· 五一广场 ============== */
-function pagoda(S, x, z, levels = 7, y0 = 0) {
-  const k = S.kit, P = k.solid, W = k.g('paint@wall'), white = hex('#F4F2EC'), eave = hex('#59606A');
-  P.cyl(x, y0 + 0.6 - y0 / 2, z, 14, 1.2 + y0, hex('#B9B2A4'), 8, Math.PI / 8); k.colSlab(x - 6.5, x + 6.5, 0, y0 + 1.2, z - 6.5, z + 6.5);
+function pagoda(S, x, z, levels = 7, y0 = 0, { wall = '#F4F2EC', eave: eaveC = '#59606A', base = '#B9B2A4', door = '#3B3027', scale: sc = 1 } = {}) {
+  const k = S.kit, P = k.solid, W = k.g('paint@wall'), white = hex(wall), eave = hex(eaveC), R = 6.5 * sc;
+  P.cyl(x, y0 + 0.6 - y0 / 2, z, 14 * sc, 1.2 + y0, hex(base), 8, Math.PI / 8); k.colSlab(x - R, x + R, 0, y0 + 1.2, z - R, z + R);
   let y = y0 + 1.2;
   for (let i = 0; i < levels; i++) {
-    const d = 10.4 - i * 0.75, h = i === 0 ? 6 : 4.4;
+    const d = (10.4 - i * 0.75) * sc, h = (i === 0 ? 6 : 4.4) * (sc < 1 ? 1 : sc);
     W.cyl(x, y + h / 2, z, d, h, white, 8, Math.PI / 8);
     // 拱门 / 小窗：四正面
-    for (let j = 0; j < 4; j++) { const a = j * Math.PI / 2, r = d / 2 * Math.cos(Math.PI / 8) + 0.02; P.box(x + Math.sin(a) * r, y + h * 0.42, z - Math.cos(a) * r, i === 0 ? 1.8 : 0.9, i === 0 ? 3 : 1.5, 0.12, hex('#3B3027'), a); }
-    // 灰色腰檐（八角，往外挑）
-    P.cyl(x, y + h + 0.25, z, d + 2.6, 0.5, eave, 8, Math.PI / 8, 0, 0, d + 0.4);
+    for (let j = 0; j < 4; j++) { const a = j * Math.PI / 2, r = d / 2 * Math.cos(Math.PI / 8) + 0.02; P.box(x + Math.sin(a) * r, y + h * 0.42, z - Math.cos(a) * r, i === 0 ? 1.8 : 0.9, i === 0 ? 3 : 1.5, 0.12, hex(door), a); }
+    // 腰檐（八角，往外挑）
+    P.cyl(x, y + h + 0.25, z, d + 2.6 * sc, 0.5, eave, 8, Math.PI / 8, 0, 0, d + 0.4 * sc);
     y += h + 0.5;
   }
-  P.cyl(x, y + 1.0, z, 3.4, 2.0, eave, 8, Math.PI / 8, 0, 0, 0.6);
+  P.cyl(x, y + 1.0, z, 3.4 * sc, 2.0, eave, 8, Math.PI / 8, 0, 0, 0.6);
   k.metal.cyl(x, y + 3.6, z, 0.4, 5, hex('#C9A23A'), 6); k.metal.sphere(x, y + 2.4, z, 1.0, hex('#C9A23A'), 1); k.metal.sphere(x, y + 4.2, z, 0.8, hex('#C9A23A'), 1);
-  k.colSlab(x - 4.6, x + 4.6, 0, y, z - 4.6, z + 4.6);
+  k.colSlab(x - 4.6 * sc, x + 4.6 * sc, 0, y, z - 4.6 * sc, z + 4.6 * sc);
   return y;
 }
 function yushan(S) {
@@ -307,13 +312,199 @@ function xihu(S) {
   S.filler([[-100, -40, 40, 14, 22, '#CFC7BA'], [100, -40, 40, 14, 26, '#D8D0C3']]);
 }
 
+/* ============== 第三批 ============== */
+/* ---------- 南门兜 B 口：乌山风景区 · 乌塔（坚牢塔） ---------- */
+/** 樱花树（乌山春天开樱花）：细树干 + 几团粉色树冠 */
+function sakura(P, x, z, s = 1, kd = 0) {
+  const PK = ['#F4B6C8', '#F7C9D6', '#EFA3BA'];
+  P.tube([x, 0, z], [x + (kd % 2 ? 0.4 : -0.4) * s, 2.6 * s, z], 0.4 * s, hex('#5A4638'), 5);
+  P.ellipsoid(x, 3.6 * s, z, 5.2 * s, 2.6 * s, 5.0 * s, hex(PK[kd % 3]), 1);
+  for (let i = 0; i < 3; i++) { const a = i / 3 * TAU + kd; P.ellipsoid(x + Math.cos(a) * 2 * s, 3.2 * s + (i % 2) * 0.5 * s, z + Math.sin(a) * 2 * s, 3.4 * s, 2.0 * s, 3.4 * s, hex(PK[(i + kd + 1) % 3]), 1); }
+}
+function wushan(S) {
+  const k = S.kit, P = k.solid, A = S.atlas, GR = k.g('granite');
+  front(S, '乌山路');
+  GR.slab(-40, 40, 0.005, 0.03, 2, 62, hex('#C9C3B6'), NO);
+  for (let z = 6; z < 62; z += 4) GR.slab(-40, 40, 0.031, 0.035, z, z + 0.1, hex('#B1AA9C'), NO);
+  stone(S, -10, 14, 5.2, 1.7, '乌山风景区', 'Wushan Hill', { bg: '#5E5A54' });
+  // 乌山：后面几个土丘，满山榕树 + 樱花
+  const HILLS = [[-20, 130, 150, 40, 70, '#46753A'], [30, 150, 130, 34, 70, '#4F7F3A'], [-60, 160, 110, 46, 60, '#3F6E35']];
+  for (const [x, z, sx, sy, sz, c] of HILLS) P.ellipsoid(x, 0, z, sx, sy, sz, hex(c), 2);
+  const hillY = (x, z) => Math.max(0, ...HILLS.map(([hx, hz, sx, sy, sz]) => { const q = ((x - hx) / (sx / 2)) ** 2 + ((z - hz) / (sz / 2)) ** 2; return q < 1 ? sy / 2 * Math.sqrt(1 - q) : 0; }));
+  k.colSlab(-80, 80, 0, 8, 92, 93);
+  for (const [x, z, s, i] of [[-50, 108, 1.2, 0], [-22, 104, 1.1, 1], [40, 118, 1.1, 3], [-4, 132, 1.0, 1], [20, 140, 1.1, 2], [-40, 140, 1.0, 3]]) banyan(P, x, z, s, i, Math.max(0, hillY(x, z) - 2));
+  // 樱花：广场两边 + 山脚
+  for (const [x, z, s, i] of [[-24, 30, 1.0, 0], [-30, 46, 1.1, 1], [-18, 58, 0.9, 2], [30, 26, 1.0, 1], [34, 44, 1.1, 2], [-8, 82, 1.0, 0], [8, 96, 1.1, 1], [-30, 88, 1.0, 2], [44, 80, 1.0, 0]]) sakura(P, x, z, s, i);
+  // 乌塔：七层八角，灰黑色花岗岩（不刷白）——在广场尽头一圈石栏里（形制示意）
+  const TX = 12, TZ = 66;
+  GR.slab(TX - 11, TX + 11, 0.03, 0.06, TZ - 11, TZ + 11, hex('#A39C8E'), NO);
+  for (const [x0, x1, z0, z1] of [[TX - 11, TX - 2.5, TZ - 11, TZ - 10.6], [TX + 2.5, TX + 11, TZ - 11, TZ - 10.6], [TX - 11, TX - 10.6, TZ - 11, TZ + 11], [TX + 10.6, TX + 11, TZ - 11, TZ + 11], [TX - 11, TX + 11, TZ + 10.6, TZ + 11]]) { GR.slab(x0, x1, 0, 0.9, z0, z1, hex('#7E786C'), NO); k.colSlab(x0, x1, 0, 1.2, z0, z1); }
+  pagoda(S, TX, TZ, 7, 0, { wall: '#6E6B66', eave: '#4A4744', base: '#8C877E', door: '#2A2622', scale: 0.82 });
+  stone(S, TX + 6.5, TZ - 13, 4.2, 1.4, '乌塔', 'Black Pagoda (Wuta)', { bg: '#5E5A54' });
+  for (const [x, z, r, j] of [[-6, 34, 0.5, 1], [6, 24, -2.5, 2], [-14, 48, 1.3, 3], [18, 44, 2.9, 4], [4, 50, 0.2, 5], [24, 54, 3.1, 6]]) lowPerson(P, x, 0, z, r, j * 4 + 3, j === 2);
+  S.filler([[-120, 30, 40, 40, 26, '#CFC7BA'], [120, 30, 40, 40, 30, '#D8D0C3'], [-100, -40, 40, 14, 30, '#C9C2B6'], [100, -40, 40, 14, 24, '#D2CABE']]);
+}
+
+/* ---------- 上藤 B 口：烟台山（近代洋楼 + 石厝教堂） ---------- */
+/** 洋楼立面贴图：红砖 / 米黄墙 + 两层券廊（拱形外廊） */
+function villaPaint(wall, trim) {
+  return (c, pw, ph) => {
+    c.fillStyle = wall; c.fillRect(0, 0, pw, ph);
+    const n = 5, fh = ph / 2;
+    for (let f = 0; f < 2; f++) for (let i = 0; i < n; i++) {
+      const x = pw * (i + 0.12) / n, w = pw * 0.76 / n, y = f * fh + fh * 0.18, h = fh * 0.72;
+      c.fillStyle = '#2E3238'; c.beginPath(); c.moveTo(x, y + h); c.lineTo(x, y + w / 2); c.arc(x + w / 2, y + w / 2, w / 2, Math.PI, 0); c.lineTo(x + w, y + h); c.closePath(); c.fill();
+      c.strokeStyle = trim; c.lineWidth = pw * 0.012; c.stroke();
+      c.fillStyle = trim; c.fillRect(x - pw * 0.01, y + h - fh * 0.12, w + pw * 0.02, fh * 0.05);   // 栏杆
+    }
+    c.fillStyle = trim; c.fillRect(0, fh - ph * 0.02, pw, ph * 0.04); c.fillRect(0, 0, pw, ph * 0.04);
+  };
+}
+/** 坡屋顶（两片斜板） */
+function gable(P, x, z, w, d, y, h, col, alongZ = false) {
+  const L = alongZ ? d : w, W = (alongZ ? w : d) / 2 + 0.6, sl = Math.hypot(W, h), ang = Math.atan2(h, W);
+  for (const s of [-1, 1]) {
+    if (alongZ) P.box(x + s * W / 2, y + h / 2, z, sl, 0.25, L + 1.0, col, 0, 0, -s * ang, 1, NO);
+    else P.box(x, y + h / 2, z + s * W / 2, L + 1.0, 0.25, sl, col, 0, s * ang, 0, 1, NO);
+  }
+}
+function villa(S, x, z, w, d, wall, trim, roofC, alongZ, faceA) {
+  const k = S.kit, P = k.solid, A = S.atlas;
+  P.slab(x - w / 2, x + w / 2, 0, 8, z - d / 2, z + d / 2, hex(wall), NO); k.colSlab(x - w / 2, x + w / 2, 0, 8, z - d / 2, z + d / 2);
+  P.slab(x - w / 2 - 0.3, x + w / 2 + 0.3, 8, 8.4, z - d / 2 - 0.3, z + d / 2 + 0.3, hex(trim), NO);
+  gable(P, x, z, w, d, 8.4, 3, hex(roofC), alongZ);
+  const fw = alongZ ? d : w, uv = A.draw(fw - 0.6, 7.4, villaPaint(wall, trim), 30);
+  const fx = alongZ ? x + (faceA > 0 ? w / 2 : -w / 2) + Math.sign(faceA) * 0.03 : x, fz = alongZ ? z : z - d / 2 - 0.03;
+  A.quad(fx, 4, fz, fw - 0.6, 7.4, faceA, uv);
+}
+function yantai(S) {
+  const k = S.kit, P = k.solid, A = S.atlas, GR = k.g('granite');
+  front(S, '上藤路');
+  GR.slab(-24, 24, 0.005, 0.03, 2, 14, hex('#C9C3B6'), NO);
+  // 上山的石板路（x -5..5），两边老洋楼（红砖 / 米黄墙 + 券廊）
+  GR.slab(-5, 5, 0.005, 0.03, 14, 120, hex('#A9A397'), NO);
+  for (let z = 16; z < 118; z += 2.4) GR.slab(-4.8, 4.8, 0.031, 0.035, z, z + 0.1, hex('#8E887C'), NO);
+  stone(S, 9, 10, 4.8, 1.6, '烟台山', 'Yantai Hill', { bg: '#7E786C' });
+  const V = [['#B5523B', '#F1ECE2', '#6E4A3A'], ['#E6D7B4', '#FFFFFF', '#7A4A3A'], ['#C9C2B0', '#F4F2EC', '#5E5A54']];
+  [[-15, 26, 0], [15, 30, 1], [-15, 52, 2], [15, 56, 0]].forEach(([x, z, i]) => villa(S, x, z, 18, 16, ...V[i], true, x < 0 ? Math.PI / 2 : -Math.PI / 2));
+  // 门口一块小招牌：“近代建筑群”
+  A.quad(-5.9, 2.4, 26, 3.4, 0.7, Math.PI / 2, A.draw(3.4, 0.7, textPaint(['仓山近代建筑群'], { bg: '#2E3238', fg: '#E9C46A' }), 60));
+  // 石厝教堂：灰色花岗岩小教堂，正面尖山墙 + 尖拱窗，旁边一座方塔尖顶钟楼（示意）
+  { const cx = 0, cz = 82, w = 12, d = 20, h = 8, GRY = hex('#8E8A82');
+    GR.slab(cx - w / 2, cx + w / 2, 0, h, cz - d / 2, cz + d / 2, GRY, NO); k.colSlab(cx - w / 2, cx + w / 2, 0, h, cz - d / 2, cz + d / 2);
+    gable(P, cx, cz, w, d, h, 5, hex('#4A4F55'), true);
+    const fz = cz - d / 2 - 0.02;
+    q2(GR, [cx - w / 2, h, fz], [cx + w / 2, h, fz], [cx, h + 5, fz], [cx, h + 5, fz], GRY);   // 山墙三角
+    A.quad(cx, h / 2 + 0.6, fz - 0.02, w - 1, h + 0.6, 0, A.draw(w - 1, h + 0.6, (c, pw, ph) => {
+      c.fillStyle = '#8E8A82'; c.fillRect(0, 0, pw, ph);
+      c.strokeStyle = '#7A766E'; c.lineWidth = 2; for (let y = 0; y < ph; y += ph / 14) { c.beginPath(); c.moveTo(0, y); c.lineTo(pw, y); c.stroke(); }
+      const arch = (x, y, w2, h2, col) => { c.fillStyle = col; c.beginPath(); c.moveTo(x, y + h2); c.lineTo(x, y + w2 * 0.6); c.quadraticCurveTo(x, y, x + w2 / 2, y - w2 * 0.2); c.quadraticCurveTo(x + w2, y, x + w2, y + w2 * 0.6); c.lineTo(x + w2, y + h2); c.closePath(); c.fill(); };
+      arch(pw * 0.4, ph * 0.5, pw * 0.2, ph * 0.5, '#3A2A20');   // 尖拱大门
+      arch(pw * 0.12, ph * 0.25, pw * 0.1, ph * 0.4, '#3E5A78'); arch(pw * 0.78, ph * 0.25, pw * 0.1, ph * 0.4, '#3E5A78');
+      c.fillStyle = '#5E7FA8'; c.beginPath(); c.arc(pw / 2, ph * 0.22, pw * 0.08, 0, TAU); c.fill(); c.strokeStyle = '#3A3F45'; c.lineWidth = 4; c.stroke();
+    }, 40));
+    // 钟楼（左前角）
+    const tx = cx - w / 2 - 1.6, tz = cz - d / 2 + 2;
+    GR.slab(tx - 2, tx + 2, 0, 15, tz - 2, tz + 2, hex('#8A867E'), NO); k.colSlab(tx - 2, tx + 2, 0, 15, tz - 2, tz + 2);
+    P.cyl(tx, 18, tz, 5.6, 6, hex('#4A4F55'), 4, Math.PI / 4, 0, 0, 0.1);
+    k.metal.cyl(tx, 21.6, tz, 0.12, 1.6, hex('#C9A23A'), 4); k.metal.box(tx, 21.9, tz, 0.9, 0.12, 0.12, hex('#C9A23A'));
+    for (const a of [0, Math.PI / 2, Math.PI, -Math.PI / 2]) P.box(tx + Math.sin(a) * 2.02, 12.5, tz - Math.cos(a) * 2.02, 1.0, 2.2, 0.08, hex('#2E3238'), a, 0, 0, 1, NO);
+    stone(S, 8, cz - d / 2 - 4, 4.4, 1.4, '石厝教堂', 'Shicuo Church', { bg: '#7E786C' }); }
+  // 山上：榕树 + 远处更多洋楼屋顶
+  P.ellipsoid(0, 0, 150, 220, 34, 90, hex('#4A7A3C'), 2); k.colSlab(-80, 80, 0, 8, 108, 109);
+  for (const [x, z, s, i] of [[-30, 96, 1.1, 0], [28, 100, 1.2, 1], [-50, 76, 1.0, 2], [44, 74, 1.1, 3], [-12, 112, 1.0, 1], [16, 118, 1.0, 2]]) banyan(P, x, z, s, i, z > 104 ? 4 : 0);
+  [[-40, 120, 2], [36, 126, 1], [-10, 132, 0]].forEach(([x, z, i]) => { P.slab(x - 7, x + 7, 8, 15, z - 5, z + 5, hex(V[i][0]), NO); gable(P, x, z, 14, 10, 15, 2.6, hex(V[i][2])); });
+  for (const [x, z, r, j] of [[-2, 20, 0, 1], [3, 34, Math.PI, 2], [-3, 48, 0.2, 3], [2.5, 60, Math.PI, 4], [-1.5, 68, 0, 5], [6, 70, -1.2, 6]]) lowPerson(P, x, 0, z, r, j * 5 + 1, j === 3);
+  S.filler([[-120, 30, 40, 40, 22, '#D2CABE'], [120, 30, 40, 40, 26, '#C9C2B6'], [-100, -40, 40, 14, 30, '#CFC7BA'], [100, -40, 40, 14, 24, '#D8D0C3']]);
+}
+
+/* ---------- 鼓山 A 口：鼓山风景区入口广场 + 空中索道 ---------- */
+function gushan(S) {
+  const k = S.kit, P = k.solid, A = S.atlas, GR = k.g('granite');
+  front(S, '福马路');
+  // 入口广场（车站就在广场下面）
+  GR.slab(-50, 50, 0.005, 0.03, 2, 70, hex('#CFC9BC'), NO);
+  for (let x = -48; x < 50; x += 6) GR.slab(x, x + 0.12, 0.031, 0.035, 2, 70, hex('#B7B1A4'), NO);
+  for (const sx of [-1, 1]) { P.slab(sx * 18, sx * 46, 0.03, 0.18, 12, 30, hex('#6FA34A'), NO); k.colSlab(Math.min(sx * 18, sx * 46), Math.max(sx * 18, sx * 46), 0, 0.5, 12, 30); }
+  // 鼓山：几座大山叠起来（山顶 ~90 m）
+  const HILLS = [[0, 230, 300, 180, 160, '#3F6E35'], [-90, 190, 160, 110, 120, '#46753A'], [90, 200, 170, 120, 120, '#4A7A3C'], [20, 150, 140, 50, 60, '#557F3E']];
+  for (const [x, z, sx, sy, sz, c] of HILLS) P.ellipsoid(x, 0, z, sx, sy, sz, hex(c), 2);
+  k.colSlab(-100, 100, 0, 8, 96, 97);
+  for (const [x, z, s, i] of [[-40, 100, 1.2, 0], [-10, 96, 1.0, 1], [44, 100, 1.1, 2], [-64, 120, 1.1, 3], [70, 124, 1.0, 1]]) banyan(P, x, z, s, i);
+  // 大石刻“鼓山”
+  { const x = 0, z = 60; GR.box(x, 2.6, z, 9, 5.2, 2.2, hex('#8C877E'), 0.1); k.col(x, 2.6, z, 9, 5.2, 2.2, { ry: 0.1 });
+    A.quad(x - 0.11, 2.8, z - 1.12, 7.4, 3.6, -0.1, A.draw(7.4, 3.6, textPaint(['鼓山', 'Gushan Mountain'], { bg: '#8C877E', fg: '#B02A22' }), 50)); }
+  stone(S, -14, 40, 5.2, 1.6, '鼓山风景区', 'Gushan Scenic Area', { bg: '#7E786C' });
+  // 登山古道起点：左边一道石阶 + 小石门
+  { const x = -32, z0 = 74;
+    for (const gx of [x - 3.2, x + 3.2]) { GR.slab(gx - 0.5, gx + 0.5, 0, 5, z0 - 0.5, z0 + 0.5, hex('#A39C8E'), NO); k.colSlab(gx - 0.5, gx + 0.5, 0, 5, z0 - 0.5, z0 + 0.5); }
+    roof(P, x, z0, 7.6, 1.6, 5, 1.2, hex('#3A3F45'), { ovh: 0.4, curl: 0.4 });
+    A.quad(x, 4.2, z0 - 0.52, 4.2, 0.8, 0, A.draw(4.2, 0.8, textPaint(['登山古道'], { bg: '#2E1F14', fg: '#E9C46A' }), 60));
+    for (let i = 0; i < 18; i++) GR.slab(x - 2.4, x + 2.4, 0, 0.3 + i * 0.32, z0 + 1 + i * 0.7, z0 + 1.7 + i * 0.7, hex('#B9B2A4'), NO); }
+  // 索道下站：右边一座白房子（“鼓山索道”）+ 缆绳上山 + 一座座铁塔；吊厢沿缆绳动（两条：上行 / 下行）
+  const BX = 30, BZ = 72, BY = 9, TOP = [40, 92, 210];
+  P.slab(BX - 8, BX + 8, 0, BY, BZ - 6, BZ + 6, hex('#EEF0F2'), NO); k.colSlab(BX - 8, BX + 8, 0, BY, BZ - 6, BZ + 6);
+  P.slab(BX - 8.6, BX + 8.6, BY, BY + 0.6, BZ - 6.6, BZ + 6.6, hex('#B02A22'), NO);
+  P.slab(BX - 3, BX + 3, 0, 3.6, BZ - 6.05, BZ - 6.0, hex('#2E3238'), NO);
+  A.quad(BX, 6.8, BZ - 6.05, 9, 1.6, 0, A.draw(9, 1.6, textPaint(['鼓山索道', 'Gushan Cableway'], { bg: '#B02A22', fg: '#FFFFFF' }), 60));
+  P.slab(TOP[0] - 6, TOP[0] + 6, 76, TOP[1] + 4, TOP[2] - 2, TOP[2] + 8, hex('#EEF0F2'), NO); P.slab(TOP[0] - 6.5, TOP[0] + 6.5, TOP[1] + 4, TOP[1] + 4.6, TOP[2] - 2.5, TOP[2] + 8.5, hex('#B02A22'), NO);   // 上站（山上）
+  const dir = [TOP[0] - BX, TOP[1] - BY, TOP[2] - BZ], LEN = Math.hypot(...dir), u = dir.map(v => v / LEN);
+  for (const off of [-1.6, 1.6]) { const a = [BX + off, BY - 0.6, BZ], b = [TOP[0] + off, TOP[1], TOP[2]]; k.metal.tube(a, b, 0.08, hex('#3A3F45'), 4); }
+  for (let t = 0.22; t < 0.95; t += 0.24) { const x = BX + dir[0] * t, y = BY + dir[1] * t, z = BZ + dir[2] * t;
+    k.metal.tube([x, y - 26 - t * 10, z], [x, y + 0.6, z], 0.9, hex('#9AA3AD'), 4); k.metal.box(x, y + 0.6, z, 4.4, 0.4, 0.5, hex('#9AA3AD')); }
+  const SP = 18, NCAB = Math.floor(LEN / SP), cab = sgn => { const g = new Geo();
+    for (let i = 0; i < NCAB; i++) { const d = i * SP, x = BX + sgn * 1.6 + u[0] * d, y = BY - 0.6 + u[1] * d, z = BZ + u[2] * d;
+      g.box(x, y - 0.9, z, 0.06, 1.8, 0.06, hex('#3A3F45')); g.box(x, y - 2.6, z, 1.8, 1.6, 1.8, hex(i % 2 ? '#D7262E' : '#E9C46A')); g.box(x, y - 2.4, z, 1.84, 0.6, 1.4, hex('#BFDCEB')); }
+    return animMesh(S, g, 'fzCable' + sgn); };
+  const up = cab(-1), dn = cab(1); S.cable = { t: 0 };
+  S.tick = dt => { S.cable.t = (S.cable.t + dt * 2.5) % SP; const t = S.cable.t; up.position.set(u[0] * t, u[1] * t, u[2] * t); dn.position.set(-u[0] * t, -u[1] * t, -u[2] * t); };
+  for (const [x, z, r, j] of [[-6, 30, 0.5, 1], [6, 22, -2.5, 2], [-20, 46, 1.3, 3], [22, 58, 2.9, 4], [26, 64, 0.2, 5], [-30, 68, 3.1, 6], [10, 50, 0, 7]]) lowPerson(P, x, 0, z, r, j * 4 + 2, j === 2);
+  S.filler([[-120, 30, 40, 40, 18, '#CFC7BA'], [120, 30, 40, 40, 22, '#D8D0C3'], [-100, -40, 40, 14, 26, '#C9C2B6'], [100, -40, 40, 14, 20, '#D2CABE']]);
+}
+
+/* ---------- 东岭 A 口：福州海峡奥体中心（体育场外观未核实，按示意：白色椭圆外壳 + 蓝色斜肋 + 环形挑棚） ---------- */
+function aoti(S) {
+  const k = S.kit, P = k.solid, A = S.atlas, GR = k.g('granite'), M = k.metal;
+  front(S, null);
+  GR.slab(-90, 90, 0.005, 0.03, 2, 80, hex('#D3CEC4'), NO);
+  for (let z = 6; z < 80; z += 6) GR.slab(-90, 90, 0.031, 0.035, z, z + 0.15, hex('#B9B3A6'), NO);
+  stone(S, 12, 14, 6.4, 1.8, '海峡奥体中心', 'Straits Olympic Sports Center', { bg: '#2D5C8A', fg: '#FFFFFF' });
+  // 旗杆一排
+  for (let i = 0; i < 6; i++) { const x = -25 + i * 10; M.cyl(x, 7, 40, 0.24, 14, hex('#C9CED3'), 6); P.box(x + 1.1, 12.8, 40, 2.0, 1.3, 0.05, hex(['#DE2910', '#2D6FA8', '#3E9A4A', '#E9C46A', '#DE2910', '#2D6FA8'][i]), 0, 0, 0, 1, NO); k.colSlab(x - 0.2, x + 0.2, 0, 14, 39.8, 40.2); }
+  // 体育场：中心 (0,150)，外椭圆 rx 70 / rz 56，高 34
+  const CX = 0, CZ = 150, RX = 70, RZ = 56, H = 34, N = 48, WH = hex('#F2F3F4'), BL = hex('#2D6FA8');
+  const pt = (a, s = 1) => [CX + Math.cos(a) * RX * s, CZ + Math.sin(a) * RZ * s];
+  for (let i = 0; i < N; i++) {
+    const a0 = i / N * TAU, a1 = (i + 1) / N * TAU, [x0, z0] = pt(a0), [x1, z1] = pt(a1), [x0t, z0t] = pt(a0, 1.06), [x1t, z1t] = pt(a1, 1.06);
+    q2(P, [x0, 0, z0], [x1, 0, z1], [x1t, H, z1t], [x0t, H, z0t], i % 2 ? WH : hex('#E4E7EA'));   // 外壳板（往外微倾）
+    const xm = (x0 + x1t) / 2, zm = (z0 + z1t) / 2;
+    if (i % 2 === 0) M.tube([x0, 0, z0], [x1t, H, z1t], 0.7, BL, 4);   // 蓝色斜肋
+  }
+  // 环形挑棚（屋面）：外圈 H → 内圈稍低
+  ring(P, CX, CZ, RX * 0.62, RZ * 0.58, RX * 1.06, RZ * 1.06, H, WH, N);
+  ring(P, CX, CZ, RX * 0.62, RZ * 0.58, RX * 0.66, RZ * 0.62, H - 0.6, BL, N);
+  // 入口（南面正中）：玻璃大门 + 名字
+  { const z = CZ - RZ - 0.4; k.glass.slab(-10, 10, 0, 6, z - 0.2, z, hex('#9CC8E0'));
+    A.quad(0, 10, z - 1.2, 22, 3, 0, A.draw(22, 3, textPaint(['海峡奥体中心 · 体育场', 'Straits Olympic Sports Center Stadium'], { bg: '#2D5C8A', fg: '#FFFFFF' }), 40)); }
+  ringCol(k, CX, CZ, RX, RZ, 40);
+  // 周边：两座矮一点的场馆（示意）+ 绿化
+  for (const [x, z, w, h, c] of [[-110, 120, 50, 16, '#E9ECEE'], [110, 120, 50, 18, '#DDE3E8']]) { P.cyl(x, h / 2, z, w, h, hex(c), 16, 0, 0, 0, w * 0.8); k.colSlab(x - w / 2, x + w / 2, 0, h, z - w / 2, z + w / 2); }
+  for (let x = -80; x <= 80; x += 16) if (Math.abs(x) > 12) S.lightTree(x, 86, 0.9);
+  for (const [x, z, r, j] of [[-4, 30, 0.5, 1], [5, 24, -2.5, 2], [-16, 52, 1.3, 3], [16, 60, 2.9, 4], [2, 70, 0.2, 5], [-30, 66, 3.1, 6], [28, 46, 0, 7], [-8, 76, 2.8, 8]]) lowPerson(P, x, 0, z, r, j * 4 + 5, j % 3 === 0);
+  S.filler([[-130, -40, 40, 14, 26, '#C9C2B6'], [130, -40, 40, 14, 20, '#D2CABE']]);
+}
+
 /** 景点街区地面挖洞（下沉的河道 / 湖面）：XmStreet.ground() 用 */
 export const FZ_ATTR_HOLES = { fzdd: [[-160, 160, 44, 56]], fzxm: [[-160, 160, 47.6, 200]] };
-export const FZ_ATTR_BUILD = { fzdjk: sanfang, fznmd: yushan, fzdd: shangxiahang, fzxm: xihu };
+export const FZ_ATTR_BUILD = { fzdjk: sanfang, fznmd: yushan, fzdd: shangxiahang, fzxm: xihu, fzst: yantai, fzgs: gushan, fzdl: aoti, fznmd_B: wushan };
 /** 到达点（街区局部 x, z）+ 半径：走到这里算“到了景点” */
 export const FZ_ATTR_GOAL = {
   fzdjk: { x: 0, z: 32, r: 4, name: '三坊七巷（南后街）', path: [[0, 10], [0, 20], [0, 32]], view: [0, 4, 0, -0.1] },
   fznmd: { x: -22, z: 60, r: 4, name: '于山白塔', path: [[0, 12], [-10, 36], [-22, 60]], view: [-14, 30, -0.18, -0.34] },
   fzdd: { x: 0, z: 50, r: 3, name: '上下杭（三通桥）', path: [[0, 14], [0, 30], [0, 42], [0, 50]], view: [-16, 42.4, 1.25, 0.16], back: [0, 50, Math.PI, 0.04] },
   fzxm: { x: 0, z: 49, r: 3, name: '西湖公园（观湖亭）', path: [[0, 10], [0, 26], [0, 40], [0, 49]], view: [0, 36, 0, 0.02] },
+  fzst: { x: 0, z: 64, r: 4, name: '烟台山（石厝教堂）', path: [[0, 10], [0, 30], [0, 50], [0, 64]], view: [-3, 44, 0.12, -0.12] },
+  fzgs: { x: 0, z: 50, r: 4, name: '鼓山风景区（索道）', path: [[0, 10], [0, 30], [0, 50]], view: [-4, 18, 0.25, -0.2] },
+  fzdl: { x: 0, z: 76, r: 4, name: '海峡奥体中心', path: [[0, 10], [0, 30], [0, 52], [0, 76]], view: [0, 16, 0, -0.16] },
+  fznmd_B: { x: 6, z: 50, r: 4, name: '乌山（乌塔）', path: [[0, 12], [2, 30], [6, 50]], view: [-2, 26, 0.25, -0.3] },
 };

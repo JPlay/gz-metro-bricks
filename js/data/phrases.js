@@ -7,7 +7,7 @@ import { LINES, STATIONS, OTHER_LINES, isTerminal, transfersAt } from './lines.j
 import { XM_LINES, XM_STATIONS, xmNext, xmIsTerminal, xmTransfers } from './xm-lines.js';
 import { VISITS, visitTexts } from './visits.js';
 import { xmVisitTexts, xmExitTexts } from './xm-visits.js';
-import { FZ_LINES, FZ_STATIONS, fzIsTerminal, fzTransfers } from './fz-lines.js';
+import { FZ_LINES, FZ_STATIONS, fzIsTerminal, fzTransfers, fzLineZh, fzLineEn } from './fz-lines.js';
 import { fzVisitTexts, fzExitTexts } from './fz-visits.js';
 
 export const LANGS = ['zh', 'yue', 'en'];
@@ -161,8 +161,10 @@ export function fzPlatformSegs(line, dir, n) {
 }
 export function fzNextSegs(line, code) {
   const s = FZ_STATIONS[code], xs = fzTransfers(code, line);
-  const xZh = xs.map(k => k + '号线').join('、'), xEn = xs.map(k => 'Line ' + k).join(' and ');
-  const zx = xs.length ? '，可换乘' + xZh : '', ex = xs.length ? ', the interchange with ' + xEn : '';
+  const xZh = xs.map(fzLineZh).join('、'), xEn = xs.map(fzLineEn).join(' and '), ox = s.ox || [];
+  // 出站换乘（水部↔闽都、两个三叉街）：报“可出站换乘××”
+  const zx = (xs.length ? '，可换乘' + xZh : '') + (ox.length ? '，可出站换乘' + ox.map(fzLineZh).join('、') : '');
+  const ex = (xs.length ? ', the interchange with ' + xEn : '') + (ox.length ? (xs.length ? '. ' : ', ') + 'Passengers may transfer to ' + ox.map(fzLineEn).join(' and ') + ' outside the station' : '');
   const both = Object.values(FZ_LINES).filter(L => L.stations.includes(code)).length > 1;
   return fseg('next.' + code + (both ? line : ''), `下一站，${s.zh}${zx}。`, `The next station is ${s.en}${ex}.`);
 }
