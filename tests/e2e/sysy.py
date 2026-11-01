@@ -28,6 +28,10 @@ for(let i=0;i<out.length;i++)for(let j=i+1;j<out.length;j++){const a=out[i],b=ou
 return {list:out.map(b=>b.id+':'+b.lbl),bad};})()"""
 async def btns(pg): return await pg.evaluate(BTNS_JS)
 
+async def gsettle(pg, g=0.3):
+    # 按游戏时间等几帧（dtMax=0.12 → 0.3s 至少 3 帧）：软件渲染 0–1 fps 时，墙钟 sleep 0.8s 可能一帧都没出，
+    # HUD（右下角动作按钮、跳按钮）还停在上一帧的样子
+    g0=await gt(pg); return await wait(pg, f"(window.__gt||0)>={g0+g}", g+5)
 async def view(pg, v):
     if await pg.evaluate('__game.player.view')!=v: await pg.evaluate('__game.toggleView()')
 async def shot(pg, name, settle=1.2):
@@ -114,7 +118,7 @@ async def main():
     sx=await pg.evaluate("(()=>{const s=__game.station.interior.seats.find(s=>s.wy==0&&s.wz<0&&Math.abs(s.wx-600)>3&&Math.abs(s.wx-600)<5);return [s.wx,s.wz,s.face]})()")
     await pose(pg, sx[0]+0.3*math.sin(sx[2]),0.05, sx[1]+0.3*math.cos(sx[2]), sx[2], 0.1)
     await wait(pg, "!!__game.state().act", 5)
-    R['actSit']=(await st(pg))['act']; R['btnSit']=await btns(pg); await pg.evaluate('__game.act()'); await wait(pg, "!!__game.state().seat.seated", 5); await asyncio.sleep(0.8)
+    await gsettle(pg); R['actSit']=(await st(pg))['act']; R['btnSit']=await btns(pg); await pg.evaluate('__game.act()'); await wait(pg, "!!__game.state().seat.seated", 5); await gsettle(pg)
     R['seat']=(await st(pg))['seat']; R['btnSeated']=await btns(pg); await shot(pg,'07-seated',0.8)
     await pg.evaluate('__game.act()'); await asyncio.sleep(0.5); R['stood']=not (await st(pg))['seat'].get('seated')
     # 9. 走楼梯上二楼楼座（西侧楼梯 → 桥 → 楼座门 → 走道），第一人称往下看

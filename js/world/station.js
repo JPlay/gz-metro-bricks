@@ -73,12 +73,12 @@ export class Station {
       A: { key: 'A', step: 1, trackZ: f.zc - TRACK_OFF, psdZ: f.zc - PSD_OFF, doorSg: 1, n: 1 },
       B: { key: 'B', step: -1, trackZ: f.zc + TRACK_OFF, psdZ: f.zc + PSD_OFF, doorSg: -1, n: 2 } } }));
     this.gates = []; this.mv = []; this.escalators = []; this.psd = []; this.pids = []; this.greeters = [];
-    // 街面 / 出入口通道 / 地下（站厅、站台、换乘）分成三组网格，按玩家位置开关（见 zoneVis）：
+    // 街面（含出入口通道）/ 地下（站厅、站台、换乘）分成两组网格，按玩家位置开关（见 zoneVis）。
+    //   通道并进街面组：站厅里只能透过通道口看到通道，而那时街面组本来就开着；通道单独成组每个桶要多一次绘制。
     //   纪念堂站的街面很重（园区外的行道树、路灯、骑楼……），站在街上时地下那 1 万多个三角形不用画
     const split = SPLIT_ZONES.has(this.s.signature);
     k.lite = split; // 同一批场景顺带用低面数的行道树 / 路灯（decor.js）
-    this.street(); if (split) k.group('street');
-    this.passage(); if (split) k.group('passage');
+    this.street(); this.passage(); if (split) k.group('street');
     this.concourse();
     this.platforms.forEach(p => this.platform(p));
     if (this.platforms.length > 1) this.transfer();
@@ -944,20 +944,25 @@ export class Station {
       e.steps.forEach((st, i) => { let u = ((i / n) * L + e.off * e.dir) % L; if (u < 0) u += L; const f = u / L; st.position.x = e.x0 + (e.x1 - e.x0) * f; st.position.y = e.y0 + (e.y1 - e.y0) * f + 0.06; });
     }
     for (const m of this.mv) m.update(dt, cam, this.events, player);
-    if (this.kit.groupNodes) this.zoneVis(p);
+    if (this.kit.groupNodes) this.zoneVis(p, cam);
     if (this.park) this.parkUpdate(dt, player, cam);
     if (this.gze) updateGze(this.gze, dt, player, Audio);
     this.crowd.update(dt, p);
     for (const pd of this.pids) { pd.t -= dt; if (pd.t <= 0) { pd.t = 1; this.drawPids(pd, metro); } }
   }
   /**
-   * 分区显示：地下组 = 在地下，或者站在出入口楼梯附近（往下能看到站厅）；街面组 = 在地面附近，或者在站厅中间靠出入口那半边（顺着通道往上能看到街口雨棚）。
-   *   出入口通道组一直显示。前几帧全开（反射探针只渲染一次，要拍到完整的站厅）。
+   * 分区显示：地下组 = 在地下，或者站在出入口楼梯附近（往下能看到站厅）；街面组（含出入口通道）= 在地面附近 / 通道里，
+   *   或者在站厅里且镜头视锥含通道口（透过通道口能看到楼梯 / 顺着通道往上能看到街口雨棚）。前几帧全开（反射探针只渲染一次，要拍到完整的站厅）。
    */
-  zoneVis(p) {
+  zoneVis(p, cam) {
     if ((this._zvF = (this._zvF || 0) + 1) < 4) return;
     const G = this.kit.groupNodes, nearStair = Math.abs(p.x) < 8 && p.z < -12 && p.z > -44;
-    const under = p.y < -1 || nearStair, street = p.y > -5 || (p.y > YC - 1.5 && Math.abs(p.x) < 10 && p.z < 12);
+    // 站厅里只有镜头对着出入口通道口（z = -20 那个洞）时，才可能顺着楼梯看到街面；背对 / 侧对通道口时街面组整组关掉
+    //（街面网格包围盒很大，视锥裁剪剔不掉，站厅镜头会白白多出十几次绘制）
+    const mouth = this._zvMouth || (this._zvMouth = new B.BoundingInfo(new B.Vector3(-3.5, YC, -20.3), new B.Vector3(3.5, -0.9, -19.7)));
+    const inPassage = Math.abs(p.x) < 4 && p.z < -19;
+    const under = p.y < -1 || nearStair,
+      street = p.y > -5 || inPassage || (p.y > YC - 1.5 && (!cam || cam.isInFrustum(mouth)));
     if (G.under && G.under.isEnabled(false) !== under) G.under.setEnabled(under);
     if (G.street && G.street.isEnabled(false) !== street) G.street.setEnabled(street);
   }
