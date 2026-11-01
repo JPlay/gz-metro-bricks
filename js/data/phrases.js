@@ -8,6 +8,7 @@ import { XM_LINES, XM_STATIONS, xmNext, xmIsTerminal, xmTransfers } from './xm-l
 import { VISITS, visitTexts } from './visits.js';
 import { xmVisitTexts, xmExitTexts } from './xm-visits.js';
 import { FZ_LINES, FZ_STATIONS, fzIsTerminal, fzTransfers } from './fz-lines.js';
+import { fzVisitTexts, fzExitTexts } from './fz-visits.js';
 
 export const LANGS = ['zh', 'yue', 'en'];
 /** 播放顺序：普通话 → 粤语（广州）/ 闽南语（厦门地铁）→ 英语。粤语只在广州、闽南语只在厦门地铁 1/2 号线；动车只有普通话 + 英语 */
@@ -99,6 +100,8 @@ const EMU_T = {
   gz: { no: 'D三三一一', noEn: 'D three three one one', from: '厦门北站', to: '广州东站', fromEn: 'Xiamen North', toEn: 'Guangzhou East', city: '广州', cityEn: 'Guangzhou' },
   // 厦门北⇄福州南（福厦高铁）：G3028 厦门北 → 南京南（福州南下车），G3027 南京南 → 厦门北（福州南上车）。end / start = 全程终到 / 始发站
   fz: { no: 'G三零二八', noEn: 'G three zero two eight', from: '厦门北站', to: '福州南站', end: '南京南站', fromEn: 'Xiamen North', toEn: 'Fuzhou South', endEn: 'Nanjing South', city: '福州', cityEn: 'Fuzhou' },
+  // 广州东 → 福州南 直达 D3309（途经厦门北）
+  gzf: { no: 'D三三零九', noEn: 'D three three zero nine', from: '广州东站', to: '福州南站', fromEn: 'Guangzhou East', toEn: 'Fuzhou South', city: '福州', cityEn: 'Fuzhou' },
   xmf: { no: 'G三零二七', noEn: 'G three zero two seven', from: '福州南站', to: '厦门北站', start: '南京南站', fromEn: 'Fuzhou South', toEn: 'Xiamen North', startEn: 'Nanjing South', city: '厦门', cityEn: 'Xiamen' }
 };
 export const emuDoorsSegs = () => seg('emu.doors', ['列车即将出发，车门即将关闭，请注意安全。', null, 'The train is about to depart. The doors are closing.']);
@@ -169,10 +172,13 @@ const FZ_EXIT_T = {
 };
 /** 福州地铁关门提示：普通话 → 福州话（空位）→ 英语，不播粤语 */
 export const fzDoorsClosingSegs = () => fseg('doorsClosing', '车门即将关闭，请注意安全。', 'The doors are closing. Please stand clear of the doors.');
-export const fzExitSegs = code => { const t = FZ_EXIT_T[code]; return t ? fseg('exit.' + code, t[0], t[1]) : []; };
+/** 站内出口提示：福州火车南站用 FZ_EXIT_T；有景点的站用 fz-visits.js 的“前往××的乘客，请从×出口出站” */
+export const fzExitSegs = code => { const t = FZ_EXIT_T[code]; if (t) return fseg('exit.' + code, t[0], t[1]); const v = fzExitTexts(code); return v ? fseg('fzexit.' + code, v[0], v[2]) : []; };
+/** 报“下一站”后接一句景点（“东街口站附近有三坊七巷，欢迎下车游玩，请从C出口出站。”） */
+export const fzVisitSegs = code => { const s = FZ_STATIONS[code], t = s && fzVisitTexts(code, s.zh + '站', s.en + ' station'); return t ? fseg('fzvisit.' + code, t[0], t[2]) : []; };
 export function fzDepartSegs(line, nextCode, dir, step, withDestination) {
   const head = withDestination ? fzDestinationSegs(line, dir) : [];
-  return fzIsTerminal(line, nextCode, step) ? [...head, ...fzTerminalSegs(line, dir)] : [...head, ...fzNextSegs(line, nextCode)];
+  return fzIsTerminal(line, nextCode, step) ? [...head, ...fzTerminalSegs(line, dir)] : [...head, ...fzNextSegs(line, nextCode), ...fzVisitSegs(nextCode)];
 }
 export function allJobs() {
   const out = new Map(), add = list => list.forEach(s => out.set(s.id, s));
@@ -189,7 +195,7 @@ export function allJobs() {
   for (const [id, L] of Object.entries(FZ_LINES)) {
     const line = +id;
     for (const dir of Object.keys(L.dirs)) { add(fzDestinationSegs(line, dir)); add(fzTerminalSegs(line, dir)); add(fzPlatformSegs(line, dir, 1)); add(fzPlatformSegs(line, dir, 2)); }
-    L.stations.forEach((c, i) => { if (i > 0 && i < L.stations.length - 1) add(fzNextSegs(line, c)); add(arriveSegs(c)); add(welcomeSegs(c)); add(fzExitSegs(c)); });
+    L.stations.forEach((c, i) => { if (i > 0 && i < L.stations.length - 1) add(fzNextSegs(line, c)); add(arriveSegs(c)); add(welcomeSegs(c)); add(fzVisitSegs(c)); add(fzExitSegs(c)); });
   }
   add(fzDoorsClosingSegs());
   add(doorsClosingSegs()); add(gapSegs()); add(emuJobs()); Object.keys(SAFETY).forEach(k => add(safetySegs(k)));

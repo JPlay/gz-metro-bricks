@@ -10,10 +10,11 @@ import { FZ_EXITS, fzExitZh } from '../data/fz-exits.js';
 import { FzStation, FZ_NET } from '../world/fzMetro.js';
 import { XmStreet } from '../world/xmStreet.js';
 import { fzStreet } from '../world/fzStreet.js';
+import { FZ_ATTR_BUILD } from '../world/fzAttr.js';
 import { XmMetro } from './xmService.js';
 import { FS } from '../world/fzZones.js';
 
-export const FZ_STREET = { O: FS, net: 'fz', EXITS: FZ_EXITS, LINES: FZ_LINES, STATIONS: FZ_STATIONS, brand: ['福州地铁', 'Fuzhou Metro'], exitZh: fzExitZh, special: false, build: fzStreet };
+export const FZ_STREET = { O: FS, net: 'fz', EXITS: FZ_EXITS, LINES: FZ_LINES, STATIONS: FZ_STATIONS, brand: ['福州地铁', 'Fuzhou Metro'], exitZh: fzExitZh, special: false, build: s => (FZ_ATTR_BUILD[s.code] ? FZ_ATTR_BUILD[s.code](s) : fzStreet(s)) };
 
 export const FZ_SVC = {
   N: FZ_NET, net: 'fz', ev: 'fz', ids: [20, 21],

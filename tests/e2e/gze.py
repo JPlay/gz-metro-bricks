@@ -52,6 +52,7 @@ async def main():
     # 5. 车厢里：门厅 → 端门 → 过道，走到第 14 排二人座旁坐下
     R['toSeat'] = await auto(pg, [[EO + 10.6, 0.25], [EO + 9.0, 0.3], [EO + 4.2, 0.3]])   # 第 14 排二人座（往前还有 4 排，看得到端门上的显示屏）
     s = await st(pg); R['actBeforeSit'] = s['act']
+    await pg.evaluate("__game.east.pick('xm')")   # 广州东站两个目的地：先选好厦门，坐下就不弹卡片
     await pg.evaluate('__game.act()'); await asyncio.sleep(1.0)
     # 坐下就会开始“关门 → 发车”倒计时（4.2 s 关门、6.5 s 开车）。截图期间冻结动车时钟，否则机器快的时候（setDtMax 0.25）截图那几秒车就开走了、下不了车
     # （startRide 在坐稳 1.2 s 后才调用，而且会把 speed 设回 1：等它开始了再冻结）

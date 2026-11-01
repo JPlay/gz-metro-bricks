@@ -1,4 +1,4 @@
-# 福州地铁 1、5 号线：每个站都要能“站台 → 楼梯 → 站厅 → 出口 → 街面”走出去，再原路走回站台（同 xm_exits.py）。
+# 福州地铁 1、4、5 号线：每个站都要能“站台 → 楼梯 → 站厅 → 出口 → 街面”走出去，再原路走回站台（同 xm_exits.py）。
 # 1. 数据：每个站（福州火车南站除外：它的站厅就是国铁出站层）在 FZ_EXITS 里都有出口；站台有上站厅的楼梯。
 # 2. 福州火车南站（fzfzn）：从地铁站厅走 F / A / B 出口通道上东广场、走 D2 上西广场，再走回出站层。
 # 3. 逐站步行（autopilot，不传送）：站台 → 楼梯 → 站厅 → 出口通道 → 地面（进街区）→ 回出口亭 → 下楼梯回站厅 → 回站台。
@@ -25,8 +25,8 @@ async def walk(pg, pts, leg=18.0, run=True):
     return await auto(pg, out, run)
 STATIC = """(async () => {
   const E = await import('/js/data/fz-exits.js'), L = await import('/js/data/fz-lines.js');
-  const all = [...new Set([...L.FZ_LINES[1].stations, ...L.FZ_LINES[5].stations])];
-  return { n1: L.FZ_LINES[1].stations.length, n5: L.FZ_LINES[5].stations.length, rail: E.FZS_EXITS,
+  const all = [...new Set(Object.values(L.FZ_LINES).flatMap(l => l.stations))];
+  return { n1: L.FZ_LINES[1].stations.length, n5: L.FZ_LINES[5].stations.length, n4: L.FZ_LINES[4] ? L.FZ_LINES[4].stations.length : 0, rail: E.FZS_EXITS,
     all: all.map(c => { const e = E.FZ_EXITS[c], s = L.FZ_STATIONS[c];
       return { code: c, zh: s.zh, lines: s.lines, ex: e ? { n: e.n, x: e.x, line: e.line, road: e.road, to: e.to } : null }; }) };
 })()"""
@@ -85,7 +85,7 @@ async def main():
         b, pg, logs = await open_game(p, BASE + '?q=1')
         await pg.evaluate(GCLOCK); await pg.evaluate(JUMP); await pg.evaluate('__game.setDtMax(0.25)'); await asyncio.sleep(1)
         S = await pg.evaluate(STATIC); R['static'] = S
-        ok('static:L1=25,L5=20', S['n1'] == 25 and S['n5'] == 20)
+        ok('static:L1=25,L4=23,L5=20', S['n1'] == 25 and S['n4'] == 23 and S['n5'] == 20)
         missing = [f"{s['code']} {s['zh']}" for s in S['all'] if s['code'] != 'fzfzn' and not s['ex']]
         R['missingExits'] = missing; log('missing exits', missing)
         ok('static:everyStationHasExit', not missing)

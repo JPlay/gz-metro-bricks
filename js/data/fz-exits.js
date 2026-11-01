@@ -1,5 +1,5 @@
 /**
- * 福州地铁出口（第一批）。
+ * 福州地铁出口（第一批 + 第二批景点站）。
  *
  * 福州火车南站（fzfzn）—— 来源：福州市政府网 2023-12-28《福州火车南站地铁—铁路换乘路线有变化》
  *   https://www.fuzhou.gov.cn/zgfzzt/qyrz/gyfz/202312/t20231229_4747188.htm ；福州新闻网 2023-12-24
@@ -29,11 +29,23 @@ export const FZS_EXITS = [
 const E = (line, n = '', to = [], toEn = []) => ({ n, x: 10, line, road: '', to, toEn, verified: false });
 export const FZ_EXITS = {};
 for (const [id, L] of Object.entries(FZ_LINES)) for (const c of L.stations) if (!FZ_EXITS[c] && c !== 'fzfzn') FZ_EXITS[c] = E(+id);
+// 第二批：有景点的站，出口号按 /workspace/fuzhou-research/brief.md 景点表（verified:true = 有来源；路名只写来源里提到的）
+Object.assign(FZ_EXITS, {
+  fzdjk: { n: 'C', x: 10, line: 1, road: '杨桥东路', to: ['三坊七巷（南后街）', '达明美食街'], toEn: ['Three Lanes and Seven Alleys (Nanhou Street)', 'Daming Food Street'] },
+  fznmd: { n: 'G1', x: 10, line: 1, road: '', to: ['于山风景区（白塔）', '五一广场'], toEn: ['Yushan Hill (White Pagoda)', 'Wuyi Square'] },
+  fzdd: { n: 'C', x: 10, line: 1, road: '', to: ['上下杭'], toEn: ['Shangxiahang Historic District'] },
+  fzxm: { n: 'B', x: 10, line: 4, road: '', to: ['西湖公园', '福建博物院'], toEn: ['West Lake Park', 'Fujian Museum'] },
+});
 // 福州火车南站（fzfzn）不在这里：它的站厅就是国铁出站层，出口通道 A / B / F / D2 在 FzsStation 里（FZS_EXITS），不走街区
 
 /** 站厅出入口信息牌（只有核过的站才有） */
 export const FZ_EXIT_TABLE = {
   fzfzn: FZS_EXITS.map(e => [e.n, e.to.join('、')]),
+  // 只列 brief 里核过的口；其余口没核实，不上牌
+  fzdjk: [['C', '杨桥东路、三坊七巷（南后街北口，约400米）']],
+  fznmd: [['G1', '于山风景区（白塔）、五一广场'], ['A1', '三坊七巷南口（约600米）'], ['B', '乌山风景区']],
+  fzdd: [['C', '上下杭（约850米）']],
+  fzxm: [['B', '西湖公园（约800米）、福建博物院']],
 };
 export const fzExitZh = n => /^[0-9]+$/.test(n) ? `${n}号出口` : `${n}出口`;
 export { FZ_STATIONS };

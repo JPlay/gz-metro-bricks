@@ -110,6 +110,10 @@ async def main():
     await auto(pg, [[-5.8, -127.3], [-5.8, -128.6]])
     ok('inCar', await wait(pg, '__game.east.info().inside', 4))
     ok('seated', await sit_row14(pg))
+    # 广州东站现在有两个目的地（厦门 D2315 / 福州 D3309 直达）：坐下先弹卡片，选厦门
+    ok('pickerGz', await wait(pg, '__game.east.info().picker', 6))
+    R['pickerGzDests'] = await pg.evaluate('__game.east.info().dests')
+    ok('pickerGzCards', R['pickerGzDests'] == ['xm', 'fz']); await pg.evaluate("__game.east.pick('xm')")
     # 2. 关门 → 发车
     ok('closing', await wait(pg, '!!__game.east.info().ride', 6))
     ok('doorClosed', await wait(pg, '__game.east.info().door >= 1', 12))

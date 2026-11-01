@@ -379,8 +379,8 @@ export class EastCtl {
   cancelRide() { this.ride = null; this.interior.setDoor(0); this.Audio.trainSound({ speed: 0 }); this.events.emit('emu', { phase: 'cancel' }); }
   /** 当前路段（rt = 发车后行驶秒数）：每层取“最近一次指定”的内容 */
   segAt(rt) {
-    const out = { far: 'city', mid: 'city', near: 'city', tunnel: false, bridge: false };
-    for (const e of this.ride.route) { if (e.t > rt) break; for (const k of ['far', 'mid', 'near']) if (e[k]) out[k] = e[k]; out.tunnel = !!e.tunnel; out.bridge = !!e.bridge; }
+    const out = { far: 'city', mid: 'city', near: 'city', tunnel: false, bridge: false, toast: null, tt: 0 };
+    for (const e of this.ride.route) { if (e.t > rt) break; for (const k of ['far', 'mid', 'near']) if (e[k]) out[k] = e[k]; out.tunnel = !!e.tunnel; out.bridge = e.bridge || false; out.toast = e.toast || null; out.tt = e.t; }
     return out;
   }
   tick(dtWall) {
@@ -396,7 +396,7 @@ export class EastCtl {
     let v;
     if (!R.braking) {
       v = rt < 12 ? 0.8 * rt : Math.min(TRIP.vmax, 9.6 + 3 * (rt - 12));
-      if (rt >= TRIP.brakeAt) { R.braking = true; R.rem = TRIP.brakeDist; R.vb = v; R.dec = v * v / (2 * TRIP.brakeDist); R.phase = 'brake'; this.events.emit('emu', { phase: 'brake' }); }
+      if (rt >= (R.trip.brakeAt || TRIP.brakeAt)) { R.braking = true; R.rem = TRIP.brakeDist; R.vb = v; R.dec = v * v / (2 * TRIP.brakeDist); R.phase = 'brake'; this.events.emit('emu', { phase: 'brake' }); }
     }
     if (R.braking) { v = Math.max(0.6, Math.sqrt(2 * R.dec * Math.max(0, R.rem))); R.rem -= v * dt; }
     R.v = v; R.s += v * dt;
@@ -408,9 +408,12 @@ export class EastCtl {
     if (!gone) this.stopAt(R.from, -R.s); else if (!R.braking || R.from !== R.dest) this.stopAt(R.from, null);
     if (R.braking && R.rem < 450) this.stopAt(R.dest, Math.max(0, R.rem));
     // 路过的提示 / 广播
-    if (seg.bridge && !F.bridge) { F.bridge = true; const b = (typeof seg.bridge === 'object' ? seg.bridge : null) || R.trip.bridge || {}; this.hud.toast(b.toast || '过大桥啦', 3000); Ann.say(PH.emuBridgeSegs(b.ann), { key: 'emu', interrupt: true }); }
+    // 大桥：每座桥（按 ann 键）报一次 —— 广州东 → 福州南一程过两座桥
+    const bk = seg.bridge && ('bridge:' + ((typeof seg.bridge === 'object' && seg.bridge.ann) || 'trip'));
+    if (seg.toast && !F['toast' + seg.tt]) { F['toast' + seg.tt] = true; this.hud.toast(seg.toast, 3200); this.events.emit('emu', { phase: 'pass', toast: seg.toast }); }
+    if (seg.bridge && !F[bk]) { F[bk] = true; F.bridge = true; const b = (typeof seg.bridge === 'object' ? seg.bridge : null) || R.trip.bridge || {}; this.hud.toast(b.toast || '过大桥啦', 3000); Ann.say(PH.emuBridgeSegs(b.ann), { key: 'emu', interrupt: true }); }
     if (seg.tunnel !== R.inTunnel) { R.inTunnel = seg.tunnel; if (seg.tunnel) this.hud.toast('进隧道啦', 1400); }
-    if (!F.annNext && rt >= TRIP.brakeAt - 14) { F.annNext = true; Ann.say(PH.emuNextSegs(R.trip.ann), { key: 'emu', interrupt: true }); }
+    if (!F.annNext && rt >= (R.trip.brakeAt || TRIP.brakeAt) - 14) { F.annNext = true; Ann.say(PH.emuNextSegs(R.trip.ann), { key: 'emu', interrupt: true }); }
     A.trainSound({ speed: Math.min(1, v / TRIP.vmax * 0.78 + (R.inTunnel ? 0.22 : 0)), inside: true, braking: R.braking && v < 30 });
     if (R.braking && R.rem <= 0) this.arrive();
   }
@@ -489,7 +492,7 @@ export class EastCtl {
     const R = this.ride;
     return { inside: !!(this.cur && this.cur.loc === 'car'), loc: this.loc, area: this.area, side: this.side, speed: this.speed, door: this.interior ? +this.interior.doorF.toFixed(2) : 0,
       dest: this.destFor(), dests: destsFrom(this.side), picker: !!this.picker,
-      ride: R ? { from: R.from, dest: R.dest, phase: R.phase, t: +R.t.toFixed(1), rt: +R.rt.toFixed(1), v: +R.v.toFixed(1), s: Math.round(R.s), rem: Math.round(R.rem), seg: this.segAt(R.rt), tunnel: !!R.inTunnel } : null,
+      ride: R ? { from: R.from, dest: R.dest, train: R.trip.train, phase: R.phase, t: +R.t.toFixed(1), rt: +R.rt.toFixed(1), v: +R.v.toFixed(1), s: Math.round(R.s), rem: Math.round(R.rem), seg: this.segAt(R.rt), tunnel: !!R.inTunnel } : null,
       xmn: this.xmn ? this.xmn.info() : null, fzs: this.fzs ? this.fzs.info() : null, interior: this.interior ? this.interior.info() : null, count: this.count };
   }
 }

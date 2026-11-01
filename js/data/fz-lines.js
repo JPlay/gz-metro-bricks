@@ -1,5 +1,6 @@
 /*
- * 福州地铁 1 号线、5 号线车站数据（第一批：只做这两条线；福州话报站以后再补）。
+ * 福州地铁 1 / 4 / 5 号线车站数据（第一批 1、5 号线；第二批加 4 号线；福州话报站以后再补）。
+ *   4 号线 23 站顺序 / 英文名：/workspace/fuzhou-research/tpl_4.txt（中文维基 4 号线车站表，2026-10-31 抓取）；线路色 #FF7F41（福州地铁颜色模板）
  *
  * 数据来源（2026-10-31 核对）：
  *   [1] 英文维基百科 Line 1 (Fuzhou Metro) https://en.wikipedia.org/wiki/Line_1_(Fuzhou_Metro)
@@ -15,12 +16,18 @@
  */
 export const FZ_L1 = '#CB333B';
 export const FZ_L5 = '#893B67';
+export const FZ_L4 = '#FF7F41';
 
 export const FZ_LINES = {
   1: {
     id: 1, zh: '1号线', en: 'Line 1', color: FZ_L1, ink: '#FFFFFF', soft: '#F8DADC', mark: '福满闽都', city: '福州地铁',
     dirs: { sjk: { zh: '三江口', en: 'Sanjiangkou', step: 1 }, xf: { zh: '象峰', en: 'Xiangfeng', step: -1 } },
     stations: ['fzxf', 'fzxs', 'fzlhs', 'fzfz', 'fzdm', 'fzsd', 'fzps', 'fzdjk', 'fznmd', 'fzct', 'fzdd', 'fzst', 'fzscj', 'fzbht', 'fzhlz', 'fzhs', 'fzpx', 'fzcm', 'fzsjc', 'fzll', 'fzfzn', 'fzap', 'fzlc', 'fzxy', 'fzsjk']
+  },
+  4: {
+    id: 4, zh: '4号线', en: 'Line 4', color: FZ_L4, ink: '#FFFFFF', soft: '#FFE3D3', mark: '福州地铁', city: '福州地铁',
+    dirs: { dfj: { zh: '帝封江', en: 'Difengjiang', step: 1 }, bz: { zh: '半洲', en: 'Banzhou', step: -1 } },
+    stations: ['fzbz', 'fzjx', 'fzht', 'fzjns', 'fzfhc', 'fzlz', 'fzxm', 'fzdjk', 'fzslyy', 'fzdmn', 'fzsjch', 'fzzy', 'fzhy', 'fzhoy', 'fzqy', 'fzgmg', 'fzafz', 'fzhhgy', 'fzhzzx', 'fzlp', 'fzcm', 'fzlzwq', 'fzdfj']
   },
   5: {
     id: 5, zh: '5号线', en: 'Line 5', color: FZ_L5, ink: '#FFFFFF', soft: '#EBD8E3', mark: '福州地铁', city: '福州地铁',
@@ -39,7 +46,7 @@ export const FZ_STATIONS = {
   fzdm: { zh: '斗门', en: 'Doumen', x: [] },
   fzsd: { zh: '树兜', en: 'Shudou', x: [] },
   fzps: { zh: '屏山', en: 'Pingshan', x: [] },
-  fzdjk: { zh: '东街口', en: 'Dongjiekou', x: [4] },
+  fzdjk: { zh: '东街口', en: 'Dongjiekou', x: [] },
   fznmd: { zh: '南门兜', en: 'Nanmendou', x: [2] },
   fzct: { zh: '茶亭', en: 'Chating', x: [] },
   fzdd: { zh: '达道', en: 'Dadao', x: [] },
@@ -49,7 +56,7 @@ export const FZ_STATIONS = {
   fzhlz: { zh: '葫芦阵', en: 'Huluzhen', x: [] },
   fzhs: { zh: '黄山', en: 'Huangshan', x: [] },
   fzpx: { zh: '排下', en: 'Paixia', x: [] },
-  fzcm: { zh: '城门', en: 'Chengmen', x: [4] },
+  fzcm: { zh: '城门', en: 'Chengmen', x: [] },
   fzsjc: { zh: '三角埕', en: 'Sanjiaocheng', x: [] },
   fzll: { zh: '胪雷', en: 'Lulei', x: [] },
   fzfzn: { zh: '福州火车南站', en: 'Fuzhou South Railway Station', x: [], theme: 'fzs' },   // 1↔5 换乘；B2 1 号线、B3 5 号线
@@ -60,7 +67,7 @@ export const FZ_STATIONS = {
   // —— 5 号线（fzfzn 已在上面）
   fzjxhy: { zh: '荆溪厚屿', en: 'Jingxi Houyu', x: [] },
   fznldx: { zh: '农林大学', en: 'Agriculture and Forestry University', x: [] },
-  fzht: { zh: '洪塘', en: 'Hongtang', x: [4] },
+  fzht: { zh: '洪塘', en: 'Hongtang', x: [] },
   fzzb: { zh: '阵坂', en: 'Zhenban', x: [] },
   fzmr: { zh: '马榕', en: 'Marong', x: [] },
   fzjs: { zh: '金山', en: 'Jinshan', x: [2] },
@@ -73,10 +80,30 @@ export const FZ_STATIONS = {
   fzws: { zh: '吴山', en: 'Wushan', x: [] },
   fzgszl: { zh: '盖山竹榄', en: 'Gaishan Zhulan', x: [] },
   fzyx: { zh: '义序', en: 'Yixu', x: [] },
-  fzdfj: { zh: '帝封江', en: 'Difengjiang', x: [4] },
+  fzdfj: { zh: '帝封江', en: 'Difengjiang', x: [] },
   fzlzgz: { zh: '螺洲古镇', en: 'Ancient Luozhou Town', x: [] },
   fzqj: { zh: '前锦', en: 'Qianjin', x: [] },
-  fzlj: { zh: '龙江', en: 'Longjiang', x: [] }
+  fzlj: { zh: '龙江', en: 'Longjiang', x: [] },
+  // —— 4 号线（第二批；洪塘 / 东街口 / 城门 / 帝封江 已在上面）
+  fzbz: { zh: '半洲', en: 'Banzhou', x: [] },
+  fzjx: { zh: '建新', en: 'Jianxin', x: [] },
+  fzjns: { zh: '金牛山', en: 'Jinniushan', x: [] },
+  fzfhc: { zh: '凤凰池', en: 'Fenghuangchi', x: [] },
+  fzlz: { zh: '陆庄', en: 'Luzhuang', x: [] },
+  fzxm: { zh: '西门', en: 'Ximen', x: [] },
+  fzslyy: { zh: '省立医院', en: 'Provincial Hospital', x: [] },
+  fzdmn: { zh: '东门', en: 'Dongmen', x: [] },          // 滨海快线换乘（第三批）
+  fzsjch: { zh: '三角池', en: 'Sanjiaochi', x: [] },
+  fzzy: { zh: '竹屿', en: 'Zhuyu', x: [] },
+  fzhy: { zh: '横屿', en: 'Hengyu', x: [] },
+  fzhoy: { zh: '后屿', en: 'Houyu', x: [] },
+  fzqy: { zh: '前屿', en: 'Qianyu', x: [2] },
+  fzgmg: { zh: '光明港', en: 'Guangminggang', x: [] },
+  fzafz: { zh: '鳌峰洲', en: 'Aofengzhou', x: [] },
+  fzhhgy: { zh: '花海公园', en: 'Huahai Park', x: [] },
+  fzhzzx: { zh: '会展中心', en: 'Exhibition Center', x: [] },
+  fzlp: { zh: '林浦', en: 'Linpu', x: [6] },
+  fzlzwq: { zh: '螺洲温泉', en: 'Luozhou Hot Spring', x: [] }
 };
 
 for (const [id, l] of Object.entries(FZ_LINES)) l.stations.forEach(c => {
