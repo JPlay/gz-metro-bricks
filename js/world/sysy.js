@@ -344,9 +344,12 @@ function grilleMat(k) {
   m.transparencyMode = B.PBRMaterial.PBRMATERIAL_ALPHATEST; m.alphaCutOff = 0.4; m.backFaceCulling = false; m.twoSidedLighting = true;
   return (M.colored[key] = m);
 }
-/** 花朵图集（不透明，一列一种花色：深浅绿叶子打底 + 满满的五瓣小花，花瓣有亮面 / 暗面、花心黄 / 褐）。
+/** 花朵图集（不透明，一列一种花色）：底色是这一色花的暗面（不是绿叶），上面铺满五瓣小花，只露出少量绿叶缝隙（约 1 成）；
+ *  花色比 main 的纯色带饱和度更高一点（顶点色锥脚 0.74 会压暗）。这样 mipmap 缩小到远处平均下来仍是这一色花，
+ *  大道远景每个花坛读出来是一条红 / 黄 / 粉 / 白的亮色带，不会被平均成深绿。
  *  不用 alpha 测试：花朵贴图缩小（mipmap）后透明度被平均掉，远处会整片消失；锯齿轮廓交给锥体本身 */
 const FLC = ['#E8443A', '#F2B33D', '#EF6FA0', '#FFFFFF'], FLN = FLC.length, FLM = 0.04;
+const FLV = { '#E8443A': '#F2382C', '#F2B33D': '#FFBE2E', '#EF6FA0': '#FF5FA2', '#FFFFFF': '#FFFFFF' };   // 图集里实际用的（更饱和的）花色
 function flowerMat(k) {
   const B = window.BABYLON, M = k.M, key = 'sysy:flowers';
   if (M.colored[key]) return M.colored[key];
@@ -354,14 +357,13 @@ function flowerMat(k) {
   let seed = 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
   const shade = (h, f) => { const v = B.Color3.FromHexString(h); return `rgb(${[v.r, v.g, v.b].map(q => Math.round(Math.min(1, q * f) * 255)).join(',')})`; };
   for (let ci = 0; ci < FLN; ci++) {
-    const x0 = ci * CW; c.save(); c.beginPath(); c.rect(x0, 0, CW, H); c.clip();
-    c.fillStyle = '#2C5A2A'; c.fillRect(x0, 0, CW, H);
-    for (let n = 0; n < 140; n++) { c.fillStyle = ['#3E7A3C', '#356C33', '#4C8C45'][n % 3]; c.beginPath(); c.ellipse(x0 + rnd() * CW, rnd() * H, 4 + rnd() * 6, 2 + rnd() * 3, rnd() * 3.14, 0, Math.PI * 2); c.fill(); }
-    const fc = FLC[ci], white = fc === '#FFFFFF';
-    for (let n = 0; n < 150; n++) {
-      const cx = x0 + rnd() * CW, cy = rnd() * H, r = 6 + rnd() * 5, a0 = rnd() * 6.28, f = 0.82 + rnd() * 0.3;
-      for (let p = 0; p < 5; p++) { const a = a0 + p * 1.2566; c.fillStyle = shade(fc, (p % 2 ? 0.9 : 1.05) * f * (white ? 0.97 : 1)); c.beginPath(); c.ellipse(cx + Math.cos(a) * r * 0.5, cy + Math.sin(a) * r * 0.5, r * 0.55, r * 0.36, a, 0, Math.PI * 2); c.fill(); }
-      c.fillStyle = white || fc === '#F2B33D' ? '#C98A1E' : '#F6D24A'; c.beginPath(); c.arc(cx, cy, r * 0.22, 0, Math.PI * 2); c.fill();
+    const x0 = ci * CW, fc = FLV[FLC[ci]], white = FLC[ci] === '#FFFFFF'; c.save(); c.beginPath(); c.rect(x0, 0, CW, H); c.clip();
+    c.fillStyle = shade(fc, white ? 0.86 : 0.78); c.fillRect(x0, 0, CW, H);                       // 底色 = 花的暗面
+    for (let n = 0; n < 34; n++) { c.fillStyle = ['#3E7A3C', '#356C33', '#4C8C45'][n % 3]; c.beginPath(); c.ellipse(x0 + rnd() * CW, rnd() * H, 3 + rnd() * 4, 1.5 + rnd() * 2, rnd() * 3.14, 0, Math.PI * 2); c.fill(); }   // 零星叶子
+    for (let n = 0; n < 330; n++) {
+      const cx = x0 + rnd() * CW, cy = rnd() * H, r = 7 + rnd() * 6, a0 = rnd() * 6.28, f = 0.9 + rnd() * 0.25;
+      for (let p = 0; p < 5; p++) { const a = a0 + p * 1.2566; c.fillStyle = shade(fc, (p % 2 ? 0.92 : 1.06) * f * (white ? 0.97 : 1)); c.beginPath(); c.ellipse(cx + Math.cos(a) * r * 0.5, cy + Math.sin(a) * r * 0.5, r * 0.55, r * 0.36, a, 0, Math.PI * 2); c.fill(); }
+      c.fillStyle = white || fc === '#FFBE2E' ? '#C98A1E' : '#F6D24A'; c.beginPath(); c.arc(cx, cy, r * 0.18, 0, Math.PI * 2); c.fill();
     }
     c.restore();
   }
