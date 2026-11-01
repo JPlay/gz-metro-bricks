@@ -141,7 +141,7 @@ export class XmStreet {
   /* ---------- 通用 ---------- */
   ground() {
     const k = this.kit;
-    k.floorWithHoles(-160, 160, -60, 200, -0.6, 0, hex('#D6D2CA'), [], true, 'pave');
+    k.floorWithHoles(-160, 160, -60, 200, -0.6, 0, hex('#D6D2CA'), (this.N.holes && this.N.holes[this.code]) || [], true, 'pave');   // holes：景点街区里下沉的河道 / 湖面
     k.colSlab(-161, -160, 0, 8, -60, 200); k.colSlab(160, 161, 0, 8, -60, 200); k.colSlab(-160, 160, 0, 8, -61, -60); k.colSlab(-160, 160, 0, 8, 200, 201);
   }
   road(x0, x1, z0, z1, alongX, name) {

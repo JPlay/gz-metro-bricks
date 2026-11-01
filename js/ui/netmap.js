@@ -410,7 +410,7 @@ export function xmNetworkSVG(here, { portrait = false } = {}) {
 export const FZ_ANCHOR = {
   fzxf: [0, -13], fzfz: [0, -9.4], fzdjk: [0, -5], fznmd: [0, -3.6], fzscj: [0.6, 1], fzcm: [1.6, 6.5], fzfzn: [2.2, 9.5], fzap: [3.4, 10], fzsjk: [7.5, 10.6],
   fzbz: [-8, 2.4], fzht: [-6.6, -1.6], fzjns: [-5.6, -3.8], fzxm: [-2.4, -5], fzdmn: [3.2, -5], fzsjch: [4.4, -5], fzqy: [5.6, -3.2], fzgmg: [5.8, -1.6], fzhhgy: [5.2, 2.4], fzlp: [4.2, 6.6], fzlzwq: [-0.2, 7.4], fzdfj: [-2.2, 8],
-  fzjxhy: [-9.4, -9.4], fznldx: [-8.6, -6], fzjs: [-5.6, 1.4], fzdl: [-4, 3.6], fzyx: [-3, 6.6], fzlzgz: [-1, 9.4], fzlj: [1, 9.8]
+  fzjxhy: [-9.4, -9.4], fznldx: [-8.6, -6], fzjs: [-5.6, 1.4], fzdl: [-4, 3.6], fzyx: [-3, 6.6], fzlzgz: [-1.4, 9.4], fzlj: [1, 9.8]
 };
 export function fzLayout() {
   const pos = {};
@@ -431,7 +431,8 @@ export function fzLayout() {
 /** 景点图标相对车站的偏移（像素）：东街口/西门/南门兜/达道挤在一起，各放一边免得图标和字叠在一起 */
 const FZ_ATTR_OFF = { fzxm: [-58, -32], fzdjk: [-24, -52], fznmd: [-50, 4], fzdd: [-50, 12] };
 /** 这几站的站名换个位置（默认在点的右上方，这几处太挤）：[dx, dy, text-anchor] */
-const FZ_LABEL_AT = { fzfhc: [0, 19, 'middle'], fzzy: [-9, 4, 'end'], fzjns: [-9, -2, 'end'], fzslyy: [8, 19, 'start'] };
+const FZ_LABEL_AT = { fzfhc: [0, 19, 'middle'], fzzy: [-9, 4, 'end'], fzjns: [-9, -2, 'end'], fzslyy: [8, 19, 'start'], fzlz: [3, 18, 'start'],
+  fzlzgz: [-5, 15, 'end'], fzqj: [0, 18, 'middle'], fzlj: [-3, -10, 'middle'] };
 export function fzNetworkSVG(here, { portrait = false } = {}) {
   const W = portrait ? 720 : 1100, H = portrait ? 1100 : 720;
   const raw = fzLayout(), pos = {};
