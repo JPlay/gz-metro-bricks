@@ -42,13 +42,21 @@ async def walk_steps(pg, o, I, f, side):   # 到了 f 层（0 起）：在走廊
   ok_ = await go(pg, o, [[x, 21 + z]]); s = await S(pg)
   ok(f"{I['id']}:walk{f + 1}F", ok_ and atY(s, o, f) and s['floor'] == f + 1 and abs(s['pos'][0] - o['x'] - x) < 1.2 and abs(s['pos'][2] - o['z'] - 21 - z) < 1.2)
 
+async def esc_shot(pg, mid, I, o, x, a, side):   # 2F 扶梯口，看着 2F→3F 上行扶梯
+  s = await S(pg); yaw = 0 if side > 0 else math.pi
+  await view(pg, 'first'); await pose(pg, o['x'] + x + 0.6, s['pos'][1], o['z'] + a - side * 2.2, yaw, -0.18)
+  await shot(pg, f'{mid}-esc2to3F', f'{mid} 2F → 3F escalator', OUT2); await view(pg, 'third')
+  await pose(pg, o['x'] + x, s['pos'][1], o['z'] + a, yaw)
+
 async def climb(pg, I, o, mid):
   NF, sx = I['floors'], I['edge']['sx']
   await go(pg, o, [[0, 7], [-0.9, sx[0][0] - 1.4]])
   for p in range(NF - 1):
     x = -0.9 if p % 2 == 0 else -2.7; Sz, Nz = sx[p % 2]
     a, b, side = (Sz - 1.4, Nz + 1.4, 1) if p % 2 == 0 else (Nz + 1.4, Sz - 1.4, -1)
-    await go(pg, o, [[x, a]]); r = await go(pg, o, [[x, b]]); s = await S(pg)
+    await go(pg, o, [[x, a]])
+    if p == 1: await esc_shot(pg, mid, I, o, x, a, side)
+    r = await go(pg, o, [[x, b]]); s = await S(pg)
     ok(f'{mid}:esc{p + 1}to{p + 2}F', r and atY(s, o, p + 1) and s['floor'] == p + 2)
     await walk_steps(pg, o, I, p + 1, side)
     if p == NF - 2: return side
@@ -109,26 +117,35 @@ async def stairwell(pg, o, I):
   await go(pg, o, [[12.5, c]]); s = await S(pg); ok('sm-city:stair2Fout', atY(s, o, 1) and s['pos'][0] - o['x'] < 13.5)
   await go(pg, o, [[rb, c], [rb, ln], [ra, ln], [ra, c], [12.5, c]]); s = await S(pg); ok('sm-city:stairDown1F', atY(s, o, 0) and s['floor'] == 1)
 
+async def fc_shot(pg, mid, I, o):   # 顶层：站在南走廊东段，往东北看——东边一排美食档口 + 北边影城（隔着中空）
+  NF = I['floors']; x, z, yaw = (4.0, 21 - 10.6, 0.42) if mid == 'sm-topaz' else (7.6, 21 - 9.4, 0.42)
+  await view(pg, 'first'); await pose(pg, o['x'] + x, o['y'] + (NF - 1) * FH + 0.05, o['z'] + z, yaw, 0.04)
+  await shot(pg, f'{mid}-foodcourt-top', f'{mid} {NF}F food court & cinema', OUT2); await view(pg, 'third')
+
+async def esc_only(pg, mid):   # 只补拍 2F→3F 扶梯（已完整跑过的楼）
+  if not await enter_main(pg, mid): return
+  I = await info(pg); o = await org(pg); Sz, Nz = I['edge']['sx'][1]
+  await pose(pg, o['x'] - 2.7, o['y'] + FH + 0.05, o['z'] + Nz + 1.4, math.pi); await asyncio.sleep(1)
+  s = await S(pg); ok(f'{mid}:esc2Fpose', s['floor'] == 2)
+  await esc_shot(pg, mid, I, o, -2.7, Nz + 1.4, -1)
+  if os.environ.get('FC') == '1': await fc_shot(pg, mid, I, o)
+  await pose(pg, o['x'], o['y'] + 0.05, o['z'] + 4, math.pi); s = await leave_main(pg, o); ok(f'{mid}:escOnlyOut', s['inside'] is None)
+
 async def mall_full(pg, mid):
   if not await enter_main(pg, mid): return
   I = await info(pg); o = await org(pg)
-  ok(f'{mid}:floors', I['floors'] == (6 if mid == 'sm-city' else 5))
+  ok(f'{mid}:floors', I['floors'] == {'sm-city': 6, 'sm-p3': 4}.get(mid, 5))
   ok(f'{mid}:shopsUnique', len(I['shops']) == len(set(I['shops'])) and all(len(f) >= 6 for f in I['shopFloors']))
   ok(f'{mid}:atlas', I['overflow'] == 0)
-  if mid in ('sm-city', 'sm-topaz'):
+  if True:
     await view(pg, 'first'); await pose(pg, o['x'] + 5, 0.05, o['z'] + 16, -0.95, -0.55)
     await shot(pg, f'{mid}-atrium-up', f'{mid} 1F atrium, escalators to {I["floors"]}F', OUT2); await view(pg, 'third')
     await pose(pg, o['x'], 0.05, o['z'] + 4, 0)
   if mid == 'sm-city': await stairwell(pg, o, I)
   side = await climb(pg, I, o, mid)
-  if mid in ('sm-city', 'sm-topaz'):
-    s = await S(pg); n = 16 if mid == 'sm-topaz' else 4
-    fx, fz = (-3, 21 - 10.2) if n == 16 else (-4, 21 - 10.5)
-    await view(pg, 'first'); await pose(pg, o['x'] + fx, s['pos'][1], o['z'] + fz, -math.pi / 2 - 0.5, 0.12)
-    await shot(pg, f'{mid}-foodcourt-top', f'{mid} {I["floors"]}F food court & cinema', OUT2); await view(pg, 'third')
-    await pose(pg, s['pos'][0], s['pos'][1], s['pos'][2], 0)
+  s = await S(pg); await fc_shot(pg, mid, I, o); await pose(pg, s['pos'][0], s['pos'][1], s['pos'][2], 0)
   await go(pg, o, ring_to_lift(16 if mid == 'sm-topaz' else 4, side))
-  await lift_down(pg, I, o, mid, mid in ('sm-city', 'sm-topaz'))
+  await lift_down(pg, I, o, mid, True)
   s = await leave_main(pg, o); ok(f'{mid}:out', s['inside'] is None and s['zone'] == 'street' and abs(s['pos'][1]) < 0.5)
 
 GATE_ROUTE = {   # 楼内局部：门内 → 2F 扶梯口（一期：天桥门在西边 c = ±7；黄宝石 / 三期：南边 c = 0，正门的上面）
@@ -202,6 +219,8 @@ async def main():
     await auto(pg, [[3010, -20], [3010, -30], [3010, -36.5]])
     s = await S(pg); ok('street', s['zone'] == 'street'); await view(pg, 'third')
     if os.environ.get('SKIP_BRIDGES') != '1': await bridges(pg)
+    for mid in (os.environ.get('ESCONLY') or '').split(','):
+      if mid: await esc_only(pg, mid)
     for mid in ONLY:
       if mid: await mall_full(pg, mid)
     R['errors'] = errs(logs); good = all(R['checks'].values()) and not R['errors']
