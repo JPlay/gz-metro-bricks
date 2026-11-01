@@ -403,7 +403,8 @@ export function xmNetworkSVG(here, { portrait = false } = {}) {
   return s;
 }
 /**
- * 福州地铁全网图：示意坐标（不是真实地理位置，只保持大致方位：1 号线南北贯穿、4 号线绕城、5 号线西边南下到福州火车南站）。
+ * 福州地铁全网图（1 / 2 / 4 / 5 / 6 号线 + 滨海快线）：示意坐标（不是真实地理位置，只保持大致方位：1 号线南北贯穿、4 号线绕城、5 号线西边南下到福州火车南站、2 号线东西向、6 号线 / 滨海快线往东南）。
+ * 站名和景点图标自动避让（fzNetworkSVG 里按候选方位挑不压别人的位置）。
  * FZ_ANCHOR = 换乘站 / 端点 / 拐点的格点坐标（x 东、y 南）；其余车站按站序在相邻锚点之间等分。站名、颜色来自 js/data/fz-lines.js。
  * 新线路：在 FZ_ANCHOR 里给它的端点和拐点加坐标即可。
  */
@@ -449,8 +450,6 @@ export function fzNetworkSVG(here, { portrait = false } = {}) {
   const ox = (W - (maxX - minX) * sc) / 2, oy = 40 + (H - 40 - (maxY - minY) * sc) / 2;
   for (const c of Object.keys(pos)) pos[c] = [ox + (pos[c][0] - minX) * sc, oy + (pos[c][1] - minY) * sc];
   const lines = Object.values(FZ_LINES);
-  const flat = {};   // 站点所在线段偏水平（|dx| > 1.3|dy|）
-  for (const L of lines) L.stations.forEach((c, i) => { const a = raw[L.stations[Math.max(0, i - 1)]], b = raw[L.stations[Math.min(L.stations.length - 1, i + 1)]]; if (Math.abs(b[0] - a[0]) > 1.3 * Math.abs(b[1] - a[1])) flat[c] = true; });
   let s = `<svg class="netmap" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
   s += `<text x="${W / 2}" y="34" text-anchor="middle" font-size="22" font-weight="800" fill="#1B2530">福州地铁</text>`;
   s += `<text x="${W / 2}" y="54" text-anchor="middle" font-size="13" fill="#6B7280">Fuzhou Metro · ${lines.map(L => L.zh).join(' · ')}</text>`;
@@ -458,22 +457,50 @@ export function fzNetworkSVG(here, { portrait = false } = {}) {
   // 出站换乘（水部↔闽都、1 号线三叉街↔滨海快线三叉街）：两站之间画灰色虚线
   for (const [c, S] of Object.entries(FZ_STATIONS)) if (S.twin && c < S.twin && pos[c] && pos[S.twin]) s += `<line class="ox" x1="${pos[c][0].toFixed(1)}" y1="${pos[c][1].toFixed(1)}" x2="${pos[S.twin][0].toFixed(1)}" y2="${pos[S.twin][1].toFixed(1)}" stroke="#6B7280" stroke-width="3" stroke-dasharray="3 3"/>`;
   for (const [c, [x, y]] of Object.entries(pos)) {
-    const S = FZ_STATIONS[c], hub = S.lines.length > 1, hereOn = c === here;
+    const S = FZ_STATIONS[c], hub = S.lines.length > 1;
     if (hub) s += `<circle cx="${x}" cy="${y}" r="9" fill="#fff" stroke="#1B2530" stroke-width="3.5"/>`;
     else s += `<circle cx="${x}" cy="${y}" r="5.5" fill="#fff" stroke="${FZ_LINES[S.lines[0]].color}" stroke-width="3.5"/>`;
-    if (hereOn) s += `<circle cx="${x}" cy="${y}" r="15" fill="none" stroke="#FF5A4E" stroke-width="3"><animate attributeName="r" values="13;19;13" dur="1.6s" repeatCount="indefinite"/></circle>`;
-    const label = S.zh.length > 5 ? S.zh.slice(0, 5) : S.zh;
-    const [ldx, ldy, lan] = FZ_LABEL_AT[c] || [9, -8, 'start'];
-    // 横着走的线段（2 号线西段、6 号线 / 滨海快线东段）站距很密：站名斜着写（-40°），不会一个压一个
-    const slant = !FZ_LABEL_AT[c] && !hub && flat[c];
-    if (slant) { s += `<text transform="translate(${(x + 3).toFixed(1)},${(y - 8).toFixed(1)}) rotate(-40)" font-size="${hereOn ? 14 : 9.5}" font-weight="${hereOn ? 800 : 600}" fill="#1B2530" paint-order="stroke" stroke="#fff" stroke-width="3" stroke-linejoin="round">${label}</text>`; continue; }
-    s += `<text x="${x + ldx}" y="${y + ldy}" text-anchor="${lan}" font-size="${hereOn ? 14 : hub ? 11 : 9.5}" font-weight="${hereOn || hub ? 800 : 600}" fill="#1B2530" paint-order="stroke" stroke="#fff" stroke-width="3" stroke-linejoin="round">${label}</text>`;
+    if (c === here) s += `<circle cx="${x}" cy="${y}" r="15" fill="none" stroke="#FF5A4E" stroke-width="3"><animate attributeName="r" values="13;19;13" dur="1.6s" repeatCount="indefinite"/></circle>`;
   }
+  // 站名 / 景点自动避让（第三批：6 条线 102 站挤在一张图上，固定“右上方”会一个压一个）：
+  // 先放所有站点圆点当障碍，再放景点图标（候选方位里挑不压东西的），最后按“当前站 → 换乘站 → 其他站”的顺序给站名挑位置。
+  const boxes = [], fsOf = c => c === here ? 14 : FZ_STATIONS[c].lines.length > 1 ? 11 : 9.5;
+  const tw = (t, fs) => [...t].reduce((w, ch) => w + (ch.charCodeAt(0) > 255 ? fs : ch === ' ' ? 0.3 * fs : 0.55 * fs), 0);
+  const tbox = (x, y, t, fs, anc) => { const w = tw(t, fs), x0 = anc === 'middle' ? x - w / 2 : anc === 'end' ? x - w : x; return [x0 - 1.5, y - 0.92 * fs - 1.5, x0 + w + 1.5, y + 0.25 * fs + 1.5]; };
+  const ov = (A, B) => Math.max(0, Math.min(A[2], B[2]) - Math.max(A[0], B[0])) * Math.max(0, Math.min(A[3], B[3]) - Math.max(A[1], B[1]));
+  const cost = (bs) => bs.reduce((t, B) => t + boxes.reduce((u, O) => u + ov(B, O), 0) + (B[0] < 4 || B[2] > W - 4 || B[1] < 62 || B[3] > H - 4 ? 1e4 : 0), 0);
+  for (const [c, [x, y]] of Object.entries(pos)) { const r = FZ_STATIONS[c].lines.length > 1 ? 10 : 7; boxes.push([x - r, y - r, x + r, y + r]); }
+  const ICAND = [[-22, 20], [22, 20], [-30, -6], [30, -6], [0, 30], [0, -34], [-40, 26], [40, 26], [-44, -20], [44, -20], [-56, 4], [56, 4]];
+  let sa = '';
   for (const a of FZ_ATTRACTIONS) { const p = pos[a.code]; if (!p) continue;
-    const [dx, dy] = FZ_ATTR_OFF[a.code] || [-22, 20], [ix, iy] = [p[0] + dx, p[1] + dy];
-    s += `<line x1="${p[0]}" y1="${p[1]}" x2="${ix}" y2="${iy}" stroke="#9AA3AD" stroke-width="2" stroke-dasharray="2 4"/>`;
-    s += `<g class="attr" data-attr="${a.id}" data-code="${a.code}">${iconSVG(a.icon, ix, iy, 13, FZ_LINES[FZ_STATIONS[a.code].lines[0]].color)}`;
-    s += `<text x="${ix}" y="${iy + 25}" font-size="10" font-weight="700" fill="#34404F" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="4" stroke-linejoin="round">${a.name}</text></g>`; }
+    let best = null;
+    for (const [dx, dy] of [FZ_ATTR_OFF[a.code] || ICAND[0], ...ICAND]) { const ix = p[0] + dx, iy = p[1] + dy, bs = [[ix - 15, iy - 15, ix + 15, iy + 15], tbox(ix, iy + 25, a.name, 10, 'middle')], k = cost(bs);
+      if (!best || k < best.k - 0.5) best = { k, ix, iy, bs }; if (k === 0) break; }
+    const { ix, iy } = best; boxes.push(...best.bs);
+    sa += `<line x1="${p[0]}" y1="${p[1]}" x2="${ix}" y2="${iy}" stroke="#9AA3AD" stroke-width="2" stroke-dasharray="2 4"/>`;
+    sa += `<g class="attr" data-attr="${a.id}" data-code="${a.code}">${iconSVG(a.icon, ix, iy, 13, FZ_LINES[FZ_STATIONS[a.code].lines[0]].color)}`;
+    sa += `<text x="${ix}" y="${iy + 25}" font-size="10" font-weight="700" fill="#34404F" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="4" stroke-linejoin="round">${a.name}</text></g>`; }
+  const LCAND = [[9, -7, 'start'], [9, 4, 'start'], [-9, 4, 'end'], [-9, -7, 'end'], [0, -11, 'middle'], [0, 17, 'middle'], [10, 13, 'start'], [-10, 13, 'end'], [12, -14, 'start'], [-12, -14, 'end'], [0, 26, 'middle'], [0, -20, 'middle'],
+    [16, -2, 'start'], [-16, -2, 'end'], [14, 20, 'start'], [-14, 20, 'end'], [14, -20, 'start'], [-14, -20, 'end'], [0, 34, 'middle'], [0, -28, 'middle']];
+  const order = Object.keys(pos).sort((p, q) => (q === here) - (p === here) || FZ_STATIONS[q].lines.length - FZ_STATIONS[p].lines.length);
+  const lab = [];
+  const pick = (c, extra) => {
+    const [x, y] = pos[c], hub = FZ_STATIONS[c].lines.length > 1, fs = fsOf(c), S = FZ_STATIONS[c], label = S.zh.length > 5 ? S.zh.slice(0, 5) : S.zh, r = hub ? 2 : 0;
+    let best = null;
+    for (const [dx0, dy0, anc] of [...(FZ_LABEL_AT[c] ? [FZ_LABEL_AT[c]] : []), ...LCAND]) for (const [jx, jy] of extra ? [[0, 0], [0, 3], [0, -3], [3, 0], [-3, 0], [3, 3], [-3, -3], [3, -3], [-3, 3], [0, 6], [0, -6]] : [[0, 0]]) {
+      const dx = dx0 + jx, dy = dy0 + jy, tx = x + dx + Math.sign(dx0) * r, ty = y + dy + (dy0 < 0 ? -r : dy0 > 6 ? r : 0), bx = tbox(tx, ty, label, fs, anc), k = cost([bx]);
+      if (!best || k < best.k - 0.5) best = { c, k, tx, ty, anc, bx, fs, hub, label }; if (k === 0) return best; }
+    return best;
+  };
+  for (const c of order) { const b = pick(c, false); boxes.push(b.bx); lab.push(b); }
+  // 第二遍：还压着别人的站名，拿掉自己再细挪（±3 / ±6 像素）找空位
+  for (let pass = 0; pass < 2; pass++) for (let i = 0; i < lab.length; i++) {
+    const bi = boxes.indexOf(lab[i].bx); boxes.splice(bi, 1);
+    if (cost([lab[i].bx]) > 0) lab[i] = pick(lab[i].c, true);
+    boxes.push(lab[i].bx);
+  }
+  for (const b of lab) s += `<text class="st" data-code="${b.c}" x="${b.tx.toFixed(1)}" y="${b.ty.toFixed(1)}" text-anchor="${b.anc}" font-size="${b.fs}" font-weight="${b.c === here || b.hub ? 800 : 600}" fill="#1B2530" paint-order="stroke" stroke="#fff" stroke-width="3" stroke-linejoin="round">${b.label}</text>`;
+  s += sa;
   s += `</svg>`;
   return s;
 }
