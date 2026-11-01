@@ -20,6 +20,16 @@ async def main():
     await pg.evaluate(GCLOCK); await pg.evaluate('__game.setDtMax(0.25)'); await asyncio.sleep(1)
     await pg.evaluate("""(() => { const g=__game; g.east.ensure(); g.east.side='fz'; g.east.cur={st:g.station, loc:'fzmetro', area:'metro'}; g.station.kit.root.setEnabled(false); g.fzMetro.enterFromRailway(g.player); })()""")
     await asyncio.sleep(1.5)
+    if len(sys.argv) > 3 and sys.argv[3] == 'map':   # 只拍线网图 + 点景点图标看卡片
+        g2 = await pg.evaluate("(() => { const m=__game.fzMetro; m.buildStation('fzdjk'); return m.station.platforms.map(P=>({y:P.y, zc:P.zc})); })()")
+        await pg.evaluate(f"__game.player.spawn({FO + 22.5}, {g2[0]['y'] + 0.05}, {g2[0]['zc'] - 1.0}, -Math.PI/2)"); await asyncio.sleep(2)
+        log('logs', len(logs), [str(x)[:200] for x in logs[:5]])
+        await pg.evaluate('__game.openMap()'); await shot(pg, 'fz-netmap-l4', 1.5)
+        R['mapSub'] = await pg.evaluate("document.querySelector('#netmap .ttl small').textContent")
+        c = await pg.evaluate("(()=>{const r=document.querySelector('#netmap g.attr[data-attr=fz-fzdjk] circle').getBoundingClientRect(); return [r.x+r.width/2, r.y+r.height/2];})()")
+        await pg.mouse.click(c[0], c[1]); await asyncio.sleep(0.8); R['card'] = await pg.evaluate('__game.state().attrCard')
+        await shot(pg, 'fz-netmap-card', 0.5); await pg.evaluate('__game.closeMap()')
+        R['errors'] = errs(logs); await b.close(); print(json.dumps(R, ensure_ascii=False, default=str)); print('B2_SHOTS DONE', len(R['errors']), 'errors'); return
     # 西门站 4 号线站台
     g = await pg.evaluate("""(() => { const m=__game.fzMetro, st=m.buildStation('fzxm'); const s=m.slots.find(o=>o.line===4&&o.step===-1); return {trackZ:s.side.trackZ, zc:s.P.zc, y:s.P.y}; })()""")
     sg = 1 if g['zc'] > g['trackZ'] else -1; R['geo'] = g
