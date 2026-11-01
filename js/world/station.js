@@ -76,6 +76,7 @@ export class Station {
     // 街面 / 出入口通道 / 地下（站厅、站台、换乘）分成三组网格，按玩家位置开关（见 zoneVis）：
     //   纪念堂站的街面很重（园区外的行道树、路灯、骑楼……），站在街上时地下那 1 万多个三角形不用画
     const split = SPLIT_ZONES.has(this.s.signature);
+    k.lite = split; // 同一批场景顺带用低面数的行道树 / 路灯（decor.js）
     this.street(); if (split) k.group('street');
     this.passage(); if (split) k.group('passage');
     this.concourse();
