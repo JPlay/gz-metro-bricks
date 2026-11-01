@@ -24,11 +24,17 @@ async def shot(pg, name, label, out=None):
   await asyncio.sleep(1.2); d = await perf(pg, 3, 0.25); R['perf'][name] = d; log('perf', name, d)
   ok(name + ':budget', d['tris'] <= TRIS and d['draws'] <= DRAWS)
   o = out or OUT
-  if o: await overlay(pg, d, label); await pg.screenshot(path=f'{o}/{name}.jpg', type='jpeg', quality=82); await overlay_off(pg)
+  if o: await overlay(pg, d, label); await pg.screenshot(path=f'{o}/{name}.jpg', type='jpeg', quality=82, timeout=240000); await overlay_off(pg)
 async def pose(pg, x, y, z, yaw, pitch=0.0):
   await pg.evaluate(f"(() => {{ const p = __game.player; p.spawn({x}, {y}, {z}, {yaw}); p.yaw = {yaw}; p.pitch = {pitch}; }})()"); await asyncio.sleep(0.4)
+async def split(pg, pts, mx=20):   # autopilot 每个航点限 12 s 游戏时间：长段切成 ≤mx m
+  s = await S(pg); x, z = s['pos'][0], s['pos'][2]; seg = []
+  for tx, tz in pts:
+    n = max(1, math.ceil(math.hypot(tx - x, tz - z) / mx))
+    seg += [[x + (tx - x) * k / n, z + (tz - z) * k / n] for k in range(1, n + 1)]; x, z = tx, tz
+  return seg
 async def go(pg, o, pts):   # 楼内局部坐标 → 世界坐标
-  return await auto(pg, [[o['x'] + x, o['z'] + z] for x, z in pts])
+  return await auto(pg, await split(pg, [[o['x'] + x, o['z'] + z] for x, z in pts]))
 def atY(s, o, f, tol=0.5): return s['pos'][1] is not None and abs(s['pos'][1] - o['y'] - f * FH) < tol
 
 async def walk_steps(pg, o, I, f, side):   # 到了 f 层（0 起）：在走廊里走几步，核对位置 / 高度 / 楼层
@@ -145,14 +151,9 @@ async def gate_out(pg, mid, gate, o, back):
   if mid != 'sm-city': far = [[0, 21 - 25]]
   await go(pg, o, back[1:] + far); await asyncio.sleep(0.8); return await S(pg)
 
-async def cross(pg, pts):
-  # 桥上有走动的路人（会挡路）：被挡住就侧移 1.5 m 再走，最多 3 次
-  for i in range(3):
-    if await auto(pg, pts): return True
-    s = await S(pg)
-    if s['inside'] is not None: return True
-    await auto(pg, [[s['pos'][0], s['pos'][2] + (1.5 if i % 2 == 0 else -3.0)]])
-  return False
+async def cross(pg, pts):   # 桥上长距离步行（切段；走进门被传送也算到）
+  if await auto(pg, await split(pg, pts)): return True
+  s = await S(pg); return s['inside'] is not None
 
 async def bridges(pg):
   # 天桥 1：一期 2F 门 ← 从桥上走进去
