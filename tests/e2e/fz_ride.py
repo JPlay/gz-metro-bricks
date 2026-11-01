@@ -3,6 +3,7 @@
 #            → 楼梯下出站层 → 出站口 5 → 换乘通道 → 地铁 1 号线站台 → 1 号线 福州火车南站 → 安平 → 回福州火车南站
 #            → 换乘楼梯下 5 号线 → 5 号线 → 林浦 → 回福州火车南站 → 换乘楼梯上 1 号线 → 1 号线一站一站坐到 达道（报站说 C 出口）
 #            → 楼梯上站厅 → C 出口 → 上下杭（走到三通桥）→ 回站 → 1 号线 → 东街口 → 换乘楼梯下 4 号线 → 4 号线 → 西门 → B 出口 → 西湖公园
+#            → 回西门站台 → 4 号线坐 8 站到前屿 → 换乘 2 号线 → 鼓山（报站 A 出口）→ A 出口 → 走到鼓山（第三批线路）
 #   part gz：广州东 → 复兴号 → 选福州 → D3309（07:47 → 厦门北 11:56/12:00 → 13:29 福州南）1 倍速全程（途经厦门北提示、九龙江 + 泉州湾两座桥播报）
 #            → 福州南站台下车 → 回车上 → G3027 开往厦门北：坐下、关门、开车（走出一段）
 # 断言（动车）：ride.s 一直在涨；车窗外景物（道床贴图偏移）走过的距离 ≈ ride.s（车厢本身不动，是景物在动）；玩家一直在车厢里坐着；
@@ -239,6 +240,30 @@ async def part_xm(pg):
     ok('fzxm:visitExitAnn', caps_has(caps, 'fzvisit.fzxm.zh', 'fzexit.fzxm.zh'))
     ex, zm = await plat_to_street(pg, 'fzxm', 'fzxm'); ok('fzxm:exitB', ex['n'] == 'B')
     await to_attraction(pg, 'fzxm', 'fzxm')
+    await street_to_plat(pg, ex, zm, 'fzxm')
+    await part_b3(pg)
+
+async def part_b3(pg):
+    """第三批线路：西门 → 4 号线往前屿（8 站）→ 换乘楼梯换 2 号线 → 鼓山（2 站，报站“A 出口”）→ A 出口 → 走到鼓山"""
+    if await board(pg, 4, 1, 'L4qy'): await ride_to(pg, 4, 1, 'fzqy', 'L4qy', 8)
+    zc = await pg.evaluate('__game.fzMetro.station.platforms[0].zc'); g2 = await geo(pg, 2, 1); s = await st(pg)
+    R['fzqy'] = {'zc': zc, 'l2': g2, 'pos': s['pos']}
+    if g2 and g2['y'] > s['pos'][1] + 4: await legs(pg, stairs_up(zc))
+    elif g2 and g2['y'] < s['pos'][1] - 4: await legs(pg, stairs_down(zc))
+    s = await st(pg); ok('fzqy:toL2', g2 and abs(s['pos'][1] - g2['y']) < 0.5 and s['zone'] == 'platform')
+    await pg.evaluate('__caps.length=0')
+    if await board(pg, 2, 1, 'L2gs'): await ride_to(pg, 2, 1, 'fzgs', 'L2gs', 2)
+    await asyncio.sleep(3); caps = await pg.evaluate('__caps'); R['capsGs'] = caps
+    ok('fzgs:visitExitAnn', caps_has(caps, 'fzvisit.fzgs.zh', 'fzvisit.fzgs.en', 'fzexit.fzgs.zh'))
+    ok('fzgs:noFzhNanYue', not any(c.endswith(('.fzh', '.nan', '.yue')) for c in caps))
+    ex, zm = await plat_to_street(pg, 'fzgs', 'fzgs'); ok('fzgs:exitA', ex['n'] == 'A')
+    await to_attraction(pg, 'fzgs', 'fzgs')
+
+async def part_b3dev(pg):
+    """开发用：直接从西门 4 号线站台开始跑 part_b3（正式测试走 part xm 全程）"""
+    await pg.evaluate("""(() => { const g=__game; g.east.ensure(); g.east.side='fz'; g.east.cur={st:g.station, loc:'fzmetro', area:'metro'}; g.station.kit.root.setEnabled(false); g.fzMetro.enterFromRailway(g.player);
+      g.fzMetro.buildStation('fzxm'); g.player.spawn(5002, -12.95, g.fzMetro.station.platforms[0].zc, -Math.PI/2); })()""")
+    await asyncio.sleep(1.5); await part_b3(pg)
 
 async def main():
   async with async_playwright() as p:
@@ -246,7 +271,7 @@ async def main():
     await pg.evaluate(GCLOCK); await pg.evaluate('__game.setDtMax(0.25)'); await pg.evaluate(HOOKS); await asyncio.sleep(1.5)
     await view(pg, 'third')
     try:
-      await (part_gz(pg) if PART == 'gz' else part_xm(pg))
+      await {'gz': part_gz, 'xm': part_xm, 'b3dev': part_b3dev}[PART](pg)
     except Exception as e:
       R['exception'] = repr(e); log('EXC', repr(e))
     R['errors'] = errs(logs); R['wall'] = round(time.time() - T0); await b.close()
