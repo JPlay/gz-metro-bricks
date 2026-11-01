@@ -70,14 +70,19 @@ async def emu_ride(pg, key, wall=1500):
     n0 = len((await E(pg))['count']['arrived'])
     ok(key + ':run', await wait(pg, '!!__game.east.info().ride && __game.east.info().ride.phase === "run"', 20))
     await pg.evaluate('window.__scn.d=0')
-    samples, t0 = [], time.time(); arrived = False
-    while time.time() - t0 < wall:
+    # 低帧率（box 上并发浏览器多时 fps≈1）下 main.js 把每帧 dt 截到 0.05 s，游戏钟只走墙钟的 ~5%，5 分钟的 D3309 要跑一个多小时。
+    # 乘车期间把 dt 上限放宽到 0.2 s（仍是 1 倍速，只是低帧率时少丢时间），并且只要 rt 还在走就继续等（停滞 180 s 或总 4500 s 才算失败）。
+    await pg.evaluate('__game.setDtMax(0.2)')
+    samples, t0 = [], time.time(); arrived = False; last_rt, last_prog = -1, time.time()
+    while time.time() - t0 < wall or (time.time() - last_prog < 180 and time.time() - t0 < 3 * wall):
         e = await E(pg); s = await st(pg)
         if len(e['count']['arrived']) > n0: arrived = True; break
         r = e['ride']
+        if r and r['rt'] > last_rt: last_rt, last_prog = r['rt'], time.time()
         if r: samples.append({'w': round(time.time() - t0), 'rt': r['rt'], 's': r['s'], 'v': r['v'], 'rem': r['rem'], 'phase': r['phase'], 'speed': e['speed'], 'inside': e['inside'],
                               'seated': bool(s['seat'].get('seated')), 'x': s['pos'][0], 'scn': round(await pg.evaluate('__scn.d')), 'far': r['seg']['far'], 'mid': r['seg']['mid'], 'near': r['seg']['near']})
         await asyncio.sleep(4)
+    await pg.evaluate('__game.setDtMax(0.05)')
     R['emu'][key] = {'samples': samples, 'wall': round(time.time() - t0), 'scn': await pg.evaluate('__scn.d')}
     log(key, 'samples', len(samples), 'wall', R['emu'][key]['wall'])
     ok(key + ':arrived', arrived)
