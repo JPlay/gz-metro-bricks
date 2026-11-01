@@ -3,7 +3,7 @@
 #            → 楼梯下出站层 → 出站口 5 → 换乘通道 → 地铁 1 号线站台 → 1 号线 福州火车南站 → 安平 → 回福州火车南站
 #            → 换乘楼梯下 5 号线 → 5 号线 → 林浦 → 回福州火车南站 → 换乘楼梯上 1 号线 → 1 号线一站一站坐到 达道（报站说 C 出口）
 #            → 楼梯上站厅 → C 出口 → 上下杭（走到三通桥）→ 回站 → 1 号线 → 东街口 → 换乘楼梯下 4 号线 → 4 号线 → 西门 → B 出口 → 西湖公园
-#            → 回西门站台 → 4 号线坐 8 站到前屿 → 换乘 2 号线 → 鼓山（报站 A 出口）→ A 出口 → 走到鼓山（第三批线路）
+#            → 回西门站台 → 4 号线到帝封江（L4↔L5 换乘）→ 4 号线回前屿 → 换乘 2 号线 → 鼓山（报站 A 出口）→ A 出口 → 鼓山（第三批）
 #   part gz：广州东 → 复兴号 → 选福州 → D3309（07:47 → 厦门北 11:56/12:00 → 13:29 福州南）1 倍速全程（途经厦门北提示、九龙江 + 泉州湾两座桥播报）
 #            → 福州南站台下车 → 回车上 → G3027 开往厦门北：坐下、关门、开车（走出一段）
 # 断言（动车）：ride.s 一直在涨；车窗外景物（道床贴图偏移）走过的距离 ≈ ride.s（车厢本身不动，是景物在动）；玩家一直在车厢里坐着；
@@ -42,7 +42,11 @@ async def to_emu_gz(pg):
     """广州东：地铁 1 号线站台 → 站厅 → 出口 → 过马路 → 候车大厅 → 检票 → 站台 → 5 号车厢车门（gze.py 同一条路）"""
     await pg.evaluate('__game.teleport(18.6,-11.95,12.6,0)'); await asyncio.sleep(0.8)
     await auto(pg, [[18.6, 13.1], [15.4, 13.1], [-1.6, 13.1], [-2.2, 13.1], [-2.2, 1.4], [2, 1.4], [2, -4.6], [8.6, -4.6]])
-    await auto(pg, [[10.5, -4.6], [10.5, -15.6], [1.2, -15.6], [1.2, -20], [1.2, -36], [1.2, -40.5]])
+    # 站厅拐角 (10.5,-15.6)→(1.2,-15.6) 低帧率易卡：多给中间点，失败再绕一圈
+    ok1 = await auto(pg, [[10.5, -4.6], [10.5, -12.0], [10.5, -15.6], [6.0, -15.6], [1.2, -15.6], [1.2, -20], [1.2, -36], [1.2, -40.5]])
+    if not ok1:
+        s = await st(pg); log('toEmu:retry', s['pos'])
+        await auto(pg, [[s['pos'][0], -15.6], [1.2, -15.6], [1.2, -20], [1.2, -28], [1.2, -36], [1.2, -40.5]])
     await auto(pg, [[1.2, -50], [0, -62], [0, -80], [0, -86], [0, -92], [1.5, -100]])
     await auto(pg, [[1.5, -108], [1.5, -111.9], [1.5, -115], [1.5, -117.4], [9, -117.4], [9, -122.5]])
     await auto(pg, [[9, -124], [-5.8, -124], [-5.8, -127.3], [-5.8, -128.6]])
@@ -244,8 +248,14 @@ async def part_xm(pg):
     await part_b3(pg)
 
 async def part_b3(pg):
-    """第三批线路：西门 → 4 号线往前屿（8 站）→ 换乘楼梯换 2 号线 → 鼓山（2 站，报站“A 出口”）→ A 出口 → 走到鼓山"""
-    if await board(pg, 4, 1, 'L4qy'): await ride_to(pg, 4, 1, 'fzqy', 'L4qy', 8)
+    """第三批线路：西门 → 4 号线到帝封江（16 站）→ L4↔L5 换乘楼梯 → 4 号线回前屿（8 站）→ 换乘 2 号线 → 鼓山（报站 A 出口）→ A 出口 → 鼓山"""
+    if await board(pg, 4, 1, 'L4dfj'): await ride_to(pg, 4, 1, 'fzdfj', 'L4dfj', 16)
+    zc = await pg.evaluate('__game.fzMetro.station.platforms[0].zc')
+    await legs(pg, stairs_down(zc)); s = await st(pg)
+    ok('fzdfj:downToL5', s['pos'][1] < -21 and s['zone'] == 'platform')
+    await legs(pg, stairs_up(zc)); s = await st(pg)
+    ok('fzdfj:upToL4', abs(s['pos'][1] + 13) < 0.5 and s['zone'] == 'platform')
+    if await board(pg, 4, -1, 'L4qy'): await ride_to(pg, 4, -1, 'fzqy', 'L4qy', 8)
     zc = await pg.evaluate('__game.fzMetro.station.platforms[0].zc'); g2 = await geo(pg, 2, 1); s = await st(pg)
     R['fzqy'] = {'zc': zc, 'l2': g2, 'pos': s['pos']}
     if g2 and g2['y'] > s['pos'][1] + 4: await legs(pg, stairs_up(zc))
