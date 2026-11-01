@@ -114,7 +114,8 @@ async def gz_one(p, code):
 XO = 3000; XSX = 4000
 XM_WALK = {
     'zhl': [('和平码头', [[4000, 6], [4030, 40], [4030, 72]], lambda q: q[2] > 68 and 4000 < q[0] < 4060),
-            ('中山路骑楼街', [[4000, 6], [3970, 6], [3930, 6], [3930, 40]], lambda q: 3916 < q[0] < 3944 and q[2] > 30)],
+            # 骑楼街只朝南（马路边人行道）开口：沿人行道往西再拐进去
+            ('中山路骑楼街', [[4000, 6], [3990, -3.5], [3970, -3.5], [3930, -3.5], [3930, 40]], lambda q: 3916 < q[0] < 3944 and q[2] > 30)],
     'ctg': [('忠仑公园', [[4000, 6], [4000, 30], [4000, 72]], lambda q: abs(q[0] - 4000) < 3 and q[2] > 68)],
 }
 async def xm_one(pg, code):
@@ -149,7 +150,7 @@ async def xm(p):
         await pg.evaluate(GCLOCK); await pg.evaluate('__game.setDtMax(0.25)'); await asyncio.sleep(1)
         await pg.evaluate("""(() => { const g=__game; g.east.ensure(); g.east.side='xm'; g.east.cur={st:g.station, loc:'xmmetro', area:'metro'}; g.station.kit.root.setEnabled(false); g.xmMetro.enterFromRailway(g.player); if (g.player.view!=='third') g.toggleView(); })()""")
         await asyncio.sleep(1.5)
-        for c in XM_EXPECT: await xm_one(pg, c)
+        for c in (os.environ.get('XM_CODES', '').split(',') if os.environ.get('XM_CODES') else XM_EXPECT): await xm_one(pg, c)
         ok('xm:noErrors', not errs(logs), errs(logs)[:5])
     finally: await b.close()
 
