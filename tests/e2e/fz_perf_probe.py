@@ -84,3 +84,4 @@ async def main():
   json.dump(R, open(OUT, 'w'), ensure_ascii=False, indent=1, default=str)
   print('FZ_PERF_PROBE', 'PASS' if all(R['checks'].values()) else 'FAIL', [k for k, v in R['checks'].items() if not v], flush=True)
 asyncio.run(main())
+sys.exit(0 if R['checks'] and all(R['checks'].values()) else 1)

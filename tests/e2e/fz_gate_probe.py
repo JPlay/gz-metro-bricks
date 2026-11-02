@@ -94,3 +94,4 @@ async def main():
     await b.close()
   save(); print('FZ_GATE_PROBE', FROM, 'PASS' if all(R['checks'].values()) else 'FAIL', [k for k, v in R['checks'].items() if not v], flush=True)
 asyncio.run(main())
+sys.exit(0 if R['checks'] and all(R['checks'].values()) else 1)
