@@ -77,7 +77,7 @@ export class XmMetro {
     return st;
   }
   attach(station) {
-    this.station = station; this.slots = []; this.exitWait = null;
+    this.station = station; this.slots = []; this.exitWait = null; this.lvY = null;
     const free = this.trains.filter(t => !this.ride || t !== this.ride.train);
     free.forEach(t => t.setVisible(false));
     let rideSlot = null;
@@ -112,6 +112,9 @@ export class XmMetro {
     let sound = null;
     const inCar = this.slots.some(o => o.train.root.isEnabled() && this.playerOn(o.train));
     const multi = this.station.platforms.length > 1;
+    // 叠层换乘站：玩家算在哪一层（离哪层站台面近；换乘楼梯半中间留 ±0.6 m 回差，不在两层之间来回闪）
+    if (multi) { const ys = [...new Set(this.station.platforms.map(q => q.y))], d = y => Math.abs(p.y - y);
+      if (!ys.includes(this.lvY) || ys.some(y => d(y) < d(this.lvY) - 1.2)) this.lvY = ys.reduce((a, y) => d(y) < d(a) ? y : a, ys[0]); }
     for (const s of this.slots) {
       if (s.state === 'away' && s.step !== s.side.step) s.step = s.side.step;   // 借来终到的槽位（见 attach）：清客开走后恢复这一侧本来的方向
       const tr = s.train, nx = this.S.next(s.line, this.code, s.step);
@@ -176,7 +179,8 @@ export class XmMetro {
       }
       if (this.ride && this.ride.train === tr && !aboard && s.state !== 'departing' && s.state !== 'arriving') this.alighted();
       // 叠层换乘站：只画玩家所在那一层的列车（另一层隔着楼板看不见，省 draw）
-      if (multi && s.state !== 'away') { const near = aboard || Math.abs(p.y - s.P.y) < 5; if (tr.root.isEnabled() !== near) tr.setVisible(near); }
+      //（以前是 |p.y - P.y| < 5：东街口 / 帝封江换乘楼梯半中间两层都算“近”，四趟车一起画 —— 61 draws / 124k tris）
+      if (multi && s.state !== 'away') { const near = aboard || (s.P.y === this.lvY && Math.abs(p.y - s.P.y) < 5); if (tr.root.isEnabled() !== near) tr.setVisible(near); }
     }
     if (sound) A.trainSound(sound); else if (!(this.ride && this.ride.phase === 'cruise')) A.trainSound({ speed: 0 });
   }
