@@ -2706,55 +2706,55 @@
     "voice": "longxiaobai_v2"
   },
   "voice.visit.gyq.yue": {
-    "fp": "f907f10236b6217e66bd4b27b823cffc45324efa5a7aca8fd1574c8e24c74a5b",
+    "fp": "89bd3a0324b4520055ebc22ad3e8d0f3798709dc0b0d61d5d2cda625b316a01e",
     "style": "cosy",
     "model": "cosyvoice-v3-flash",
     "voice": "longjiayi_v3"
   },
   "voice.visit.gyq.zh": {
-    "fp": "39efb72258c192e272384a69cd4b25fc4387a423ae93b1d1864e46e8a05c4b06",
+    "fp": "718a3001e6e59892690cd5200bcec25eaf9183810f4ccc5ae79d740f9c6e79f0",
     "style": "cosy",
     "model": "cosyvoice-v2",
     "voice": "longxiaobai_v2"
   },
   "voice.visit.gyq.en": {
-    "fp": "31c8a3bd1d431987cb3b044a35f1b15fe78bc7c81f9ae4c879c013793bdeac9c",
+    "fp": "d09ab51d1a89df0dbf98a87e5792bd88829d96a2ac57fed868c43b84800b00ea",
     "style": "cosy",
     "model": "cosyvoice-v2",
     "voice": "longxiaobai_v2"
   },
   "voice.visit.lsly.zh": {
-    "fp": "28a0d17cb8ee705368fb6322fa5fe0125cb44a6a0d25d4795deee6b9ac145392",
+    "fp": "c541329f08b677f55193ebc68fcb08e0f9a4a3ea50f78d1c13588bf9524859eb",
     "style": "cosy",
     "model": "cosyvoice-v2",
     "voice": "longxiaobai_v2"
   },
   "voice.visit.lsly.yue": {
-    "fp": "b307a065919b32b97dbde721e8ecc19e21c9d0209eac5382737b885f14fa20b8",
+    "fp": "8871de057c2d9c8265fddfd0ea443aea8cbbce0f12b6dca0577d8e138caab180",
     "style": "cosy",
     "model": "cosyvoice-v3-flash",
     "voice": "longjiayi_v3"
   },
   "voice.visit.dsk.zh": {
-    "fp": "56683b50c79cf641a82f235ca24dd6937c62e00475f628d605c417a5651b0707",
+    "fp": "2a2a0157cd0d9bfa5522aa4b19e1a80069373ee27da71a834b3d537abf373b8c",
     "style": "cosy",
     "model": "cosyvoice-v2",
     "voice": "longxiaobai_v2"
   },
   "voice.visit.lsly.en": {
-    "fp": "c77de234a6f40d8d6b5714e68807688d61aebad8d2d9a5f2da7802a373ce2711",
+    "fp": "185919f6db909b49acdf538dcf7b9d86ea99268a2bde53576aa34dce7cb21f46",
     "style": "cosy",
     "model": "cosyvoice-v2",
     "voice": "longxiaobai_v2"
   },
   "voice.visit.dsk.yue": {
-    "fp": "88eee621bdf3cae0b4634cf3d163326a6bda8e6d74095eabdd872a3f3875da43",
+    "fp": "9f33c7e0186b95e83490cde41967e11669b6a968f6cc7049014e915d9966f4ec",
     "style": "cosy",
     "model": "cosyvoice-v3-flash",
     "voice": "longjiayi_v3"
   },
   "voice.visit.dsk.en": {
-    "fp": "46c9cbc8badad835b08087871b546ed5c06a1d706908ffb7c5ccae065a5c5a9c",
+    "fp": "b4a20945066364ee8c915fc7548620fe92edeccacf7375f51d20882502fb8e53",
     "style": "cosy",
     "model": "cosyvoice-v2",
     "voice": "longxiaobai_v2"
@@ -2886,13 +2886,13 @@
     "voice": "longxiaobai_v2"
   },
   "voice.visit.yxgy.yue": {
-    "fp": "8df333aeb8d1e30f62e1da47dfaf073f526453e2cd7537c96a57ca8ad56bfbb5",
+    "fp": "5335211cc64834bd7064acf35636ed6f33985fc122c9c9dbd2172896e96665d4",
     "style": "cosy",
     "model": "cosyvoice-v3-flash",
     "voice": "longjiayi_v3"
   },
   "voice.visit.yxgy.zh": {
-    "fp": "df77bdaa9933a0553d95a18bef6f99493b91c59e1268d4c2965f86521f6cf81d",
+    "fp": "6de8b99fd3d94da5e856c9840fb1b81b559404c9a69a057456bdf210a459499e",
     "style": "cosy",
     "model": "cosyvoice-v2",
     "voice": "longxiaobai_v2"
@@ -2904,7 +2904,7 @@
     "voice": "longxiaobai_v2"
   },
   "voice.visit.yxgy.en": {
-    "fp": "08e2195e7fd1c92e1ebc7198761f8327f9d2dbba0a15e7892f05394d3f70e7a5",
+    "fp": "bcda3b574753316afdf659da92463db4a0b802d2fec395979753d9d21badb837",
     "style": "cosy",
     "model": "cosyvoice-v2",
     "voice": "longxiaobai_v2"
@@ -5376,13 +5376,13 @@
     "voice": "longxiaobai_v2"
   },
   "voice.xmexit.zhl.en": {
-    "fp": "5dda581e4923185293252738db18b37cfffb43380e32e731bf59fb9cfb3bbc1c",
+    "fp": "f88ea0ce66a5a3e90bce8111dc4d7ddcd00197d431606c1c3e72ec1c5747db2c",
     "style": "cosy",
     "model": "cosyvoice-v2",
     "voice": "longxiaobai_v2"
   },
   "voice.xmexit.zhl.zh": {
-    "fp": "a8123dacfaf03ef8868aec6c7dca95c0229fc2de5f7ddc586a9fd0293d128ca9",
+    "fp": "ce8b0b61b65b91b77914d7df38628c63099703e93206c9d16bf8aae7ee5c2c11",
     "style": "cosy",
     "model": "cosyvoice-v2",
     "voice": "longxiaobai_v2"
@@ -5556,13 +5556,13 @@
     "voice": "longxiaobai_v2"
   },
   "voice.xmvisit.zhl.zh": {
-    "fp": "12fbfb77574ef9aea0549f5a66d962f52ac5d34b955cceab10be0d6b13c63195",
+    "fp": "ba77d96a693154d09921f4076e263f1c3b7b3bda6c88d012fe6f5849727bcca3",
     "style": "cosy",
     "model": "cosyvoice-v2",
     "voice": "longxiaobai_v2"
   },
   "voice.xmvisit.zhl.en": {
-    "fp": "b41bdb2e0ad19798fa4fec07df3845ea1c6113b90144d5440e4f392ee1370026",
+    "fp": "5bdb38525d565f582815fafb4b17f407930f61ef87ae794795427557a54348cc",
     "style": "cosy",
     "model": "cosyvoice-v2",
     "voice": "longxiaobai_v2"

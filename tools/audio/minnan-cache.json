@@ -1782,11 +1782,11 @@
   "flag": false
  },
  "voice.xmexit.zhl.nan": {
-  "fp": "24ef6ae36da39a1d1425239498cbcfc8951902aadc42bf0de25f35d98e5b6b56",
+  "fp": "c1a319623723d1abcb25fae9a596f3a6a916e6f3acaab8d855f25146c4d4e15e",
   "model": "cosyvoice-v3.5-flash",
   "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
-  "sim": 0.833,
-  "asr": "一目好平码头的乘客请从壹号出口出站。前往中山路步行街的乘客请从沙边出口出站。",
+  "sim": 0.913,
+  "asr": "前弄和平码头中山路步行街的乘客，请从壹号出口出站。",
   "tries": 4,
   "flag": true
  },
@@ -1890,11 +1890,11 @@
   "flag": false
  },
  "voice.xmvisit.zhl.nan": {
-  "fp": "8d676fbe000ff648c702140a01294a3028d8558c5c322ce64010acabf74d22f9",
+  "fp": "370ea42254649ffe9bdbcdd925db51783d0d1dfc6925dcc23a89ee381111b0e9",
   "model": "cosyvoice-v3.5-flash",
   "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
-  "sim": 0.837,
-  "asr": "静海路站，沪景五和平码头，中山路步行街，欢迎下车游玩。和平码头恰厂一号出口出站，中山路步行街车从3B出口出站。",
+  "sim": 0.742,
+  "asr": "正蟹乐站铺景五和平码头，中山路步行街，欢迎下车游玩，车从壹号出口出站。",
   "tries": 4,
   "flag": true
  },

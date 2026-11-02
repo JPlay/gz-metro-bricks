@@ -19,7 +19,7 @@ import { yuxiuXdf } from './xmXdf.js';
 import { smCity } from './xmSM.js';
 
 const ALL_EXITS = {
-  zhl: { n: '1', x: 10, line: 1, road: '和平码头', to: ['和平码头', '中山路步行街 3B'], toEn: ['Heping Pier', 'Zhongshan Road (Exit 3B)'] },
+  zhl: { n: '1', x: 10, line: 1, road: '和平码头', to: ['和平码头', '中山路步行街'], toEn: ['Heping Pier', 'Zhongshan Road'] },
   lbn: { n: '3', x: 10, line: 1, road: '嘉禾路', to: ['外图厦门书城'], toEn: ['Xiamen Book City'] },
   gqi: { n: '1', x: 10, line: 1, road: '海堤纪念公园', to: ['海堤纪念公园'], toEn: ['Seawall Memorial Park'] },
   yby: { n: '2', x: 10, line: 1, road: '园博苑', to: ['园博苑'], toEn: ['Garden Expo Park'] },
