@@ -6,7 +6,7 @@
 import asyncio, json, os, sys
 from playwright.async_api import async_playwright
 sys.path.insert(0, os.path.dirname(__file__))
-from common import ARGS
+from common import ARGS, safe_shot
 URL = sys.argv[1] if len(sys.argv) > 1 else 'http://localhost:8123/'
 OUT = sys.argv[2] if len(sys.argv) > 2 else '/workspace/gz-shots-audio'
 SEP = '&' if '?' in URL else '?'
@@ -21,7 +21,7 @@ async def diag(pg): return await pg.evaluate('window.__game ? __game.state().aud
 async def tap(pg, x=556, y=300):
     await pg.touchscreen.tap(x, y); await pg.wait_for_timeout(250)
 async def shot(pg, path):
-    try: await pg.screenshot(path=path, timeout=90000)
+    try: await safe_shot(pg, path=path, timeout=90000)
     except Exception as e: print('screenshot failed', path, str(e)[:80])
 async def hint_visible(pg): return await pg.evaluate('(() => { const h = document.getElementById("audioHint"); return !!h && !h.hidden; })()')
 

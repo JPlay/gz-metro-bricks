@@ -12,7 +12,7 @@ W = int(sys.argv[3]) if len(sys.argv) > 3 else 1112; H = int(sys.argv[4]) if len
 TAG = 'landscape' if W > H else 'portrait'; PART = os.environ.get('PART', 'greet')
 os.makedirs(OUT, exist_ok=True); T0 = time.time(); R = {}
 def log(*a): print(f'[{time.time() - T0:6.1f}s]', *a, flush=True)
-async def shot(pg, name): await pg.screenshot(path=OUT + name + '.png', timeout=240000); log('shot', name)
+async def shot(pg, name): await safe_shot(pg, path=OUT + name + '.png', timeout=240000); log('shot', name)
 async def until(pg, js, t=60):
     for _ in range(int(t / 0.25)):
         if await pg.evaluate(js): return True

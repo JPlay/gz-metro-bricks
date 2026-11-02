@@ -19,11 +19,7 @@ async def view(pg, v):
 async def gsleep(pg, secs):
     g0 = await gt(pg); t0 = time.time()
     while await gt(pg) - g0 < secs and time.time() - t0 < 300: await asyncio.sleep(0.3)
-async def screenshot(pg, path):
-    for i in range(2):
-        try: await pg.screenshot(path=path, timeout=120000); return True
-        except Exception as e: log('shot timeout/retry', i, path, repr(e)[:120])
-    return False
+async def screenshot(pg, path): return bool(await safe_shot(pg, path=path, timeout=120000))   # 限时 + 重试一次见 common.safe_shot
 async def measure(pg, name, yaw, pitch, settle=6):
     d = {}
     for v in ('first', 'third'):

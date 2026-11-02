@@ -48,7 +48,7 @@ async def ride_to(pg, code, game=120):
     s=await st(pg); log('arrived', code, ok, ok2, s['code'], s['aboard']); return s['code']==code and s['aboard']
 async def transfer(pg):
     ok=await auto(pg, [[20,19],[0,19],[-3.5,14],[-5,14],[-20.5,14],[-21.5,16],[-21.5,24]])
-    await auto(pg, [[-21.5,30]]); await asyncio.sleep(0.3); await pg.screenshot(path=SHOT+'_j_transfer.png')
+    await auto(pg, [[-21.5,30]]); await asyncio.sleep(0.3); await safe_shot(pg, path=SHOT+'_j_transfer.png')
     await auto(pg, [[-21.5,43],[-18.5,43],[-5,43],[2,42]])
     s=await st(pg); R['l2platform']=[s['zone'], s['pos']]; log('L2', s['pos'], s['zone'])
     R['board3']=await board(pg,2,1,[[6,39.6],[6,36.6]],[6,40.5])
@@ -95,7 +95,7 @@ async def main():
     R['board1']=await board(pg,1,1,[[24.6,10],[24.6,6.6]],[24.6,10.5])
     await pg.evaluate('__game.toggleView()')  # 第一人称看车厢
     R['tunnel']=await wait(pg, "__game.state().inTunnel", 60); log('tunnel', R['tunnel'], (await st(pg))['metro']['ride'])
-    await pg.screenshot(path=SHOT+'_j_inside_train.png')
+    await safe_shot(pg, path=SHOT+'_j_inside_train.png')
     R['stop1']=await ride_to(pg,'njs')
     R['stop2']=await ride_to(pg,'lsly')
     await pg.evaluate('__game.toggleView()')
@@ -108,7 +108,7 @@ async def main():
     s=await st(pg); a=s['audio']
     R['announced']=a['log']['announced'][-12:]; R['fallbacks']=len(a['log']['fallbacks']); R['played']=len(a['log']['played']); R['audioErrors']=a['log']['errors'][-5:]
     R['mv']=s['mv']; R['errors']=errs(logs); R['avgFps']=s['avgFps']; R['gameSeconds']=round(await gt(pg),1)
-    await pg.screenshot(path=SHOT+'_j_end.png')
+    await safe_shot(pg, path=SHOT+'_j_end.png')
     print(json.dumps(R, ensure_ascii=False, indent=1, default=str))
     keys=['ticket','gateOpen','board1','tunnel','stop1','stop2','board2','back1','back2','board3','l2stop']
     bad=[k for k in keys if not R.get(k)]

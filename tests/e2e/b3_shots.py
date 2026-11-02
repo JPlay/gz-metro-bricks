@@ -17,8 +17,9 @@ async def view(pg, v):
 async def shot(pg, name, settle=1.5, budget=True):
     await asyncio.sleep(settle); d = await perf(pg, 4, 0.25); R['perf'][name] = d; log('perf', name, d)
     if budget: ok(name + ':budget', d['draws'] <= BUDGET['draws'] and d['tris'] <= BUDGET['tris'])
-    await overlay(pg, d, name); await pg.screenshot(path=OUT + name + '.png', timeout=180000); await overlay_off(pg)
-    from PIL import Image; Image.open(OUT + name + '.png').convert('RGB').save(OUT + name + '.jpg', quality=88)
+    await overlay(pg, d, name); good = await safe_shot(pg, path=OUT + name + '.png', timeout=180000); await overlay_off(pg)
+    if good:
+        from PIL import Image; Image.open(OUT + name + '.png').convert('RGB').save(OUT + name + '.jpg', quality=88)
     return d
 async def trains_in(pg, code, lines):
     """建站，叫 lines 上两个方向的车，等全部开门停稳后冻结游戏时间"""

@@ -83,7 +83,7 @@ async def main():
       R['area'][c] = await pg.evaluate("() => __game.scene.meshes.filter(m => m.isEnabled() && m.isVisible && m.getTotalIndices).reduce((t, m) => t + m.getTotalIndices() / 3 * (m.instances ? 1 + m.instances.length : 1), 0)")
       ok(c + ':budget', d['draws'] <= BUDGET['draws'] and d['tris'] <= BUDGET['tris'] and R['area'][c] <= BUDGET['tris'])
       if OUT:
-        await overlay(pg, d, c); await pg.screenshot(path=f'{OUT}fz-attr-{c}.png', timeout=180000); await overlay_off(pg)
+        await overlay(pg, d, c); await safe_shot(pg, path=f'{OUT}fz-attr-{c}.png', timeout=180000); await overlay_off(pg)
         try:
           from PIL import Image
           Image.open(f'{OUT}fz-attr-{c}.png').convert('RGB').save(f'{OUT}fz-attr-{c}.jpg', quality=88)
@@ -96,7 +96,7 @@ async def main():
           await pg.evaluate("__game.player.yaw = Math.PI; __game.player.pitch = 0.02"); await asyncio.sleep(1.0)
         d2 = await perf(pg, 3, 0.25); R['perf'][c + '-back'] = d2
         ok(c + ':budgetBack', d2['draws'] <= BUDGET['draws'] and d2['tris'] <= BUDGET['tris'])
-        await overlay(pg, d2, c + ' (back)'); await pg.screenshot(path=f'{OUT}fz-attr-{c}-back.png', timeout=180000); await overlay_off(pg)
+        await overlay(pg, d2, c + ' (back)'); await safe_shot(pg, path=f'{OUT}fz-attr-{c}-back.png', timeout=180000); await overlay_off(pg)
         try:
           from PIL import Image
           Image.open(f'{OUT}fz-attr-{c}-back.png').convert('RGB').save(f'{OUT}fz-attr-{c}-back.jpg', quality=88)

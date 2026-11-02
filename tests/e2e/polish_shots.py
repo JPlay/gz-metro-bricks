@@ -14,7 +14,7 @@ async def pose(pg, x,y,z,yaw,pitch,v, settle=0.9):
     await pg.evaluate(f'__game.teleport({x},{y},{z},{yaw}); __game.player.pitch={pitch}')
     await asyncio.sleep(settle)
 async def shot(pg, name, R):
-    await pg.screenshot(path=OUT+name+'.png', timeout=120000); s=await st(pg); R[name]={'dc':s['drawCalls'],'active':s['activeMeshes'],'fps':s['fps'],'zone':s['zone']}
+    await safe_shot(pg, path=OUT+name+'.png', timeout=120000); s=await st(pg); R[name]={'dc':s['drawCalls'],'active':s['activeMeshes'],'fps':s['fps'],'zone':s['zone']}
 async def wait(pg, js, timeout=120):
     for _ in range(int(timeout/0.5)):
         if await pg.evaluate(js): return True
@@ -47,8 +47,8 @@ async def main():
     await pose(pg,0,0.05,-49,0.6,-0.55,'first',1.2); await shot(pg,'13-sky',R)
     # HUD 特写
     await pose(pg,0,0.05,-49,0,0.12,'third',0.8)
-    await pg.screenshot(path=OUT+'11-hud-closeup.png', clip={'x':0,'y':0,'width':1112,'height':150}, timeout=120000)
-    await pg.screenshot(path=OUT+'11b-hud-bottom.png', clip={'x':0,'y':560,'width':1112,'height':274}, timeout=120000)
+    await safe_shot(pg, path=OUT+'11-hud-closeup.png', clip={'x':0,'y':0,'width':1112,'height':150}, timeout=120000)
+    await safe_shot(pg, path=OUT+'11b-hud-bottom.png', clip={'x':0,'y':560,'width':1112,'height':274}, timeout=120000)
     R['errors']=errs(logs); await b.close()
     # 招牌站
     for code,name,pos in [('njs','10-signature-nongjiangsuo',(0,0.05,-50,0,0.1)),('dsk','10b-signature-dongshankou',(-6,0.05,-56,-0.45,0.08))]:

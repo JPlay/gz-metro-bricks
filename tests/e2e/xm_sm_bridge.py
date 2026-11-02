@@ -24,7 +24,7 @@ async def shot(pg, name, label, out=None):
   await asyncio.sleep(1.2); d = await perf(pg, 3, 0.25); R['perf'][name] = d; log('perf', name, d)
   ok(name + ':budget', d['tris'] <= TRIS and d['draws'] <= DRAWS)
   o = out or OUT
-  if o: await overlay(pg, d, label); await pg.screenshot(path=f'{o}/{name}.jpg', type='jpeg', quality=82, timeout=240000); await overlay_off(pg)
+  if o: await overlay(pg, d, label); await safe_shot(pg, path=f'{o}/{name}.jpg', type='jpeg', quality=82, timeout=240000); await overlay_off(pg)
 async def pose(pg, x, y, z, yaw, pitch=0.0):
   await pg.evaluate(f"(() => {{ const p = __game.player; p.spawn({x}, {y}, {z}, {yaw}); p.yaw = {yaw}; p.pitch = {pitch}; }})()"); await asyncio.sleep(0.4)
 async def split(pg, pts, mx=20):   # autopilot 每个航点限 12 s 游戏时间：长段切成 ≤mx m

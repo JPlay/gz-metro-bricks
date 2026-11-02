@@ -11,8 +11,8 @@ async def view(pg, v):
     if await pg.evaluate('__game.player.view') != v: await pg.evaluate('__game.toggleView()')
 async def shot(pg, name, settle=1.5):
     await asyncio.sleep(settle); d = await perf(pg, 4, 0.25); R['perf'][name] = d; log('perf', name, d)
-    await pg.screenshot(path=OUT + name + '.png', timeout=180000)
-    from PIL import Image; Image.open(OUT + name + '.png').convert('RGB').save(OUT + name + '.jpg', quality=88)
+    if await safe_shot(pg, path=OUT + name + '.png', timeout=180000):
+        from PIL import Image; Image.open(OUT + name + '.png').convert('RGB').save(OUT + name + '.jpg', quality=88)
 async def main():
   os.makedirs(OUT, exist_ok=True)
   async with async_playwright() as p:

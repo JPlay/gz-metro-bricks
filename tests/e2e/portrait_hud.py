@@ -3,7 +3,7 @@
 import asyncio, json, os, sys
 from playwright.async_api import async_playwright
 sys.path.insert(0, os.path.dirname(__file__))
-from common import ARGS
+from common import ARGS, safe_shot
 URL = sys.argv[1] if len(sys.argv) > 1 else 'http://localhost:8123/'
 OUT = sys.argv[2] if len(sys.argv) > 2 else '/workspace/gz-shots-polish/portrait-hud'
 SUF = sys.argv[3] if len(sys.argv) > 3 else ''
@@ -34,7 +34,7 @@ async def main():
                     if not (len(c) >= 3 and min(c[:3]) >= 250 and (c[3] if len(c) > 3 else 1) >= 0.9): bad.append('inv-bg ' + m['invBg'])
                 out[state] = dict(m, overlap=bad); ok &= not bad
                 path = f"{OUT}/{name}_{state}{SUF}.png"
-                try: await pg.screenshot(path=path, timeout=120000); out[state]['shot'] = path
+                try: await safe_shot(pg, path=path, timeout=120000); out[state]['shot'] = path
                 except Exception as e: out[state]['shot'] = 'FAILED ' + str(e)[:60]
             R[name] = out; await ctx.close()
         await b.close()

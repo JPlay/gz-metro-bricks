@@ -15,7 +15,7 @@ async def S(pg): return await pg.evaluate('(() => { const m = __game.xmMetro, s 
 AREA = "() => __game.scene.meshes.filter(m => m.isEnabled() && m.isVisible && m.getTotalIndices).reduce((t, m) => t + m.getTotalIndices() / 3 * (m.instances ? 1 + m.instances.length : 1), 0)"
 async def budget(pg, name, area=False):
   await asyncio.sleep(1.2)
-  if OUT: await pg.screenshot(path=f'{OUT}/{name}.png')
+  if OUT: await safe_shot(pg, path=f'{OUT}/{name}.png')
   d = await perf(pg, 3, 0.25); R['perf'][name] = d; log('perf', name, d)
   ok(name + ':budget', d['tris'] <= TRIS and d['draws'] <= DRAWS)
   if area: R['area'][name] = a = await pg.evaluate(AREA); log('area', name, a); ok(name + ':area90k', a <= TRIS)
