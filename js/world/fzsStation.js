@@ -90,18 +90,19 @@ function backdrop(c, pw, ph) {
 /** 把 build() 里 k.group('under' / 'east' / 'west') + 剩下的站房几何重新拼成两份互斥的视图：
  *   full：四组全部（候车室以外用；每种材质仍只有一个网格，draw 数和不分组时一样；不含候车室旅客 crowd）
  *   wait：east + 站房（候车室里用；不含出站层 / 地铁站厅、西广场和广场上的人车 plazaLife）
- * 两份同时只开一份（onArea），几何多占一份内存，但哪儿都不多 draw。 */
+ *   metro：under + east + west，不含站房（走进福州南地铁站厅 / 闸机以后用：站房在地面以上，隔着两层楼板看不见；也不含 crowd / plazaLife）
+ * 三份同时只开一份（onArea），几何多占两份内存，但哪儿都不多 draw。 */
 function twoViews(k) {
   const G = Object.fromEntries(k.groups.map(g => [g.name, g.buckets])); G.house = k.buckets;
-  const cat = (names, skip) => { const out = {};
+  const cat = (names, ...skip) => { const out = {};
     for (const nm of names) for (const [b, g] of Object.entries(G[nm])) {
-      if (g.empty || b === skip) continue;
+      if (g.empty || skip.includes(b)) continue;
       const o = out[b] || (out[b] = new Geo()), base = o.p.length / 3, nv = g.p.length / 3;   // 逐个 push（大数组不能用 ...展开，会爆栈）
       for (const v of g.p) o.p.push(v); for (const v of g.n) o.n.push(v); for (const v of g.c) o.c.push(v);
       for (let j = 0; j < nv * 2; j++) o.u.push(g.u[j] ?? 0); for (const v of g.i) o.i.push(v + base);
     }
     return out; };
-  k.groups = [{ name: 'full', buckets: cat(['under', 'east', 'west', 'house'], 'crowd') }];
+  k.groups = [{ name: 'full', buckets: cat(['under', 'east', 'west', 'house'], 'crowd') }, { name: 'metro', buckets: cat(['under', 'east', 'west'], 'crowd', 'plazaLife') }];
   k.buckets = cat(['east', 'house'], 'plazaLife');
 }
 export class FzsStation {
@@ -122,7 +123,8 @@ export class FzsStation {
     if (b.plazaLife) b.plazaLife.setEnabled(a === 'plaza');
     // 候车室里只开 wait 那份（东广场 + 站房，不含楼板下的出站层 / 地铁站厅和股道北边的西广场），别处开 full（整站，每种材质一个网格）
     //（以前整站一份，候车室里也全画：34 draws / 93.6k tris；分四组按区开关则候车室外每种材质 4 个网格：33 → 52 draws）
-    const n = this.kit.groupNodes; if (n) { n.full.setEnabled(a !== 'wait'); n.wait.setEnabled(a === 'wait'); }
+    // 'metro'（xmService.buildStation：人在地铁站厅 / 闸机 / 楼梯下半段）只开 metro 那份：不画地面以上的站房（福州南进站闸机 29 draws / 88.2k → 见提交说明）
+    const n = this.kit.groupNodes; if (n) { n.full.setEnabled(a !== 'wait' && a !== 'metro'); n.metro.setEnabled(a === 'metro'); n.wait.setEnabled(a === 'wait'); }
   }
   hang(x, y, z, w, h, a, paint, top = HC, back) {
     const k = this.kit, at = this.atlas, nx = Math.sin(a), nz = Math.cos(a), uv = at.draw(w, h, paint);

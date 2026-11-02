@@ -70,6 +70,8 @@ export class XmMetro {
         // 国铁站房只在人走在楼梯 / 换乘通道西段时打开（east.js 每帧按位置切）；solo（动车外观、远景）关掉省 draw
         const pp = this.ctx.player && this.ctx.player.position, near = !!pp && (pp.x - this.N.O.x) < -60 && pp.y > XM_PY - 1 && pp.y < -5 && Math.abs(pp.z + 80) < 14;
         if (rail.station) rail.station.setEnabled(!!near);
+        // 福州南：在地铁这边只开不含地面站房的那份几何（FzsStation.onArea('metro')）；厦门北站房没有 onArea
+        if (rail.station && rail.station.onArea) rail.station.onArea('metro');
         if (rail.solo && rail.solo.root) rail.solo.root.setEnabled(false);
       } else { rail.show(null); }
     }
@@ -277,6 +279,7 @@ export class XmMetro {
     // 回到国铁出站层换乘通道
     const rail = this.ctx.getRailway && this.ctx.getRailway();
     if (rail) rail.show('solo');
+    if (rail && rail.station && rail.station.onArea) rail.station.onArea('passage');   // 回到国铁换乘通道：站房整份几何（east.js 之后按区再切）
     if (this.station) { this.station.dispose(); this.station = null; this.code = null; this.slots = []; }
     this.trains.forEach(t => t.setVisible(false));
     if (!walk) player.spawn(this.N.O.x - 92, -6.45, -80, Math.PI / 2);
