@@ -73,6 +73,8 @@ async def main():
         await measure(pg, f'dfj-plat{i}-y{q["y"]}', 'Math.PI/2', -0.05, 3)
       await pg.evaluate("__game.fzMetro.slots.forEach(o => { if (o.state==='dwell') o.t = 0.5; })")
     if 'wait' in PARTS:
+      # 前面 djk / dfj 建过地铁站：照游戏里出站的路径（exitToRailway，walk=true 不动人）先拆掉地铁站，否则地下的东街口站房会算进候车室的 tris
+      await pg.evaluate("(() => { const m=__game.fzMetro; if (m && m.station) m.exitToRailway(__game.player, true); })()")
       await pg.evaluate("""(() => { const g=__game; g.east.ensure(); g.east.side='fz'; const P=g.east.rails.fz.plat(true); P.show('solo'); g.east.cur={st:g.station, loc:'fzs', area:'platform'}; g.station.kit.root.setEnabled(false); g.player.spawn(5020, 0.05, -72.08, -2.6); })()""")
       await gsleep(pg, 3); R['waitArea'] = await pg.evaluate('__game.east.info().area'); ok('wait:area', R['waitArea'] == 'wait')
       await measure(pg, 'fzs-waitinghall', -2.6, -0.04)
