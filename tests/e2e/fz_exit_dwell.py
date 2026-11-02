@@ -2,7 +2,7 @@
 #   南门兜（L1）、东街口（L1）、鼓山（L2）、东岭（L5）：上一站上车 → 坐一站 → 开门后走出车门 → 出口广播（“前往××的乘客，请从×出口出站”）开始播
 #   检查：出口广播各片段都播完、没被“车门即将关闭”（interrupt）掐掉；车门开始关闭的时刻 ≥ 广播播完 + 1.5 s（墙钟，和音频同一个钟）；
 #         车停在上一站时已预载这一站的出口广播（preload.exitIds）。
-#   普通站（无出口广播）：exitWait 为空，下车后到关门 = 3.5 s 游戏时间（停站时长不变）。
+#   普通站（无出口广播）：exitWait 为空，开门完成到关门 = 3.5 s 游戏时间（停站时长不变；下车→关门 ≤ 3.5 s，因为 3.5 s 不从下车起算）。
 # 用法：python tests/e2e/fz_exit_dwell.py [base-url] [站代码,逗号分隔（可选）]
 import asyncio, sys, json, os, time
 sys.path.insert(0, os.path.dirname(__file__))
@@ -47,10 +47,13 @@ async def case(pg, code, line):
     pre = await pg.evaluate('__game.fzMetro.info().preload')
     r['preload'] = pre
     if plan['segs']: ok(f'{code}:exitPreloadedAtPrev', pre and pre.get('next') == tgt and all(i in (pre.get('exitIds') or []) for i in plan['segs']), pre)
+    # 普通站判定要用目标站“开门完成 → dwell”那一刻（停站 3.5 s 从这里起算，不从下车起算），所以到站前先挂一个只记 dwell 起点的观察者
+    await pg.evaluate(f"""(() => {{ window.__gt3=window.__gt3||0; window.__dwG=null; window.__preObs=__game.scene.onAfterRenderObservable.add(() => {{ window.__gt3 += Math.min(0.25, __game.engine.getDeltaTime()/1000);
+      const s={SLOT % (line, step)}; if (window.__dwG===null && __game.fzMetro.code==='{tgt}' && s && s.state==='dwell') window.__dwG=window.__gt3; }}); }})()""")
     await pg.evaluate(f"(() => {{ const s={SLOT % (line, step)}; s.t=0.3; }})()")   # 上一站：照常关门开车（只把这一站的停站计时提前，行车 / 目标站停站不动）
     ok(f'{code}:arrived', await wait(pg, f"(() => {{ const m=__game.fzMetro, s={SLOT % (line, step)}; return m.code==='{tgt}' && s && s.state==='dwell' && __game.state().aboard; }})()", 200))
     # 走出车门：记录下车那一刻（游戏钟 + 墙钟）和之后每个状态切换
-    await pg.evaluate(f"""(() => {{ const m=__game.fzMetro, s={SLOT % (line, step)}; window.__ed={{offG:null, offW:null, closeG:null, closeW:null, annW:null, st:[]}};
+    await pg.evaluate(f"""(() => {{ __game.scene.onAfterRenderObservable.remove(window.__preObs); const m=__game.fzMetro, s={SLOT % (line, step)}; window.__ed={{dwG:window.__dwG, offG:null, offW:null, closeG:null, closeW:null, annW:null, st:[]}};
       const E=window.__ed; let last=null, lastAnn=!!s.ann; window.__gt3=window.__gt3||0;
       window.__edObs=__game.scene.onAfterRenderObservable.add(() => {{ window.__gt3 += Math.min(0.25, __game.engine.getDeltaTime()/1000); const ab=__game.state().aboard;
         if (E.offG===null && !ab) {{ E.offG=window.__gt3; E.offW=performance.now(); }}
@@ -72,8 +75,14 @@ async def case(pg, code, line):
         r['summary'] = {'dur_s': lx and lx['dur'], 'doneAt_ms': lx and lx['doneAt'], 'closeAt_ms': lx and lx['closeAt'], 'offToCloseGame_s': gapG}
     else:
         ok(f'{code}:noExitWait', not lx or lx.get('code') != tgt, lx)
-        ok(f'{code}:dwellUnchanged3.5', 3.2 <= gapG <= 3.5 + 0.3, gapG)
-        r['summary'] = {'offToCloseGame_s': gapG}
+        # 停站逻辑（33c7c96 / ce35ded / 现在相同）：dwell 里只要人不在门口 s.t = min(s.t, 3.5)，s.t 一直在减 —— 3.5 s 从开门完成（或离开门口）起算，
+        # 不是从下车（aboard→false）起算；人在车厢里走到门口再下车的那段时间已经计在 3.5 s 里，所以 下车→关门 ≤ 3.5 s（实测 3.0 正常）。
+        # 判定：开门完成→关门 ≈ 3.5 s（没有被加长或缩短；人在门口挡门时可更长，取 max(3.5, 下车时刻)），下车→关门 ≤ 3.5 s（没有出口广播的额外等待）。
+        # 容差 0.3 s：游戏钟每帧 ≤0.25 s（盒子上 3–4 fps）。
+        dwG = e.get('dwG'); dwGap = None if dwG is None else round(e['closeG'] - dwG, 2)
+        expect = None if dwG is None else max(3.5, round(e['offG'] - dwG, 2))
+        ok(f'{code}:dwellUnchanged3.5', dwGap is not None and abs(dwGap - expect) <= 0.3 and 0 <= gapG <= 3.5 + 0.3, {'openToCloseGame_s': dwGap, 'expect': expect, 'offToCloseGame_s': gapG})
+        r['summary'] = {'offToCloseGame_s': gapG, 'openToCloseGame_s': dwGap}
     log('SUMMARY', code, tgt, json.dumps(r['summary'], ensure_ascii=False))
 async def main():
     async with async_playwright() as p:
