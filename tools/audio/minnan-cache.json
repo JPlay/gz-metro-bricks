@@ -584,15 +584,6 @@
   "tries": 4,
   "flag": true
  },
- "voice.xmvisit.lhj.nan": {
-  "fp": "4b5033e4d3ca9b0c31f3c0205306ed5a80e9694c344a8d04751de1c16133504e",
-  "model": "cosyvoice-v3.5-flash",
-  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
-  "sim": 0.808,
-  "asr": "莲花路靠站附近有莲花公园，欢迎下车游玩，车总适合出口出站。",
-  "tries": 4,
-  "flag": true
- },
  "voice.welcome.lbn.nan": {
   "fp": "ae308631b0224f1fad389aa928feb99f648be9ebf4c9d60a4a7b63d70705254b",
   "model": "cosyvoice-v3.5-flash",
@@ -1295,15 +1286,6 @@
   "tries": 1,
   "flag": false
  },
- "voice.xmvisit.hpu.nan": {
-  "fp": "c69e775e27281e262f6aa6278081cf7b43f2dcdd0e51bc9c7a9d8d83b1fc1fef",
-  "model": "cosyvoice-v3.5-flash",
-  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
-  "sim": 0.667,
-  "asr": "宝宝站附近有中伦公园，欢迎下车游玩，车中熄火，出口出站。",
-  "tries": 1,
-  "flag": false
- },
  "voice.next.ctg.nan": {
   "fp": "abd3e48d4fa7ce4cfc90488e791d5a8085abb7d29422a4891a0f326c5ac86c14",
   "model": "cosyvoice-v3.5-flash",
@@ -1727,15 +1709,6 @@
   "tries": 4,
   "flag": true
  },
- "voice.xmexit.lhj.nan": {
-  "fp": "2322b530e46da0adb407c9353446b09bd6dbcde7d0bf01b1f0b083ec93ca3a98",
-  "model": "cosyvoice-v3.5-flash",
-  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
-  "sim": 0.882,
-  "asr": "前往莲花公园的乘客车从四号出口出站。",
-  "tries": 4,
-  "flag": true
- },
  "voice.xmexit.hcw.nan": {
   "fp": "4fc814e810b819b69900e0ae1b3de191afb73d10dc49c87a474712f7159aa2a7",
   "model": "cosyvoice-v3.5-flash",
@@ -1796,15 +1769,6 @@
   "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
   "sim": 0.765,
   "asr": "前往的古码头的乘客请从六河出口出站。",
-  "tries": 4,
-  "flag": true
- },
- "voice.xmexit.hpu.nan": {
-  "fp": "abc3559086a7939b04d7861dcfebe472f38424de0f39eee36d160ea65eee1908",
-  "model": "cosyvoice-v3.5-flash",
-  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
-  "sim": 0.706,
-  "asr": "今往中伦公文的乘客，请从四号出口出站。",
   "tries": 4,
   "flag": true
  },

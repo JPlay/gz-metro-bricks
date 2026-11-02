@@ -38,7 +38,10 @@ let train = { speed: 0, inside: true, braking: false, near: 1 }, lastTrainAt = -
 // 声音分区：metro 地铁声 0..1（站内 1，出口楼梯上渐弱，街面 0）；street 街面车流；restaurant 饭店嘈杂；sub 站内哪种环境床
 const env = { metro: 1, street: 0, restaurant: 0, birds: 0, sub: 'concourse' };   // birds：沙面榕树下的鸟叫（合成）
 const steps = { count: 0, last: null, times: [] };
-const log = { played: [], announced: [], fallbacks: [], errors: [] };
+const log = { played: [], announced: [], fallbacks: [], errors: [], done: [], cut: [] };
+// done：完整播完（没被打断）的广播片段；cut：播到一半被新广播（interrupt）打断的片段 —— 测试用来确认景点出口广播没被进站广播掐掉
+function mark(list, id) { list.push(id); if (list.length > 80) list.shift(); }
+const finished = (item, id) => mark(item.epoch === epoch ? log.done : log.cut, id);
 
 function clamp(n, a, b) { return Math.max(a, Math.min(b, Number.isFinite(n) ? n : a)); }
 function smooth(param, target, seconds) {
@@ -416,21 +419,23 @@ async function pump() {
       const item = queue.shift(); current = item;
       if (item.epoch !== epoch) { item.resolve({ cancelled: true }); continue; }
       for (let i = 0; i < item.ids.length && item.epoch === epoch; i++) {
+        item.i = i;   // pendingSegs() 用：这一组播到第几段
         // 片段可以是清单 id，也可以是 {id, lang, text}（新车站：清单里没有 MP3 时直接走 Web Speech 回退）
         const x = item.ids[i], a = typeof x === 'string' ? assets[x] : (assets[x.id] || x);
         if (!a) { log.errors.push('未知片段 ' + x); continue; }
         if (!canPlay() || muted) {
           // 未解锁/静音/后台：照样按时长显示字幕，保证游戏节奏一致
-          caption(a, { silent: true }); sleepToken = {}; await sleep(estimate(a) + (i ? 220 : 70), sleepToken); continue;
+          caption(a, { silent: true }); sleepToken = {}; await sleep(estimate(a) + (i ? 220 : 70), sleepToken); finished(item, a.id); continue;
         }
         let ok = !!(a.file && assets[a.id]);
         if (ok) { try { await ensureBuffer(a.id); } catch (e) { ok = false; } }
         if (item.epoch !== epoch) break;
         if (!ok && a.lang === 'nan') { log.skipped = (log.skipped || []).concat(a.id); continue; }   // 闽南语没有 MP3 时不能让 Web Speech 用普通话念：直接跳过
-        if (!ok) { await fallbackClip(a, item.epoch); continue; }
+        if (!ok) { await fallbackClip(a, item.epoch); finished(item, a.id); continue; }
         caption(a);
         log.announced.push(a.id);
         await new Promise(res => { const d = play(a.id, buses.voice, { pa: true, volume: 1, delay: i ? 0.22 : 0.07, kind: 'voice' }, res); if (!d) res(); });
+        finished(item, a.id);
       }
       item.resolve({ cancelled: item.epoch !== epoch });
     }
@@ -485,6 +490,15 @@ export function cancelLang(lang) {
 /** 正在播 + 排队中的广播类别（key） */
 export function pendingKeys() { return [current, ...queue].filter(q => q && q.epoch === epoch).map(q => q.key); }
 export function isAnnouncing() { return pumping || queue.length > 0; }
+/** 还没播完的报站片段（当前这组从正在播/正在下载的那段起 + 排队中的），原样返回（id 字符串或 {id, lang, text}） */
+export function pendingSegs() {
+  const out = [];
+  if (current && current.epoch === epoch) out.push(...current.ids.slice(current.i || 0));
+  for (const q of queue) if (q.epoch === epoch) out.push(...q.ids);
+  return out;
+}
+/** 片段的 MP3 是否已在本地（已解码，或压缩数据已下载、只差解码） */
+export function isReady(id) { return !!(buffers[id] || compressed[id]); }
 
 /* ---------- 解锁 / 生命周期 ---------- */
 // 0.5 秒 8kHz 8-bit 静音 WAV（运行时生成 data URI）。在手势里播放它：iOS 会把页面音频切到媒体（playback）通道
@@ -671,6 +685,6 @@ export function getState() {
     zone, ducked, env: { ...env }, gains: gains(), steps: { count: steps.count, last: steps.last, times: steps.times.slice(-12) }, train: { ...train }, announcing: current ? current.key : null, queued: queue.length, active: active.length,
     decoded: Object.keys(buffers).length, missing: [...missing], voiceCacheBytes: voiceBytes,
     sampleRate: ctx ? ctx.sampleRate : null, fallbackMode: CONFIG.VOICE_FALLBACK, diag: diag(),
-    log: { played: log.played.slice(), announced: log.announced.slice(), fallbacks: log.fallbacks.slice(), errors: log.errors.slice() }
+    log: { played: log.played.slice(), announced: log.announced.slice(), fallbacks: log.fallbacks.slice(), errors: log.errors.slice(), done: log.done.slice(), cut: log.cut.slice() }
   };
 }
