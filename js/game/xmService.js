@@ -183,6 +183,11 @@ export class XmMetro {
       // 叠层换乘站：只画玩家所在那一层的列车（另一层隔着楼板看不见，省 draw）
       //（以前是 |p.y - P.y| < 5：东街口 / 帝封江换乘楼梯半中间两层都算“近”，四趟车一起画 —— 61 draws / 124k tris）
       if (multi && s.state !== 'away') { const near = aboard || (s.P.y === this.lvY && Math.abs(p.y - s.P.y) < 5); if (tr.root.isEnabled() !== near) tr.setVisible(near); }
+      // 国铁换乘站（福州南 / 厦门北）：人在换乘通道西段 / 楼梯下半段（离站台端墙门洞 24 m 以上）时不画列车：
+      // 隔着 6 m 宽的门洞和屏蔽门几乎看不见，两趟车同时停站时朝东上方看会到 53 draws / 101k tris
+      const farHide = this.code === this.N.rail && !aboard && (p.x - this.N.O.x) < -60;
+      if (farHide) { if (tr.root.isEnabled()) { tr.setVisible(false); s.farHid = true; } }
+      else if (s.farHid) { s.farHid = false; if (s.state !== 'away' && !(multi && !(s.P.y === this.lvY && Math.abs(p.y - s.P.y) < 5))) tr.setVisible(true); }
     }
     if (sound) A.trainSound(sound); else if (!(this.ride && this.ride.phase === 'cruise')) A.trainSound({ speed: 0 });
   }
