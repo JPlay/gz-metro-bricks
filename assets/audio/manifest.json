@@ -1680,45 +1680,6 @@
       "bytes": 15980
     },
     {
-      "id": "voice.visit.kk.zh",
-      "file": "voice/visit-kk-zh.mp3",
-      "group": "voice",
-      "label": "visit.kk.zh",
-      "lang": "zh",
-      "text": "坑口站附近有芳村黄大仙祠，欢迎下车游玩，请从B出口出站。",
-      "model": "cosyvoice-v2",
-      "voice": "longxiaobai_v2",
-      "language_type": "Chinese",
-      "duration": 7.536,
-      "bytes": 60524
-    },
-    {
-      "id": "voice.visit.kk.yue",
-      "file": "voice/visit-kk-yue.mp3",
-      "group": "voice",
-      "label": "visit.kk.yue",
-      "lang": "yue",
-      "text": "坑口站附近有芳村黄大仙祠，欢迎落车游玩，请喺B出口出站。",
-      "model": "cosyvoice-v3-flash",
-      "voice": "longjiayi_v3",
-      "language_type": "Chinese",
-      "duration": 6.552,
-      "bytes": 52652
-    },
-    {
-      "id": "voice.visit.kk.en",
-      "file": "voice/visit-kk-en.mp3",
-      "group": "voice",
-      "label": "visit.kk.en",
-      "lang": "en",
-      "text": "Kengkou station is near Fangcun Wong Tai Sin Temple. You are welcome to get off and visit. Please use Exit B.",
-      "model": "cosyvoice-v2",
-      "voice": "longxiaobai_v2",
-      "language_type": "English",
-      "duration": 7.272,
-      "bytes": 58412
-    },
-    {
       "id": "voice.arrive.kk.zh",
       "file": "voice/arrive-kk-zh.mp3",
       "group": "voice",
@@ -1951,45 +1912,6 @@
       "language_type": "English",
       "duration": 5.208,
       "bytes": 41900
-    },
-    {
-      "id": "voice.visit.fc.zh",
-      "file": "voice/visit-fc-zh.mp3",
-      "group": "voice",
-      "label": "visit.fc.zh",
-      "lang": "zh",
-      "text": "芳村站附近有醉观公园，欢迎下车游玩，请从D出口出站。",
-      "model": "cosyvoice-v2",
-      "voice": "longxiaobai_v2",
-      "language_type": "Chinese",
-      "duration": 6.168,
-      "bytes": 49580
-    },
-    {
-      "id": "voice.visit.fc.yue",
-      "file": "voice/visit-fc-yue.mp3",
-      "group": "voice",
-      "label": "visit.fc.yue",
-      "lang": "yue",
-      "text": "芳村站附近有醉观公园，欢迎落车游玩，请喺D出口出站。",
-      "model": "cosyvoice-v3-flash",
-      "voice": "longjiayi_v3",
-      "language_type": "Chinese",
-      "duration": 5.832,
-      "bytes": 46892
-    },
-    {
-      "id": "voice.visit.fc.en",
-      "file": "voice/visit-fc-en.mp3",
-      "group": "voice",
-      "label": "visit.fc.en",
-      "lang": "en",
-      "text": "Fangcun station is near Zuiguan Park. You are welcome to get off and visit. Please use Exit D.",
-      "model": "cosyvoice-v2",
-      "voice": "longxiaobai_v2",
-      "language_type": "English",
-      "duration": 6.48,
-      "bytes": 52076
     },
     {
       "id": "voice.arrive.fc.zh",
@@ -2265,45 +2187,6 @@
       "bytes": 20396
     },
     {
-      "id": "voice.visit.csl.zh",
-      "file": "voice/visit-csl-zh.mp3",
-      "group": "voice",
-      "label": "visit.csl.zh",
-      "lang": "zh",
-      "text": "长寿路站附近有上下九步行街、荔枝湾涌，欢迎下车游玩，请从A出口出站。",
-      "model": "cosyvoice-v2",
-      "voice": "longxiaobai_v2",
-      "language_type": "Chinese",
-      "duration": 8.952,
-      "bytes": 71852
-    },
-    {
-      "id": "voice.visit.csl.yue",
-      "file": "voice/visit-csl-yue.mp3",
-      "group": "voice",
-      "label": "visit.csl.yue",
-      "lang": "yue",
-      "text": "长寿路站附近有上下九步行街、荔枝湾涌，欢迎落车游玩，请喺A出口出站。",
-      "model": "cosyvoice-v3-flash",
-      "voice": "longjiayi_v3",
-      "language_type": "Chinese",
-      "duration": 7.968,
-      "bytes": 63980
-    },
-    {
-      "id": "voice.visit.csl.en",
-      "file": "voice/visit-csl-en.mp3",
-      "group": "voice",
-      "label": "visit.csl.en",
-      "lang": "en",
-      "text": "Changshou Lu station is near Shangxiajiu Pedestrian Street and Lizhiwan Creek. You are welcome to get off and visit. Please use Exit A.",
-      "model": "cosyvoice-v2",
-      "voice": "longxiaobai_v2",
-      "language_type": "English",
-      "duration": 10.08,
-      "bytes": 80876
-    },
-    {
       "id": "voice.arrive.csl.zh",
       "file": "voice/arrive-csl-zh.mp3",
       "group": "voice",
@@ -2577,45 +2460,6 @@
       "bytes": 14636
     },
     {
-      "id": "voice.visit.xmk.zh",
-      "file": "voice/visit-xmk-zh.mp3",
-      "group": "voice",
-      "label": "visit.xmk.zh",
-      "lang": "zh",
-      "text": "西门口站附近有光孝寺，欢迎下车游玩。",
-      "model": "cosyvoice-v2",
-      "voice": "longxiaobai_v2",
-      "language_type": "Chinese",
-      "duration": 4.464,
-      "bytes": 35948
-    },
-    {
-      "id": "voice.visit.xmk.yue",
-      "file": "voice/visit-xmk-yue.mp3",
-      "group": "voice",
-      "label": "visit.xmk.yue",
-      "lang": "yue",
-      "text": "西门口站附近有光孝寺，欢迎落车游玩。",
-      "model": "cosyvoice-v3-flash",
-      "voice": "longjiayi_v3",
-      "language_type": "Chinese",
-      "duration": 4.632,
-      "bytes": 37292
-    },
-    {
-      "id": "voice.visit.xmk.en",
-      "file": "voice/visit-xmk-en.mp3",
-      "group": "voice",
-      "label": "visit.xmk.en",
-      "lang": "en",
-      "text": "Ximenkou station is near Guangxiao Temple. You are welcome to get off and visit.",
-      "model": "cosyvoice-v2",
-      "voice": "longxiaobai_v2",
-      "language_type": "English",
-      "duration": 4.776,
-      "bytes": 38444
-    },
-    {
       "id": "voice.arrive.xmk.zh",
       "file": "voice/arrive-xmk-zh.mp3",
       "group": "voice",
@@ -2699,12 +2543,12 @@
       "group": "voice",
       "label": "visit.gyq.zh",
       "lang": "zh",
-      "text": "公园前站附近有人民公园、北京路步行街，欢迎下车游玩。",
+      "text": "公园前站附近有人民公园，欢迎下车游玩，请从D出口出站。",
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 5.976,
-      "bytes": 48044
+      "duration": 5.928,
+      "bytes": 47660
     },
     {
       "id": "voice.visit.gyq.yue",
@@ -2712,12 +2556,12 @@
       "group": "voice",
       "label": "visit.gyq.yue",
       "lang": "yue",
-      "text": "公园前站附近有人民公园、北京路步行街，欢迎落车游玩。",
+      "text": "公园前站附近有人民公园，欢迎落车游玩，请喺D出口出站。",
       "model": "cosyvoice-v3-flash",
       "voice": "longjiayi_v3",
       "language_type": "Chinese",
-      "duration": 6.384,
-      "bytes": 51308
+      "duration": 6.36,
+      "bytes": 51116
     },
     {
       "id": "voice.visit.gyq.en",
@@ -2725,12 +2569,12 @@
       "group": "voice",
       "label": "visit.gyq.en",
       "lang": "en",
-      "text": "Gongyuanqian station is near the People's Park and Beijing Road Pedestrian Street. You are welcome to get off and visit.",
+      "text": "Gongyuanqian station is near the People's Park. You are welcome to get off and visit. Please use Exit D.",
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 7.2,
-      "bytes": 57836
+      "duration": 6.816,
+      "bytes": 54764
     },
     {
       "id": "voice.visit.njs.zh",
@@ -2777,12 +2621,12 @@
       "group": "voice",
       "label": "visit.lsly.zh",
       "lang": "zh",
-      "text": "烈士陵园站附近有广州起义烈士陵园，欢迎下车游玩，请从C出口出站。",
+      "text": "烈士陵园站附近有广州起义烈士陵园，欢迎下车游玩，请从D出口出站。",
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 7.608,
-      "bytes": 61100
+      "duration": 7.536,
+      "bytes": 60524
     },
     {
       "id": "voice.visit.lsly.yue",
@@ -2790,7 +2634,7 @@
       "group": "voice",
       "label": "visit.lsly.yue",
       "lang": "yue",
-      "text": "烈士陵园站附近有广州起义烈士陵园，欢迎落车游玩，请喺C出口出站。",
+      "text": "烈士陵园站附近有广州起义烈士陵园，欢迎落车游玩，请喺D出口出站。",
       "model": "cosyvoice-v3-flash",
       "voice": "longjiayi_v3",
       "language_type": "Chinese",
@@ -2803,12 +2647,12 @@
       "group": "voice",
       "label": "visit.lsly.en",
       "lang": "en",
-      "text": "Lieshi Lingyuan station is near the Guangzhou Uprising Martyrs' Cemetery. You are welcome to get off and visit. Please use Exit C.",
+      "text": "Lieshi Lingyuan station is near the Guangzhou Uprising Martyrs' Cemetery. You are welcome to get off and visit. Please use Exit D.",
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 7.92,
-      "bytes": 63596
+      "duration": 7.872,
+      "bytes": 63212
     },
     {
       "id": "voice.visit.dsk.zh",
@@ -2816,12 +2660,12 @@
       "group": "voice",
       "label": "visit.dsk.zh",
       "lang": "zh",
-      "text": "东山口站附近有东山口红砖洋楼、东山湖公园，欢迎下车游玩。",
+      "text": "东山口站附近有东山口红砖洋楼，欢迎下车游玩，请从D出口出站。",
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 7.032,
-      "bytes": 56492
+      "duration": 8.136,
+      "bytes": 65324
     },
     {
       "id": "voice.visit.dsk.yue",
@@ -2829,12 +2673,12 @@
       "group": "voice",
       "label": "visit.dsk.yue",
       "lang": "yue",
-      "text": "东山口站附近有东山口红砖洋楼、东山湖公园，欢迎落车游玩。",
+      "text": "东山口站附近有东山口红砖洋楼，欢迎落车游玩，请喺D出口出站。",
       "model": "cosyvoice-v3-flash",
       "voice": "longjiayi_v3",
       "language_type": "Chinese",
-      "duration": 6.816,
-      "bytes": 54764
+      "duration": 6.864,
+      "bytes": 55148
     },
     {
       "id": "voice.visit.dsk.en",
@@ -2842,12 +2686,12 @@
       "group": "voice",
       "label": "visit.dsk.en",
       "lang": "en",
-      "text": "Dongshankou station is near the Dongshankou red-brick villas and Dongshan Lake Park. You are welcome to get off and visit.",
+      "text": "Dongshankou station is near the Dongshankou red-brick villas. You are welcome to get off and visit. Please use Exit D.",
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 8.16,
-      "bytes": 65516
+      "duration": 7.56,
+      "bytes": 60716
     },
     {
       "id": "voice.next.yj.zh",
@@ -3121,45 +2965,6 @@
       "language_type": "English",
       "duration": 2.448,
       "bytes": 19820
-    },
-    {
-      "id": "voice.visit.tyzx.zh",
-      "file": "voice/visit-tyzx-zh.mp3",
-      "group": "voice",
-      "label": "visit.tyzx.zh",
-      "lang": "zh",
-      "text": "体育中心站附近有天河体育中心，欢迎下车游玩，请从C出口出站。",
-      "model": "cosyvoice-v2",
-      "voice": "longxiaobai_v2",
-      "language_type": "Chinese",
-      "duration": 7.44,
-      "bytes": 59756
-    },
-    {
-      "id": "voice.visit.tyzx.yue",
-      "file": "voice/visit-tyzx-yue.mp3",
-      "group": "voice",
-      "label": "visit.tyzx.yue",
-      "lang": "yue",
-      "text": "体育中心站附近有天河体育中心，欢迎落车游玩，请喺C出口出站。",
-      "model": "cosyvoice-v3-flash",
-      "voice": "longjiayi_v3",
-      "language_type": "Chinese",
-      "duration": 6.96,
-      "bytes": 55916
-    },
-    {
-      "id": "voice.visit.tyzx.en",
-      "file": "voice/visit-tyzx-en.mp3",
-      "group": "voice",
-      "label": "visit.tyzx.en",
-      "lang": "en",
-      "text": "Tiyu Zhongxin station is near the Tianhe Sports Center. You are welcome to get off and visit. Please use Exit C.",
-      "model": "cosyvoice-v2",
-      "voice": "longxiaobai_v2",
-      "language_type": "English",
-      "duration": 7.176,
-      "bytes": 57644
     },
     {
       "id": "voice.arrive.tyzx.zh",
@@ -4137,45 +3942,6 @@
       "bytes": 15980
     },
     {
-      "id": "voice.visit.lx.zh",
-      "file": "voice/visit-lx-zh.mp3",
-      "group": "voice",
-      "label": "visit.lx.zh",
-      "lang": "zh",
-      "text": "洛溪站附近有洛溪大桥、洛浦公园，欢迎下车游玩。",
-      "model": "cosyvoice-v2",
-      "voice": "longxiaobai_v2",
-      "language_type": "Chinese",
-      "duration": 5.664,
-      "bytes": 45548
-    },
-    {
-      "id": "voice.visit.lx.yue",
-      "file": "voice/visit-lx-yue.mp3",
-      "group": "voice",
-      "label": "visit.lx.yue",
-      "lang": "yue",
-      "text": "洛溪站附近有洛溪大桥、洛浦公园，欢迎落车游玩。",
-      "model": "cosyvoice-v3-flash",
-      "voice": "longjiayi_v3",
-      "language_type": "Chinese",
-      "duration": 5.64,
-      "bytes": 45356
-    },
-    {
-      "id": "voice.visit.lx.en",
-      "file": "voice/visit-lx-en.mp3",
-      "group": "voice",
-      "label": "visit.lx.en",
-      "lang": "en",
-      "text": "Luoxi station is near Luoxi Bridge and Luopu Park. You are welcome to get off and visit.",
-      "model": "cosyvoice-v2",
-      "voice": "longxiaobai_v2",
-      "language_type": "English",
-      "duration": 5.712,
-      "bytes": 45932
-    },
-    {
       "id": "voice.arrive.lx.zh",
       "file": "voice/arrive-lx-zh.mp3",
       "group": "voice",
@@ -4291,45 +4057,6 @@
       "language_type": "English",
       "duration": 4.56,
       "bytes": 36716
-    },
-    {
-      "id": "voice.visit.nz.zh",
-      "file": "voice/visit-nz-zh.mp3",
-      "group": "voice",
-      "label": "visit.nz.zh",
-      "lang": "zh",
-      "text": "南洲站附近有海珠儿童公园、陈李济中药博物馆，欢迎下车游玩。",
-      "model": "cosyvoice-v2",
-      "voice": "longxiaobai_v2",
-      "language_type": "Chinese",
-      "duration": 7.032,
-      "bytes": 56492
-    },
-    {
-      "id": "voice.visit.nz.yue",
-      "file": "voice/visit-nz-yue.mp3",
-      "group": "voice",
-      "label": "visit.nz.yue",
-      "lang": "yue",
-      "text": "南洲站附近有海珠儿童公园、陈李济中药博物馆，欢迎落车游玩。",
-      "model": "cosyvoice-v3-flash",
-      "voice": "longjiayi_v3",
-      "language_type": "Chinese",
-      "duration": 7.176,
-      "bytes": 57644
-    },
-    {
-      "id": "voice.visit.nz.en",
-      "file": "voice/visit-nz-en.mp3",
-      "group": "voice",
-      "label": "visit.nz.en",
-      "lang": "en",
-      "text": "Nanzhou station is near Haizhu Children's Park and the Chen Li Ji Chinese Medicine Museum. You are welcome to get off and visit.",
-      "model": "cosyvoice-v2",
-      "voice": "longxiaobai_v2",
-      "language_type": "English",
-      "duration": 8.088,
-      "bytes": 64940
     },
     {
       "id": "voice.arrive.nz.zh",
@@ -4800,45 +4527,6 @@
       "bytes": 17708
     },
     {
-      "id": "voice.visit.jnx.zh",
-      "file": "voice/visit-jnx-zh.mp3",
-      "group": "voice",
-      "label": "visit.jnx.zh",
-      "lang": "zh",
-      "text": "江南西站附近有十香园，欢迎下车游玩。",
-      "model": "cosyvoice-v2",
-      "voice": "longxiaobai_v2",
-      "language_type": "Chinese",
-      "duration": 4.248,
-      "bytes": 34220
-    },
-    {
-      "id": "voice.visit.jnx.yue",
-      "file": "voice/visit-jnx-yue.mp3",
-      "group": "voice",
-      "label": "visit.jnx.yue",
-      "lang": "yue",
-      "text": "江南西站附近有十香园，欢迎落车游玩。",
-      "model": "cosyvoice-v3-flash",
-      "voice": "longjiayi_v3",
-      "language_type": "Chinese",
-      "duration": 4.392,
-      "bytes": 35372
-    },
-    {
-      "id": "voice.visit.jnx.en",
-      "file": "voice/visit-jnx-en.mp3",
-      "group": "voice",
-      "label": "visit.jnx.en",
-      "lang": "en",
-      "text": "Jiangnanxi station is near the Shixiang Garden. You are welcome to get off and visit.",
-      "model": "cosyvoice-v2",
-      "voice": "longxiaobai_v2",
-      "language_type": "English",
-      "duration": 5.16,
-      "bytes": 41516
-    },
-    {
       "id": "voice.arrive.jnx.zh",
       "file": "voice/arrive-jnx-zh.mp3",
       "group": "voice",
@@ -4956,45 +4644,6 @@
       "bytes": 15980
     },
     {
-      "id": "voice.visit.seg.zh",
-      "file": "voice/visit-seg-zh.mp3",
-      "group": "voice",
-      "label": "visit.seg.zh",
-      "lang": "zh",
-      "text": "市二宫站附近有孙中山大元帅府纪念馆，欢迎下车游玩，请从A出口出站。",
-      "model": "cosyvoice-v2",
-      "voice": "longxiaobai_v2",
-      "language_type": "Chinese",
-      "duration": 8.304,
-      "bytes": 66668
-    },
-    {
-      "id": "voice.visit.seg.yue",
-      "file": "voice/visit-seg-yue.mp3",
-      "group": "voice",
-      "label": "visit.seg.yue",
-      "lang": "yue",
-      "text": "市二宫站附近有孙中山大元帅府纪念馆，欢迎落车游玩，请喺A出口出站。",
-      "model": "cosyvoice-v3-flash",
-      "voice": "longjiayi_v3",
-      "language_type": "Chinese",
-      "duration": 8.424,
-      "bytes": 67628
-    },
-    {
-      "id": "voice.visit.seg.en",
-      "file": "voice/visit-seg-en.mp3",
-      "group": "voice",
-      "label": "visit.seg.en",
-      "lang": "en",
-      "text": "Shi'ergong station is near the Memorial Museum of Sun Yat-sen's Generalissimo Mansion. You are welcome to get off and visit. Please use Exit A.",
-      "model": "cosyvoice-v2",
-      "voice": "longxiaobai_v2",
-      "language_type": "English",
-      "duration": 9.168,
-      "bytes": 73580
-    },
-    {
       "id": "voice.arrive.seg.zh",
       "file": "voice/arrive-seg-zh.mp3",
       "group": "voice",
@@ -5110,45 +4759,6 @@
       "language_type": "English",
       "duration": 4.656,
       "bytes": 37484
-    },
-    {
-      "id": "voice.visit.hzgc.zh",
-      "file": "voice/visit-hzgc-zh.mp3",
-      "group": "voice",
-      "label": "visit.hzgc.zh",
-      "lang": "zh",
-      "text": "海珠广场站附近有石室圣心大教堂，欢迎下车游玩，请从B2出口出站。",
-      "model": "cosyvoice-v2",
-      "voice": "longxiaobai_v2",
-      "language_type": "Chinese",
-      "duration": 8.328,
-      "bytes": 66860
-    },
-    {
-      "id": "voice.visit.hzgc.yue",
-      "file": "voice/visit-hzgc-yue.mp3",
-      "group": "voice",
-      "label": "visit.hzgc.yue",
-      "lang": "yue",
-      "text": "海珠广场站附近有石室圣心大教堂，欢迎落车游玩，请喺B2出口出站。",
-      "model": "cosyvoice-v3-flash",
-      "voice": "longjiayi_v3",
-      "language_type": "Chinese",
-      "duration": 7.344,
-      "bytes": 58988
-    },
-    {
-      "id": "voice.visit.hzgc.en",
-      "file": "voice/visit-hzgc-en.mp3",
-      "group": "voice",
-      "label": "visit.hzgc.en",
-      "lang": "en",
-      "text": "Haizhu Guangchang station is near the Sacred Heart Cathedral. You are welcome to get off and visit. Please use Exit B2.",
-      "model": "cosyvoice-v2",
-      "voice": "longxiaobai_v2",
-      "language_type": "English",
-      "duration": 7.368,
-      "bytes": 59180
     },
     {
       "id": "voice.arrive.hzgc.zh",
@@ -5468,12 +5078,12 @@
       "group": "voice",
       "label": "visit.yxgy.zh",
       "lang": "zh",
-      "text": "越秀公园站附近有越秀公园五羊石像、镇海楼，欢迎下车游玩，请从B1出口出站。",
+      "text": "越秀公园站附近有越秀公园五羊石像，欢迎下车游玩，请从B1出口出站。",
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 8.928,
-      "bytes": 71660
+      "duration": 7.68,
+      "bytes": 61676
     },
     {
       "id": "voice.visit.yxgy.yue",
@@ -5481,12 +5091,12 @@
       "group": "voice",
       "label": "visit.yxgy.yue",
       "lang": "yue",
-      "text": "越秀公园站附近有越秀公园五羊石像、镇海楼，欢迎落车游玩，请喺B1出口出站。",
+      "text": "越秀公园站附近有越秀公园五羊石像，欢迎落车游玩，请喺B1出口出站。",
       "model": "cosyvoice-v3-flash",
       "voice": "longjiayi_v3",
       "language_type": "Chinese",
-      "duration": 8.616,
-      "bytes": 69164
+      "duration": 7.656,
+      "bytes": 61484
     },
     {
       "id": "voice.visit.yxgy.en",
@@ -5494,12 +5104,12 @@
       "group": "voice",
       "label": "visit.yxgy.en",
       "lang": "en",
-      "text": "Yuexiu Gongyuan station is near the Five Rams Statue in Yuexiu Park and Zhenhai Tower. You are welcome to get off and visit. Please use Exit B1.",
+      "text": "Yuexiu Gongyuan station is near the Five Rams Statue in Yuexiu Park. You are welcome to get off and visit. Please use Exit B1.",
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 9.84,
-      "bytes": 78956
+      "duration": 8.76,
+      "bytes": 70316
     },
     {
       "id": "voice.arrive.yxgy.zh",
@@ -5736,45 +5346,6 @@
       "bytes": 18284
     },
     {
-      "id": "voice.visit.syl.zh",
-      "file": "voice/visit-syl-zh.mp3",
-      "group": "voice",
-      "label": "visit.syl.zh",
-      "lang": "zh",
-      "text": "三元里站附近有三元里人民抗英斗争纪念馆，欢迎下车游玩，请从B出口出站。",
-      "model": "cosyvoice-v2",
-      "voice": "longxiaobai_v2",
-      "language_type": "Chinese",
-      "duration": 8.832,
-      "bytes": 70892
-    },
-    {
-      "id": "voice.visit.syl.yue",
-      "file": "voice/visit-syl-yue.mp3",
-      "group": "voice",
-      "label": "visit.syl.yue",
-      "lang": "yue",
-      "text": "三元里站附近有三元里人民抗英斗争纪念馆，欢迎落车游玩，请喺B出口出站。",
-      "model": "cosyvoice-v3-flash",
-      "voice": "longjiayi_v3",
-      "language_type": "Chinese",
-      "duration": 8.232,
-      "bytes": 66092
-    },
-    {
-      "id": "voice.visit.syl.en",
-      "file": "voice/visit-syl-en.mp3",
-      "group": "voice",
-      "label": "visit.syl.en",
-      "lang": "en",
-      "text": "Sanyuanli station is near the Sanyuanli Anti-British Struggle Memorial. You are welcome to get off and visit. Please use Exit B.",
-      "model": "cosyvoice-v2",
-      "voice": "longxiaobai_v2",
-      "language_type": "English",
-      "duration": 8.736,
-      "bytes": 70124
-    },
-    {
       "id": "voice.arrive.syl.zh",
       "file": "voice/arrive-syl-zh.mp3",
       "group": "voice",
@@ -6009,45 +5580,6 @@
       "bytes": 19820
     },
     {
-      "id": "voice.visit.bygy.zh",
-      "file": "voice/visit-bygy-zh.mp3",
-      "group": "voice",
-      "label": "visit.bygy.zh",
-      "lang": "zh",
-      "text": "白云公园站附近有白云公园，欢迎下车游玩，请从A出口出站。",
-      "model": "cosyvoice-v2",
-      "voice": "longxiaobai_v2",
-      "language_type": "Chinese",
-      "duration": 7.104,
-      "bytes": 57068
-    },
-    {
-      "id": "voice.visit.bygy.yue",
-      "file": "voice/visit-bygy-yue.mp3",
-      "group": "voice",
-      "label": "visit.bygy.yue",
-      "lang": "yue",
-      "text": "白云公园站附近有白云公园，欢迎落车游玩，请喺A出口出站。",
-      "model": "cosyvoice-v3-flash",
-      "voice": "longjiayi_v3",
-      "language_type": "Chinese",
-      "duration": 6.528,
-      "bytes": 52460
-    },
-    {
-      "id": "voice.visit.bygy.en",
-      "file": "voice/visit-bygy-en.mp3",
-      "group": "voice",
-      "label": "visit.bygy.en",
-      "lang": "en",
-      "text": "Baiyun Gongyuan station is near Baiyun Park. You are welcome to get off and visit. Please use Exit A.",
-      "model": "cosyvoice-v2",
-      "voice": "longxiaobai_v2",
-      "language_type": "English",
-      "duration": 6.696,
-      "bytes": 53804
-    },
-    {
       "id": "voice.arrive.bygy.zh",
       "file": "voice/arrive-bygy-zh.mp3",
       "group": "voice",
@@ -6163,45 +5695,6 @@
       "language_type": "English",
       "duration": 5.28,
       "bytes": 42476
-    },
-    {
-      "id": "voice.visit.bywhgc.zh",
-      "file": "voice/visit-bywhgc-zh.mp3",
-      "group": "voice",
-      "label": "visit.bywhgc.zh",
-      "lang": "zh",
-      "text": "白云文化广场站附近有广州城市规划展览中心，欢迎下车游玩，请从A出口出站。",
-      "model": "cosyvoice-v2",
-      "voice": "longxiaobai_v2",
-      "language_type": "Chinese",
-      "duration": 8.784,
-      "bytes": 70508
-    },
-    {
-      "id": "voice.visit.bywhgc.yue",
-      "file": "voice/visit-bywhgc-yue.mp3",
-      "group": "voice",
-      "label": "visit.bywhgc.yue",
-      "lang": "yue",
-      "text": "白云文化广场站附近有广州城市规划展览中心，欢迎落车游玩，请喺A出口出站。",
-      "model": "cosyvoice-v3-flash",
-      "voice": "longjiayi_v3",
-      "language_type": "Chinese",
-      "duration": 8.208,
-      "bytes": 65900
-    },
-    {
-      "id": "voice.visit.bywhgc.en",
-      "file": "voice/visit-bywhgc-en.mp3",
-      "group": "voice",
-      "label": "visit.bywhgc.en",
-      "lang": "en",
-      "text": "Baiyun Wenhua Guangchang station is near the Guangzhou Urban Planning Exhibition Center. You are welcome to get off and visit. Please use Exit A.",
-      "model": "cosyvoice-v2",
-      "voice": "longxiaobai_v2",
-      "language_type": "English",
-      "duration": 9.672,
-      "bytes": 77612
     },
     {
       "id": "voice.arrive.bywhgc.zh",
@@ -9649,84 +9142,6 @@
       "bytes": 52076
     },
     {
-      "id": "voice.xmvisit.lhj.zh",
-      "file": "voice/xmvisit-lhj-zh.mp3",
-      "group": "voice",
-      "label": "xmvisit.lhj.zh",
-      "lang": "zh",
-      "text": "莲花路口站附近有莲花公园，欢迎下车游玩，请从4号出口出站。",
-      "model": "cosyvoice-v2",
-      "voice": "longxiaobai_v2",
-      "language_type": "Chinese",
-      "duration": 6.6,
-      "bytes": 53036
-    },
-    {
-      "id": "voice.xmvisit.lhj.nan",
-      "file": "voice/xmvisit-lhj-nan.mp3",
-      "group": "voice",
-      "label": "xmvisit.lhj.nan",
-      "lang": "nan",
-      "text": "莲花路口站附近有莲花公园，欢迎下车游玩，请从4号出口出站。",
-      "model": "cosyvoice-v3.5-flash",
-      "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
-      "language_type": "Chinese",
-      "duration": 7.584,
-      "bytes": 60908
-    },
-    {
-      "id": "voice.xmvisit.lhj.en",
-      "file": "voice/xmvisit-lhj-en.mp3",
-      "group": "voice",
-      "label": "xmvisit.lhj.en",
-      "lang": "en",
-      "text": "Lianhua Lukou station is near Lianhua Park. You are welcome to get off and visit. Please use Exit 4.",
-      "model": "cosyvoice-v2",
-      "voice": "longxiaobai_v2",
-      "language_type": "English",
-      "duration": 6.648,
-      "bytes": 53420
-    },
-    {
-      "id": "voice.xmexit.lhj.zh",
-      "file": "voice/xmexit-lhj-zh.mp3",
-      "group": "voice",
-      "label": "xmexit.lhj.zh",
-      "lang": "zh",
-      "text": "前往莲花公园的乘客，请从4号出口出站。",
-      "model": "cosyvoice-v2",
-      "voice": "longxiaobai_v2",
-      "language_type": "Chinese",
-      "duration": 4.344,
-      "bytes": 34988
-    },
-    {
-      "id": "voice.xmexit.lhj.nan",
-      "file": "voice/xmexit-lhj-nan.mp3",
-      "group": "voice",
-      "label": "xmexit.lhj.nan",
-      "lang": "nan",
-      "text": "前往莲花公园的乘客，请从4号出口出站。",
-      "model": "cosyvoice-v3.5-flash",
-      "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
-      "language_type": "Chinese",
-      "duration": 5.424,
-      "bytes": 43628
-    },
-    {
-      "id": "voice.xmexit.lhj.en",
-      "file": "voice/xmexit-lhj-en.mp3",
-      "group": "voice",
-      "label": "xmexit.lhj.en",
-      "lang": "en",
-      "text": "Passengers for Lianhua Park, please use Exit 4.",
-      "model": "cosyvoice-v2",
-      "voice": "longxiaobai_v2",
-      "language_type": "English",
-      "duration": 3.456,
-      "bytes": 27884
-    },
-    {
       "id": "voice.next.lbn.zh",
       "file": "voice/next-lbn-zh.mp3",
       "group": "voice",
@@ -10551,12 +9966,12 @@
       "group": "voice",
       "label": "xmvisit.zhl.zh",
       "lang": "zh",
-      "text": "镇海路站附近有和平码头、中山路步行街，欢迎下车游玩，和平码头请从1号出口出站，中山路步行街请从3B出口出站。",
+      "text": "镇海路站附近有和平码头、中山路步行街，欢迎下车游玩，请从1号出口出站。",
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 12.36,
-      "bytes": 99116
+      "duration": 8.472,
+      "bytes": 68012
     },
     {
       "id": "voice.xmvisit.zhl.nan",
@@ -10564,12 +9979,12 @@
       "group": "voice",
       "label": "xmvisit.zhl.nan",
       "lang": "nan",
-      "text": "镇海路站附近有和平码头、中山路步行街，欢迎下车游玩，和平码头请从1号出口出站，中山路步行街请从3B出口出站。",
+      "text": "镇海路站附近有和平码头、中山路步行街，欢迎下车游玩，请从1号出口出站。",
       "model": "cosyvoice-v3.5-flash",
       "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
       "language_type": "Chinese",
-      "duration": 14.064,
-      "bytes": 112748
+      "duration": 9.096,
+      "bytes": 73004
     },
     {
       "id": "voice.xmvisit.zhl.en",
@@ -10577,12 +9992,12 @@
       "group": "voice",
       "label": "xmvisit.zhl.en",
       "lang": "en",
-      "text": "Zhenhailu station is near Heping Pier and Zhongshan Road Pedestrian Street. You are welcome to get off and visit. For Heping Pier, please use Exit 1. For Zhongshan Road Pedestrian Street, please use Exit 3B.",
+      "text": "Zhenhailu station is near Heping Pier and Zhongshan Road Pedestrian Street. You are welcome to get off and visit. Please use Exit 1.",
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 14.136,
-      "bytes": 113324
+      "duration": 9.288,
+      "bytes": 74540
     },
     {
       "id": "voice.xmexit.zhl.zh",
@@ -10590,12 +10005,12 @@
       "group": "voice",
       "label": "xmexit.zhl.zh",
       "lang": "zh",
-      "text": "前往和平码头的乘客，请从1号出口出站；前往中山路步行街的乘客，请从3B出口出站。",
+      "text": "前往和平码头、中山路步行街的乘客，请从1号出口出站。",
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "Chinese",
-      "duration": 9.432,
-      "bytes": 75692
+      "duration": 5.544,
+      "bytes": 44588
     },
     {
       "id": "voice.xmexit.zhl.nan",
@@ -10603,12 +10018,12 @@
       "group": "voice",
       "label": "xmexit.zhl.nan",
       "lang": "nan",
-      "text": "前往和平码头的乘客，请从1号出口出站；前往中山路步行街的乘客，请从3B出口出站。",
+      "text": "前往和平码头、中山路步行街的乘客，请从1号出口出站。",
       "model": "cosyvoice-v3.5-flash",
       "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
       "language_type": "Chinese",
-      "duration": 9.648,
-      "bytes": 77420
+      "duration": 7.728,
+      "bytes": 62060
     },
     {
       "id": "voice.xmexit.zhl.en",
@@ -10616,12 +10031,12 @@
       "group": "voice",
       "label": "xmexit.zhl.en",
       "lang": "en",
-      "text": "Passengers for Heping Pier, please use Exit 1. Passengers for Zhongshan Road Pedestrian Street, please use Exit 3B.",
+      "text": "Passengers for Heping Pier and Zhongshan Road Pedestrian Street, please use Exit 1.",
       "model": "cosyvoice-v2",
       "voice": "longxiaobai_v2",
       "language_type": "English",
-      "duration": 8.568,
-      "bytes": 68780
+      "duration": 5.616,
+      "bytes": 45164
     },
     {
       "id": "voice.destination.xmwyw.zh",
@@ -13547,84 +12962,6 @@
       "language_type": "English",
       "duration": 6.216,
       "bytes": 49964
-    },
-    {
-      "id": "voice.xmvisit.hpu.zh",
-      "file": "voice/xmvisit-hpu-zh.mp3",
-      "group": "voice",
-      "label": "xmvisit.hpu.zh",
-      "lang": "zh",
-      "text": "后埔站附近有忠仑公园，欢迎下车游玩，请从4号出口出站。",
-      "model": "cosyvoice-v2",
-      "voice": "longxiaobai_v2",
-      "language_type": "Chinese",
-      "duration": 6.744,
-      "bytes": 54188
-    },
-    {
-      "id": "voice.xmvisit.hpu.nan",
-      "file": "voice/xmvisit-hpu-nan.mp3",
-      "group": "voice",
-      "label": "xmvisit.hpu.nan",
-      "lang": "nan",
-      "text": "后埔站附近有忠仑公园，欢迎下车游玩，请从4号出口出站。",
-      "model": "cosyvoice-v3.5-flash",
-      "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
-      "language_type": "Chinese",
-      "duration": 7.488,
-      "bytes": 60140
-    },
-    {
-      "id": "voice.xmvisit.hpu.en",
-      "file": "voice/xmvisit-hpu-en.mp3",
-      "group": "voice",
-      "label": "xmvisit.hpu.en",
-      "lang": "en",
-      "text": "Houpu station is near Zhonglun Park. You are welcome to get off and visit. Please use Exit 4.",
-      "model": "cosyvoice-v2",
-      "voice": "longxiaobai_v2",
-      "language_type": "English",
-      "duration": 6.576,
-      "bytes": 52844
-    },
-    {
-      "id": "voice.xmexit.hpu.zh",
-      "file": "voice/xmexit-hpu-zh.mp3",
-      "group": "voice",
-      "label": "xmexit.hpu.zh",
-      "lang": "zh",
-      "text": "前往忠仑公园的乘客，请从4号出口出站。",
-      "model": "cosyvoice-v2",
-      "voice": "longxiaobai_v2",
-      "language_type": "Chinese",
-      "duration": 4.272,
-      "bytes": 34412
-    },
-    {
-      "id": "voice.xmexit.hpu.nan",
-      "file": "voice/xmexit-hpu-nan.mp3",
-      "group": "voice",
-      "label": "xmexit.hpu.nan",
-      "lang": "nan",
-      "text": "前往忠仑公园的乘客，请从4号出口出站。",
-      "model": "cosyvoice-v3.5-flash",
-      "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
-      "language_type": "Chinese",
-      "duration": 5.904,
-      "bytes": 47468
-    },
-    {
-      "id": "voice.xmexit.hpu.en",
-      "file": "voice/xmexit-hpu-en.mp3",
-      "group": "voice",
-      "label": "xmexit.hpu.en",
-      "lang": "en",
-      "text": "Passengers for Zhonglun Park, please use Exit 4.",
-      "model": "cosyvoice-v2",
-      "voice": "longxiaobai_v2",
-      "language_type": "English",
-      "duration": 3.888,
-      "bytes": 31340
     },
     {
       "id": "voice.next.ctg.zh",

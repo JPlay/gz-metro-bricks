@@ -4,7 +4,7 @@
  * 列车 id 20 / 21（厦门 10 / 11、广州 0..）；涂装 net='fz'（js/world/train.js registerNet）。
  */
 import * as Ann from '../audio/announcements.js';
-import { fzExitSegs } from '../data/phrases.js';
+import { fzExitSegs, fzDepartSegs } from '../data/phrases.js';
 import { FZ_LINES, FZ_STATIONS, fzNext } from '../data/fz-lines.js';
 import { FZ_EXITS, fzExitZh } from '../data/fz-exits.js';
 import { FzStation, FZ_NET } from '../world/fzMetro.js';
@@ -22,7 +22,7 @@ export const FZ_SVC = {
   street: (scene, code, ex) => new XmStreet(scene, code, FZ_STREET, ex),
   next: fzNext,
   ann: { platform: Ann.fzPlatform, depart: Ann.fzDepart, arrive: Ann.arrive, welcome: Ann.welcome, exit: Ann.fzExit, doorsClosing: Ann.fzDoorsClosing },
-  exitSegs: fzExitSegs,
+  exitSegs: fzExitSegs, departSegs: fzDepartSegs,
   /** 福州火车南站的出口在国铁换乘大厅里（FzsStation），不走地铁站厅出口街口 */
   streetAt: code => !!FZ_EXITS[code],
 };

@@ -10,7 +10,7 @@
  *   用 Geo 的整体缩放（xz ×1.5、y ×1.15）放大到真实比例（宽:高 ≈ 65:48）。
  * 性能：园区单独一个 Kit（站里在地面时才启用），只用合批的静态桶 + 烘焙暗影，不加灯；树用低面数版本。
  */
-import { hex } from '../core/geo.js';
+import { hex, mix } from '../core/geo.js';
 import * as D from './decor.js';
 
 export const AX = 72;
@@ -105,7 +105,7 @@ function buildHall(k) {
       P.box(dx, yW0 + 2.3, dz, 3.4, 4.6, 0.12, C.red2, ry, 0, 0, 1, { ao: false });
       const [ix, iz] = at(0, 0.1);
       P.box(ix, yW0 + 2.25, iz, 0.06, 4.3, 0.06, C.gold, ry, 0, 0, 1, { ao: false });
-      for (const su of [-1, 1]) for (let r = 0; r < 5; r++) for (let c2 = 0; c2 < 3; c2++) { const [bx, bz] = at(su * (0.4 + c2 * 0.45), 0.12); P.sphere(bx, yW0 + 0.9 + r * 0.75, bz, 0.12, C.gold, 1); }
+      for (const su of [-1, 1]) for (let r = 0; r < 5; r++) for (let c2 = 0; c2 < 3; c2++) { const [bx, bz] = at(su * (0.4 + c2 * 0.45), 0.12); P.octa(bx, yW0 + 0.9 + r * 0.75, bz, 0.15, C.gold); }
       const [lx, lz] = at(0, 0.06); P.box(lx, yW0 + 4.95, lz, 3.8, 0.5, 0.1, C.gold, ry, 0, 0, 1, { ao: false });
       continue;
     }
@@ -115,7 +115,7 @@ function buildHall(k) {
       P.box(gx, 4.4, gz, 1.1, 3.5, 0.04, C.glass, ry, 0, 0, 1, { ao: false });
       for (const v of [3.3, 4.4, 5.5]) { const [hx, hz] = at(u, 0.12); P.box(hx, v, hz, 1.1, 0.06, 0.03, C.wall, ry, 0, 0, 1, { ao: false }); }
       const [mx, mz] = at(u, 0.12); P.box(mx, 4.4, mz, 0.06, 3.5, 0.03, C.wall, ry, 0, 0, 1, { ao: false });
-      const [ax, az] = at(u, 0.05); P.cyl(ax, 6.4, az, 1.5, 0.12, C.red, 12, ry, Math.PI / 2, 0, undefined, { ao: false });
+      const [ax, az] = at(u, 0.05); P.cyl(ax, 6.4, az, 1.5, 0.12, C.red, 8, ry, Math.PI / 2, 0, undefined, { ao: false });
     }
   }
   // ---------- 檐口：红额枋 + 金线 + 青绿斗拱带 ----------
@@ -150,6 +150,8 @@ function buildHall(k) {
 /** 地面：中轴大道、铜像前庭、纪念堂周围的平台广场、大草坪（带路缘）、园内小路 */
 function grounds(k) {
   const P = k.solid, Pv = k.g('pave'), G = k.g('grass'), S = k.shade;
+  // 花坛的花朵贴图层（有场景时；node 统计脚本没有场景，花丛退回 paint 桶的纯色锥）
+  if (k.scene && k.M) { k.mats = k.mats || {}; k.mats.flowers = flowerMat(k); k.flowers = k.g('flowers'); }
   const lawn = (x0, x1, z0, z1) => {
     G.slab(x0, x1, 0, 0.1, z0, z1, hex('#FFFFFF'), { ao: false });
     for (const [a0, a1, b0, b1] of [[x0 - 0.15, x1 + 0.15, z0 - 0.15, z0], [x0 - 0.15, x1 + 0.15, z1, z1 + 0.15], [x0 - 0.15, x0, z0, z1], [x1, x1 + 0.15, z0, z1]]) P.slab(a0, a1, 0, 0.17, b0, b1, C.curb, { ao: false });
@@ -176,11 +178,22 @@ function grounds(k) {
     P.slab(xa, xb, 0.32, 0.36, z0, z1, hex('#5B4632'), { ao: false });
     k.colSlab(xa - 0.12, xb + 0.12, 0, 0.72, z0 - 0.12, z1 + 0.12);
     P.slab(sx > 0 ? xb - 0.42 : xa, sx > 0 ? xb : xa + 0.42, 0.36, 0.72, z0, z1, hex('#3E7A3C'), { ao: true });
-    for (let z = z0 + 0.3, i = 0; z < z1 - 0.2; z += 0.42, i++) {
-      const c = hex(FL[Math.floor(i / 6) % FL.length]);
-      for (const [o, dz] of [[0.35, 0], [0.8, 0.21]]) P.box(xi + sx * o, 0.47, z + dz, 0.26, 0.2, 0.26, c, 0, 0.6, 0, 1, { ao: false });
+    // 花丛（美术意见：不要平平的色条，也不要回到一朵一个网格）：
+    //   底下一条深绿“叶丛”垫层；上面每 0.42 m 一丛矮四棱锥（4 个三角形，前后相邻两丛搭一截，高矮、锥尖位置随机，
+    //   锥尖在内 / 外两排之间交替 → 顶上一高一低的锯齿轮廓），锥面贴“花朵图集”（绿叶打底 + 满满的五瓣小花，每种花色一列）
+    //   → 远看一团团花，近看是一朵朵花。两边合计 816 + 24 个三角形，多 1 次绘制。
+    const FLW = k.flowers || P, LEAF2 = mix(LEAF, hex('#1F3D1E'), 0.45);
+    P.slab(Math.min(xi + sx * 0.1, xi + sx * 1.0), Math.max(xi + sx * 0.1, xi + sx * 1.0), 0.36, 0.47, z0 + 0.05, z1 - 0.05, LEAF2, { ao: false });
+    let i = 0;
+    for (let z = z0 + 0.3; z < z1 - 0.2; z += 0.42, i++) {
+      const h = hash(i * 7.13 + sx * 3.1), h2 = hash(i * 3.7 + sx * 1.9), h3 = hash(i * 5.3 - sx * 2.3);
+      const c = hex(FL[Math.floor(i / 6) % FL.length]).map(v => Math.min(1, v * (0.88 + h3 * 0.24)));
+      const ox = (i % 2 ? 0.74 : 0.42) + (h - 0.5) * 0.14, oz = (h2 - 0.5) * 0.24, L = 0.3 + h2 * 0.1;
+      const fc = FL[Math.floor(i / 6) % FL.length], tex = k.flowers ? { ci: FLC.indexOf(fc), off: h3 * 0.5 } : null;
+      flowerClump(FLW, xi + sx * 0.08, xi + sx * 1.02, z - L, z + L, xi + sx * ox, z + oz, 0.4, 0.56 + h * 0.14, c, tex);
     }
   }
+  k.flowers = null;
   // 榕树 / 白兰（低面数），沿围栏内侧和纪念堂两侧
   const trees = [];
   for (let z = -50; z <= 58; z += 12) trees.push([PARK.x0 + 3.2, z, 1.25], [PARK.x1 - 3.2, z + 6, 1.25]);
@@ -189,13 +202,35 @@ function grounds(k) {
   for (const [x, z, s] of trees) cheapTree(k, x, z, s);
 }
 
+const LEAF = hex('#3E7A3C');
+function hash(v) { const x = Math.sin(v * 12.9898) * 43758.5453; return x - Math.floor(x); }
+/** 一丛花：底面 (xa..xb, za..zb) 四角在 y0，锥尖 (ax, y1, az)；4 个面各自的法线（有棱角的“花团”）。
+ *  tex = {ci, off}：花朵图集第 ci 列（顶点色只管明暗：锥尖亮、锥脚暗），UV 按俯视投影铺在这一列里（off 错开，免得每丛一样）；
+ *  tex = null（node 统计没有场景）：纯色锥，锥尖花色、锥脚混叶绿 */
+function flowerClump(P, xa, xb, za, zb, ax, az, y0, y1, col, tex) {
+  const lo = tex ? [0.74, 0.74, 0.74] : [0, 1, 2].map(j => col[j] * 0.3 + LEAF[j] * 0.7), hi = tex ? [1, 1, 1] : [0, 1, 2].map(j => Math.min(1, col[j] * 1.04));
+  const A = [ax, y1, az], Q = [[xa, y0, za], [xb, y0, za], [xb, y0, zb], [xa, y0, zb]];
+  const uv = q => { const t = (q[2] - za) / (zb - za), w = (q[0] - xa) / (xb - xa); return [(tex.ci + FLM + (tex.off + t * 0.5) * (1 - 2 * FLM)) / FLN, 0.06 + w * 0.88]; };
+  for (let j = 0; j < 4; j++) {
+    const p0 = Q[j], p1 = Q[(j + 1) % 4];
+    const e1 = [p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]], e2 = [A[0] - p0[0], A[1] - p0[1], A[2] - p0[2]];
+    // Geo 的正面法线 = (c - a) × (b - a)（同 quad）；朝下就换绕向，保证四个面都朝外
+    let n = [e2[1] * e1[2] - e2[2] * e1[1], e2[2] * e1[0] - e2[0] * e1[2], e2[0] * e1[1] - e2[1] * e1[0]], flip = n[1] < 0;
+    if (flip) n = n.map(v => -v);
+    const l = Math.hypot(...n) || 1, k = P.p.length / 3;
+    P.push(p0[0], p0[1], p0[2], n[0] / l, n[1] / l, n[2] / l, lo); P.push(p1[0], p1[1], p1[2], n[0] / l, n[1] / l, n[2] / l, lo); P.push(A[0], A[1], A[2], n[0] / l, n[1] / l, n[2] / l, hi);
+    if (tex) { const u = P.u, b = u.length - 6; [p0, p1, A].forEach((q, m) => { const [a, c] = uv(q); u[b + m * 2] = a; u[b + m * 2 + 1] = c; }); }
+    if (flip) P.i.push(k, k + 2, k + 1); else P.i.push(k, k + 1, k + 2);
+  }
+}
+
 /** 低面数的树：树干 + 一个主树冠 + 三团小树冠（约 170 个三角形） */
 function cheapTree(k, x, z, s) {
   const P = k.solid, g = ['#3F8A45', '#4C9A4E', '#367C3D', '#58A657'];
   k.shade.shadeBlob(x, z, 2.4 * s, 2.4 * s, 0.11, 0.3);
   P.cyl(x, 1.5 * s, z, 0.5 * s, 3 * s, hex('#6E5640'), 6, 0, 0, 0, 0.32 * s);
   const cy = 4.3 * s, prev = P.tint; P.tint = (px, py) => 0.72 + 0.34 * Math.max(0, Math.min(1, (py - (cy - 2.2 * s)) / (4.4 * s)));
-  P.ellipsoid(x, cy, z, 4.6 * s, 3.2 * s, 4.6 * s, hex(g[0]), 2);
+  P.ellipsoid(x, cy, z, 4.6 * s, 3.2 * s, 4.6 * s, hex(g[0]), 1);
   for (let i = 0; i < 3; i++) { const a = i * 2.1 + x * 0.37; P.ellipsoid(x + Math.cos(a) * 1.6 * s, cy + 0.5 * s, z + Math.sin(a) * 1.6 * s, 2.6 * s, 2.1 * s, 2.6 * s, hex(g[1 + i]), 1); }
   P.tint = prev; k.col(x, 1.5 * s, z, 0.5 * s, 3 * s, 0.5 * s);
 }
@@ -231,12 +266,12 @@ function gate(k) {
     const n = 10; for (let i = 0; i < n; i++) { const u0 = -r + 2 * r * i / n, u1 = u0 + 2 * r / n, um = (u0 + u1) / 2, yb = hs + 0.3 + Math.sqrt(Math.max(0, r * r - um * um)); P.slab(cx + u0, cx + u1, yb, H, zf, zb, C.grit, { ao: false }); }
     P.slab(cx - r, cx + r, 0.28, 0.3, zf, zb, C.stone2, { ao: false });
     // 拱券线脚（前后两面）
-    for (const z of [zf - 0.06, zb + 0.06]) { const pts = []; for (let i = 0; i <= 12; i++) { const a = Math.PI * i / 12; pts.push([cx + Math.cos(a) * (r + 0.12), hs + 0.3 + Math.sin(a) * (r + 0.12), z]); } P.path(pts, 0.24, C.granite, 5); for (const sx of [-1, 1]) P.box(cx + sx * (r + 0.12), (hs + 0.3) / 2 + 0.15, z, 0.24, hs, 0.12, C.granite, 0, 0, 0, 1, { ao: false }); }
+    for (const z of [zf - 0.06, zb + 0.06]) { const pts = []; for (let i = 0; i <= 6; i++) { const a = Math.PI * i / 6; pts.push([cx + Math.cos(a) * (r + 0.12), hs + 0.3 + Math.sin(a) * (r + 0.12), z]); } for (let i = 0; i < 6; i++) P.tube(pts[i], pts[i + 1], 0.24, C.granite, 4); for (const sx of [-1, 1]) P.box(cx + sx * (r + 0.12), (hs + 0.3) / 2 + 0.15, z, 0.24, hs, 0.12, C.granite, 0, 0, 0, 1, { ao: false }); }
     // 朱红铁门：两扇都开着，贴在拱洞两侧
     for (const sx of [-1, 1]) {
       const x = cx + sx * (r - 0.06), leaf = Math.min(r, D * 0.45);
       P.box(x, 0.3 + hs / 2, zf + 0.25 + leaf / 2, 0.08, hs - 0.05, leaf, C.red2, 0, 0, 0, 1, { ao: false });
-      for (let yy = 0.9; yy < hs; yy += 0.7) for (let w = 0.3; w < leaf - 0.1; w += 0.45) P.sphere(x - sx * 0.05, 0.3 + yy, zf + 0.25 + w, 0.09, C.gold, 1);
+      for (let yy = 0.9; yy < hs; yy += 0.7) for (let w = 0.3; w < leaf - 0.1; w += 0.45) P.octa(x - sx * 0.05, 0.3 + yy, zf + 0.25 + w, 0.12, C.gold);
     }
   }
   // 门洞地面（浅色石）
@@ -259,7 +294,7 @@ function gate(k) {
 
 /** 石柱铁花围栏：每 4m 一根花岗岩柱，石米矮墙 + 黑色铁栏杆（竖条 + 菱形铁花 + 金点） */
 function fenceRun(k, x0, z0, x1, z1) {
-  const P = k.solid, Pv = k.g('pave'), L = Math.hypot(x1 - x0, z1 - z0), n = Math.max(1, Math.round(L / 4)), ux = (x1 - x0) / L, uz = (z1 - z0) / L, nx = -uz, nz = ux;
+  const GR = k.grille, P = k.solid, Pv = k.g('pave'), L = Math.hypot(x1 - x0, z1 - z0), n = Math.max(1, Math.round(L / 4)), ux = (x1 - x0) / L, uz = (z1 - z0) / L, nx = -uz, nz = ux;
   const at = (t, y, o = 0) => [x0 + ux * t + nx * o, y, z0 + uz * t + nz * o], seg = L / n, ry = Math.atan2(ux, uz) - Math.PI / 2;
   const strip = (t, ya, yb, w) => { const a = at(t - w / 2, ya), b = at(t + w / 2, ya), c = at(t + w / 2, yb), d = at(t - w / 2, yb); P.quad(a, b, c, d, C.iron); P.quad(d, c, b, a, C.iron); };
   const bar = (t0, y0, t1, y1, w) => { const a = at(t0, y0), b = at(t1, y1), dx = (t1 - t0), dy = y1 - y0, l = Math.hypot(dx, dy), ox = -dy / l * w / 2, oy = dx / l * w / 2;
@@ -274,6 +309,13 @@ function fenceRun(k, x0, z0, x1, z1) {
     P.cyl(px, 2.46, pz, 0.62, 0.28, C.stone2, 4, Math.PI / 4, 0, 0, 0.12, { ao: false });
     if (i === n) break;
     const t0 = i * seg + 0.4, t1 = (i + 1) * seg - 0.4, tm = (t0 + t1) / 2;
+    if (GR) {
+      // 一整格铁栏杆 = 一块镂空贴图的双面方片（竖条 + 菱形铁花 + 金点都画在贴图里，见 grilleMat）
+      const ta = t0 - 0.02, tb = t1 + 0.02, a = at(ta, 0.48), b = at(tb, 0.48), c = at(tb, 2.0), d = at(ta, 2.0), u0 = GR.u.length;
+      GR.quad(a, b, c, d, WHITE);
+      GR.u.splice(u0, 8, 0, 0, 1, 0, 1, 1, 0, 1);
+      continue;
+    }
     for (let t = t0; t <= t1 + 1e-3; t += 0.24) if (Math.abs(t - tm) > 0.42) strip(t, 0.48, 2.0, 0.035);
     // 铁花：菱形 + 中间金点
     bar(tm - 0.42, 1.24, tm, 1.72, 0.05); bar(tm, 1.72, tm + 0.42, 1.24, 0.05); bar(tm + 0.42, 1.24, tm, 0.76, 0.05); bar(tm, 0.76, tm - 0.42, 1.24, 0.05);
@@ -282,10 +324,60 @@ function fenceRun(k, x0, z0, x1, z1) {
     void ry;
   }
 }
+const WHITE = hex('#FFFFFF');
+/** 铁栏杆贴图材质（一格的图案：竖条 + 菱形铁花 + 金点；透明处 alpha 测试裁掉，双面） */
+function grilleMat(k) {
+  const B = window.BABYLON, M = k.M, key = 'sysy:grille';
+  if (M.colored[key]) return M.colored[key];
+  const W = 512, H = 256, tex = new B.DynamicTexture('sysyGrille', { width: W, height: H }, k.scene, true);
+  const c = tex.getContext(), bw = 3.24, bh = 1.52, X = t => (t + 0.02) / bw * W, Y = y => (1 - (y - 0.48) / bh) * H;
+  const css = v => `rgb(${v.slice(0, 3).map(q => Math.round(q * 255)).join(',')})`;
+  c.clearRect(0, 0, W, H); c.fillStyle = c.strokeStyle = css(C.iron);
+  const tm = 1.6, sw = Math.max(5, 0.04 / bw * W);
+  for (let t = 0; t <= 3.2 + 1e-3; t += 0.24) if (Math.abs(t - tm) > 0.42) c.fillRect(X(t) - sw / 2, 0, sw, H);
+  c.fillRect(X(tm) - sw / 2, Y(0.76), sw, Y(0.48) - Y(0.76)); c.fillRect(X(tm) - sw / 2, Y(2.0), sw, Y(1.72) - Y(2.0));
+  c.lineWidth = Math.max(6, 0.055 / bw * W); c.lineJoin = 'miter'; c.beginPath();
+  c.moveTo(X(tm - 0.42), Y(1.24)); c.lineTo(X(tm), Y(1.72)); c.lineTo(X(tm + 0.42), Y(1.24)); c.lineTo(X(tm), Y(0.76)); c.closePath(); c.stroke();
+  c.fillStyle = css(C.gold); c.beginPath(); c.arc(X(tm), Y(1.24), 0.085 / bw * W, 0, Math.PI * 2); c.fill();
+  tex.update(false); tex.hasAlpha = true; tex.wrapU = tex.wrapV = B.Texture.CLAMP_ADDRESSMODE; tex.anisotropicFilteringLevel = 4;
+  const m = M.paint.clone('grille'); m.albedoTexture = tex; m.useAlphaFromAlbedoTexture = true;
+  m.transparencyMode = B.PBRMaterial.PBRMATERIAL_ALPHATEST; m.alphaCutOff = 0.4; m.backFaceCulling = false; m.twoSidedLighting = true;
+  return (M.colored[key] = m);
+}
+/** 花朵图集（不透明，一列一种花色）：底色是这一色花的暗面（不是绿叶），上面铺满五瓣小花，只露出少量绿叶缝隙（约 1 成）；
+ *  花色比 main 的纯色带饱和度更高一点（顶点色锥脚 0.74 会压暗）。这样 mipmap 缩小到远处平均下来仍是这一色花，
+ *  大道远景每个花坛读出来是一条红 / 黄 / 粉 / 白的亮色带，不会被平均成深绿。
+ *  不用 alpha 测试：花朵贴图缩小（mipmap）后透明度被平均掉，远处会整片消失；锯齿轮廓交给锥体本身 */
+const FLC = ['#E8443A', '#F2B33D', '#EF6FA0', '#FFFFFF'], FLN = FLC.length, FLM = 0.04;
+const FLV = { '#E8443A': '#F2382C', '#F2B33D': '#FFBE2E', '#EF6FA0': '#FF5FA2', '#FFFFFF': '#FFFFFF' };   // 图集里实际用的（更饱和的）花色
+function flowerMat(k) {
+  const B = window.BABYLON, M = k.M, key = 'sysy:flowers';
+  if (M.colored[key]) return M.colored[key];
+  const CW = 256, W = CW * FLN, H = 256, tex = new B.DynamicTexture('sysyFlowers', { width: W, height: H }, k.scene, true), c = tex.getContext();
+  let seed = 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const shade = (h, f) => { const v = B.Color3.FromHexString(h); return `rgb(${[v.r, v.g, v.b].map(q => Math.round(Math.min(1, q * f) * 255)).join(',')})`; };
+  for (let ci = 0; ci < FLN; ci++) {
+    const x0 = ci * CW, fc = FLV[FLC[ci]], white = FLC[ci] === '#FFFFFF'; c.save(); c.beginPath(); c.rect(x0, 0, CW, H); c.clip();
+    c.fillStyle = shade(fc, white ? 0.86 : 0.78); c.fillRect(x0, 0, CW, H);                       // 底色 = 花的暗面
+    for (let n = 0; n < 34; n++) { c.fillStyle = ['#3E7A3C', '#356C33', '#4C8C45'][n % 3]; c.beginPath(); c.ellipse(x0 + rnd() * CW, rnd() * H, 3 + rnd() * 4, 1.5 + rnd() * 2, rnd() * 3.14, 0, Math.PI * 2); c.fill(); }   // 零星叶子
+    for (let n = 0; n < 330; n++) {
+      const cx = x0 + rnd() * CW, cy = rnd() * H, r = 7 + rnd() * 6, a0 = rnd() * 6.28, f = 0.9 + rnd() * 0.25;
+      for (let p = 0; p < 5; p++) { const a = a0 + p * 1.2566; c.fillStyle = shade(fc, (p % 2 ? 0.92 : 1.06) * f * (white ? 0.97 : 1)); c.beginPath(); c.ellipse(cx + Math.cos(a) * r * 0.5, cy + Math.sin(a) * r * 0.5, r * 0.55, r * 0.36, a, 0, Math.PI * 2); c.fill(); }
+      c.fillStyle = white || fc === '#FFBE2E' ? '#C98A1E' : '#F6D24A'; c.beginPath(); c.arc(cx, cy, r * 0.18, 0, Math.PI * 2); c.fill();
+    }
+    c.restore();
+  }
+  tex.update(false); tex.wrapU = tex.wrapV = B.Texture.CLAMP_ADDRESSMODE; tex.anisotropicFilteringLevel = 4;
+  const m = M.paint.clone('flowers'); m.albedoTexture = tex;
+  return (M.colored[key] = m);
+}
 function fences(k) {
+  // 有场景时（游戏里）铁栏杆走贴图方片；node 统计脚本没有场景，就保持原来的几何
+  if (k.scene && k.M) { k.mats = k.mats || {}; k.mats.grille = grilleMat(k); k.grille = k.g('grille'); }
   const z = PARK.z0;
   fenceRun(k, PARK.x0, z, GATE.x - 12, z); fenceRun(k, GATE.x + 12, z, PARK.x1, z);
   fenceRun(k, PARK.x0, z, PARK.x0, PARK.z1); fenceRun(k, PARK.x1, z, PARK.x1, PARK.z1); fenceRun(k, PARK.x0, PARK.z1, PARK.x1, PARK.z1);
+  k.grille = null;
 }
 
 /** 铜像 + 花岗岩底座（scaledBuild 放大 1.45 倍：铜像约 4.5m、底座约 3.8m） */
@@ -331,15 +423,20 @@ function kapok(k, x, z) {
       const steps = Math.max(3, Math.round(len / 0.55));
       for (let s = 1; s <= steps; s++) {
         const t = 0.25 + 0.75 * s / steps, fx = x + (ex - x) * t, fy = y + (ey - y) * t + 0.25, fz = z + (ez - z) * t;
-        for (let f = 0; f < 3; f++) P.sphere(fx + (rnd() - 0.5) * 0.9, fy + rnd() * 0.7, fz + (rnd() - 0.5) * 0.9, 0.42 + rnd() * 0.2, reds[(s + f) % 4], 1);
+        // 一簇花 = 一个 20 面的椭球（原来是 3 个小球；随机数照样取 12 次，树形不变）
+        let ax = 0, ay = 0, az = 0, as = 0;
+        for (let f = 0; f < 3; f++) { ax += (rnd() - 0.5) * 0.9; ay += rnd() * 0.7; az += (rnd() - 0.5) * 0.9; as += 0.42 + rnd() * 0.2; }
+        as /= 3; P.ellipsoid(fx + ax / 3, fy + ay / 3, fz + az / 3, as * 2.1, as * 1.5, as * 2.1, reds[s % 4], 1, s * 0.9 + b);
       }
       // 枝梢上一小撮新叶
       P.ellipsoid(ex, ey + 0.3, ez, 0.9, 0.5, 0.9, hex('#7FB25A'), 1);
     }
   });
-  for (let f = 0; f < 18; f++) P.sphere(x + (rnd() - 0.5) * 1.6, 17.2 + rnd() * 1.2, z + (rnd() - 0.5) * 1.6, 0.5, reds[f % 4], 1);
+  for (let f = 0; f < 18; f += 3) { let ax = 0, ay = 0, az = 0; for (let j = 0; j < 3; j++) { ax += (rnd() - 0.5) * 1.6; ay += rnd() * 1.2; az += (rnd() - 0.5) * 1.6; } P.ellipsoid(x + ax / 3, 17.2 + ay / 3, z + az / 3, 1.25, 0.95, 1.25, reds[(f / 3) % 4], 1, f); }
   // 地上的落花
-  for (let f = 0; f < 40; f++) { const a = rnd() * 6.28, d = 1.4 + rnd() * 5.5; P.cyl(x + Math.cos(a) * d, 0.13, z + Math.sin(a) * d, 0.32, 0.05, reds[f % 4], 6, a, 0, 0, undefined, { ao: false }); }
+  // （贴地的小方片，2 个三角形，原来是 6 棱小圆饼）
+  for (let f = 0; f < 40; f++) { const a = rnd() * 6.28, d = 1.4 + rnd() * 5.5, cx = x + Math.cos(a) * d, cz = z + Math.sin(a) * d, r = 0.2, ca = Math.cos(a) * r, sa = Math.sin(a) * r;
+    P.quad([cx - ca, 0.14, cz - sa], [cx + sa, 0.14, cz - ca], [cx + ca, 0.14, cz + sa], [cx - sa, 0.14, cz + ca], reds[f % 4]); }
   // 小牌子
   const sx = x - 6.0, sz = z - 3.0;
   P.cyl(sx, 0.55, sz, 0.12, 1.1, hex('#4A3E30'), 6);
@@ -379,19 +476,22 @@ function roofTier(k, y, d0, d1, h, top = false) {
     const a0 = d0 * AP, am = dm / 2 * AP, half = d0 * Math.sin(T8) * 0.8, n = Math.max(3, Math.round(half / 0.9));
     for (let i = -n; i <= n; i++) {
       const u0 = half * i / n, u1 = u0 * (am / a0);
-      P.tube([X0 + nx * (a0 + 0.04) + tx * u0, y + 0.3, Z0 + nz * (a0 + 0.04) + tz * u0], [X0 + nx * (am + 0.04) + tx * u1, ym + 0.02, Z0 + nz * (am + 0.04) + tz * u1], 0.07, C.blue2, 4);
+      // 瓦垄：贴在屋面上的一条朝外的细长方片（2 个三角形；原来是 4 棱细管）
+      const w0 = 0.045, w1 = w0 * (am / a0), ra = a0 + 0.06, rb = am + 0.06;
+      P.quad([X0 + nx * ra + tx * (u0 + w0), y + 0.3, Z0 + nz * ra + tz * (u0 + w0)], [X0 + nx * ra + tx * (u0 - w0), y + 0.3, Z0 + nz * ra + tz * (u0 - w0)],
+        [X0 + nx * rb + tx * (u1 - w1), ym + 0.03, Z0 + nz * rb + tz * (u1 - w1)], [X0 + nx * rb + tx * (u1 + w1), ym + 0.03, Z0 + nz * rb + tz * (u1 + w1)], C.blue2);
     }
   }
   // 垂脊 + 翘角（八个角）
   for (let v = 0; v < 8; v++) {
     const a = T8 + v * Math.PI / 4, cx = Math.cos(a), cz = Math.sin(a);
     const r0 = d0 + 0.3, rm = dm / 2, r1 = d1 / 2;
-    P.path([[X0 + cx * r0, y + 0.42, Z0 + cz * r0], [X0 + cx * rm, ym + 0.12, Z0 + cz * rm], [X0 + cx * r1, y + h + 0.05, Z0 + cz * r1]], 0.32, C.ridge, 6);
+    P.path([[X0 + cx * r0, y + 0.42, Z0 + cz * r0], [X0 + cx * rm, ym + 0.12, Z0 + cz * rm], [X0 + cx * r1, y + h + 0.05, Z0 + cz * r1]], 0.32, C.ridge, 5);
     // 翘角：檐角往上翘的一小段 + 金色头
     P.tubeTaper([X0 + cx * r0, y + 0.42, Z0 + cz * r0], [X0 + cx * (r0 + 0.9), y + 1.05, Z0 + cz * (r0 + 0.9)], 0.34, 0.18, C.ridge, 6);
     P.sphere(X0 + cx * (r0 + 0.95), y + 1.1, Z0 + cz * (r0 + 0.95), 0.3, C.gold, 1);
     // 脊兽（小小一排金点）
-    for (let i = 1; i <= 3; i++) { const t = i / 4, rr = r0 + (rm - r0) * t; P.sphere(X0 + cx * rr, y + 0.42 + (ym - y - 0.3) * t + 0.22, Z0 + cz * rr, 0.2, C.gold, 1); }
+    for (let i = 1; i <= 3; i++) { const t = i / 4, rr = r0 + (rm - r0) * t; P.octa(X0 + cx * rr, y + 0.42 + (ym - y - 0.3) * t + 0.22, Z0 + cz * rr, 0.26, C.gold); }
   }
   if (top) Gl.cyl(X0, y + h + 0.1, Z0, d1 + 0.2, 0.2, C.ridge, 8, T8, 0, 0, undefined, { ao: false });
   return y + h;
@@ -407,11 +507,11 @@ function portico(k, th, aw, y0, front) {
   // 红柱：前排 6 根 + 后排靠墙 2 根
   for (const u of [-4.2, -2.52, -0.84, 0.84, 2.52, 4.2]) {
     const [x, z] = at(u, D1 - 0.5);
-    P.cyl(x, (y0 + yC) / 2, z, 0.62, yC - y0, C.red, 14);
-    P.cyl(x, y0 + 0.15, z, 0.9, 0.3, C.wall, 14, 0, 0, 0, undefined, { ao: false });
-    P.cyl(x, yC - 0.2, z, 0.72, 0.18, C.gold, 14, 0, 0, 0, undefined, { ao: false });
+    P.cyl(x, (y0 + yC) / 2, z, 0.62, yC - y0, C.red, 8);
+    P.cyl(x, y0 + 0.15, z, 0.9, 0.3, C.wall, 8, 0, 0, 0, undefined, { ao: false });
+    P.cyl(x, yC - 0.2, z, 0.72, 0.18, C.gold, 8, 0, 0, 0, undefined, { ao: false });
     k.col(x, (y0 + yC) / 2, z, 0.62, yC - y0, 0.62);
-    k.shade.shadeRing(x, z, 0.3, 0.8, y0 + 0.01, 0.28, 14);
+    k.shade.shadeRing(x, z, 0.3, 0.8, y0 + 0.01, 0.28, 8);
   }
   // 额枋：红 + 青绿彩画带 + 金线
   box(0, (D0 + D1) / 2, yC + 0.35, W + 0.4, 0.7, D1 - D0 + 0.2, C.red);

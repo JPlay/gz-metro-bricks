@@ -61,9 +61,6 @@ export class Train {
     this.root = this.kit.root;
     const M = this.kit.M;
     this.shellMat = M.paint.clone('trainShell' + id); this.shellMat.roughness = 0.28; this.shellMat.metallic = 0.25; this.shellMat.environmentIntensity = 1.0;
-    this.lineMat = M.paint.clone('trainLine' + id); this.lineMat.roughness = 0.3; this.lineMat.albedoColor = B.Color3.FromHexString('#F3D03E');
-    this.accentMat = M.paint.clone('trainAccent' + id); this.accentMat.roughness = 0.3;
-    this.seatMat = M.paint.clone('trainSeat' + id); this.seatMat.roughness = 0.25;
     this.steelMat = M.metal.clone('trainSteel' + id); this.steelMat.metallic = 0.45; this.steelMat.roughness = 0.25;
     this.glassMat = M.glass.clone('trainGlass' + id); this.glassMat.albedoColor = new B.Color3(0.22, 0.3, 0.36); this.glassMat.alpha = 0.32;
     this.line = 1; this.net = 'gz'; this.open = { 1: 0, '-1': 0 }; this.s = 0; this.pos = new B.Vector3(); this.prev = new B.Vector3();
@@ -71,7 +68,10 @@ export class Train {
     this.setLine(1);
   }
   build() {
-    const k = this.kit, P = k.solid, Mt = k.metal, Gl = k.glow, Gs = k.g('tglass'), Sh = k.g('shell'), Ln = k.g('line'), Ac = k.g('accent'), Se = k.g('seat'), Gloss = k.g('gloss');
+    const k = this.kit, P = k.solid, Mt = k.metal, Gl = k.glow, Gs = k.g('tglass'), Sh = k.g('shell'), Ln = k.g('line'), Ac = Ln, Se = k.g('seat'), Gloss = k.g('gloss');
+    // 车厢里的细件（吊环、横杆、座椅两端立柱、座位分隔条、LCD 外壳）单独成桶：只有在车上或站在这列车门口附近（near）才画，
+    // 站台中间隔着屏蔽门 + 车窗两层玻璃看不清，每列车省约 1 万个三角形（见 main.js）。腰带上下两条（accent / line）本来就是同一个颜色，合成一个桶
+    const Pi = k.g('paintIn'), Mi = k.g('metalIn');
     preseed(this.id * 31 + 5);
     this.seats = []; const taken = []; this.pax = [];
     const band = (x0, x1, y0, y1, side, geo = Sh) => { for (const c of clip(OUT, y0, y1, side)) geo.extrudeX(c, x0, x1, WHITE); };
@@ -117,17 +117,17 @@ export class Train {
           Mt.slab(qa + 0.05, qb - 0.05, 0.02, 0.41, sd * 1.05, sd * 1.4, STEEL, { ao: false });
           const nSeat = Math.round((qb - qa) / 0.5);
           for (let q = 0; q < nSeat; q++) this.seats.push({ x: qa + (qb - qa) * (q + 0.5) / nSeat, sd });
-          for (let q = 1; q < nSeat; q++) P.slab(qa + (qb - qa) * q / nSeat - 0.006, qa + (qb - qa) * q / nSeat + 0.006, 0.47, 0.475, sd * 0.97, sd * 1.36, hex('#2A2E33'), { ao: false });
+          for (let q = 1; q < nSeat; q++) Pi.slab(qa + (qb - qa) * q / nSeat - 0.006, qa + (qb - qa) * q / nSeat + 0.006, 0.47, 0.475, sd * 0.97, sd * 1.36, hex('#2A2E33'), { ao: false });
           k.col((qa + qb) / 2, 0.25, sd * 1.2, qb - qa, 0.5, 0.5, { parent: this.root, dynamic: true });
           // 横杆 + 三角吊环
-          Mt.tube([qa, 1.92, sd * 1.0], [qb, 1.92, sd * 1.0], 0.032, STEEL, 6);
+          Mi.tube([qa, 1.92, sd * 1.0], [qb, 1.92, sd * 1.0], 0.032, STEEL, 6);
           for (let hx = qa + 0.3; hx < qb - 0.2; hx += 0.6) {
-            P.box(hx, 1.8, sd * 1.0, 0.025, 0.22, 0.012, hex('#E9ECEF'), 0, 0, 0, 1, { ao: false });
-            for (const [p1, p2] of [[[hx - 0.07, 1.62, sd], [hx + 0.07, 1.62, sd]], [[hx - 0.07, 1.62, sd], [hx, 1.72, sd]], [[hx + 0.07, 1.62, sd], [hx, 1.72, sd]]]) P.tube(p1, p2, 0.025, hex('#F2C230'), 3);   // 2.5 cm 的吊环杆用三棱柱就够（两列车同时进站时站台视角 ≤ 90k 面）
+            Pi.box(hx, 1.8, sd * 1.0, 0.025, 0.22, 0.012, hex('#E9ECEF'), 0, 0, 0, 1, { ao: false });
+            for (const [p1, p2] of [[[hx - 0.07, 1.62, sd], [hx + 0.07, 1.62, sd]], [[hx - 0.07, 1.62, sd], [hx, 1.72, sd]], [[hx + 0.07, 1.62, sd], [hx, 1.72, sd]]]) Pi.tube(p1, p2, 0.025, hex('#F2C230'), 3);   // 2.5 cm 的吊环杆用三棱柱就够（两列车同时进站时站台视角 ≤ 90k 面）
           }
           // 座椅两端的立柱
           // 立柱上端弯进横杆（不再通到车顶）：门上方线路图左端的“1号线”色块不会被立柱挡住
-          for (const [qx, qe] of [[qa - 0.1, qa], [qb + 0.1, qb]]) { Mt.tube([qx, 0, sd * 1.12], [qx, 1.76, sd * 1.12], 0.038, STEEL, 6); Mt.tube([qx, 1.76, sd * 1.12], [qx + (qe - qx) * 0.45, 1.88, sd * 1.06], 0.038, STEEL, 6); Mt.tube([qx + (qe - qx) * 0.45, 1.88, sd * 1.06], [qe, 1.92, sd * 1.0], 0.036, STEEL, 6); }
+          for (const [qx, qe] of [[qa - 0.1, qa], [qb + 0.1, qb]]) { Mi.tube([qx, 0, sd * 1.12], [qx, 1.76, sd * 1.12], 0.038, STEEL, 6); Mi.tube([qx, 1.76, sd * 1.12], [qx + (qe - qx) * 0.45, 1.88, sd * 1.06], 0.038, STEEL, 6); Mi.tube([qx + (qe - qx) * 0.45, 1.88, sd * 1.06], [qe, 1.92, sd * 1.0], 0.036, STEEL, 6); }
         }
       }
       for (const d of doors) {
@@ -221,15 +221,18 @@ export class Train {
     // 材质：桶 → 专用材质
     // 过道上方 LCD 的黑色外壳 + 吊杆（屏幕本身是 build 末尾的动态贴图网格）
     for (const cx of CAR_X) for (const d of [-3, 3]) {
-      const x = cx + d; P.box(x, 2.13, 0, 0.056, 0.34, 0.84, DARK, 0, 0, 0, 1, { ao: false });
-      for (const z of [-0.3, 0.3]) Mt.tube([x, 2.28, z], [x, 2.36, z], 0.012, STEEL, 5);
+      const x = cx + d; Pi.box(x, 2.13, 0, 0.056, 0.34, 0.84, DARK, 0, 0, 0, 1, { ao: false });
+      for (const z of [-0.3, 0.3]) Mi.tube([x, 2.28, z], [x, 2.36, z], 0.012, STEEL, 5);
     }
+    // 车身漆 + 线路色带 + 座椅合成一个“涂装”网格（一次绘制）：材质是白色车漆，颜色全靠顶点色，setLine 换线时重写顶点色
+    const nBody = Sh.p.length / 3; Sh.merge(Ln); const nLine = Sh.p.length / 3; Sh.merge(Se); const nSeat = Sh.p.length / 3;
+    delete k.buckets.line; delete k.buckets.seat;
     const meshes = k.finish(false), by = k.byBucket;
-    if (by.shell) by.shell.material = this.shellMat; if (by.line) by.line.material = this.lineMat; if (by.accent) by.accent.material = this.accentMat; if (by.seat) by.seat.material = this.seatMat; if (by.tglass) by.tglass.material = this.glassMat; if (by.metal) by.metal.material = this.steelMat;
+    if (by.shell) by.shell.material = this.shellMat; if (by.metalIn) by.metalIn.material = this.steelMat; if (by.tglass) by.tglass.material = this.glassMat; if (by.metal) by.metal.material = this.steelMat;
     meshes.forEach(m => { m.alwaysSelectAsActiveMesh = false; });
-    this.body = by.shell;
+    this.body = by.shell; this.detail = [by.paintIn, by.metalIn].filter(Boolean); this._detailOn = true;
     // 门扇（实例）：门壳（车身色）+ 玻璃 + 线路色带；外侧
-    const lf = new Geo(), lg = new Geo(), ll = new Geo(), hw = DOOR_W / 2;
+    const lf = new Geo(), lg = new Geo(), ll = new Geo(), hw = DOOR_W / 2;  // 门壳 lf 和色带 ll 最后合成一个涂装源网格
     lf.box(0, 0.47, 0, hw, 0.94, 0.05, WHITE, 0, 0, 0, 1, { ao: false }); lf.box(0, 1.9, 0, hw, 0.2, 0.05, WHITE, 0, 0, 0, 1, { ao: false });
     lf.box(-hw / 2 + 0.06, 1.37, 0, 0.12, 0.86, 0.05, WHITE, 0, 0, 0, 1, { ao: false }); lf.box(hw / 2 - 0.06, 1.37, 0, 0.12, 0.86, 0.05, WHITE, 0, 0, 0, 1, { ao: false });
     lg.box(0, 1.37, 0, hw - 0.22, 0.86, 0.03, WHITE, 0, 0, 0, 1, { ao: false });
@@ -242,7 +245,10 @@ export class Train {
     this.innerMat = this.kit.M.metal.clone('trainDoorIn' + this.id); this.innerMat.metallic = 0.55; this.innerMat.roughness = 0.35;
     this.innerMat.albedoColor = B.Color3.FromHexString('#C8CED4').toLinearSpace(); this.innerMat.backFaceCulling = false;
     const mk = (g, name, mat) => { const m = g.toMesh(name, this.scene, mat, this.root); m.isVisible = false; return m; };
-    this.leafSrc = [mk(lf, 'leafShell', this.shellMat), mk(lg, 'leafGlass', this.glassMat), mk(ll, 'leafLine', this.lineMat), mk(li, 'leafInner', this.innerMat)];
+    const nLeaf = lf.p.length / 3; lf.merge(ll); const nLeafAll = lf.p.length / 3;
+    this.leafSrc = [mk(lf, 'leafShell', this.shellMat), mk(lg, 'leafGlass', this.glassMat), mk(li, 'leafInner', this.innerMat)];
+    const liv = (m, parts) => ({ m, base: Float32Array.from(m.getVerticesData(B.VertexBuffer.ColorKind)), parts });
+    this.livery = [liv(this.body, [[0, nBody, 'body'], [nBody, nLine, 'stripe'], [nLine, nSeat, 'seat']]), liv(this.leafSrc[0], [[0, nLeaf, 'body'], [nLeaf, nLeafAll, 'stripe']])];
     this.leaves = { 1: [], '-1': [] }; this.doorCols = { 1: [], '-1': [] };
     for (const sg of [-1, 1]) for (const dx of DOOR_XS) {
       for (const lr of [-1, 1]) { const set = this.leafSrc.map(src => { const inst = src.createInstance('lf'); inst.parent = this.root; return inst; }); this.leaves[sg].push({ set, dx, lr, sg }); }
@@ -285,16 +291,18 @@ export class Train {
       this.glowT += Math.min(0.1, this.scene.getEngine().getDeltaTime() / 1000);
       gm.alpha = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(this.glowT * Math.PI * 2 / 1.8));   // 1.8 秒一呼一吸
     });
-    this.shadowMeshes = [this.body, by.line, by.paint].filter(Boolean);
+    this.shadowMeshes = [this.body, by.paint].filter(Boolean);
   }
   setLine(line, net = this.net) {
     this.line = line; this.net = net || 'gz';
     const key = lineKey(this.net, line), L = netLines(this.net)[line];
     const lin = h => B.Color3.FromHexString(h).toLinearSpace();
-    this.lineMat.albedoColor = lin(STRIPE[key] || L.color);
-    this.accentMat.albedoColor = lin(STRIPE[key] || L.color);
-    this.shellMat.albedoColor = lin(BODY[key] || BODY[1]);
-    this.seatMat.albedoColor = lin(L.color);
+    const col = { body: lin(BODY[key] || BODY[1]), stripe: lin(STRIPE[key] || L.color), seat: lin(L.color) };
+    for (const { m, base, parts } of this.livery) {
+      const c = new Float32Array(base.length);
+      for (const [a, b, kind] of parts) { const q = col[kind]; for (let v = a; v < b; v++) { const o = v * 4; c[o] = base[o] * q.r; c[o + 1] = base[o + 1] * q.g; c[o + 2] = base[o + 2] * q.b; c[o + 3] = base[o + 3]; } }
+      m.setVerticesData(B.VertexBuffer.ColorKind, c, true);
+    }
   }
   /**
    * 换站时调用：线路图 + 车厢 LCD + 车头目的地屏。code = 当前站（停站 / 进站时）或刚开出的站，
@@ -331,13 +339,15 @@ export class Train {
     const e = f * f * (3 - 2 * f), out = Math.min(1, f * 4);
     for (const l of this.leaves[sg]) {
       const px = l.dx + l.lr * (DOOR_W / 4 + e * (DOOR_W / 2 - 0.02)), pz = l.sg * (1.5 + out * 0.06);
-      // i=3 内侧面板：往车厢中心偏（-sg），两侧门都盖住外壳黄漆
-      l.set.forEach((m, i) => m.position.set(px, 0, i === 3 ? pz - l.sg * 0.09 : pz));
+      // i=2 内侧面板：往车厢中心偏（-sg），两侧门都盖住外壳黄漆
+      l.set.forEach((m, i) => m.position.set(px, 0, i === 2 ? pz - l.sg * 0.09 : pz));
     }
     const closed = f < 0.7; for (const c of this.doorCols[sg]) c.checkCollisions = closed;
   }
   setPos(x, y, z) { this.prev.copyFrom(this.root.position); this.root.position.set(x, y, z); this.pos.copyFrom(this.root.position); }
   local(p) { return new B.Vector3(p.x - this.root.position.x, p.y - this.root.position.y, p.z - this.root.position.z); }
+  /** 在车上或站在这列车旁边（车门外 ~2.6m 内）：车厢细件要画 */
+  near(p) { const l = this.local(p); return Math.abs(l.x) < HALF + 4 && Math.abs(l.z) < 4.2 && l.y > -1.5 && l.y < 3.5; }
   contains(p) { const l = this.local(p); return Math.abs(l.x) < HALF - 0.1 && Math.abs(l.z) < 1.42 && l.y > -0.6 && l.y < 2.6; }
   inDoorway(p) { const l = this.local(p); if (Math.abs(l.z) < 1.0 || Math.abs(l.z) > 2.3 || Math.abs(l.y) > 1) return false; return DOOR_XS.some(d => Math.abs(l.x - d) < 0.95); }
   setVisible(v) { this.root.setEnabled(v); }

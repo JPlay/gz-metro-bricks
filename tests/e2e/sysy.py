@@ -16,6 +16,9 @@ OUT=(sys.argv[2] if len(sys.argv)>2 else '/workspace/gz-shots-polish/sysy-r3/').
 Q=sys.argv[3] if len(sys.argv)>3 else '1'
 # 预算 = 现有站厅（公园前站厅闸机机位，a904278，q=1，同一测法）的最大值
 BUDGET={'draws':66,'tris':186754}
+# 街面镜头另有更严的预算（iPad Air 3：每个画面 ≤ 9 万三角形、≤ 50 次绘制）
+# 街面 + 小美 PR#18 评审要求的两个车站镜头（站台 x1 / 站厅 x2）同一预算
+STREET=('02-gate-front','03-axis','04-fence','05-arrival','x1-platform-sign','x2-exit-sign'); STREET_BUDGET={'draws':50,'tris':90000}
 R={'perf':{}}
 
 BTNS_JS = """(()=>{const vw=innerWidth,vh=innerHeight,out=[];
@@ -26,6 +29,10 @@ for(let i=0;i<out.length;i++)for(let j=i+1;j<out.length;j++){const a=out[i],b=ou
 return {list:out.map(b=>b.id+':'+b.lbl),bad};})()"""
 async def btns(pg): return await pg.evaluate(BTNS_JS)
 
+async def gsettle(pg, g=0.3):
+    # 按游戏时间等几帧（dtMax=0.12 → 0.3s 至少 3 帧）：软件渲染 0–1 fps 时，墙钟 sleep 0.8s 可能一帧都没出，
+    # HUD（右下角动作按钮、跳按钮）还停在上一帧的样子
+    g0=await gt(pg); return await wait(pg, f"(window.__gt||0)>={g0+g}", g+5)
 async def view(pg, v):
     if await pg.evaluate('__game.player.view')!=v: await pg.evaluate('__game.toggleView()')
 async def shot(pg, name, settle=1.2):
@@ -112,7 +119,7 @@ async def main():
     sx=await pg.evaluate("(()=>{const s=__game.station.interior.seats.find(s=>s.wy==0&&s.wz<0&&Math.abs(s.wx-600)>3&&Math.abs(s.wx-600)<5);return [s.wx,s.wz,s.face]})()")
     await pose(pg, sx[0]+0.3*math.sin(sx[2]),0.05, sx[1]+0.3*math.cos(sx[2]), sx[2], 0.1)
     await wait(pg, "!!__game.state().act", 5)
-    R['actSit']=(await st(pg))['act']; R['btnSit']=await btns(pg); await pg.evaluate('__game.act()'); await wait(pg, "!!__game.state().seat.seated", 5); await asyncio.sleep(0.8)
+    await gsettle(pg); R['actSit']=(await st(pg))['act']; R['btnSit']=await btns(pg); await pg.evaluate('__game.act()'); await wait(pg, "!!__game.state().seat.seated", 5); await gsettle(pg)
     R['seat']=(await st(pg))['seat']; R['btnSeated']=await btns(pg); await shot(pg,'07-seated',0.8)
     await pg.evaluate('__game.act()'); await asyncio.sleep(0.5); R['stood']=not (await st(pg))['seat'].get('seated')
     # 9. 走楼梯上二楼楼座（西侧楼梯 → 桥 → 楼座门 → 走道），第一人称往下看
@@ -127,6 +134,7 @@ async def main():
     R['errors']=errs(logs); R['gameSeconds']=round(await gt(pg),1)
     # 预算只管 r3 要求的镜头；x* 是原有车站内景（站台 / 站厅导向牌），只记录
     R['overBudget']=[k for k,v in R['perf'].items() if not k.startswith('x') and (v['draws']>BUDGET['draws'] or v['tris']>BUDGET['tris'])]
+    R['overBudget']+=[k+'(street)' for k in STREET if k in R['perf'] and (R['perf'][k]['draws']>STREET_BUDGET['draws'] or R['perf'][k]['tris']>STREET_BUDGET['tris'])]
     print(json.dumps(R, ensure_ascii=False, indent=1, default=str))
     ok=R['noChip'] and R['noMapDest'] and R['board'] and R['arriving'] and R['noPlatformAnnInCar'] and len(R['visitAnn'])>=3 and R['offAt'][0]=='jnt' and not R['offAt'][2] \
        and R['street'][0]=='street' and R['noStreetHint'] and R['arrived'] and R['framed'] and R['cheer'] and R['cardSoon'] and R['cardClosed'] \

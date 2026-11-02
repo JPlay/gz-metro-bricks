@@ -14,11 +14,33 @@ export const FONT_EN = '"Helvetica Neue",Helvetica,Arial,"Noto Sans",sans-serif'
 export const SIGN = { bg: '#2A2D31', frame: '#1B1D20', white: '#FFFFFF', exit: '#FFC72C', exitInk: '#1B1D20' };
 const STEEL = hex('#B9C0C8');
 
+/** 按三角形包围盒把一个桶拆成 [test 为假, test 为真] 两份（顶点按需复制，索引重排） */
+function splitGeo(g, test) {
+  const out = [new Geo(), new Geo()], maps = [new Map(), new Map()];
+  if (g.b) out.forEach(o => { o.b = []; });
+  for (let t = 0; t < g.i.length; t += 3) {
+    const a = g.i[t], b = g.i[t + 1], c = g.i[t + 2], P = g.p;
+    const x0 = Math.min(P[a * 3], P[b * 3], P[c * 3]), x1 = Math.max(P[a * 3], P[b * 3], P[c * 3]);
+    const y0 = Math.min(P[a * 3 + 1], P[b * 3 + 1], P[c * 3 + 1]), y1 = Math.max(P[a * 3 + 1], P[b * 3 + 1], P[c * 3 + 1]);
+    const z0 = Math.min(P[a * 3 + 2], P[b * 3 + 2], P[c * 3 + 2]), z1 = Math.max(P[a * 3 + 2], P[b * 3 + 2], P[c * 3 + 2]);
+    const j = test(x0, y0, z0, x1, y1, z1) ? 1 : 0, o = out[j], mp = maps[j];
+    for (const v of [a, b, c]) {
+      let w = mp.get(v);
+      if (w === undefined) {
+        w = o.p.length / 3; mp.set(v, w);
+        o.p.push(P[v * 3], P[v * 3 + 1], P[v * 3 + 2]); o.n.push(g.n[v * 3], g.n[v * 3 + 1], g.n[v * 3 + 2]);
+        o.c.push(g.c[v * 4], g.c[v * 4 + 1], g.c[v * 4 + 2], g.c[v * 4 + 3]); o.u.push(g.u[v * 2] ?? 0, g.u[v * 2 + 1] ?? 0); if (g.b) o.b.push(g.b[v]);
+      }
+      o.i.push(w);
+    }
+  }
+  return out;
+}
 export class Kit {
   constructor(scene, name, parent) {
     this.scene = scene; this.M = mats(scene);
     this.root = new B.TransformNode(name, scene); if (parent) this.root.parent = parent;
-    this.buckets = {}; this.colliders = []; this.atlas = null; this.meshes = []; this.byBucket = {};
+    this.buckets = {}; this.colliders = []; this.atlas = null; this.meshes = []; this.byBucket = {}; this.mats = null; this.groups = null;
   }
   g(name) { return this.buckets[name] || (this.buckets[name] = new Geo()); }
   get solid() { return this.g('paint'); }
@@ -146,20 +168,42 @@ export class Kit {
       for (const s of [-1, 1]) { const px = x - nx * d / 2 + rx * s * o.w * 0.35, pz = z - nz * d / 2 + rz * s * o.w * 0.35; this.metal.tube([px, cy, pz], [px, top, pz], 0.03, STEEL, 6); }
     }
   }
-  finish(freeze = true) {
+  /**
+   * 分区：把到目前为止写进各桶的几何封成一个“组”（finish 时每组的网格挂在 root 下单独的 TransformNode 上，
+   * 可以按玩家位置整组开关，比如街面 / 地下）。之后的几何进新的桶；碰撞体、标牌图集仍挂在 root 上（不受开关影响）。
+   */
+  group(name, split) { (this.groups || (this.groups = [])).push({ name, buckets: this.buckets, split }); this.buckets = {}; }
+  finish(freeze = true, restName = 'rest') {
     const s = this.scene, out = [];
-    for (const [name, g] of Object.entries(this.buckets)) {
-      if (g.empty) continue;
-      const mat = bucketMat(s, this.M, name), alpha = name === 'shade' || name === 'halo';
-      const m = g.toMesh(name, s, mat, this.root, { alpha });
-      if (name === 'glass') m.alphaIndex = 10; if (name === 'shade') m.alphaIndex = 1; if (name === 'halo') m.alphaIndex = 20;
-      m.receiveShadows = !alpha && name !== 'glow' && name !== 'band';
-      this.byBucket[name] = m; out.push(m);
+    const groups = this.groups ? [...this.groups, { name: restName, buckets: this.buckets }] : [{ name: null, buckets: this.buckets }];
+    this.groupNodes = this.groups ? {} : null; const seen = new Set();
+    for (const G of groups) {
+      let parent = this.root;
+      if (G.name) { parent = this.groupNodes[G.name] = new B.TransformNode(this.root.name + ':' + G.name, s); parent.parent = this.root; }
+      // split = { name, test(...) }：父组挂未拆分的完整几何（街上一次绘制）；再把 test 为真的三角形复制进子组，
+      // 站厅只开子组。zoneVis 必须互斥，否则完整几何和 mouth 会叠画。
+      let sp = null;
+      if (G.split) { sp = this.groupNodes[G.split.name] = new B.TransformNode(this.root.name + ':' + G.split.name, s); sp.parent = this.root; }
+      for (const [name, g0] of Object.entries(G.buckets)) {
+        if (g0.empty) continue;
+        let parts = [[g0, parent, G.name]];
+        if (sp) { const mouth = splitGeo(g0, G.split.test)[1]; if (!mouth.empty) parts.push([mouth, sp, G.split.name]); }
+        for (const [g, par, gname] of parts) {
+          if (g.empty) continue;
+          const mat = this.mats?.[name] || bucketMat(s, this.M, name), alpha = name === 'shade' || name === 'halo';
+          const m = g.toMesh(name, s, mat, par, { alpha });
+          if (name === 'glass') m.alphaIndex = 10; if (name === 'shade') m.alphaIndex = 1; if (name === 'halo') m.alphaIndex = 20;
+          m.receiveShadows = !alpha && name !== 'glow' && name !== 'band';
+          if (!seen.has(name)) { seen.add(name); this.byBucket[name] = m; }   // 同名桶在多个组里：byBucket[name] 取第一个（材质相同）
+          if (gname) this.byBucket[gname + ':' + name] = m;
+          out.push(m);
+        }
+      }
     }
     if (this.atlas) { const m = this.atlas.finish(this.root); this.byBucket.signs = m; out.push(m); }
     if (freeze) out.forEach(m => { m.computeWorldMatrix(true); m.freezeWorldMatrix(); m.doNotSyncBoundingInfo = true; });
     this.meshes = out;
-    this.buckets = {};
+    this.buckets = {}; this.groups = null;
     return out;
   }
   dispose() {

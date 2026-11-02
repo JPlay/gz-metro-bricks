@@ -27,6 +27,8 @@ import { drawLineCanvas, networkSVG } from '../ui/netmap.js';
 import { buildFoodStreet } from '../game/food-street.js';
 const B = window.BABYLON;
 
+/** 街面 / 地下分组显示的车站（按 signature） */
+const SPLIT_ZONES = new Set(['sysy']);
 export const YC = -6, HALL_X = 46, TUNNEL_X = 140, TRACK_OFF = 7.6, PSD_OFF = 6, WALL_OFF = 10.6;
 export const MAIN = { y: -12, zc: 14 }, GYQ2 = { y: -22, zc: 44 };
 export const SPAWN = { x: 0, y: 0, z: -48, yaw: 0 };
@@ -71,11 +73,30 @@ export class Station {
       A: { key: 'A', step: 1, trackZ: f.zc - TRACK_OFF, psdZ: f.zc - PSD_OFF, doorSg: 1, n: 1 },
       B: { key: 'B', step: -1, trackZ: f.zc + TRACK_OFF, psdZ: f.zc + PSD_OFF, doorSg: -1, n: 2 } } }));
     this.gates = []; this.mv = []; this.escalators = []; this.psd = []; this.pids = []; this.greeters = [];
-    this.street(); this.passage(); this.concourse();
+    // 街面（含出入口通道）/ 地下（站厅、站台、换乘）分成两组网格，按玩家位置开关（见 zoneVis）。
+    //   通道并进街面组：站厅里只能透过通道口看到通道，而那时街面组本来就开着；通道单独成组每个桶要多一次绘制。
+    //   纪念堂站的街面很重（园区外的行道树、路灯、骑楼……），站在街上时地下那 1 万多个三角形不用画
+    const split = SPLIT_ZONES.has(this.s.signature);
+    k.lite = split; // 同一批场景顺带用低面数的行道树 / 路灯（decor.js）
+    this.street(); this.passage(); if (split) k.group('street', { name: 'mouth', test: mouthVisible });
+    this.concourse();
     this.platforms.forEach(p => this.platform(p));
     if (this.platforms.length > 1) this.transfer();
     if (this.s.attraction) this.sysyWayfinding();
-    k.finish();
+    k.finish(true, 'under');
+    // mouth 与 street 完整几何互斥：默认只开 street，站厅 zoneVis 再按需开 mouth
+    if (k.groupNodes && k.groupNodes.mouth) k.groupNodes.mouth.setEnabled(false);
+    // 扶梯踏步 / 闸机扇门 / PSD 门扇是 createInstance，原先挂在 root 上，under 关掉后仍可能进视锥白画；并进 under 组
+    const und = k.groupNodes && k.groupNodes.under;
+    if (und) {
+      const adopt = m => { if (m && m.parent !== und) m.parent = und; };
+      for (const src of Object.values(this._stepSrc || {})) adopt(src);
+      for (const esc of this.escalators) for (const st of esc.steps) adopt(st);
+      for (const src of Object.values(this._psdSrc || {})) adopt(src);
+      for (const st of this.psd) for (const l of st.leaves) adopt(l);
+      for (const g of this.gates) for (const fl of g.flaps) adopt(fl.pv);
+      if (this._flapSrc) adopt(this._flapSrc);
+    }
     if (this.park) this.park.finish();
     this.root = k.root;
   }
@@ -428,7 +449,7 @@ export class Station {
       S.shadeBlob(cx, zg, 0.45, 1.2, y + 0.004, 0.28);
     }
     const flapG = new Geo(); flapG.rbox(0, -0.3, 0, 0.5, 0.6, 0.03, hex('#E9EEF2'), 0.12, 0, { ao: false, bottom: true }); flapG.box(-0.03, 0.0, 0, 0.44, 0.04, 0.035, hex('#D52B1E'), 0, 0, 0, 1, { ao: false });
-    const flapSrc = flapG.toMesh('flap', this.scene, k.M.paint, k.root); flapSrc.isVisible = false;
+    const flapSrc = this._flapSrc = flapG.toMesh('flap', this.scene, k.M.paint, k.root); flapSrc.isVisible = false;
     for (const lx of lanes) {
       const flaps = [-1, 1].map(sd => { const pv = new B.TransformNode('fp', this.scene); pv.parent = k.root; pv.position.set(lx + sd * 0.55, y + 0.75, zg); const f = flapSrc.createInstance('flap'); f.parent = pv; f.position.x = -sd * 0.25; f.rotation.y = 0; return { pv, sd }; });
       const col = k.col(lx, y + 0.8, zg, 1.1, 1.6, 0.25, { dynamic: false });
@@ -592,12 +613,18 @@ export class Station {
     }
   }
   escSteps(zc, w, ang, len, _dir, y) {
-    const g = new Geo();
-    g.box(0, 0, 0, 0.42, 0.08, w - 0.08, hex('#4A4F55'), 0, 0, 0, 1, { ao: false });
-    for (let i = -3; i <= 3; i++) g.box(i * 0.055, 0.042, 0, 0.02, 0.006, w - 0.12, hex('#7B828A'), 0, 0, 0, 1, { ao: false });
-    g.box(0.19, 0.043, 0, 0.04, 0.008, w - 0.1, hex('#F2C230'), 0, 0, 0, 1, { ao: false });
-    for (const s of [-1, 1]) g.box(0, 0.043, s * (w / 2 - 0.07), 0.42, 0.008, 0.04, hex('#F2C230'), 0, 0, 0, 1, { ao: false });
-    const src = g.toMesh('step', this.scene, this.kit.M.paint, this.kit.root); src.isVisible = false;
+    // 一级台阶：踏板盒子 + 7 条齿槽 + 3 条黄边。齿槽 / 黄边只有 6–8mm 高，侧面看不见 → 只画朝上的面（每级 132 → 32 个三角形）；
+    // 同一座站里宽度相同的扶梯共用一个源网格（实例合批：两部扶梯 1 次绘制）
+    this._stepSrc = this._stepSrc || {};
+    let src = this._stepSrc[w];
+    if (!src) {
+      const g = new Geo(), top = (x0, x1, z0, z1, yy, c) => g.quad([x0, yy, z0], [x1, yy, z0], [x1, yy, z1], [x0, yy, z1], c);
+      g.box(0, 0, 0, 0.42, 0.08, w - 0.08, hex('#4A4F55'), 0, 0, 0, 1, { ao: false });
+      for (let i = -3; i <= 3; i++) top(i * 0.055 - 0.01, i * 0.055 + 0.01, -(w - 0.12) / 2, (w - 0.12) / 2, 0.045, hex('#7B828A'));
+      top(0.17, 0.21, -(w - 0.1) / 2, (w - 0.1) / 2, 0.047, hex('#F2C230'));
+      for (const s of [-1, 1]) top(-0.21, 0.21, s * (w / 2 - 0.07) - 0.02, s * (w / 2 - 0.07) + 0.02, 0.047, hex('#F2C230'));
+      src = this._stepSrc[w] = g.toMesh('step', this.scene, this.kit.M.paint, this.kit.root); src.isVisible = false;
+    }
     const out = [];
     for (let i = 0; i < 40; i++) { const st = src.createInstance('st'); st.parent = this.kit.root; st.rotation.z = ang; st.position.z = zc; out.push(st); }
     return out;
@@ -734,15 +761,21 @@ export class Station {
       arrow(k, d, y + 0.006, pz, sgn > 0 ? 0 : Math.PI, '#3DBE6E', 0.75);
       for (const s2 of [-1, 1]) arrow(k, d + s2 * 1.1, y + 0.006, pz, sgn > 0 ? Math.PI : 0, '#F2C230', 0.6);
     }
-    // 门扇（实例）：不锈钢框 + 玻璃 + 线路色贴条
-    const src = new Geo();
-
-    // 门扇框 = 四边不锈钢（中间留空给玻璃实例）
-    for (const [bx, by, bw, bh] of [[0, 0.1, 0.8, 0.2], [0, 2.21, 0.8, 0.1], [-0.36, 1.15, 0.08, 2.26], [0.36, 1.15, 0.08, 2.26]]) src.box(bx, by, 0, bw, bh, 0.05, STEEL, 0, 0, 0, 1, { ao: false });
-    src.box(0, 1.25, 0, 0.66, 0.14, 0.058, hex(lc), 0, 0, 0, 1, { ao: false });
-    const sm = src.toMesh('psdLeaf', this.scene, k.M.paint, k.root); sm.isVisible = false;
-    const gsrc = new Geo(); gsrc.box(0, 1.2, 0, 0.66, 2.0, 0.02, hex('#D6EEF8'), 0, 0, 0, 1, { ao: false });
-    const gm = gsrc.toMesh('psdLeafGlass', this.scene, k.M.glass, k.root); gm.isVisible = false; gm.alphaIndex = 10;
+    // 门扇（实例）：不锈钢框 + 玻璃 + 线路色贴条。源网格按线路色缓存，两侧同色时共用同一个源 → 实例合成一次绘制
+    const PS = this._psdSrc || (this._psdSrc = {});
+    let sm = PS[lc];
+    if (!sm) {
+      const src = new Geo();
+      // 门扇框 = 四边不锈钢（中间留空给玻璃实例）
+      for (const [bx, by, bw, bh] of [[0, 0.1, 0.8, 0.2], [0, 2.21, 0.8, 0.1], [-0.36, 1.15, 0.08, 2.26], [0.36, 1.15, 0.08, 2.26]]) src.box(bx, by, 0, bw, bh, 0.05, STEEL, 0, 0, 0, 1, { ao: false });
+      src.box(0, 1.25, 0, 0.66, 0.14, 0.058, hex(lc), 0, 0, 0, 1, { ao: false });
+      sm = PS[lc] = src.toMesh('psdLeaf', this.scene, k.M.paint, k.root); sm.isVisible = false;
+    }
+    let gm = PS.glass;
+    if (!gm) {
+      const gsrc = new Geo(); gsrc.box(0, 1.2, 0, 0.66, 2.0, 0.02, hex('#D6EEF8'), 0, 0, 0, 1, { ao: false });
+      gm = PS.glass = gsrc.toMesh('psdLeafGlass', this.scene, k.M.glass, k.root); gm.isVisible = false; gm.alphaIndex = 10;
+    }
     const leaves = [], cols = [];
     for (const d of DOOR_XS) {
       for (const lr of [-1, 1]) for (const srcM of [sm, gm]) { const inst = srcM.createInstance('pl'); inst.parent = k.root; inst.metadata = { d, lr }; leaves.push(inst); }
@@ -936,15 +969,50 @@ export class Station {
       e.steps.forEach((st, i) => { let u = ((i / n) * L + e.off * e.dir) % L; if (u < 0) u += L; const f = u / L; st.position.x = e.x0 + (e.x1 - e.x0) * f; st.position.y = e.y0 + (e.y1 - e.y0) * f + 0.06; });
     }
     for (const m of this.mv) m.update(dt, cam, this.events, player);
+    if (this.kit.groupNodes) this.zoneVis(p, cam);
     if (this.park) this.parkUpdate(dt, player, cam);
     if (this.gze) updateGze(this.gze, dt, player, Audio);
     this.crowd.update(dt, p);
     for (const pd of this.pids) { pd.t -= dt; if (pd.t <= 0) { pd.t = 1; this.drawPids(pd, metro); } }
   }
+  /**
+   * 分区显示：地下组 = 在地下，或出入口楼梯附近且镜头朝向通道/洞口；街面组 = 地面 / 通道里的完整街面几何；
+   *   mouth 子组 = 仅站厅里镜头对着通道口时启用（与街面组互斥）。前几帧全开（反射探针只渲染一次）。
+   */
+  zoneVis(p, cam) {
+    if ((this._zvF = (this._zvF || 0) + 1) < 4) return;
+    // nearStair：只在通道中段靠近楼梯口（不是 C 口街面端），避免通道外口 street+under 双开超预算
+    const G = this.kit.groupNodes, nearStair = Math.abs(p.x) < 8 && p.z < -12 && p.z > -34;
+    // 站厅里只有镜头对着出入口通道口（z = -20 那个洞）时，才可能顺着楼梯看到街面；背对 / 侧对通道口时街面组整组关掉
+    //（街面网格包围盒很大，视锥裁剪剔不掉，站厅镜头会白白多出十几次绘制）
+    const mouth = this._zvMouth || (this._zvMouth = new B.BoundingInfo(new B.Vector3(-3.5, YC, -20.3), new B.Vector3(3.5, -0.9, -19.7)));
+    // 出入口通道里往站厅看时才需要地下组：楼梯口附近 + 镜头视锥碰到通道/洞口；在街面背对洞口时关掉，避免 street+under 双开
+    const portal = this._zvPortal || (this._zvPortal = new B.BoundingInfo(new B.Vector3(-3.7, YC - 0.5, -33), new B.Vector3(3.7, 3.6, -19.5)));
+    const inPassage = Math.abs(p.x) < 4 && p.z < -19;
+    // street = 完整街面（含通道）；mouthOnly = 站厅里只开 mouth 子集。二者互斥，避免完整几何与 mouth 叠画
+    const streetOn = p.y > -5 || inPassage;
+    const mouthOnly = !streetOn && p.y > YC - 1.5 && (!cam || cam.isInFrustum(mouth));
+    let under = p.y < -1 || (nearStair && (!cam || cam.isInFrustum(portal)));
+    // 通道/楼梯几何在 street 组：通道里必须开 street，不能同时开 under（否则 90k+）；走出通道进站厅后再开 under
+    if (inPassage) under = false;
+    if (G.under && G.under.isEnabled(false) !== under) G.under.setEnabled(under);
+    if (G.street && G.street.isEnabled(false) !== streetOn) G.street.setEnabled(streetOn);
+    if (G.mouth && G.mouth.isEnabled(false) !== mouthOnly) G.mouth.setEnabled(mouthOnly);
+  }
+  /**
+   * 站厅里能不能看到列车：列车在站台层，从站厅只能透过楼扶梯那个洞（x -1..15, z 10..18）看下去。
+   * 分区车站（纪念堂）镜头视锥不含这个洞时返回 true → main.js 用 layerMask 跳过列车网格（站厅背对楼梯时省掉两列车）。
+   */
+  trainsHidden(zone, cam) {
+    if (!this.kit.groupNodes || !cam || zone.kind !== 'concourse') return false;
+    const hole = this._zvHole || (this._zvHole = new B.BoundingInfo(new B.Vector3(-1, YC - 1.3, 10), new B.Vector3(15, YC + 0.1, 18)));
+    return !cam.isInFrustum(hole);
+  }
   /** 纪念堂园区：只在地面上时启用园区网格；走进正门 → 进纪念堂内部（单独的场景，第一次进去时才搭），从内部南门出来回到门口 */
   parkUpdate(dt, player, cam) {
     const p = player.position, inHall = p.x > IX - 200;
-    const showPark = !inHall && p.y > -4; if (this.park.root.isEnabled() !== showPark) this.park.root.setEnabled(showPark);
+    // 楼梯/通道里（y≤-1.5）关掉园区：包围盒太大，视锥裁不掉，通道中段会白白多出园区几次绘制
+    const showPark = !inHall && p.y > -1.5; if (this.park.root.isEnabled() !== showPark) this.park.root.setEnabled(showPark);
     if (!this.sysy) return;
     const E = HALL_ENTRY;
     if (!inHall && !player.seat && p.x > E.x0 && p.x < E.x1 && p.z > E.z0 && p.z < E.z1 && p.y > E.y0) {
@@ -981,6 +1049,20 @@ export class Station {
   dispose() { if (this.interior) this.interior.dispose(); this.crowd.dispose(); this.pids.forEach(p => { p.tex.dispose(); p.mat.dispose(); }); for (const o of [this.tvmScr, this.gateScr, this.wallMap]) if (o) { o.tex.dispose(); o.mat.dispose(); } this.wallMap = null; this.kit.dispose(); }
 }
 
+/**
+ * 街面组里哪些三角形（包围盒）可能从站厅透过出入口通道看到（保守估计，宁多勿少）：
+ *   通道口 z=-20（|x|≤3.5，吊顶 y≈-1 一直到 z=-26），z -37..-26 两侧墙高到 y 3.6，楼梯 z=-36 处到地面 y=0。
+ *   a) 视线一直在两侧墙里出来：|x| ≤ 3.8 + 0.43·(−37−z)，并且得在楼梯顶以上：y ≥ 0.1·(−36−z)
+ *   b) 视线很陡、从墙顶上方出去：只受 z -26..-20 那段约束：|x| ≤ 3.5 + 7/6·(−26−z)，y ≥ −3.75 + 0.42·(−26−z)
+ *   通道本身（z > -37）都算。比 z=-19.7 还靠北的街面东西（站厅吊顶以上）从站厅看不到。
+ */
+function mouthVisible(x0, y0, z0, x1, y1, z1) {
+  if (z0 > -19.7) return false;
+  const ax = x0 > 0 ? x0 : x1 < 0 ? -x1 : 0, m = 0.3;
+  const a = ax <= 3.8 + 0.43 * Math.max(0, -37 - z0) + m && y1 >= 0.1 * Math.max(0, -36 - z1) - m;
+  const b = ax <= 3.5 + 7 / 6 * Math.max(0, -26 - z0) + m && y1 >= -3.75 + 0.42 * Math.max(0, -26 - z1) - m;
+  return a || b;
+}
 /** 地面箭头（油漆） */
 export function arrow(k, x, y, z, a, col, s = 1) {
   const c = hex(col), P = k.solid;
