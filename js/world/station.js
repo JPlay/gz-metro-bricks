@@ -84,6 +84,19 @@ export class Station {
     if (this.platforms.length > 1) this.transfer();
     if (this.s.attraction) this.sysyWayfinding();
     k.finish(true, 'under');
+    // mouth 与 street 完整几何互斥：默认只开 street，站厅 zoneVis 再按需开 mouth
+    if (k.groupNodes && k.groupNodes.mouth) k.groupNodes.mouth.setEnabled(false);
+    // 扶梯踏步 / 闸机扇门 / PSD 门扇是 createInstance，原先挂在 root 上，under 关掉后仍可能进视锥白画；并进 under 组
+    const und = k.groupNodes && k.groupNodes.under;
+    if (und) {
+      const adopt = m => { if (m && m.parent !== und) m.parent = und; };
+      for (const src of Object.values(this._stepSrc || {})) adopt(src);
+      for (const esc of this.escalators) for (const st of esc.steps) adopt(st);
+      for (const src of Object.values(this._psdSrc || {})) adopt(src);
+      for (const st of this.psd) for (const l of st.leaves) adopt(l);
+      for (const g of this.gates) for (const fl of g.flaps) adopt(fl.pv);
+      if (this._flapSrc) adopt(this._flapSrc);
+    }
     if (this.park) this.park.finish();
     this.root = k.root;
   }
@@ -436,7 +449,7 @@ export class Station {
       S.shadeBlob(cx, zg, 0.45, 1.2, y + 0.004, 0.28);
     }
     const flapG = new Geo(); flapG.rbox(0, -0.3, 0, 0.5, 0.6, 0.03, hex('#E9EEF2'), 0.12, 0, { ao: false, bottom: true }); flapG.box(-0.03, 0.0, 0, 0.44, 0.04, 0.035, hex('#D52B1E'), 0, 0, 0, 1, { ao: false });
-    const flapSrc = flapG.toMesh('flap', this.scene, k.M.paint, k.root); flapSrc.isVisible = false;
+    const flapSrc = this._flapSrc = flapG.toMesh('flap', this.scene, k.M.paint, k.root); flapSrc.isVisible = false;
     for (const lx of lanes) {
       const flaps = [-1, 1].map(sd => { const pv = new B.TransformNode('fp', this.scene); pv.parent = k.root; pv.position.set(lx + sd * 0.55, y + 0.75, zg); const f = flapSrc.createInstance('flap'); f.parent = pv; f.position.x = -sd * 0.25; f.rotation.y = 0; return { pv, sd }; });
       const col = k.col(lx, y + 0.8, zg, 1.1, 1.6, 0.25, { dynamic: false });
@@ -963,22 +976,28 @@ export class Station {
     for (const pd of this.pids) { pd.t -= dt; if (pd.t <= 0) { pd.t = 1; this.drawPids(pd, metro); } }
   }
   /**
-   * 分区显示：地下组 = 在地下，或者站在出入口楼梯附近（往下能看到站厅）；街面组（含出入口通道）= 在地面附近 / 通道里，
-   *   或者在站厅里且镜头视锥含通道口（透过通道口能看到楼梯 / 顺着通道往上能看到街口雨棚）。前几帧全开（反射探针只渲染一次，要拍到完整的站厅）。
+   * 分区显示：地下组 = 在地下，或出入口楼梯附近且镜头朝向通道/洞口；街面组 = 地面 / 通道里的完整街面几何；
+   *   mouth 子组 = 仅站厅里镜头对着通道口时启用（与街面组互斥）。前几帧全开（反射探针只渲染一次）。
    */
   zoneVis(p, cam) {
     if ((this._zvF = (this._zvF || 0) + 1) < 4) return;
-    const G = this.kit.groupNodes, nearStair = Math.abs(p.x) < 8 && p.z < -12 && p.z > -44;
+    // nearStair：只在通道中段靠近楼梯口（不是 C 口街面端），避免通道外口 street+under 双开超预算
+    const G = this.kit.groupNodes, nearStair = Math.abs(p.x) < 8 && p.z < -12 && p.z > -34;
     // 站厅里只有镜头对着出入口通道口（z = -20 那个洞）时，才可能顺着楼梯看到街面；背对 / 侧对通道口时街面组整组关掉
     //（街面网格包围盒很大，视锥裁剪剔不掉，站厅镜头会白白多出十几次绘制）
     const mouth = this._zvMouth || (this._zvMouth = new B.BoundingInfo(new B.Vector3(-3.5, YC, -20.3), new B.Vector3(3.5, -0.9, -19.7)));
+    // 出入口通道里往站厅看时才需要地下组：楼梯口附近 + 镜头视锥碰到通道/洞口；在街面背对洞口时关掉，避免 street+under 双开
+    const portal = this._zvPortal || (this._zvPortal = new B.BoundingInfo(new B.Vector3(-3.7, YC - 0.5, -33), new B.Vector3(3.7, 3.6, -19.5)));
     const inPassage = Math.abs(p.x) < 4 && p.z < -19;
-    // 街面组又按“站厅能不能透过通道口看到”拆成 mouth 子组（见 mouthVisible）：站厅里对着通道口时只开 mouth，整条街其余部分不画
-    const under = p.y < -1 || nearStair, street = p.y > -5 || inPassage,
-      mouthOn = street || (p.y > YC - 1.5 && (!cam || cam.isInFrustum(mouth)));
+    // street = 完整街面（含通道）；mouthOnly = 站厅里只开 mouth 子集。二者互斥，避免完整几何与 mouth 叠画
+    const streetOn = p.y > -5 || inPassage;
+    const mouthOnly = !streetOn && p.y > YC - 1.5 && (!cam || cam.isInFrustum(mouth));
+    let under = p.y < -1 || (nearStair && (!cam || cam.isInFrustum(portal)));
+    // 通道/楼梯几何在 street 组：通道里必须开 street，不能同时开 under（否则 90k+）；走出通道进站厅后再开 under
+    if (inPassage) under = false;
     if (G.under && G.under.isEnabled(false) !== under) G.under.setEnabled(under);
-    if (G.street && G.street.isEnabled(false) !== street) G.street.setEnabled(street);
-    if (G.mouth && G.mouth.isEnabled(false) !== mouthOn) G.mouth.setEnabled(mouthOn);
+    if (G.street && G.street.isEnabled(false) !== streetOn) G.street.setEnabled(streetOn);
+    if (G.mouth && G.mouth.isEnabled(false) !== mouthOnly) G.mouth.setEnabled(mouthOnly);
   }
   /**
    * 站厅里能不能看到列车：列车在站台层，从站厅只能透过楼扶梯那个洞（x -1..15, z 10..18）看下去。
@@ -992,7 +1011,8 @@ export class Station {
   /** 纪念堂园区：只在地面上时启用园区网格；走进正门 → 进纪念堂内部（单独的场景，第一次进去时才搭），从内部南门出来回到门口 */
   parkUpdate(dt, player, cam) {
     const p = player.position, inHall = p.x > IX - 200;
-    const showPark = !inHall && p.y > -4; if (this.park.root.isEnabled() !== showPark) this.park.root.setEnabled(showPark);
+    // 楼梯/通道里（y≤-1.5）关掉园区：包围盒太大，视锥裁不掉，通道中段会白白多出园区几次绘制
+    const showPark = !inHall && p.y > -1.5; if (this.park.root.isEnabled() !== showPark) this.park.root.setEnabled(showPark);
     if (!this.sysy) return;
     const E = HALL_ENTRY;
     if (!inHall && !player.seat && p.x > E.x0 && p.x < E.x1 && p.z > E.z0 && p.z < E.z1 && p.y > E.y0) {

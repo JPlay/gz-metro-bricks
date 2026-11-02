@@ -169,12 +169,14 @@ export class Kit {
     for (const G of groups) {
       let parent = this.root;
       if (G.name) { parent = this.groupNodes[G.name] = new B.TransformNode(this.root.name + ':' + G.name, s); parent.parent = this.root; }
-      // split = { name, test(x0,y0,z0,x1,y1,z1) }：组内每个桶再按三角形包围盒一分为二，test 为真的三角形进子组 split.name（单独的节点，可单独开关）
+      // split = { name, test(...) }：父组挂未拆分的完整几何（街上一次绘制）；再把 test 为真的三角形复制进子组，
+      // 站厅只开子组。zoneVis 必须互斥，否则完整几何和 mouth 会叠画。
       let sp = null;
       if (G.split) { sp = this.groupNodes[G.split.name] = new B.TransformNode(this.root.name + ':' + G.split.name, s); sp.parent = this.root; }
       for (const [name, g0] of Object.entries(G.buckets)) {
         if (g0.empty) continue;
-        const parts = sp ? splitGeo(g0, G.split.test).map((g, j) => [g, j ? sp : parent, j ? G.split.name : G.name]) : [[g0, parent, G.name]];
+        let parts = [[g0, parent, G.name]];
+        if (sp) { const mouth = splitGeo(g0, G.split.test)[1]; if (!mouth.empty) parts.push([mouth, sp, G.split.name]); }
         for (const [g, par, gname] of parts) {
           if (g.empty) continue;
           const mat = this.mats?.[name] || bucketMat(s, this.M, name), alpha = name === 'shade' || name === 'halo';
