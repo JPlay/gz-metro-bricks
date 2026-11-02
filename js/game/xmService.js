@@ -77,7 +77,7 @@ export class XmMetro {
     return st;
   }
   attach(station) {
-    this.station = station; this.slots = [];
+    this.station = station; this.slots = []; this.exitWait = null;
     const free = this.trains.filter(t => !this.ride || t !== this.ride.train);
     free.forEach(t => t.setVisible(false));
     let rideSlot = null;
@@ -141,9 +141,17 @@ export class XmMetro {
         case 'dwell': {
           this.doors(s, 1);
           const terminalHold = !nx && aboard, hold = terminalHold || (!seated && tr.inDoorway(p));
-          if (!hold) s.t = Math.min(s.t, 3.5);
+          const ew = this.exitWait && this.exitWait.slot === s ? this.exitWait : null;
+          if (!hold) s.t = Math.min(s.t, ew && ew.release ? 3.1 + Ann.EXIT_MARGIN : 3.5);
+          // 刚从这列车下来、出口广播（“前往××的乘客，请从×出口出站”）还在播：关门提示（interrupt）和关门都等它播完 + EXIT_MARGIN 秒；
+          // 播放期间最多多停 EXIT_CAP 秒（游戏时间）。没有出口广播的站 exitWait 为空 → 停站时长照旧
+          if (ew) {
+            ew.el += dt;
+            if (!ew.done && ew.el < Ann.EXIT_CAP) s.t = Math.max(s.t, 3.5 + Ann.EXIT_MARGIN);
+            else { if (!ew.doneAt) ew.doneAt = performance.now(); if (!ew.release) { ew.release = true; s.t = Math.max(s.t, 3.1 + Ann.EXIT_MARGIN); } }
+          }
           if (!s.ann && s.t < 3.1 && (aboard || onPlat) && !terminalHold) { s.ann = true; (this.S.ann.doorsClosing || Ann.doorsClosing)(); A.sfx('doorChime'); }
-          if (s.t <= 0 && !hold) { s.state = 'closing'; s.t = 1.4; }
+          if (s.t <= 0 && !hold) { s.state = 'closing'; s.t = 1.4; if (ew) { this.lastExit = { ...this.exitInfo(), closeAt: Math.round(performance.now() - ew.t0) }; this.exitWait = null; } }
           break;
         }
         case 'closing': this.doors(s, Math.max(0, s.t) / 1.4); if (s.t <= 0) {
@@ -175,8 +183,15 @@ export class XmMetro {
   /** 下车了：有景点出口的站再播一句“前往××的乘客，请从N号出口出站”（每到一次站播一次） */
   alighted() {
     const from = this.ride; this.ride = null;
-    if (from && this.guided !== this.code && this.S.exitSegs(this.code).length) { this.guided = this.code; this.S.ann.exit(this.code); }
+    const segs = this.S.exitSegs(this.code);
+    if (from && this.guided !== this.code && segs.length) {
+      this.guided = this.code;
+      const s = from.slot, ew = this.exitWait = s && (s.state === 'dwell' || s.state === 'opening') ? { code: this.code, slot: s, dur: +Ann.seconds(segs).toFixed(2), t0: performance.now(), el: 0, done: false, doneAt: 0, release: false } : null;
+      if (ew && s.state === 'dwell') s.t = Math.max(s.t, 3.5 + Ann.EXIT_MARGIN);   // 同一帧里关门提示不能先抢播
+      Promise.resolve(this.S.ann.exit(this.code)).then(() => { if (ew) { ew.done = true; ew.doneAt = ew.doneAt || performance.now(); } });
+    }
   }
+  exitInfo() { const e = this.exitWait; return e ? { code: e.code, dur: e.dur, el: +e.el.toFixed(2), done: e.done, doneAt: e.doneAt ? Math.round(e.doneAt - e.t0) : null } : null; }
   move(s, x) {
     const tr = s.train, pl = this.ctx.player, aboard = this.playerOn(tr);
     const prev = tr.root.position.x, worldX = this.N.O.x + x; tr.setPos(worldX, s.P.y, s.side.trackZ); this.refresh(tr);
@@ -202,7 +217,8 @@ export class XmMetro {
   }
   preloadNext(s, nx) {
     const ids = Ann.prefetchDepart(this.S.departSegs(s.line, nx, this.dirKey(s.line, s.step), s.step, this.legs === 0 || this.ride?.line !== s.line));
-    if (ids.length) this.preload = { at: this.code, next: nx, ids };
+    const exitIds = Ann.prefetchSegs(this.S.exitSegs(nx));   // 下一站下车的出口广播也提前一站预载
+    if (ids.length || exitIds.length) this.preload = { at: this.code, next: nx, ids, exitIds };
   }
   exitTunnel() {
     const r = this.ride, tr = r.train, pl = this.ctx.player, s = r.slot;
@@ -265,7 +281,7 @@ export class XmMetro {
   louder(a, b) { if (!a) return b; return { speed: Math.max(a.speed, b.speed), inside: a.inside || b.inside, braking: a.braking || b.braking }; }
   call(line, step) { const s = this.slots.find(o => o.line === line && o.step === step); if (s && s.state === 'away') s.t = 0; return !!s; }
   info() {
-    return { code: this.code, ride: this.ride ? { phase: this.ride.phase, line: this.ride.line, step: this.ride.step, next: this.ride.next, hold: this.ride.hold, el: this.ride.el, t: this.ride.t } : null, lastLeg: this.lastLeg || null, preload: this.preload || null,
+    return { code: this.code, ride: this.ride ? { phase: this.ride.phase, line: this.ride.line, step: this.ride.step, next: this.ride.next, hold: this.ride.hold, el: this.ride.el, t: this.ride.t } : null, lastLeg: this.lastLeg || null, preload: this.preload || null, exitWait: this.exitInfo(), lastExit: this.lastExit || null,
       slots: this.slots.map(s => ({ line: s.line, side: s.side.key, step: s.step, state: s.state, t: +s.t.toFixed(1), x: +(s.train.root.position.x - this.N.O.x).toFixed(1), doors: +s.f.toFixed(2) })),
       station: this.station ? this.station.info() : null, street: this.street ? this.street.info() : null };
   }

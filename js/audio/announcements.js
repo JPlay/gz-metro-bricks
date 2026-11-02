@@ -37,6 +37,14 @@ export function prefetchDepart(segs) {
   Audio.prefetch(ids);
   return ids;
 }
+/** 预取任意一组片段的 MP3（下车出口广播用：车停在上一站时先下载、解码好下一站的“前往××请从×出口出站”） */
+export function prefetchSegs(segs) {
+  const ids = segs.map(x => typeof x === 'string' ? x : x.id).filter(id => { const a = Audio.getAsset(id); return a && a.file; });
+  if (ids.length) Audio.prefetch(ids);
+  return ids;
+}
+/** 下车出口广播：关门要等它播完再过 EXIT_MARGIN 秒；播放（含排队、下载）期间停站最多再延长 EXIT_CAP 秒 */
+export const EXIT_MARGIN = 1.5, EXIT_CAP = 20;
 export const arrive = code => say(P.arriveSegs(code), { key: 'arrive', interrupt: true });
 export const welcome = code => say(P.welcomeSegs(code), { key: 'welcome' });
 export const platform = (line, dir, n) => say(P.platformSegs(line, dir, n), { key: 'platform', interrupt: true });
