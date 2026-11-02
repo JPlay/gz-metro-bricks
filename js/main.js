@@ -237,17 +237,30 @@ export async function start() {
     else if (east && east.cur) G.zone = { kind: 'xmn', area: east.area };
     else G.zone = G.station.zoneOf(p);
     // 在地面上看不到地下的列车（车站全在地下）：用 layerMask 跳过列车网格，省掉两列车 ~6 万三角形
-    { const lm = G.zone.kind === 'street' || G.zone.kind === 'hall' ? 0x0FFFFFFF : 0x1FFFFFFF; if (cam.layerMask !== lm) cam.layerMask = lm; }
+    // 纪念堂站厅：镜头没对着楼扶梯洞口时也看不到列车（见 Station.trainsHidden）
+    { const lm = G.zone.kind === 'street' || G.zone.kind === 'hall' || G.zone.kind === 'passage' || (!inXm && !(east && east.cur) && !G.inTunnel && G.station.trainsHidden(G.zone, cam)) ? 0x0FFFFFFF : 0x1FFFFFFF; if (cam.layerMask !== lm) cam.layerMask = lm; }
     // 站台上看列车：只有自己坐的那列车画车厢里的屏（线路图条 / LCD / 呼吸光圈 / 亮面件），别的车隔着窗看不清，省 4 次绘制 / 列；
     // 地下没有太阳：列车不投太阳阴影（每列车 3 次阴影绘制）
     for (const t of [...metro.trains, ...(xmMetro ? xmMetro.trains : [])]) {
       if (!t._inner) t._inner = t.root.getChildMeshes(false).filter(m => /^(trainStrip|trainLcd|trainHotGlow|gloss|leafInner)$/.test(m.name) || (m.sourceMesh && m.sourceMesh.name === 'leafInner'));
+      // 对面车残留：顶灯 / 转向架 / 门扇隔着两层玻璃看不清；人在本车时关掉，站台上仍保留（对面车要看得见）
+      if (!t._far) t._far = t.root.getChildMeshes(false).filter(m => m.name === 'glow' || m.name === 'metal' || (m.sourceMesh && /^leaf(Shell|Glass)$/.test(m.sourceMesh.name)));
       const inside = t.root.isEnabled() && t.contains(p);
       if (t._innerOn !== inside) { t._innerOn = inside; t._inner.forEach(m => m.setEnabled(inside)); }
-      // 车厢乘客：自己坐的车全显示；别的车只显示 20m 内的（远处隔着两层玻璃看不出来，每人 1 次绘制）
-      if (t.pax && t.root.isEnabled()) for (const q of t.pax) { const m = q.p.mesh, w = m.getAbsolutePosition(), on = inside || (w.x - p.x) ** 2 + (w.z - p.z) ** 2 < 20 * 20; if (m.isEnabled() !== on) m.setEnabled(on); }
+      const wantFar = !G.aboard || inside;
+      if (t._farOn !== wantFar) { t._farOn = wantFar; t._far.forEach(m => m.setEnabled(wantFar)); }
+      // 车厢细件（吊环 / 横杆 / 立柱 / 座位分隔条）：在车上或站到这列车门口附近才画；站台中间、站厅看过去省约 1 万三角形 / 列
+      const near = inside || (t.root.isEnabled() && t.near(p));
+      if (t.detail && t._detailOn !== near) { t._detailOn = near; t.detail.forEach(m => m.setEnabled(near)); }
+      // 车厢乘客：自己坐的车只显示 10m 内（第三人称沿车厢望会超预算）；别的车仍 12m（小美说对面淡入没问题）
+      if (t.pax && t.root.isEnabled()) for (const q of t.pax) { const m = q.p.mesh, w = m.getAbsolutePosition(), r2 = inside ? 10 * 10 : 12 * 12, on = (w.x - p.x) ** 2 + (w.z - p.z) ** 2 < r2; if (m.isEnabled() !== on) m.setEnabled(on); }
       const sh = G.zone.kind === 'street' && !G.inTunnel;
       if (t._shOn !== sh && t.shadowMeshes) { t._shOn = sh; const rl = R.sg.getShadowMap().renderList; for (const m of t.shadowMeshes) { const i = rl.indexOf(m); if (sh && i < 0) rl.push(m); else if (!sh && i >= 0) rl.splice(i, 1); } }
+    }
+    // 车厢里看不见站厅售票机 / 闸机屏 / 墙图，白画 3 次
+    if (!inXm && !(east && east.cur) && G.station) {
+      const showConcScr = !G.aboard;
+      for (const o of [G.station.tvmScr, G.station.gateScr, G.station.wallMap]) if (o && o.mesh && o.mesh.isEnabled() !== showConcScr) o.mesh.setEnabled(showConcScr);
     }
     R.setSunShadow(G.zone.kind === 'street' || G.zone.kind === 'hall');
     // 坐车到站、走出车厢 → 主角庆祝一下（两只拳头举起“努力！”）
