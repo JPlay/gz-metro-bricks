@@ -27,8 +27,11 @@ import { drawLineCanvas, networkSVG } from '../ui/netmap.js';
 import { buildFoodStreet } from '../game/food-street.js';
 const B = window.BABYLON;
 
-/** 街面 / 地下分组显示的车站（按 signature） */
-const SPLIT_ZONES = new Set(['sysy']);
+/** 街面 / 地下分组显示的车站（按 signature）：纪念堂；烈士陵园（memorial，街面纪念碑 + 行道树 7 万多三角形，站台上不用画）；
+ *  公园前（park，两层站台：另外再把 2 号线站台层单独成组，见 zoneVis） */
+const SPLIT_ZONES = new Set(['sysy', 'memorial', 'park']);
+/** 用低面数行道树 / 路灯的车站（只有纪念堂；烈士陵园 / 公园前分组后街面不变样） */
+const LITE_DECOR = new Set(['sysy']);
 export const YC = -6, HALL_X = 46, TUNNEL_X = 140, TRACK_OFF = 7.6, PSD_OFF = 6, WALL_OFF = 10.6;
 export const MAIN = { y: -12, zc: 14 }, GYQ2 = { y: -22, zc: 44 };
 export const SPAWN = { x: 0, y: 0, z: -48, yaw: 0 };
@@ -77,25 +80,31 @@ export class Station {
     //   通道并进街面组：站厅里只能透过通道口看到通道，而那时街面组本来就开着；通道单独成组每个桶要多一次绘制。
     //   纪念堂站的街面很重（园区外的行道树、路灯、骑楼……），站在街上时地下那 1 万多个三角形不用画
     const split = SPLIT_ZONES.has(this.s.signature);
-    k.lite = split; // 同一批场景顺带用低面数的行道树 / 路灯（decor.js）
+    k.lite = LITE_DECOR.has(this.s.signature); // 纪念堂顺带用低面数的行道树 / 路灯（decor.js）
     this.street(); this.passage(); if (split) k.group('street', { name: 'mouth', test: mouthVisible });
     this.concourse();
-    this.platforms.forEach(p => this.platform(p));
+    // 两层站台的分区车站（公园前）：under = 站厅 + 1 号线站台；deep = 2 号线站台层；xfer = 换乘通道 / 楼梯 / 导向（地下都开）。
+    //   1 号线站台 / 车上看不到 2 号线那层（不在正下方、隔着楼板），整层不画；2 号线站台上反过来不画站厅和 1 号线站台
+    const deep = split && this.platforms.length > 1;
+    this.platforms.forEach((p, i) => { this.platform(p); if (deep && i === 0) k.group('under'); });
+    if (deep) k.group('deep');
     if (this.platforms.length > 1) this.transfer();
     if (this.s.attraction) this.sysyWayfinding();
-    k.finish(true, 'under');
+    k.finish(true, deep ? 'xfer' : 'under');
     // mouth 与 street 完整几何互斥：默认只开 street，站厅 zoneVis 再按需开 mouth
     if (k.groupNodes && k.groupNodes.mouth) k.groupNodes.mouth.setEnabled(false);
     // 扶梯踏步 / 闸机扇门 / PSD 门扇是 createInstance，原先挂在 root 上，under 关掉后仍可能进视锥白画；并进 under 组
     const und = k.groupNodes && k.groupNodes.under;
     if (und) {
-      const adopt = m => { if (m && m.parent !== und) m.parent = und; };
-      for (const src of Object.values(this._stepSrc || {})) adopt(src);
-      for (const esc of this.escalators) for (const st of esc.steps) adopt(st);
-      for (const src of Object.values(this._psdSrc || {})) adopt(src);
-      for (const st of this.psd) for (const l of st.leaves) adopt(l);
+      // 两层站台：2 号线那层（y < -17）的实例并进 deep；实例的源网格放在地下一直开着的 xfer（否则只开 deep 时源网格被关、实例跟着不画）
+      const GN = k.groupNodes, srcG = GN.xfer || und;
+      const adopt = (m, g = und) => { if (m && m.parent !== g) m.parent = g; }, lv = y => GN.deep && y < -17 ? GN.deep : und;
+      for (const src of Object.values(this._stepSrc || {})) adopt(src, srcG);
+      for (const esc of this.escalators) for (const st of esc.steps) adopt(st, lv(Math.min(esc.y0, esc.y1)));
+      for (const src of Object.values(this._psdSrc || {})) adopt(src, srcG);
+      for (const st of this.psd) for (const l of st.leaves) adopt(l, lv(st.y));
       for (const g of this.gates) for (const fl of g.flaps) adopt(fl.pv);
-      if (this._flapSrc) adopt(this._flapSrc);
+      if (this._flapSrc) adopt(this._flapSrc, srcG);
     }
     if (this.park) this.park.finish();
     this.root = k.root;
@@ -995,6 +1004,13 @@ export class Station {
     let under = p.y < -1 || (nearStair && (!cam || cam.isInFrustum(portal)));
     // 通道/楼梯几何在 street 组：通道里必须开 street，不能同时开 under（否则 90k+）；走出通道进站厅后再开 under
     if (inPassage) under = false;
+    // 两层站台（公园前）：deep（2 号线站台层）只在换乘通道往下（y < -14）才开；人在 2 号线站台 / 下半段楼梯上时关掉 under（站厅 + 1 号线站台）
+    if (G.deep) {
+      const deepOn = under && p.y < -14, onL2 = p.y < -18.5 && p.z > 30;
+      if (G.deep.isEnabled(false) !== deepOn) G.deep.setEnabled(deepOn);
+      if (G.xfer.isEnabled(false) !== under) G.xfer.setEnabled(under);
+      if (onL2) under = false;
+    }
     if (G.under && G.under.isEnabled(false) !== under) G.under.setEnabled(under);
     if (G.street && G.street.isEnabled(false) !== streetOn) G.street.setEnabled(streetOn);
     if (G.mouth && G.mouth.isEnabled(false) !== mouthOnly) G.mouth.setEnabled(mouthOnly);
