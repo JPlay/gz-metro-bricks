@@ -37,6 +37,7 @@ export const MAIN = { y: -12, zc: 14 }, GYQ2 = { y: -22, zc: 44 };
 // 公园前换乘通道：z < XS（楼梯井北墙那条线）的楼梯脚归 under 组；z XS ~ ZS 那段归 xfer；z > ZS（拼桥、通道北段、2 号线楼梯 / 竖井）归 deep（见 transferL1 / transfer / zoneVis）
 //   ZS：1 号线站台层透过换乘楼梯洞最远只看得到通道 z ≈ 23；2 号线站台 / 下半段楼梯上透过竖井最远看到 z ≈ 30（都按几何算过），中间留余量
 const XS = 16.3, ZS = 26;
+const GN_DEEP = k => !!(k.groupNodes && k.groupNodes.deep);
 export const SPAWN = { x: 0, y: 0, z: -48, yaw: 0 };
 /** 售票机位置（站厅，安检和闸机之间） */
 export const TVM_XS = [-8.6, -7.4, -6.2], TVM_Z = -6.4;
@@ -118,6 +119,10 @@ export class Station {
       // 换乘通道里的拼桥（z 26~33，桥板 / 桥上色带是实例，挂在 root 下的 pivot 上）：并进 deep（通道北段），站厅 / 1 号线站台层一起不画
       if (GN.deep && this.bridge) for (const t of this.bridge.tiles) adopt(t.pivot, GN.deep);
     }
+    // 街面专属、挂在 root 上的网格（Penrose 雕塑、美食店招牌图集）：只在 street / mouth 开着时画（以前地下各处镜头视锥碰到就白画 1~2 次）
+    this._streetOnly = k.root.getChildMeshes(true).filter(m => m.name === 'penrose' || m.name.startsWith('foodSigns-'));
+    // 公园前换乘通道里看不见的东西（见 zoneVis 的 corr）：PSD 门扇 / 扶梯踏步 / 闸机扇门实例、站台 PIDS 屏
+    if (GN_DEEP(k)) this._corrNodes = [...this.psd.flatMap(st => st.leaves), ...this.escalators.flatMap(e => e.steps), ...this.gates.flatMap(g => g.flaps.map(fl => fl.pv)), ...this.pids.map(pd => pd.mesh)].filter(Boolean);
     if (this.park) this.park.finish();
     this.root = k.root;
   }
@@ -1059,10 +1064,22 @@ export class Station {
       //   而且得站到洞口附近（镜头 x < 2、z 4~24）；其他时候整组关，省 ~12 次绘制（1 号线站台往西看 57 → ~45）。
       //   2 号线站台 / 下半段楼梯上（onL2）透过竖井最远只看到通道 z ≈ 30，南段整组关（2 号线站台往西看 51 → ~42）；通道北段 / 2 号线楼梯在 deep 里
       const c = cam && cam.globalPosition, nearHole = !c || (c.x < 2 && c.z > 4 && c.z < 24);
-      const xferOn = under && !onL2 && (p.y < -12.3 || nearHole);
+      //   车上（this.aboard，main.js 每帧回填）：1 号线 A 侧车在洞口南边 6 m、隔着车窗 + 屏蔽门，看不到通道南段（B 侧车在洞口北边，视线朝南往下更不可能）；
+      //   以前进站第三人称镜头 x < 2 时 xfer 跟着开，白画 8 次（公园前进站 54 → ~46）
+      const xferOn = under && !onL2 && (p.y < -12.3 || (nearHole && !this.aboard));
       if (G.xfer.isEnabled(false) !== xferOn) G.xfer.setEnabled(xferOn);
       if (onL2) under = false;
+      // corr：人和镜头都在换乘通道里（x -24.5 ~ -18.5、楼板 -17 到顶板 -14 之间、楼梯脚以北）。通道四面是墙，只有两头的楼梯口透得出去：
+      //   南头 1 号线楼梯洞：镜头 z < 19.5 且视锥碰到楼梯脚 / 楼梯井时，才可能斜着往上透过站台楼板洞看到一条 A 侧车顶 / 屏蔽门；
+      //   北头 2 号线楼梯竖井：镜头 z > 39.5 且视锥碰到竖井时，才可能顺着竖井看到 2 号线站台远处。
+      //   其余时候列车（main.js 用 layerMask 跳过）、PSD 门扇、扶梯踏步、闸机扇门、站台 PIDS 屏都看不见；以前通道里白画 ~20 次（北段朝南 68、南段 60）
+      const inC = q => q.x > -24.5 && q.x < -18.5 && q.y > -17.6 && q.y < -13.4 && q.z > XS;
+      const foot = this._zvFoot || (this._zvFoot = new B.BoundingInfo(new B.Vector3(-24.3, -17.2, 11.6), new B.Vector3(-5.8, -12, 16.4)));
+      const shaft = this._zvShaft || (this._zvShaft = new B.BoundingInfo(new B.Vector3(-19.2, GYQ2.y, 40.6), new B.Vector3(-5.5, -13.7, 45.4)));
+      const corr = !!c && inC(p) && inC(c) && !(c.z < 19.5 && cam.isInFrustum(foot)) && !(c.z > 39.5 && cam.isInFrustum(shaft));
+      if (corr !== !!this._corr) { this._corr = corr; for (const n of this._corrNodes || []) n.setEnabled(!corr); }
     }
+    if (this._streetOnly) { const on = streetOn || mouthOnly; if (this._streetOnlyOn !== on) { this._streetOnlyOn = on; for (const m of this._streetOnly) m.setEnabled(on); } }
     if (G.under && G.under.isEnabled(false) !== under) G.under.setEnabled(under);
     if (G.street && G.street.isEnabled(false) !== streetOn) G.street.setEnabled(streetOn);
     if (G.mouth && G.mouth.isEnabled(false) !== mouthOnly) G.mouth.setEnabled(mouthOnly);
@@ -1072,6 +1089,7 @@ export class Station {
    * 分区车站（纪念堂）镜头视锥不含这个洞时返回 true → main.js 用 layerMask 跳过列车网格（站厅背对楼梯时省掉两列车）。
    */
   trainsHidden(zone, cam) {
+    if (this._corr && zone.kind === 'transfer') return true;   // 换乘通道里（见 zoneVis 的 corr）
     if (!this.kit.groupNodes || !cam || zone.kind !== 'concourse') return false;
     const hole = this._zvHole || (this._zvHole = new B.BoundingInfo(new B.Vector3(-1, YC - 1.3, 10), new B.Vector3(15, YC + 0.1, 18)));
     return !cam.isInFrustum(hole);

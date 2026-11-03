@@ -233,6 +233,7 @@ export async function start() {
     const aboardGz = !(east && east.cur) && !inXm && metro.trains.some(t => t.root.isEnabled() && t.contains(p));
     const aboardXm = inXm && xmMetro.trains.some(t => t.root.isEnabled() && t.contains(p));
     G.aboard = aboardGz || aboardXm || G.inTunnel;
+    if (G.station) G.station.aboard = G.aboard;   // 车站分区（公园前 xfer 组）要知道人在不在车上，见 Station.zoneVis
     // 在厦门地铁里 G.code 是厦门站码；回到广州（坐动车回来时广州站不重建）要换回广州站码，否则 STATIONS[G.code] 为空，HUD 每帧报错、游戏卡死
     if (!inXm && G.gzCode) G.code = G.gzCode;
     if (G.inTunnel) G.zone = { kind: 'tunnel' };
