@@ -1070,13 +1070,15 @@ export class Station {
       if (G.xfer.isEnabled(false) !== xferOn) G.xfer.setEnabled(xferOn);
       if (onL2) under = false;
       // corr：人和镜头都在换乘通道里（x -24.5 ~ -18.5、楼板 -17 到顶板 -14 之间、楼梯脚以北）。通道四面是墙，只有两头的楼梯口透得出去：
-      //   南头 1 号线楼梯洞：镜头 z < 19.5 且视锥碰到楼梯脚 / 楼梯井时，才可能斜着往上透过站台楼板洞看到一条 A 侧车顶 / 屏蔽门；
+      //   南头 1 号线楼梯洞：镜头 z < 19.5 且视锥碰到站台楼板上的楼梯洞时，才可能斜着往上透过站台楼板洞看到一条 A 侧车顶 / 屏蔽门；
       //   北头 2 号线楼梯竖井：镜头 z > 39.5 且视锥碰到竖井时，才可能顺着竖井看到 2 号线站台远处。
       //   其余时候列车（main.js 用 layerMask 跳过）、PSD 门扇、扶梯踏步、闸机扇门、站台 PIDS 屏都看不见；以前通道里白画 ~20 次（北段朝南 68、南段 60）
-      const inC = q => q.x > -24.5 && q.x < -18.5 && q.y > -17.6 && q.y < -13.4 && q.z > XS;
-      const foot = this._zvFoot || (this._zvFoot = new B.BoundingInfo(new B.Vector3(-24.3, -17.2, 11.6), new B.Vector3(-5.8, -12, 16.4)));
+      //   人要在楼梯脚以北（z > XS）；镜头可以退到楼梯脚下（z > 11.6，第三人称在通道南头朝北时就退到这里）。
+      //   往上透出去只有 1 号线站台楼板上那个楼梯洞（hole 盒）：视锥碰不到洞口就什么都透不出去
+      const inC = (q, z0) => q.x > -24.5 && q.x < -18.5 && q.y > -17.6 && q.y < -13.4 && q.z > z0;
+      const foot = this._zvFoot || (this._zvFoot = new B.BoundingInfo(new B.Vector3(-20.3, -12.7, 11.7), new B.Vector3(-5.8, -11.3, 16.4)));
       const shaft = this._zvShaft || (this._zvShaft = new B.BoundingInfo(new B.Vector3(-19.2, GYQ2.y, 40.6), new B.Vector3(-5.5, -13.7, 45.4)));
-      const corr = !!c && inC(p) && inC(c) && !(c.z < 19.5 && cam.isInFrustum(foot)) && !(c.z > 39.5 && cam.isInFrustum(shaft));
+      const corr = !!c && inC(p, XS) && inC(c, 11.6) && !(c.z < 19.5 && cam.isInFrustum(foot)) && !(c.z > 39.5 && cam.isInFrustum(shaft));
       if (corr !== !!this._corr) { this._corr = corr; for (const n of this._corrNodes || []) n.setEnabled(!corr); }
     }
     if (this._streetOnly) { const on = streetOn || mouthOnly; if (this._streetOnlyOn !== on) { this._streetOnlyOn = on; for (const m of this._streetOnly) m.setEnabled(on); } }
