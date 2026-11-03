@@ -94,17 +94,34 @@ export class Render {
     this.refreshProbes();
   }
   /** 反射探针：每个车站静态渲染一次（站厅 / 站台各一个），带盒投影，给抛光地面做“镜面反射” */
-  makeProbe(name, center, size, renderList, mat) {
+  makeProbe(name, center, size, renderList, mat, onDone) {
     const p = new B.ReflectionProbe(name, 256, this.scene, true, false);
     p.position.copyFrom(center); p.refreshRate = B.RenderTargetTexture.REFRESHRATE_RENDER_ONCE;
     renderList.forEach(m => p.renderList.push(m));
     p.cubeTexture.boundingBoxSize = size; p.cubeTexture.boundingBoxPosition = center.clone();
-    this.probes.push({ p, mat });
-    if (this.useProbes) mat.reflectionTexture = p.cubeTexture;
+    const e = { p, mat, onDone }; this.probes.push(e);
+    if (this.useProbes) { mat.reflectionTexture = p.cubeTexture; this.bakeProbe(e); }
     return p;
   }
-  refreshProbes() {
-    for (const { p, mat } of this.probes) { mat.reflectionTexture = this.useProbes ? p.cubeTexture : null; if (this.useProbes) p.cubeTexture.resetRefreshCounter(); }
+  /** 立刻拍：挂进 scene.customRenderTargets，六个面拍完就摘掉。以前只有抛光地面进视锥时才拍（材质 RTT），
+   *  隧道里建好的下一站要等进站第一帧才拍，那一帧 245 次绘制；现在在隧道里（黑的）就拍完 */
+  bakeProbe(e) {
+    const t = e.p.cubeTexture, crt = this.scene.customRenderTargets;
+    if (e.obs) t.onAfterRenderObservable.remove(e.obs);
+    if (!crt.includes(t)) crt.push(t);
+    e.obs = t.onAfterRenderObservable.add(face => {
+      if (face !== 5) return;
+      const i = crt.indexOf(t); if (i >= 0) crt.splice(i, 1);
+      t.onAfterRenderObservable.remove(e.obs); e.obs = null;
+      if (e.onDone) { const f = e.onDone; e.onDone = null; f(); }
+    });
   }
-  disposeProbes() { for (const { p, mat } of this.probes) { mat.reflectionTexture = null; p.dispose(); } this.probes = []; }
+  refreshProbes() {
+    for (const e of this.probes) { const { p, mat } = e; mat.reflectionTexture = this.useProbes ? p.cubeTexture : null; if (this.useProbes) { p.cubeTexture.resetRefreshCounter(); this.bakeProbe(e); } }
+  }
+  disposeProbes() {
+    const crt = this.scene.customRenderTargets;
+    for (const { p, mat } of this.probes) { const i = crt.indexOf(p.cubeTexture); if (i >= 0) crt.splice(i, 1); mat.reflectionTexture = null; p.dispose(); }
+    this.probes = [];
+  }
 }

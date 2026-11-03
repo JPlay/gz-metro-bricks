@@ -37,21 +37,31 @@ TICK = """window.__startTick = (speed) => { const g=__game, e=g.engine, sc=g.sce
   const run = () => { if (window.__tick) return; window.__tick = setInterval(() => { const t0=performance.now(); let n=0; while (n < (speed||6) && performance.now()-t0 < 60) { try { sc.render(); } catch(err) { window.__tickErr = String(err); } n++; } }, 20); };
   window.__hiShot = () => { if (window.__tick) { clearInterval(window.__tick); window.__tick = null; } e.setHardwareScalingLevel(1); sc.render(); };
   window.__loShot = () => { e.setHardwareScalingLevel(4); run(); }; run(); }"""
-TOP = """(() => { const s=__game.scene, out={}; const am=s.getActiveMeshes(); for (let i=0;i<am.length;i++) { const m=am.data[i]; const n=(m.parent&&m.parent.name?m.parent.name.replace(/^st-[a-z0-9]+/,'st')+'/':'')+(m.name||'?'); const t=(m.getTotalIndices? m.getTotalIndices():0)/3; out[n]=(out[n]||0)+Math.round(t); }
-  return Object.entries(out).sort((a,b)=>b[1]-a[1]).slice(0,12); })()"""
-# 逐帧采样（挂 scene.onAfterRender：__startTick 停了引擎渲染循环、自己调 scene.render()，engine.onEndFrame 不会触发）：按 (站, 隧道, 车状态) 分桶记最大值；超预算帧记前 12 帧的最贵网格
-FRAMES = """(() => { if (window.__fw) return; window.__fw = {on:false, b:{}, over:[]};
-  __game.scene.onAfterRenderObservable.add(() => { const W=window.__fw; if (!W.on) return; const g=__game, e=g.engine, d=(e._drawCalls&&e._drawCalls.current)||0, tr=Math.round(g.scene.getActiveIndices()/3);
-    const s=g.state(), m=g.metro, sl=m.ride&&m.ride.slot; const k=s.code+'|'+(s.inTunnel?'tun':(m.ride?m.ride.phase:'-'))+'|'+(sl?sl.state:'-')+'|'+g.player.view;
+# 网格清单：名字 → [三角形, 估计绘制数（子网格数；实例只算源网格一次）]。全量（不截前 12），超标时好逐个对
+MESHES = """((g) => { const am=g.scene.getActiveMeshes(), o={}, seen=new Set(); for (let i=0;i<am.length;i++) { const x=am.data[i]; const src=x.sourceMesh||x;
+    const n=(src.parent&&src.parent.name?src.parent.name.replace(/^st-[a-z0-9]+/,'st')+'/':'')+(src.name||'?')+(x.sourceMesh?'[inst]':''); const e=o[n]||(o[n]=[0,0]);
+    e[0]+=Math.round((x.getTotalIndices?x.getTotalIndices():0)/3); if (!seen.has(src)) { seen.add(src); e[1]+=(src.subMeshes?src.subMeshes.length:1); } }
+  return Object.entries(o).sort((a,b)=>b[1][1]-a[1][1]||b[1][0]-a[1][0]); })(__game)"""
+TOP = MESHES
+# 逐帧采样（挂 scene.onAfterRender：__startTick 停了引擎渲染循环、自己调 scene.render()，engine.onEndFrame 不会触发）：按 (站, 隧道, 车状态) 分桶记最大值；
+#   超预算帧每个桶记前 3 帧的全量网格清单。反射探针拍照的那一帧（RENDER_ONCE，每站一次）单独记成 '…|bake' 桶，不算进预算，但照样报出来
+FRAMES = """(() => { if (window.__fw) return; window.__fw = {on:false, b:{}, over:[], ob:{}, bakes:[]};
+  const sc=__game.scene, hk=t => { if (!t || t.__bk || !t.onAfterRenderObservable) return; t.__bk=1; t.onAfterRenderObservable.add(() => { window.__fw.bake=1; }); };
+  sc.onBeforeRenderTargetsRenderObservable.add(() => { (sc.reflectionProbes||[]).forEach(p => hk(p.cubeTexture)); });
+  sc.onAfterRenderObservable.add(() => { const W=window.__fw, bk=W.bake; W.bake=0; if (!W.on) return; const g=__game, e=g.engine, d=(e._drawCalls&&e._drawCalls.current)||0, tr=Math.round(g.scene.getActiveIndices()/3);
+    const s=g.state(), m=g.metro, sl=m.ride&&m.ride.slot; const k=s.code+'|'+(s.inTunnel?'tun':(m.ride?m.ride.phase:'-'))+'|'+(sl?sl.state:'-')+'|'+g.player.view+(bk?'|bake':'');
     const B=W.b[k]||(W.b[k]={n:0,d:0,t:0}); B.n++; if (d>B.d) B.d=d; if (tr>B.t) B.t=tr;
-    if ((d>50||tr>90000) && W.over.length<12) { const am=g.scene.getActiveMeshes(), o={}; for (let i=0;i<am.length;i++){const x=am.data[i]; const n=(x.parent&&x.parent.name?x.parent.name.replace(/^st-[a-z0-9]+/,'st')+'/':'')+x.name; o[n]=(o[n]||0)+Math.round((x.getTotalIndices?x.getTotalIndices():0)/3);} W.over.push({k, d, tr, pos:s.pos, top:Object.entries(o).sort((a,b)=>b[1]-a[1]).slice(0,8)}); } }); })()"""
+    if (bk) W.bakes.push({k, d, tr, pos:s.pos});
+    if ((d>50||tr>90000) && (W.ob[k]=(W.ob[k]||0)+1) <= 3) W.over.push({k, d, tr, pos:s.pos, yaw:g.player.yaw, top:""" + MESHES + """}); }); })()"""
 async def fw_start(pg): await pg.evaluate("(window.__fw.b={}, window.__fw.over=[], window.__fw.on=true)")
 async def fw_stop(pg, name):
-    w = await pg.evaluate("(() => { const W=window.__fw; W.on=false; return {b:W.b, over:W.over}; })()")
+    w = await pg.evaluate("(() => { const W=window.__fw; W.on=false; return {b:W.b, over:W.over, bakes:W.bakes}; })()")
     R['frames'][name] = w; save()
-    mx = {'draws': max([v['d'] for v in w['b'].values()] or [0]), 'tris': max([v['t'] for v in w['b'].values()] or [0])}
+    nb = {k: v for k, v in w['b'].items() if not k.endswith('|bake')}
+    mx = {'draws': max([v['d'] for v in nb.values()] or [0]), 'tris': max([v['t'] for v in nb.values()] or [0])}
+    log('bakes', name, w.get('bakes'))
     log('frames', name, mx, {k: (v['n'], v['d'], v['t']) for k, v in w['b'].items()})
-    for o in w['over'][:4]: log('  over', o['k'], o['d'], o['tr'], o['top'][:5])
+    for o in w['over'][:6]: log('  over', o['k'], o['d'], o['tr'], o['top'][:8])
     return mx
 async def view(pg, v):
     if await pg.evaluate('__game.player.view') != v: await pg.evaluate('void __game.toggleView()')
@@ -152,7 +162,7 @@ async def ride_leg(pg, name, to):
     async def snap():   # 逐帧采样中途也每 20 秒写一次 json（被杀也留得下）
         while True:
             await asyncio.sleep(20)
-            try: R['frames'][name] = await pg.evaluate("(() => { const W=window.__fw; return {b:W.b, over:W.over, partial:true}; })()"); save()
+            try: R['frames'][name] = await pg.evaluate("(() => { const W=window.__fw; return {b:W.b, over:W.over, bakes:W.bakes, partial:true}; })()"); save()
             except Exception: pass
     sn = asyncio.ensure_future(snap())
     try:

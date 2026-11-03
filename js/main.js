@@ -92,9 +92,12 @@ export async function start() {
     st.kit.meshes.forEach(m => { m.receiveShadows = m.name !== 'glow' && m.name !== 'halo' && m.name !== 'shade'; });
     // 抛光地面的反射探针（站厅 / 站台各一个，静态渲染一次，盒投影）
     const list = st.probeMeshes(), byB = st.kit.byBucket;
-    if (byB.floor) R.makeProbe('probeHall', new B.Vector3(0, YC + 2.2, 3), new B.Vector3(36, 4.4, 46), list, byB.floor.material);
-    if (byB['floor@P']) R.makeProbe('probeP', new B.Vector3(0, MAIN.y + 2.1, MAIN.zc), new B.Vector3(96, 4.2, 12), list, byB['floor@P'].material);
-    if (byB['floor@P2']) R.makeProbe('probeP2', new B.Vector3(0, GYQ2.y + 2.1, GYQ2.zc), new B.Vector3(96, 4.2, 12), list, byB['floor@P2'].material);
+    // 探针拍完之前 zoneVis 保持各组全开（隧道里建站时各组本来会整组关掉，拍出来是空的）
+    st.probeHold = 0; const done = () => { st.probeHold--; };
+    const mk = (...a) => { if (R.useProbes) st.probeHold++; R.makeProbe(...a, done); };
+    if (byB.floor) mk('probeHall', new B.Vector3(0, YC + 2.2, 3), new B.Vector3(36, 4.4, 46), list, byB.floor.material);
+    if (byB['floor@P']) mk('probeP', new B.Vector3(0, MAIN.y + 2.1, MAIN.zc), new B.Vector3(96, 4.2, 12), list, byB['floor@P'].material);
+    if (byB['floor@P2']) mk('probeP2', new B.Vector3(0, GYQ2.y + 2.1, GYQ2.zc), new B.Vector3(96, 4.2, 12), list, byB['floor@P2'].material);
     st.ticketPolicy = tickets;
     G.station = st; G.code = code; G.gzCode = code; G.welcomed = false;
     metro.attach(st);

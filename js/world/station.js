@@ -82,7 +82,8 @@ export class Station {
     // 街面（含出入口通道）/ 地下（站厅、站台、换乘）分成两组网格，按玩家位置开关（见 zoneVis）。
     //   通道并进街面组：站厅里只能透过通道口看到通道，而那时街面组本来就开着；通道单独成组每个桶要多一次绘制。
     //   纪念堂站的街面很重（园区外的行道树、路灯、骑楼……），站在街上时地下那 1 万多个三角形不用画
-    const split = SPLIT_ZONES.has(this.s.signature);
+    //   没有招牌布景的通用站（西门口等）布局和烈士陵园一样，也分区：以前整站一个网格，站台 / 车上也画街面楼房树木（西门口站台 54 次 / 140k）
+    const split = SPLIT_ZONES.has(this.s.signature) || !this.s.signature;
     k.lite = LITE_DECOR.has(this.s.signature); // 纪念堂顺带用低面数的行道树 / 路灯（decor.js）
     this.street(); this.passage(); if (split) k.group('street', { name: 'mouth', test: mouthVisible });
     this.concourse();
@@ -1029,7 +1030,8 @@ export class Station {
    *   mouth 子组 = 仅站厅里镜头对着通道口时启用（与街面组互斥）。前几帧全开（反射探针只渲染一次）。
    */
   zoneVis(p, cam) {
-    if ((this._zvF = (this._zvF || 0) + 1) < 4) return;
+    // probeHold：反射探针还没拍完（main.js 建站时挂进 customRenderTargets，拍完减一）时保持全开，最多等 30 帧
+    if ((this._zvF = (this._zvF || 0) + 1) < 4 || (this.probeHold > 0 && this._zvF < 30)) return;
     // 隧道里（列车在 y = -300 跑区间，下一站在隧道里刚建好）：车站各组整组关掉。前 3 帧全开已经让反射探针拍完（RENDER_ONCE），
     //   以前 p.y < -1 让 under 组在隧道里一直开着，镜头 420 m 远裁剪面够得着上面的车站，白画几万三角形
     if (p.y < -100) { for (const n of Object.values(this.kit.groupNodes)) if (n.isEnabled(false)) n.setEnabled(false); return; }
