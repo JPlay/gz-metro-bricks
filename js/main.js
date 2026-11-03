@@ -260,10 +260,11 @@ export async function start() {
       const sh = G.zone.kind === 'street' && !G.inTunnel;
       if (t._shOn !== sh && t.shadowMeshes) { t._shOn = sh; const rl = R.sg.getShadowMap().renderList; for (const m of t.shadowMeshes) { const i = rl.indexOf(m); if (sh && i < 0) rl.push(m); else if (!sh && i >= 0) rl.splice(i, 1); } }
     }
-    // 车厢里看不见站厅售票机 / 闸机屏 / 墙图，白画 3 次
+    // 车厢里 / 站台层（y < -10.5，和站台人群同一条线）看不见站厅售票机 / 闸机屏 / 墙图 / 安检行李（3 个）/ 安检门灯条：
+    //   安检在站厅入口那头，离楼扶梯洞 25 m 以上，从站台透过洞口看不到站厅地面上的东西；以前车上 / 站台上白画 4~7 次
     if (!inXm && !(east && east.cur) && G.station) {
-      const showConcScr = !G.aboard;
-      for (const o of [G.station.tvmScr, G.station.gateScr, G.station.wallMap]) if (o && o.mesh && o.mesh.isEnabled() !== showConcScr) o.mesh.setEnabled(showConcScr);
+      const showConcScr = !G.aboard && p.y > -10.5, S = G.station, sec = S.security;
+      for (const m of [S.tvmScr && S.tvmScr.mesh, S.gateScr && S.gateScr.mesh, S.wallMap && S.wallMap.mesh, ...(sec ? [...sec.bags, sec.arch] : [])]) if (m && m.isEnabled(false) !== showConcScr) m.setEnabled(showConcScr);
     }
     R.setSunShadow(G.zone.kind === 'street' || G.zone.kind === 'hall');
     // 坐车到站、走出车厢 → 主角庆祝一下（两只拳头举起“努力！”）

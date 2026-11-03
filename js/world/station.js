@@ -113,6 +113,8 @@ export class Station {
       // 站厅里的安检行李 / 安检门灯条 / 售票机屏 / 闸机屏 / 墙上线路图：以前挂在 root 上，2 号线站台（under 关）上镜头视锥碰到就白画 7 次
       if (this.security) { for (const b of this.security.bags) adopt(b); adopt(this.security.arch); }
       for (const o of [this.tvmScr, this.gateScr, this.wallMap]) if (o && o.mesh) adopt(o.mesh);
+      // 站台 PIDS 屏（动态贴图，一层一个网格）：以前挂 root，公园前 1 号线站台 / 车上也画 2 号线那层的屏（隔着楼板），反之亦然
+      for (const pd of this.pids) adopt(pd.mesh, lv(pd.P.y));
       // 换乘通道里的拼桥（z 26~33，桥板 / 桥上色带是实例，挂在 root 下的 pivot 上）：并进 deep（通道北段），站厅 / 1 号线站台层一起不画
       if (GN.deep && this.bridge) for (const t of this.bridge.tiles) adopt(t.pivot, GN.deep);
     }
