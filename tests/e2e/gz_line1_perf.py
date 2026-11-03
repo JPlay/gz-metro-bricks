@@ -3,7 +3,7 @@
 #   gyq2   公园前 2 号线站台（y -22, zc 44），两侧车停站，4 个朝向；顺带 1 号线站台
 #   ride   西门口上车（走上去）→ 出站 → 隧道（这时重建公园前）→ 公园前进站停站：逐帧采样（第三人称），
 #          到站后车上 4 个朝向第一 / 第三人称；再坐一段 公园前 → 农讲所（第一人称逐帧采样）
-# 用法：python tests/e2e/gz_line1_perf.py BASE parts(lsly,gyq2,ride) OUTJSON [SHOTDIR]
+# 用法：python tests/e2e/gz_line1_perf.py BASE parts(lsly,gyq2,ride | 小段 gyqL2,gyqL1,ride1) OUTJSON [SHOTDIR]
 # 游戏时钟：和 fz_perf_probe 一样 setDtMax(0.25) + 自己驱动渲染（tick），等待全部按游戏时间。
 import asyncio, sys, json, os, time, math
 sys.path.insert(0, os.path.dirname(__file__))
@@ -80,7 +80,9 @@ async def part_lsly(pg):
     await pg.evaluate('void __game.player.spawn(0, -11.95, 14, Math.PI/2)'); await gsleep(pg, 2)
     await spot(pg, 'lsly-platform-mid', shots=(('third', 0),))
     await pg.evaluate("window.__hold=[]")
-async def part_gyq2(pg):
+async def part_gyq2(pg): await part_gyqL2(pg); await part_gyqL1(pg, boot_=False)
+# 小段（每次持锁只测一两个点位用）：gyqL2 = 2 号线站台两处；gyqL1 = 1 号线站台
+async def part_gyqL2(pg):
     await boot(pg, '?q=1&start=gyq&line=2&char=mingming')
     ok('gyq2:allDwell', await all_dwell(pg, 2))
     await pg.evaluate('void __game.player.spawn(18.6, -21.95, 42.6, Math.PI/2)'); await gsleep(pg, 2)
@@ -88,9 +90,11 @@ async def part_gyq2(pg):
     await pg.evaluate('void __game.player.spawn(0, -21.95, 44, Math.PI/2)'); await gsleep(pg, 2)
     await spot(pg, 'gyq-L2-platform-mid', shots=(('third', 0),))
     await pg.evaluate("window.__hold=[]")
+async def part_gyqL1(pg, boot_=True):
+    if boot_: await boot(pg, '?q=1&start=gyq&line=1&char=mingming')
     ok('gyq1:allDwell', await all_dwell(pg, 1))
     await pg.evaluate('void __game.player.spawn(18.6, -11.95, 12.6, Math.PI/2)'); await gsleep(pg, 2)
-    await spot(pg, 'gyq-L1-platform', shots=(('third', 0),))
+    await spot(pg, 'gyq-L1-platform', shots=(('third', 0), ('third', 2)))
     await pg.evaluate("window.__hold=[]")
 async def ride_leg(pg, name, to):
     """已在车上、车停站：逐帧采样直到到 to 站停站开门"""
@@ -98,7 +102,8 @@ async def ride_leg(pg, name, to):
     okr = await wait(pg, f"(() => {{ const s=__game.state(), m=__game.metro, sl=m.ride&&m.ride.slot; return s.code=='{to}' && !s.inTunnel && sl && sl.state=='dwell'; }})()", 120)
     await pg.evaluate("window.__hold=[[__game.metro.ride.line, __game.metro.ride.step]]")
     mx = await fw_stop(pg, name); ok(name + ':arrived', okr); ok(name + ':everyFrameBudget', mx['draws'] <= 50 and mx['tris'] <= 90000, mx)
-async def part_ride(pg):
+async def part_ride1(pg): await part_ride(pg, legs=1)
+async def part_ride(pg, legs=2):
     await boot(pg, '?q=1&start=xmk&line=1&char=mingming')
     await pg.evaluate(HOLD); await view(pg, 'third')
     await pg.evaluate('void __game.player.spawn(18.6, -11.95, 12.6, 0)'); await gsleep(pg, 1)
@@ -106,7 +111,8 @@ async def part_ride(pg):
     z = await pg.evaluate("(()=>{const m=__game.metro; const s=m.slots.find(o=>o.train.root.isEnabled()&&m.playerOn(o.train)); return s?s.train.root.position.z:null})()")
     if z is not None: await auto(pg, [[22.0, z]])
     await ride_leg(pg, 'ride-xmk-gyq-third', 'gyq')
-    await spot(pg, 'gyq-aboard-L1', shots=(('third', 0), ('first', 0), ('third', 3)))
+    await spot(pg, 'gyq-aboard-L1', shots=(('third', 0), ('first', 0), ('third', 3)) if legs > 1 else (('third', 0), ('first', 0)))
+    if legs < 2: await pg.evaluate("window.__hold=[]"); return
     await pg.evaluate("window.__hold=[]"); await view(pg, 'first')
     await ride_leg(pg, 'ride-gyq-njs-first', 'njs')
     await pg.evaluate("window.__hold=[]"); await view(pg, 'third')
@@ -115,7 +121,7 @@ async def main():
     b, pg, logs = await open_game(p, BASE + '?q=1&char=mingming')
     try:
       for part in PARTS:   # 每段单独 try：一段出错不影响后面几段
-        try: await {'lsly': part_lsly, 'gyq2': part_gyq2, 'ride': part_ride}[part](pg)
+        try: await {'lsly': part_lsly, 'gyq2': part_gyq2, 'ride': part_ride, 'gyqL2': part_gyqL2, 'gyqL1': part_gyqL1, 'ride1': part_ride1}[part](pg)
         except Exception as e:
           import traceback; R.setdefault('exception', {})[part] = traceback.format_exc(); log('EXC', part, repr(e)[:300]); ok(part + ':exception', False)
           try: await pg.evaluate("window.__fw && (window.__fw.on=false); window.__hold=[]")
