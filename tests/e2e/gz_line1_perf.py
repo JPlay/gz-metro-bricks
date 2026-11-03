@@ -20,9 +20,9 @@ TICK = """window.__startTick = (speed) => { const g=__game, e=g.engine, sc=g.sce
   window.__tick = setInterval(() => { const t0=performance.now(); let n=0; while (n < (speed||6) && performance.now()-t0 < 60) { try { sc.render(); } catch(err) { window.__tickErr = String(err); } n++; } }, 20); }"""
 TOP = """(() => { const s=__game.scene, out={}; const am=s.getActiveMeshes(); for (let i=0;i<am.length;i++) { const m=am.data[i]; const n=(m.parent&&m.parent.name?m.parent.name.replace(/^st-[a-z0-9]+/,'st')+'/':'')+(m.name||'?'); const t=(m.getTotalIndices? m.getTotalIndices():0)/3; out[n]=(out[n]||0)+Math.round(t); }
   return Object.entries(out).sort((a,b)=>b[1]-a[1]).slice(0,12); })()"""
-# 逐帧采样：按 (站, 隧道, 车状态) 分桶记最大值；超预算帧记前 12 帧的最贵网格
+# 逐帧采样（挂 scene.onAfterRender：__startTick 停了引擎渲染循环、自己调 scene.render()，engine.onEndFrame 不会触发）：按 (站, 隧道, 车状态) 分桶记最大值；超预算帧记前 12 帧的最贵网格
 FRAMES = """(() => { if (window.__fw) return; window.__fw = {on:false, b:{}, over:[]};
-  __game.engine.onEndFrameObservable.add(() => { const W=window.__fw; if (!W.on) return; const g=__game, e=g.engine, d=(e._drawCalls&&e._drawCalls.current)||0, tr=Math.round(g.scene.getActiveIndices()/3);
+  __game.scene.onAfterRenderObservable.add(() => { const W=window.__fw; if (!W.on) return; const g=__game, e=g.engine, d=(e._drawCalls&&e._drawCalls.current)||0, tr=Math.round(g.scene.getActiveIndices()/3);
     const s=g.state(), m=g.metro, sl=m.ride&&m.ride.slot; const k=s.code+'|'+(s.inTunnel?'tun':(m.ride?m.ride.phase:'-'))+'|'+(sl?sl.state:'-')+'|'+g.player.view;
     const B=W.b[k]||(W.b[k]={n:0,d:0,t:0}); B.n++; if (d>B.d) B.d=d; if (tr>B.t) B.t=tr;
     if ((d>50||tr>90000) && W.over.length<12) { const am=g.scene.getActiveMeshes(), o={}; for (let i=0;i<am.length;i++){const x=am.data[i]; const n=(x.parent&&x.parent.name?x.parent.name.replace(/^st-[a-z0-9]+/,'st')+'/':'')+x.name; o[n]=(o[n]||0)+Math.round((x.getTotalIndices?x.getTotalIndices():0)/3);} W.over.push({k, d, tr, pos:s.pos, top:Object.entries(o).sort((a,b)=>b[1]-a[1]).slice(0,8)}); } }); })()"""
