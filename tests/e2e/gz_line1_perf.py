@@ -137,6 +137,15 @@ async def part_gyqL1(pg, boot_=True):
     await pg.evaluate('void __game.player.spawn(18.6, -11.95, 12.6, Math.PI/2)'); await gsleep(pg, 2)
     await spot(pg, 'gyq-L1-platform', shots=(('third', 0), ('third', 2)))
     await pg.evaluate("window.__hold=[]")
+# gyqX = 换乘通道 / 楼梯洞附近（deep / xfer 拆分后的回归点）：通道北段朝南、通道南段朝北、1 号线站台楼梯洞旁朝西（镜头 x > 2，xfer 关）
+async def part_gyqX(pg):
+    await boot(pg, '?q=1&start=gyq&line=1&char=mingming')
+    await pg.evaluate('void __game.player.spawn(-21.5, -16.95, 38, Math.PI)'); await gsleep(pg, 2)
+    await spot(pg, 'gyq-xfer-north', shots=(('third', 0), ('first', 0), ('third', 2)))
+    await pg.evaluate('void __game.player.spawn(-21.5, -16.95, 20, 0)'); await gsleep(pg, 2)
+    await spot(pg, 'gyq-xfer-south', shots=(('third', 0), ('third', 2)))
+    await pg.evaluate('void __game.player.spawn(-1, -11.95, 18.6, -Math.PI/2)'); await gsleep(pg, 2)
+    await spot(pg, 'gyq-L1-hole', shots=(('third', 0), ('first', 0)))
 async def ride_leg(pg, name, to):
     """已在车上、车停站：逐帧采样直到到 to 站停站开门"""
     await fw_start(pg); okr = False
@@ -173,7 +182,7 @@ async def main():
     b, pg, logs = await open_game(p, BASE + '?q=1&char=mingming')
     try:
       for part in PARTS:   # 每段单独 try：一段出错不影响后面几段
-        try: await asyncio.wait_for({'lsly': part_lsly, 'gyq2': part_gyq2, 'ride': part_ride, 'gyqL2': part_gyqL2, 'gyqL1': part_gyqL1, 'ride1': part_ride1}[part](pg), PART_TO)
+        try: await asyncio.wait_for({'lsly': part_lsly, 'gyq2': part_gyq2, 'ride': part_ride, 'gyqL2': part_gyqL2, 'gyqL1': part_gyqL1, 'gyqX': part_gyqX, 'ride1': part_ride1}[part](pg), PART_TO)
         except asyncio.TimeoutError:
           log('TIMEOUT part', part, f'{PART_TO:.0f}s'); ok(part + ':partTimeout', False)
           try: await asyncio.wait_for(pg.evaluate("window.__fw && (window.__fw.on=false); window.__hold=[]"), 20)
