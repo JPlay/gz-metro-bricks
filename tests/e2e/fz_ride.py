@@ -82,7 +82,8 @@ async def emu_ride(pg, key, wall=1500):
         if r and r['rt'] > last_rt: last_rt, last_prog = r['rt'], time.time()
         if r: samples.append({'w': round(time.time() - t0), 'rt': r['rt'], 's': r['s'], 'v': r['v'], 'rem': r['rem'], 'phase': r['phase'], 'speed': e['speed'], 'inside': e['inside'],
                               'seated': bool(s['seat'].get('seated')), 'x': s['pos'][0], 'scn': round(await pg.evaluate('__scn.d')), 'far': r['seg']['far'], 'mid': r['seg']['mid'], 'near': r['seg']['near']})
-        await asyncio.sleep(4)
+        tb = time.time(); await asyncio.sleep(4); gap = time.time() - tb
+        if gap > 60: t0 += gap - 4; last_prog += gap - 4   # box 整机挂起（没 agent 在跑时会冻结）恢复后墙钟一下跳几十分钟：冻结时段不算进 wall/停滞判定
     await pg.evaluate(f'__game.setDtMax({DTMAX})')   # 恢复全局上限（以前误设回 0.05，之后的地铁段游戏钟只走墙钟 ~5%，L1a 240 s 墙钟内车都没出站）
     R['emu'][key] = {'samples': samples, 'wall': round(time.time() - t0), 'scn': await pg.evaluate('__scn.d')}
     log(key, 'samples', len(samples), 'wall', R['emu'][key]['wall'])
