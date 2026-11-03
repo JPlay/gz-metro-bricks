@@ -990,6 +990,9 @@ export class Station {
    */
   zoneVis(p, cam) {
     if ((this._zvF = (this._zvF || 0) + 1) < 4) return;
+    // 隧道里（列车在 y = -300 跑区间，下一站在隧道里刚建好）：车站各组整组关掉。前 3 帧全开已经让反射探针拍完（RENDER_ONCE），
+    //   以前 p.y < -1 让 under 组在隧道里一直开着，镜头 420 m 远裁剪面够得着上面的车站，白画几万三角形
+    if (p.y < -100) { for (const n of Object.values(this.kit.groupNodes)) if (n.isEnabled(false)) n.setEnabled(false); return; }
     // nearStair：只在通道中段靠近楼梯口（不是 C 口街面端），避免通道外口 street+under 双开超预算
     const G = this.kit.groupNodes, nearStair = Math.abs(p.x) < 8 && p.z < -12 && p.z > -34;
     // 站厅里只有镜头对着出入口通道口（z = -20 那个洞）时，才可能顺着楼梯看到街面；背对 / 侧对通道口时街面组整组关掉
