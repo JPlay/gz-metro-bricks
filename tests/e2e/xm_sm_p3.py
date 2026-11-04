@@ -16,6 +16,19 @@ async def both(pg, name, label, x, z, yaw, pitch=0.0, y=0.05):
   await view(pg, 'first'); await pose(pg, x, y, z, yaw, pitch); await shot(pg, name + '-1p', label + ' (1st person)'); await view(pg, 'third')
   s = await S(pg); ok(name + ':pose', s['zone'] == 'street' and abs(s['pos'][1] - y) < 1 and abs(s['pos'][2] - z) < 2)
 
+
+PEAK_ON = """() => { const g = __game, s = g.scene, e = g.engine; window.__pk = { tris: 0, draws: 0, at: null, n: 0 };
+  window.__pkObs = s.onAfterRenderObservable.add(() => { const t = Math.round(s.getActiveIndices() / 3), d = (e._drawCalls && e._drawCalls.current) || 0, P = window.__pk; P.n++;
+    if (t > P.tris) { P.tris = t; const q = g.player.position; P.at = [q.x - 4000, q.z, g.player.yaw].map(v => Math.round(v * 10) / 10); } if (d > P.draws) P.draws = d; }); }"""
+PEAK_OFF = "() => { __game.scene.onAfterRenderObservable.remove(window.__pkObs); return window.__pk; }"
+async def walk_peak(pg, name, mode, pts, pitch=-0.25):
+  # 夏花广场边走边量：每一帧记 活动三角形 / draw 的峰值（小美 是边走边看的，比固定机位更严）
+  await view(pg, mode); await pose(pg, XS + pts[0][0], 0.05, pts[0][1], 0.0, pitch)
+  await pg.evaluate(f'__game.player.pitch = {pitch}'); await pg.evaluate(PEAK_ON)
+  await auto(pg, await xb.split(pg, [[XS + x, z] for x, z in pts[1:]], 8)); d = await pg.evaluate(PEAK_OFF); await view(pg, 'third')
+  R['perf'][name] = d; log('walkPeak', name, d); ok(name + ':budget', d['n'] > 20 and d['tris'] <= xb.TRIS and d['draws'] <= xb.DRAWS)
+XIAHUA_LOOP = [[-44, 128], [-44, 160], [-44, 198], [-56, 198], [-58.6, 168], [-58.6, 152], [-56, 130], [-44, 128]]
+
 async def street(pg):
   await both(pg, 'p3-east-plaza', 'Phase III east face on 嘉禾路 + 夏花 plaza', XS - 40, 140, math.atan2(-14, 26), -0.12)
   await both(pg, 'p3-se-corner', 'Phase III rounded SE corner + skybridge 2', XS - 44, 112, math.atan2(-22, 22), -0.18)
@@ -34,6 +47,9 @@ async def main():
     s = await S(pg); ok('street', s['zone'] == 'street')
     si = await pg.evaluate('__game.xmMetro.street.info()'); log('street atlas', si); ok('streetAtlas', si['atlasOverflow'] == 0)
     await street(pg)
+    await walk_peak(pg, 'p3-xiahua-walk-3p', 'third', XIAHUA_LOOP); await walk_peak(pg, 'p3-xiahua-walk-1p', 'first', XIAHUA_LOOP)
+    if os.environ.get('PEAK_ONLY') == '1':
+      R['errors'] = errs(logs); print(json.dumps(R['perf'], ensure_ascii=False)); print('XMSMP3', 'PEAK-ONLY', [k for k, v in R['checks'].items() if not v], flush=True); await b.close(); return
     # ---- 1F 正门进三期 ----
     if await enter_main(pg, 'sm-p3'):
       I = await info(pg); o = await org(pg); SF = I['shopFloors']; log('p3 floors', SF)
