@@ -596,13 +596,16 @@ function phase3(S) {
   P.slab(x0, P3S.x1, 0, h, z0, P3S.z1, wall, { ao: false }); k.colSlab(x0, P3S.x1, 0, h, z0, P3S.z1);
   P.slab(x0, P3E.x0, 0, P3LOW, P3S.z1, z1, hex('#D5DAD6'), { ao: false }); k.colSlab(x0, P3E.x0, 0, P3LOW, P3S.z1, z1);
   { const { cx, cz, r } = P3R; P.cyl(cx, h / 2, cz, 2 * r, h, wall, 24, 0, 0, 0, undefined, { ao: false });
-    for (let i = 0; i < 8; i++) { const a = -Math.PI / 2 + (i + 0.5) / 8 * Math.PI / 2, nx = Math.cos(a), nz = Math.sin(a), w = 2 * r * Math.sin(Math.PI / 32) * 2 + 0.05;
-      k.col(cx + nx * (r - 0.4), h / 2, cz + nz * (r - 0.4), 0.8, h, w * 1.1, { ry: Math.atan2(-nz, nx) + Math.PI / 2 });
+    for (let i = 0; i < 8; i++) { const a = -Math.PI / 2 + (i + 0.5) / 8 * Math.PI / 2, nx = Math.cos(a), nz = Math.sin(a), w = 2 * (r + 0.04) * Math.sin(Math.PI / 32) + 0.05;
+      k.col(cx + nx * (r - 0.4), h / 2, cz + nz * (r - 0.4), 0.8, h, 2 * w, { ry: Math.atan2(-nz, nx) + Math.PI / 2 });
       A.quad(cx + nx * (r + 0.04), 6 + (h - 7) / 2, cz + nz * (r + 0.04), w, h - 7, aS(nx, nz), fw);
-      A.quad(cx + nx * (r + 0.04), 2.3, cz + nz * (r + 0.04), w, 4.6, aS(nx, nz), store);
-      k.g('band').box(cx + nx * (r + 0.15), 5.3, cz + nz * (r + 0.15), w, 1.4, 0.3, hex('#2B3036'), Math.atan2(nx, nz) + Math.PI / 2, 0, 0, 1, { ao: false });
-      for (const y of [h - 0.25, 11.3]) G.box(cx + nx * (r + 0.32), y, cz + nz * (r + 0.32), w, 0.12, 0.06, line, Math.atan2(nx, nz) + Math.PI / 2, 0, 0, 1, { ao: false });
-      P.box(cx + nx * (r + 0.1), h + 0.1, cz + nz * (r + 0.1), w, 1.4, 0.5, white, Math.atan2(nx, nz) + Math.PI / 2, 0, 0, 1, { ao: false }); } }
+      A.quad(cx + nx * (r + 0.04), 2.3, cz + nz * (r + 0.04), w, 4.6, aS(nx, nz), store); }
+    // 2F 深色檐带 / 灯线 / 女儿墙：沿圆角切向排 16 段（ry 与立面贴图同 aS），弦长按外半径略放大，段间无缝、与两侧直段（±0.3）接齐
+    const N = 16, seg = (rr, ext = 0.02) => 2 * rr * Math.sin(Math.PI / 4 / N / 2) * (1 + ext) + 0.02;
+    for (let i = 0; i < N; i++) { const a = -Math.PI / 2 + (i + 0.5) / N * Math.PI / 2, nx = Math.cos(a), nz = Math.sin(a), ry = aS(nx, nz);
+      k.g('band').box(cx + nx * r, 5.3, cz + nz * r, seg(r + 0.3), 1.4, 0.6, hex('#2B3036'), ry, 0, 0, 1, { ao: false });
+      for (const y of [h - 0.25, 11.3]) G.box(cx + nx * (r + 0.33), y, cz + nz * (r + 0.33), seg(r + 0.36), 0.12, 0.06, line, ry, 0, 0, 1, { ao: false });
+      P.box(cx + nx * (r + 0.1), h + 0.1, cz + nz * (r + 0.1), seg(r + 0.35), 1.4, 0.5, white, ry, 0, 0, 1, { ao: false }); } }
   // 东立面（嘉禾路）z 138…196、南立面（对黄宝石）x −150…−80：上面玻璃百叶，底层店面
   tileFace(A, fw, 'z', x1, P3E.z0, z1, 6, h - 1, 1, 12); tileFace(A, store, 'z', x1, P3E.z0, z1, 0, 4.6, 1, 12);
   tileFace(A, fw, 'x', z0, x0, P3R.cx, 6, h - 1, -1, 12); tileFace(A, store, 'x', z0, x0, P3R.cx, 0, 4.6, -1, 12);
