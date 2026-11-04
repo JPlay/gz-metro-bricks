@@ -28,7 +28,7 @@ async def street(pg):
   await both(pg, 'p4-corner', '仙岳路 × 兴山路: tower A + LED band', 86, -11, math.atan2(52, 24), -0.42)
   await both(pg, 'p4-bigblue', '大步路 BIG BLUE (blue ceiling, gold rings)', 120, -6, 0.0, -0.04)
   await both(pg, 'p4-courtyard', 'Courtyard: blue stair + 2F terrace + 潮 mural', 110, 31, math.atan2(20, 18), -0.22)
-  await both(pg, 'p4-4c', '4C site north of Phase I: hoarding + shells + crane', 100, 170, math.atan2(-50, 10), -0.34)
+  await both(pg, 'p4-4c', '4C site north of Phase I: hoarding + shells + crane', 101, 156, math.atan2(-45, 27), -0.55)
 
 async def route(pg):
   await pose(pg, XS + 2, 0.05, 3, math.pi / 2)
