@@ -280,8 +280,196 @@ export function smCity(S) {
   ];
 }
 
-/* ---------- 四期：SM国际中心 + CHAO BLOCK（兴山路东）、4C 工地（一期北侧） ---------- */
+/* ---------- 四期：SM国际中心 + CHAO BLOCK（兴山路东）、4C 工地（一期北侧） ----------
+ * 资料（research.md §8）：四期建在一期原来的露天停车场上；4A / 4B 地块 2024-09 竣工：3 栋塔楼（SM国际中心，5A 写字楼，6–19F 办公，
+ * 19 层 86.47 m）+ 裙楼（1–2F 商业 = 非标街区 CHAO BLOCK，3–5F 停车）+ 地下街区；4C 地块（一期北侧）2026-01 封顶，正做幕墙，2027 上半年竣备。
+ * CHAO BLOCK 实拍：白色裙楼 + SM 圆标 + 蓝色 LED 字带「CHAOBLOCK」，底层开敞，蓝色大楼梯，主步道「大步路 BIG BLUE」，蓝顶 + 金色圆环灯；
+ * 握爪公园（宠物友好）。具体平面没有公开图纸：下面的体块 / 步道 / 塔楼位置是按航拍和实拍估的。 */
+const P4 = { x0: 106, x1: 158, z0: -8, z1: 118, h: 23 };   // 4B 地块裙楼（兴山路东、仙岳路北）
+const P4C = { x0: 18, x1: 84, z0: 166, z1: 197 };          // 4C 工地（一期北侧）
+const BIGBLUE = { x0: 116, x1: 124 }, P4Y = { z0: 28, z1: 80 }, P4E = 136;   // 大步路（南北贯通）、中庭（向兴山路敞开）、东楼
+const CHAO_BLUE = '#1F5BD8';
+/** LED 字带：蓝底 + 白色点阵字 */
+function chaoBand(c, pw, ph) {
+  c.fillStyle = CHAO_BLUE; c.fillRect(0, 0, pw, ph);
+  c.fillStyle = '#FFFFFF'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `900 ${ph * 0.72}px ${FONT_EN}`;
+  c.fillText('CHAOBLOCK', pw * 0.3, ph * 0.54); c.font = `900 ${ph * 0.6}px ${FONT}`; c.fillText('潮 · 街 区', pw * 0.78, ph * 0.54);
+  c.fillStyle = CHAO_BLUE; const d = Math.max(2, ph / 14); for (let x = 0; x < pw; x += d) c.fillRect(x, 0, 1, ph); for (let y = 0; y < ph; y += d) c.fillRect(0, y, pw, 1);
+}
+/** 3–5F 停车楼外皮：白色横向格栅 */
+function parkPanel(c, pw, ph) {
+  c.fillStyle = '#F1F2F0'; c.fillRect(0, 0, pw, ph); c.fillStyle = 'rgba(120,128,136,0.28)';
+  for (let y = 0; y < ph; y += Math.max(3, ph / 28)) c.fillRect(0, y, pw, Math.max(1, ph / 90));
+  c.fillStyle = 'rgba(150,156,162,0.35)'; for (let i = 1; i < 4; i++) c.fillRect(pw * i / 4 - 1, 0, 2, ph);
+  for (let i = 1; i < 3; i++) c.fillRect(0, ph * i / 3 - 1, pw, 3);
+}
+/** 写字楼：深色 Low-E 玻璃 + 每层白色横带（一张 = 4 层） */
+function towerGlass(c, pw, ph) {
+  const g = c.createLinearGradient(0, 0, pw, ph); g.addColorStop(0, '#4D6274'); g.addColorStop(1, '#2C3B48'); c.fillStyle = g; c.fillRect(0, 0, pw, ph);
+  c.fillStyle = 'rgba(190,215,235,0.18)'; c.beginPath(); c.moveTo(0, ph * 0.1); c.lineTo(pw * 0.5, 0); c.lineTo(pw, 0); c.lineTo(0, ph * 0.6); c.fill();
+  c.fillStyle = '#DCE1E4'; for (let i = 0; i < 4; i++) c.fillRect(0, ph * (i + 0.84) / 4, pw, ph * 0.035);
+  c.fillStyle = 'rgba(210,220,226,0.7)'; for (let i = 0; i <= 6; i++) c.fillRect(pw * i / 6 - 1, 0, 2, ph);
+}
+/** 4C 工地：裸露楼板 + 黑洞洞的窗 + 绿色安全网 */
+function bareFrame(c, pw, ph) {
+  c.fillStyle = '#B9B6AE'; c.fillRect(0, 0, pw, ph);
+  for (let f = 0; f < 4; f++) { c.fillStyle = '#4A4C4E'; c.fillRect(0, ph * (f * 0.25 + 0.04), pw, ph * 0.17);
+    c.fillStyle = '#A7A49C'; for (let i = 0; i <= 5; i++) c.fillRect(pw * i / 5 - pw * 0.015, ph * f * 0.25, pw * 0.03, ph * 0.25); }
+  c.fillStyle = 'rgba(46,125,70,0.55)'; c.fillRect(0, 0, pw * 0.38, ph);
+}
+/** 围挡：SM 深蓝底 + 圆标 + 4C 文案 */
+function hoarding(c, pw, ph) {
+  c.fillStyle = SM_NAVY; c.fillRect(0, 0, pw, ph); c.fillStyle = '#FFFFFF'; c.fillRect(0, ph * 0.86, pw, ph * 0.14);
+  const r = ph * 0.3; c.beginPath(); c.arc(ph * 0.45, ph * 0.43, r, 0, TAU); c.fill();
+  c.fillStyle = SM_NAVY; c.font = `italic 900 ${r}px ${FONT_EN}`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('SM', ph * 0.45, ph * 0.45);
+  c.fillStyle = '#FFFFFF'; c.textAlign = 'left'; c.font = `800 ${ph * 0.26}px ${FONT}`; c.fillText('SM厦门四期 · 4C 地块', ph * 0.9, ph * 0.3);
+  c.font = `600 ${ph * 0.17}px ${FONT}`; c.fillText('2026 · 01 封顶   幕墙施工中   2027 敬请期待', ph * 0.9, ph * 0.64);
+  c.fillStyle = SM_NAVY; c.font = `700 ${ph * 0.1}px ${FONT}`; c.fillText('安全文明施工  ·  SM INTERNATIONAL CENTER PHASE II', ph * 0.2, ph * 0.93);
+}
+/** 「潮」浪花大画（东楼面向中庭） */
+function chaoWave(c, pw, ph) {
+  const g = c.createLinearGradient(0, 0, 0, ph); g.addColorStop(0, '#BFE0FF'); g.addColorStop(1, CHAO_BLUE); c.fillStyle = g; c.fillRect(0, 0, pw, ph);
+  c.strokeStyle = '#FFFFFF'; c.lineWidth = ph * 0.035;
+  for (let k = 0; k < 4; k++) { c.beginPath(); for (let x = 0; x <= pw; x += pw / 40) { const y = ph * (0.45 + k * 0.13) + Math.sin(x / pw * TAU * 2 + k) * ph * 0.06; x ? c.lineTo(x, y) : c.moveTo(x, y); } c.stroke(); }
+  c.fillStyle = '#FFFFFF'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `900 ${ph * 0.36}px ${FONT}`; c.fillText('潮', pw * 0.2, ph * 0.28);
+  c.font = `900 ${ph * 0.16}px ${FONT_EN}`; c.fillText('CHAO BLOCK', pw * 0.62, ph * 0.22); c.font = `700 ${ph * 0.08}px ${FONT}`; c.fillText('SM 非标商业街区 · 大步路 BIG BLUE', pw * 0.62, ph * 0.34);
+}
+/** 握爪公园牌：黄底 + 爪印 */
+function pawSign(c, pw, ph) {
+  c.fillStyle = '#F2C230'; c.fillRect(0, 0, pw, ph); c.fillStyle = SM_NAVY;
+  const paw = (x, y, r) => { c.beginPath(); c.ellipse(x, y, r, r * 0.85, 0, 0, TAU); c.fill(); for (let i = 0; i < 4; i++) { const a = -Math.PI * (0.2 + i * 0.2); c.beginPath(); c.arc(x + Math.cos(a) * r * 1.35, y + Math.sin(a) * r * 1.35, r * 0.38, 0, TAU); c.fill(); } };
+  paw(pw * 0.16, ph * 0.6, ph * 0.18); c.textAlign = 'left'; c.textBaseline = 'middle'; c.font = `900 ${ph * 0.3}px ${FONT}`; c.fillText('握爪公园', pw * 0.32, ph * 0.38);
+  c.font = `700 ${ph * 0.14}px ${FONT_EN}`; c.fillText('PAW PARK · 宠物友好', pw * 0.32, ph * 0.72);
+}
+const CHAO_SHOPS = [['WM.HOME', '#EDE7DC', '#2B2B2B'], ['喧哗世界', '#E8306B', '#FFFFFF'], ['INNOUT LAB', '#111111', '#F2C230'], ['M Stand', '#FFFFFF', '#111111'],
+  ['景德欧记大排档', '#B8001F', '#FFE3A0'], ['GOST', '#2B2F35', '#FFFFFF'], ['The Nth Possibility', '#F4F1EA', '#1F3B73'], ['FAKEROOM', '#5BA4D8', '#FFFFFF'],
+  ['李山山茶事', '#3F6B4A', '#F4EEDC'], ['FUGGLER', '#F28A2E', '#FFFFFF'], ['野菌培养室', '#6B4C3B', '#F4EEDC'], ['日出那边', '#F2C230', '#B8001F'],
+  ['漫火串烧', '#2B2B2B', '#F28A2E'], ['酒鬼食堂', '#1F3B73', '#FFFFFF'], ['GRKC', '#FFFFFF', '#C8102E'], ['吉㠭', '#C9A97A', '#2B2B2B']];
+
 function phase4(S) {
+  const k = S.kit, P = k.solid, A = S.atlas, G = k.glow, GL = k.glass, M = k.metal, B = k.g('band'), GR = k.g('granite');
+  const { x0, x1, z0, z1, h } = P4, { x0: bx0, x1: bx1 } = BIGBLUE, { z0: yz0, z1: yz1 } = P4Y;
+  const white = hex('#F3F4F2'), dark = hex('#2B3036'), blue = hex(CHAO_BLUE), gold = hex('#F2C26B'), line = hex('#EAF6FF');
+  const store = shopUv(S), glass2 = A.draw(12, 5, curtain('#7FA6C2'), 9), park = A.draw(13, 10.6, parkPanel, 7), band = A.draw(26, 1.4, chaoBand, 24);
+  // ---- 兴山路（南北向，一期东侧）+ 斑马线 ----
+  S.road(90, 102, -14, 200, false, null); S.roadSign(103.4, 6, '兴山路', -Math.PI / 2);
+  for (const [za, zb] of [[-12.5, -8.5], [36, 40], [158.5, 162.5]]) for (let x = 90.6; x < 101.6; x += 1.2) P.slab(x, x + 0.6, 0.012, 0.017, za, zb, hex('#F2F2F2'), { ao: false });
+  for (let z = -10.5; z > -40; z -= 1.2) if (z < -14.5) P.slab(91, 101, 0.012, 0.017, z - 0.6, z, hex('#F2F2F2'), { ao: false });
+  GR.slab(86, 90, 0.004, 0.03, -14, 200, hex('#D3CCC0'), { ao: false }); GR.slab(102, x0, 0.004, 0.03, -14, 200, hex('#D3CCC0'), { ao: false });
+  // ---- 裙楼体块：南楼 / 北楼（中间穿过大步路）、东楼；中庭 x0…P4E × yz0…yz1 向兴山路敞开 ----
+  const mass = (a0, a1, c0, c1, y0, y1) => { P.slab(a0, a1, y0, y1, c0, c1, white, { ao: false }); k.colSlab(a0, a1, y0, y1, c0, c1); };
+  for (const [c0, c1] of [[z0, yz0], [yz1, z1]]) { mass(x0, bx0, c0, c1, 0, 6); mass(bx1, x1, c0, c1, 0, 6); mass(x0, x1, c0, c1, 6, h); }
+  mass(P4E, x1, yz0, yz1, 0, h);
+  // 立面：1F 店面 + 深色招牌带 / 2F 玻璃 / LED 字带 / 3–5F 停车楼白格栅
+  const face = (axis, fixed, a0, a1, nrm, { led = false, upper = true, low = true } = {}) => {
+    if (low) for (const [s0, s1] of (axis === 'x' && a0 < bx0 && a1 > bx1 ? [[a0, bx0], [bx1, a1]] : [[a0, a1]])) {   // 南北面：大步路口不贴店面
+      tileFace(A, store, axis, fixed, s0, s1, 0, 4.6, nrm, 12);
+      if (axis === 'x') B.slab(s0, s1, 4.6, 6, fixed + nrm * 0.02 - 0.2, fixed + nrm * 0.02 + 0.2, dark, { ao: false }); else B.slab(fixed + nrm * 0.02 - 0.2, fixed + nrm * 0.02 + 0.2, 4.6, 6, s0, s1, dark, { ao: false }); }
+    if (!upper) return;
+    tileFace(A, glass2, axis, fixed, a0, a1, 6, 11, nrm, 12);
+    tileFace(A, led ? band : park, axis, fixed, a0, a1, 11, 12.4, nrm, led ? 26 : 13);
+    tileFace(A, park, axis, fixed, a0, a1, 12.4, h - 0.4, nrm, 13);
+    if (axis === 'x') G.slab(a0, a1, h - 0.3, h - 0.18, fixed + nrm * 0.05 - 0.03, fixed + nrm * 0.05 + 0.03, line, { ao: false }); else G.slab(fixed + nrm * 0.05 - 0.03, fixed + nrm * 0.05 + 0.03, h - 0.3, h - 0.18, a0, a1, line, { ao: false });
+  };
+  face('x', z0, x0, x1, -1, { led: true }); face('x', z1, x0, x1, 1, { led: true });                 // 南（仙岳路）/ 北
+  face('z', x0, z0, yz0, -1, { led: true }); face('z', x0, yz1, z1, -1, { led: true });              // 兴山路
+  face('z', x1, z0, z1, 1, { low: false });                                                           // 东（背面）
+  face('x', yz0, x0, P4E, 1); face('x', yz1, x0, P4E, -1);                                            // 中庭南北两面
+  face('z', P4E, yz0, yz1, -1, { upper: false });                                                     // 东楼 1F
+  tileFace(A, store, 'z', P4E, yz0 + 2, yz1 - 2, 6.05, 10.6, -1, 12);                                // 东楼 2F（平台上的店）
+  A.quad(P4E - 0.05, 17.2, (yz0 + yz1) / 2, 40, 9.6, aS(-1, 0), A.draw(40, 9.6, chaoWave, 12));
+  for (const c of [[z0, yz0], [yz1, z1]]) for (const s of [-1, 1]) {                                  // 大步路两侧店面
+    const fx = s < 0 ? bx0 : bx1; tileFace(A, store, 'z', fx, c[0], c[1], 0, 4.6, s < 0 ? 1 : -1, 12); }
+  // 屋顶女儿墙 + SM 圆标 + 停车楼牌
+  P.slab(x0 - 0.3, x1 + 0.3, h, h + 1, z0 - 0.3, z0 + 0.3, white, { ao: false }); P.slab(x0 - 0.3, x0 + 0.3, h, h + 1, z0, z1, white, { ao: false });
+  const logo = A.draw(6, 6, (c, pw, ph) => smLogo(c, pw, ph, { bg: '#FFFFFF' }), 24);
+  A.quad(x0 + 5, 17.6, z0 - 0.08, 6, 6, aS(0, -1), logo); A.quad(x0 - 0.08, 17.6, 20, 6, 6, aS(-1, 0), logo); A.quad(x0 - 0.08, 17.6, 110, 6, 6, aS(-1, 0), logo);
+  A.quad(x1 - 8, 17.6, z0 - 0.08, 9, 3, aS(0, -1), A.draw(9, 3, textPaint(['P  停车楼 3–5F', 'SM PARKING'], { bg: '#1F5FA8', fg: '#FFFFFF' }), 24));
+  // ---- 大步路 BIG BLUE：蓝色步道 + 蓝顶 + 金色圆环灯；两头挂牌 ----
+  const bb = A.draw(7.6, 1.1, textPaint(['大步路  BIG BLUE', 'CHAO BLOCK · 潮街区'], { bg: CHAO_BLUE, fg: '#FFFFFF' }), 40);
+  B.slab(bx0 + 1.5, bx1 - 1.5, 0.03, 0.05, z0 - 6, z1 + 3, blue, { ao: false });
+  for (const [c0, c1] of [[z0, yz0], [yz1, z1]]) {
+    B.slab(bx0, bx1, 5.84, 5.98, c0, c1, blue, { ao: false });
+    for (let z = c0 + 4; z < c1 - 2; z += 7) { G.cyl((bx0 + bx1) / 2, 5.8, z, 2.6, 0.06, gold, 16, 0, 0, 0, undefined, { ao: false }); B.cyl((bx0 + bx1) / 2, 5.76, z, 2.0, 0.06, blue, 16, 0, 0, 0, undefined, { ao: false }); }
+    for (const [z, n] of [[c0 - 0.1, -1], [c1 + 0.1, 1]]) A.quad((bx0 + bx1) / 2, 5.2, z, 7.6, 1.1, aS(0, n), bb);
+  }
+  // ---- 中庭：蓝色大楼梯 → 2F 平台（东楼前，可走）----
+  const TY = 6, sx0 = 126, sx1 = 130, sz0 = 40, sz1 = 55, tx0 = 130;
+  k.stairs('z', sz0, 0, sz1, TY, sx0, sx1, 0, blue, { rails: true, nosing: '#E8EEF6' });
+  P.slab(sx0, P4E, TY - 0.4, TY, sz1, sz1 + 4, hex('#E9ECEF'), { ao: false }); k.colSlab(sx0, P4E, TY - 0.6, TY, sz1, sz1 + 4);
+  P.slab(tx0, P4E, TY - 0.4, TY, yz0 + 2, yz1 - 2, hex('#E9ECEF'), { ao: false }); k.colSlab(tx0, P4E, TY - 0.6, TY, yz0 + 2, yz1 - 2);
+  B.slab(tx0, P4E, TY - 0.55, TY - 0.4, yz0 + 2, yz1 - 2, blue, { ao: false });
+  const rail = (a0, a1, c0, c1) => { GL.slab(a0, a1, TY, TY + 1.1, c0, c1, hex('#D6EEF8'), { ao: false }); M.slab(a0 - 0.02, a1 + 0.02, TY + 1.1, TY + 1.16, c0 - 0.02, c1 + 0.02, hex('#C3C9CF'), { ao: false }); k.colSlab(a0, a1, TY, TY + 1.2, c0, c1); };
+  rail(tx0 - 0.05, tx0 + 0.05, yz0 + 2, sz1); rail(tx0 - 0.05, tx0 + 0.05, sz1 + 4, yz1 - 2); rail(sx0 - 0.05, sx0 + 0.05, sz1, sz1 + 4); rail(sx0, tx0, sz1 + 3.95, sz1 + 4.05);
+  rail(tx0, P4E, yz0 + 1.95, yz0 + 2.05); rail(tx0, P4E, yz1 - 2.05, yz1 - 1.95);
+  for (const z of [yz0 + 3, 66, yz1 - 3]) { M.cyl(tx0 + 0.4, (TY - 0.4) / 2, z, 0.5, TY - 0.4, hex('#E6E8EA'), 10); k.colSlab(tx0 + 0.15, tx0 + 0.65, 0, TY - 0.4, z - 0.25, z + 0.25); }
+  for (const z of [36, 48, 62, 72]) { G.cyl(133, TY - 0.6, z, 2.2, 0.06, gold, 16, 0, 0, 0, undefined, { ao: false }); B.cyl(133, TY - 0.64, z, 1.7, 0.06, blue, 16, 0, 0, 0, undefined, { ao: false }); }
+  // 店招：大步路两侧 + 中庭四周（官网 / 公众号里的首批品牌）
+  const shopSign = (i, x, z, nx, nz, y = 5.3) => { const [n, bg, fg] = CHAO_SHOPS[i % CHAO_SHOPS.length]; A.quad(x + nx * 0.25, y, z + nz * 0.25, 5.2, 0.9, aS(nx, nz), A.draw(5.2, 0.9, textPaint([n], { bg, fg }), 40)); };
+  let si = 0;
+  for (const z of [0, 14, 90, 104]) { shopSign(si++, bx0, z, 1, 0); shopSign(si++, bx1, z + 6, -1, 0); }
+  for (const x of [110, 128]) { shopSign(si++, x, yz0, 0, 1); shopSign(si++, x, yz1, 0, -1); }
+  for (const z of [38, 70]) shopSign(si++, P4E, z, -1, 0);
+  for (const z of [44, 62]) shopSign(si++, P4E, z, -1, 0, 10.9);
+  // ---- 握爪公园（中庭西北角，挨着兴山路）----
+  P.slab(x0 + 1, 115, 0.02, 0.12, 56, yz1 - 1, hex('#6FA65A'), { ao: false });
+  for (const [a0, a1, c0, c1] of [[115, 115.12, 60, yz1 - 1], [x0 + 1, 112.5, 55.94, 56.06]]) { M.slab(a0, a1, 0.12, 0.9, c0, c1, hex('#FFFFFF'), { ao: false }); k.colSlab(a0, a1, 0, 0.9, c0, c1); }
+  M.cyl(114, 1.2, 57.5, 0.1, 2.4, hex('#8A9198'), 6); A.quad(114, 2.3, 57.4, 2.6, 1.2, aS(0, -1), A.draw(2.6, 1.2, pawSign, 60));
+  for (const [x, z, r] of [[109, 66, 0.4], [112, 71, 2.2]]) dog(P, x, z, r);
+  for (const x of [109, 111]) M.cyl(x, 0.35, 61, 0.06, 0.7, hex('#F28A2E'), 6); M.slab(108.9, 111.1, 0.62, 0.7, 60.96, 61.04, hex('#F28A2E'), { ao: false });
+  D.tree(k, 108.5, 0.12, 75, 0.7, 1); D.bench(k, 117, 0, 66, Math.PI / 2); D.bench(k, 117, 0, 44, Math.PI / 2);
+  // ---- 3 栋塔楼「SM国际中心」A / B / C（19F 86.47 m；从裙楼顶起）----
+  const tg = A.draw(13, 17.2, towerGlass, 6), intl = A.draw(16, 2.4, textPaint(['SM国际中心', 'SM INTERNATIONAL CENTER'], { bg: '#2C3B48', fg: '#FFFFFF' }), 18);
+  for (const [n, a0, a1, c0, c1, th] of [['A', 128, 154, -4, 22, 86.5], ['B', 138, 158, 38, 66, 80], ['C', 110, 134, 88, 112, 72]]) {
+    P.slab(a0, a1, h, th, c0, c1, hex('#33424F'), { ao: false });
+    for (let y = h + 1; y < th - 3; y += 17.2) { const y1 = Math.min(th - 3, y + 17.2);
+      tileFace(A, tg, 'x', c0, a0, a1, y, y1, -1, 13); tileFace(A, tg, 'x', c1, a0, a1, y, y1, 1, 13); tileFace(A, tg, 'z', a0, c0, c1, y, y1, -1, 13); tileFace(A, tg, 'z', a1, c0, c1, y, y1, 1, 13); }
+    P.slab(a0 - 0.3, a1 + 0.3, th - 3, th, c0 - 0.3, c1 + 0.3, hex('#E4E7E9'), { ao: false }); P.slab(a0 + 2, a1 - 2, th, th + 3, c0 + 2, c1 - 2, hex('#BFC5CA'), { ao: false });
+    G.slab(a0 - 0.36, a1 + 0.36, th - 0.3, th - 0.2, c0 - 0.36, c1 + 0.36, line, { ao: false });
+    A.quad((a0 + a1) / 2, th - 1.5, c0 - 0.36, 16, 2.4, aS(0, -1), intl); A.quad(a0 - 0.36, th - 1.5, (c0 + c1) / 2, 16, 2.4, aS(-1, 0), intl);
+    A.quad(a0 - 0.36, th - 6, c0 + 3, 3, 3, aS(-1, 0), A.draw(3, 3, textPaint([n + '栋'], { bg: '#2C3B48', fg: '#FFFFFF' }), 30));
+  }
+  // A 栋大堂（11 m 挑高，仙岳路一侧；只做门面）
+  GL.slab(134, 150, 0.2, 10.8, z0 - 0.4, z0 - 0.3, hex('#BFD8E6'), { ao: false }); M.slab(133.6, 150.4, 10.8, 11.2, z0 - 1.6, z0, hex('#D5DADF'), { ao: false });
+  A.quad(142, 1.5, z0 - 0.45, 3.2, 3.0, aS(0, -1), S._smDoorUv || (S._smDoorUv = A.draw(3.2, 3.0, doorArt, 40)));
+  A.quad(142, 9.4, z0 - 0.48, 12, 1.4, aS(0, -1), A.draw(12, 1.4, textPaint(['SM国际中心 A栋 大堂', 'SM INTERNATIONAL CENTER · 5A OFFICE'], { bg: '#FFFFFF', fg: SM_NAVY }), 30));
+  // 人（低模）+ 平台上两个
+  [[120, -2, 0.1], [121.5, 12, 3.0], [119, 34, 0.4], [124, 46, -0.6], [112, 40, 1.9], [120, 74, 3.1], [118.5, 96, 0.05], [104, 2, 2.9]].forEach(([x, z, r], i) => shopper(P, x, 0, z, r, i + 90, { lo: true }));
+  for (const [z, r] of [[50, 0.2], [68, 3.0]]) shopper(P, 133, TY, z, r, z + 7, { lo: true });
+  for (const z of [-4, 24, 52, 82, 110, 140]) S.lightTree(104, z, 0.6);
+  phase4C(S);
+}
+/** 小狗（低模，握爪公园） */
+function dog(P, x, z, ry) {
+  const c = hex(ry > 1 ? '#D9A066' : '#F4F1EA'), fx = Math.sin(ry), fz = Math.cos(ry);
+  P.box(x, 0.42, z, 0.26, 0.24, 0.6, c, ry, 0, 0, 1, { ao: false }); P.box(x + fx * 0.36, 0.58, z + fz * 0.36, 0.22, 0.22, 0.24, c, ry, 0, 0, 1, { ao: false });
+  for (const s of [-1, 1]) for (const t of [-1, 1]) P.box(x + fx * 0.22 * t + Math.cos(ry) * 0.09 * s, 0.17, z + fz * 0.22 * t - Math.sin(ry) * 0.09 * s, 0.07, 0.34, 0.07, c, ry, 0, 0, 1, { ao: false });
+}
+/** 4C 地块（一期北侧）：2026-01 封顶，正在做幕墙 → 围挡 + 两栋封顶的塔楼（下半截已装玻璃）+ 塔吊 */
+function phase4C(S) {
+  const k = S.kit, P = k.solid, A = S.atlas, M = k.metal, G = k.glow, { x0, x1, z0, z1 } = P4C;
+  const hd = A.draw(11, 2.6, hoarding, 22), fr = A.draw(13, 16, bareFrame, 6), cw = A.draw(13, 16, curtain('#6F8FA6'), 6), conc = hex('#BDBAB2');
+  // 围挡（南面对一期北墙、东面对兴山路、西面对广场）
+  for (const [a0, a1, c0, c1] of [[x0 - 2, x1 + 2, z0 - 3.1, z0 - 2.9], [x1 + 1.9, x1 + 2.1, z0 - 3, 199], [x0 - 2.1, x0 - 1.9, z0 - 3, 199]]) {
+    P.slab(a0, a1, 0, 2.6, c0, c1, hex('#E9ECEE'), { ao: false }); k.colSlab(a0, a1, 0, 2.6, c0, c1); }
+  tileFace(A, hd, 'x', z0 - 3.1, x0 - 2, x1 + 2, 0, 2.6, -1, 11); tileFace(A, hd, 'z', x1 + 2.1, z0 - 3, 199, 0, 2.6, 1, 11); tileFace(A, hd, 'z', x0 - 2.1, z0 - 3, 199, 0, 2.6, -1, 11);
+  // 裙楼 5F（毛坯）+ 两栋塔楼：下半截幕墙、上半截裸楼板
+  P.slab(x0, x1, 0, 23, z0, z1, conc, { ao: false }); k.colSlab(x0, x1, 0, 23, z0, z1);
+  tileFace(A, fr, 'x', z0, x0, x1, 2.6, 23, -1, 13); tileFace(A, fr, 'z', x1, z0, z1, 2.6, 23, 1, 13); tileFace(A, fr, 'z', x0, z0, z1, 2.6, 23, -1, 13);
+  for (const [a0, a1, th, gTop] of [[22, 44, 70, 46], [58, 80, 62, 36]]) {
+    const c0 = 170, c1 = 192; P.slab(a0, a1, 23, th, c0, c1, conc, { ao: false });
+    for (let y = 23; y < th; y += 16) { const y1 = Math.min(th, y + 16), uv = y1 <= gTop ? cw : fr;
+      tileFace(A, uv, 'x', c0, a0, a1, y, y1, -1, 11); tileFace(A, uv, 'z', a0, c0, c1, y, y1, -1, 11); tileFace(A, uv, 'z', a1, c0, c1, y, y1, 1, 11); }
+    M.slab(a0 + 3, a0 + 5, 0, th + 2, c0 - 1.6, c0 - 0.1, hex('#E2B53A'), { ao: false });   // 施工电梯
+  }
+  // 塔吊（黄色）：标准节塔身 + 起重臂伸到兴山路上空 + 平衡臂 + 驾驶室 + 吊钩
+  const Y = hex('#F2B705'), cx = 51, cz = 181, H = 84;
+  M.slab(cx - 1, cx + 1, 0, H, cz - 1, cz + 1, Y, { ao: false }); k.colSlab(cx - 1, cx + 1, 0, H, cz - 1, cz + 1);
+  for (let y = 6; y < H; y += 6) M.slab(cx - 1.08, cx + 1.08, y, y + 0.25, cz - 1.08, cz + 1.08, hex('#C99500'), { ao: false });
+  M.slab(cx - 14, cx + 46, H, H + 1.3, cz - 0.6, cz + 0.6, Y, { ao: false }); M.slab(cx - 0.5, cx + 0.5, H, H + 7, cz - 0.5, cz + 0.5, Y, { ao: false });
+  P.slab(cx - 14, cx - 8, H - 2.2, H, cz - 1.2, cz + 1.2, hex('#9A9890'), { ao: false }); P.slab(cx + 1, cx + 3.4, H - 2.4, H, cz - 1.4, cz + 1.4, hex('#F4F4F2'), { ao: false });
+  M.slab(cx + 31, cx + 31.08, 52, H, cz - 0.04, cz + 0.04, hex('#2B3036'), { ao: false }); M.slab(cx + 30.4, cx + 31.7, 51, 52.2, cz - 0.4, cz + 0.4, hex('#D23A2A'), { ao: false });
+  G.slab(cx - 0.2, cx + 0.2, H + 7, H + 7.3, cz - 0.2, cz + 0.2, hex('#FF4A3A'), { ao: false });
 }
 
 /* ---------- 一期：SM城市广场 ---------- */
