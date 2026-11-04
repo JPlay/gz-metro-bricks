@@ -1,4 +1,5 @@
-# 乌石浦 · 厦门 SM 城市广场：4B 出口上街 → 一期 / 二期外观 + 天桥（走上去走过去）→ 进黄宝石中庭坐扶梯上 2F → 出来 → 进一期 → 回车站
+# 乌石浦 · 厦门 SM 城市广场：4B 出口上街 → 一期 / 二期外观 + 天桥（走上去走过去）→ 进黄宝石坐扶梯上 2F、再坐下行扶梯回 1F → 出来 → 进一期 → 回车站
+# （多层商场 / 观光电梯 / 楼梯 / 天桥门的完整走法在 xm_sm_bridge.py）
 # 每个视角 ≤ 9 万三角形、≤ 50 draw；招牌图集不溢出
 import asyncio, sys, json, os
 sys.path.insert(0, os.path.dirname(__file__))
@@ -14,7 +15,7 @@ async def S(pg): return await pg.evaluate('(() => { const m = __game.xmMetro, s 
 AREA = "() => __game.scene.meshes.filter(m => m.isEnabled() && m.isVisible && m.getTotalIndices).reduce((t, m) => t + m.getTotalIndices() / 3 * (m.instances ? 1 + m.instances.length : 1), 0)"
 async def budget(pg, name, area=False):
   await asyncio.sleep(1.2)
-  if OUT: await pg.screenshot(path=f'{OUT}/{name}.png')
+  if OUT: await safe_shot(pg, path=f'{OUT}/{name}.png')
   d = await perf(pg, 3, 0.25); R['perf'][name] = d; log('perf', name, d)
   ok(name + ':budget', d['tris'] <= TRIS and d['draws'] <= DRAWS)
   if area: R['area'][name] = a = await pg.evaluate(AREA); log('area', name, a); ok(name + ':area90k', a <= TRIS)
@@ -65,10 +66,12 @@ async def main():
     ia = await pg.evaluate('(() => { const i = __game.xmMetro.street.inside; return { ov: i.atlas.overflow, o: i.o }; })()'); ok('topazAtlas', ia['ov'] == 0)
     ox, oz = ia['o']['x'], ia['o']['z']
     await pg.evaluate('__game.player.yaw = 0; __game.player.pitch = -0.2'); await budget(pg, 'atrium', area=True)
-    await auto(pg, [[ox, oz + 12], [ox, oz + 18], [ox, oz + 31]])
+    await auto(pg, [[ox, oz + 7], [ox - 0.9, oz + 11.6], [ox - 0.9, oz + 30.4]])   # 上行扶梯在 x = −0.9（南 → 北）
     s = await S(pg); ok('escalator2F', abs(s['pos'][1] - ia['o']['y'] - 5.5) < 0.6)
     await budget(pg, 'atrium2F')
-    await auto(pg, [[ox, oz + 18], [ox, oz + 8], [ox, oz + 1]]); await auto(pg, [[ox, oz - 4.5]]); await asyncio.sleep(0.8)
+    await auto(pg, [[ox + 0.9, oz + 30.4], [ox + 0.9, oz + 11.6]])   # 同一对的下行扶梯（+0.9：北 → 南）回 1F
+    s = await S(pg); ok('escalatorDown1F', abs(s['pos'][1] - ia['o']['y']) < 0.4)
+    await auto(pg, [[ox, oz + 7], [ox, oz + 1]]); await auto(pg, [[ox, oz - 4.5]]); await asyncio.sleep(0.8)
     s = await S(pg); ok('topazOut', s['street'] and s['street']['inside'] is None and s['zone'] == 'street' and abs(s['pos'][0] - (XS - 75.4)) < 3 and abs(s['pos'][2] - 96) < 3)
     # 一期正门（仙岳路侧）
     await pg.evaluate(f"__game.player.spawn({XS + 51}, 0.05, 16, 0)"); await asyncio.sleep(0.5)

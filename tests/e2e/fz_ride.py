@@ -3,6 +3,7 @@
 #            → 楼梯下出站层 → 出站口 5 → 换乘通道 → 地铁 1 号线站台 → 1 号线 福州火车南站 → 安平 → 回福州火车南站
 #            → 换乘楼梯下 5 号线 → 5 号线 → 林浦 → 回福州火车南站 → 换乘楼梯上 1 号线 → 1 号线一站一站坐到 达道（报站说 C 出口）
 #            → 楼梯上站厅 → C 出口 → 上下杭（走到三通桥）→ 回站 → 1 号线 → 东街口 → 换乘楼梯下 4 号线 → 4 号线 → 西门 → B 出口 → 西湖公园
+#            → 回西门站台 → 4 号线到帝封江（L4↔L5 换乘）→ 4 号线回前屿 → 换乘 2 号线 → 鼓山（报站 A 出口）→ A 出口 → 鼓山（第三批）
 #   part gz：广州东 → 复兴号 → 选福州 → D3309（07:47 → 厦门北 11:56/12:00 → 13:29 福州南）1 倍速全程（途经厦门北提示、九龙江 + 泉州湾两座桥播报）
 #            → 福州南站台下车 → 回车上 → G3027 开往厦门北：坐下、关门、开车（走出一段）
 # 断言（动车）：ride.s 一直在涨；车窗外景物（道床贴图偏移）走过的距离 ≈ ride.s（车厢本身不动，是景物在动）；玩家一直在车厢里坐着；
@@ -11,11 +12,12 @@
 import asyncio, sys, json, os, time
 sys.path.insert(0, os.path.dirname(__file__))
 from common import *
-from journey import GCLOCK, auto, wait, log
+from journey import GCLOCK, gt, auto, wait, log
 from perfhud import perf
 BASE = sys.argv[1] if len(sys.argv) > 1 else 'http://localhost:8123/'
 PART = sys.argv[2] if len(sys.argv) > 2 else 'xm'
 EO, XO, FO, FS = 2200, 3000, 5000, 6000
+DTMAX = 0.25   # main() 给整套测试设的每帧 dt 上限；动车 1 倍速段临时改 0.2，结束后恢复成这个值
 R = {'part': PART, 'checks': {}, 'emu': {}, 'hops': [], 'perf': {}, 'times': {}}
 T0 = time.time()
 def ok(name, v): R['checks'][name] = bool(v); log('check', name, bool(v), f'{time.time() - T0:.0f}s'); return v
@@ -41,7 +43,11 @@ async def to_emu_gz(pg):
     """广州东：地铁 1 号线站台 → 站厅 → 出口 → 过马路 → 候车大厅 → 检票 → 站台 → 5 号车厢车门（gze.py 同一条路）"""
     await pg.evaluate('__game.teleport(18.6,-11.95,12.6,0)'); await asyncio.sleep(0.8)
     await auto(pg, [[18.6, 13.1], [15.4, 13.1], [-1.6, 13.1], [-2.2, 13.1], [-2.2, 1.4], [2, 1.4], [2, -4.6], [8.6, -4.6]])
-    await auto(pg, [[10.5, -4.6], [10.5, -15.6], [1.2, -15.6], [1.2, -20], [1.2, -36], [1.2, -40.5]])
+    # 站厅拐角 (10.77,-15.6) 低帧率易卡在柱边：先主路径，失败则改走 z=-18 走廊绕开
+    ok1 = await auto(pg, [[10.5, -4.6], [10.5, -12.0], [10.5, -15.6], [6.0, -15.6], [1.2, -15.6], [1.2, -20], [1.2, -36], [1.2, -40.5]])
+    if not ok1:
+        s = await st(pg); log('toEmu:retry-via-z18', s['pos'])
+        await auto(pg, [[10.5, s['pos'][2]], [10.5, -18.5], [8.0, -18.5], [4.0, -18.5], [1.2, -18.5], [1.2, -28], [1.2, -36], [1.2, -40.5]])
     await auto(pg, [[1.2, -50], [0, -62], [0, -80], [0, -86], [0, -92], [1.5, -100]])
     await auto(pg, [[1.5, -108], [1.5, -111.9], [1.5, -115], [1.5, -117.4], [9, -117.4], [9, -122.5]])
     await auto(pg, [[9, -124], [-5.8, -124], [-5.8, -127.3], [-5.8, -128.6]])
@@ -65,14 +71,20 @@ async def emu_ride(pg, key, wall=1500):
     n0 = len((await E(pg))['count']['arrived'])
     ok(key + ':run', await wait(pg, '!!__game.east.info().ride && __game.east.info().ride.phase === "run"', 20))
     await pg.evaluate('window.__scn.d=0')
-    samples, t0 = [], time.time(); arrived = False
-    while time.time() - t0 < wall:
+    # 低帧率（box 上并发浏览器多时 fps≈1）下 main.js 把每帧 dt 截到 0.05 s，游戏钟只走墙钟的 ~5%，5 分钟的 D3309 要跑一个多小时。
+    # 乘车期间把 dt 上限放宽到 0.2 s（仍是 1 倍速，只是低帧率时少丢时间），并且只要 rt 还在走就继续等（停滞 180 s 或总 4500 s 才算失败）。
+    await pg.evaluate('__game.setDtMax(0.2)')
+    samples, t0 = [], time.time(); arrived = False; last_rt, last_prog = -1, time.time()
+    while time.time() - t0 < wall or (time.time() - last_prog < 180 and time.time() - t0 < 3 * wall):
         e = await E(pg); s = await st(pg)
         if len(e['count']['arrived']) > n0: arrived = True; break
         r = e['ride']
+        if r and r['rt'] > last_rt: last_rt, last_prog = r['rt'], time.time()
         if r: samples.append({'w': round(time.time() - t0), 'rt': r['rt'], 's': r['s'], 'v': r['v'], 'rem': r['rem'], 'phase': r['phase'], 'speed': e['speed'], 'inside': e['inside'],
                               'seated': bool(s['seat'].get('seated')), 'x': s['pos'][0], 'scn': round(await pg.evaluate('__scn.d')), 'far': r['seg']['far'], 'mid': r['seg']['mid'], 'near': r['seg']['near']})
-        await asyncio.sleep(4)
+        tb = time.time(); await asyncio.sleep(4); gap = time.time() - tb
+        if gap > 60: t0 += gap - 4; last_prog += gap - 4   # box 整机挂起（没 agent 在跑时会冻结）恢复后墙钟一下跳几十分钟：冻结时段不算进 wall/停滞判定
+    await pg.evaluate(f'__game.setDtMax({DTMAX})')   # 恢复全局上限（以前误设回 0.05，之后的地铁段游戏钟只走墙钟 ~5%，L1a 240 s 墙钟内车都没出站）
     R['emu'][key] = {'samples': samples, 'wall': round(time.time() - t0), 'scn': await pg.evaluate('__scn.d')}
     log(key, 'samples', len(samples), 'wall', R['emu'][key]['wall'])
     ok(key + ':arrived', arrived)
@@ -102,8 +114,12 @@ async def board(pg, line, step, tag):
     return ok(f'{tag}:aboard', await wait(pg, '__game.state().aboard', 6))
 async def ride_to(pg, line, step, code, tag, hops):
     """坐着不动，一站一站自然开（关门 → 出站 → 隧道 → 进站 → 开门 → 停站 → 关门 ……）直到 code 站开门"""
-    seen, phases, t0 = [], set(), time.time()
-    while time.time() - t0 < 120 * hops + 120:
+    # 预算按游戏时间计（每站 120 s 游戏时间 + 120 s）：低帧率下墙钟会远超这个数；游戏钟 180 s 墙钟不动或总墙钟 2 h 才算卡死
+    seen, phases, t0 = [], set(), time.time(); g0 = await gt(pg); last = (g0, t0)
+    while await gt(pg) - g0 < 120 * hops + 120 and time.time() - t0 < 7200:
+        g = await gt(pg)
+        if g != last[0]: last = (g, time.time())
+        elif time.time() - last[1] > 180: log(tag, 'game clock stalled 180s at', round(g, 1)); break
         i = await pg.evaluate(f"""(() => {{ const m=__game.fzMetro, s={SLOT % (line, step)}; return {{code:m.code, ride:m.ride?m.ride.phase:null, st:s?s.state:null, ab:__game.state().aboard}}; }})()""")
         if i['ride']: phases.add(i['ride'])
         if not seen or seen[-1] != i['code']: seen.append(i['code']); log(tag, 'at', i['code'], round(time.time() - t0))
@@ -239,14 +255,44 @@ async def part_xm(pg):
     ok('fzxm:visitExitAnn', caps_has(caps, 'fzvisit.fzxm.zh', 'fzexit.fzxm.zh'))
     ex, zm = await plat_to_street(pg, 'fzxm', 'fzxm'); ok('fzxm:exitB', ex['n'] == 'B')
     await to_attraction(pg, 'fzxm', 'fzxm')
+    await street_to_plat(pg, ex, zm, 'fzxm')
+    await part_b3(pg)
+
+async def part_b3(pg):
+    """第三批线路：西门 → 4 号线到帝封江（16 站）→ L4↔L5 换乘楼梯 → 4 号线回前屿（8 站）→ 换乘 2 号线 → 鼓山（报站 A 出口）→ A 出口 → 鼓山"""
+    if await board(pg, 4, 1, 'L4dfj'): await ride_to(pg, 4, 1, 'fzdfj', 'L4dfj', 16)
+    zc = await pg.evaluate('__game.fzMetro.station.platforms[0].zc')
+    await legs(pg, stairs_down(zc)); s = await st(pg)
+    ok('fzdfj:downToL5', s['pos'][1] < -21 and s['zone'] == 'platform')
+    await legs(pg, stairs_up(zc)); s = await st(pg)
+    ok('fzdfj:upToL4', abs(s['pos'][1] + 13) < 0.5 and s['zone'] == 'platform')
+    if await board(pg, 4, -1, 'L4qy'): await ride_to(pg, 4, -1, 'fzqy', 'L4qy', 8)
+    zc = await pg.evaluate('__game.fzMetro.station.platforms[0].zc'); g2 = await geo(pg, 2, 1); s = await st(pg)
+    R['fzqy'] = {'zc': zc, 'l2': g2, 'pos': s['pos']}
+    if g2 and g2['y'] > s['pos'][1] + 4: await legs(pg, stairs_up(zc))
+    elif g2 and g2['y'] < s['pos'][1] - 4: await legs(pg, stairs_down(zc))
+    s = await st(pg); ok('fzqy:toL2', g2 and abs(s['pos'][1] - g2['y']) < 0.5 and s['zone'] == 'platform')
+    await pg.evaluate('__caps.length=0')
+    if await board(pg, 2, 1, 'L2gs'): await ride_to(pg, 2, 1, 'fzgs', 'L2gs', 2)
+    await asyncio.sleep(3); caps = await pg.evaluate('__caps'); R['capsGs'] = caps
+    ok('fzgs:visitExitAnn', caps_has(caps, 'fzvisit.fzgs.zh', 'fzvisit.fzgs.en', 'fzexit.fzgs.zh'))
+    ok('fzgs:noFzhNanYue', not any(c.endswith(('.fzh', '.nan', '.yue')) for c in caps))
+    ex, zm = await plat_to_street(pg, 'fzgs', 'fzgs'); ok('fzgs:exitA', ex['n'] == 'A')
+    await to_attraction(pg, 'fzgs', 'fzgs')
+
+async def part_b3dev(pg):
+    """开发用：直接从西门 4 号线站台开始跑 part_b3（正式测试走 part xm 全程）"""
+    await pg.evaluate("""(() => { const g=__game; g.east.ensure(); g.east.side='fz'; g.east.cur={st:g.station, loc:'fzmetro', area:'metro'}; g.station.kit.root.setEnabled(false); g.fzMetro.enterFromRailway(g.player);
+      g.fzMetro.buildStation('fzxm'); g.player.spawn(5002, -12.95, g.fzMetro.station.platforms[0].zc, -Math.PI/2); })()""")
+    await asyncio.sleep(1.5); await part_b3(pg)
 
 async def main():
   async with async_playwright() as p:
     b, pg, logs = await open_game(p, BASE + '?q=1&start=gzdz&line=1')
-    await pg.evaluate(GCLOCK); await pg.evaluate('__game.setDtMax(0.25)'); await pg.evaluate(HOOKS); await asyncio.sleep(1.5)
+    await pg.evaluate(GCLOCK); await pg.evaluate(f'__game.setDtMax({DTMAX})'); await pg.evaluate(HOOKS); await asyncio.sleep(1.5)
     await view(pg, 'third')
     try:
-      await (part_gz(pg) if PART == 'gz' else part_xm(pg))
+      await {'gz': part_gz, 'xm': part_xm, 'b3dev': part_b3dev}[PART](pg)
     except Exception as e:
       R['exception'] = repr(e); log('EXC', repr(e))
     R['errors'] = errs(logs); R['wall'] = round(time.time() - T0); await b.close()

@@ -19,7 +19,7 @@ async def wait(pg, js, t=90):
 async def shot(pg, name, label):
     if not SHOTS: return
     await asyncio.sleep(0.4); d = await perf(pg, n=4, gap=0.3); PERF[name] = d
-    await overlay(pg, d, label); await pg.screenshot(path=os.path.join(SHOTS, name + '.png'), timeout=240000); await overlay_off(pg)
+    await overlay(pg, d, label); await safe_shot(pg, path=os.path.join(SHOTS, name + '.png'), timeout=240000); await overlay_off(pg)
     print('shot', name, d, flush=True)
 async def main():
     if SHOTS: os.makedirs(SHOTS, exist_ok=True)

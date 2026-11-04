@@ -11,7 +11,8 @@ const STEEL = hex('#B9C0C8'), DARK = hex('#2F3338'), POLE = hex('#4A5058');
 
 /** 树：kind 0 榕树（宽冠深绿），1 木棉（红花），2 棕榈 */
 export function tree(k, x, y, z, s = 1, kind = 0) {
-  const P = k.solid, bark = hex(kind === 2 ? '#8A7860' : '#6E5640');
+  // k.lite（纪念堂站等重场景）：小树冠用 20 面球、树干 6 棱，主树冠仍保持 80 面，随机数消耗不变（布局不变）
+  const lite = !!k.lite, LS = lite ? 1 : 2, P = k.solid, bark = hex(kind === 2 ? '#8A7860' : '#6E5640');
   k.shade.shadeBlob(x, z, 2.2 * s, 2.2 * s, y + 0.02, 0.32);
   if (kind === 2) { // 棕榈
     P.cyl(x, y + 3.2 * s, z, 0.32 * s, 6.4 * s, bark, 10, 0, 0, 0, 0.24 * s);
@@ -21,18 +22,18 @@ export function tree(k, x, y, z, s = 1, kind = 0) {
     }
     return;
   }
-  P.cyl(x, y + 1.3 * s, z, 0.42 * s, 2.6 * s, bark, 10, 0, 0, 0, 0.3 * s);
-  for (let b = 0; b < 3; b++) { const a = b * 2.1 + rnd(); P.tubeTaper([x, y + 2.2 * s, z], [x + Math.cos(a) * 0.9 * s, y + 3.2 * s, z + Math.sin(a) * 0.9 * s], 0.2 * s, 0.1 * s, bark, 6); }
+  P.cyl(x, y + 1.3 * s, z, 0.42 * s, 2.6 * s, bark, lite ? 6 : 10, 0, 0, 0, 0.3 * s);
+  for (let b = 0; b < 3; b++) { const a = b * 2.1 + rnd(); P.tubeTaper([x, y + 2.2 * s, z], [x + Math.cos(a) * 0.9 * s, y + 3.2 * s, z + Math.sin(a) * 0.9 * s], 0.2 * s, 0.1 * s, bark, lite ? 4 : 6); }
   const greens = kind === 1 ? ['#6FA65A', '#7DB466', '#5E9A4E'] : ['#3F8A45', '#4C9A4E', '#367C3D', '#58A657'];
   const n = kind === 1 ? 6 : 9, R = (kind === 1 ? 1.5 : 2.1) * s, cy = y + (kind === 1 ? 3.6 : 3.7) * s;
   const prevTint = P.tint; P.tint = (px, py) => 0.72 + 0.34 * Math.max(0, Math.min(1, (py - (cy - R)) / (2 * R)));
   P.ellipsoid(x, cy, z, R * 1.9, R * 1.3, R * 1.9, hex(greens[0]), 2);
   for (let i = 0; i < n; i++) {
     const a = i / n * Math.PI * 2 + rnd() * 0.6, d = R * (0.55 + rnd() * 0.35), sz = R * (0.75 + rnd() * 0.4);
-    P.ellipsoid(x + Math.cos(a) * d, cy + (rnd() - 0.3) * R * 0.6, z + Math.sin(a) * d, sz * 1.15, sz * 0.85, sz * 1.15, hex(greens[i % greens.length]), 2);
+    P.ellipsoid(x + Math.cos(a) * d, cy + (rnd() - 0.3) * R * 0.6, z + Math.sin(a) * d, sz * 1.15, sz * 0.85, sz * 1.15, hex(greens[i % greens.length]), LS);
   }
-  P.ellipsoid(x, cy + R * 0.55, z, R * 1.2, R * 0.8, R * 1.2, hex(greens[1]), 2);
-  if (kind === 1) for (let i = 0; i < 16; i++) { const a = rnd() * 6.28, d = R * (0.4 + rnd() * 0.7); P.sphere(x + Math.cos(a) * d, cy + R * (0.2 + rnd() * 0.7), z + Math.sin(a) * d, 0.32 * s, hex(rnd() < 0.5 ? '#E8443A' : '#F05A3C'), 1); }
+  P.ellipsoid(x, cy + R * 0.55, z, R * 1.2, R * 0.8, R * 1.2, hex(greens[1]), LS);
+  if (kind === 1) for (let i = 0; i < 16; i++) { const a = rnd() * 6.28, d = R * (0.4 + rnd() * 0.7), fy = cy + R * (0.2 + rnd() * 0.7), fc = hex(rnd() < 0.5 ? '#E8443A' : '#F05A3C'); if (!lite || i % 2 === 0) P.sphere(x + Math.cos(a) * d, fy, z + Math.sin(a) * d, (lite ? 0.4 : 0.32) * s, fc, 1); }
   P.tint = prevTint;
 }
 /** 绿篱（圆角矮灌木） */
@@ -44,11 +45,11 @@ export function hedge(k, x0, x1, z0, z1, y = 0, h = 0.8) {
 }
 /** 路灯：广州街道常见的弯臂路灯 */
 export function lamp(k, x, y, z, face = 0) {
-  const M = k.solid, dx = Math.sin(face), dz = Math.cos(face);
-  M.cyl(x, y + 0.25, z, 0.34, 0.5, POLE, 12, 0, 0, 0, 0.26);
-  M.cyl(x, y + 3.5, z, 0.16, 6.5, POLE, 10, 0, 0, 0, 0.1);
+  const M = k.solid, dx = Math.sin(face), dz = Math.cos(face), lite = !!k.lite;
+  M.cyl(x, y + 0.25, z, 0.34, 0.5, POLE, lite ? 6 : 12, 0, 0, 0, 0.26);
+  M.cyl(x, y + 3.5, z, 0.16, 6.5, POLE, lite ? 6 : 10, 0, 0, 0, 0.1);
   const pts = [[x, y + 6.6, z], [x + dx * 0.4, y + 7.1, z + dz * 0.4], [x + dx * 1.1, y + 7.3, z + dz * 1.1], [x + dx * 1.6, y + 7.25, z + dz * 1.6]];
-  M.path(pts, 0.09, POLE, 8);
+  M.path(pts, 0.09, POLE, lite ? 5 : 8);
   M.rbox(x + dx * 1.75, y + 7.1, z + dz * 1.75, 0.38, 0.16, 0.75, POLE, 0.12, face, { ao: false, bevel: 0.04 });
   k.glow.box(x + dx * 1.75, y + 7.095, z + dz * 1.75, 0.28, 0.01, 0.6, hex('#FFF4D8'), face);
   k.shade.shadeBlob(x, z, 0.5, 0.5, y + 0.015, 0.3);

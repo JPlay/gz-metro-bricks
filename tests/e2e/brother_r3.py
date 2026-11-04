@@ -10,7 +10,7 @@ os.makedirs(OUT, exist_ok=True); PERF = {}
 BUDGET = (66, 186754)
 async def shot(pg, name, settle=1.5):
     await asyncio.sleep(settle); d = await perf(pg, n=4, gap=0.3); PERF[name] = d
-    await overlay(pg, d, name); await pg.screenshot(path=OUT + name + '.png', timeout=240000); await overlay_off(pg); print('shot', name, d, flush=True)
+    await overlay(pg, d, name); await safe_shot(pg, path=OUT + name + '.png', timeout=240000); await overlay_off(pg); print('shot', name, d, flush=True)
     assert d['draws'] <= BUDGET[0] and d['tris'] <= BUDGET[1], (name, d)
 # 头顶高度：头骨骼的世界坐标 + 头（含头发）大约的高度
 HEIGHTS = """() => { const out = {}; for (const m of __game.scene.meshes) { if (!m.skeleton || !m.isEnabled() || !/^(kid|buddy)/.test(m.name)) continue;

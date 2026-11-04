@@ -21,7 +21,7 @@ async def measure(pg, name):
     d = await perf(pg); R['perf'][name] = d; log('perf', name, d); return d
 async def shot(pg, name, settle=1.5):
     await asyncio.sleep(settle); await measure(pg, name)
-    await pg.screenshot(path=OUT + name + '.png', timeout=180000)
+    await safe_shot(pg, path=OUT + name + '.png', timeout=180000)
 async def pose(pg, x, y, z, yaw, pitch, v='third', settle=1.2):
     await view(pg, v); await pg.evaluate(f'__game.teleport({x},{y},{z},{yaw}); __game.player.pitch={pitch}'); await asyncio.sleep(settle)
 async def main():

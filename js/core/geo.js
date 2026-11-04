@@ -122,6 +122,17 @@ export class Geo {
     B.Matrix.ComposeToRef(tmpS, B.Quaternion.Identity(), tmpT, tmpM);
     return this.addVD(vd, tmpM, C(col));
   }
+  /** 八面体小钉（8 个三角形，远看和 20 面的小球差不多）：门钉、金点 */
+  octa(x, y, z, dia, col) {
+    const vd = proto('octa', () => {
+      const P = [0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, -0.5, 0, 0, 0, -0.5, 0, 0, 0, -0.5];
+      const N = P.map(v => v * 2), I = [0, 2, 1, 2, 3, 1, 3, 5, 1, 5, 0, 1, 2, 0, 4, 3, 2, 4, 5, 3, 4, 0, 5, 4];
+      return { positions: P, normals: N, indices: I };
+    });
+    tmpS.set(dia, dia, dia); tmpT.set(x, y, z);
+    B.Matrix.ComposeToRef(tmpS, B.Quaternion.Identity(), tmpT, tmpM);
+    return this.addVD(vd, tmpM, C(col));
+  }
   /** 椭球（可旋转），用于人物身体部件 */
   ellipsoid(x, y, z, sx, sy, sz, col, seg = 2, ry = 0, rx = 0, rz = 0) {
     const vd = proto('ico' + seg + 'false', () => B.VertexData.CreateIcoSphere({ radius: 0.5, subdivisions: seg, flat: false }));

@@ -1,5 +1,6 @@
 /**
- * 福州地铁出口（第一批 + 第二批景点站）。
+ * 福州地铁出口（第一批 + 第二批 + 第三批景点站）。
+ * 第三批来源：brief.md 景点表；上藤 / 鼓山出入口表来自中文维基（st_上藤站.txt / st_鼓山站__福州_.txt）；东岭 A/B/C 口均到奥体（S37 福州新闻网 2026-09-04）。
  *
  * 福州火车南站（fzfzn）—— 来源：福州市政府网 2023-12-28《福州火车南站地铁—铁路换乘路线有变化》
  *   https://www.fuzhou.gov.cn/zgfzzt/qyrz/gyfz/202312/t20231229_4747188.htm ；福州新闻网 2023-12-24
@@ -32,7 +33,15 @@ for (const [id, L] of Object.entries(FZ_LINES)) for (const c of L.stations) if (
 // 第二批：有景点的站，出口号按 /workspace/fuzhou-research/brief.md 景点表（verified:true = 有来源；路名只写来源里提到的）
 Object.assign(FZ_EXITS, {
   fzdjk: { n: 'C', x: 10, line: 1, road: '杨桥东路', to: ['三坊七巷（南后街）', '达明美食街'], toEn: ['Three Lanes and Seven Alleys (Nanhou Street)', 'Daming Food Street'] },
-  fznmd: { n: 'G1', x: 10, line: 1, road: '', to: ['于山风景区（白塔）', '五一广场'], toEn: ['Yushan Hill (White Pagoda)', 'Wuyi Square'] },
+  // 南门兜：两个能走出去的口 —— G1 于山（主出口，x 10）+ B 乌山（站厅南墙西段 x -14，街区键 fznmd_B）
+  //   乌山出口核对（第三批复核）：东南网/福州新闻网 2019-12 南门兜出入口表「B出入口：乌山风景区、乌塔公园、冠亚广场」，B 口步行约 150 m 到乌塔公园（大洋晶典旁）；
+  //   三坊七巷官网交通页：D2 西南口约 500 m 到乌山历史风貌区南大门、A1 西北口约 450 m 到北门。我们的景点是乌塔 + 山脚广场 → 用 B。
+  fznmd: { n: 'G1', x: 10, line: 1, road: '', to: ['于山风景区（白塔）', '五一广场'], toEn: ['Yushan Hill (White Pagoda)', 'Wuyi Square'],
+    more: [{ n: 'B', x: -14, line: 2, road: '', to: ['乌山风景区（乌塔）'], toEn: ['Wushan Hill (Black Pagoda)'], attr: 'fznmd_B' }] },
+  // 第三批（brief 景点表 #7 #9 #13）
+  fzst: { n: 'B', x: 10, line: 1, road: '上藤路', to: ['烟台山（约600米）'], toEn: ['Yantai Hill (about 600 m)'] },
+  fzgs: { n: 'A', x: 10, line: 2, road: '福马路', to: ['鼓山风景区'], toEn: ['Gushan Mountain Scenic Area'] },
+  fzdl: { n: 'A', x: 10, line: 5, road: '', to: ['海峡奥体中心'], toEn: ['Straits Olympic Sports Center'] },
   fzdd: { n: 'C', x: 10, line: 1, road: '', to: ['上下杭'], toEn: ['Shangxiahang Historic District'] },
   fzxm: { n: 'B', x: 10, line: 4, road: '', to: ['西湖公园', '福建博物院'], toEn: ['West Lake Park', 'Fujian Museum'] },
 });
@@ -46,6 +55,9 @@ export const FZ_EXIT_TABLE = {
   fznmd: [['G1', '于山风景区（白塔）、五一广场'], ['A1', '三坊七巷南口（约600米）'], ['B', '乌山风景区']],
   fzdd: [['C', '上下杭（约850米）']],
   fzxm: [['B', '西湖公园（约800米）、福建博物院']],
+  fzst: [['A', '上藤路万春巷路口东侧'], ['B', '烟台山（约600米）'], ['C', '六一南路、汇达广场']],
+  fzgs: [['A', '鼓山风景区（福马路东侧）'], ['B', '鼓山路口、鼓山公交总站'], ['C', '福马路东侧、省革命历史纪念馆'], ['D', '福马路东侧、廨院公交总站']],
+  fzdl: [['A', '海峡奥体中心'], ['B', '海峡奥体中心'], ['C', '海峡奥体中心']],
 };
 export const fzExitZh = n => /^[0-9]+$/.test(n) ? `${n}号出口` : `${n}出口`;
 export { FZ_STATIONS };

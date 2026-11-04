@@ -10,7 +10,7 @@ W = int(sys.argv[3]) if len(sys.argv) > 3 else 1112; H = int(sys.argv[4]) if len
 TAG = ('landscape' if W > H else 'portrait') + os.environ.get('SUFFIX', '')
 os.makedirs(OUT, exist_ok=True); T0 = time.time(); R = {}
 def log(*a): print(f'[{time.time() - T0:6.1f}s]', *a, flush=True)
-async def shot(pg, name): await pg.screenshot(path=OUT + name + '.png', timeout=180000); log('shot', name)
+async def shot(pg, name): await safe_shot(pg, path=OUT + name + '.png', timeout=180000); log('shot', name)
 async def tap(pg, sel):
     box = await pg.locator(sel).first.bounding_box()
     await pg.touchscreen.tap(box['x'] + box['width'] / 2, box['y'] + box['height'] / 2); return box

@@ -33,7 +33,7 @@ async def measure(pg, name, budget=True):
     return d
 async def shot(pg, name, settle=1.2, budget=True):
     await asyncio.sleep(settle); await measure(pg, name, budget)
-    await pg.screenshot(path=OUT + name + '.png', timeout=180000)
+    await safe_shot(pg, path=OUT + name + '.png', timeout=180000)
     try:
         from PIL import Image
         Image.open(OUT + name + '.png').convert('RGB').save(OUT + name + '.jpg', quality=88)
