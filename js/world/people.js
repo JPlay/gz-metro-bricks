@@ -310,15 +310,22 @@ export class Crowd {
     // 地面 / 地下分开显示：人在街上时看不到地下站厅的人（以前视锥里地下的人照样画，一人两三次绘制），反之亦然；楼梯上两边都显示
     const fy = focus ? focus.y : 0, hideLow = fy > -1.5, hideHigh = fy < -4.5, hideMid = fy < -10.5;   // 站台层（-12）只画站台上的人
     const midStair = !hideLow && !hideHigh;   // 楼梯/通道中间层（约 -1.5..-4.5）：两边人都在，必须单独裁距
-    // C 口通道：street 几何开着、under 关着，站厅人若仍按 30m 画会叠到 50+；通道里只留近距
-    const inPassage = focus && Math.abs(focus.x) < 5 && focus.z < -19 && focus.z > -42;
+    // C 口通道：street 几何开着、under 关着，站厅人若仍按 30m 画会叠到 50+；通道里只留近距（z 与 zoneOf/inPassage 对齐 -20.5）
+    const inPassage = focus && Math.abs(focus.x) < 5 && focus.z < -20.5 && focus.z > -42;
+    // 站厅南段/出口：人潮顶预算；近出口 8m，南站厅 10m，楼梯口 12m，北付费区 16m
+    const southHall = focus && hideHigh && !hideMid && focus.z < 5;
+    const nearMouth = focus && hideHigh && !hideMid && Math.abs(focus.x) < 8 && focus.z < -8;
+    const stairHead = focus && hideHigh && !hideMid && focus.z > 5 && focus.z < 20 && Math.abs(focus.x) < 12;
     for (const n of this.list) {
       const m = n.p.mesh, d2 = focus ? (m.position.x - focus.x) ** 2 + (m.position.z - focus.z) ** 2 + ((m.position.y - focus.y) * 3) ** 2 : 0;
-      // 地下：站台层 16m；站厅 30m；通道 10m；地面 32m；楼梯中段 14m 且只留近层
-      const platR2 = hideMid ? 16 * 16 : inPassage ? 10 * 10 : 30 * 30;
-      const vis = !((hideLow && m.position.y < -3) || (hideHigh && m.position.y > -1) || (hideMid && m.position.y > -8.5) || (hideHigh && d2 > platR2) || (hideLow && d2 > 32 * 32) || (midStair && (d2 > 14 * 14 || m.position.y < fy - 2.5)) || (inPassage && d2 > platR2));
-      // 地面 18m 外 / 楼梯中段 10m 外只留脚底阴影点
-      const showMesh = vis && (!hideLow || d2 < 18 * 18) && (!midStair || d2 < 10 * 10);
+      // 地下：站台 14m；近出口 8m；南站厅 10m；楼梯口 12m；北 16m；通道 8m
+      const platR2 = hideMid ? 14 * 14 : inPassage ? 8 * 8 : nearMouth ? 8 * 8 : southHall ? 10 * 10 : stairHead ? 12 * 12 : 16 * 16;
+      const vis = !((hideLow && m.position.y < -3) || (hideHigh && m.position.y > -1) || (hideMid && m.position.y > -8.5) || (hideHigh && d2 > platR2) || (hideLow && d2 > 20 * 20) || (midStair && (d2 > 14 * 14 || m.position.y < fy - 2.5)) || (inPassage && d2 > platR2));
+      // 地面默认 18m；C 口外沿（z≈-42）街面 paint 已 ~69k，缩到 7m 才能压进 90k（11m 仍 5 人+paint69k→96k）
+      // 楼梯中段 10m 外只留脚底阴影点
+      const streetNearExit = hideLow && focus && Math.abs(focus.x) < 8 && focus.z < -30 && focus.z > -55;
+      const groundR2 = streetNearExit ? 7 * 7 : 18 * 18;
+      const showMesh = vis && (!hideLow || d2 < groundR2) && (!midStair || d2 < 10 * 10);
       if (m.isEnabled() !== showMesh) m.setEnabled(showMesh);
       if (n.sh.isEnabled() !== vis) n.sh.setEnabled(vis);
       const near = d2 < 45 * 45;
