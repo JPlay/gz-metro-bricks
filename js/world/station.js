@@ -1065,10 +1065,11 @@ export class Station {
     let mouthOnly = !streetOn && p.y > YC - 1.5 && (!cam || cam.isInFrustum(mouth));
     let under = p.y < -1 || (nearStair && (!cam || cam.isInFrustum(portal)));
     // 通道/楼梯几何在 street 组：通道里默认开 street、关 under（否则 90k+）。往站厅回看时开 under + mouth（mouth 含通道楼梯，不必开完整 street）
+    // 含街面端 y≈0 俯视 C 口（小美 xmk-back-first-1）：旧 p.y<-0.5 把 under 关死 → 站厅地板露天/sky
     if (inPassage) {
       under = false;
       const fwd = cam && cam.getDirection(B.Axis.Z);
-      if (fwd && fwd.z > 0.3 && p.y < -0.5) { under = true; streetOn = false; mouthOnly = true; }
+      if (fwd && fwd.z > 0.3) { under = true; streetOn = false; mouthOnly = true; }
     }
     // 两层站台（公园前）：deep（2 号线站台层 + 通道北段 z>ZS）—— L1 楼梯脚侧视 / 背视时 deep 不在视锥，关以省预算；朝北看通道尽头时视锥碰到 deep 口再开（否则露空，见 foot-first2）
     //   开：通道里 / 接近拼桥 / 2 号线层 / 镜头视锥碰到 deep 口；人在 2 号线站台时关 under
