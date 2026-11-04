@@ -68,6 +68,8 @@ export class HallInterior {
     // 舞台
     P.slab(O - half - 0.2, O + half + 0.2, 0, 1.1, zf, 16.6, hex('#7B4A2C'), { ao: false }); k.colSlab(O - half - 0.2, O + half + 0.2, 0, 1.1, zf, 16.6);
     P.slab(O - half, O + half, 0, 1.1, zf - 0.05, zf, C.red2, { ao: false });
+    // 台前两侧各一段踏步（7 级，跟舞台同色木头）：小朋友能走上台，站到「天下为公」匾下面；kit.stairs 自带斜板碰撞 + 两侧挡墙
+    for (const s of [-1, 1]) k.stairs('z', zf - 1.8, 0, zf, 1.1, O + s * 2.2, O + s * 3.6, 0, hex('#7B4A2C'), { rails: false, nosing: '#5A3420' });
     // 大幕（两边收起）+ 檐幕 + 天幕
     for (const s of [-1, 1]) for (let i = 0; i < 4; i++) P.cyl(O + s * (half - 0.35 - i * 0.42), 3.75, zf + 0.6, 0.5, 5.3, i % 2 ? C.red2 : C.red, 8);
     P.slab(O - half, O + half, 5.4, 6.4, zf + 0.3, zf + 0.6, C.red2, { ao: false });

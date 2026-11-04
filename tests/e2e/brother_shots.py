@@ -15,7 +15,7 @@ async def shot(pg, name, settle=1.2, tag=True):
     await asyncio.sleep(settle)
     if tag:
         d = await perf(pg, n=4, gap=0.3); PERF[name] = d; await overlay(pg, d, name)
-    await pg.screenshot(path=OUT + name + '.png', timeout=240000)
+    await safe_shot(pg, path=OUT + name + '.png', timeout=240000)
     if tag: await overlay_off(pg)
     log('shot', name, PERF.get(name))
 async def main():

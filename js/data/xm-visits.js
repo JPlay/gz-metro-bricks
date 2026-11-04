@@ -11,10 +11,9 @@ export const XM_VISITS = {
   yby: { zh: ['园林博览苑'], en: ['the Garden Expo Park'], exit: '2', icon: 'pavilion', name: '园博苑' },
   gqi: { zh: ['海堤纪念公园'], en: ['the Seawall Memorial Park'], exit: '1', icon: 'rail', name: '海堤公园' },
   dqn: { zh: ['清水宫'], en: ['Qingshui Temple'], exit: '1', icon: 'temple', name: '清水宫' },
-  lhj: { zh: ['莲花公园'], en: ['Lianhua Park'], exit: '4', icon: 'lotus', name: '莲花公园' },
   lbn: { zh: ['外图厦门书城'], en: ['Xiamen Book City'], exit: '3', icon: 'books', name: '书城' },
   zsp: { zh: ['中山公园'], en: ['Zhongshan Park'], exit: '3A', icon: 'park', name: '中山公园' },
-  zhl: { zh: ['和平码头', '中山路步行街'], en: ['Heping Pier', 'Zhongshan Road Pedestrian Street'], exits: ['1', '3B'], icon: 'qilou', name: '中山路' },
+  zhl: { zh: ['和平码头', '中山路步行街'], en: ['Heping Pier', 'Zhongshan Road Pedestrian Street'], exit: '1', icon: 'qilou', name: '中山路' },   // 游戏里只搭了 1 号出口：出来往东是和平码头，往西是中山路骑楼街
   // —— 1 / 2 号线换乘 ——
   lcu: { zh: ['莲花公园'], en: ['Lianhua Park'], exit: '12', icon: 'lotus', name: '莲花公园' },
   // —— 2 号线 ——
@@ -24,8 +23,7 @@ export const XM_VISITS = {
   yxd: { zh: ['新东方'], en: ['New Oriental'], exit: '3', icon: 'xdf', name: '新东方' },
   wsp: { zh: ['厦门SM城市广场'], en: ['SM City Xiamen'], exit: '4B', icon: 'sm', name: 'SM广场' },
   jtou: { zh: ['莲龙小学'], en: ['Lianlong Primary School'], exit: '2', icon: 'school', name: '莲龙小学' },
-  hpu: { zh: ['忠仑公园'], en: ['Zhonglun Park'], exit: '4', icon: 'park', name: '忠仑公园' },
-  ctg: { zh: ['忠仑公园'], en: ['Zhonglun Park'], exit: '2', icon: 'park', name: '忠仑公园' },
+  ctg: { zh: ['忠仑公园'], en: ['Zhonglun Park'], exit: '2', icon: 'park', name: '忠仑公园' },   // 忠仑公园只在蔡塘报（2 号出口有搭）；后埔不报（后埔 4 号出口没搭）
   gys: { zh: ['观音山沙滩', '沙雕公园'], en: ['Guanyinshan Beach', 'the Sand Sculpture Park'], exit: '4', icon: 'beach', name: '观音山沙滩' },
   sdy: { zh: ['五缘湾湿地公园'], en: ['Wuyuan Bay Wetland Park'], exit: '3', icon: 'swan', name: '湿地公园' },
 };

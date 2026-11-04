@@ -7,7 +7,7 @@ URL = sys.argv[1] if len(sys.argv) > 1 else 'http://localhost:8123/?q=2&start=gy
 OUT = (sys.argv[2] if len(sys.argv) > 2 else '/workspace/gz-shots-3d/').rstrip('/') + '/'
 os.makedirs(OUT, exist_ok=True); T0 = time.time(); R = {}
 def log(*a): print(f'[{time.time() - T0:6.1f}s]', *a, flush=True)
-async def shot(pg, name): await pg.screenshot(path=OUT + name + '.png', timeout=180000); log('shot', name)
+async def shot(pg, name): await safe_shot(pg, path=OUT + name + '.png', timeout=180000); log('shot', name)
 async def until(pg, js, t=120):
     for _ in range(int(t / 0.25)):
         if await pg.evaluate(js): return True
