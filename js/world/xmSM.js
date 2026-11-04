@@ -647,9 +647,9 @@ function phase3(S) {
       k.col(cx + nx * (r - 0.4), h / 2, cz + nz * (r - 0.4), 0.8, h, 2 * w, { ry: Math.atan2(-nz, nx) + Math.PI / 2 });
       A.quad(cx + nx * (r + 0.04), 6 + (h - 7) / 2, cz + nz * (r + 0.04), w, h - 7, aS(nx, nz), fw);
       A.quad(cx + nx * (r + 0.04), 2.3, cz + nz * (r + 0.04), w, 4.6, aS(nx, nz), store); }
-    // 2F 深色檐带 / 灯线 / 女儿墙：沿圆角切向排 16 段（ry 与立面贴图同 aS），弦长按外半径略放大，段间无缝、与两侧直段（±0.3）接齐
+    // 2F 深色檐带 / 灯线 / 女儿墙：沿圆角切向排 16 段（每段都切向，见下面 ry），弦长按外半径略放大，段间无缝、与两侧直段（±0.3）接齐
     const N = 16, seg = (rr, ext = 0.02) => 2 * rr * Math.sin(Math.PI / 4 / N / 2) * (1 + ext) + 0.02;
-    for (let i = 0; i < N; i++) { const a = -Math.PI / 2 + (i + 0.5) / N * Math.PI / 2, nx = Math.cos(a), nz = Math.sin(a), ry = aS(nx, nz);
+    for (let i = 0; i < N; i++) { const a = -Math.PI / 2 + (i + 0.5) / N * Math.PI / 2, nx = Math.cos(a), nz = Math.sin(a), ry = Math.atan2(-nx, -nz);   // Geo.box 的 ry 是 Babylon 偏航：局部 x → (cos ry, −sin ry)；要它沿切线 (−nz, nx) 就得 atan2(−nx, −nz)（aS 只对贴图 quad 成立，box 用它在 45° 处会变成径向 → 琴键）
       k.g('band').box(cx + nx * r, 5.3, cz + nz * r, seg(r + 0.3), 1.4, 0.6, hex('#2B3036'), ry, 0, 0, 1, { ao: false });
       for (const y of [h - 0.25, 11.3]) G.box(cx + nx * (r + 0.33), y, cz + nz * (r + 0.33), seg(r + 0.36), 0.12, 0.06, line, ry, 0, 0, 1, { ao: false });
       P.box(cx + nx * (r + 0.1), h + 0.1, cz + nz * (r + 0.1), seg(r + 0.35), 1.4, 0.5, white, ry, 0, 0, 1, { ao: false }); } }
