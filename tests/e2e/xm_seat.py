@@ -11,7 +11,7 @@ R = {}
 T0 = time.time()
 def log(*a): print(f'[{time.time() - T0:6.1f}s]', *a, flush=True)
 async def shot(pg, name):
-    await pg.screenshot(path=OUT + name + '.png', timeout=180000); log('shot', name)
+    await safe_shot(pg, path=OUT + name + '.png', timeout=180000); log('shot', name)
 async def tap(pg, sel):
     box = await pg.locator(sel).first.bounding_box()
     await pg.touchscreen.tap(box['x'] + box['width'] / 2, box['y'] + box['height'] / 2)

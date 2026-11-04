@@ -59,11 +59,11 @@ async def main():
     R['jump']={'peak':round(peak,2), 'btnSize':[box['width'],box['height']]}
     R['btnSizes']=await pg.evaluate("[...document.querySelectorAll('.btn')].map(b=>[b.id,b.getBoundingClientRect().width,b.getBoundingClientRect().height])")
     await asyncio.sleep(1)
-    await pg.screenshot(path=SHOT+'third-person.png', timeout=120000)
+    await safe_shot(pg, path=SHOT+'third-person.png', timeout=120000)
     # 视角切换
     box=await pg.locator('#bView').bounding_box(); await pg.touchscreen.tap(box['x']+40, box['y']+40); await asyncio.sleep(0.5)
     R['view']=(await st(pg))['view']
-    await pg.screenshot(path=SHOT+'first-person.png', timeout=120000)
+    await safe_shot(pg, path=SHOT+'first-person.png', timeout=120000)
     box=await pg.locator('#bView').bounding_box(); await pg.touchscreen.tap(box['x']+40, box['y']+40); await asyncio.sleep(0.2)
     R['viewBack']=(await st(pg))['view']
     # 脚印系统已移除：右上角只剩视角 / 声音按钮

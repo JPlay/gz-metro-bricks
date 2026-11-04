@@ -76,7 +76,7 @@ export function figure(P, x, z, col, h = 1.6, y = 0) {
   P.cyl(x, y + h * 0.3, z, h * 0.22, h * 0.6, hex(col), 6); P.sphere(x, y + h * 0.72, z, h * 0.22, hex('#E8C29E'), 1); P.sphere(x, y + h * 0.8, z, h * 0.2, hex('#2B2420'), 1);
 }
 /** 动画件：独立网格（不冻结），XmStreet.tick 里每帧改位置 */
-function animMesh(S, g, name, bucket = 'paint') { const m = g.toMesh(name, S.scene, bucketMat(S.scene, S.kit.M, bucket), S.kit.root); m.receiveShadows = false; (S.anim || (S.anim = [])).push(m); return m; }
+export function animMesh(S, g, name, bucket = 'paint') { const m = g.toMesh(name, S.scene, bucketMat(S.scene, S.kit.M, bucket), S.kit.root); m.receiveShadows = false; (S.anim || (S.anim = [])).push(m); return m; }
 /** 街口：路 + 行道树 + 路灯（出口亭在路南侧） */
 function streetFront(S, road, trees = true) {
   const k = S.kit;

@@ -10,10 +10,41 @@
  *       九龙江特大桥 4572.657 m 在厦门北—漳州共线段，跨九龙江北溪北港、南港和西溪，是进厦门前最后一座大桥）
  * 车窗外：广州城区 → 珠三角 / 潮汕的田野 → 粤东闽南的山和隧道 → 九龙江特大桥（九龙江入海口的宽阔水面）→ 厦门（集美）。
  */
-export const RAIL = {
-  xm: { train: 'D2315', from: '广州东', to: '厦门北', fromEn: 'Guangzhoudong', toEn: 'Xiamenbei', dep: '14:20', arr: '18:57', car: '05' },
-  gz: { train: 'D3311', from: '厦门北', to: '广州东', fromEn: 'Xiamenbei', toEn: 'Guangzhoudong', dep: '15:18', arr: '19:17', car: '05' }
+/**
+ * 城市表：每个城市一座高铁站（游戏里的“国铁站”），dests = 从这里能坐动车去的城市（顺序 = 选目的地卡片的顺序，第一个是默认）。
+ * 只有一个目的地时不弹选择卡片（坐下就开）。
+ */
+export const CITIES = {
+  gz: { zh: '广州', en: 'Guangzhou', icon: '🏙️', stn: '广州东站', stnEn: 'Guangzhoudong', dests: ['xm', 'fz'] },
+  xm: { zh: '厦门', en: 'Xiamen', icon: '🌊', stn: '厦门北站', stnEn: 'Xiamenbei', dests: ['gz', 'fz'] },
+  fz: { zh: '福州', en: 'Fuzhou', icon: '🌳', stn: '福州南站', stnEn: 'Fuzhounan', dests: ['xm'] }
 };
+/** 车次表：键 = 'from>to'（城市代码）。ann = 报站片段 id 用的键（广州⇄厦门沿用旧 id：emu.depart.xm / emu.depart.gz，已有 MP3） */
+export const TRIPS = {
+  'gz>xm': { fromCity: 'gz', toCity: 'xm', ann: 'xm', train: 'D2315', from: '广州东', to: '厦门北', fromEn: 'Guangzhoudong', toEn: 'Xiamenbei', dep: '14:20', arr: '18:57', car: '05',
+    bridge: { toast: '九龙江特大桥 · 九龙江入海口', ann: 'bridge' } },
+  'xm>gz': { fromCity: 'xm', toCity: 'gz', ann: 'gz', train: 'D3311', from: '厦门北', to: '广州东', fromEn: 'Xiamenbei', toEn: 'Guangzhoudong', dep: '15:18', arr: '19:17', car: '05',
+    bridge: { toast: '九龙江特大桥 · 九龙江入海口', ann: 'bridge' } },
+  // 福厦高铁（2023-09-28 开通）：G3028 厦门北 13:25 → 福州南 14:35（继续开往南京南）；回程 G3027 福州南 11:55 → 厦门北 13:05（南京南始发）。
+  //   途经泉州湾跨海大桥（福厦高铁跨海段，全长约 20.3 km）。时刻按 brief（js 里只是显示用，游戏里约 3 分钟一程）
+  'xm>fz': { fromCity: 'xm', toCity: 'fz', ann: 'fz', train: 'G3028', from: '厦门北', to: '福州南', fromEn: 'Xiamenbei', toEn: 'Fuzhounan', dep: '13:25', arr: '14:35', car: '05',
+    bridge: { toast: '泉州湾跨海大桥', ann: 'qzw' } },
+  // 广州东 → 福州南 直达动车 D3309：广州东 07:47 → 厦门北 11:56 / 12:00 → 福州南 13:29（时刻按小美给的车次表；游戏里途经厦门北只弹提示，不停车）。
+  //   brakeAt：这一程比广州⇄厦门长（两段连起来），约 5 分钟。两座大桥：九龙江特大桥、泉州湾跨海大桥
+  'gz>fz': { fromCity: 'gz', toCity: 'fz', ann: 'gzf', train: 'D3309', from: '广州东', to: '福州南', fromEn: 'Guangzhoudong', toEn: 'Fuzhounan', dep: '07:47', arr: '13:29', car: '05',
+    via: { stn: '厦门北', arr: '11:56', dep: '12:00' }, brakeAt: 322,
+    bridge: { toast: '九龙江特大桥 · 九龙江入海口', ann: 'bridge' } },
+  'fz>xm': { fromCity: 'fz', toCity: 'xm', ann: 'xmf', train: 'G3027', from: '福州南', to: '厦门北', fromEn: 'Fuzhounan', toEn: 'Xiamenbei', dep: '11:55', arr: '13:05', car: '05',
+    bridge: { toast: '泉州湾跨海大桥', ann: 'qzw' } }
+};
+// trip.from / trip.to = 车厢显示屏 / HUD 上的站名（不带“站”）；fromCity / toCity = 城市代码
+for (const t of Object.values(TRIPS)) t.key = t.fromCity + '>' + t.toCity;
+export const tripKey = (from, to) => from + '>' + to;
+export function tripFor(from, to) { return TRIPS[tripKey(from, to)] || null; }
+/** 从 city 出发能去的城市（只列有车次的） */
+export function destsFrom(city) { return ((CITIES[city] || {}).dests || []).filter(d => TRIPS[tripKey(city, d)]); }
+/** 旧接口：RAIL[dest]（按目的地）。只在每个城市只有一个出发站时有意义；新代码用 tripFor(from, to) */
+export const RAIL = { xm: TRIPS['gz>xm'], gz: TRIPS['xm>gz'] };
 /**
  * 一程的路段（行驶秒数，×1 速度；关门 + 起步约 6 s，到站前制动约 17 s）。
  * far / mid / near：车窗外三层远景的内容（js/world/emuScenery.js）；toast：路过时的小提示；ann：路过时的广播（js/data/phrases.js）。
@@ -43,4 +74,44 @@ const BACK = [
 ];
 /** 行驶 TRIP 秒后开始进站制动 */
 export const TRIP = { brakeAt: 166, brakeDist: 600, vmax: 70 };
-export function routeFor(dest) { return dest === 'xm' ? OUT : BACK; }
+/** 厦门北 → 福州南：厦门城区 → 同安的田野 → 山和隧道 → 泉州湾跨海大桥 → 莆田的田野和山 → 福州（远景暂用通用城市，没有福州专属远景板） */
+const XM_FZ = [
+  { t: 0, far: 'xiamen', mid: 'xiamen', near: 'fields' },
+  { t: 30, far: 'fields', mid: 'fields', near: 'fields' },
+  { t: 52, far: 'mount', mid: 'mount', near: 'mount' },
+  { t: 62, near: 'tunnel', tunnel: true },
+  { t: 70, near: 'mount', far: 'sea', mid: 'sea' },
+  { t: 80, far: 'sea', mid: 'sea', near: 'bridge', bridge: true },
+  { t: 104, far: 'fields', mid: 'fields', near: 'fields' },
+  { t: 118, far: 'mount', mid: 'mount', near: 'mount' },
+  { t: 128, near: 'tunnel', tunnel: true },
+  { t: 136, near: 'mount' },
+  { t: 146, far: 'city', mid: 'city', near: 'city' }
+];
+const FZ_XM = [
+  { t: 0, far: 'city', mid: 'city', near: 'city' },
+  { t: 26, far: 'mount', mid: 'mount', near: 'mount' },
+  { t: 36, near: 'tunnel', tunnel: true },
+  { t: 44, near: 'mount' },
+  { t: 54, far: 'fields', mid: 'fields', near: 'fields' },
+  { t: 70, far: 'sea', mid: 'sea', near: 'bridge', bridge: true },
+  { t: 94, far: 'mount', mid: 'mount', near: 'mount' },
+  { t: 104, near: 'tunnel', tunnel: true },
+  { t: 112, near: 'mount' },
+  { t: 122, far: 'fields', mid: 'fields', near: 'fields' },
+  { t: 146, far: 'xiamen', mid: 'xiamen', near: 'fields' }
+];
+/** 广州东 → 福州南（D3309）：广州 → 九龙江特大桥 → 厦门城区（途经厦门北，弹提示）→ 接着走厦门北 → 福州南那一程（泉州湾跨海大桥）。
+ *  bridge 写成对象：两座桥各报一次（east.js 按 ann 键记“已报”） */
+const GZ_FZ = [
+  ...OUT.map(e => e.bridge ? { ...e, bridge: { toast: '九龙江特大桥 · 九龙江入海口', ann: 'bridge' } } : e),
+  { t: 160, far: 'xiamen', mid: 'xiamen', near: 'fields', toast: '途经 厦门北站（11:56 到 · 12:00 开）' },
+  ...XM_FZ.slice(1).map(e => ({ ...e, t: e.t + 160, ...(e.bridge ? { bridge: { toast: '泉州湾跨海大桥', ann: 'qzw' } } : {}) }))
+];
+const ROUTES = { 'gz>xm': OUT, 'xm>gz': BACK, 'xm>fz': XM_FZ, 'fz>xm': FZ_XM, 'gz>fz': GZ_FZ };
+/** 一程的路段：routeFor(from, to)；旧写法 routeFor(dest) 仍可用（广州⇄厦门） */
+export function routeFor(from, to) {
+  if (to === undefined) { to = from; from = to === 'xm' ? 'gz' : 'xm'; }
+  return ROUTES[tripKey(from, to)] || OUT;
+}
+export function registerRoute(from, to, route) { ROUTES[tripKey(from, to)] = route; }

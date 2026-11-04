@@ -23,7 +23,7 @@ STATIC = """(async () => {
   const XM = await import('/js/world/xmMetro.js'), GS = await import('/js/world/station.js');
   const out = { xm: [], gz: [], borrowed: [], missing: [], termini: [] };
   for (const [line, L] of Object.entries(XL.XM_LINES)) for (const code of L.stations) {
-    const fake = { s: XL.XM_STATIONS[code], code };
+    const fake = { s: XL.XM_STATIONS[code], code, N: XM.XM_NET };   // XmStation 按网络参数化后（2b9469d）frames()/sidesFor() 读 this.N
     const sides = XM.XmStation.prototype.frames.call(fake).filter(f => f.line === +line).flatMap(f => Object.values(XM.XmStation.prototype.sidesFor.call(fake, f)));
     for (const step of [1, -1]) {
       const from = XL.xmNext(+line, code, -step); if (!from) continue;   // 从 from 开过来，行车方向 step

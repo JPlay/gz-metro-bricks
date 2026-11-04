@@ -32,7 +32,7 @@ async def run(p, name, w, h):
                 if not await pg.evaluate('!!document.getElementById("loadStation") && !document.querySelector("#loading.done")'): continue
                 path = f'{OUT}load-{name}-{round(f*100):02d}pct.png'
                 txt = await pg.evaluate('[document.getElementById("loadStation").textContent, document.getElementById("loadMsg").textContent, document.getElementById("loadFact").textContent]')
-                await pg.screenshot(path=path, timeout=120000)
+                await safe_shot(pg, path=path, timeout=120000)
                 got[t] = (round(f, 3), path, txt); print(name, t, got[t])
         if await pg.evaluate('!!window.__game'): break
         await asyncio.sleep(0.1)
@@ -45,7 +45,7 @@ async def run_err(p):
     await pg.goto(URL + ('&' if '?' in URL else '?') + 'bjs=none')
     await pg.wait_for_selector('#loading.err', timeout=30000); await asyncio.sleep(0.5)
     txt = await pg.evaluate('document.getElementById("loadMsg").textContent')
-    await pg.screenshot(path=OUT + 'load-landscape-error.png'); print('error', txt)
+    await safe_shot(pg, path=OUT + 'load-landscape-error.png'); print('error', txt)
     await b.close()
 async def main():
     async with async_playwright() as p:

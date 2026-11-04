@@ -6,7 +6,7 @@
 import asyncio, sys, os, json, time, math, subprocess, shutil
 sys.path.insert(0, os.path.dirname(__file__))
 from playwright.async_api import async_playwright
-from common import ARGS, errs
+from common import ARGS, errs, safe_shot
 URL = sys.argv[1] if len(sys.argv) > 1 else 'http://localhost:8123/?q=1'
 OUT = (sys.argv[2] if len(sys.argv) > 2 else '/workspace/gz-shots-polish/transfer-r2/').rstrip('/') + '/'
 FPS = int(os.environ.get('FPS', '24')); DT = 1 / FPS
@@ -38,7 +38,7 @@ STEP = "(n) => { for (let i = 0; i < n; i++) window.__rec.loops.forEach(f => f()
 class Rec:
     def __init__(s, pg): s.pg, s.n, s.durs = pg, 0, []
     async def shot(s, dur):
-        fn = f'{FR}{s.n:05d}.jpg'; await s.pg.screenshot(path=fn, type='jpeg', quality=90); s.durs.append(dur); s.n += 1
+        fn = f'{FR}{s.n:05d}.jpg'; await safe_shot(s.pg, path=fn, type='jpeg', quality=90); s.durs.append(dur); s.n += 1
     async def frame(s):
         await s.pg.evaluate(STEP, 1); await s.shot(DT)
     async def frames(s, n):

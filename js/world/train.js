@@ -11,6 +11,7 @@ import { Geo, hex, mix } from '../core/geo.js';
 import { randomLook, preseed, Person } from './people.js';
 import { LINES, STATIONS } from '../data/lines.js';
 import { XM_LINES, XM_STATIONS } from '../data/xm-lines.js';
+import { FZ_LINES, FZ_STATIONS } from '../data/fz-lines.js';
 import { drawStrip, drawLcd, hotUV, STRIP_W, STRIP_H } from './routemap.js';
 const TEX_K = 0.75; // 车内两块屏贴图的缩放（见 build）
 const B = window.BABYLON;
@@ -19,11 +20,16 @@ export const CAR_X = [-18.6, 0, 18.6], DOOR_DX = [-6, 0, 6], HALF = 27.9, DOOR_W
 export const DOOR_XS = CAR_X.flatMap(c => DOOR_DX.map(d => c + d));
 const WHITE = [1, 1, 1], STEEL = hex('#BFC6CE'), DARK = hex('#2A2E33'), INT = hex('#F1F0EC'), FLOORC = hex('#8E979F');
 // 涂装（对照实车）：1 号线 A1 型 = 黄色车身 + 红色腰带；2 号线 = 香槟色车身 + 线路蓝腰带
-const BODY = { 1: '#F4CF3A', 2: '#E9DEC6', xm1: '#F5E6D8', xm2: '#E6F3EA' }, STRIPE = { 1: '#D52B1E', 2: '#00629B', xm1: '#F2711C', xm2: '#00A651' };
-/** 当前列车跑哪张网：'gz' | 'xm'（厦门地铁线路图 / 站名来自 xm-lines） */
-function netLines(net) { return net === 'xm' ? XM_LINES : LINES; }
-function netStations(net) { return net === 'xm' ? XM_STATIONS : STATIONS; }
-function lineKey(net, line) { return net === 'xm' ? 'xm' + line : line; }
+const BODY = { 1: '#F4CF3A', 2: '#E9DEC6', xm1: '#F5E6D8', xm2: '#E6F3EA', fz1: '#F4F5F3', fz2: '#F4F5F3', fz4: '#F4F5F3', fz5: '#F4F5F3', fz6: '#F4F5F3', fz20: '#F4F5F3' }, STRIPE = { 1: '#D52B1E', 2: '#00629B', xm1: '#F2711C', xm2: '#00A651', fz1: '#CB333B', fz2: '#046A38', fz4: '#FF7F41', fz5: '#893B67', fz6: '#005EB8', fz20: '#00B0B9' };   // 福州：白车身 + 线路色腰带
+/** 当前列车跑哪张网：'gz' | 'xm' | …（线路图 / 站名来自各城市的 *-lines.js）。新城市：registerNet(net, LINES, STATIONS) + BODY/STRIPE 加 `${net}${line}` */
+const NETS = { gz: { LINES, STATIONS }, xm: { LINES: XM_LINES, STATIONS: XM_STATIONS }, fz: { LINES: FZ_LINES, STATIONS: FZ_STATIONS } };
+export function registerNet(net, lines, stations, colors) {
+  NETS[net] = { LINES: lines, STATIONS: stations };
+  if (colors) for (const [k, c] of Object.entries(colors)) { BODY[net + k] = c.body; STRIPE[net + k] = c.stripe; }
+}
+function netLines(net) { return (NETS[net] || NETS.gz).LINES; }
+function netStations(net) { return (NETS[net] || NETS.gz).STATIONS; }
+function lineKey(net, line) { return net && net !== 'gz' ? net + line : line; }
 // 外轮廓（右半，自下而上），左半镜像
 const R = [[1.34, -0.95], [1.45, -0.86], [1.5, -0.6], [1.52, 0.2], [1.53, 0.95], [1.515, 1.55], [1.48, 2.05], [1.43, 2.33], [1.33, 2.53], [1.13, 2.68], [0.8, 2.77], [0.4, 2.81], [0, 2.82]];
 const OUT = [...R, ...R.slice(0, -1).reverse().map(([z, y]) => [-z, y])];
@@ -86,7 +92,7 @@ export class Train {
       P.slab(x0 + 2.5, x1 - 2.5, -0.95, -0.2, -1.2, 1.2, hex('#3A3E44'), { ao: false });
       for (const bx of [cx - 6.3, cx + 6.3]) {
         P.rbox(bx, -1.25, 0, 2.6, 0.45, 2.1, DARK, 0.1, 0, { ao: false });
-        for (const wx of [-0.85, 0.85]) for (const wz of [-0.72, 0.72]) Mt.cyl(bx + wx, -1.15, wz, 0.84, 0.13, STEEL, 16, 0, Math.PI / 2, 0, undefined, { ao: false });
+        for (const wx of [-0.85, 0.85]) for (const wz of [-0.72, 0.72]) Mt.cyl(bx + wx, -1.15, wz, 0.84, 0.13, STEEL, 10, 0, Math.PI / 2, 0, undefined, { ao: false });
       }
       // 车门 / 窗户分段
       const doors = DOOR_DX.map(d => cx + d), segs = [];
@@ -114,14 +120,14 @@ export class Train {
           for (let q = 1; q < nSeat; q++) Pi.slab(qa + (qb - qa) * q / nSeat - 0.006, qa + (qb - qa) * q / nSeat + 0.006, 0.47, 0.475, sd * 0.97, sd * 1.36, hex('#2A2E33'), { ao: false });
           k.col((qa + qb) / 2, 0.25, sd * 1.2, qb - qa, 0.5, 0.5, { parent: this.root, dynamic: true });
           // 横杆 + 三角吊环
-          Mi.tube([qa, 1.92, sd * 1.0], [qb, 1.92, sd * 1.0], 0.032, STEEL, 8);
-          for (let hx = qa + 0.3; hx < qb - 0.2; hx += 0.45) {
+          Mi.tube([qa, 1.92, sd * 1.0], [qb, 1.92, sd * 1.0], 0.032, STEEL, 6);
+          for (let hx = qa + 0.3; hx < qb - 0.2; hx += 0.6) {
             Pi.box(hx, 1.8, sd * 1.0, 0.025, 0.22, 0.012, hex('#E9ECEF'), 0, 0, 0, 1, { ao: false });
-            for (const [p1, p2] of [[[hx - 0.07, 1.62, sd], [hx + 0.07, 1.62, sd]], [[hx - 0.07, 1.62, sd], [hx, 1.72, sd]], [[hx + 0.07, 1.62, sd], [hx, 1.72, sd]]]) Pi.tube(p1, p2, 0.025, hex('#F2C230'), 5);
+            for (const [p1, p2] of [[[hx - 0.07, 1.62, sd], [hx + 0.07, 1.62, sd]], [[hx - 0.07, 1.62, sd], [hx, 1.72, sd]], [[hx + 0.07, 1.62, sd], [hx, 1.72, sd]]]) Pi.tube(p1, p2, 0.025, hex('#F2C230'), 3);   // 2.5 cm 的吊环杆用三棱柱就够（两列车同时进站时站台视角 ≤ 90k 面）
           }
           // 座椅两端的立柱
           // 立柱上端弯进横杆（不再通到车顶）：门上方线路图左端的“1号线”色块不会被立柱挡住
-          for (const [qx, qe] of [[qa - 0.1, qa], [qb + 0.1, qb]]) { Mi.tube([qx, 0, sd * 1.12], [qx, 1.76, sd * 1.12], 0.038, STEEL, 8); Mi.tube([qx, 1.76, sd * 1.12], [qx + (qe - qx) * 0.45, 1.88, sd * 1.06], 0.038, STEEL, 8); Mi.tube([qx + (qe - qx) * 0.45, 1.88, sd * 1.06], [qe, 1.92, sd * 1.0], 0.036, STEEL, 8); }
+          for (const [qx, qe] of [[qa - 0.1, qa], [qb + 0.1, qb]]) { Mi.tube([qx, 0, sd * 1.12], [qx, 1.76, sd * 1.12], 0.038, STEEL, 6); Mi.tube([qx, 1.76, sd * 1.12], [qx + (qe - qx) * 0.45, 1.88, sd * 1.06], 0.038, STEEL, 6); Mi.tube([qx + (qe - qx) * 0.45, 1.88, sd * 1.06], [qe, 1.92, sd * 1.0], 0.036, STEEL, 6); }
         }
       }
       for (const d of doors) {
@@ -129,7 +135,7 @@ export class Train {
         band(d - 0.7, d + 0.7, 2.0, 3, 0);
         ibandI(d - 0.7, d + 0.7, 2.0, 2.4, 0);
         for (const sd of [-1, 1]) { P.slab(d - 0.74, d - 0.68, 0, 2.02, sd * 1.5 - 0.03, sd * 1.5 + 0.03, DARK, { ao: false }); P.slab(d + 0.68, d + 0.74, 0, 2.02, sd * 1.5 - 0.03, sd * 1.5 + 0.03, DARK, { ao: false }); P.slab(d - 0.74, d + 0.74, 1.99, 2.04, sd * 1.5 - 0.03, sd * 1.5 + 0.03, DARK, { ao: false }); Mt.slab(d - 0.7, d + 0.7, -0.005, 0.004, sd * 1.25, sd * 1.5, STEEL, { ao: false }); }
-        Mt.tube([d, 0, 0], [d, 2.3, 0], 0.045, STEEL, 10); // 门区中间立柱
+        Mt.tube([d, 0, 0], [d, 2.3, 0], 0.045, STEEL, 8); // 门区中间立柱
       }
       // 车顶内部：双排灯带 + 中间送风口
       for (const lz of [-0.62, 0.62]) Gl.slab(x0 + 0.4, x1 - 0.4, 2.27, 2.29, lz - 0.09, lz + 0.09, hex('#FFFBF2'), { ao: false });

@@ -19,7 +19,7 @@ async def main():
                 await pg.evaluate(js); await asyncio.sleep(3)
                 d = await perf(pg, n=6, gap=0.3); R[f'{v}/{tag}'] = d; print(v, tag, d, flush=True)
                 if OUT:
-                    await overlay(pg, d, f'{v} {tag}'); await pg.screenshot(path=f'{OUT}19-perf-{v}-{tag}.png', timeout=240000); await overlay_off(pg)
+                    await overlay(pg, d, f'{v} {tag}'); await safe_shot(pg, path=f'{OUT}19-perf-{v}-{tag}.png', timeout=240000); await overlay_off(pg)
             assert not errs(logs), errs(logs); await b.close()
     print('PERF', json.dumps(R))
 asyncio.run(main())

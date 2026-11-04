@@ -38,14 +38,14 @@ function metroLogo(c, x, y, s) {
   c.strokeStyle = '#1D5AA8'; c.lineWidth = s * 0.12; c.lineJoin = 'round'; c.lineCap = 'round';
   c.beginPath(); c.moveTo(x + s * 0.2, y + s * 0.86); c.lineTo(x + s * 0.2, y + s * 0.46); c.lineTo(x + s * 0.5, y + s * 0.72); c.lineTo(x + s * 0.8, y + s * 0.46); c.lineTo(x + s * 0.8, y + s * 0.86); c.stroke();
 }
-function rr(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
-function arrow(c, x, y, s, dir, col = '#FFFFFF') {
+export function rr(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
+export function arrow(c, x, y, s, dir, col = '#FFFFFF') {
   const a = { r: 0, d: Math.PI / 2, l: Math.PI, u: -Math.PI / 2 }[dir];
   c.save(); c.translate(x + s / 2, y + s / 2); c.rotate(a); c.fillStyle = col; c.beginPath();
   c.moveTo(s * 0.45, 0); c.lineTo(0, -s * 0.38); c.lineTo(0, -s * 0.14); c.lineTo(-s * 0.42, -s * 0.14); c.lineTo(-s * 0.42, s * 0.14); c.lineTo(0, s * 0.14); c.lineTo(0, s * 0.38); c.closePath(); c.fill(); c.restore();
 }
 /** 出口图标：绿色方块 + 白色奔跑的人 + 门 */
-function exitIcon(c, x, y, s) {
+export function exitIcon(c, x, y, s) {
   c.fillStyle = '#1E8E4E'; rr(c, x, y, s, s, s * 0.1); c.fill();
   c.fillStyle = '#FFFFFF'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `800 ${s * 0.62}px ${FONT}`; c.fillText('出', x + s / 2, y + s * 0.54);
 }
@@ -75,7 +75,7 @@ function board(parts, bg = NAVY) {
   };
 }
 /** 大字（站房立面 / 地铁入口）：bg 底色、fg 字色 */
-function bigText(zh, en, bg, fg, enCol) {
+export function bigText(zh, en, bg, fg, enCol) {
   return (c, pw, ph) => { c.fillStyle = bg; c.fillRect(0, 0, pw, ph); c.fillStyle = fg; c.textAlign = 'center'; c.textBaseline = 'middle';
     c.font = `800 ${ph * (en ? 0.56 : 0.7)}px ${FONT}`; c.fillText(zh, pw / 2, ph * (en ? 0.4 : 0.54)); if (en) { c.fillStyle = enCol || fg; c.font = `600 ${ph * 0.2}px ${FONT_EN}`; c.fillText(en, pw / 2, ph * 0.82); } };
 }

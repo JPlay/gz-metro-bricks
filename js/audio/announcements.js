@@ -11,7 +11,7 @@ export const depart = (line, nextCode, dir, step, withDest) => say(P.departSegs(
 export function seconds(segs) {
   return segs.reduce((t, x, i) => {
     const id = typeof x === 'string' ? x : x.id, m = Audio.getAsset(id), a = m || (typeof x === 'string' ? null : x);
-    if (!a || (!m && a.lang === 'nan')) return t;
+    if (!a || (!m && (a.lang === 'nan' || a.lang === 'fzh'))) return t;   // 闽南语 / 福州话没 MP3 会被跳过（audio.js pump）
     return t + (a.duration || Math.max(1.5, (a.text || '').length * (a.lang === 'en' ? 0.07 : 0.24))) + (i ? 0.22 : 0.07);
   }, 0);
 }
@@ -21,7 +21,7 @@ export function seconds(segs) {
  */
 export const VISIT_MARGIN = 1.5;
 // 只算带“请从×出口出站”的景点广播（诚毅广场那种只有“欢迎下车游玩”、没有出口的不算）
-const isExitVisit = x => typeof x !== 'string' && /^voice\.(xm)?visit\./.test(x.id) && /出口|Exit/.test(x.text || '');
+const isExitVisit = x => typeof x !== 'string' && /^voice\.(xm|fz\.fz)?visit\./.test(x.id) && /出口|Exit/.test(x.text || '');
 export function departHold(segs) { return segs.some(isExitVisit) ? seconds(segs) + VISIT_MARGIN : 0; }
 /** 景点出口广播还在播（或还在等下载）时，行车保底上限从“还差的 + 6 s”放宽到“还差的 + VISIT_CAP s”（见 service.js cruiseDone） */
 export const VISIT_CAP = 20;
@@ -37,6 +37,14 @@ export function prefetchDepart(segs) {
   Audio.prefetch(ids);
   return ids;
 }
+/** 预取任意一组片段的 MP3（下车出口广播用：车停在上一站时先下载、解码好下一站的“前往××请从×出口出站”） */
+export function prefetchSegs(segs) {
+  const ids = segs.map(x => typeof x === 'string' ? x : x.id).filter(id => { const a = Audio.getAsset(id); return a && a.file; });
+  if (ids.length) Audio.prefetch(ids);
+  return ids;
+}
+/** 下车出口广播：关门要等它播完再过 EXIT_MARGIN 秒；播放（含排队、下载）期间停站最多再延长 EXIT_CAP 秒 */
+export const EXIT_MARGIN = 1.5, EXIT_CAP = 20;
 export const arrive = code => say(P.arriveSegs(code), { key: 'arrive', interrupt: true });
 export const welcome = code => say(P.welcomeSegs(code), { key: 'welcome' });
 export const platform = (line, dir, n) => say(P.platformSegs(line, dir, n), { key: 'platform', interrupt: true });
@@ -46,3 +54,7 @@ export const safety = k => say(P.safetySegs(k), { key: 'safety' });
 export const xmDepart = (line, nextCode, dir, step, withDest) => say(P.xmDepartSegs(line, nextCode, dir, step, withDest), { key: 'next', interrupt: true });
 export const xmPlatform = (line, dir, n) => say(P.xmPlatformSegs(line, dir, n), { key: 'platform', interrupt: true });
 export const xmExit = code => say(P.xmExitSegs(code), { key: 'xmexit' });
+export const fzDepart = (line, nextCode, dir, step, withDest) => say(P.fzDepartSegs(line, nextCode, dir, step, withDest), { key: 'next', interrupt: true });
+export const fzPlatform = (line, dir, n) => say(P.fzPlatformSegs(line, dir, n), { key: 'platform', interrupt: true });
+export const fzDoorsClosing = () => say(P.fzDoorsClosingSegs(), { key: 'doorsClosing', interrupt: true });
+export const fzExit = code => say(P.fzExitSegs(code), { key: 'fzexit' });

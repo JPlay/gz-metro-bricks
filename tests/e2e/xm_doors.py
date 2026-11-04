@@ -43,7 +43,7 @@ async def door_check(pg, name, key, line=None, walk_in=True):
     zPlat = r['psdZ'] + sg * 0.8; zCar = r['trackZ']
     await auto(pg, [[r['x'] + 6, zPlat]]); await jreset(pg); await auto(pg, [[r['x'] + 6, zCar]])
     ab = await wait(pg, '__game.state().aboard', 3); ok('walkAboard:' + name, ab); await jcheck(pg, 'board:' + name)
-    await pg.screenshot(path=f'{OUT}doors-{name}.png', timeout=180000)
+    await safe_shot(pg, path=f'{OUT}doors-{name}.png', timeout=180000)
     await auto(pg, [[r['x'] + 6, zPlat]]); ok('walkOff:' + name, not (await st(pg))['aboard'])
     await pg.evaluate('window.__holdSlot=null')
     return ab

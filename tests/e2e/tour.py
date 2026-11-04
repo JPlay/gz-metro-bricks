@@ -14,7 +14,7 @@ async def main():
       if v!=view: await pg.evaluate('__game.toggleView()')
       await pg.wait_for_timeout(700)
       s=await st(pg); print(name, s['pos'], s['zone'], s['grounded'], 'dc',s['drawCalls'], s['atlas'])
-      await pg.screenshot(path=f'/workspace/gz-shots-3d/_t_{name}.png')
+      await safe_shot(pg, path=f'/workspace/gz-shots-3d/_t_{name}.png')
     print('ERRS', errs(logs)[:20])
     await b.close()
 asyncio.run(main())
