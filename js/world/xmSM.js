@@ -270,7 +270,9 @@ export function smCity(S) {
     [70, 16, -1.6], [-6, 30, 0.05], [-8, 52, 3.1], [-4, 76, 0.2], [-7, 104, 3.0], [-60, 30, 0.4], [-56, 80, 2.9], [-70, 100, 1.6], [-62, 16, -0.4], [-52, 120, 0.2],
   ];
   crowd.forEach(([x, z, r], i) => shopper(P, x, 0, z, r, i, { lo: i >= 5 }));   // 出口近处用细模，远处低模（四期要省三角形）
-  family(P, 34, 12, Math.PI * 0.95, 1); family(P, -64, 60 - 18, Math.PI, 2, true); family(P, -9, 40, 0.1, 3, true);
+  // 这三家人照 fzsDecor.family(P, x, z, ry, i) 的参数抄的，少了 y：实际飘在 12 / 42 / 40 m 高空（平常视角看不见），却白占 ~2 万三角形（预算瘦身）。
+  // 画进一个不出网格的 Geo：随机数（prnd）照样按原顺序取 → 后面所有人 / 车的外形和以前完全一样。
+  { const sink = new Geo(); family(sink, 34, 12, Math.PI * 0.95, 1); family(sink, -64, 60 - 18, Math.PI, 2, true); family(sink, -9, 40, 0.1, 3, true); }
   for (let i = 0; i < 8; i++) shopper(P, -70 + i * 10 + (i % 2) * 2, BR1.y, BR1.z0 + 1.6 + (i % 3) * 1.4, i % 2 ? Math.PI / 2 : -Math.PI / 2, i + 40, { lo: true });   // 天桥上：低模
   for (let i = 0; i < 3; i++) shopper(P, -40 + i * 22, BR2.y, BR2.z0 + 2 + i, i % 2 ? Math.PI / 2 : -Math.PI / 2, i + 50, { lo: true });
 
