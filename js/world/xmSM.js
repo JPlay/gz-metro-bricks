@@ -644,7 +644,7 @@ function phase3(S) {
   P.slab(x0, P3E.x0, 0, P3LOW, P3S.z1, z1, hex('#D5DAD6'), { ao: false }); k.colSlab(x0, P3E.x0, 0, P3LOW, P3S.z1, z1);
   { const { cx, cz, r } = P3R; P.cyl(cx, h / 2, cz, 2 * r, h, wall, 24, 0, 0, 0, undefined, { ao: false });
     for (let i = 0; i < 8; i++) { const a = -Math.PI / 2 + (i + 0.5) / 8 * Math.PI / 2, nx = Math.cos(a), nz = Math.sin(a), w = 2 * (r + 0.04) * Math.sin(Math.PI / 32) + 0.05;
-      k.col(cx + nx * (r - 0.4), h / 2, cz + nz * (r - 0.4), 0.8, h, 2 * w, { ry: Math.atan2(-nz, nx) + Math.PI / 2 });
+      k.col(cx + nx * (r - 0.4), h / 2, cz + nz * (r - 0.4), 0.8, h, 2 * w, { ry: Math.atan2(-nz, nx) });   // 同 Geo.box：局部 x → (cos ry, −sin ry) = 径向 0.8 厚，局部 z = 切向 2w 长 → 8 片首尾相接成连续圆墙（以前 +π/2 把 4 m 长边转成径向，墙外凸出 1.6 m 的隐形杆、中间漏缝）
       A.quad(cx + nx * (r + 0.04), 6 + (h - 7) / 2, cz + nz * (r + 0.04), w, h - 7, aS(nx, nz), fw);
       A.quad(cx + nx * (r + 0.04), 2.3, cz + nz * (r + 0.04), w, 4.6, aS(nx, nz), store); }
     // 2F 深色檐带 / 灯线 / 女儿墙：沿圆角切向排 16 段（每段都切向，见下面 ry），弦长按外半径略放大，段间无缝、与两侧直段（±0.3）接齐
