@@ -215,7 +215,7 @@ export function smCity(S) {
   GR.slab(-78, -46, 0.004, 0.03, -14, 128, hex('#CFC8BB'), { ao: false });
   GR.slab(-14, P1.x0, 0.004, 0.03, -14, 200, hex('#D3CCC0'), { ao: false });
 
-  phase1(S); phase2(S); phase3(S);
+  phase1(S);
   skybridge(S, BR1, [[-66.2, -59.6], [1.8, 8.6]], [-52, -8], '厦门SM城市广场  ⇄  SM新生活广场', 'SM SKYBRIDGE  ·  94 m');
   bridgeStairs(S, 2, 45, BR1.z0, true); bridgeStairs(S, -66, 45, BR1.z0, true);
   skybridge(S, BR2, [[-58.2, -53.8], [1.8, 8.6]], [-30], 'SM城市广场 ⇄ SM三期', 'SM CITY  ·  PHASE III');
@@ -242,19 +242,25 @@ export function smCity(S) {
 
   // ---------- 远景（仙岳路南侧、北侧）----------
   S.filler([[-110, -52, 50, 14, 46, '#D2CABE'], [-70, -50, 22, 14, 70, '#C9C2B6'], [30, -52, 60, 14, 58, '#CBC5BA'], [110, -50, 50, 14, 40, '#D6D0C6'],
-    [52, 182, 56, 24, 34, '#CFC9BE'], [130, 140, 30, 60, 52, '#C6CCD2'], [130, 60, 30, 50, 30, '#D4CEC4']]);
+    [130, 180, 50, 30, 40, '#C6CCD2']]);   // 一期北侧原来的远景楼 = 四期 4C 工地，东侧 = 四期 B 地块（phase4）
 
   // ---------- 人：出口、一期门口、天桥下、二期广场 ----------
   const crowd = [
     [3, 6, 0.3], [-1.5, 9, 0.1], [6, 12, 0.8], [10, 15, 0.6], [14, 10, -0.4], [22, 14, 0.2], [30, 17, 1.2], [46, 18, -0.3], [55, 17, 0.4], [60, 15, 2.8],
     [70, 16, -1.6], [-6, 30, 0.05], [-8, 52, 3.1], [-4, 76, 0.2], [-7, 104, 3.0], [-60, 30, 0.4], [-56, 80, 2.9], [-70, 100, 1.6], [-62, 16, -0.4], [-52, 120, 0.2],
   ];
-  crowd.forEach(([x, z, r], i) => shopper(P, x, 0, z, r, i, { lo: i >= 8 }));   // 出口 / 一期门口近处用细模，远处低模
+  crowd.forEach(([x, z, r], i) => shopper(P, x, 0, z, r, i, { lo: i >= 5 }));   // 出口近处用细模，远处低模（四期要省三角形）
   family(P, 34, 12, Math.PI * 0.95, 1); family(P, -64, 60 - 18, Math.PI, 2, true); family(P, -9, 40, 0.1, 3, true);
-  for (let i = 0; i < 8; i++) shopper(P, -70 + i * 10 + (i % 2) * 2, BR1.y, BR1.z0 + 1.6 + (i % 3) * 1.4, i % 2 ? Math.PI / 2 : -Math.PI / 2, i + 40, { lo: i % 2 === 0 });
+  for (let i = 0; i < 8; i++) shopper(P, -70 + i * 10 + (i % 2) * 2, BR1.y, BR1.z0 + 1.6 + (i % 3) * 1.4, i % 2 ? Math.PI / 2 : -Math.PI / 2, i + 40, { lo: true });   // 天桥上：低模
   for (let i = 0; i < 3; i++) shopper(P, -40 + i * 22, BR2.y, BR2.z0 + 2 + i, i % 2 ? Math.PI / 2 : -Math.PI / 2, i + 50, { lo: true });
 
   traffic(S);
+  // ---------- 分组（视锥裁剪用）：每组单独几个网格，看不见的那组整组不画 ----------
+  //   sm-core = 路 / 一期 / 天桥 / 人 / 树（到处都看得见）；sm-west = 二期 + 三期（嘉禾路西）；剩下 = 四期（兴山路东 + 一期北侧 4C）
+  k.group('sm-core');
+  phase2(S); phase3(S);
+  k.group('sm-west');
+  phase4(S);
   // ---------- 进门 ----------
   // 每栋楼都能进：地面正门 + 天桥两头的 2F 玻璃门（y: 6，进楼内 2F；gate = 楼里对应的那扇门）
   const mall = id => (scene, o) => new SmMall(scene, o, id);
@@ -272,6 +278,10 @@ export function smCity(S) {
     { s: 1, x: (LK3.x0 + LK3.x1) / 2, z: LK3.zP - 0.4, y: LK3.y, halfW: 2.6, zLo: -0.6, zHi: 0.8, outPos: [(LK3.x0 + LK3.x1) / 2, LK3.zP - 2.0], outY: LK3.y + 0.05, outYaw: Math.PI, id: 'sm-p3', gate: 'lk3', make: mall('sm-p3') },
     { s: -1, x: (LK3.x0 + LK3.x1) / 2, z: LK3.zT + 3.4, y: LK3.y, halfW: 2.6, zLo: -0.6, zHi: 0.8, outPos: [(LK3.x0 + LK3.x1) / 2, LK3.zT + 5.0], outY: LK3.y + 0.05, outYaw: 0, id: 'sm-topaz', gate: 'lk3', make: mall('sm-topaz') },
   ];
+}
+
+/* ---------- 四期：SM国际中心 + CHAO BLOCK（兴山路东）、4C 工地（一期北侧） ---------- */
+function phase4(S) {
 }
 
 /* ---------- 一期：SM城市广场 ---------- */

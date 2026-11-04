@@ -84,13 +84,15 @@ export function doorHit(d, lx, lz) {
 }
 /** 街区参数（厦门默认）；福州（js/world/fzStreet.js）传自己的：原点、出口表、线路 / 站表、地铁品牌名 */
 export const XM_STREET = { O: XS, net: 'xm', EXITS: XM_EXITS, LINES: XM_LINES, STATIONS: XM_STATIONS, brand: ['厦门地铁', 'Xiamen Metro'], exitZh, special: true };
+/** 这些街区的牌子 atlas 用 best-fit 装法（一行行顺序排会在高低不齐的牌子之间浪费大半张图） */
+const FIT_ATLAS = new Set(['wsp']);
 export class XmStreet {
   /** ex：走出来的那个出口（一站多个可走出口时由 XmMetro.goStreet 传入）；key：景点街区表的键（默认站码，第二个出口用 ex.attr） */
   constructor(scene, code, N = XM_STREET, ex = null) {
     this.scene = scene; this.code = code; this.N = N; this.O = N.O; this.ex = ex || N.EXITS[code]; this.key = (this.ex && this.ex.attr) || code;
     const XS = this.O;
     const k = this.kit = new Kit(scene, N.net + 'Street-' + code); k.root.position.set(XS.x, 0, XS.z);
-    this.atlas = new FoodAtlas(scene, 2048);
+    this.atlas = new FoodAtlas(scene, 2048, FIT_ATLAS.has(code) ? { bestFit: 3 } : {});   // 牌子多的街区（SM）按最矮行装，省出空位
     { const q = this.atlas.quad.bind(this.atlas); this.atlas.quad = (x, y, z, w, h, a, uv) => q(x, y, z, w, h, Math.PI - a, uv); }   // 本文件约定：a=0 朝 -z、π 朝 +z、±π/2 朝 ±x
     D.reseed(code.length * 97 + code.charCodeAt(0));
     this.ground(); this.kiosk();
