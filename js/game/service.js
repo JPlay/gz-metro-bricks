@@ -71,6 +71,19 @@ export class Metro {
     let sound = null;
     // 人在任何一列车厢里（停站时车厢区域也算 platform 区）就不是“站在站台上”：对面列车的进站广播 / 关门提示不该在车里响
     const inCar = this.slots.some(o => o.train.root.isEnabled() && this.playerOn(o.train));
+    // 两层站台（公园前 1 / 2 号线）：只画玩家所在层的列车（离哪层站台面近；换乘楼梯半中间 ±0.6 m 回差不来回闪），同福州叠层换乘站。
+    //   1 号线站台 / 车上看不到 2 号线那层的车（隔着楼板，不在正下方），以前两层四趟车全画
+    const ys = this.station.platforms.length > 1 ? [...new Set(this.station.platforms.map(q => q.y))] : null;
+    // 两层站台：离哪层近画哪层（±1.2 m 回差）。换乘通道北端 / 2 号线楼梯口俯视（y≈-17,z≈42）时两层等距，回差会把 L2 车拖到下第一级才开 → 弹出；此处优先 L2
+    if (ys) {
+      const d = y => Math.abs(p.y - y), lo = Math.min(...ys), hi = Math.max(...ys);
+      // 通道北端 / 2 号线楼梯口俯视 → L2；1 号线楼梯 / 楼梯脚（等距时回差会粘在 L2）→ L1
+      const overLo = p.z > 38 && p.y > lo + 2 && p.y <= -14 && p.x > -25 && p.x < -4;
+      const overHi = p.z < 30 && p.y > -18.2 && p.y < -13.5 && p.x > -25 && p.x < -4;
+      if (overLo) this.lvY = lo;
+      else if (overHi) this.lvY = hi;
+      else if (!ys.includes(this.lvY) || ys.some(y => d(y) < d(this.lvY) - 1.2)) this.lvY = ys.reduce((a, y) => d(y) < d(a) ? y : a, ys[0]);
+    }
     for (const s of this.slots) {
       const tr = s.train, nx = nextStation(s.line, this.station.code, s.step);
       const aboard = this.playerOn(tr), onPlat = !inCar && this.ctx.zone && this.ctx.zone.kind === 'platform' && this.ctx.zone.P === s.P;
@@ -124,6 +137,7 @@ export class Metro {
         }
       }
       if (this.ride && this.ride.train === tr && !aboard && s.state !== 'departing' && s.state !== 'arriving') this.ride = null;
+      if (ys && s.state !== 'away') { const near = aboard || s.P.y === this.lvY; if (tr.root.isEnabled() !== near) tr.setVisible(near); }
     }
     if (sound) A.trainSound(sound); else if (!(this.ctx.extTrain && this.ctx.extTrain())) A.trainSound({ speed: 0 });
   }

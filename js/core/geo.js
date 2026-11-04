@@ -31,7 +31,7 @@ function bandBox(rows) {
   return { positions: P, normals: N, indices: I, s: S };
 }
 /** 分段圆柱原型（侧面光滑），rows 同上 */
-function bandCyl(tess, rows, topScale = 1) {
+function bandCyl(tess, rows, topScale = 1, caps = true) {
   const P = [], N = [], I = [], S = [];
   const slope = (1 - topScale) * 0.5;
   for (let r = 0; r < rows.length; r++) {
@@ -43,7 +43,7 @@ function bandCyl(tess, rows, topScale = 1) {
   }
   const W = tess + 1;
   for (let r = 0; r < rows.length - 1; r++) for (let k = 0; k < tess; k++) { const a = r * W + k, b = a + W; I.push(a, a + 1, b + 1, a, b + 1, b); }
-  for (const [y, sgn, rr] of [[0.5, 1, 0.5 * topScale], [-0.5, -1, 0.5]]) {
+  if (caps) for (const [y, sgn, rr] of [[0.5, 1, 0.5 * topScale], [-0.5, -1, 0.5]]) {
     const c0 = P.length / 3; P.push(0, y, 0); N.push(0, sgn, 0); S.push(y + 0.5);
     for (let k = 0; k <= tess; k++) { const a = k / tess * Math.PI * 2; P.push(Math.cos(a) * rr, y, Math.sin(a) * rr); N.push(0, sgn, 0); S.push(y + 0.5); }
     for (let k = 0; k < tess; k++) sgn > 0 ? I.push(c0, c0 + 1 + k, c0 + 2 + k) : I.push(c0, c0 + 2 + k, c0 + 1 + k);
@@ -104,12 +104,13 @@ export class Geo {
     return this.addVD(vd, tmpM, col, 1, this._aoFn(ao, !!o.aoTop));
   }
   /** 两点之间的圆管（扶手、杆子） */
-  tube(a, b, dia, col, tess = 8) {
+  /** caps = false：不封两端（两端藏在别的件里 / 首尾相接的细管，端面看不到），每根省 2 × tess 个三角形 */
+  tube(a, b, dia, col, tess = 8, caps = true) {
     const dx = b[0] - a[0], dy = b[1] - a[1], dz = b[2] - a[2], L = Math.hypot(dx, dy, dz); if (L < 1e-4) return this;
     const dir = new B.Vector3(dx / L, dy / L, dz / L), up = new B.Vector3(0, 1, 0);
     const axis = B.Vector3.Cross(up, dir), ang = Math.acos(Math.max(-1, Math.min(1, B.Vector3.Dot(up, dir))));
     const q = axis.length() < 1e-5 ? (dir.y > 0 ? B.Quaternion.Identity() : B.Quaternion.RotationAxis(new B.Vector3(1, 0, 0), Math.PI)) : B.Quaternion.RotationAxis(axis.normalize(), ang);
-    const vd = proto('cy' + tess + '_1_0,1', () => bandCyl(tess, [0, 1], 1));
+    const vd = caps ? proto('cy' + tess + '_1_0,1', () => bandCyl(tess, [0, 1], 1)) : proto('cyo' + tess, () => bandCyl(tess, [0, 1], 1, false));
     tmpS.set(dia, L, dia); tmpT.set((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2);
     B.Matrix.ComposeToRef(tmpS, q, tmpT, tmpM);
     return this.addVD(vd, tmpM, C(col));

@@ -119,15 +119,15 @@ export class Train {
           for (let q = 0; q < nSeat; q++) this.seats.push({ x: qa + (qb - qa) * (q + 0.5) / nSeat, sd });
           for (let q = 1; q < nSeat; q++) Pi.slab(qa + (qb - qa) * q / nSeat - 0.006, qa + (qb - qa) * q / nSeat + 0.006, 0.47, 0.475, sd * 0.97, sd * 1.36, hex('#2A2E33'), { ao: false });
           k.col((qa + qb) / 2, 0.25, sd * 1.2, qb - qa, 0.5, 0.5, { parent: this.root, dynamic: true });
-          // 横杆 + 三角吊环
-          Mi.tube([qa, 1.92, sd * 1.0], [qb, 1.92, sd * 1.0], 0.032, STEEL, 6);
+          // 横杆 + 三角吊环（细管不封端：吊环三边首尾相接、横杆两端接立柱弯头（弯头仍封端）、立柱直段下端在地板上上端接弯头，端面都看不到）
+          Mi.tube([qa, 1.92, sd * 1.0], [qb, 1.92, sd * 1.0], 0.032, STEEL, 6, false);
           for (let hx = qa + 0.3; hx < qb - 0.2; hx += 0.6) {
             Pi.box(hx, 1.8, sd * 1.0, 0.025, 0.22, 0.012, hex('#E9ECEF'), 0, 0, 0, 1, { ao: false });
-            for (const [p1, p2] of [[[hx - 0.07, 1.62, sd], [hx + 0.07, 1.62, sd]], [[hx - 0.07, 1.62, sd], [hx, 1.72, sd]], [[hx + 0.07, 1.62, sd], [hx, 1.72, sd]]]) Pi.tube(p1, p2, 0.025, hex('#F2C230'), 3);   // 2.5 cm 的吊环杆用三棱柱就够（两列车同时进站时站台视角 ≤ 90k 面）
+            for (const [p1, p2] of [[[hx - 0.07, 1.62, sd], [hx + 0.07, 1.62, sd]], [[hx - 0.07, 1.62, sd], [hx, 1.72, sd]], [[hx + 0.07, 1.62, sd], [hx, 1.72, sd]]]) Pi.tube(p1, p2, 0.025, hex('#F2C230'), 3, false);   // 2.5 cm 的吊环杆用三棱柱就够（两列车同时进站时站台视角 ≤ 90k 面）
           }
           // 座椅两端的立柱
           // 立柱上端弯进横杆（不再通到车顶）：门上方线路图左端的“1号线”色块不会被立柱挡住
-          for (const [qx, qe] of [[qa - 0.1, qa], [qb + 0.1, qb]]) { Mi.tube([qx, 0, sd * 1.12], [qx, 1.76, sd * 1.12], 0.038, STEEL, 6); Mi.tube([qx, 1.76, sd * 1.12], [qx + (qe - qx) * 0.45, 1.88, sd * 1.06], 0.038, STEEL, 6); Mi.tube([qx + (qe - qx) * 0.45, 1.88, sd * 1.06], [qe, 1.92, sd * 1.0], 0.036, STEEL, 6); }
+          for (const [qx, qe] of [[qa - 0.1, qa], [qb + 0.1, qb]]) { Mi.tube([qx, 0, sd * 1.12], [qx, 1.76, sd * 1.12], 0.038, STEEL, 6, false); Mi.tube([qx, 1.76, sd * 1.12], [qx + (qe - qx) * 0.45, 1.88, sd * 1.06], 0.038, STEEL, 6); Mi.tube([qx + (qe - qx) * 0.45, 1.88, sd * 1.06], [qe, 1.92, sd * 1.0], 0.036, STEEL, 6); }
         }
       }
       for (const d of doors) {

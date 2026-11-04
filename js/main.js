@@ -95,9 +95,12 @@ export async function start() {
     st.kit.meshes.forEach(m => { m.receiveShadows = m.name !== 'glow' && m.name !== 'halo' && m.name !== 'shade'; });
     // 抛光地面的反射探针（站厅 / 站台各一个，静态渲染一次，盒投影）
     const list = st.probeMeshes(), byB = st.kit.byBucket;
-    if (byB.floor) R.makeProbe('probeHall', new B.Vector3(0, YC + 2.2, 3), new B.Vector3(36, 4.4, 46), list, byB.floor.material);
-    if (byB['floor@P']) R.makeProbe('probeP', new B.Vector3(0, MAIN.y + 2.1, MAIN.zc), new B.Vector3(96, 4.2, 12), list, byB['floor@P'].material);
-    if (byB['floor@P2']) R.makeProbe('probeP2', new B.Vector3(0, GYQ2.y + 2.1, GYQ2.zc), new B.Vector3(96, 4.2, 12), list, byB['floor@P2'].material);
+    // 探针拍完之前 zoneVis 保持各组全开（隧道里建站时各组本来会整组关掉，拍出来是空的）
+    st.probeHold = 0; const done = () => { st.probeHold--; };
+    const mk = (...a) => { if (R.useProbes) st.probeHold++; R.makeProbe(...a, done); };
+    if (byB.floor) mk('probeHall', new B.Vector3(0, YC + 2.2, 3), new B.Vector3(36, 4.4, 46), list, byB.floor.material);
+    if (byB['floor@P']) mk('probeP', new B.Vector3(0, MAIN.y + 2.1, MAIN.zc), new B.Vector3(96, 4.2, 12), list, byB['floor@P'].material);
+    if (byB['floor@P2']) mk('probeP2', new B.Vector3(0, GYQ2.y + 2.1, GYQ2.zc), new B.Vector3(96, 4.2, 12), list, byB['floor@P2'].material);
     st.ticketPolicy = tickets;
     G.station = st; G.code = code; G.gzCode = code; G.welcomed = false;
     metro.attach(st);
@@ -247,6 +250,7 @@ export async function start() {
     const aboardGz = !(east && east.cur) && !inXm && metro.trains.some(t => t.root.isEnabled() && t.contains(p));
     const aboardXm = inXm && cm.trains.some(t => t.root.isEnabled() && t.contains(p));
     G.aboard = aboardGz || aboardXm || G.inTunnel;
+    if (G.station) G.station.aboard = G.aboard;   // 车站分区（公园前 xfer 组）要知道人在不在车上，见 Station.zoneVis
     // 在厦门地铁里 G.code 是厦门站码；回到广州（坐动车回来时广州站不重建）要换回广州站码，否则 STATIONS[G.code] 为空，HUD 每帧报错、游戏卡死
     if (!inXm && G.gzCode) G.code = G.gzCode;
     if (G.inTunnel) G.zone = { kind: 'tunnel' };
@@ -274,10 +278,11 @@ export async function start() {
       const sh = G.zone.kind === 'street' && !G.inTunnel;
       if (t._shOn !== sh && t.shadowMeshes) { t._shOn = sh; const rl = R.sg.getShadowMap().renderList; for (const m of t.shadowMeshes) { const i = rl.indexOf(m); if (sh && i < 0) rl.push(m); else if (!sh && i >= 0) rl.splice(i, 1); } }
     }
-    // 车厢里看不见站厅售票机 / 闸机屏 / 墙图，白画 3 次
+    // 车厢里 / 站台层（y < -10.5，和站台人群同一条线）看不见站厅售票机 / 闸机屏 / 墙图 / 安检行李（3 个）/ 安检门灯条：
+    //   安检在站厅入口那头，离楼扶梯洞 25 m 以上，从站台透过洞口看不到站厅地面上的东西；以前车上 / 站台上白画 4~7 次
     if (!inXm && !(east && east.cur) && G.station) {
-      const showConcScr = !G.aboard;
-      for (const o of [G.station.tvmScr, G.station.gateScr, G.station.wallMap]) if (o && o.mesh && o.mesh.isEnabled() !== showConcScr) o.mesh.setEnabled(showConcScr);
+      const showConcScr = !G.aboard && p.y > -10.5, S = G.station, sec = S.security;
+      for (const m of [S.tvmScr && S.tvmScr.mesh, S.gateScr && S.gateScr.mesh, S.wallMap && S.wallMap.mesh, ...(sec ? [...sec.bags, sec.arch] : [])]) if (m && m.isEnabled(false) !== showConcScr) m.setEnabled(showConcScr);
     }
     R.setSunShadow(G.zone.kind === 'street' || G.zone.kind === 'hall');
     // 坐车到站、走出车厢 → 主角庆祝一下（两只拳头举起“努力！”）
