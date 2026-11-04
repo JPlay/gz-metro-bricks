@@ -369,6 +369,20 @@ const CHAO_SHOPS = [['WM.HOME', '#EDE7DC', '#2B2B2B'], ['喧哗世界', '#E8306B
   ['李山山茶事', '#3F6B4A', '#F4EEDC'], ['FUGGLER', '#F28A2E', '#FFFFFF'], ['野菌培养室', '#6B4C3B', '#F4EEDC'], ['日出那边', '#F2C230', '#B8001F'],
   ['漫火串烧', '#2B2B2B', '#F28A2E'], ['酒鬼食堂', '#1F3B73', '#FFFFFF'], ['GRKC', '#FFFFFF', '#C8102E'], ['吉㠭', '#C9A97A', '#2B2B2B']];
 
+const BB_HI = hex('#3D64AE'), BB_LO = hex('#24467F'), BB_BEAM = hex('#1C3766');   // 大步路蓝顶（比 CHAO_BLUE 暗、低饱和）
+const mixC = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+/** 金色圆环灯：哑光金属金的圆截面环（36×6 段）+ 内圈一条微微发光的细环带 */
+function goldRing(k, cx, y, cz, R, r) {
+  const M = k.metal, G = k.glow, SEG = 28, SIDE = 4, col = hex('#C9A75E'), b0 = M.p.length / 3;
+  for (let i = 0; i <= SEG; i++) { const a = i / SEG * Math.PI * 2, ca = Math.cos(a), sa = Math.sin(a);
+    for (let j = 0; j <= SIDE; j++) { const b = (j / SIDE + 0.125) * Math.PI * 2, cb = Math.cos(b), sb = Math.sin(b);
+      M.push(cx + (R + r * cb) * ca, y + r * sb, cz + (R + r * cb) * sa, cb * ca, sb, cb * sa, col); } }
+  for (let i = 0; i < SEG; i++) for (let j = 0; j < SIDE; j++) { const a = b0 + i * (SIDE + 1) + j, b = a + SIDE + 1; M.i.push(a, b, a + 1, a + 1, b, b + 1); }
+  const g0 = G.p.length / 3, gc = hex('#F3D48C'), ri = R - r * 0.9, ro = R - r * 0.35, yy = y - r * 0.75;
+  for (let i = 0; i <= SEG; i++) { const a = i / SEG * Math.PI * 2, ca = Math.cos(a), sa = Math.sin(a);
+    G.push(cx + ri * ca, yy, cz + ri * sa, 0, -1, 0, gc); G.push(cx + ro * ca, yy, cz + ro * sa, 0, -1, 0, gc); }
+  for (let i = 0; i < SEG; i++) { const a = g0 + i * 2; G.i.push(a, a + 2, a + 1, a + 1, a + 2, a + 3); }
+}
 function phase4(S) {
   const k = S.kit, P = k.solid, A = S.atlas, G = k.glow, GL = k.glass, M = k.metal, B = k.g('band'), GR = k.g('granite');
   const { x0, x1, z0, z1, h } = P4, { x0: bx0, x1: bx1 } = BIGBLUE, { z0: yz0, z1: yz1 } = P4Y;
@@ -410,15 +424,25 @@ function phase4(S) {
   A.quad(x1 - 8, 17.6, z0 - 0.08, 9, 3, aS(0, -1), A.draw(9, 3, textPaint(['P  停车楼 3–5F', 'SM PARKING'], { bg: '#1F5FA8', fg: '#FFFFFF' }), 24));
   // ---- 大步路 BIG BLUE：蓝色步道 + 蓝顶 + 金色圆环灯；两头挂牌 ----
   const bb = A.draw(7.6, 1.1, textPaint(['大步路  BIG BLUE', 'CHAO BLOCK · 潮街区'], { bg: CHAO_BLUE, fg: '#FFFFFF' }), 40);
-  B.slab(bx0 + 1.5, bx1 - 1.5, 0.03, 0.05, z0 - 6, z1 + 3, blue, { ao: false });
+  GR.slab(bx0 + 0.2, bx1 - 0.2, 0.03, 0.05, z0 - 6, z1 + 3, hex('#D3CCC0'), { ao: false });   // 步道地面 = 浅灰石材（同人行道），蓝色只在顶上
+  for (let z = z0 - 6 + 3; z < z1 + 3; z += 3) GR.slab(bx0 + 0.2, bx1 - 0.2, 0.05, 0.052, z - 0.03, z + 0.03, hex('#B9B3A8'), { ao: false });   // 石材分缝
   for (const [c0, c1] of [[z0, yz0], [yz1, z1]]) {
-    B.slab(bx0, bx1, 5.84, 5.98, c0, c1, blue, { ao: false });
-    for (let z = c0 + 4; z < c1 - 2; z += 7) { G.cyl((bx0 + bx1) / 2, 5.8, z, 2.6, 0.06, gold, 16, 0, 0, 0, undefined, { ao: false }); B.cyl((bx0 + bx1) / 2, 5.76, z, 2.0, 0.06, blue, 16, 0, 0, 0, undefined, { ao: false }); }
-    for (const [z, n] of [[c0 - 0.1, -1], [c1 + 0.1, 1]]) A.quad((bx0 + bx1) / 2, 5.2, z, 7.6, 1.1, aS(0, n), bb);
+    // 蓝顶：压暗、降饱和；横向明暗渐变（两边暗、中间亮）+ 横梁 / 边梁格子
+    const NS = 8; for (let j = 0; j < NS; j++) { const t = Math.abs((j + 0.5) / NS - 0.5) * 2; B.slab(bx0 + (bx1 - bx0) * j / NS, bx0 + (bx1 - bx0) * (j + 1) / NS, 5.84, 5.98, c0, c1, mixC(BB_HI, BB_LO, t), { ao: false }); }
+    for (let z = c0 + 1.75; z < c1; z += 3.5) B.slab(bx0, bx1, 5.62, 5.84, z - 0.09, z + 0.09, BB_BEAM, { ao: false });
+    for (const x of [bx0 + 0.15, bx1 - 0.15]) B.slab(x - 0.15, x + 0.15, 5.5, 5.84, c0, c1, BB_BEAM, { ao: false });
+    for (let z = c0 + 4; z < c1 - 2; z += 8.5) goldRing(k, (bx0 + bx1) / 2, 5.5, z, 1.15, 0.1);
+    for (const [z, n] of [[c0 - 0.1, -1], [c1 + 0.1, 1]]) {   // 两头挂牌：双面（里外都读正），中间夹一块牌体
+      P.slab((bx0 + bx1) / 2 - 3.85, (bx0 + bx1) / 2 + 3.85, 4.62, 5.78, z - 0.07, z + 0.07, hex('#1A3F86'), { ao: false });
+      A.quad((bx0 + bx1) / 2, 5.2, z + n * 0.08, 7.6, 1.1, aS(0, n), bb); A.quad((bx0 + bx1) / 2, 5.2, z - n * 0.08, 7.6, 1.1, aS(0, -n), bb);
+    }
   }
   // ---- 中庭：蓝色大楼梯 → 2F 平台（东楼前，可走）----
   const TY = 6, sx0 = 126, sx1 = 130, sz0 = 40, sz1 = 55, tx0 = 130;
-  k.stairs('z', sz0, 0, sz1, TY, sx0, sx1, 0, blue, { rails: true, nosing: '#E8EEF6' });
+  k.stairs('z', sz0, 0, sz1, TY, sx0, sx1, 0, blue, { rails: true, steps: false });
+  { const n = Math.round(TY / 0.16);   // 踏步自己画在哑光 paint 桶（kit 默认的 floor 桶是高光反射，整段楼梯会被环境反射切成左暗右亮两半）
+    for (let j = 0; j < n; j++) { const s0 = sz0 + (sz1 - sz0) * j / n, s1 = sz0 + (sz1 - sz0) * (j + 1) / n, top = TY * (j + 1) / n;
+      P.slab(sx0, sx1, 0, top, s0, s1, blue, { ao: false }); P.slab(sx0 + 0.05, sx1 - 0.05, top, top + 0.006, s0, s0 + 0.07, hex('#E8EEF6'), { ao: false }); } }
   P.slab(sx0, P4E, TY - 0.4, TY, sz1, sz1 + 4, hex('#E9ECEF'), { ao: false }); k.colSlab(sx0, P4E, TY - 0.6, TY, sz1, sz1 + 4);
   P.slab(tx0, P4E, TY - 0.4, TY, yz0 + 2, yz1 - 2, hex('#E9ECEF'), { ao: false }); k.colSlab(tx0, P4E, TY - 0.6, TY, yz0 + 2, yz1 - 2);
   B.slab(tx0, P4E, TY - 0.55, TY - 0.4, yz0 + 2, yz1 - 2, blue, { ao: false });
@@ -426,7 +450,7 @@ function phase4(S) {
   rail(tx0 - 0.05, tx0 + 0.05, yz0 + 2, sz1); rail(tx0 - 0.05, tx0 + 0.05, sz1 + 4, yz1 - 2); rail(sx0 - 0.05, sx0 + 0.05, sz1, sz1 + 4); rail(sx0, tx0, sz1 + 3.95, sz1 + 4.05);
   rail(tx0, P4E, yz0 + 1.95, yz0 + 2.05); rail(tx0, P4E, yz1 - 2.05, yz1 - 1.95);
   for (const z of [yz0 + 3, 66, yz1 - 3]) { M.cyl(tx0 + 0.4, (TY - 0.4) / 2, z, 0.5, TY - 0.4, hex('#E6E8EA'), 10); k.colSlab(tx0 + 0.15, tx0 + 0.65, 0, TY - 0.4, z - 0.25, z + 0.25); }
-  for (const z of [36, 48, 62, 72]) { G.cyl(133, TY - 0.6, z, 2.2, 0.06, gold, 16, 0, 0, 0, undefined, { ao: false }); B.cyl(133, TY - 0.64, z, 1.7, 0.06, blue, 16, 0, 0, 0, undefined, { ao: false }); }
+  for (const z of [36, 48, 62, 72]) goldRing(k, 133, TY - 0.72, z, 0.98, 0.09);
   // 店招：大步路两侧 + 中庭四周（官网 / 公众号里的首批品牌）
   const shopSign = (i, x, z, nx, nz, y = 5.3) => { const [n, bg, fg] = CHAO_SHOPS[i % CHAO_SHOPS.length]; A.quad(x + nx * 0.25, y, z + nz * 0.25, 5.2, 0.9, aS(nx, nz), A.draw(5.2, 0.9, textPaint([n], { bg, fg }), 40)); };
   let si = 0;
