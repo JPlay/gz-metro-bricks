@@ -392,7 +392,7 @@ function finWall(tint = '#86A9BE', floors = 3) {
 }
 function phase3(S) {
   const k = S.kit, P = k.solid, A = S.atlas, G = k.glow, GL = k.glass, GR = k.g('granite'), { x0, x1, z0, z1, h } = P3;
-  const fw = A.draw(12, 17, finWall(), 9), store = shopUv(S), wall = hex('#E4E8EB'), white = hex('#F4F6F7'), line = hex('#EAF6FF');
+  const fw = A.draw(12, 17, finWall(), 7), store = shopUv(S), wall = hex('#E4E8EB'), white = hex('#F4F6F7'), line = hex('#EAF6FF');
   // ---- 体块 ----
   P.slab(P3E.x0, x1, 0, h, P3E.z0, z1, wall, { ao: false }); k.colSlab(P3E.x0, x1, 0, h, P3E.z0, z1);
   P.slab(x0, P3S.x1, 0, h, z0, P3S.z1, wall, { ao: false }); k.colSlab(x0, P3S.x1, 0, h, z0, P3S.z1);
@@ -421,11 +421,11 @@ function phase3(S) {
   for (const [tx, tz] of [[-140, 188], [-94, 160]]) D.tree(k, tx, P3LOW + 0.25, tz, 0.7, 1);
   // 招牌
   A.quad(x1 + 0.45, 15, 168, 22, 3.4, aS(1, 0), A.draw(22, 3.4, textPaint(['SM厦门 三期', 'SM XIAMEN · PHASE III'], { bg: '#FFFFFF', fg: SM_NAVY }), 15));
-  A.quad(x1 + 0.45, 15, 186, 4, 4, aS(1, 0), A.draw(4, 4, (c, pw, ph) => smLogo(c, pw, ph, { bg: '#FFFFFF' }), 40));
+  A.quad(x1 + 0.45, 15, 186, 4, 4, aS(1, 0), A.draw(4, 4, (c, pw, ph) => smLogo(c, pw, ph, { bg: '#FFFFFF' }), 30));
   { const a = -Math.PI / 4, nx = Math.cos(a), nz = Math.sin(a); A.quad(P3R.cx + nx * (P3R.r + 0.5), 16.5, P3R.cz + nz * (P3R.r + 0.5), 5, 5, aS(nx, nz), A.draw(5, 5, (c, pw, ph) => smLogo(c, pw, ph, { bg: '#FFFFFF' }), 20)); }
   A.quad(-128, 16.5, z0 - 0.45, 18, 3, aS(0, -1), A.draw(18, 3, textPaint(['SM厦门 三期', '都市潮流聚落 · 新锐社交空间'], { bg: '#FFFFFF', fg: SM_NAVY }), 15));
   // ---- voco 酒店塔楼（18 层 77.9 m；从低区屋面起） ----
-  { const { x0, x1, z0, z1, h: th } = HOTEL, tw = A.draw(14, 20, curtain('#6F8FA6'), 9);
+  { const { x0, x1, z0, z1, h: th } = HOTEL, tw = A.draw(14, 20, curtain('#6F8FA6'), 7);
     P.slab(x0, x1, P3LOW, th, z0, z1, hex('#BFCBD4'), { ao: false });
     tileFace(A, tw, 'z', x1, z0, z1, P3LOW + 0.6, th - 2, 1, 14); tileFace(A, tw, 'x', z0, x0, x1, h + 0.6, th - 2, -1, 14);
     P.slab(x0 - 0.3, x1 + 0.3, th - 2, th, z0 - 0.3, z1 + 0.3, hex('#E9ECEE'), { ao: false });
