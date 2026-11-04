@@ -14,7 +14,7 @@ async def cam(pg, az, el, d, ty, fov=0.8):
 async def free_off(pg): await pg.evaluate('__game.player.freeCam=null; __game.player.cam.fov=0.92')
 async def shot(pg, name, wait=1.2):
     await asyncio.sleep(wait)
-    path = f'{OUT}/{name}.png'; await pg.screenshot(path=path, timeout=240000)
+    path = f'{OUT}/{name}.png'; await safe_shot(pg, path=path, timeout=240000)
     dc = (await st(pg))['drawCalls']; print('SHOT', name, path, 'dc=', dc, flush=True)
 def want(n): return not ONLY or n in ONLY
 async def main():

@@ -25,7 +25,7 @@ async def walk(pg, pts):
     return True
 async def P(pg, name):
     d = await perf(pg); R['perf'][name] = d; log('perf', name, d)
-    await pg.screenshot(path=SHOTS + name + '.jpg', type='jpeg', quality=60, timeout=180000)
+    await safe_shot(pg, path=SHOTS + name + '.jpg', type='jpeg', quality=60, timeout=180000)
     ok(f'perf:{name}:budget', d['tris'] < BUDGET['tris'] and d['draws'] < BUDGET['draws'], d)
 async def no_card(pg, name, secs=4):
     # 游戏时间 secs 秒内卡片一直不出现（含“马上要弹”的计时）

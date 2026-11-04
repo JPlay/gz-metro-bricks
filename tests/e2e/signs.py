@@ -27,7 +27,7 @@ async def main():
     for name, x, y, z, yaw, pitch in SPOTS:
         if ONLY and ONLY not in name: continue
         await pg.evaluate(f'__game.teleport({x},{y},{z},{yaw}); __game.player.pitch={pitch}'); await asyncio.sleep(1.6)
-        await pg.screenshot(path=OUT + name + '.png', timeout=240000); log('shot', name)
+        await safe_shot(pg, path=OUT + name + '.png', timeout=240000); log('shot', name)
     R['atlas'] = (await st(pg))['atlas']; R['errors'] = errs(logs)
     print(json.dumps(R, ensure_ascii=False), flush=True)
     chk = {'atlasNoOverflow': R['atlas'] and R['atlas']['overflow'] == 0, 'noErrors': not R['errors']}

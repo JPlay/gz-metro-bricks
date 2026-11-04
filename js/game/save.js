@@ -6,11 +6,13 @@
  * 存档带版本号；解析失败 / 版本不对 / 车站不存在 → 用默认开局（绝不白屏）。URL 带 ?start= 时不读存档（测试用）。
  */
 export const SAVE_KEY = 'gzmb.save', SAVE_V = 1;
+/** 能存档续玩的城市（地铁网）；加城市只往这里加，不用升版本号 */
+export const SAVE_CITIES = ['gz', 'xm', 'fz'];
 export function readSave() {
   try {
     const raw = localStorage.getItem(SAVE_KEY); if (!raw) return null;
     const s = JSON.parse(raw);
-    if (!s || s.v !== SAVE_V || (s.city !== 'gz' && s.city !== 'xm') || typeof s.code !== 'string') return null;
+    if (!s || s.v !== SAVE_V || !SAVE_CITIES.includes(s.city) || typeof s.code !== 'string') return null;
     if (s.pos && !(Array.isArray(s.pos) && s.pos.length === 3 && s.pos.every(Number.isFinite))) s.pos = null;
     if (!Number.isFinite(s.yaw)) s.yaw = 0;
     return s;
@@ -18,15 +20,16 @@ export function readSave() {
 }
 export function clearSave() { try { localStorage.removeItem(SAVE_KEY); } catch (_) {} }
 
-/** g: { player, G, metro, xmMetro(), east(), hotel(), clan(), brother() } */
+/** g: { player, G, metro, xmMetro(), fzMetro(), east(), hotel(), clan(), brother() } */
 export function snapshot(g) {
   if (g.off && g.off()) return null;
   const { player, G, metro } = g, xm = g.xmMetro(), east = g.east(), hotel = g.hotel(), clan = g.clan(), br = g.brother();
   const p = player.position, pos = [p.x, p.y, p.z].map(v => +v.toFixed(2)), yaw = +player.yaw.toFixed(3);
-  if (xm && xm.station) {
-    const riding = G.aboard || G.inTunnel || G.zone.kind === 'tunnel' || !!xm.street;   // 街区：存成“回到这个站的站台”
-    const line = xm.ride ? xm.ride.line : (G.zone.P ? G.zone.P.line : null);
-    return riding ? { city: 'xm', code: xm.code, line, platform: true } : { city: 'xm', code: xm.code, line, pos, yaw };
+  const fz = g.fzMetro ? g.fzMetro() : null;
+  for (const [city, m] of [['xm', xm], ['fz', fz]]) if (m && m.station) {
+    const riding = G.aboard || G.inTunnel || G.zone.kind === 'tunnel' || !!m.street;   // 街区：存成“回到这个站的站台”
+    const line = m.ride ? m.ride.line : (G.zone.P ? G.zone.P.line : null);
+    return riding ? { city, code: m.code, line, platform: true } : { city, code: m.code, line, pos, yaw };
   }
   if ((east && east.cur) || (hotel && hotel.cur) || (clan && clan.cur) || (br && br.food && br.food.cur)) return null;   // 室内 / 国铁 / 动车：不覆盖
   if (!G.station || !G.code) return null;

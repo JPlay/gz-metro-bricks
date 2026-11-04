@@ -327,7 +327,7 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #1d2b3a; fon
 #netmap { position: fixed; inset: 0; z-index: 6; display: flex; align-items: center; justify-content: center; background: rgba(12,22,34,.42); padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); animation: nmIn .2s ease-out; }
 @keyframes nmIn { from { opacity: 0; } } @keyframes nmOut { to { opacity: 0; } }
 #netmap.out { animation: nmOut .2s ease-in forwards; }
-#netmap .sheet { width: min(1120px, 96vw); height: 96vh; max-height: 96vh; border-radius: 30px; padding: 12px 16px 16px; background: rgba(250,252,254,.9); color: var(--ink); display: flex; flex-direction: column; box-sizing: border-box; }
+#netmap .sheet { width: min(1120px, 96vw); height: 96vh; max-height: 96vh; border-radius: 30px; padding: 12px 16px 16px; background: #FAFCFE;   /* 不透明：地图打开时不透出后面的站台 / 按钮 */ color: var(--ink); display: flex; flex-direction: column; box-sizing: border-box; }
 #netmap header { display: flex; align-items: center; gap: 14px; min-height: 64px; }
 #netmap .ttl { display: flex; align-items: center; gap: 12px; font-size: 30px; }
 #netmap .ttl .ico { width: 40px; height: 40px; color: #34404f; }

@@ -17,7 +17,7 @@ async def pose(pg, x, y, z, yaw, pitch, v, settle=1.2, dist=4.2):
     await pg.evaluate(f'__game.teleport({x},{y},{z},{yaw}); __game.player.pitch={pitch}; __game.player.dist={dist}')
     await asyncio.sleep(settle)
 async def shot(pg, name):
-    await pg.screenshot(path=OUT + name + '.png', timeout=180000)
+    await safe_shot(pg, path=OUT + name + '.png', timeout=180000)
     s = await st(pg); R[name] = {'pos': s['pos'], 'yaw': s['yaw'], 'pitch': s['pitch'], 'view': s['view'], 'camPos': s['camPos']}
     print(name, json.dumps(R[name]), flush=True)
 def want(k): return ONLY is None or k in ONLY

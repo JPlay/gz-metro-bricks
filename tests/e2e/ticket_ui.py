@@ -16,7 +16,7 @@ os.makedirs(OUT, exist_ok=True)
 T0 = time.time(); R = {}
 def log(*a): print(f'[{time.time() - T0:6.1f}s]', *a, flush=True)
 async def shot(pg, name):
-    await pg.screenshot(path=OUT + name + TAG + SUF + '.png', timeout=180000); log('shot', name + TAG + SUF)
+    await safe_shot(pg, path=OUT + name + TAG + SUF + '.png', timeout=180000); log('shot', name + TAG + SUF)
 async def tap(pg, sel):
     box = await pg.locator(sel).first.bounding_box()
     await pg.touchscreen.tap(box['x'] + box['width'] / 2, box['y'] + box['height'] / 2)
