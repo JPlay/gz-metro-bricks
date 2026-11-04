@@ -210,7 +210,8 @@ function wangJieGate(S) {
   GL.slab(x0, x1, 0.06, 3.0, z1 - 0.04, z1, hex('#D6EEF8')); k.colSlab(x0, x1, 0, 3, z1 - 0.2, z1 + 0.1);
   M.slab(x0 - 0.4, x1 + 0.4, 3.0, 3.25, z0 - 0.5, z1 + 0.3, hex('#6E767E'), { ao: false });
   P.slab(x0 - 0.42, x1 + 0.42, 2.45, 3.0, z0 - 0.52, z0 - 0.4, hex('#B3261E'), { ao: false });
-  A.quad((x0 + x1) / 2, 2.72, z0 - 0.53, 5.6, 0.5, aS(0, -1), A.draw(5.6, 0.5, textPaint(['SM 旺街  ↓ -1F', 'WANG STREET · 地铁直达 · SM一期 B1'], { bg: '#B3261E', fg: '#F6D36B' }), 50));
+  A.quad((x0 + x1) / 2, 2.72, z0 - 0.53, 5.6, 0.5, aS(0, -1), A.draw(5.6, 0.5, textPaint(['SM 旺街  ↓ -1F', 'WANG STREET · 地铁直达 · SM一期 B1'], { bg: '#B3261E', fg: '#F6D36B', fit: true }), 50));
+  P.slab(x1 + 0.04, x1 + 0.09, 0.88, 2.52, (z0 + z1) / 2 - 0.62, (z0 + z1) / 2 + 0.62, hex('#B3261E'), { ao: false });   // 牌子背板：隔着玻璃从亭里看不到镜像字
   A.quad(x1 + 0.12, 1.7, (z0 + z1) / 2, 1.2, 1.6, aS(1, 0), A.draw(1.2, 1.6, textPaint(['旺', 'HO!'], { bg: '#B3261E', fg: '#F6D36B', frame: '#F6D36B' }), 50));
   G.slab(x0 + 0.3, x1 - 0.3, 2.98, 3.0, z0, z1 - 0.3, hex('#FFE2A8'), { ao: false });
   k.shade.shadeBlob((x0 + x1) / 2, (z0 + z1) / 2, 3.4, 4.0, 0.07, 0.22);

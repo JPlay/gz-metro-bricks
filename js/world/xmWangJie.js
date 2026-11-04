@@ -14,7 +14,8 @@
 import { hex } from '../core/geo.js';
 import { Kit } from './kit.js';
 import { FoodAtlas } from '../game/food-art.js';
-import { textPaint, FONT, FONT_EN } from './xmStreet.js';
+import { textPaint as textPaint0, FONT, FONT_EN } from './xmStreet.js';
+const textPaint = (lines, o = {}) => textPaint0(lines, { fit: true, ...o });   // 旺街的字都按宽度缩，不许出框
 import { preseed } from './people.js';
 import { escalator, lowPerson, shopper, flatQ } from './xmSM.js';
 
@@ -58,9 +59,11 @@ function yanglou(c, pw, ph) {
 function hoard(c, pw, ph) {
   c.fillStyle = '#C8443A'; c.fillRect(0, 0, pw, ph);
   c.fillStyle = '#FFE7A8'; c.textAlign = 'center'; c.textBaseline = 'middle';
-  c.font = `900 ${ph * 0.3}px ${FONT}`; c.fillText('HO! 上街去', pw * 0.3, ph * 0.42);
-  c.font = `700 ${ph * 0.12}px ${FONT}`; c.fillText('人旺财旺精神旺 · 呷旺饮旺家家旺', pw * 0.72, ph * 0.4);
-  c.font = `600 ${ph * 0.08}px ${FONT_EN}`; c.fillText('WANG STREET · -1F ws09–ws13', pw * 0.72, ph * 0.62);
+  // 上下叠排，每行量宽缩放，不许互相压字
+  const fit = (t, w, sz, f, maxW) => { c.font = `${w} ${sz}px ${f}`; const m = c.measureText(t).width; if (m > maxW) c.font = `${w} ${sz * maxW / m}px ${f}`; };
+  fit('HO! 上街去', 900, ph * 0.3, FONT, pw * 0.86); c.fillText('HO! 上街去', pw / 2, ph * 0.28);
+  fit('人旺财旺精神旺 · 呷旺饮旺家家旺', 700, ph * 0.11, FONT, pw * 0.86); c.fillText('人旺财旺精神旺 · 呷旺饮旺家家旺', pw / 2, ph * 0.55);
+  fit('WANG STREET · -1F ws09–ws13 · COMING SOON', 600, ph * 0.065, FONT_EN, pw * 0.86); c.fillText('WANG STREET · -1F ws09–ws13 · COMING SOON', pw / 2, ph * 0.7);
   for (let i = 0; i < 9; i++) { c.fillStyle = i % 2 ? '#F2C230' : '#FFFFFF'; c.beginPath(); c.arc(pw * (0.05 + i * 0.11), ph * 0.86, ph * 0.04, 0, 7); c.fill(); }
 }
 function directory(c, pw, ph) {
@@ -158,7 +161,9 @@ export class SmWangJie {
     row(WJ_WEST, -1); row(WJ_EAST, 1);
     // 顶上一串红灯笼（走廊中间，每 6 m 一对）
     for (let z = Z0 + 3; z < Z1; z += BAY) for (const x of [-1.6, 1.6]) { G.ellipsoid(x, 3.55, z, 0.55, 0.48, 0.55, hex('#E8402F'), 1); P.cyl(x, 3.85, z, 0.32, 0.08, GOLD, 6, 0, 0, 0, undefined, { ao: false }); P.cyl(x, 3.25, z, 0.32, 0.08, GOLD, 6, 0, 0, 0, undefined, { ao: false }); Mt.tube([x, 3.9, z], [x, H, z], 0.02, DARK, 3); }
-    for (let z = Z0 + 6; z < Z1; z += 12) A.sign(0, 3.9, z, 5.6, 0.55, a(0, -1), textPaint([z % 24 === 6 ? 'HO! 上街去' : '人旺财旺精神旺 · 呷旺饮旺家家旺'], { bg: '#B3261E', fg: '#F6D36B' }));
+    // 横幅两面都印字（单面会从背后看到镜像字）；同一张贴图正反各贴一次
+    for (let z = Z0 + 6; z < Z1; z += 12) { const uvB = A.draw(5.6, 0.55, textPaint([z % 24 === 6 ? 'HO! 上街去' : '人旺财旺精神旺 · 呷旺饮旺家家旺'], { bg: '#B3261E', fg: '#F6D36B' }));
+      A.quad(0, 3.9, z - 0.02, 5.6, 0.55, a(0, -1), uvB); A.quad(0, 3.9, z + 0.02, 5.6, 0.55, a(0, 1), uvB); }
     // ---------- 北厅：扶梯 + 楼梯上 1F，北面玻璃墙后是一期 B1 ----------
     escalator(k, [5.6, 0, 57], [5.6, UP, 66.5], 1.1, true);
     k.stairs('z', 57, 0, 66.5, UP, 1.6, 4.2, -0.3, '#D9D4CA', { rails: true });

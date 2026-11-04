@@ -66,13 +66,15 @@ export function pillarText(t, bg = '#B8463A', fg = '#F6D36B') {
     ch.forEach((x, i) => c.fillText(x, pw / 2, ph / 2 + (i - (ch.length - 1) / 2) * sz * 1.08));
   };
 }
-export function textPaint(lines, { bg = '#B3261E', fg = '#F6D36B', font = FONT, weight = 800, frame = null } = {}) {
+export function textPaint(lines, { bg = '#B3261E', fg = '#F6D36B', font = FONT, weight = 800, frame = null, fit = false } = {}) {
   return (c, pw, ph) => {
     c.fillStyle = bg; c.fillRect(0, 0, pw, ph);
     if (frame) { c.strokeStyle = frame; c.lineWidth = ph * 0.05; c.strokeRect(ph * 0.05, ph * 0.05, pw - ph * 0.1, ph - ph * 0.1); }
     c.fillStyle = fg; c.textAlign = 'center'; c.textBaseline = 'middle';
     const n = lines.length;
-    lines.forEach((t, i) => { const sz = (i === 0 ? 0.62 : 0.3) * ph / Math.max(1, n * 0.75); c.font = `${i === 0 ? weight : 600} ${sz}px ${i === 0 ? font : FONT_EN}`; c.fillText(t, pw / 2, ph * (n === 1 ? 0.54 : 0.38 + i * 0.36)); });
+    lines.forEach((t, i) => { const sz = (i === 0 ? 0.62 : 0.3) * ph / Math.max(1, n * 0.75); c.font = `${i === 0 ? weight : 600} ${sz}px ${i === 0 ? font : FONT_EN}`;
+      if (fit) { const m = c.measureText(t).width, mw = pw - ph * (frame ? 0.3 : 0.16); if (m > mw) c.font = `${i === 0 ? weight : 600} ${sz * mw / m}px ${i === 0 ? font : FONT_EN}`; }
+      c.fillText(t, pw / 2, ph * (n === 1 ? 0.54 : 0.38 + i * 0.36)); });
   };
 }
 
