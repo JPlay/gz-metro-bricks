@@ -268,7 +268,9 @@ export function smCity(S) {
     { ax: 'x', s: 1, x: P1.x0 - 0.4, z: (BR1.z0 + BR1.z1) / 2, y: BR1.y, halfW: 2.6, zLo: -0.6, zHi: 0.8, outPos: [P1.x0 - 2.4, (BR1.z0 + BR1.z1) / 2], outY: BR1.y + 0.05, outYaw: -Math.PI / 2, id: 'sm-city', gate: 'br1', make: mall('sm-city') },
     { ax: 'x', s: 1, x: P1.x0 - 0.4, z: (BR2.z0 + BR2.z1) / 2, y: BR2.y, halfW: 2.6, zLo: -0.6, zHi: 0.8, outPos: [P1.x0 - 2.4, (BR2.z0 + BR2.z1) / 2], outY: BR2.y + 0.05, outYaw: -Math.PI / 2, id: 'sm-city', gate: 'br2', make: mall('sm-city') },
     { ax: 'x', s: -1, x: BR1.x0 + 0.4, z: (BR1.z0 + BR1.z1) / 2, y: BR1.y, halfW: 2.6, zLo: -0.6, zHi: 0.8, outPos: [BR1.x0 + 2.4, (BR1.z0 + BR1.z1) / 2], outY: BR1.y + 0.05, outYaw: Math.PI / 2, id: 'sm-topaz', gate: 'br1', make: mall('sm-topaz') },
-    { ax: 'x', s: -1, x: BR2.x0 + 0.4, z: (BR2.z0 + BR2.z1) / 2, y: BR2.y, halfW: 2.6, zLo: -0.6, zHi: 0.8, outPos: [BR2.x0 + 2.4, (BR2.z0 + BR2.z1) / 2], outY: BR2.y + 0.05, outYaw: Math.PI / 2, id: 'sm-p3', gate: 'br2', make: mall('sm-p3') },
+    { ax: 'x', s: -1, x: BR2.x0 + 0.4, z: (BR2.z0 + BR2.z1) / 2, y: BR2.y, halfW: 2.6, zLo: -0.6, zHi: 0.8, outPos: [BR2.x0 + 2.4, (BR2.z0 + BR2.z1) / 2], outY: BR2.y + 0.05, outYaw: Math.PI / 2, id: 'sm-p3', gate: 'br2', make: mall('sm-p3') },    // 3F 连廊（楼面 y 11）：北头进三期 3F、南头进黄宝石 3F
+    { s: 1, x: (LK3.x0 + LK3.x1) / 2, z: LK3.zP - 0.4, y: LK3.y, halfW: 2.6, zLo: -0.6, zHi: 0.8, outPos: [(LK3.x0 + LK3.x1) / 2, LK3.zP - 2.0], outY: LK3.y + 0.05, outYaw: Math.PI, id: 'sm-p3', gate: 'lk3', make: mall('sm-p3') },
+    { s: -1, x: (LK3.x0 + LK3.x1) / 2, z: LK3.zT + 3.4, y: LK3.y, halfW: 2.6, zLo: -0.6, zHi: 0.8, outPos: [(LK3.x0 + LK3.x1) / 2, LK3.zT + 5.0], outY: LK3.y + 0.05, outYaw: 0, id: 'sm-topaz', gate: 'lk3', make: mall('sm-topaz') },
   ];
 }
 
@@ -373,28 +375,130 @@ function phase2(S) {
   k.metal.slab(-47.75, -47.55, 0, 4.0, 38.7, 41.3, hex('#5C646C'), { ao: false }); k.colSlab(-47.8, -47.5, 0, 4, 38.7, 41.3);
 }
 
-/* ---------- 三期（嘉禾路401，二期北侧）：4 层裙楼 + voco 酒店塔楼 ---------- */
+/* ---------- 三期（嘉禾路401，二期北侧）：L 形 4 层裙楼 + voco 酒店塔楼 + 3F 连廊（→ 黄宝石 3F）+ 「夏花」雕塑广场 ----------
+ * 资料：SM 官网「SM厦门三期夺得金坐标」（L 型建筑外观、流畅轮廓线条、极简灯光线条勾勒轮廓、水畔小景、秦岭户外雕塑 12 m × 7 m，凤凰花 + 白鹭）
+ *       SM 官网三期开业稿（两座过街天桥 + 三层连廊接二期）；公共空间艺术设计网「夏花」（不锈钢骨架激光镂空 + 光学水晶玻璃，水雾 + 灯光）
+ * 体块：东翼（沿嘉禾路）x −84…−60 + 南翼（对着黄宝石）z 128…152，两翼 23 m；东南角做 R10 圆角；西北角低一块（12 m 屋顶花园），酒店塔楼从上面起 */
+const P3E = { x0: -84, z0: 138 }, P3S = { x1: -70, z1: 152 }, P3R = { cx: -70, cz: 138, r: 10 }, P3LOW = 12, LK3 = { x0: -108, x1: -100, y: 11, zT: 117, zP: P3.z0 };
+/** 三期立面：玻璃 + 每层三道白色横向铝百叶（层高 5.75） */
+function finWall(tint = '#86A9BE', floors = 3) {
+  return (c, pw, ph) => {
+    const g = c.createLinearGradient(0, 0, 0, ph); g.addColorStop(0, '#D3E4EE'); g.addColorStop(1, tint); c.fillStyle = g; c.fillRect(0, 0, pw, ph);
+    c.fillStyle = 'rgba(40,60,75,0.28)'; for (let i = 0; i < 6; i++) c.fillRect(pw * i / 6 - 1, 0, 2, ph);
+    for (let f = 0; f < floors; f++) { const y0 = ph * f / floors;
+      c.fillStyle = '#F4F6F7'; c.fillRect(0, y0, pw, ph / floors * 0.13);
+      c.fillStyle = 'rgba(244,246,247,0.85)'; for (const t of [0.42, 0.68]) c.fillRect(0, y0 + ph / floors * t, pw, ph / floors * 0.05); }
+  };
+}
 function phase3(S) {
-  const k = S.kit, P = k.solid, A = S.atlas, { x0, x1, z0, z1, h } = P3;
-  const cw = A.draw(12, 14, curtain('#7FA6BF'), 12), store = shopUv(S);
-  P.slab(x0, x1, 0, h, z0, z1, hex('#D8DDE2'), { ao: false }); k.colSlab(x0, x1, 0, h, z0, z1);
-  for (const [axis, fixed, a0, a1, nrm] of [['z', x1, z0, z1, 1], ['x', z0, x0, x1, -1]]) { tileFace(A, cw, axis, fixed, a0, a1, 6, h - 1, nrm, 12); tileFace(A, store, axis, fixed, a0, a1, 0, 4.6, nrm, 12); }
-  k.g('band').slab(x0 - 0.3, x1 + 0.3, 4.6, 6, z0 - 0.3, z1 + 0.3, hex('#2B3036'), { ao: false });
-  P.slab(x0 - 0.3, x1 + 0.3, h - 1, h + 0.6, z0 - 0.3, z1 + 0.3, hex('#EEF0F2'), { ao: false });
-  A.quad(x1 + 0.45, 15, 168, 22, 3.4, aS(1, 0), A.draw(22, 3.4, textPaint(['SM厦门 三期', 'SM XIAMEN · PHASE III'], { bg: '#FFFFFF', fg: SM_NAVY }), 20));
+  const k = S.kit, P = k.solid, A = S.atlas, G = k.glow, GL = k.glass, GR = k.g('granite'), { x0, x1, z0, z1, h } = P3;
+  const fw = A.draw(12, 17, finWall(), 9), store = shopUv(S), wall = hex('#E4E8EB'), white = hex('#F4F6F7'), line = hex('#EAF6FF');
+  // ---- 体块 ----
+  P.slab(P3E.x0, x1, 0, h, P3E.z0, z1, wall, { ao: false }); k.colSlab(P3E.x0, x1, 0, h, P3E.z0, z1);
+  P.slab(x0, P3S.x1, 0, h, z0, P3S.z1, wall, { ao: false }); k.colSlab(x0, P3S.x1, 0, h, z0, P3S.z1);
+  P.slab(x0, P3E.x0, 0, P3LOW, P3S.z1, z1, hex('#D5DAD6'), { ao: false }); k.colSlab(x0, P3E.x0, 0, P3LOW, P3S.z1, z1);
+  { const { cx, cz, r } = P3R; P.cyl(cx, h / 2, cz, 2 * r, h, wall, 24, 0, 0, 0, undefined, { ao: false });
+    for (let i = 0; i < 8; i++) { const a = -Math.PI / 2 + (i + 0.5) / 8 * Math.PI / 2, nx = Math.cos(a), nz = Math.sin(a), w = 2 * r * Math.sin(Math.PI / 32) * 2 + 0.05;
+      k.col(cx + nx * (r - 0.4), h / 2, cz + nz * (r - 0.4), 0.8, h, w * 1.1, { ry: Math.atan2(-nz, nx) + Math.PI / 2 });
+      A.quad(cx + nx * (r + 0.04), 6 + (h - 7) / 2, cz + nz * (r + 0.04), w, h - 7, aS(nx, nz), fw);
+      A.quad(cx + nx * (r + 0.04), 2.3, cz + nz * (r + 0.04), w, 4.6, aS(nx, nz), store);
+      k.g('band').box(cx + nx * (r + 0.15), 5.3, cz + nz * (r + 0.15), w, 1.4, 0.3, hex('#2B3036'), Math.atan2(nx, nz) + Math.PI / 2, 0, 0, 1, { ao: false });
+      for (const y of [h - 0.25, 11.3]) G.box(cx + nx * (r + 0.32), y, cz + nz * (r + 0.32), w, 0.12, 0.06, line, Math.atan2(nx, nz) + Math.PI / 2, 0, 0, 1, { ao: false });
+      P.box(cx + nx * (r + 0.1), h + 0.1, cz + nz * (r + 0.1), w, 1.4, 0.5, white, Math.atan2(nx, nz) + Math.PI / 2, 0, 0, 1, { ao: false }); } }
+  // 东立面（嘉禾路）z 138…196、南立面（对黄宝石）x −150…−80：上面玻璃百叶，底层店面
+  tileFace(A, fw, 'z', x1, P3E.z0, z1, 6, h - 1, 1, 12); tileFace(A, store, 'z', x1, P3E.z0, z1, 0, 4.6, 1, 12);
+  tileFace(A, fw, 'x', z0, x0, P3R.cx, 6, h - 1, -1, 12); tileFace(A, store, 'x', z0, x0, P3R.cx, 0, 4.6, -1, 12);
+  const B = k.g('band');
+  B.slab(x1 - 0.3, x1 + 0.3, 4.6, 6, P3E.z0, z1 + 0.3, hex('#2B3036'), { ao: false }); B.slab(x0 - 0.3, P3R.cx, 4.6, 6, z0 - 0.3, z0 + 0.3, hex('#2B3036'), { ao: false });
+  // 女儿墙
+  P.slab(P3E.x0, x1 + 0.3, h - 1, h + 0.8, P3E.z0, z1 + 0.3, white, { ao: false }); P.slab(x0 - 0.3, P3S.x1, h - 1, h + 0.8, z0 - 0.3, P3S.z1, white, { ao: false });
+  // 极简灯光线条：屋檐、3F 楼板线、几根竖向转角线
+  for (const y of [h - 0.25, 11.3]) { G.slab(x1 + 0.3, x1 + 0.36, y - 0.06, y + 0.06, P3E.z0, z1 + 0.3, line, { ao: false }); G.slab(x0 - 0.3, P3R.cx, y - 0.06, y + 0.06, z0 - 0.36, z0 - 0.3, line, { ao: false }); }
+  G.slab(x1 + 0.3, x1 + 0.36, 0.3, h, z1 + 0.24, z1 + 0.3, line, { ao: false }); G.slab(x0 - 0.36, x0 - 0.3, 0.3, h, z0 - 0.36, z0 - 0.3, line, { ao: false });
+  // 西北角低区：12 m 屋顶花园（草 + 几棵树 + 木栈道）
+  P.slab(x0 + 0.5, P3E.x0 - 0.5, P3LOW, P3LOW + 0.25, P3S.z1 + 0.5, z1 - 0.5, hex('#6FA65A'), { ao: false });
+  P.slab(x0 - 0.2, P3E.x0, P3LOW - 0.6, P3LOW + 1.1, z1 - 0.3, z1 + 0.2, white, { ao: false });
+  for (const [tx, tz] of [[-140, 188], [-94, 160]]) D.tree(k, tx, P3LOW + 0.25, tz, 0.7, 1);
+  // 招牌
+  A.quad(x1 + 0.45, 15, 168, 22, 3.4, aS(1, 0), A.draw(22, 3.4, textPaint(['SM厦门 三期', 'SM XIAMEN · PHASE III'], { bg: '#FFFFFF', fg: SM_NAVY }), 15));
   A.quad(x1 + 0.45, 15, 186, 4, 4, aS(1, 0), A.draw(4, 4, (c, pw, ph) => smLogo(c, pw, ph, { bg: '#FFFFFF' }), 40));
-  // 酒店塔楼
+  { const a = -Math.PI / 4, nx = Math.cos(a), nz = Math.sin(a); A.quad(P3R.cx + nx * (P3R.r + 0.5), 16.5, P3R.cz + nz * (P3R.r + 0.5), 5, 5, aS(nx, nz), A.draw(5, 5, (c, pw, ph) => smLogo(c, pw, ph, { bg: '#FFFFFF' }), 20)); }
+  A.quad(-128, 16.5, z0 - 0.45, 18, 3, aS(0, -1), A.draw(18, 3, textPaint(['SM厦门 三期', '都市潮流聚落 · 新锐社交空间'], { bg: '#FFFFFF', fg: SM_NAVY }), 15));
+  // ---- voco 酒店塔楼（18 层 77.9 m；从低区屋面起） ----
   { const { x0, x1, z0, z1, h: th } = HOTEL, tw = A.draw(14, 20, curtain('#6F8FA6'), 9);
-    P.slab(x0, x1, h, th, z0, z1, hex('#BFCBD4'), { ao: false });
-    tileFace(A, tw, 'z', x1, z0, z1, h + 0.6, th - 2, 1, 14); tileFace(A, tw, 'x', z0, x0, x1, h + 0.6, th - 2, -1, 14);
+    P.slab(x0, x1, P3LOW, th, z0, z1, hex('#BFCBD4'), { ao: false });
+    tileFace(A, tw, 'z', x1, z0, z1, P3LOW + 0.6, th - 2, 1, 14); tileFace(A, tw, 'x', z0, x0, x1, h + 0.6, th - 2, -1, 14);
     P.slab(x0 - 0.3, x1 + 0.3, th - 2, th, z0 - 0.3, z1 + 0.3, hex('#E9ECEE'), { ao: false });
-    A.quad(x1 + 0.35, th - 5, 168, 12, 4, aS(1, 0), A.draw(12, 4, (c, pw, ph) => { c.fillStyle = '#E9ECEE'; c.fillRect(0, 0, pw, ph); c.fillStyle = '#E4007C'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `800 ${ph * 0.6}px ${FONT_EN}`; c.fillText('voco', pw / 2, ph * 0.42); c.fillStyle = '#333'; c.font = `600 ${ph * 0.16}px ${FONT_EN}`; c.fillText('XIAMEN SM CITY', pw / 2, ph * 0.82); }, 30)); }
-  // 三期 ↔ 二期 3F 连廊（落在黄宝石北侧）
-  const cy = 11; S.kit.glass.slab(-108, -100, cy, cy + 4, TOPAZ.cz + TOPAZ.r - 3, z0 + 0.1, hex('#CFE6F2'), { ao: false });
-  P.slab(-108.3, -99.7, cy - 0.6, cy, TOPAZ.cz + TOPAZ.r - 3, z0, hex('#EEF0F2'), { ao: false }); P.slab(-108.3, -99.7, cy + 4, cy + 4.4, TOPAZ.cz + TOPAZ.r - 3, z0, hex('#EEF0F2'), { ao: false });
+    G.slab(x1 + 0.3, x1 + 0.36, h, th, z0 - 0.36, z0 - 0.3, line, { ao: false });
+    const vocoUv = {}, voco = (w, hh) => vocoUv[w + 'x' + hh] || (vocoUv[w + 'x' + hh] = A.draw(w, hh, (c, pw, ph) => { c.fillStyle = '#E9ECEE'; c.fillRect(0, 0, pw, ph); c.fillStyle = '#E4007C'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `800 ${ph * 0.6}px ${FONT_EN}`; c.fillText('voco', pw / 2, ph * 0.42); c.fillStyle = '#333'; c.font = `600 ${ph * 0.16}px ${FONT_EN}`; c.fillText('XIAMEN SM CITY', pw / 2, ph * 0.82); }, 30));
+    A.quad(x1 + 0.35, th - 5, 168, 12, 4, aS(1, 0), voco(12, 4)); A.quad(-126, th - 5, z0 - 0.35, 12, 4, aS(0, -1), voco(12, 4)); }
+  // voco 酒店落客入口（嘉禾路 403 号；只做门面，酒店不进）
+  { const zc = 192, x = x1 + 0.06;
+    k.metal.slab(x1, x1 + 4.2, 4.0, 4.3, zc - 4, zc + 4, hex('#D5DADF'), { ao: false }); G.slab(x1 + 4.1, x1 + 4.25, 3.9, 4.0, zc - 4, zc + 4, line, { ao: false });
+    for (const z of [zc - 3.6, zc + 3.6]) k.metal.cyl(x1 + 3.8, 2, z, 0.25, 4, hex('#9AA1A8'), 8);
+    A.quad(x + 0.02, 1.6, zc, 3.2, 3.0, aS(1, 0), S._smDoorUv || (S._smDoorUv = A.draw(3.2, 3.0, doorArt, 40)));
+    A.quad(x1 + 4.27, 4.15, zc, 7.6, 0.55, aS(1, 0), A.draw(7.6, 0.55, textPaint(['voco 厦门SM酒店  ·  嘉禾路403号'], { bg: '#FFFFFF', fg: '#E4007C' }), 50)); }
+  // ---- 三期门前广场：铺地 + 「夏花」雕塑 + 水畔小景 ----
+  GR.slab(-80, -46, 0.004, 0.03, 128, 140, hex('#CFC8BB'), { ao: false }); GR.slab(x1, -46, 0.004, 0.03, 140, 200, hex('#CFC8BB'), { ao: false });
+  for (let z = 130; z < 199; z += 3) P.slab(x1, -46, 0.031, 0.036, z, z + 0.08, hex('#B9B2A6'), { ao: false });
+  xiaHua(S, -53, 160);
+  for (const [za, zb] of [[164.5, 173], [179, 195.5]]) {
+    GR.slab(-51.2, -47.4, 0, 0.42, za, zb, hex('#BFB8AC'), { ao: false }); k.colSlab(-51.2, -47.4, 0, 0.9, za, zb);
+    GL.slab(-50.9, -47.7, 0.36, 0.4, za + 0.3, zb - 0.3, hex('#7FB8D0'), { ao: false });
+    for (let z = za + 1.2; z < zb - 1; z += 2.6) P.sphere(-49.3, 0.55, z, 0.9, hex(z % 2 > 1 ? '#5E9A4E' : '#4C8A44'), 1, 0.6); }
+  D.tree(k, -49.3, 0.42, 168.8, 0.8, 1); D.tree(k, -49.3, 0.42, 187, 0.8, 1);
+  for (let i = 0; i < 4; i++) shopper(P, -56 + (i % 2) * 3, 0, 150 + i * 6 + (i > 1 ? 8 : 0), (i % 2 ? 1 : -1) * 1.2 + i, i + 70, { lo: true });
+  // ---- 3F 连廊（三期 3F ↔ 二期黄宝石 3F，可走） ----
+  link3(S);
   bridgeGate(S, x1, BR2, 1, 'SM 三期 2F', 'SM PHASE III · L2', '#4F7F8F');
   groundDoor(S, x1, 176, 1, 'SM 三期', '#4F7F8F');
-  // 注：上面 3F 那条三期 ↔ 黄宝石连廊只是外观（两头没有门、楼内也没有 3F 接口）；三期室内从天桥 2F 门或这扇地面门进
+}
+/** 雕塑「夏花」（秦岭，2023-01-01 点亮）：不锈钢镂空花瓣 + 嵌红 / 橙水晶，像白鹭振翅般绽放的凤凰花；高 12 m、宽 7 m；底下一圈水池 + 雾 */
+function xiaHua(S, cx, cz) {
+  const k = S.kit, M = k.metal, G = k.glow, GL = k.glass, steel = hex('#DDE2E6'), red = hex('#E2412E'), org = hex('#F28A2E');
+  k.g('granite').cyl(cx, 0.25, cz, 9, 0.5, hex('#BFB8AC'), 24, 0, 0, 0, undefined, { ao: false }); k.colSlab(cx - 3.9, cx + 3.9, 0, 1, cz - 3.9, cz + 3.9);
+  GL.cyl(cx, 0.48, cz, 8.2, 0.06, hex('#7FB8D0'), 24, 0, 0, 0, undefined, { ao: false });
+  GL.cyl(cx, 1.1, cz, 6.4, 1.2, hex('#F4F8FA'), 16, 0, 0, 0, 7.6, { ao: false });   // 水雾
+  M.tubeTaper([cx, 0.5, cz], [cx, 6.4, cz], 0.9, 0.45, steel, 10);
+  for (let i = 0; i < 6; i++) {
+    const a = i / 6 * TAU + 0.3, ca = Math.cos(a), sa = Math.sin(a), egret = i % 2 === 0;
+    for (let j = -1; j <= 1; j++) {
+      const b = a + j * 0.22, cb = Math.cos(b), sb = Math.sin(b), R = egret ? 3.5 : 2.8, top = egret ? 12 : 10.4;
+      const p0 = [cx + ca * 0.3, 6.2, cz + sa * 0.3], p1 = [cx + cb * R * 0.55, 8.4 + (egret ? 0.6 : 0), cz + sb * R * 0.55], p2 = [cx + cb * R, top - Math.abs(j) * 0.7, cz + sb * R];
+      M.tubeTaper(p0, p1, 0.26, 0.2, steel, 5); M.tubeTaper(p1, p2, 0.2, 0.06, egret && j === 0 ? hex('#FFFFFF') : steel, 5);
+      if (!egret || j === 0) G.sphere((p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2, (p1[2] + p2[2]) / 2, 0.5, (i + j) % 2 ? red : org, 1);
+    }
+  }
+  for (let i = 0; i < 10; i++) { const a = i / 10 * TAU; G.sphere(cx + Math.cos(a) * 1.4, 6.9 + (i % 3) * 0.3, cz + Math.sin(a) * 1.4, 0.55, i % 2 ? red : org, 1); }
+  S.atlas.quad(cx + 4.45, 0.75, cz, 2.4, 0.5, aS(1, 0), S.atlas.draw(2.4, 0.5, textPaint(['夏花 · 秦岭 2023'], { bg: '#2B3036', fg: '#FFFFFF' }), 60));
+}
+/** 3F 连廊：玻璃廊 x −108…−100、楼面 y 11；南头插进黄宝石北面（z≈120），北头接三期南立面（z 128）；两头各一扇门 */
+function link3(S) {
+  const k = S.kit, P = k.solid, G = k.glow, { x0, x1, y: Y, zT, zP } = LK3, white = hex('#F4F6F7'), xc = (x0 + x1) / 2, TOP = Y + 3.6;
+  const GLW = k.g('glass@bridge'), gm = bucketMat(k.scene, k.M, 'glass@bridge'); gm.environmentIntensity = 0; gm.alpha = 0.22;
+  k.g('granite').slab(x0, x1, Y - 0.3, Y, zT, zP, hex('#DCD6CB'), { ao: false }); k.colSlab(x0, x1, Y - 0.6, Y, zT, zP);
+  for (let z = zT + 1.2; z < zP; z += 1.2) P.quad([x0, Y + 0.004, z], [x1, Y + 0.004, z], [x1, Y + 0.004, z + 0.05], [x0, Y + 0.004, z + 0.05], hex('#B9B2A6'));
+  for (const [a, b] of [[x0 - 0.3, x0 + 0.2], [x1 - 0.2, x1 + 0.3]]) P.slab(a, b, Y - 1.6, Y - 0.3, zT, zP, white, { ao: false });
+  P.slab(x0, x1, Y - 1.65, Y - 1.5, zT, zP, hex('#E2E4E6'), { ao: false });
+  for (const [a, b] of [[x0 - 0.06, x0], [x1, x1 + 0.06]]) { GLW.slab(a, b, Y, TOP, zT, zP, hex('#D6EEF8'), { ao: false }); k.colSlab(a - 0.1, b + 0.1, Y, TOP + 1, zT, zP); }
+  for (let z = zT + 0.6; z < zP; z += 2.6) for (const x of [x0 - 0.08, x1 + 0.02]) k.metal.slab(x, x + 0.06, Y, TOP, z, z + 0.12, hex('#C3C9CF'), { ao: false });
+  for (const x of [x0 + 0.05, x1 - 0.11]) k.metal.slab(x, x + 0.06, Y + 1.0, Y + 1.05, zT, zP, hex('#AEB6BD'), { ao: false });
+  P.slab(x0 - 0.3, x1 + 0.3, TOP, TOP + 0.45, zT, zP, white, { ao: false }); G.slab(xc - 0.25, xc + 0.25, TOP - 0.03, TOP, zT + 0.5, zP - 0.5, hex('#FFF6E0'), { ao: false });
+  for (const x of [x0 - 0.36, x1 + 0.3]) for (const y of [Y - 1.6, TOP + 0.45]) G.slab(x, x + 0.06, y - 0.05, y + 0.05, zT + 3, zP, hex('#EAF6FF'), { ao: false });
+  k.colSlab(x0, x1, Y, TOP, zT + 2.1, zT + 2.4);   // 黄宝石墙里面不让穿过去
+  zGate(S, zT + 2.85, xc, Y, 1, '二期 黄宝石 3F', 'SM LIFESTYLE · TOPAZ L3', '#B8892E');
+  zGate(S, zP - 0.06, xc, Y, -1, 'SM 三期 3F', 'SM PHASE III · L3', '#4F7F8F');
+  for (let i = 0; i < 2; i++) shopper(P, xc - 1.6 + i * 3.2, Y, zT + 5 + i * 3, i ? 0 : Math.PI, i + 80, { lo: true });
+}
+/** z 立面上的连廊门（bridgeGate 的 z 版本）：fz = 立面 z，dir = 门朝 +z（1）/ −z（−1） */
+function zGate(S, fz, xc, Y, dir, zh, en, col) {
+  const k = S.kit, A = S.atlas, z = fz + dir * 0.06, steel = hex('#C3C9CF'), x0 = xc - 4, x1 = xc + 4;
+  for (const x of [x0 - 0.15, xc - 1.75, xc + 1.6, x1]) k.metal.slab(x, x + 0.15, Y, Y + 3.0, z - 0.12, z + 0.12, steel, { ao: false });
+  k.metal.slab(x0 - 0.15, x1 + 0.15, Y + 3.0, Y + 3.6, z - 0.15, z + 0.15, hex(col), { ao: false });
+  A.quad(xc, Y + 3.3, z + dir * 0.17, 5.6, 0.56, aS(0, dir), A.draw(5.6, 0.56, textPaint([zh, en], { bg: col, fg: '#FFFFFF' }), 50));
+  A.quad(xc, Y + 1.5, z + dir * 0.02, 3.2, 3.0, aS(0, dir), S._smDoorUv || (S._smDoorUv = A.draw(3.2, 3.0, doorArt, 40)));
+  for (const [a, b] of [[x0, xc - 1.75], [xc + 1.75, x1]]) k.glass.slab(a, b, Y, Y + 3.0, z - 0.02, z + 0.02, hex('#D6EEF8'), { ao: false });
+  k.glow.slab(xc - 1.6, xc + 1.6, Y + 2.95, Y + 3.0, z + dir * 0.18 - 0.02, z + dir * 0.18 + 0.02, hex('#FFF4DA'), { ao: false });
 }
 
 /* ---------- 楼门（街面一侧） ---------- */

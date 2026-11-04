@@ -33,18 +33,32 @@ export const POOL = {
     '面包新语', '蜜雪冰城', '张亮麻辣烫', '老乡鸡', '鼓浪屿馅饼', '八市海鲜', '湘鄂情', '点都德'],
 };
 const THEME = { beauty: ['化妆品 · 珠宝', 'Beauty & Jewellery'], ladies: ['女装', 'Ladies'], men: ['男装', 'Menswear'], sports: ['运动', 'Sports'], kids: ['童装 · 玩具', 'Kids & Toys'],
-  men_sports: ['男装 · 运动', 'Men & Sports'], food: ['美食广场 · 影城', 'Food Court & Cinema'] };
+  men_sports: ['男装 · 运动', 'Men & Sports'], food: ['美食广场 · 影城', 'Food Court & Cinema'],
+  // 三期（定位「都市潮流聚落 · 新锐社交空间」；SM 官网开业稿 newsdisp.aspx?aid=14054 + 官网三期楼层指引）
+  trend: ['国际潮牌 · 旗舰', 'Flagships'], designer: ['运动 · 设计师 · 数码', 'Sports, Designer & Tech'], family: ['亲子 · 潮玩 · 甜品', 'Family, Toys & Cinema'], dining: ['餐饮 · 娱乐 · 喜剧', 'Dining & Fun'] };
+/** 某个主题的店名不够时从哪个池补 */
+const FALLBACK = { trend: 'sports', designer: 'ladies', family: 'kids', dining: 'food' };
 const PLAN = { 6: ['beauty', 'ladies', 'men', 'sports', 'kids', 'food'], 5: ['beauty', 'ladies', 'men_sports', 'kids', 'food'], 4: ['beauty', 'ladies', 'men_sports', 'food'] };
 /** 各栋楼：边数、层数、颜色、影城、天桥门（s = 哪一边，c = 沿边的位置，f = 楼层 0 起） */
 export const MALLS = {
   'sm-city': { n: 4, NF: 6, title: 'SM城市广场', en: 'SM CITY XIAMEN', accent: '#2E5DA8', warm: '#E4EEF8', seed: 6262, off: 0, cinema: 'SM 影城',
     gates: { br1: { s: 3, c: 7, f: 1, zh: 'SM 天桥 → SM新生活广场（二期）', en: 'SKYBRIDGE TO SM LIFESTYLE' }, br2: { s: 3, c: -7, f: 1, zh: '天桥 → SM 三期', en: 'SKYBRIDGE TO PHASE III' } } },
   'sm-topaz': { n: 16, NF: 5, title: 'SM新生活广场 · 黄宝石', en: 'SM LIFESTYLE · TOPAZ', accent: '#C9A24A', warm: '#F6E7C4', seed: 6161, off: 5, gold: true, cinema: 'CGV 影城',
-    gates: { br1: { s: 0, c: 0, f: 1, zh: 'SM 天桥 → SM城市广场（一期）', en: 'SKYBRIDGE TO SM CITY' } } },
+    gates: { br1: { s: 0, c: 0, f: 1, zh: 'SM 天桥 → SM城市广场（一期）', en: 'SKYBRIDGE TO SM CITY' },
+      lk3: { s: 8, c: 0, f: 2, zh: '3F 连廊 → SM 三期', en: 'L3 LINK TO PHASE III' } } },
   'sm-ruby': { n: 4, NF: 5, title: 'SM新生活广场 · 红宝石', en: 'SM LIFESTYLE · RUBY', accent: '#C8102E', warm: '#F8E4E4', seed: 6363, off: 9, cinema: 'UA 影城', gates: {} },
   'sm-sapphire': { n: 4, NF: 5, title: 'SM新生活广场 · 蓝宝石', en: 'SM LIFESTYLE · SAPPHIRE', accent: '#2A5BAE', warm: '#E2EAF8', seed: 6464, off: 13, cinema: '万达影城', gates: {} },
-  'sm-p3': { n: 4, NF: 4, title: 'SM 三期', en: 'SM XIAMEN PHASE III', accent: '#4F7F8F', warm: '#E6EEF0', seed: 6565, off: 3, cinema: '中影国际影城',
-    gates: { br2: { s: 0, c: 0, f: 1, zh: '天桥 → SM城市广场（一期）', en: 'SKYBRIDGE TO SM CITY' } } },
+  // 三期：1F 国际潮牌旗舰，2F 运动 / 设计师 / 华为，3F 亲子潮玩 + 万达影城（官网 3F-328），4F 餐饮 + 来疯喜剧；3F 南边连廊 → 二期黄宝石 3F
+  'sm-p3': { n: 4, NF: 4, title: 'SM 三期', en: 'SM XIAMEN PHASE III', accent: '#4F7F8F', warm: '#E6EEF0', seed: 6565, off: 3, cinema: '万达影城', cinemaF: 2,
+    plan: ['trend', 'designer', 'family', 'dining'],
+    // 店名按 SM 官网三期楼层指引（smsupermalls.cn/city/threefloor.aspx，2026-11 抓取）
+    names: [['NIKE RISE 1200', '丝芙兰 SEPHORA', 'Maison Kitsuné', 'TOMMY HILFIGER', 'J.LINDEBERG', 'Aape', 'I.T', '星巴克', '雪乐山室内滑雪', '极氪 ZEEKR', 'Monologue', 'MAISON LE FAME'],
+      ['HUAWEI 智能生活馆', 'adidas', 'Champion', 'MELAND CLUB', 'nshare', 'RuirUiruI', 'NINE WEST', 'CROCS', 'K·SWISS', 'moussy', '小大董', "Domino's Pizza"],
+      ['卡通尼', 'att-store', 'UPGAME', 'PM TOYS', '卡游', '泰谣 Home Thai', '哈根达斯', '一米天妇罗', 'KOI PLUS', '暴龙眼镜', '叫我熊猫', 'TIME 时代'],
+      ['怂重庆火锅厂', '哲平鳗满', '霞初铁板烧', '来疯喜剧', '玩刻', 'DELL 戴尔', '樊登书店 × 22 SPACE', '南蛮鸭', '汉烟火', '众玩殿堂 ZONE ONE', '宇宙治茶', '潮玩星球']],
+    play: ['卡通尼'],
+    gates: { br2: { s: 0, c: 0, f: 1, zh: '天桥 → SM城市广场（一期）', en: 'SKYBRIDGE TO SM CITY' },
+      lk3: { s: 0, c: -7, f: 2, zh: '3F 连廊 → 二期 黄宝石', en: 'L3 LINK TO TOPAZ' } } },
 };
 const STEEL = hex('#C3C9CF'), DARK = hex('#3A3F45'), WHITE = hex('#F3F1EC'), FLOOR = hex('#E9E5DD'), GOLD = hex('#D4A84A');
 
@@ -56,6 +70,16 @@ function foodStall(c, pw, ph) {
     c.fillStyle = '#5A3A22'; c.fillRect(pw * (0.08 + i * 0.22), ph * 0.34, pw * 0.18, ph * 0.04); }
   c.fillStyle = '#D9D4CA'; c.fillRect(0, ph * 0.62, pw, ph * 0.08); c.fillStyle = '#8A5A3A'; c.fillRect(0, ph * 0.7, pw, ph * 0.3);
   c.fillStyle = 'rgba(255,255,255,0.18)'; for (let x = 0; x < pw; x += pw / 12) c.fillRect(x, ph * 0.72, 2, ph * 0.28);
+}
+/** 亲子乐园门面（卡通尼 / 神奇科学家 / 乐海豚）：彩色软包 + 波波球 + 滑梯 */
+function playFront(c, pw, ph) {
+  c.fillStyle = '#3A3F45'; c.fillRect(0, 0, pw, ph);
+  const g = c.createLinearGradient(0, 0, 0, ph); g.addColorStop(0, '#FFF6D8'); g.addColorStop(1, '#BFE8F6'); c.fillStyle = g; c.fillRect(pw * 0.02, ph * 0.08, pw * 0.96, ph * 0.9);
+  const C = ['#F2545B', '#F2C230', '#3FB27F', '#3E8EDE', '#B567D6', '#FF8C42'];
+  for (let i = 0; i < 6; i++) { c.fillStyle = C[i]; c.fillRect(pw * (0.05 + i * 0.15), ph * 0.18, pw * 0.12, ph * 0.3); }
+  c.fillStyle = '#F2545B'; c.beginPath(); c.moveTo(pw * 0.62, ph * 0.5); c.quadraticCurveTo(pw * 0.8, ph * 0.55, pw * 0.92, ph * 0.95); c.lineTo(pw * 0.84, ph * 0.95); c.quadraticCurveTo(pw * 0.74, ph * 0.62, pw * 0.6, ph * 0.58); c.fill();
+  for (let i = 0; i < 46; i++) { c.fillStyle = C[i % 6]; c.beginPath(); c.arc(pw * (0.05 + ((i * 37) % 53) / 100), ph * (0.72 + ((i * 17) % 23) / 100), ph * 0.035, 0, TAU); c.fill(); }
+  c.fillStyle = 'rgba(255,255,255,0.3)'; c.fillRect(pw * 0.02, ph * 0.08, pw * 0.96, ph * 0.04);
 }
 function cinemaPaint(name, accent) {
   return (c, pw, ph) => { c.fillStyle = '#141826'; c.fillRect(0, 0, pw, ph); c.fillStyle = accent; c.fillRect(0, ph * 0.78, pw, ph * 0.22);
@@ -85,7 +109,7 @@ export class SmMall {
     const k = this.kit = new Kit(scene, 'smMall'); k.root.position.set(origin.x, origin.y, origin.z);
     const A = this.atlas = new FoodAtlas(scene, 2048);
     const P = k.solid, GL = k.glass, G = k.glow, GR = k.g('granite'), Mt = k.metal;
-    const gold = !!cfg.gold, accent = hex(cfg.accent), plan = PLAN[NF];
+    const gold = !!cfg.gold, accent = hex(cfg.accent), plan = this.plan = cfg.plan || PLAN[NF], cinF = cfg.cinemaF ?? NF - 1;
     const GM = gold ? k.g('metal@gold') : Mt;
     if (gold) bucketMat(scene, k.M, 'metal@gold').emissiveColor.set(0.32, 0.23, 0.07);
     preseed(cfg.seed);
@@ -117,12 +141,16 @@ export class SmMall {
 
     // ---------- 店名 ----------
     const used = {}, take = pool => { const L = POOL[pool], i = used[pool] = (used[pool] || 0); used[pool]++; return L[(cfg.off + i) % L.length]; };
-    const nameFor = (f, i) => { const th = plan[f]; if (th === 'men_sports') return take(i % 2 ? 'sports' : 'men'); return take(th); };
+    const got = new Set(), nf = new Array(NF).fill(0);
+    const nameFor = (f, i) => { const th = plan[f], L = cfg.names && cfg.names[f];
+      if (L) while (nf[f] < L.length) { const nm = L[nf[f]++]; if (!got.has(nm)) { got.add(nm); return nm; } }
+      for (let k2 = 0; k2 < 40; k2++) { const nm = take(th === 'men_sports' ? (i % 2 ? 'sports' : 'men') : FALLBACK[th] || th); if (!got.has(nm)) { got.add(nm); return nm; } }
+      return take(FALLBACK[th] || th); };
     this.shops = []; this.shopFloors = [];
 
     // ---------- 每层每边的分段 ----------
     const segsOf = (f, s) => {
-      const half = AS * t, L = 2 * half, per = Math.max(1, Math.round(L / 9)), top = f === NF - 1;
+      const half = AS * t, L = 2 * half, per = Math.max(1, Math.round(L / 9)), top = f === cinF;
       if (top && cinemaSides.includes(s)) return [[-half, half, 'cinema']];
       if (st.extraWall.includes(s)) return [[-half, half, 'wall']];
       const cuts = [];
@@ -174,7 +202,8 @@ export class SmMall {
           const w = b - a, c = (a + b) / 2, [x, z] = pt(fr, AS, c);
           if (kind === 'shop') {
             const nm = nameFor(f, shopIdx++); names.push(nm);
-            A.quad(x, y + 1.9, z, w - 0.02, 3.4, fr.aIn, f === NF - 1 ? (this._stall || (this._stall = A.draw(9, 3.6, foodStall, 24))) : (this._glass || (this._glass = A.draw(9, 3.6, storefront(cfg.warm), 24))));
+            const play = cfg.play && cfg.play.includes(nm);
+            A.quad(x, y + 1.9, z, w - 0.02, 3.4, fr.aIn, play ? (this._play || (this._play = A.draw(9, 3.6, playFront, 24))) : f === NF - 1 ? (this._stall || (this._stall = A.draw(9, 3.6, foodStall, 24))) : (this._glass || (this._glass = A.draw(9, 3.6, storefront(cfg.warm), 24))));
             const [sx, sz] = pt(fr, AS - 0.05, c); A.quad(sx, y + 4.3, sz, Math.min(w - 0.6, 6), 0.8, fr.aIn, sUv(nm));
             boxRC(P, fr, AS, AS + 0.2, a, b, y + 3.6, y + 5.0, DARK);
             colRC(fr, AS, AS + 0.3, a, b, y, y + FH - 0.6);
@@ -303,7 +332,7 @@ export class SmMall {
     // ---------- 楼层指引（每层一块，标「您在这里」） ----------
     const dPos = n === 16 ? [8.13, CZ - 8.13] : [11.5, CZ - 11.5], dF = [-Math.SQRT1_2, Math.SQRT1_2], dry = Math.atan2(dF[0], dF[1]);
     const dirRows = []; for (let f = NF - 1; f >= 0; f--) { const th = THEME[plan[f]], ex = this.shopFloors[f].slice(0, 2).join(' · ');
-      dirRows.push([f, `${f + 1}F`, th[0] + (f === NF - 1 ? ` · ${cfg.cinema}` : ''), th[1], ex]); }
+      dirRows.push([f, `${f + 1}F`, th[0] + (f === cinF ? ` · ${cfg.cinema}` : ''), th[1], ex]); }
     for (let f = 0; f < NF; f++) {
       const y = f * FH;
       P.box(dPos[0], y + 1.3, dPos[1], 1.9, 2.6, 0.3, hex('#2B3036'), dry, 0, 0, 1, { ao: false }); k.col(dPos[0], y + 1.3, dPos[1], 1.9, 2.6, 0.3, { ry: dry });
