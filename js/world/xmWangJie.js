@@ -122,6 +122,7 @@ export class SmWangJie {
     A.sign(0, 3.85, 0.32, 7.2, 1.0, a(0, 1), textPaint(['人旺财旺精神旺', 'WANG STREET'], { bg: '#B3261E', fg: '#F6D36B' }));
     // ---------- 两侧铺位 ----------
     this.shops = [];
+    const uvY = A.draw(BAY - 0.3, 0.8, yanglou);   // 洋楼门头带：一张图，每个开间重复贴（省贴图集）
     const row = (list, s) => {
       let z = Z0;
       for (const sh of list) {
@@ -129,7 +130,7 @@ export class SmWangJie {
         z = z1; this.shops.push({ ws: sh.ws, zh: sh.zh, side: s, z0, z1 });
         wall(Math.min(s * 3.5, s * 7.5), Math.max(s * 3.5, s * 7.5), z1 - 0.12, z1 + 0.12);   // 分隔墙
         P.slab(Math.min(xi, xi + s * 0.15), Math.max(xi, xi + s * 0.15), 3.0, H, z0, z1, CREAM, { ao: false });   // 门头墙
-        A.sign(xi - s * 0.01, 3.95, zc, L - 0.3, 0.8, an, yanglou);
+        for (let j = 0; j < sh.n; j++) A.quad(xi - s * 0.01, 3.95, z0 + BAY * (j + 0.5), BAY - 0.3, 0.8, an, uvY);
         if (sh.kind === 'seat') {
           for (const dz of [-1.4, 1.4]) { P.cyl(s * 5.5, 0.72, zc + dz, 1.0, 0.06, WOOD, 10, 0, 0, 0, undefined, { ao: false }); P.cyl(s * 5.5, 0.36, zc + dz, 0.12, 0.72, DARK, 6, 0, 0, 0, undefined, { ao: false });
             for (const dx of [-0.8, 0.8]) P.box(s * 5.5 + dx, 0.23, zc + dz, 0.4, 0.46, 0.4, RED, 0, 0, 0, 1, { ao: false }); k.col(s * 5.5, 0.4, zc + dz, 2.2, 0.8, 1.1); }
@@ -138,7 +139,7 @@ export class SmWangJie {
         }
         if (sh.kind === 'hoard' || sh.kind === 'shut') {   // 围挡 / 卷闸：整面挡住
           P.slab(Math.min(xi, xi + s * 0.1), Math.max(xi, xi + s * 0.1), 0, 3.0, z0 + 0.12, z1 - 0.12, hex(sh.kind === 'hoard' ? '#C8443A' : '#BFC3C6'), { ao: false }); k.colSlab(Math.min(xi, xi + s * 0.15), Math.max(xi, xi + s * 0.15), 0, 3, z0, z1);
-          if (sh.kind === 'hoard') A.sign(xi - s * 0.02, 1.55, zc, L - 0.6, 2.6, an, hoard);
+          if (sh.kind === 'hoard') { const uvH = A.draw(BAY - 0.4, 2.6, hoard); for (let j = 0; j < sh.n; j++) A.quad(xi - s * 0.02, 1.55, z0 + BAY * (j + 0.5), BAY - 0.4, 2.6, an, uvH); }
           else A.sign(xi - s * 0.02, 1.5, zc, L - 0.6, 2.4, an, (c, pw, ph) => { c.fillStyle = '#BFC3C6'; c.fillRect(0, 0, pw, ph); c.fillStyle = '#9AA1A8'; for (let y = 0; y < ph; y += ph / 16) c.fillRect(0, y, pw, ph / 64); textPaint(['待租', 'FOR LEASE · -1F-WS06'], { bg: 'rgba(0,0,0,0)', fg: '#5A5550' })(c, pw, ph); });
           A.sign(xi - s * 0.02, 3.3, zc, Math.min(L - 0.6, 4.8), 0.55, an, textPaint([sh.zh, `${sh.en} · -1F-${sh.ws.toUpperCase()}`], { bg: sh.bg, fg: sh.fg }));
           continue;
@@ -193,6 +194,6 @@ export class SmWangJie {
     return [o.x + 6, o.y + 0.05, o.z - 2.6, 0];
   }
   zoneOf() { return { kind: 'interior', net: 'xm', building: this.id, floor: -1, inUnit: false }; }
-  info() { return { id: this.id, shops: this.shops, gates: ['main', 'back', 'p1'], overflow: this.atlas.overflow }; }
+  info() { return { id: this.id, shops: this.shops, gates: ['main', 'back', 'p1'], overflow: this.atlas.overflow, atlasY: this.atlas.y }; }
   dispose() { this.atlas.dispose(); this.kit.root.getChildMeshes(false).forEach(m => m.dispose()); this.kit.root.dispose(); }
 }
