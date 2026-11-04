@@ -34,7 +34,7 @@ const SPLIT_ZONES = new Set(['sysy', 'memorial', 'park']);
 const LITE_DECOR = new Set(['sysy']);
 export const YC = -6, HALL_X = 46, TUNNEL_X = 140, TRACK_OFF = 7.6, PSD_OFF = 6, WALL_OFF = 10.6;
 export const MAIN = { y: -12, zc: 14 }, GYQ2 = { y: -22, zc: 44 };
-// 公园前换乘通道：z < XS（楼梯井北墙那条线）的楼梯脚归 under 组；z XS ~ ZS 那段归 xfer；z > ZS（拼桥、通道北段、2 号线楼梯 / 竖井）归 deep（见 transferL1 / transfer / zoneVis）
+// 公园前换乘通道：z < XS（楼梯井北墙那条线）的楼梯脚归 under 组；z XS ~ ZS 那段（transferSouth）也归 under；z > ZS（拼桥、通道北段、2 号线楼梯 / 竖井）归 deep（见 transferL1 / transfer / zoneVis）
 //   ZS：1 号线站台层透过换乘楼梯洞最远只看得到通道 z ≈ 23；2 号线站台 / 下半段楼梯上透过竖井最远看到 z ≈ 30（都按几何算过），中间留余量
 const XS = 16.3, ZS = 26;
 const GN_DEEP = k => !!(k.groupNodes && k.groupNodes.deep);
@@ -88,21 +88,23 @@ export class Station {
     k.lite = LITE_DECOR.has(this.s.signature); // 纪念堂顺带用低面数的行道树 / 路灯（decor.js）
     this.street(); this.passage(); if (split) k.group('street', { name: 'mouth', test: mouthVisible });
     this.concourse();
-    // 两层站台的分区车站（公园前）：under = 站厅 + 1 号线站台；deep = 2 号线站台层 + 换乘通道北段（z > ZS）/ 2 号线楼梯；xfer = 换乘通道南段。
+    // 两层站台的分区车站（公园前）：under = 站厅 + 1 号线站台；deep = 2 号线站台层 + 换乘通道北段（z > ZS）/ 2 号线楼梯；换乘通道南段也在 under 里。
     //   1 号线站台 / 车上看不到 2 号线那层（不在正下方、隔着楼板），整层不画；2 号线站台上反过来不画站厅和 1 号线站台
     const deep = split && this.platforms.length > 1;
-    //   换乘楼梯（1 号线站台 → 通道）连同楼梯脚那一小段通道并进 under：1 号线站台上只透过楼梯洞看得到这些，xfer（通道其余部分）在 1 号线站台层可整组关（见 zoneVis）
-    this.platforms.forEach((p, i) => { this.platform(p); if (deep && i === 0) { this.transferL1(); k.group('under'); } });
-    //   换乘通道北段（z > ZS）+ 2 号线楼梯 / 竖井也并进 deep（transfer 里 k.group('deep')）：2 号线站台上看得到的通道几何和站台同桶，xfer 在 2 号线站台层可整组关
+    //   换乘楼梯（1 号线站台 → 通道）连同楼梯脚那一小段通道并进 under：1 号线站台上只透过楼梯洞看得到这些
+    //   换乘通道南段（z XS ~ ZS）也并进 under（transferSouth）：以前单独一个 xfer 组，1 号线站台楼梯洞旁第一人称往西看时 xfer 得开，
+    //   多 8 次绘制只为 ~400 个三角形（gyq-L1-hole first0 50 → 42）；并进 under 后同材质同桶，一次也不多画
+    this.platforms.forEach((p, i) => { this.platform(p); if (deep && i === 0) { this.transferL1(); this.transferSouth(true); k.group('under'); } });
+    //   换乘通道北段（z > ZS）+ 2 号线楼梯 / 竖井也并进 deep（transfer 里 k.group('deep')）：2 号线站台上看得到的通道几何和站台同桶
     if (this.platforms.length > 1) { if (!deep) this.transferL1(); this.transfer(deep); }
     if (this.s.attraction) this.sysyWayfinding();
-    k.finish(true, deep ? 'xfer' : 'under');
+    k.finish(true, deep ? 'rest' : 'under');   // deep：剩下的（通常为空）挂 rest，常开
     // mouth 与 street 完整几何互斥：默认只开 street，站厅 zoneVis 再按需开 mouth
     if (k.groupNodes && k.groupNodes.mouth) k.groupNodes.mouth.setEnabled(false);
     // 扶梯踏步 / 闸机扇门 / PSD 门扇是 createInstance，原先挂在 root 上，under 关掉后仍可能进视锥白画；并进 under 组
     const und = k.groupNodes && k.groupNodes.under;
     if (und) {
-      // 两层站台：2 号线那层（y < -17）的实例并进 deep；实例的源网格（本身不可见）挂 root（under / deep / xfer 各自会整组关，源网格被关时实例跟着不画）
+      // 两层站台：2 号线那层（y < -17）的实例并进 deep；实例的源网格（本身不可见）挂 root（under / deep 各自会整组关，源网格被关时实例跟着不画）
       const GN = k.groupNodes, srcG = GN.deep ? k.root : und;
       const adopt = (m, g = und) => { if (m && m.parent !== g) m.parent = g; }, lv = y => GN.deep && y < -17 ? GN.deep : und;
       for (const src of Object.values(this._stepSrc || {})) adopt(src, srcG);
@@ -910,7 +912,17 @@ export class Station {
     if (north) k.shade.shadeRoom(-24, -19, 16.3, 45, yc + 0.004, 0.55, 0.25);
     for (let z = 20; z < 44; z += 8) if (z >= z0 && z < z1) this.poster(-23.97, yc + 1.9, z, Math.PI / 2, z / 8);
   }
-  /** deep = 公园前分组：先建通道北段（z > ZS）+ 拼桥 + 2 号线楼梯 / 竖井 / 导向，封进 deep 组；再建通道南段（XS ~ ZS，归 xfer） */
+  /** 换乘通道南段：通道 XS ~ ZS（只有 deep 分区时单独建，否则 corridor(XS, 45) 一次建完）+ 入口那块“换乘 2号线”双面牌 + 南段引导带 */
+  transferSouth(deep) {
+    if (deep) this.corridor(XS, ZS, false);
+    this.xsign(17.2);
+    this.transferWayfinding('south');
+  }
+  xsign(z) {
+    const k = this.kit, c2 = LINES[2].color, c1 = LINES[1].color;
+    k.sign(-21.5, -14.5, z, { kind: 'way', w: 4.6, h: 0.8, zh: '换乘', en: 'Line 2', badges: [badge(2)], arrow: 'up', face: Math.PI, bar: c2, double: true, back: { kind: 'way', zh: '换乘', en: 'Line 1', badges: [badge(1)], arrow: 'up', bar: c1 }, hang: -14.0 });
+  }
+  /** deep = 公园前分组：先建通道北段（z > ZS）+ 拼桥 + 2 号线楼梯 / 竖井 / 导向，封进 deep 组；通道南段（XS ~ ZS）在 transferSouth 里，归 under */
   transfer(deep) {
     const k = this.kit, yc = -17, y2 = GYQ2.y, c2 = LINES[2].color, c1 = LINES[1].color;
     // 通道 x∈[-24,-19], z∈[12,45]（z < XS 那段楼梯脚在 transferL1 里，归 under）
@@ -927,8 +939,7 @@ export class Station {
     // （以前这里是几个蓝 / 黄地面箭头，换成 transferWayfinding() 里连续的引导带）
     // 换乘通道：入口、中段（过桥之后）各一块双面牌——往里走看到“换乘 2号线”，往回走看到“换乘 1号线”；通道尽头的墙上指向右手边下 2 号线站台的楼梯
     //   （牌面在 root 上的图集里，各组开关都不影响；吊杆随所在段）
-    const xsign = z => k.sign(-21.5, -14.5, z, { kind: 'way', w: 4.6, h: 0.8, zh: '换乘', en: 'Line 2', badges: [badge(2)], arrow: 'up', face: Math.PI, bar: c2, double: true, back: { kind: 'way', zh: '换乘', en: 'Line 1', badges: [badge(1)], arrow: 'up', bar: c1 }, hang: -14.0 });
-    xsign(36);
+    this.xsign(36);
     k.sign(-21.5, -14.9, 44.9, { kind: 'way', w: 4.6, h: 0.85, badges: [badge(2)], arrow: 'right', dirs: [{ zh: '2号线站台', en: 'Line 2' }], face: Math.PI, bar: c2 });
     // 2 号线站台楼梯口（向东下行）：箭头往下 + 两头终点
     k.sign(-18.75, -14.48, 43, { kind: 'way', w: 3.9, h: 0.78, badges: [badge(2)], arrow: 'down', dirs: termini(2, 'gyq'), face: -Math.PI / 2, bar: c2, hang: -14.0 });
@@ -936,9 +947,7 @@ export class Station {
     k.sign(-4.8, y2 + 3.3, 43, { kind: 'dir', w: 6.2, h: 0.62, zh: '换乘 1号线 · 出口', en: 'Line 1 · Exit', badges: [badge(1)], exits: ['A', 'D'], arrow: 'up', face: Math.PI / 2, double: true, bar: c1, hang: y2 + 4.2,
       back: { kind: 'way', w: 6.2, h: 0.62, zh: '2号线站台', en: 'Line 2', badges: [badge(2)], dirs: termini(2, 'gyq'), bar: c2 } });
     this.transferWayfinding('north');
-    if (deep) { k.group('deep'); this.corridor(XS, ZS, false); }
-    xsign(17.2);
-    this.transferWayfinding('south');
+    if (deep) k.group('deep'); else this.transferSouth(false);   // deep：通道南段已在 under 里（见 build）
   }
   /**
    * 公园前换乘导向（给第一次来的小朋友）：
@@ -950,7 +959,7 @@ export class Station {
   transferWayfinding(part) {
     const k = this.kit, G = k.g('band'), y1 = MAIN.y, yc = -17, y2 = GYQ2.y, c2 = LINES[2].color, c1 = LINES[1].color, W2 = '#FFFFFF', D1 = '#3A2E00';
     const zB = 14.7, zY = 13.3, xB = -20.8, xY = -22.2, zB2 = 42.3, zY2 = 43.7, NB = 18.6, TX = 17.4;
-    // 通道南段（楼梯脚 XS → 拼桥南头 25.8，z < ZS，归 xfer）：蓝往北、黄往南
+    // 通道南段（楼梯脚 XS → 拼桥南头 25.8，z < ZS，deep 分区时归 under）：蓝往北、黄往南
     if (part === 'south') { flatBand(G, [[xB, XS], [xB, 25.8]], yc, c2, W2); flatBand(G, [[xY, 25.8], [xY, XS]], yc, c1, D1); return; }
     // —— 蓝：1 号线站台 → 北侧走道 → 换乘楼梯 → 楼梯脚（z < XS）在 transferL1 里；楼梯脚 → 拼桥南头在上面 south 里；这里从拼桥北头往北
     flatBand(G, [[xB, 33.2], [xB, zB2], [-19, zB2]], yc, c2, W2);
@@ -1060,14 +1069,8 @@ export class Station {
     if (G.deep) {
       const deepOn = under && p.y < -14, onL2 = p.y < -18.5 && p.z > 30;
       if (G.deep.isEnabled(false) !== deepOn) G.deep.setEnabled(deepOn);
-      // xfer（换乘通道南段 z XS ~ ZS）：1 号线站台层 / 站厅（y > -12.3）只能透过换乘楼梯洞斜着看到通道南头一小条，
-      //   而且得站到洞口附近（镜头 x < 2、z 4~24）；其他时候整组关，省 ~12 次绘制（1 号线站台往西看 57 → ~45）。
-      //   2 号线站台 / 下半段楼梯上（onL2）透过竖井最远只看到通道 z ≈ 30，南段整组关（2 号线站台往西看 51 → ~42）；通道北段 / 2 号线楼梯在 deep 里
-      const c = cam && cam.globalPosition, nearHole = !c || (c.x < 2 && c.z > 4 && c.z < 24);
-      //   车上（this.aboard，main.js 每帧回填）：1 号线 A 侧车在洞口南边 6 m、隔着车窗 + 屏蔽门，看不到通道南段（B 侧车在洞口北边，视线朝南往下更不可能）；
-      //   以前进站第三人称镜头 x < 2 时 xfer 跟着开，白画 8 次（公园前进站 54 → ~46）
-      const xferOn = under && !onL2 && (p.y < -12.3 || (nearHole && !this.aboard));
-      if (G.xfer.isEnabled(false) !== xferOn) G.xfer.setEnabled(xferOn);
+      // （以前这里按镜头位置开关 xfer = 换乘通道南段；南段现在并进 under 同桶（见 build / transferSouth），不再单独开关）
+      const c = cam && cam.globalPosition;
       if (onL2) under = false;
       // corr：人和镜头都在换乘通道里（x -24.5 ~ -18.5、楼板 -17 到顶板 -14 之间、楼梯脚以北）。通道四面是墙，只有两头的楼梯口透得出去：
       //   南头 1 号线楼梯洞：镜头 z < 19.5 且视锥碰到站台楼板上的楼梯洞时，才可能斜着往上透过站台楼板洞看到一条 A 侧车顶 / 屏蔽门；
