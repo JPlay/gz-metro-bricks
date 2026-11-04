@@ -21,6 +21,11 @@ async def walk(pg, name, pts, check):   # 街区局部坐标；长段切成 ≤ 
   lx, y, z = s['pos'][0] - XS, s['pos'][1], s['pos'][2]
   return ok('walk:' + name, r and s['zone'] == 'street' and check(lx, y, z))
 
+PEAK_ON = """() => { const g = __game, s = g.scene, e = g.engine; window.__pk = window.__pk || { tris: 0, draws: 0, at: null, dat: null, n: 0 };
+  window.__pkObs = s.onAfterRenderObservable.add(() => { const t = Math.round(s.getActiveIndices() / 3), d = (e._drawCalls && e._drawCalls.current) || 0, P = window.__pk, q = g.player.position; P.n++;
+    const here = [q.x - 4000, q.y, q.z].map(v => Math.round(v * 10) / 10); if (t > P.tris) { P.tris = t; P.at = here; } if (d > P.draws) { P.draws = d; P.dat = here; } }); }"""
+PEAK_PAUSE = "() => { __game.scene.onAfterRenderObservable.remove(window.__pkObs); return window.__pk; }"
+
 def near(x, z, tol=1.5): return lambda lx, y, lz: math.hypot(lx - x, lz - z) < tol
 
 async def street(pg):
@@ -28,10 +33,13 @@ async def street(pg):
   await both(pg, 'p4-corner', '仙岳路 × 兴山路: tower A + LED band', 86, -11, math.atan2(52, 24), -0.42)
   await both(pg, 'p4-bigblue', '大步路 BIG BLUE (blue ceiling, gold rings)', 120, -6, 0.0, -0.04)
   await both(pg, 'p4-courtyard', 'Courtyard: blue stair + 2F terrace + 潮 mural', 110, 31, math.atan2(20, 18), -0.22)
+  await both(pg, 'p4-bb-ceiling', '大步路 ceiling from below: beams + gradient + gold rings + double-sided sign', 120, 20, 0.0, -0.7)
+  await both(pg, 'p4-blue-stair', 'Blue stair from the courtyard (matte treads)', 128, 37, 0.0, -0.22)
   await both(pg, 'p4-4c', '4C site north of Phase I: hoarding + shells + crane', 101, 156, math.atan2(-45, 27), -0.55)
 
 async def route(pg):
-  await pose(pg, XS + 2, 0.05, 3, math.pi / 2)
+  # 第三人称边走边量（小美 的口径）：整条路线每帧记 活动三角形 / draw 峰值（只有平台上的 1p 截图那一下不计）
+  await view(pg, 'third'); await pose(pg, XS + 2, 0.05, 3, math.pi / 2); await pg.evaluate('window.__pk = null'); await pg.evaluate(PEAK_ON)
   await walk(pg, 'eastSidewalk', [[20, -10.5], [86, -10.5]], near(86, -10.5))
   await walk(pg, 'crossXingshan', [[96, -10.5], [106, -10.5], [120, -10.5]], near(120, -10.5))
   await walk(pg, 'bigBlueSouth', [[120, -4], [120, 26]], lambda x, y, z: abs(x - 120) < 1.5 and abs(z - 26) < 1.5 and y < 0.5)
@@ -39,13 +47,15 @@ async def route(pg):
   await walk(pg, 'blueStairUp', [[128, 46], [128, 54.5], [128, 57]], lambda x, y, z: abs(y - 6) < 0.4 and near(128, 57)(x, y, z))
   await walk(pg, 'terrace', [[133, 57], [133, 75]], lambda x, y, z: abs(y - 6) < 0.4 and near(133, 75)(x, y, z))
   if R['checks'].get('walk:terrace'):
-    await view(pg, 'first'); await pg.evaluate('__game.player.yaw = Math.PI * 1.25; __game.player.pitch = 0.12')
-    await shot(pg, 'p4-terrace-1p', 'From the 2F terrace over the courtyard'); await view(pg, 'third')
+    await pg.evaluate(PEAK_PAUSE); await view(pg, 'first'); await pg.evaluate('__game.player.yaw = Math.PI * 1.25; __game.player.pitch = 0.12')
+    await shot(pg, 'p4-terrace-1p', 'From the 2F terrace over the courtyard'); await view(pg, 'third'); await pg.evaluate(PEAK_ON)
   await walk(pg, 'blueStairDown', [[133, 57], [128, 57], [128, 54], [128, 38]], lambda x, y, z: y < 0.5 and near(128, 38)(x, y, z))
   await walk(pg, 'pawPark', [[118, 38], [118, 50], [114, 54.5]], near(114, 54.5))
   await walk(pg, 'bigBlueNorth', [[120, 70], [120, 84], [120, 116], [120, 121]], near(120, 121))
   await walk(pg, 'toPhase1North', [[104, 124], [104, 160.5], [88, 160.5], [60, 161.3]], near(60, 161.3))
   await walk(pg, 'along4C', [[30, 161.3], [14, 161.3]], lambda x, y, z: near(14, 161.3)(x, y, z) and y < 0.5)
+  d = await pg.evaluate(PEAK_PAUSE); R['perf']['p4-walk-3p'] = d; log('walkPeak p4-walk-3p', d)
+  ok('p4-walk-3p:budget', d['n'] > 50 and d['tris'] <= xb.TRIS and d['draws'] <= xb.DRAWS)
 
 async def main():
   async with async_playwright() as p:
