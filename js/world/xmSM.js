@@ -15,6 +15,7 @@ import { FoodAtlas } from '../game/food-art.js';
 import { textPaint, FONT, FONT_EN } from './xmStreet.js';
 import { ringCol } from './xmAttr.js';
 import { SmMall } from './xmSMMall.js';
+import { SmWangJie } from './xmWangJie.js';
 import { bakePerson, randomLook, archetypeLook, preseed, prnd, POSES } from './people.js';
 
 const TAU = Math.PI * 2;
@@ -196,6 +197,25 @@ const HOTEL = { x0: -140, x1: -112, z0: 150, z1: 186, h: 78 };   // 三期 voco 
 const BR1 = { x0: -78, x1: P1.x0, z0: 60, z1: 66, y: 6 };        // SM 天桥（一期 ↔ 二期，94 m）
 const BR2 = { x0: P3.x1, x1: P1.x0, z0: 140, z1: 146, y: 6 };    // 第二座过街天桥（一期 ↔ 三期）
 
+/* ---------- SM 旺街 入口亭（门前广场）：真实的旺街是从乌石浦站站厅 4A/4B 方向「出闸入旺」，游戏里地铁出口外再加一个下沉入口亭 ---------- */
+const WJG = { x: 9, x0: 6.5, x1: 11.5, z0: 1, z1: 7 };
+function wangJieGate(S) {
+  const k = S.kit, P = k.solid, A = S.atlas, M = k.metal, GL = k.glass, G = k.glow, { x0, x1, z0, z1 } = WJG;
+  P.slab(x0 - 0.2, x1 + 0.2, 0, 0.06, z0 - 0.6, z1 + 0.2, hex('#B9B5AD'), { ao: false });
+  P.slab(x0 + 0.6, x1 - 0.6, 0.06, 0.07, z0 + 0.8, z1 - 0.6, hex('#1B1E22'), { ao: false });   // 下沉楼梯井（往北下去）
+  for (let i = 0; i < 3; i++) P.slab(x0 + 0.6, x1 - 0.6, 0.07 + (2 - i) * 0.001, 0.075, z0 + 0.8 + i * 0.45, z0 + 1.1 + i * 0.45, hex(i % 2 ? '#8A867E' : '#6E6A64'), { ao: false });
+  for (const s of [-1, 1]) { const x = s < 0 ? x0 : x1;
+    GL.slab(x - 0.02, x + 0.02, 0.06, 3.0, z0 + 0.3, z1, hex('#D6EEF8')); k.colSlab(x - 0.1, x + 0.1, 0, 3, z0, z1);
+    M.slab(x - 0.1, x + 0.1, 0, 3.1, z0, z0 + 0.3, hex('#B3261E'), { ao: false }); k.rail(x - s * 0.5, z0 + 0.8, x - s * 0.5, z1 - 0.4, 0); k.colSlab(x - s * 0.5 - 0.05, x - s * 0.5 + 0.05, 0, 1.2, z0 + 0.8, z1 - 0.4); }
+  GL.slab(x0, x1, 0.06, 3.0, z1 - 0.04, z1, hex('#D6EEF8')); k.colSlab(x0, x1, 0, 3, z1 - 0.2, z1 + 0.1);
+  M.slab(x0 - 0.4, x1 + 0.4, 3.0, 3.25, z0 - 0.5, z1 + 0.3, hex('#6E767E'), { ao: false });
+  P.slab(x0 - 0.42, x1 + 0.42, 2.45, 3.0, z0 - 0.52, z0 - 0.4, hex('#B3261E'), { ao: false });
+  A.quad((x0 + x1) / 2, 2.72, z0 - 0.53, 5.6, 0.5, aS(0, -1), A.draw(5.6, 0.5, textPaint(['SM 旺街  ↓ -1F', 'WANG STREET · 地铁直达 · SM一期 B1'], { bg: '#B3261E', fg: '#F6D36B' }), 50));
+  A.quad(x1 + 0.12, 1.7, (z0 + z1) / 2, 1.2, 1.6, aS(1, 0), A.draw(1.2, 1.6, textPaint(['旺', 'HO!'], { bg: '#B3261E', fg: '#F6D36B', frame: '#F6D36B' }), 50));
+  G.slab(x0 + 0.3, x1 - 0.3, 2.98, 3.0, z0, z1 - 0.3, hex('#FFE2A8'), { ao: false });
+  k.shade.shadeBlob((x0 + x1) / 2, (z0 + z1) / 2, 3.4, 4.0, 0.07, 0.22);
+}
+
 export function smCity(S) {
   const k = S.kit, P = k.solid, A = S.atlas, G = k.glow, GL = k.glass, GR = k.g('granite');
   preseed(4040);
@@ -257,6 +277,7 @@ export function smCity(S) {
   traffic(S);
   // ---------- 分组（视锥裁剪用）：每组单独几个网格，看不见的那组整组不画 ----------
   //   sm-core = 路 / 一期 / 天桥 / 人 / 树（到处都看得见）；sm-west = 二期 + 三期（嘉禾路西）；剩下 = 四期（兴山路东 + 一期北侧 4C）
+  wangJieGate(S);
   k.group('sm-core');
   phase2(S); phase3(S);
   k.group('sm-west');
@@ -265,6 +286,8 @@ export function smCity(S) {
   // 每栋楼都能进：地面正门 + 天桥两头的 2F 玻璃门（y: 6，进楼内 2F；gate = 楼里对应的那扇门）
   const mall = id => (scene, o) => new SmMall(scene, o, id);
   S.enterDoors = [
+    // SM 旺街入口亭（门前广场，4B 出口东边）：往北走进去 → 旺街南厅楼梯底
+    { x: WJG.x, z: WJG.z0 + 0.3, halfW: 1.5, zLo: -0.4, zHi: 0.8, outPos: [WJG.x, WJG.z0 - 1.8], outYaw: Math.PI, id: 'sm-wj', make: (scene, o) => new SmWangJie(scene, o) },
     { x: 51, z: P1.z0 - 0.3, halfW: 1.6, zLo: -0.4, zHi: 0.8, outPos: [51, P1.z0 - 2.4], outYaw: Math.PI, id: 'sm-city', make: mall('sm-city') },
     { ax: 'x', s: -1, x: TOPAZ.cx + TOPAZ.r + 0.3, z: TOPAZ.cz, halfW: 1.6, zLo: -0.4, zHi: 0.8, outPos: [TOPAZ.cx + TOPAZ.r + 2.6, TOPAZ.cz], outYaw: Math.PI / 2, id: 'sm-topaz', make: mall('sm-topaz') },
     { ax: 'x', s: -1, x: RUBY.x1 + 0.3, z: 24, halfW: 1.7, zLo: -0.5, zHi: 0.8, outPos: [RUBY.x1 + 2.4, 24], outYaw: Math.PI / 2, id: 'sm-ruby', make: mall('sm-ruby') },

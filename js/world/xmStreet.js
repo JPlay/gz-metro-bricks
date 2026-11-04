@@ -112,7 +112,10 @@ export class XmStreet {
     const p = pl.position;
     const dt = Math.min(0.1, this.scene.getEngine().getDeltaTime() / 1000);
     if (this.tick) this.tick(dt);
-    if (this.inside) { if (this.inside.update) this.inside.update(pl, dt); const g = this.inside.wantsOut(p); if (g) this.leaveBuilding(pl, g); return null; }
+    if (this.inside) { if (this.inside.update) this.inside.update(pl, dt); const g = this.inside.wantsOut(p);
+      if (g === 'back') return 'back';   // 楼里直通地铁站（SM 旺街的闸机）
+      if (g && g.enter) { const d = (this.enterDoors || []).find(x => x.id === g.enter && !x.gate); this.inside.dispose(); this.inside = null; this.curDoor = null; this.kit.root.setEnabled(true); if (d) this.enterBuilding(pl, d); return null; }   // 楼连楼（旺街 → 一期 1F）
+      if (g) this.leaveBuilding(pl, g); return null; }
     if (this.wantsBack(p)) return 'back';
     const XS = this.O, lx = p.x - XS.x, lz = p.z - XS.z;
     // 门可以在地面，也可以在天桥上（door.y = 6：天桥那一层的玻璃门）
