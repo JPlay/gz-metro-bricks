@@ -15,7 +15,7 @@
  * 只有一个目的地时不弹选择卡片（坐下就开）。
  */
 export const CITIES = {
-  gz: { zh: '广州', en: 'Guangzhou', icon: '🏙️', stn: '广州东站', stnEn: 'Guangzhoudong', dests: ['xm'] },
+  gz: { zh: '广州', en: 'Guangzhou', icon: '🏙️', stn: '广州东站', stnEn: 'Guangzhoudong', dests: ['xm', 'fz'] },
   xm: { zh: '厦门', en: 'Xiamen', icon: '🌊', stn: '厦门北站', stnEn: 'Xiamenbei', dests: ['gz', 'fz'] },
   fz: { zh: '福州', en: 'Fuzhou', icon: '🌳', stn: '福州南站', stnEn: 'Fuzhounan', dests: ['xm'] }
 };
@@ -29,6 +29,11 @@ export const TRIPS = {
   //   途经泉州湾跨海大桥（福厦高铁跨海段，全长约 20.3 km）。时刻按 brief（js 里只是显示用，游戏里约 3 分钟一程）
   'xm>fz': { fromCity: 'xm', toCity: 'fz', ann: 'fz', train: 'G3028', from: '厦门北', to: '福州南', fromEn: 'Xiamenbei', toEn: 'Fuzhounan', dep: '13:25', arr: '14:35', car: '05',
     bridge: { toast: '泉州湾跨海大桥', ann: 'qzw' } },
+  // 广州东 → 福州南 直达动车 D3309：广州东 07:47 → 厦门北 11:56 / 12:00 → 福州南 13:29（时刻按小美给的车次表；游戏里途经厦门北只弹提示，不停车）。
+  //   brakeAt：这一程比广州⇄厦门长（两段连起来），约 5 分钟。两座大桥：九龙江特大桥、泉州湾跨海大桥
+  'gz>fz': { fromCity: 'gz', toCity: 'fz', ann: 'gzf', train: 'D3309', from: '广州东', to: '福州南', fromEn: 'Guangzhoudong', toEn: 'Fuzhounan', dep: '07:47', arr: '13:29', car: '05',
+    via: { stn: '厦门北', arr: '11:56', dep: '12:00' }, brakeAt: 322,
+    bridge: { toast: '九龙江特大桥 · 九龙江入海口', ann: 'bridge' } },
   'fz>xm': { fromCity: 'fz', toCity: 'xm', ann: 'xmf', train: 'G3027', from: '福州南', to: '厦门北', fromEn: 'Fuzhounan', toEn: 'Xiamenbei', dep: '11:55', arr: '13:05', car: '05',
     bridge: { toast: '泉州湾跨海大桥', ann: 'qzw' } }
 };
@@ -96,7 +101,14 @@ const FZ_XM = [
   { t: 122, far: 'fields', mid: 'fields', near: 'fields' },
   { t: 146, far: 'xiamen', mid: 'xiamen', near: 'fields' }
 ];
-const ROUTES = { 'gz>xm': OUT, 'xm>gz': BACK, 'xm>fz': XM_FZ, 'fz>xm': FZ_XM };
+/** 广州东 → 福州南（D3309）：广州 → 九龙江特大桥 → 厦门城区（途经厦门北，弹提示）→ 接着走厦门北 → 福州南那一程（泉州湾跨海大桥）。
+ *  bridge 写成对象：两座桥各报一次（east.js 按 ann 键记“已报”） */
+const GZ_FZ = [
+  ...OUT.map(e => e.bridge ? { ...e, bridge: { toast: '九龙江特大桥 · 九龙江入海口', ann: 'bridge' } } : e),
+  { t: 160, far: 'xiamen', mid: 'xiamen', near: 'fields', toast: '途经 厦门北站（11:56 到 · 12:00 开）' },
+  ...XM_FZ.slice(1).map(e => ({ ...e, t: e.t + 160, ...(e.bridge ? { bridge: { toast: '泉州湾跨海大桥', ann: 'qzw' } } : {}) }))
+];
+const ROUTES = { 'gz>xm': OUT, 'xm>gz': BACK, 'xm>fz': XM_FZ, 'fz>xm': FZ_XM, 'gz>fz': GZ_FZ };
 /** 一程的路段：routeFor(from, to)；旧写法 routeFor(dest) 仍可用（广州⇄厦门） */
 export function routeFor(from, to) {
   if (to === undefined) { to = from; from = to === 'xm' ? 'gz' : 'xm'; }

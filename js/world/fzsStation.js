@@ -11,7 +11,7 @@
  *   出口位置是示意（未核实）；老站房 3 号进站口 2023-12-25 起关闭，不做。福州地铁标志是简化画法，不是官方图形。
  */
 import { Kit, FONT, FONT_EN } from './kit.js';
-import { hex } from '../core/geo.js';
+import { hex, Geo } from '../core/geo.js';
 import { FoodAtlas } from '../game/food-art.js';
 import { XST, noProbe, rr, arrow, exitIcon, bigText } from './xmnStation.js';
 import { FZS_EXITS } from '../data/fz-exits.js';
@@ -87,13 +87,32 @@ function backdrop(c, pw, ph) {
   c.fillStyle = '#7C9C74'; c.fillRect(0, ph * 0.76, pw, ph * 0.24);
 }
 
+/** 把 build() 里 k.group('under' / 'east' / 'west') + 剩下的站房几何重新拼成两份互斥的视图：
+ *   full：四组全部（候车室以外用；每种材质仍只有一个网格，draw 数和不分组时一样；不含候车室旅客 crowd）
+ *   wait：east + 站房（候车室里用；不含出站层 / 地铁站厅、西广场和广场上的人车 plazaLife）
+ *   metro：under + east + west，不含站房（走进福州南地铁站厅 / 闸机以后用：站房在地面以上，隔着两层楼板看不见；也不含 crowd / plazaLife）
+ * 三份同时只开一份（onArea），几何多占两份内存，但哪儿都不多 draw。 */
+function twoViews(k) {
+  const G = Object.fromEntries(k.groups.map(g => [g.name, g.buckets])); G.house = k.buckets;
+  const cat = (names, ...skip) => { const out = {};
+    for (const nm of names) for (const [b, g] of Object.entries(G[nm])) {
+      if (g.empty || skip.includes(b)) continue;
+      const o = out[b] || (out[b] = new Geo()), base = o.p.length / 3, nv = g.p.length / 3;   // 逐个 push（大数组不能用 ...展开，会爆栈）
+      for (const v of g.p) o.p.push(v); for (const v of g.n) o.n.push(v); for (const v of g.c) o.c.push(v);
+      for (let j = 0; j < nv * 2; j++) o.u.push(g.u[j] ?? 0); for (const v of g.i) o.i.push(v + base);
+    }
+    return out; };
+  k.groups = [{ name: 'full', buckets: cat(['under', 'east', 'west', 'house'], 'crowd') }, { name: 'metro', buckets: cat(['under', 'east', 'west'], 'crowd', 'plazaLife') }];
+  k.buckets = cat(['east', 'house'], 'plazaLife');
+}
 export class FzsStation {
   constructor(scene) {
     this.scene = scene;
     const k = this.kit = new Kit(scene, 'fzsSt'); k.root.position.set(FO.x, 0, 0);
     const at = this.atlas = new FoodAtlas(scene, 2048);
     this.build(k, at);
-    k.finish(true); at.finish(k.root, 'fzsStSigns'); noProbe(k.root);
+    twoViews(k);
+    k.finish(true, 'wait'); at.finish(k.root, 'fzsStSigns'); noProbe(k.root);
     this.root = k.root; this.onArea(null);
   }
   setEnabled(v) { this.root.setEnabled(v); }
@@ -102,6 +121,10 @@ export class FzsStation {
     const b = this.kit.byBucket;
     if (b.crowd) b.crowd.setEnabled(a === 'wait');
     if (b.plazaLife) b.plazaLife.setEnabled(a === 'plaza');
+    // 候车室里只开 wait 那份（东广场 + 站房，不含楼板下的出站层 / 地铁站厅和股道北边的西广场），别处开 full（整站，每种材质一个网格）
+    //（以前整站一份，候车室里也全画：34 draws / 93.6k tris；分四组按区开关则候车室外每种材质 4 个网格：33 → 52 draws）
+    // 'metro'（xmService.buildStation：人在地铁站厅 / 闸机 / 楼梯下半段）只开 metro 那份：不画地面以上的站房（福州南进站闸机 29 draws / 88.2k → 见提交说明）
+    const n = this.kit.groupNodes; if (n) { n.full.setEnabled(a !== 'wait' && a !== 'metro'); n.metro.setEnabled(a === 'metro'); n.wait.setEnabled(a === 'wait'); }
   }
   hang(x, y, z, w, h, a, paint, top = HC, back) {
     const k = this.kit, at = this.atlas, nx = Math.sin(a), nz = Math.cos(a), uv = at.draw(w, h, paint);
@@ -123,7 +146,9 @@ export class FzsStation {
     if (collide) k.colSlab(x - dia / 2, x + dia / 2, y0, yFork, z - dia / 2, z + dia / 2);
   }
   build(k, at) {
-    const P = k.solid, G = k.glow, M = k.metal, GR = k.g('granite'), CE = k.g('ceiling');
+    // 注意：k.group() 之后 k.solid 等会换成新的桶，所以这些简写用 let，分组后重新取（不然后面的东西还会画进上一组）
+    let P = k.solid, G = k.glow, M = k.metal, GR = k.g('granite'), CE = k.g('ceiling');
+    const rebind = () => { P = k.solid; G = k.glow; M = k.metal; GR = k.g('granite'); CE = k.g('ceiling'); };
     const { hall: H, tr: T, metro: MT, stair: S } = XST, hole = [-25.2, -11.2, -124.4, -119.6];
     /* ===== 出站层（地下）：地面 / 吊顶 / 墙 ===== */
     k.floorWithHoles(H.x0, H.x1, H.z0, H.z1, HY - 0.3, HY, C.floor, [], true, 'floor');
@@ -209,6 +234,8 @@ export class FzsStation {
       k.rail(x0, z0 - 0.05, x1, z0 - 0.05, HY); k.rail(x0, z1 + 0.05, x1, z1 + 0.05, HY); k.rail(x1 + 0.05, z0, x1 + 0.05, z1, HY); }
     this.hang(-104, HY + 3.4, -80, 6.4, 0.9, Math.PI / 2, board([{ l: 1 }, { l: 5 }, { zh: '站台', en: 'Platforms' }, { a: 'd' }]), HC);
     this.hang(d2.x, HY + 3.4, MT.z0 + 1.5, 5.5, 0.9, 0, board([{ exit: 1 }, { letter: 'D2' }, { zh: '西广场', en: 'West Square' }, { a: 'u' }], '#1E8E4E'), HC);
+    k.group('under');   // 出站层 / 出口 5 / 吊牌 / 地铁站厅：候车室里看不见（楼板下面），在候车室时整组关掉（onArea）
+    rebind();
     /* ===== 出站楼梯（S）：出站层 → 东广场 ===== */
     k.stairs('z', S.z0, HY, S.z1, 0, S.x0, S.x1, HY, '#D6D1C7');
     for (const x of [S.x0 - 0.3, S.x1]) k.block(x, x + 0.3, HY, 0, S.z0, S.z1, C.wall, true, 'paint', { ao: false });
@@ -281,6 +308,8 @@ export class FzsStation {
       }, 60));
     }
     at.quad(-5, 22, PZ.z1 + 110, 360, 60, Math.PI, at.draw(360, 60, backdrop, 3));
+    k.group('east');   // 出站楼梯 S / 出口通道 / 东广场（隔着南面玻璃幕墙看得到，一直开着）
+    rebind();
     /* ===== 西广场 + 老站房（背景） ===== */
     const SQ = FZS.square, WB = FZS.west;
     k.floorWithHoles(SQ.x0, SQ.x1, SQ.z0, SQ.z1, -0.3, 0, C.pave, [[d2.x - W2 - 0.3, d2.x + W2 + 0.3, FZS.d2.top, FZS.d2.z1]], true, 'pave');
@@ -299,6 +328,7 @@ export class FzsStation {
       for (const a of [0, Math.PI]) at.quad(x, 2.6, z + (a ? -0.51 : 0.51), 0.9, 1.6, a, at.draw(0.9, 1.6, (c, pw, ph) => { c.fillStyle = '#F7F7F5'; c.fillRect(0, 0, pw, ph); fzLogo(c, pw * 0.08, ph * 0.04, pw * 0.84); c.fillStyle = '#1E8E4E'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `800 ${pw * 0.42}px ${FONT_EN}`; c.fillText('D2', pw / 2, ph * 0.68); c.font = `700 ${pw * 0.18}px ${FONT}`; c.fillText('西广场', pw / 2, ph * 0.9); })); }
     { const x = -30, z = -168; P.slab(x - 4, x + 4, 2.8, 3.0, z - 1.2, z + 1.2, hex('#3E6E9A'), { ao: false }); for (const sx of [-3.6, 3.6]) M.slab(x + sx - 0.07, x + sx + 0.07, 0, 2.8, z - 0.07, z + 0.07, C.lamp, { ao: false });
       at.quad(x, 3.3, z + 1.25, 6, 0.6, 0, at.draw(6, 0.6, bigText('西广场公交站 West Square Bus', null, '#1B6E56', '#FFFFFF'))); k.colSlab(x - 4, x + 4, 0, 0.5, z - 0.3, z + 0.3); P.slab(x - 3, x + 3, 0.42, 0.5, z - 0.3, z + 0.3, C.seat, { ao: false }); }
+    k.group('west');   // 西广场 + 老站房：在股道北边，候车室北墙玻璃外是一整张“站台雨棚 + 天空”远景挡着，看不见 → 候车室里关掉
     this.buildHall(k, at);
     this.buildFacade(k, at);
   }

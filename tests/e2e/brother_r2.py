@@ -10,7 +10,7 @@ DOORS = '--doors' in sys.argv
 os.makedirs(OUT, exist_ok=True); PERF = {}
 async def shot(pg, name, settle=1.5):
     await asyncio.sleep(settle); d = await perf(pg, n=4, gap=0.3); PERF[name] = d
-    await overlay(pg, d, name); await pg.screenshot(path=OUT + name + '.png', timeout=240000); await overlay_off(pg); print('shot', name, d, flush=True)
+    await overlay(pg, d, name); await safe_shot(pg, path=OUT + name + '.png', timeout=240000); await overlay_off(pg); print('shot', name, d, flush=True)
 async def main():
     async with async_playwright() as p:
         b, pg, logs = await open_game(p, BASE + '?q=1&char=mingming')

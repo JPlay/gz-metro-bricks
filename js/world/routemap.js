@@ -10,8 +10,8 @@ import { LINES, STATIONS, OTHER_LINES } from '../data/lines.js';
 import { XM_LINES, XM_STATIONS } from '../data/xm-lines.js';
 import { FZ_LINES, FZ_STATIONS } from '../data/fz-lines.js';
 const NET = { gz: { LINES, STATIONS, OTHER: OTHER_LINES }, xm: { LINES: XM_LINES, STATIONS: XM_STATIONS, OTHER: { 3: { zh: '3号线', en: 'Line 3', color: '#00A0E9' }, 4: { zh: '4号线', en: 'Line 4', color: '#E60012' }, 6: { zh: '6号线', en: 'Line 6', color: '#8B5CF6' } } } };
-// 福州：本游戏只做 1、5 号线；其他换乘线（2/4/6）线路色未核实，统一画中性灰
-const FZ_OTHER = { 2: { zh: '2号线', en: 'Line 2', color: '#8A9098' }, 4: { zh: '4号线', en: 'Line 4', color: '#8A9098' }, 6: { zh: '6号线', en: 'Line 6', color: '#8A9098' } };
+// 福州：第三批起 1/2/4/5/6 号线 + 滨海快线都在 FZ_LINES 里，没有“游戏外”的已开通换乘线了
+const FZ_OTHER = {};
 NET.fz = { LINES: FZ_LINES, STATIONS: FZ_STATIONS, OTHER: FZ_OTHER };
 function N(net = 'gz') { return NET[net] || NET.gz; }
 import { FONT, FONT_EN, roundRect } from './kit.js';
@@ -30,6 +30,7 @@ export function transferColor(code, line, net = 'gz') {
   const { LINES: L, STATIONS: S, OTHER } = N(net);
   const s = S[code], o = s.lines.find(l => l !== line);
   if (o) return L[o].color;
+  if (s.ox && s.ox.length && L[s.ox[0]]) return L[s.ox[0]].color;   // 出站换乘（福州 水部↔闽都、三叉街）
   return s.x.some(k => OTHER[k]) ? '#1B2430' : null;
 }
 /** 行进方向排好的站序（step=+1 原序，-1 倒序）、高亮站的下标、已经过的站数 */
@@ -54,7 +55,8 @@ export function drawStrip(c, line, code, step, moving, nextCode, net = 'gz') {
   // 左边：线路色块（大号线路号 + 往哪儿开）
   c.fillStyle = L.color; roundRect(c, BX, 20, 300, H - 40, 20); c.fill();
   c.fillStyle = L.ink; c.textAlign = 'center'; c.textBaseline = 'alphabetic';
-  c.font = `800 92px ${FONT_EN}`; c.fillText(String(L.id), BX + 72, 112); c.font = `700 46px ${FONT}`; c.fillText('号线', BX + 180, 106);
+  if (L.badge) { c.font = `800 80px ${FONT_EN}`; c.fillText(L.badge, BX + 64, 110); c.font = `700 36px ${FONT}`; c.fillText(L.zh, BX + 200, 102); }   // 滨海快线：F1 + 线路名
+  else { c.font = `800 92px ${FONT_EN}`; c.fillText(String(L.id), BX + 72, 112); c.font = `700 46px ${FONT}`; c.fillText('号线', BX + 180, 106); }
   const dz = dir.zh, fz = dz.length > 4 ? 40 : 48;
   c.font = `700 ${fz}px ${FONT}`; c.fillText('往 ' + dz, BX + 150, 178);
   let fe = 24; c.font = `600 ${fe}px ${FONT_EN}`; while (c.measureText(dir.en).width > 270 && fe > 14) { fe -= 1; c.font = `600 ${fe}px ${FONT_EN}`; }

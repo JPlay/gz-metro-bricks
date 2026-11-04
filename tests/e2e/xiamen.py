@@ -26,7 +26,7 @@ async def measure(pg, name):
     d = await perf(pg, 4, 0.25); R['perf'][name] = d; log('perf', name, d); return d
 async def shot(pg, name, settle=1.0):
     await asyncio.sleep(settle); await measure(pg, name)
-    await pg.screenshot(path=OUT + name + '.png', timeout=180000)
+    await safe_shot(pg, path=OUT + name + '.png', timeout=180000)
 OUT2 = (sys.argv[4] if len(sys.argv) > 4 else '/workspace/gz-shots-polish/xm-s2-r1/').rstrip('/') + '/'
 BUDGET2 = 50   # 第二阶段新加的镜头（厦门北站房）
 OUT3 = (sys.argv[5] if len(sys.argv) > 5 else '/workspace/gz-shots-polish/xm-s3-r1/').rstrip('/') + '/'
@@ -76,7 +76,7 @@ async def measure2(pg, name):
     d = await measure(pg, name); ok('budget50:' + name, d['draws'] <= BUDGET2 and d['tris'] <= BUDGET['tris']); return d
 async def shot2(pg, name, settle=1.2):
     await asyncio.sleep(settle); await measure2(pg, name)
-    await pg.screenshot(path=OUT2 + name + '.png', timeout=180000)
+    await safe_shot(pg, path=OUT2 + name + '.png', timeout=180000)
 async def until_rt(pg, rt, speed=10):
     await pg.evaluate(f'__game.east.setSpeed({speed})')
     r = await wait(pg, f'(__game.east.info().ride||{{rt:1e9}}).rt > {rt}', 400)
@@ -110,6 +110,10 @@ async def main():
     await auto(pg, [[-5.8, -127.3], [-5.8, -128.6]])
     ok('inCar', await wait(pg, '__game.east.info().inside', 4))
     ok('seated', await sit_row14(pg))
+    # 广州东站现在有两个目的地（厦门 D2315 / 福州 D3309 直达）：坐下先弹卡片，选厦门
+    ok('pickerGz', await wait(pg, '__game.east.info().picker', 6))
+    R['pickerGzDests'] = await pg.evaluate('__game.east.info().dests')
+    ok('pickerGzCards', R['pickerGzDests'] == ['xm', 'fz']); await pg.evaluate("__game.east.pick('xm')")
     # 2. 关门 → 发车
     ok('closing', await wait(pg, '!!__game.east.info().ride', 6))
     ok('doorClosed', await wait(pg, '__game.east.info().door >= 1', 12))

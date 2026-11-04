@@ -1,4 +1,4 @@
-# 福州地铁 1、5 号线：每个站都要能“站台 → 楼梯 → 站厅 → 出口 → 街面”走出去，再原路走回站台（同 xm_exits.py）。
+# 福州地铁 1、2、4、5、6 号线 + 滨海快线（F1，内部线号 20）：每个站都要能“站台 → 楼梯 → 站厅 → 出口 → 街面”走出去，再原路走回站台（同 xm_exits.py）。
 # 1. 数据：每个站（福州火车南站除外：它的站厅就是国铁出站层）在 FZ_EXITS 里都有出口；站台有上站厅的楼梯。
 # 2. 福州火车南站（fzfzn）：从地铁站厅走 F / A / B 出口通道上东广场、走 D2 上西广场，再走回出站层。
 # 3. 逐站步行（autopilot，不传送）：站台 → 楼梯 → 站厅 → 出口通道 → 地面（进街区）→ 回出口亭 → 下楼梯回站厅 → 回站台。
@@ -25,10 +25,11 @@ async def walk(pg, pts, leg=18.0, run=True):
     return await auto(pg, out, run)
 STATIC = """(async () => {
   const E = await import('/js/data/fz-exits.js'), L = await import('/js/data/fz-lines.js');
-  const all = [...new Set([...L.FZ_LINES[1].stations, ...L.FZ_LINES[5].stations])];
-  return { n1: L.FZ_LINES[1].stations.length, n5: L.FZ_LINES[5].stations.length, rail: E.FZS_EXITS,
+  const all = [...new Set(Object.values(L.FZ_LINES).flatMap(l => l.stations))];
+  return { n: Object.fromEntries(Object.entries(L.FZ_LINES).map(([k, l]) => [k, l.stations.length])), n1: L.FZ_LINES[1].stations.length, n5: L.FZ_LINES[5].stations.length, n4: L.FZ_LINES[4] ? L.FZ_LINES[4].stations.length : 0, rail: E.FZS_EXITS,
     all: all.map(c => { const e = E.FZ_EXITS[c], s = L.FZ_STATIONS[c];
-      return { code: c, zh: s.zh, lines: s.lines, ex: e ? { n: e.n, x: e.x, line: e.line, road: e.road, to: e.to } : null }; }) };
+      return { code: c, zh: s.zh, lines: s.lines, ex: e ? { n: e.n, x: e.x, line: e.line, road: e.road, to: e.to } : null,
+        more: e && e.more ? e.more.map(m => ({ n: m.n, x: m.x, line: m.line, to: m.to, attr: m.attr || null })) : [] }; }) };
 })()"""
 async def area(pg): return await pg.evaluate('__game.east.area')
 async def railway_exits(pg, rail):
@@ -52,13 +53,15 @@ async def railway_exits(pg, rail):
             await walk(pg, [[x, -164], [x, -150], [x, -93], [x, -86], [FO - 92, -80]])
         s = await st(pg); r['back'] = s['pos']
         ok(f'fzfzn:{n}:backDown', abs(s['pos'][1] - HY) < 0.4 and await area(pg) in ('passage', 'hall'))
-async def station(pg, code, zh):
+async def station(pg, code, zh, exd=None):
     r = {'zh': zh}
     info = await pg.evaluate(f"""(() => {{ const e=__game.east; e.cur.loc='fzmetro'; e.cur.area='metro'; const st=__game.fzMetro.buildStation('{code}');
       const P=st.platforms.find(p=>p.up); return P ? {{ zm:(P.up.z0+P.up.z1)/2, y:P.y }} : null; }})()""")
     r['up'] = info
     if not ok(f'{code}:stairsUp', info): return r
-    ex = await pg.evaluate(f"(async () => {{ const S = await import('/js/data/fz-exits.js'); const e=S.FZ_EXITS['{code}']; return e ? {{x:e.x, n:e.n}} : null; }})()")
+    ex = exd or await pg.evaluate(f"(async () => {{ const S = await import('/js/data/fz-exits.js'); const e=S.FZ_EXITS['{code}']; return e ? {{x:e.x, n:e.n}} : null; }})()")
+    tag = code if not exd else f"{code}.{exd['n']}"
+    code_ = code; code = tag
     if not ok(f'{code}:exitEntry', ex): return r
     zm, ex_x = info['zm'], ex['x']
     await pg.evaluate(f"__game.player.spawn({FO}+2, -12.95, {zm}, -Math.PI/2)"); await asyncio.sleep(1); await jreset(pg)
@@ -68,7 +71,7 @@ async def station(pg, code, zh):
     await jreset(pg)
     await auto(pg, [[FO + ex_x, -16]], True); await auto(pg, [[FO + ex_x, -20], [FO + ex_x, -36]], True)
     s = await st(pg); street = await pg.evaluate("__game.fzMetro.street ? __game.fzMetro.street.info() : null"); r['street'] = street
-    ok(f'{code}:concourseToStreet', bool(street) and street['code'] == code and s['zone'] == 'street' and abs(s['pos'][1]) < 0.5)
+    ok(f'{code}:concourseToStreet', bool(street) and street['code'] == code_ and s['zone'] == 'street' and abs(s['pos'][1]) < 0.5)
     if not street: return r
     await auto(pg, [[FS, -4]], True); await asyncio.sleep(0.5)
     s = await st(pg); back = not await pg.evaluate("!!__game.fzMetro.street")
@@ -85,11 +88,12 @@ async def main():
         b, pg, logs = await open_game(p, BASE + '?q=1')
         await pg.evaluate(GCLOCK); await pg.evaluate(JUMP); await pg.evaluate('__game.setDtMax(0.25)'); await asyncio.sleep(1)
         S = await pg.evaluate(STATIC); R['static'] = S
-        ok('static:L1=25,L5=20', S['n1'] == 25 and S['n5'] == 20)
+        ok('static:L1=25,L2=22,L4=23,L5=20,L6=14,F1=12', S['n'] == {'1': 25, '2': 22, '4': 23, '5': 20, '6': 14, '20': 12})
         missing = [f"{s['code']} {s['zh']}" for s in S['all'] if s['code'] != 'fzfzn' and not s['ex']]
         R['missingExits'] = missing; log('missing exits', missing)
         ok('static:everyStationHasExit', not missing)
-        bad = [s['code'] for s in S['all'] if s['ex'] and (not isinstance(s['ex']['n'], str) or s['ex']['line'] not in s['lines'] or not isinstance(s['ex']['to'], list) or not -20 < s['ex']['x'] < 16)]
+        bad = [s['code'] + ':' + str(e['n']) for s in S['all'] for e in ([s['ex']] + s['more'] if s['ex'] else []) if (not isinstance(e['n'], str) or e['line'] not in s['lines'] or not isinstance(e['to'], list) or not -20 < e['x'] < 16)]
+        bad += [s['code'] + ':overlap' for s in S['all'] for e in s['more'] if abs(e['x'] - s['ex']['x']) < 8]
         R['badExits'] = bad; ok('static:exitEntriesWellFormed', not bad)
         ok('static:fzfznExits', sorted(e['n'] for e in S['rail']) == ['A', 'B', 'D2', 'F'])
         if not ONLY or 'fzfzn' in ONLY: await railway_exits(pg, S['rail'])
@@ -100,6 +104,8 @@ async def main():
             if s['code'] == 'fzfzn' or (ONLY and s['code'] not in ONLY): continue
             log('=== station', s['code'], s['zh'])
             R['stations'][s['code']] = await station(pg, s['code'], s['zh'])
+            for e in s['more']:   # 同站的第二个出口（走到对应街区，如南门兜 B → 乌山）
+                log('=== exit', s['code'], e['n']); R['stations'][s['code'] + '.' + e['n']] = await station(pg, s['code'], s['zh'], e)
         R['errors'] = errs(logs); await b.close()
     print(json.dumps({k: v for k, v in R.items() if k != 'static'}, ensure_ascii=False, indent=1, default=str))
     good = all(R['checks'].values()) and not R['errors']

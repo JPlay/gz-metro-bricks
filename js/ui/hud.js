@@ -22,7 +22,7 @@ export class Hud {
     const { LINES: XL, STATIONS: XS, brand } = NETS[net], s = XS[code], L = XL[line] || XL[s.lines[0]], key = net + ':' + code + line + (nextCode || '');
     if (key === this.key) return; const changed = this.key && !this.key.startsWith(net + ':' + code); this.key = key;
     const w = $('where'); w.style.setProperty('--line', L.color); w.style.setProperty('--ink', L.ink);
-    const ln = $('whereLine'); ln.innerHTML = `<b>${L.id}</b><small>号线</small>`; ln.setAttribute('aria-label', brand + L.zh);
+    const ln = $('whereLine'); ln.innerHTML = L.badge ? `<b>${L.badge}</b><small>${L.zh}</small>` : `<b>${L.id}</b><small>号线</small>`; ln.setAttribute('aria-label', brand + L.zh);
     $('whereName').textContent = s.zh; $('whereEn').textContent = s.en;
     if (changed) { w.classList.remove('swap'); void w.offsetWidth; w.classList.add('swap'); }
     const n = $('next');

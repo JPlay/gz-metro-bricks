@@ -309,11 +309,18 @@ export class Crowd {
   update(dt, focus) {
     // 地面 / 地下分开显示：人在街上时看不到地下站厅的人（以前视锥里地下的人照样画，一人两三次绘制），反之亦然；楼梯上两边都显示
     const fy = focus ? focus.y : 0, hideLow = fy > -1.5, hideHigh = fy < -4.5, hideMid = fy < -10.5;   // 站台层（-12）只画站台上的人
+    const midStair = !hideLow && !hideHigh;   // 楼梯/通道中间层（约 -1.5..-4.5）：两边人都在，必须单独裁距
+    // C 口通道：street 几何开着、under 关着，站厅人若仍按 30m 画会叠到 50+；通道里只留近距
+    const inPassage = focus && Math.abs(focus.x) < 5 && focus.z < -19 && focus.z > -42;
     for (const n of this.list) {
       const m = n.p.mesh, d2 = focus ? (m.position.x - focus.x) ** 2 + (m.position.z - focus.z) ** 2 + ((m.position.y - focus.y) * 3) ** 2 : 0;
-      // 地下（站厅 / 站台）再加一条：30m 外的人不画（站台一眼望到头，远处的人很小，每人 1 次绘制）
-      const vis = !((hideLow && m.position.y < -3) || (hideHigh && m.position.y > -1) || (hideMid && m.position.y > -8.5) || (hideHigh && d2 > 30 * 30));
-      if (m.isEnabled() !== vis) { m.setEnabled(vis); n.sh.setEnabled(vis); }
+      // 地下：站台层 16m；站厅 30m；通道 10m；地面 32m；楼梯中段 14m 且只留近层
+      const platR2 = hideMid ? 16 * 16 : inPassage ? 10 * 10 : 30 * 30;
+      const vis = !((hideLow && m.position.y < -3) || (hideHigh && m.position.y > -1) || (hideMid && m.position.y > -8.5) || (hideHigh && d2 > platR2) || (hideLow && d2 > 32 * 32) || (midStair && (d2 > 14 * 14 || m.position.y < fy - 2.5)) || (inPassage && d2 > platR2));
+      // 地面 18m 外 / 楼梯中段 10m 外只留脚底阴影点
+      const showMesh = vis && (!hideLow || d2 < 18 * 18) && (!midStair || d2 < 10 * 10);
+      if (m.isEnabled() !== showMesh) m.setEnabled(showMesh);
+      if (n.sh.isEnabled() !== vis) n.sh.setEnabled(vis);
       const near = d2 < 45 * 45;
       if (n.act) {
         const a = n.act; a.t -= dt; this.turnTo(m, a.yaw, dt * 7); n.p.pointYaw = a.pointYaw || 0;

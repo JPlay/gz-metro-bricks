@@ -29,6 +29,7 @@ python3 tests/e2e/brother_perf.py 'http://localhost:8123/' [截图目录]   # �
 python3 tests/e2e/audio_ios.py 'http://localhost:8123/?q=2' [截图目录]   # iOS 音频加固：默认采样率、点一下后 running、?debug=audio 诊断面板；模拟 resume() 挂起 / interrupted → 出现“点一下开启声音”→ 再点一下关掉重建；iPhone UA 静音 <audio> 循环兜底。WEBKIT=1 用 Playwright WebKit 冒烟（不是 iOS）
 python3 tests/e2e/portrait_hud.py 'http://localhost:8123/?q=2' /workspace/gz-shots-polish/portrait-hud [后缀]   # iPhone 竖屏 390×844 / 430×932：右上角 5 个按钮排到站名牌下面一排，不压站名牌 / “下一站”条 / 票卡标签；iPad 横屏 1112×834 按钮位置不变
 python3 tests/e2e/shots.py    'http://localhost:8123/'       # 截图（含竖屏 834×1112）
+SHOTS=目录 python3 tests/e2e/xm_sm_bridge.py 'http://localhost:8123/'   # 厦门乌石浦 SM：天桥 1 / 2 两头的 2F 玻璃门进楼（一期 ↔ 黄宝石、一期 ↔ 三期，来回）+ 进门走到扶梯；一期 / 黄宝石 / 红宝石 / 蓝宝石 1F 坐扶梯到顶层（每层核对高度）、观光电梯点 1F 回来、一期楼梯 1F ↔ 2F；每张 ≤9 万三角形 / ≤50 draws。MALLS=sm-city 只跑一栋，SKIP_BRIDGES=1 跳过天桥
 python3 tests/e2e/polish_shots.py 'http://localhost:8123/' /workspace/gz-shots-polish/after 1   # 视觉升级对比截图（12 个场景 + HUD 特写），并打印每张的绘制调用数
 ```
 

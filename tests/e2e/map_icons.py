@@ -75,7 +75,7 @@ async def main():
     await tap(pg, '#bMap'); await until(pg, '__game.state().mapOpen && !document.getElementById("netmap").hidden', 10); await asyncio.sleep(0.6)
     await pg.evaluate("document.getAnimations().forEach(a=>{a.pause(); a.currentTime=500;})")
     R['ipad'] = await pg.evaluate(ONMAP)
-    await pg.screenshot(path=OUT + '01-ipad-full.png'); log('shot 01')
+    await safe_shot(pg, path=OUT + '01-ipad-full.png'); log('shot 01')
     # 点纪念堂的图标 → 小卡片（中山纪念堂 · C 出口）；点空白处收起
     c = await pg.evaluate("(()=>{const r=document.querySelector('#netmap g.attr[data-attr=sysy] circle:not([fill-opacity])').getBoundingClientRect(); return [r.left+r.width/2, r.top+r.height/2];})()")
     await pg.touchscreen.tap(c[0], c[1]); await asyncio.sleep(0.5)
@@ -105,7 +105,7 @@ async def main():
         if await pg.evaluate('__game.player.view') != 'first': await pg.evaluate('__game.toggleView()')
         await pg.evaluate(f"(()=>{{const t={slot}.train, r=t.root.position; __game.teleport(r.x+0.6, r.y+0.02, r.z+0.5, Math.PI); __game.player.pitch=-0.42;}})()")
         await asyncio.sleep(2.5); d = await perf(pg); R['carPerf'] = d; R['aboard'] = (await st(pg))['aboard']
-        await overlay(pg, d, 'car-map'); await pg.screenshot(path=OUT + 'x-car-map.png', timeout=180000); log('car', d)
+        await overlay(pg, d, 'car-map'); await safe_shot(pg, path=OUT + 'x-car-map.png', timeout=180000); log('car', d)
     R['errorsIpad'] = errs(logs); await b.close()
     # —— 3. iPhone 竖屏：放大到纪念堂附近
     b, pg, logs = await open_game(p, BASE + '?q=1&start=jnt&line=2', w=390, h=844)
@@ -118,7 +118,7 @@ async def main():
       const h=document.querySelector('#netmap svg circle.here').getBoundingClientRect(); const k=3, cx=r.left+r.width/2, cy=r.top+r.height/2, px=(d.left+d.width/2+h.left+h.width/2)/2, py=(d.top+d.height/2+h.top+h.height/2)/2; __game.mapZoom.set(k, -(px-cx)*k, -(py-cy)*k);})()""")
     await asyncio.sleep(0.6)
     R['iphoneZoom'] = await pg.evaluate(ONMAP)
-    await pg.screenshot(path=OUT + '02-iphone-zoom-sysy.png'); log('shot 02')
+    await safe_shot(pg, path=OUT + '02-iphone-zoom-sysy.png'); log('shot 02')
     R['errorsIphone'] = errs(logs); await b.close()
   print(json.dumps(R, ensure_ascii=False, indent=1), flush=True)
   ids = {a[1] for a in R['attractions']}

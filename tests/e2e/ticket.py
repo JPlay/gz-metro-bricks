@@ -11,7 +11,7 @@ PART = os.environ.get('PART', 'all')   # all | tvm（只跑售票机面板，截
 os.makedirs(OUT, exist_ok=True)
 R = {}
 async def shot(pg, name):
-    await pg.screenshot(path=OUT + name + TAG + '.png', timeout=180000); print('shot', name + TAG, flush=True)
+    await safe_shot(pg, path=OUT + name + TAG + '.png', timeout=180000); print('shot', name + TAG, flush=True)
 async def tap(pg, sel):
     box = await pg.locator(sel).first.bounding_box()
     await pg.touchscreen.tap(box['x'] + box['width'] / 2, box['y'] + box['height'] / 2); return box

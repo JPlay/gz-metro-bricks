@@ -47,8 +47,8 @@ async def main():
                     await pg.evaluate(rj.STEP, 1); n += 1
                     r = await pg.evaluate(PROBE)
                     if os.environ.get('SHOTS') == '1' and n % 3 == 0:
-                        fn = f'{OUT}{name}-{n:04d}.jpg'; await pg.screenshot(path=fn, type='jpeg', quality=70)
-                        a = np.asarray(Image.open(fn).convert('L')); top = a[: a.shape[0] // 2]; r['darkTop'] = round(float((top < 40).mean()), 3)
+                        fn = f'{OUT}{name}-{n:04d}.jpg'
+                        if await safe_shot(pg, path=fn, type='jpeg', quality=70): a = np.asarray(Image.open(fn).convert('L')); top = a[: a.shape[0] // 2]; r['darkTop'] = round(float((top < 40).mean()), 3)
                     rows.append(r)
                     if await pg.evaluate('window.__rec.follow.done'): break
             bad = [r for r in rows if r['blocked'] or r['near'] < 0.25 or (r['heroOn'] and r['dBody'] < 0.5) or r.get('darkTop', 0) > 0.25]

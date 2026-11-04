@@ -35,7 +35,7 @@ async def main():
             await pg.evaluate(f'__game.teleport({x},{y},{z},{yaw})')
             await asyncio.sleep(4 if 'bridge' in name else 2.0)
             fn = OUT + name + ('-portrait' if portrait else '') + '.png'
-            await pg.screenshot(path=fn, timeout=240000); log('shot', fn, (await st(pg)).get('drawCalls'))
+            await safe_shot(pg, path=fn, timeout=240000); log('shot', fn, (await st(pg)).get('drawCalls'))
         e = errs(logs); a = (await st(pg)).get('atlas'); print('ERRORS', e, 'ATLAS', a, flush=True)
         await b.close()
 asyncio.run(main())

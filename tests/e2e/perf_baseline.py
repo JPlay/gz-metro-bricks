@@ -16,7 +16,7 @@ async def main():
         if await pg.evaluate('__game.player.view')!=v: await pg.evaluate('__game.toggleView()')
         await pg.evaluate(f'__game.teleport({x},{y},{z},{yaw}); __game.player.pitch={pitch}')
         await asyncio.sleep(1.5); R[name]=await perf(pg)
-        if OUT: await overlay(pg,R[name],name); await pg.screenshot(path=f'{OUT}/baseline-{name}.png')
+        if OUT: await overlay(pg,R[name],name); await safe_shot(pg, path=f'{OUT}/baseline-{name}.png')
     R['errors']=errs(logs)
     print('BASELINE', json.dumps(R, ensure_ascii=False))
     await b.close()
