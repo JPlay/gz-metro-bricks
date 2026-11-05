@@ -58,11 +58,14 @@ async def stage_cam_audit(pg):
         for i, yaw in enumerate(STAGE_YAWS):
             await pg.evaluate(f'__game.teleport({x},{y},{z},{yaw}); __game.player.pitch=-0.1; __game.player._stageCamK=1')
             await asyncio.sleep(1.0)
-            info = await pg.evaluate('(()=>{const pl=__game.player,c=pl.cam;return{en:pl.model.isEnabled(),fade:+(pl._heroFade??1).toFixed(3),k:+(pl._stageCamK||0).toFixed(3),pos:[+pl.position.x.toFixed(2),+pl.position.y.toFixed(2),+pl.position.z.toFixed(2)],cam:[+c.position.x.toFixed(2),+c.position.y.toFixed(2),+c.position.z.toFixed(2)],aimYaw:pl.aimYaw}})()')
+            info = await pg.evaluate('(()=>{const pl=__game.player,c=pl.cam;return{en:pl.model.isEnabled(),fade:+(pl._heroFade??1).toFixed(3),k:+(pl._stageCamK||0).toFixed(3),pos:[+pl.position.x.toFixed(2),+pl.position.y.toFixed(2),+pl.position.z.toFixed(2)],cam:[+c.position.x.toFixed(2),+c.position.y.toFixed(2),+c.position.z.toFixed(2)],yaw:+pl.yaw.toFixed(3),aimYaw:pl.aimYaw,camRotY:+c.rotation.y.toFixed(3)}})()')
             vis = info['en'] and info['fade'] > 0.5
             rf = await red_frac(pg, SHOTS + f'stageCam_{name}_y{i}.jpg')
             ok(f'stageCam:{name}:yaw{i}:hero', vis, info)
             ok(f'stageCam:{name}:yaw{i}:red', rf <= 0.30, {'redFrac': round(rf, 3), **info})
+            # 镜头 yaw 必须跟玩家 yaw（不许 aimYaw 翻转）
+            dyaw = abs((info['camRotY'] - info['yaw'] + math.pi) % (2*math.pi) - math.pi)
+            ok(f'stageCam:{name}:yaw{i}:noFlip', info.get('aimYaw') is None and dyaw < 0.15, {'dyaw': round(dyaw, 3), **info})
     # 匾下东→西横走：每帧主角不得被藏；若干采样点红幕 ≤ 30%
     await pg.evaluate("""(()=>{
       if (window.__scObs) { __game.scene.onAfterRenderObservable.remove(window.__scObs); window.__scObs=null; }
@@ -72,11 +75,21 @@ async def stage_cam_audit(pg):
         H.n++; if (!pl.model.isEnabled() || (pl._heroFade??1)<0.5) H.hid++;
       });
     })()""")
-    await pg.evaluate('__game.teleport(602.9,1.1,9.7,Math.PI); __game.player.pitch=-0.1; __game.player._stageCamK=1')
-    await asyncio.sleep(0.6)
-    walked = await walk(pg, [[601.4, 9.7], [600.0, 9.7], [598.6, 9.7], [597.1, 9.7]])
+    await pg.evaluate('__game.teleport(602.9,1.1,9.7,Math.PI); __game.player.pitch=-0.1; __game.player._stageCamK=1; __game.player.vy=0; __game.player.grounded=true')
+    await asyncio.sleep(0.8)
+    # yaw=π 时 stick 右 = 世界 −x；用摇杆横走，避免 autopilot 在台上大步长穿地
+    await pg.evaluate('__game.setMove(1, 0)')
+    walked = False
+    for _ in range(50):
+        spos = await st(pg)
+        if spos['pos'][1] < 0.5:  # 掉下舞台则失败
+            break
+        if spos['pos'][0] <= 597.25:
+            walked = True; break
+        await asyncio.sleep(0.2)
+    await pg.evaluate('__game.setMove(0, 0)')
     hid = await pg.evaluate('(()=>{const H=window.__scH||{n:0,hid:0}; if(window.__scObs){__game.scene.onAfterRenderObservable.remove(window.__scObs);window.__scObs=null;} return H;})()')
-    ok('stageCam:plaqueWalk:reached', walked, hid)
+    ok('stageCam:plaqueWalk:reached', walked, {'walked': walked, 'pos': (await st(pg))['pos'], **hid})
     ok('stageCam:plaqueWalk:heroVisible', hid.get('n', 0) > 0 and hid.get('hid', 1) == 0, hid)
     for tag, x in (('plaqueE', 602.5), ('plaqueM', 600.0), ('plaqueW', 597.5)):
         await pg.evaluate(f'__game.teleport({x},1.1,9.7,Math.PI); __game.player.pitch=-0.1; __game.player._stageCamK=1')
@@ -85,6 +98,56 @@ async def stage_cam_audit(pg):
         rf = await red_frac(pg, SHOTS + f'stageCam_{tag}.jpg')
         ok(f'stageCam:{tag}:hero', info['en'] and info['fade'] > 0.5, info)
         ok(f'stageCam:{tag}:red', rf <= 0.30, {'redFrac': round(rf, 3), **info})
+
+async def stick_dirs_audit(pg):
+    """摇杆四向：舞台区内外世界位移同号；镜头 yaw = 玩家 yaw（无 180° 倒向）。"""
+    if await pg.evaluate('__game.player.view') != 'third':
+        await pg.evaluate('__game.toggleView()')
+    dirs = [('up', 0, 1), ('down', 0, -1), ('right', 1, 0), ('left', -1, 0)]
+    async def measure(x, y, z, yaw, tag):
+        out = {}
+        for name, mx, my in dirs:
+            await pg.evaluate(f'__game.teleport({x},{y},{z},{yaw}); __game.player.vel.set(0,0,0); __game.player.pitch=-0.1; __game.setMove(0,0)')
+            await asyncio.sleep(0.35)
+            p0 = await pg.evaluate('[+__game.player.position.x, +__game.player.position.z, +__game.player.yaw, +__game.player.cam.rotation.y, __game.player.aimYaw]')
+            await pg.evaluate(f'__game.setMove({mx},{my})')
+            await asyncio.sleep(0.7)
+            await pg.evaluate('__game.setMove(0,0)')
+            p1 = await pg.evaluate('[+__game.player.position.x, +__game.player.position.z]')
+            out[name] = {'dx': p1[0]-p0[0], 'dz': p1[1]-p0[1], 'yaw0': p0[2], 'camY0': p0[3], 'aimYaw': p0[4]}
+            log('stick', tag, name, out[name])
+        return out
+    # 区外过道（面对 +z）
+    base = await measure(600, 0.05, 0, 0, 'aisle')
+    # 舞台踏步顶（同 yaw=0，面对舞台深处）
+    stage = await measure(602.9, 1.1, 9.81, 0, 'E_top')
+    for name, _, _ in dirs:
+        b, s_ = base[name], stage[name]
+        # 世界位移主轴同号（允许被墙挡住幅度变小，但不能反向）
+        same_x = abs(b['dx']) < 0.05 or abs(s_['dx']) < 0.05 or (b['dx'] * s_['dx'] > 0)
+        same_z = abs(b['dz']) < 0.05 or abs(s_['dz']) < 0.05 or (b['dz'] * s_['dz'] > 0)
+        # 至少有一个主分量明显动了且同号
+        moved = abs(s_['dx']) + abs(s_['dz']) > 0.15
+        ok(f'stick:{name}:sameWorldDir', same_x and same_z and moved, {'aisle': b, 'stage': s_})
+        dy = abs((s_['camY0'] - s_['yaw0'] + math.pi) % (2*math.pi) - math.pi)
+        ok(f'stick:{name}:camFollowsYaw', s_['aimYaw'] is None and dy < 0.15, {'dyaw': round(dy, 3), **s_})
+    # 进出区过渡：从脚下走向踏步顶，cam.rotation.y 与 player.yaw 差不能突然跳 > 0.5
+    await pg.evaluate('__game.teleport(602.9,0.05,6.4,0); __game.player.pitch=-0.1; __game.setMove(0,0)')
+    await asyncio.sleep(0.4)
+    await pg.evaluate("""(()=>{
+      if (window.__scYawObs) { __game.scene.onAfterRenderObservable.remove(window.__scYawObs); }
+      const H=window.__scYaw={n:0,maxJump:0,last:null};
+      window.__scYawObs=__game.scene.onAfterRenderObservable.add(()=>{
+        const pl=__game.player; if (pl.view!=='third') return;
+        const d=pl.cam.rotation.y - pl.yaw; const dd=Math.atan2(Math.sin(d),Math.cos(d));
+        if (H.last!==null) { const j=Math.abs(dd-H.last); if (j>H.maxJump) H.maxJump=j; }
+        H.last=dd; H.n++;
+      });
+    })()""")
+    await walk(pg, [[602.9, 8.2], [602.9, 9.7]])
+    yinfo = await pg.evaluate('(()=>{const H=window.__scYaw||{n:0,maxJump:0}; if(window.__scYawObs){__game.scene.onAfterRenderObservable.remove(window.__scYawObs);window.__scYawObs=null;} return {n:H.n,maxJump:+(H.maxJump||0).toFixed(3)};})()')
+    log('yawJump', yinfo)
+    ok('stick:enterExit:noYawJump', yinfo.get('n', 0) > 5 and yinfo.get('maxJump', 99) < 0.5, yinfo)
 async def main():
     async with async_playwright() as p:
         b, pg, logs = await open_game(p, BASE + '?q=1&start=jnt&line=2')
@@ -108,6 +171,7 @@ async def main():
             ok('stage:underPlaque', s['pos'][1] > 1.0 and abs(s['pos'][0] - 600) < 0.6 and 9.2 < s['pos'][2] < 10.4, s['pos'])
             await pg.evaluate('__game.player.yaw=Math.PI; __game.player.pitch=0.1'); await asyncio.sleep(1.0); await P(pg, 'stageUnderPlaque')
             await stage_cam_audit(pg)
+            await stick_dirs_audit(pg)
             await pg.evaluate('__game.teleport(600,0.05,0,0); __game.player.pitch=0.05'); await asyncio.sleep(1.5); await P(pg, 'stageSteps')
             await walk(pg, [[600, 5.4], [602.9, 6.4], [602.9, 9.7], [600, 9.7]])   # 摆机位后回到台上
             await walk(pg, [[597.1, 9.7], [597.1, 8.2], [597.1, 6.4]]); s = await st(pg)

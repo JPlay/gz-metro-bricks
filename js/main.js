@@ -70,7 +70,7 @@ export async function start() {
   const seats = new SeatCtl({ player, metro: null, Audio, events });
   seats.hall = () => (G.station && G.station.interior && G.station.interior.active ? G.station.interior : null);
   player.leanFn = p => { const h = seats.hall(); return h && h.lean ? h.lean(p) : 0; };
-  player.stageCamFn = p => { const h = seats.hall(); return h && h.stageCam ? h.stageCam(p) : null; };
+  player.stageCamFn = (p, yaw) => { const h = seats.hall(); return h && h.stageCam ? h.stageCam(p, yaw) : null; };
   const bubbles = new Bubbles(scene, cam);
   player.onStandRequest = () => seats.stand();
   player.meshes().forEach(m => R.addShadowCaster(m));

@@ -208,8 +208,10 @@ export class Player {
       this.blob.setEnabled(true);
       // 纪念堂舞台镜头区（HallInterior.stageCam）：人在舞台 / 两侧踏步 / 踏步脚下时，把 3P 镜头融到大幕观众侧，
       //   短臂、略抬高，不跟 yaw 转到幕布后面（满屏红、主角被藏）。区外 _stageCamK→0，其它场景 stageCamFn 为 null。
+      // 舞台区只改镜头位置（短臂 / 抬高 / 滑出幕布），绝不改 aimYaw：摇杆仍按 this.yaw，
+      //   与镜头朝向同一套，进出区不会倒向、也不会 180° 跳变。
       this.aimYaw = undefined;
-      const wantSC = this.stageCamFn && !this.seat ? this.stageCamFn(p) : null;
+      const wantSC = this.stageCamFn && !this.seat ? this.stageCamFn(p, this.yaw) : null;
       if (wantSC) this._stageCamLast = wantSC;
       const wantK = wantSC && wantSC.w > 0 ? wantSC.w : 0;
       this._stageCamK = this._stageCamK === undefined ? 0 : this._stageCamK;
@@ -220,10 +222,9 @@ export class Player {
         cam.position.x += (sc.x - cam.position.x) * k;
         cam.position.y += (sc.y - cam.position.y) * k;
         cam.position.z += (sc.z - cam.position.z) * k;
-        const lx = p.x, ly = p.y + 1.25, lz = p.z;
-        const hx = lx - cam.position.x, hz = lz - cam.position.z, hd2 = Math.hypot(hx, hz);
-        this.aimYaw = Math.atan2(hx, hz);
-        this.aimPitch = hd2 > 0.2 ? Math.atan2(cam.position.y - ly, hd2) : this.pitch;
+        const ly = p.y + 1.25, fxx = Math.sin(this.yaw), fzz = Math.cos(this.yaw);
+        const along = (p.x - cam.position.x) * fxx + (p.z - cam.position.z) * fzz;
+        if (Math.abs(along) > 0.25) this.aimPitch = Math.atan2(cam.position.y - ly, Math.abs(along));
         const ay2 = Math.min(p.y + 1.45, Math.max(p.y + 0.1, cam.position.y));
         const d2 = Math.hypot(cam.position.x - p.x, cam.position.y - ay2, cam.position.z - p.z);
         const f2 = Math.max(0, Math.min(1, (d2 - 0.75) / 0.35));

@@ -156,7 +156,38 @@ async def topaz_chandelier(pg, o):   # 黄宝石中庭金环吊灯（xmSMMall.js
   await pose(pg, o['x'], o['y'] + 0.05, o['z'] + 4, 0); await asyncio.sleep(0.6); await pg.evaluate(PK_ON)
   r1 = await go(pg, o, [[0, 7], [4.4, 13.5], [4.4, 28.5], [4.4, 13.5], [0, 7], [-4.4, 13.5], [-4.4, 28.5], [-4.4, 13.5], [0, 7]]); s = await S(pg)
   ok('topaz-chand-walk1F', r1 and s['floor'] == 1)
-  await pg.evaluate(PK_PAUSE); await pose(pg, o['x'] + 4.0, o['y'] + 4 * FH + 0.05, o['z'] + 21 - 10.6, -0.36); await asyncio.sleep(0.6); await pg.evaluate(PK_ON)
+  # 1F 绕吊灯顺/逆时针各一圈（3P）。
+  # 东西向只在 z=7（中庭南、扶梯脚以南）穿越；南北向在 x=±5.0（避开 |x|<3.4 扶梯、西侧电梯井 x<-5.3）。
+  # 长边拆成 28→13.5→7，避免一次穿中庭被扶梯脚吸进去（chand4 卡在 ~[1.8,28.5]）。
+  # 峰值计数器不停，和 walk1F / 5F 共用，最后一次 PAUSE 作为 walk-3p。
+  def _in_atrium(s):
+    return s['floor'] == 1 and s.get('inside') == 'sm-topaz' and abs(s['pos'][0] - o['x']) < 9 and abs(s['pos'][2] - (o['z'] + 21)) < 12
+  PK_READ = "() => Object.assign({}, window.__pk)"
+  # 若中途 teleport 丢了 observer，重绑但保留峰值（不清零）
+  PK_REARM = """() => { const g=__game,s=g.scene,e=g.engine,o=g.xmMetro.street.inside?g.xmMetro.street.inside.o:{x:0,y:0,z:0};
+    const P=window.__pk||(window.__pk={tris:0,draws:0,at:null,dat:null,n:0});
+    if(window.__pkObs) try{s.onAfterRenderObservable.remove(window.__pkObs)}catch(err){}
+    window.__pkObs=s.onAfterRenderObservable.add(()=>{const t=Math.round(s.getActiveIndices()/3),d=(e._drawCalls&&e._drawCalls.current)||0,q=g.player.position;P.n++;
+      const here=[q.x-o.x,q.y-o.y,q.z-o.z].map(v=>Math.round(v*10)/10); if(t>P.tris){P.tris=t;P.at=here} if(d>P.draws){P.draws=d;P.dat=here};}); }"""
+  XW, ZE, ZN, ZS = 5.0, 13.5, 28.0, 7.0
+  # 顺时针：东侧北上 → 回到南交叉带 → 西穿 → 西侧北上 → 回南 → 东穿回起点
+  cw_pts = [[XW, ZE], [XW, ZN], [XW, ZE], [XW, ZS], [-XW, ZS], [-XW, ZE], [-XW, ZN], [-XW, ZE], [-XW, ZS], [XW, ZS], [XW, ZE]]
+  # 逆时针：东侧先南下西穿，西侧北上再回南，东穿后北上回到起点
+  ccw_pts = [[XW, ZE], [XW, ZS], [-XW, ZS], [-XW, ZE], [-XW, ZN], [-XW, ZE], [-XW, ZS], [XW, ZS], [XW, ZE], [XW, ZN], [XW, ZE]]
+  await pose(pg, o['x'] + XW, o['y'] + 0.05, o['z'] + ZE, 0); await asyncio.sleep(0.4)
+  await pg.evaluate(PK_REARM)
+  rcw = await go(pg, o, cw_pts); s = await S(pg)
+  ok('topaz-chand-1F-cw', rcw and _in_atrium(s)); R['perf']['topaz-chand-1F-cw-end'] = {'pos': s['pos'], 'floor': s['floor'], 'inside': s.get('inside')}
+  d_cw = await pg.evaluate(PK_READ); R['perf']['topaz-chand-1F-cw'] = d_cw; log('walkPeak topaz-chand-1F-cw', d_cw)
+  ok('topaz-chand-1F-cw:budget', d_cw['n'] > 20 and d_cw['tris'] < WALK_TRIS and d_cw['draws'] <= DRAWS)
+  await pose(pg, o['x'] + XW, o['y'] + 0.05, o['z'] + ZE, math.pi); await asyncio.sleep(0.4)
+  await pg.evaluate(PK_REARM)
+  rccw = await go(pg, o, ccw_pts); s = await S(pg)
+  ok('topaz-chand-1F-ccw', rccw and _in_atrium(s)); R['perf']['topaz-chand-1F-ccw-end'] = {'pos': s['pos'], 'floor': s['floor'], 'inside': s.get('inside')}
+  d_ccw = await pg.evaluate(PK_READ); R['perf']['topaz-chand-1F-ccw'] = d_ccw; log('walkPeak topaz-chand-1F-ccw', d_ccw)
+  ok('topaz-chand-1F-ccw:budget', d_ccw['n'] > 20 and d_ccw['tris'] < WALK_TRIS and d_ccw['draws'] <= DRAWS)
+  await pose(pg, o['x'] + 4.0, o['y'] + 4 * FH + 0.05, o['z'] + 21 - 10.6, -0.36); await asyncio.sleep(0.6)
+  await pg.evaluate(PK_REARM)
   r5 = await go(pg, o, [[round(10.6 * math.cos(math.radians(a)), 2), round(21 + 10.6 * math.sin(math.radians(a)), 2)] for a in range(-70, 11, 20)]); s = await S(pg)
   ok('topaz-chand-walk5F', r5 and s['floor'] == 5)
   d = await pg.evaluate(PK_PAUSE); R['perf']['topaz-chand-walk-3p'] = d; log('walkPeak topaz-chand-walk-3p', d)
