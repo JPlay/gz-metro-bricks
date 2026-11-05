@@ -359,6 +359,9 @@ async def stick_dirs_audit(pg):
         dy = abs((s_['camY0'] - s_['yaw0'] + math.pi) % (2*math.pi) - math.pi)
         ok(f'stick:{name}:camFollowsYaw', s_['aimYaw'] is None and dy < 0.15, {'dyaw': round(dy, 3), **s_})
     # 进出区过渡：从脚下走向踏步顶，cam.rotation.y 与 player.yaw 差不能突然跳 > 0.5
+    # 固定步长 dt=1/60（dtMax=1/60；软件渲染 <60fps，每帧恰好 1/60 s）——与 glide 审计同口径。
+    # 旧版在全局 dtMax=0.25 下量（一帧 0.25 s），属测试步长假象，不是产品镜头跳变。
+    await pg.evaluate('__game.setDtMax(1/60)')
     await pg.evaluate('__game.teleport(602.9,0.05,6.4,0); __game.player.pitch=-0.1; __game.setMove(0,0)')
     await asyncio.sleep(0.4)
     await pg.evaluate("""(()=>{
@@ -373,6 +376,7 @@ async def stick_dirs_audit(pg):
     })()""")
     await walk(pg, [[602.9, 8.2], [602.9, 9.7]])
     yinfo = await pg.evaluate('(()=>{const H=window.__scYaw||{n:0,maxJump:0}; if(window.__scYawObs){__game.scene.onAfterRenderObservable.remove(window.__scYawObs);window.__scYawObs=null;} return {n:H.n,maxJump:+(H.maxJump||0).toFixed(3)};})()')
+    await pg.evaluate('__game.setDtMax(0.25)')
     log('yawJump', yinfo)
     ok('stick:enterExit:noYawJump', yinfo.get('n', 0) > 5 and yinfo.get('maxJump', 99) < 0.5, yinfo)
 async def main():
@@ -392,9 +396,10 @@ async def main():
             # 舞台：中间过道 → 东侧踏步 → 匾下 → 西侧踏步 → 地面
             await walk(pg, [[600, -16.5], [600, -7.2], [600, 5.4], [602.9, 6.4]]); s = await st(pg)
             ok('stage:atStepFoot', abs(s['pos'][0] - 602.9) < 0.6 and abs(s['pos'][2] - 6.4) < 0.6 and s['pos'][1] < 0.3, s['pos'])
-            await walk(pg, [[602.9, 8.2], [602.9, 9.7]]); s = await st(pg)
+            # autopilot 到点半径 ~0.3m：目标 9.7 偶发停在最上一级踏步 (z≈9.44,y≈0.9)；目标放到台面里 9.95 确保站上台面
+            await walk(pg, [[602.9, 8.2], [602.9, 9.7], [602.9, 9.95]]); s = await st(pg)
             ok('stage:upEastSteps', s['pos'][1] > 1.0 and s['pos'][2] > 9.2, s['pos'])
-            await walk(pg, [[600, 9.7]]); s = await st(pg)
+            await walk(pg, [[600, 9.95]]); s = await st(pg)
             ok('stage:underPlaque', s['pos'][1] > 1.0 and abs(s['pos'][0] - 600) < 0.6 and 9.2 < s['pos'][2] < 10.4, s['pos'])
             await pg.evaluate('__game.player.yaw=Math.PI; __game.player.pitch=0.1'); await asyncio.sleep(1.0); await P(pg, 'stageUnderPlaque')
             await stage_cam_audit(pg)
