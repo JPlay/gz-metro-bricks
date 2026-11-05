@@ -4,7 +4,7 @@
 #  · 天桥：一期 2F 门 → 天桥 1 → 黄宝石 2F → 回一期；一期 2F 门 → 天桥 2 → 三期 2F → 回一期；每次进门后走到扶梯口
 #  · 每个视角 ≤ 9 万三角形、≤ 50 draw；SHOTS=目录 时存截图（带 FPS / draws / tris 角标）
 #  · 黄宝石中庭金环吊灯（topaz_chandelier）：1F 仰视 / 3F 平视 / 5F 走廊斜看（1p + 3p）+ 3P 穿中庭行走峰值 < WALK_TRIS（8.5 万）、≤ 50 draw；
-#    关裁剪全量只记录。CHAND=1 时只跑这一段（配 MALLS= SKIP_BRIDGES=1）
+#    关裁剪全量只记录。CHAND=1 时只跑这一段（配 MALLS=, SKIP_BRIDGES=1；MALLS 为空字符串会回落到全部 4 栋）
 import asyncio, sys, json, os, math
 sys.path.insert(0, os.path.dirname(__file__))
 from common import *
@@ -148,8 +148,8 @@ async def topaz_chandelier(pg, o):   # 黄宝石中庭金环吊灯（xmSMMall.js
       await view(pg, v); await pose(pg, o['x'] + x, o['y'] + f * FH + 0.05, o['z'] + z, yaw, pt)
       await shot(pg, f'{name}-{v[0]}p', f'{label} ({v} person)', OUT2)
     await view(pg, 'third'); s = await S(pg); ok(f'{name}:floor', s['floor'] == f + 1)
-  await both('topaz-chand-1F-up', 'Topaz 1F under the atrium, looking up at the gold-ring chandelier', 4.5, 0, 21 - 13, -0.33, -1.05, -0.35)
-  await both('topaz-chand-3F', 'Topaz 3F corridor, eye level across the atrium', 3.2, 2, 21 - 12.2, -0.26, -0.3, -0.3)
+  await both('topaz-chand-1F-up', 'Topaz 1F under the atrium, looking up at the gold-ring chandelier', 7.2, 0, 21, -1.5708, -1.33, -0.35)   # 中庭空洞东缘正下方、几乎竖直往上看（视线不穿 |x|<3.4 的扶梯组）
+  await both('topaz-chand-3F', 'Topaz 3F corridor, eye level across the atrium', 10.6, 2, 21, -1.5708, -0.8, -0.35)   # 东侧走廊朝西看，视线从扶梯上方越过
   await both('topaz-chand-5F-oblique', 'Topaz 5F corridor, oblique view of the chandelier', 4.0, 4, 21 - 10.6, -0.36, -0.08, -0.1)
   # 3P 穿中庭行走峰值：1F 从门厅走进中庭、在吊灯下方东西两侧各走一个来回（避开扶梯 |x| < 3.4、西侧电梯井 x < −5.3，不穿北端扶梯脚），再到 5F 走廊绕半圈
   await view(pg, 'third'); await pg.evaluate(PK_RESET)

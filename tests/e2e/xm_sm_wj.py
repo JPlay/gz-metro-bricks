@@ -66,6 +66,8 @@ async def main():
         # 小美 pr20：A 1F 扶梯 / 楼梯顶往南看旺街顶棚；B 南厅楼梯脚往上看出口；C 楼梯脚第三人称不穿头；D 镜头不钻进铺位柜台
         await no_sky(pg, 'wj-1F-landing-S', 'North hall 1F landing looking south over 旺街 (closed roof + lightbox wall)', X + 4, 5.55, Z + 67.6, math.pi, 0.25)
         await no_sky(pg, 'wj-stair-up', 'South hall stair foot looking up at the exit (canopy + plaza view, no open sky)', X + 6, 0.05, Z - 1, math.pi, -0.25)
+        # 小美 pr20 V_backdrop：站在南厅楼梯最上一级（出口触发前）往南看门口画（plazaView 地平线应在 ≈ 眼高、画面中线附近）
+        await no_sky(pg, 'wj-stair-top', 'South hall stair top step looking south at the plaza view (horizon ≈ eye height)', X + 6, 3.4, Z - 11.6, math.pi, 0.0)   # 出口触发在 z < −11.8 & y > 2.8，这是触发前最后一级
         await both(pg, 'wj-seats-rice-E', 'Camera vs west counters (z 42), looking east', X - 2, 0.05, Z + 42, math.pi / 2 + 0.4, -0.05, 'interior')
         await both(pg, 'wj-shops-W-lease', 'Camera vs east counters (z 31), looking west', X + 2, 0.05, Z + 31, -math.pi / 2 - 0.5, -0.05, 'interior')
         await view(pg, 'third'); await pose(pg, X + 6, 0.05, Z - 2.6, 0)
