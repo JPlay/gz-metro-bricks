@@ -85,8 +85,10 @@ function b1Beyond(c, pw, ph) {
 
 /** 楼梯顶头：从入口亭门口往南看出去（门框 + 亭子屋檐 + 门前广场 + 嘉禾路对面的楼 + 一条天），代替以前露天的洞口 */
 function plazaView(c, pw, ph) {
-  // 画面 y 3.9…7.2；地平线（嘉禾路远端）放在 HZ = 0.535 ≈ 顶级台阶 +1.5 m 眼高，铺地透视线汇到这条线上（小美 pr20 V_backdrop：以前地平线在膝盖–腰高，像贴了张海报）
-  const HZ = 0.535, RD = 0.575;
+  // 画面 y 3.9…7.2；地平线（嘉禾路远端）放在玩家真正能站到的最上一级的眼高：出口触发在 z < −11.8 & y > 2.8，
+  //   触发前最后一级 y ≈ 3.3、眼高 ≈ 4.75 → HZ = (7.2 − 4.75) / 3.3 ≈ 0.74；铺地透视线汇到这条线上（小美 pr20 V_backdrop：以前地平线在膝盖–腰高，像贴了张海报；
+  //   c42c881 按 y 3.9 的平台 +1.5 m 算的，但平台站不上去，从最上一级看地平线还高出眼睛 ≈ 0.7 m）
+  const HZ = 0.74, RD = 0.765, PY = y => RD + (y - 0.575) / 0.425 * (1 - RD);
   const g = c.createLinearGradient(0, 0, 0, ph * HZ); g.addColorStop(0, '#BFD6E4'); g.addColorStop(1, '#E4ECEE'); c.fillStyle = g; c.fillRect(0, 0, pw, ph * HZ);
   const bl = [['#C9BBA6', 0.0, 0.14, 0.22], ['#8E9AA6', 0.2, 0.08, 0.2], ['#D8D2C6', 0.38, 0.18, 0.18], ['#A99683', 0.55, 0.12, 0.2], ['#7F8C98', 0.74, 0.05, 0.27]];
   for (const [col, x, y, w] of bl) { c.fillStyle = col; c.fillRect(pw * x, ph * y, pw * w, ph * (HZ - y));
@@ -97,7 +99,7 @@ function plazaView(c, pw, ph) {
   c.fillStyle = '#C9C3B8'; c.fillRect(0, ph * RD, pw, ph * (1 - RD));   // 门前广场铺地
   c.strokeStyle = 'rgba(120,112,100,0.5)'; c.lineWidth = Math.max(1, ph * 0.006);
   for (let i = -8; i <= 8; i++) { const t = (RD - HZ) / (1 - HZ); c.beginPath(); c.moveTo(pw * (0.5 + i * 0.16 * t), ph * RD); c.lineTo(pw * (0.5 + i * 0.16), ph); c.stroke(); }
-  for (const y of [0.6, 0.635, 0.69, 0.77, 0.9]) { c.beginPath(); c.moveTo(0, ph * y); c.lineTo(pw, ph * y); c.stroke(); }
+  for (const y of [0.6, 0.635, 0.69, 0.77, 0.9].map(PY)) { c.beginPath(); c.moveTo(0, ph * y); c.lineTo(pw, ph * y); c.stroke(); }
   c.fillStyle = 'rgba(200,228,240,0.18)'; c.fillRect(0, ph * 0.12, pw, ph * 0.88);   // 门玻璃
   c.fillStyle = '#4A5058'; for (const x of [0, 0.485, 0.97]) c.fillRect(pw * x, ph * 0.12, pw * 0.03, ph * 0.88);   // 门框
   c.fillRect(0, ph * 0.3, pw, ph * 0.02);   // 门横档（约 2.3 m 高，不压在视平线上）
