@@ -197,10 +197,11 @@ export class Player {
       // 镜头压低后仍对准玩家（只改看的俯仰，不改玩家设定的 pitch）
       const hd = Math.hypot(target.x - cam.position.x, target.z - cam.position.z);
       this.aimPitch = hd > 0.4 ? Math.atan2(cam.position.y - target.y, hd) : this.pitch;
-      // 镜头离主角身体（脚底到头顶这根竖线）太近：0.8m 内渐隐，0.5m 内整个藏起来（以前会看到脸和头发的内侧）
+      // 镜头离主角身体（脚底到头顶这根竖线）太近：1.1m 内渐隐，0.75m 内整个藏起来（以前会看到脸和头发的内侧；
+      //   0.5–0.8m 那档半透明的大脑袋会糊满整屏，比如旺街南厅楼梯脚背靠门墙往上看 —— 小美 pr20 C）
       const ay = Math.min(p.y + 1.45, Math.max(p.y + 0.1, cam.position.y));
       const dBody = Math.hypot(cam.position.x - p.x, cam.position.y - ay, cam.position.z - p.z);
-      const f = Math.max(0, Math.min(1, (dBody - 0.5) / 0.3));
+      const f = Math.max(0, Math.min(1, (dBody - 0.75) / 0.35));
       this.model.setEnabled(f > 0.02);
       if (f !== this._heroFade) { this._heroFade = f; for (const m of [this.model, ...this.model.getChildMeshes()]) m.visibility = f; }
       this.blob.setEnabled(true);
