@@ -71,6 +71,7 @@ export async function start() {
   seats.hall = () => (G.station && G.station.interior && G.station.interior.active ? G.station.interior : null);
   player.leanFn = p => { const h = seats.hall(); return h && h.lean ? h.lean(p) : 0; };
   player.stageCamFn = (p, yaw) => { const h = seats.hall(); return h && h.stageCam ? h.stageCam(p, yaw) : null; };
+  player.stageCamClampFn = (x, y, z) => { const h = seats.hall(); return h && h.stageCamClamp ? h.stageCamClamp(x, y, z) : { x, y, z }; };
   const bubbles = new Bubbles(scene, cam);
   player.onStandRequest = () => seats.stand();
   player.meshes().forEach(m => R.addShadowCaster(m));
@@ -202,7 +203,9 @@ export async function start() {
   // —— 主循环
   let stepAcc = 0, hotel = null, clan = null, east = null;
   scene.onBeforeRenderObservable.add(() => {
-    const dt = Math.min(G.dtMax || 0.05, engine.getDeltaTime() / 1000);
+    // dtMax===0：冻结模拟（e2e 固定 dt 测镜头时 scene.render 仍会触发本回调）
+    if (G.dtMax === 0) return;
+    const dt = Math.min(G.dtMax ?? 0.05, engine.getDeltaTime() / 1000);
     // 自动驾驶（测试用）
     if (G.auto) {
       const a = G.auto, t = a.pts[a.i], p = player.position, dx = t[0] - p.x, dz = t[1] - p.z, d = Math.hypot(dx, dz);

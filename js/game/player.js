@@ -146,7 +146,7 @@ export class Player {
     const cam = this.cam, p = this.position;
     const fwd = new B.Vector3(Math.sin(this.yaw) * Math.cos(this.pitch), -Math.sin(this.pitch), Math.cos(this.yaw) * Math.cos(this.pitch));
     if (this.view === 'first') {
-      this.aimYaw = undefined; this._stageCamK = 0;
+      this.aimYaw = undefined; this._stageCamK = 0; this._stageCamU = 0; this._scPos = null; this._scShown = null;
       // 轻微头部起伏：竖直按步频、左右按半步频，幅度随速度
       const k = this.grounded ? Math.min(1, this.speed / 3.5) : 0; this.bobK = (this.bobK || 0) + (k - (this.bobK || 0)) * Math.min(1, dt * 8);
       const ph = this.person.phase || this.walkPhase, bob = Math.abs(Math.sin(ph)) * 0.035 * this.bobK, sway = Math.sin(ph) * 0.012 * this.bobK;
@@ -210,28 +210,107 @@ export class Player {
       //   短臂、略抬高，不跟 yaw 转到幕布后面（满屏红、主角被藏）。区外 _stageCamK→0，其它场景 stageCamFn 为 null。
       // 舞台区只改镜头位置（短臂 / 抬高 / 滑出幕布），绝不改 aimYaw：摇杆仍按 this.yaw，
       //   与镜头朝向同一套，进出区不会倒向、也不会 180° 跳变。
+      // 融合 ≥0.4s smoothstep；目标 _scPos 阻尼（τ≈0.14s + 限速，幕法向撤离/抬高更快）；
+      //   最终镜头再限速；进区从抬高+硬夹种子起步；最后硬夹到大幕观众侧。wantK>0 绝不清 U。
       this.aimYaw = undefined;
+      const dtC = Math.min(dt, 0.1);
       const wantSC = this.stageCamFn && !this.seat ? this.stageCamFn(p, this.yaw) : null;
       if (wantSC) this._stageCamLast = wantSC;
       const wantK = wantSC && wantSC.w > 0 ? wantSC.w : 0;
-      this._stageCamK = this._stageCamK === undefined ? 0 : this._stageCamK;
-      this._stageCamK += (wantK - this._stageCamK) * Math.min(1, dt * (wantK > this._stageCamK ? 8 : 3));
+      if (this._stageCamU === undefined) this._stageCamU = (this._stageCamK > 0.5 ? 1 : 0);
+      const BLEND_DUR = 0.4;
+      if (wantK > 0) this._stageCamU = Math.min(1, this._stageCamU + dtC / BLEND_DUR);
+      else this._stageCamU = Math.max(0, this._stageCamU - dtC / BLEND_DUR);
+      const u = this._stageCamU, sm = u * u * (3 - 2 * u);
+      const wRef = wantSC ? wantSC.w : (this._stageCamLast && this._stageCamLast.w) || 1;
+      this._stageCamK = sm * wRef;
       const sc = wantSC || this._stageCamLast;
-      if (this._stageCamK > 0.02 && sc) {
-        const k = this._stageCamK;
-        cam.position.x += (sc.x - cam.position.x) * k;
-        cam.position.y += (sc.y - cam.position.y) * k;
-        cam.position.z += (sc.z - cam.position.z) * k;
+      const baseX = cam.position.x, baseY = cam.position.y, baseZ = cam.position.z;
+      // 阻尼：幕布法向（+z 朝舞台深处）更慢，抬高 / 南撤 / 收中更快，过渡帧少钻红
+      const scRate = 1 / 0.14, maxV = 6.5, maxStep = maxV * dtC;
+      const axisRates = (dx, dy, dz, cur, ty) => {
+        // +z（朝幕）更慢；-z（观众侧 / 幕法向撤离）更快；抬高优先
+        // 抬升未完成时几乎锁死 +z，先在 boom 南侧抬到安全带再北移，避开 mid-z mid-y 红带
+        let rz = dz > 0.02 ? scRate * 0.45 : scRate * 2.1;
+        const ry = dy > 0 ? scRate * 2.5 : scRate * 0.9;
+        const rx = scRate * 1.45;
+        if (dz > 0.02 && (ty - cur.y) > 0.5) rz *= 0.06;
+        return [rx, ry, rz];
+      };
+      const damp3 = (cur, tx, ty, tz) => {
+        const dx = tx - cur.x, dy = ty - cur.y, dz = tz - cur.z;
+        const dist = Math.hypot(dx, dy, dz);
+        if (dist < 1e-8) return;
+        const [rx, ry, rz] = axisRates(dx, dy, dz, cur, ty);
+        // 速率加权方向：抬高 / 南撤优先于朝幕 +z，避免两轴都触 maxStep 时等权钻红
+        let wx = dx * rx, wy = dy * ry, wz = dz * rz;
+        const wlen = Math.hypot(wx, wy, wz);
+        if (wlen < 1e-8) return;
+        wx /= wlen; wy /= wlen; wz /= wlen;
+        const speed = Math.min(dist * Math.min(1, dtC * scRate), maxStep);
+        cur.x += wx * speed; cur.y += wy * speed; cur.z += wz * speed;
+      };
+      const seedSafe = (x, y, z) => {
+        // 进区：先在当前 xz（偏南 boom）抬到近目标高度，不提前北移进红带；水平再靠阻尼 raise-first
+        let sx = x, sy = Math.max(y, p.y + 4.2, 5.2), sz = z;
+        if (sc) {
+          sx = x + (sc.x - x) * 0.25;
+          sy = Math.max(sy, sc.y - 0.35, p.y + 5.0);
+          sz = z; // 保持南侧，等抬高后再阻尼 +z
+        }
+        if (this.stageCamClampFn) {
+          const c = this.stageCamClampFn(sx, sy, sz);
+          return { x: c.x, y: Math.max(c.y, sy), z: c.z };
+        }
+        return { x: sx, y: sy, z: sz };
+      };
+      // 目标阻尼 + 硬夹；k=0 端点用抬高+硬夹的安全 3P（不从幕风险 boom 起融）
+      if ((this._stageCamK > 0.001 || wantK > 0) && sc) {
+        if (!this._scPos) this._scPos = seedSafe(baseX, baseY, baseZ);
+        damp3(this._scPos, sc.x, sc.y, sc.z);
+        if (this.stageCamClampFn) {
+          const c = this.stageCamClampFn(this._scPos.x, this._scPos.y, this._scPos.z);
+          this._scPos.x = c.x; this._scPos.y = c.y; this._scPos.z = c.z;
+        }
+      }
+      const k = this._stageCamK;
+      const safe0 = (wantK > 0 || k > 0.001) ? seedSafe(baseX, baseY, baseZ) : { x: baseX, y: baseY, z: baseZ };
+      let desX = safe0.x, desY = safe0.y, desZ = safe0.z;
+      if (k > 0.001 && this._scPos) {
+        desX = safe0.x + (this._scPos.x - safe0.x) * k;
+        desY = safe0.y + (this._scPos.y - safe0.y) * k;
+        desZ = safe0.z + (this._scPos.z - safe0.z) * k;
+      }
+      // 最终镜头限速 + 硬夹（过渡每一帧都在幕布观众侧；_scShown 从当前 3P 滑向安全点，无单帧瞬移）
+      if (k > 0.001 || this._scShown || wantK > 0) {
+        if (!this._scShown) this._scShown = { x: baseX, y: baseY, z: baseZ };
+        damp3(this._scShown, desX, desY, desZ);
+        if (this.stageCamClampFn) {
+          const c = this.stageCamClampFn(this._scShown.x, this._scShown.y, this._scShown.z);
+          this._scShown.x = c.x; this._scShown.y = c.y; this._scShown.z = c.z;
+        }
+        cam.position.x = this._scShown.x; cam.position.y = this._scShown.y; cam.position.z = this._scShown.z;
         const ly = p.y + 1.25, fxx = Math.sin(this.yaw), fzz = Math.cos(this.yaw);
         const along = (p.x - cam.position.x) * fxx + (p.z - cam.position.z) * fzz;
-        if (Math.abs(along) > 0.25) this.aimPitch = Math.atan2(cam.position.y - ly, Math.abs(along));
+        // 顶视 / 侧偏时 along 可能很小：用水平距兜底，保证仍低头看人（不被天花板糊屏、主角仍在画内）
+        const hdist = Math.hypot(p.x - cam.position.x, p.z - cam.position.z);
+        const pitchDist = Math.max(Math.abs(along), hdist, 0.18);
+        this.aimPitch = Math.atan2(cam.position.y - ly, pitchDist);
         const ay2 = Math.min(p.y + 1.45, Math.max(p.y + 0.1, cam.position.y));
         const d2 = Math.hypot(cam.position.x - p.x, cam.position.y - ay2, cam.position.z - p.z);
         const f2 = Math.max(0, Math.min(1, (d2 - 0.75) / 0.35));
         this.model.setEnabled(f2 > 0.02);
         if (f2 !== this._heroFade) { this._heroFade = f2; for (const m of [this.model, ...this.model.getChildMeshes()]) m.visibility = f2; }
         if (d2 > this.camDist) this.camDist = d2;
-      } else if (this._stageCamK <= 0.02) { this._stageCamK = 0; this._stageCamLast = null; }
+      }
+      // 只在完全离开（不想要 + U 耗尽 + 镜头到 3P）时清状态
+      if (wantK <= 0 && this._stageCamU <= 0) {
+        const left = this._scShown ? Math.hypot(this._scShown.x - baseX, this._scShown.y - baseY, this._scShown.z - baseZ) : 0;
+        if (left < 0.05) {
+          this._stageCamK = 0; this._stageCamLast = null; this._scPos = null; this._scShown = null;
+        }
+      }
+
       // 取景模式（到达中山纪念堂）：镜头放在主角正前方偏一侧、离 D 米、高 h 米，朝上看向主角身后的大殿，主角和整座纪念堂同框
       const F = this.frame;
       if (F) {

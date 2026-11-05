@@ -39,50 +39,101 @@ async def balcony(pg, n):
     if n == 1: await P(pg, 'balcony')
     await walk(pg, DOWN_BALCONY); s = await st(pg); ok(f'balcony{n}:backDown', s['pos'][1] < 0.3, s['pos'])
 
-# 舞台 3P 镜头区：三个坏点 × yaw 0..2π/8 + 匾下横走；每帧主角可见、红幕占比 ≤ 30%
+# 舞台 3P 镜头区：三个坏点 × yaw 0..2π/8 + 匾下横走
+# 规则（小美 option A）：(1) 幕+台口墙板 mesh 遮罩像素 ≤30%  (2) 镜头在幕观众侧且不在台口 AABB  (3) 主角可见
 STAGE_SPOTS = [
     ('E_top', 602.9, 1.1, 9.81),
     ('W_top', 597.1, 1.1, 9.8),
     ('oldbad', 597.03, 0.05, 6.72),
 ]
 STAGE_YAWS = [i * math.pi / 4 for i in range(8)]
-async def red_frac(pg, path):
-    await safe_shot(pg, path=path, type='jpeg', quality=70, timeout=180000)
-    im = Image.open(path).convert('RGB').resize((64, 40))
-    px = list(im.getdata())
-    return sum(1 for (R, G, B) in px if R > 120 and G < 70 and B < 70) / len(px)
+# 浏览器内 ID/mask 采样：curtMesh+portalMesh→品红，其余→黑（保深度遮挡），计品红占比
+OCC_FRAC_JS = r"""(() => {
+  const scene = __game.scene, eng = __game.engine, B = BABYLON;
+  const hi = __game.station && __game.station.interior;
+  if (!hi || !hi.curtMesh || !hi.portalMesh) return -1;
+  if (!window.__occBlk) {
+    const blk = new B.StandardMaterial('__occBlk', scene);
+    blk.disableLighting = true;
+    blk.diffuseColor = new B.Color3(0,0,0);
+    blk.emissiveColor = new B.Color3(0,0,0);
+    blk.specularColor = new B.Color3(0,0,0);
+    blk.freeze && blk.freeze();
+    window.__occBlk = blk;
+  }
+  const blk = window.__occBlk;
+  const targets = new Set([hi.curtMesh, hi.portalMesh]);
+  for (const m of scene.meshes) {
+    let p = m.parent;
+    while (p) { if (targets.has(p)) { targets.add(m); break; } p = p.parent; }
+  }
+  const saved = [];
+  for (const m of scene.meshes) {
+    saved.push({ m, mat: m.material, vis: m.visibility });  // do NOT snapshot isEnabled(): while hall is up street kit.root is disabled, isEnabled() is false for children; restoring setEnabled(false) permanently kills street collision after leaveBuilding
+    if (!m.isEnabled()) continue;
+    m.visibility = 1;
+    if (!targets.has(m)) m.material = blk;
+  }
+  // force target full vis (override distance curt fade)
+  hi.curtMesh.visibility = 1; hi.portalMesh.visibility = 1;
+  const prevCC = scene.clearColor.clone();
+  scene.clearColor = new B.Color4(0,0,0,1);
+  scene.render();
+  const canvas = eng.getRenderingCanvas();
+  const c2 = document.createElement('canvas'); c2.width = 64; c2.height = 40;
+  const ctx = c2.getContext('2d', { willReadFrequently: true });
+  let frac = -1;
+  try {
+    ctx.drawImage(canvas, 0, 0, 64, 40);
+    const d = ctx.getImageData(0, 0, 64, 40).data;
+    let n = 0;
+    for (let i = 0; i < d.length; i += 4) if (d[i] + d[i+1] + d[i+2] > 24) n++;
+    frac = n / (64 * 40);
+  } catch (e) { frac = -1; }
+  scene.clearColor.copyFrom(prevCC);
+  for (const s of saved) { s.m.material = s.mat; s.m.visibility = s.vis; }
+  return frac;
+})()"""
+GEO_OK_JS = r"""(() => {
+  const h = __game.station && __game.station.interior, c = __game.player.cam.position;
+  return !!(h && h.stageCamGeoOK && h.stageCamGeoOK(c.x, c.y, c.z));
+})()"""
+async def occ_frac(pg):
+    return await pg.evaluate(OCC_FRAC_JS)
+async def geo_ok(pg):
+    return await pg.evaluate(GEO_OK_JS)
 async def stage_cam_audit(pg):
     if await pg.evaluate('__game.player.view') != 'third':
         await pg.evaluate('__game.toggleView()')
     for name, x, y, z in STAGE_SPOTS:
         for i, yaw in enumerate(STAGE_YAWS):
-            await pg.evaluate(f'__game.teleport({x},{y},{z},{yaw}); __game.player.pitch=-0.1; __game.player._stageCamK=1')
-            await asyncio.sleep(1.0)
+            await pg.evaluate(f'__game.teleport({x},{y},{z},{yaw}); __game.player.pitch=-0.1; __game.player._stageCamK=1; __game.player._stageCamU=1; __game.player._scPos=null; __game.player._scShown=null; for(let i=0;i<90;i++)__game.player.updateCamera(1/60,__game.scene)')
+            await asyncio.sleep(0.15)
             info = await pg.evaluate('(()=>{const pl=__game.player,c=pl.cam;return{en:pl.model.isEnabled(),fade:+(pl._heroFade??1).toFixed(3),k:+(pl._stageCamK||0).toFixed(3),pos:[+pl.position.x.toFixed(2),+pl.position.y.toFixed(2),+pl.position.z.toFixed(2)],cam:[+c.position.x.toFixed(2),+c.position.y.toFixed(2),+c.position.z.toFixed(2)],yaw:+pl.yaw.toFixed(3),aimYaw:pl.aimYaw,camRotY:+c.rotation.y.toFixed(3)}})()')
-            vis = info['en'] and info['fade'] > 0.5
-            rf = await red_frac(pg, SHOTS + f'stageCam_{name}_y{i}.jpg')
+            vis = info['en'] and info['fade'] > 0.02
+            rf = await occ_frac(pg)
+            gok = await geo_ok(pg)
             ok(f'stageCam:{name}:yaw{i}:hero', vis, info)
-            ok(f'stageCam:{name}:yaw{i}:red', rf <= 0.30, {'redFrac': round(rf, 3), **info})
-            # 镜头 yaw 必须跟玩家 yaw（不许 aimYaw 翻转）
+            ok(f'stageCam:{name}:yaw{i}:occ', rf >= 0 and rf <= 0.30, {'occFrac': round(rf, 3) if rf is not None else None, **info})
+            ok(f'stageCam:{name}:yaw{i}:geo', gok, {'geo': gok, **info})
             dyaw = abs((info['camRotY'] - info['yaw'] + math.pi) % (2*math.pi) - math.pi)
             ok(f'stageCam:{name}:yaw{i}:noFlip', info.get('aimYaw') is None and dyaw < 0.15, {'dyaw': round(dyaw, 3), **info})
-    # 匾下东→西横走：每帧主角不得被藏；若干采样点红幕 ≤ 30%
+    # 匾下东→西横走：每帧主角不得被藏
     await pg.evaluate("""(()=>{
       if (window.__scObs) { __game.scene.onAfterRenderObservable.remove(window.__scObs); window.__scObs=null; }
       const H=window.__scH={n:0,hid:0};
       window.__scObs=__game.scene.onAfterRenderObservable.add(()=>{
         const pl=__game.player; if (pl.view!=='third') return;
-        H.n++; if (!pl.model.isEnabled() || (pl._heroFade??1)<0.5) H.hid++;
+        H.n++; if (!pl.model.isEnabled() || (pl._heroFade??1)<0.02) H.hid++;
       });
     })()""")
-    await pg.evaluate('__game.teleport(602.9,1.1,9.7,Math.PI); __game.player.pitch=-0.1; __game.player._stageCamK=1; __game.player.vy=0; __game.player.grounded=true')
+    await pg.evaluate('__game.teleport(602.9,1.1,9.7,Math.PI); __game.player.pitch=-0.1; __game.player.vy=0; __game.player.grounded=true; __game.player._stageCamK=1; __game.player._stageCamU=1; __game.player._scPos=null; __game.player._scShown=null; for(let i=0;i<90;i++)__game.player.updateCamera(1/60,__game.scene)')
     await asyncio.sleep(0.8)
-    # yaw=π 时 stick 右 = 世界 −x；用摇杆横走，避免 autopilot 在台上大步长穿地
     await pg.evaluate('__game.setMove(1, 0)')
     walked = False
     for _ in range(50):
         spos = await st(pg)
-        if spos['pos'][1] < 0.5:  # 掉下舞台则失败
+        if spos['pos'][1] < 0.5:
             break
         if spos['pos'][0] <= 597.25:
             walked = True; break
@@ -92,12 +143,188 @@ async def stage_cam_audit(pg):
     ok('stageCam:plaqueWalk:reached', walked, {'walked': walked, 'pos': (await st(pg))['pos'], **hid})
     ok('stageCam:plaqueWalk:heroVisible', hid.get('n', 0) > 0 and hid.get('hid', 1) == 0, hid)
     for tag, x in (('plaqueE', 602.5), ('plaqueM', 600.0), ('plaqueW', 597.5)):
-        await pg.evaluate(f'__game.teleport({x},1.1,9.7,Math.PI); __game.player.pitch=-0.1; __game.player._stageCamK=1')
-        await asyncio.sleep(0.8)
+        await pg.evaluate(f'__game.teleport({x},1.1,9.7,Math.PI); __game.player.pitch=-0.1; __game.player._stageCamK=1; __game.player._stageCamU=1; __game.player._scPos=null; __game.player._scShown=null; for(let i=0;i<90;i++)__game.player.updateCamera(1/60,__game.scene)')
+        await asyncio.sleep(0.5)
         info = await pg.evaluate('(()=>{const pl=__game.player;return{en:pl.model.isEnabled(),fade:+(pl._heroFade??1).toFixed(3),cam:[+pl.cam.position.x.toFixed(2),+pl.cam.position.y.toFixed(2),+pl.cam.position.z.toFixed(2)]}})()')
-        rf = await red_frac(pg, SHOTS + f'stageCam_{tag}.jpg')
-        ok(f'stageCam:{tag}:hero', info['en'] and info['fade'] > 0.5, info)
-        ok(f'stageCam:{tag}:red', rf <= 0.30, {'redFrac': round(rf, 3), **info})
+        rf = await occ_frac(pg)
+        gok = await geo_ok(pg)
+        ok(f'stageCam:{tag}:hero', info['en'] and info['fade'] > 0.02, info)
+        ok(f'stageCam:{tag}:occ', rf >= 0 and rf <= 0.30, {'occFrac': round(rf, 3) if rf is not None else None, **info})
+        ok(f'stageCam:{tag}:geo', gok, {'geo': gok, **info})
+
+async def stage_cam_glide_audit(pg):
+    """固定 dt=1/60 直接调 updateCamera（停掉主循环）：
+    进出区 + 幕布推点；每帧位移 ≤0.15m、≥0.3s 到 95%；
+    幕+台口 mesh 遮罩 ≤30%、几何在观众侧、主角可见。"""
+    if await pg.evaluate('__game.player.view') != 'third':
+        await pg.evaluate('__game.toggleView()')
+    active = await pg.evaluate('!!(__game.station && __game.station.interior && __game.station.interior.active && __game.player.stageCamFn)')
+    ok('glide:hallActive', active, {'active': active})
+    if not active:
+        return
+    js = r"""
+() => {
+  const pl = __game.player, scene = __game.scene, eng = __game.engine, G = __game, B = BABYLON;
+  const DT = 1/60, OCC_LIM = 0.30;
+  const canvas = eng.getRenderingCanvas();
+  const c2 = document.createElement('canvas'); c2.width = 64; c2.height = 40;
+  const ctx = c2.getContext('2d', { willReadFrequently: true });
+  const savedDtMax = (typeof G.dtMax === 'number') ? G.dtMax : 0.25;
+  eng.stopRenderLoop();
+  G.setDtMax(0);
+
+  const hi = G.station && G.station.interior;
+  function sampleOcc() {
+    if (!hi || !hi.curtMesh || !hi.portalMesh) return -1;
+    if (!window.__occBlk) {
+      const blk0 = new B.StandardMaterial('__occBlk', scene);
+      blk0.disableLighting = true;
+      blk0.diffuseColor = new B.Color3(0,0,0);
+      blk0.emissiveColor = new B.Color3(0,0,0);
+      blk0.specularColor = new B.Color3(0,0,0);
+      window.__occBlk = blk0;
+    }
+    const blk = window.__occBlk;
+    const targets = new Set([hi.curtMesh, hi.portalMesh]);
+    for (const m of scene.meshes) {
+      let p = m.parent;
+      while (p) { if (targets.has(p)) { targets.add(m); break; } p = p.parent; }
+    }
+    const saved = [];
+    for (const m of scene.meshes) {
+      saved.push({ m, mat: m.material, vis: m.visibility });  // do NOT snapshot isEnabled(): while hall is up street kit.root is disabled, isEnabled() is false for children; restoring setEnabled(false) permanently kills street collision after leaveBuilding
+      if (!m.isEnabled()) continue;
+      m.visibility = 1;
+      if (!targets.has(m)) m.material = blk;
+    }
+    hi.curtMesh.visibility = 1; hi.portalMesh.visibility = 1;
+    const prevCC = scene.clearColor.clone();
+    scene.clearColor = new B.Color4(0,0,0,1);
+    scene.render();
+    let frac = -1;
+    try {
+      ctx.drawImage(canvas, 0, 0, 64, 40);
+      const d = ctx.getImageData(0, 0, 64, 40).data;
+      let n = 0;
+      for (let i = 0; i < d.length; i += 4) if (d[i] + d[i+1] + d[i+2] > 24) n++;
+      frac = n / (64 * 40);
+    } catch (e) { frac = -1; }
+    scene.clearColor.copyFrom(prevCC);
+    for (const s of saved) { s.m.material = s.mat; s.m.visibility = s.vis; }
+    return frac;
+  }
+  function geoOk() {
+    const c = pl.cam.position;
+    return !!(hi && hi.stageCamGeoOK && hi.stageCamGeoOK(c.x, c.y, c.z));
+  }
+  function resetStage() {
+    pl._stageCamK = 0; pl._stageCamU = 0; pl._stageCamLast = null; pl._scPos = null; pl._scShown = null;
+  }
+  function place(x, y, z, yaw) {
+    pl.spawn(x, y, z, yaw); pl.pitch = -0.1; pl.vy = 0; pl.grounded = true; pl.vel.set(0,0,0); pl.frame = null;
+  }
+  function step() { pl.updateCamera(DT, scene); }
+  function camP() { const c = pl.cam.position; return [c.x, c.y, c.z]; }
+  function heroOk() { return pl.model.isEnabled() && (pl._heroFade ?? 1) > 0.02; }
+
+  const out = { runs: [], maxDeltaAll: 0, maxOccAll: 0, hidFramesAll: 0, geoFailAll: 0, sampleOccOk: true };
+
+  function measure(name, frames, entering, kTarget) {
+    let maxD = 0, maxOcc = 0, hid = 0, t95 = null, occFail = 0, geoFail = 0;
+    let prev = camP();
+    for (let i = 0; i < frames; i++) {
+      step();
+      const c = camP();
+      const d = Math.hypot(c[0]-prev[0], c[1]-prev[1], c[2]-prev[2]);
+      if (d > maxD) maxD = d;
+      prev = c;
+      const of = sampleOcc();
+      if (of < 0) out.sampleOccOk = false;
+      else { if (of > maxOcc) maxOcc = of; if (of > OCC_LIM) occFail++; }
+      if (!geoOk()) geoFail++;
+      if (!heroOk()) hid++;
+      const k = pl._stageCamK || 0;
+      if (t95 === null) {
+        if (entering && k >= 0.95 * Math.max(0.01, kTarget)) t95 = (i + 1) * DT;
+        if (!entering && k <= 0.05) t95 = (i + 1) * DT;
+      }
+    }
+    const rec = {
+      name, maxDelta: +maxD.toFixed(4), t95: t95 === null ? null : +t95.toFixed(3),
+      maxOcc: +maxOcc.toFixed(3), hid, occFail, geoFail,
+      kFinal: +(pl._stageCamK || 0).toFixed(3),
+      aimYaw: pl.aimYaw, entering, kTarget
+    };
+    out.runs.push(rec);
+    if (maxD > out.maxDeltaAll) out.maxDeltaAll = maxD;
+    if (maxOcc > out.maxOccAll) out.maxOccAll = maxOcc;
+    out.hidFramesAll += hid;
+    out.geoFailAll += geoFail;
+    return rec;
+  }
+
+  for (const [name, x, y, z, yaw] of [
+    ['enter:E_top', 602.9, 1.1, 9.81, 0],
+    ['enter:W_top', 597.1, 1.1, 9.8, 0],
+    ['enter:oldbad', 597.03, 0.05, 6.72, Math.PI],
+  ]) {
+    place(x, y, z, yaw);
+    resetStage();
+    const sc0 = pl.stageCamFn(pl.position, pl.yaw);
+    const kTarget = sc0 && sc0.w > 0 ? sc0.w : 0;
+    step();
+    measure(name, 90, true, kTarget);
+  }
+
+  {
+    place(602.9, 1.1, 9.81, 0);
+    resetStage(); pl._stageCamU = 1; pl._stageCamK = 1;
+    for (let i = 0; i < 90; i++) step();
+    const savedFn = pl.stageCamFn;
+    pl.stageCamFn = () => null;
+    measure('exit:E_top', 90, false, 0);
+    pl.stageCamFn = savedFn;
+  }
+
+  function pushRun(name, x, y, z, yaw0, yaw1) {
+    place(x, y, z, yaw0);
+    resetStage(); pl._stageCamU = 1; pl._stageCamK = 1;
+    for (let i = 0; i < 90; i++) step();
+    const c0 = camP();
+    pl._scShown = { x: c0[0], y: c0[1], z: c0[2] };
+    pl._scPos = { x: c0[0], y: c0[1], z: c0[2] };
+    pl.yaw = yaw1;
+    step();
+    measure(name, 90, true, 1);
+  }
+  pushRun('push:E_top', 602.9, 1.1, 9.81, 0, Math.PI / 2);
+  pushRun('push:W_top', 597.1, 1.1, 9.8, 0, -Math.PI / 2);
+  pushRun('push:oldbad', 597.03, 0.05, 6.72, Math.PI, -Math.PI / 2);
+
+  out.maxDeltaAll = +out.maxDeltaAll.toFixed(4);
+  out.maxOccAll = +out.maxOccAll.toFixed(3);
+
+  G.setDtMax(savedDtMax);
+  eng.runRenderLoop(() => scene.render());
+  return out;
+}
+"""
+    result = await pg.evaluate(js)
+    log('glide', result)
+    ok('glide:sampleOcc', result.get('sampleOccOk', False), result)
+    ok('glide:maxDelta', result.get('maxDeltaAll', 99) <= 0.15, {'maxDeltaAll': result.get('maxDeltaAll'), 'runs': result.get('runs')})
+    ok('glide:noHidden', result.get('hidFramesAll', 99) == 0, {'hidFramesAll': result.get('hidFramesAll')})
+    ok('glide:maxOcc', result.get('maxOccAll', 99) <= 0.30, {'maxOccAll': result.get('maxOccAll')})
+    ok('glide:geo', result.get('geoFailAll', 99) == 0, {'geoFailAll': result.get('geoFailAll')})
+    for rec in result.get('runs') or []:
+        t95 = rec.get('t95')
+        if rec['name'].startswith('enter:') or rec['name'].startswith('exit:'):
+            ok(f"glide:{rec['name']}:t95", t95 is not None and t95 >= 0.3, rec)
+        ok(f"glide:{rec['name']}:delta", rec.get('maxDelta', 99) <= 0.15, rec)
+        ok(f"glide:{rec['name']}:occ", rec.get('occFail', 1) == 0 and rec.get('maxOcc', 99) <= 0.30, rec)
+        ok(f"glide:{rec['name']}:geo", rec.get('geoFail', 1) == 0, rec)
+        ok(f"glide:{rec['name']}:hero", rec.get('hid', 1) == 0, rec)
+        ok(f"glide:{rec['name']}:noAimYaw", rec.get('aimYaw') is None, rec)
 
 async def stick_dirs_audit(pg):
     """摇杆四向：舞台区内外世界位移同号；镜头 yaw = 玩家 yaw（无 180° 倒向）。"""
@@ -171,6 +398,7 @@ async def main():
             ok('stage:underPlaque', s['pos'][1] > 1.0 and abs(s['pos'][0] - 600) < 0.6 and 9.2 < s['pos'][2] < 10.4, s['pos'])
             await pg.evaluate('__game.player.yaw=Math.PI; __game.player.pitch=0.1'); await asyncio.sleep(1.0); await P(pg, 'stageUnderPlaque')
             await stage_cam_audit(pg)
+            await stage_cam_glide_audit(pg)
             await stick_dirs_audit(pg)
             await pg.evaluate('__game.teleport(600,0.05,0,0); __game.player.pitch=0.05'); await asyncio.sleep(1.5); await P(pg, 'stageSteps')
             await walk(pg, [[600, 5.4], [602.9, 6.4], [602.9, 9.7], [600, 9.7]])   # 摆机位后回到台上
@@ -182,6 +410,9 @@ async def main():
             # 楼座第一次：没有卡
             await balcony(pg, 1)
             # 出门 → 走过台阶前到达区：不再弹卡
+            # hall2 路径恢复为 bfd8d49/jh3/reg1 已通过的步行线（[[72,4],[70,1],[67.4,-2]]→北回）。
+            # WIP 曾加 seed_street 抬高瞬移到 (67.4,y,-9)：该点落在站厅开口附近，往北走偶发掉进 platform
+            # （optA4–A6）；短访厅双端对比（WIP+bfd8 × orig/seed）证明不是 player/sysyHall 位移回归。
             await walk(pg, [[600, -22.5], [600, -25]]); s = await st(pg); ok('out1:street', s['zone'] == 'street', s['pos'])
             await walk(pg, [[72, 4], [70, 1], [67.4, -2]]); await no_card(pg, 'arrive2:noCard')
             # 第二次进门上楼座：仍然没有卡

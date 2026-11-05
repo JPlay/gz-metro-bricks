@@ -31,22 +31,40 @@ export class HallInterior {
     k.finish();
     this.seatMesh = this.buildSeats(M);
     this.kit.root.setEnabled(false);
-    // 大幕近镜淡出：侧向/踏步 3P 时圆柱贴脸占红屏；visibility 降到 0.08，红像素占比明显下降，远处仍实色
+    // 大幕 / 台口墙板：独立桶（测遮挡用）；近幕距离淡出保持旧行为。
+    // stageCamOccludeFade 默认关（艺术决策）；开时只压幕+台口，不碰座椅——镜头逻辑不依赖座位。
     this.curtMesh = k.byBucket['paint@hallCurt'] || null;
-    if (this.curtMesh) {
-      const zf = F.z, mesh = this.curtMesh;
+    this.portalMesh = k.byBucket['paint@hallPortal'] || null;
+    this.stageCamOccludeFade = false;
+    {
+      const zf = F.z;
       scene.onBeforeRenderObservable.add(() => {
-        if (!this.active) { mesh.visibility = 1; return; }
+        if (!this.active) {
+          if (this.curtMesh) this.curtMesh.visibility = 1;
+          if (this.portalMesh) this.portalMesh.visibility = 1;
+          return;
+        }
         const c = scene.activeCamera; if (!c) return;
-        // 近幕淡出；舞台区高位镜头也淡（侧向俯视时圆柱仍会占红）
-        const d = Math.min(
-          Math.hypot(c.position.x - (O + 3.3), c.position.z - (zf + 1.55)),
-          Math.hypot(c.position.x - (O - 3.3), c.position.z - (zf + 1.55))
-        );
-        let v = Math.max(0.06, Math.min(1, (d - 1.2) / 3.0));
-        if (c.position.y > 3.8 && c.position.z < zf + 0.5 && Math.abs(c.position.x - O) < 6.1)
-          v = Math.min(v, 0.22);
-        mesh.visibility = v;
+        let curtV = 1;
+        if (this.curtMesh) {
+          const d = Math.min(
+            Math.hypot(c.position.x - (O + 3.3), c.position.z - (zf + 1.55)),
+            Math.hypot(c.position.x - (O - 3.3), c.position.z - (zf + 1.55))
+          );
+          curtV = Math.max(0.06, Math.min(1, (d - 1.2) / 3.0));
+          if (c.position.y > 3.8 && c.position.z < zf + 0.5 && Math.abs(c.position.x - O) < 6.1)
+            curtV = Math.min(curtV, 0.22);
+          this.curtMesh.visibility = curtV;
+        }
+        if (this.stageCamOccludeFade) {
+          const pl = (typeof window !== 'undefined' && window.__game && window.__game.player) ? window.__game.player : null;
+          const blend = pl ? Math.max(pl._stageCamK || 0, pl._stageCamU || 0) : 0;
+          const occ = blend > 0.02 ? Math.max(0.03, 1 - 0.96 * Math.min(1, blend * 1.2)) : 1;
+          if (this.curtMesh) this.curtMesh.visibility = Math.min(curtV, occ);
+          if (this.portalMesh) this.portalMesh.visibility = occ;
+        } else if (this.portalMesh) {
+          this.portalMesh.visibility = 1;
+        }
       });
     }
   }
@@ -79,13 +97,14 @@ export class HallInterior {
     const P = k.solid, zf = F.z, half = 4.6, xw = A / Math.cos(Math.PI / 4) - zf;   // 台口墙两端碰到东北 / 西北面的位置
     for (const [x0, x1] of [[-xw, -half], [half, xw]]) { P.slab(O + x0, O + x1, 0, HW, zf, zf + 0.4, C.wall, { aoTop: true }); k.colSlab(O + x0, O + x1, 0, HW, zf, zf + 0.4); P.slab(O + x0, O + x1, 0, 2.4, zf - 0.02, zf, C.panel, { ao: false }); }
     P.slab(O - half, O + half, 7.8, HW, zf, zf + 0.4, C.wall, { ao: false });
-    // 台口框：红 + 金边
-    for (const s of [-1, 1]) { P.slab(O + s * half - (s > 0 ? 0 : 1.1), O + s * half + (s > 0 ? 1.1 : 0), 0, 7.8, zf - 0.35, zf, C.red, { aoTop: true }); P.slab(O + s * (half + 0.02) - 0.06, O + s * (half + 0.02) + 0.06, 0, 7.8, zf - 0.37, zf - 0.3, C.gold, { ao: false }); }
-    P.slab(O - half - 1.1, O + half + 1.1, 6.4, 7.8, zf - 0.35, zf, C.red, { ao: false }); P.slab(O - half, O + half, 6.36, 6.46, zf - 0.37, zf - 0.3, C.gold, { ao: false });
+    // 台口框：红（独立桶，便于 stageCam 遮挡淡出）+ 金边
+    const Portal = k.g('paint@hallPortal');
+    for (const s of [-1, 1]) { Portal.slab(O + s * half - (s > 0 ? 0 : 1.1), O + s * half + (s > 0 ? 1.1 : 0), 0, 7.8, zf - 0.35, zf, C.red, { aoTop: true }); P.slab(O + s * (half + 0.02) - 0.06, O + s * (half + 0.02) + 0.06, 0, 7.8, zf - 0.37, zf - 0.3, C.gold, { ao: false }); }
+    Portal.slab(O - half - 1.1, O + half + 1.1, 6.4, 7.8, zf - 0.35, zf, C.red, { ao: false }); P.slab(O - half, O + half, 6.36, 6.46, zf - 0.37, zf - 0.3, C.gold, { ao: false });
     k.sign(O, 9.4, zf - 0.04, { kind: 'plain', w: 5.6, h: 1.4, bg: '#1E3A6B', fg: '#F2C94C', zh: '天下为公', face: Math.PI, align: 'center' });
     // 舞台
     P.slab(O - half - 0.2, O + half + 0.2, 0, 1.1, zf, 16.6, hex('#7B4A2C'), { ao: false }); k.colSlab(O - half - 0.2, O + half + 0.2, 0, 1.1, zf, 16.6);
-    P.slab(O - half, O + half, 0, 1.1, zf - 0.05, zf, C.red2, { ao: false });
+    Portal.slab(O - half, O + half, 0, 1.1, zf - 0.05, zf, C.red2, { ao: false });
     // 台前两侧各一段踏步（7 级，跟舞台同色木头）：小朋友能走上台，站到「天下为公」匾下面；kit.stairs 自带斜板碰撞 + 两侧挡墙
     for (const s of [-1, 1]) k.stairs('z', zf - 1.8, 0, zf, 1.1, O + s * 2.2, O + s * 3.6, 0, hex('#7B4A2C'), { rails: false, nosing: '#5A3420' });
     // 大幕（两边收起，独立桶便于近镜淡出）+ 檐幕 + 天幕
@@ -94,7 +113,7 @@ export class HallInterior {
     for (const s of [-1, 1]) for (let i = 0; i < 3; i++) Curt.cyl(O + s * (half - 0.55 - i * 0.42), 3.95, zf + 1.55, 0.26, 4.6, i % 2 ? C.red2 : C.red, 8);
     // 大幕只挡镜头不挡人：camBlock 罩住幕布深处，人照样从踏步走上台
     for (const s of [-1, 1]) { const m = k.colSlab(O + s * 2.4, O + s * half, 1.1, 6.4, zf + 1.0, zf + 2.0, { name: 'camBlock' }); m.checkCollisions = false; m.metadata = { camBlock: true }; }
-    P.slab(O - half, O + half, 5.4, 6.4, zf + 1.15, zf + 1.45, C.red2, { ao: false });
+    Portal.slab(O - half, O + half, 5.4, 6.4, zf + 1.15, zf + 1.45, C.red2, { ao: false });
     P.slab(O - half, O + half, 1.1, 6.4, 16.4, 16.6, hex('#2B3E66'), { ao: false });
     k.glow.slab(O - 3.5, O + 3.5, 1.12, 1.16, zf + 1.2, zf + 1.6, hex('#FFE7A8'), { ao: false });   // 台口脚光
     // 台上的讲台 + 两盆花
@@ -222,14 +241,15 @@ export class HallInterior {
     const zf = F.z, half = 4.6, dx = p.x - O;
     const inX = Math.abs(dx) < half + 0.5;
     const onTop = p.y > 0.85 && p.z > zf - 0.25 && p.z < zf + 5.5 && inX;
-    const onSteps = p.z > zf - 2.3 && p.z < zf + 0.35 && p.y < 1.45
-      && ((dx > 2.0 && dx < 3.95) || (dx < -2.0 && dx > -3.95));
-    const atFoot = p.y < 0.55 && p.z > 5.6 && p.z < zf - 0.15
-      && ((dx > 1.7 && dx < 4.1) || (dx < -1.7 && dx > -4.1));
+    // 软边再扩：更早接管（踏步/脚下），争取在默认 boom 仍干净时把 blend 走完
+    const onSteps = p.z > zf - 4.8 && p.z < zf + 0.35 && p.y < 1.45
+      && ((dx > 1.55 && dx < 4.35) || (dx < -1.55 && dx > -4.35));
+    const atFoot = p.y < 0.55 && p.z > 3.0 && p.z < zf - 0.15
+      && ((dx > 1.25 && dx < 4.45) || (dx < -1.25 && dx > -4.45));
     if (!(onTop || onSteps || atFoot)) return null;
     let w = 1;
-    if (atFoot && !onSteps) w = Math.max(0.35, Math.min(1, (p.z - 5.6) / 1.6));
-    if (onSteps && p.z < zf - 0.8) w = Math.max(w, 0.6 + 0.4 * (p.z - (zf - 2.3)) / 1.5);
+    if (atFoot && !onSteps) w = Math.max(0.15, Math.min(1, (p.z - 3.0) / 3.6));
+    if (onSteps && p.z < zf - 0.5) w = Math.max(w, 0.25 + 0.75 * (p.z - (zf - 4.8)) / 4.3);
 
     const fx = Math.sin(yaw), fz = Math.cos(yaw);
     const lookAud = fz < -0.25, lookSide = Math.abs(fx) > 0.55, lookStage = fz > 0.25;
@@ -237,35 +257,21 @@ export class HallInterior {
     // 朝近侧幕布外望（同号）：圆柱就在视线前方 → 必须顶视
     const lookOut = sideNear && fx * dx > 0.35;
 
+    // 双 yaw 安全机位（lookStage 位在 lookOut yaw 下也必须红≤30%）：
+    //   近顶视短臂，z≈p.z-0.5..-1.0，cy≈5.5..7.5。低机位后拉在转头瞬间必爆红。
     let boom, elev;
-    if (onTop && lookOut) { boom = 0.55; elev = 5.8; }
-    else if (onTop && lookSide) { boom = 0.9; elev = 4.6; }
-    else if (onTop && lookAud) { boom = 1.05; elev = 3.1; }
-    else if (onTop) { boom = 1.45; elev = 2.4; }
-    else if (lookOut) { boom = 0.95; elev = 3.4; }
-    else if (lookAud) { boom = 1.45; elev = 2.35; }
-    else if (lookStage) { boom = 1.3; elev = 2.55; }
-    else { boom = 1.65; elev = 2.0; }
+    if (onTop && lookOut) { boom = 0.95; elev = 6.4; }
+    else if (onTop && lookSide) { boom = 0.85; elev = 5.2; }
+    else if (onTop && lookAud) { boom = 1.0; elev = 4.2; }
+    else if (onTop) { boom = 0.55; elev = 5.4; }           // lookStage：双 yaw 安全近顶视
+    else if (lookOut) { boom = 0.55; elev = 5.4; }
+    else if (lookAud) { boom = 0.85; elev = 4.6; }
+    else if (lookStage) { boom = 0.55; elev = 5.4; }
+    else { boom = 0.9; elev = 4.2; }
 
-    // 幕布 AABB（与建造一致，略放大）：推到 zf+1.0..2.2
-    const curtZ0 = zf + 0.85, curtZ1 = zf + 2.25, curtInner = 2.2;
-    const inCurt = (cx, cz) => {
-      if (cz < curtZ0 || cz > curtZ1) return false;
-      for (const s of [-1, 1]) {
-        const lo = Math.min(O + s * curtInner, O + s * (half + 0.25));
-        const hi = Math.max(O + s * curtInner, O + s * (half + 0.25));
-        if (cx >= lo - 0.2 && cx <= hi + 0.2) return true;
-      }
-      return false;
-    };
     const eject = (cx, cz) => {
-      let x = cx, z = cz;
-      for (let i = 0; i < 16 && inCurt(x, z); i++) {
-        x = x + (O - x) * 0.5;
-        if (!inCurt(x, z)) break;
-        z = Math.min(z, curtZ0 - 0.2);
-      }
-      return [x, z];
+      const c = this.stageCamClamp(cx, 0, cz);
+      return [c.x, c.z];
     };
     const behind = (x, z) => (p.x - x) * fx + (p.z - z) * fz;
 
@@ -273,60 +279,153 @@ export class HallInterior {
     let cy = Math.max(p.y + elev, 1.55);
     [cx, cz] = eject(cx, cz);
 
-    if (onTop && (lookOut || lookSide)) {
-      // 顶视 + 略偏观众席，保证镜头在角色身后且不进幕
-      const audZ = zf - 1.35;
-      cz = Math.min(cz, Math.max(audZ, p.z - 0.85));
-      // 外望：水平几乎贴在角色正上方偏后，x 略往中轴收
-      if (lookOut) {
-        cx = p.x * 0.65 + (O + dx * 0.15) * 0.35 - fx * 0.25;
-        cz = p.z - Math.max(0.35, fz * boom);
-        if (fz >= 0) cz = Math.min(cz, p.z - 0.4);  // 禁止镜头比人更靠舞台深处
-        cy = Math.max(cy, p.y + 5.8, 6.4);
-      } else {
-        const preferX = O + Math.sign(dx || 1) * 0.55;
-        cx = cx * 0.35 + preferX * 0.65;
-        cz = Math.min(cz, audZ);
-        cy = Math.max(cy, p.y + 4.8, 5.5);
-      }
+    if (onTop && lookOut) {
+      // 与 lookStage 同一双 yaw 安全带（A_hi05）：抬升路径会穿过 cy≈7@z≈9.3 红带，故不另抬
+      cx = p.x + Math.sign(dx || 1) * 0.1;
+      cz = p.z - 0.5;
+      cy = Math.max(p.y + 5.4, 6.5);
       [cx, cz] = eject(cx, cz);
-      if (behind(cx, cz) < 0.35) {
-        cx = p.x - fx * 0.7; cz = p.z - Math.max(0.45, fz * 0.7);
-        if (lookSide) cz = Math.min(cz, zf - 1.0);
-        cy = Math.max(cy, p.y + 5.2);
-        [cx, cz] = eject(cx, cz);
-      }
+    } else if (onTop && lookSide) {
+      const audZ = zf - 1.1;
+      cz = Math.min(cz, Math.max(audZ, p.z - 0.9));
+      const preferX = O + Math.sign(dx || 1) * 0.5;
+      cx = cx * 0.45 + preferX * 0.55;
+      cy = Math.max(cy, p.y + 5.0, 5.6);
+      [cx, cz] = eject(cx, cz);
     } else if (lookSide) {
-      const audZ = zf - 1.15;
+      const audZ = zf - 1.25;
       cz = Math.min(cz, audZ);
-      const inner = O + Math.sign(dx || 1) * 1.5;
+      const inner = O + Math.sign(dx || 1) * 1.4;
       if (dx > 0) cx = Math.min(cx, inner);
       else if (dx < 0) cx = Math.max(cx, inner);
-      cy = Math.max(cy, p.y + 3.0);
+      cy = Math.max(cy, p.y + 4.2);
       [cx, cz] = eject(cx, cz);
     } else if (onTop && sideNear) {
-      cx = cx * 0.6 + (O + dx * 0.25) * 0.4;
-      if (lookAud) { cz = Math.min(Math.max(cz, zf - 0.4), zf + 0.2); cy = Math.max(cy, p.y + 3.2); }
-      else cz = Math.min(cz, zf - 0.9);
+      // lookStage / lookAud：双 yaw 安全近顶视（与 lookOut 同侧带，转头只抬升/略南撤）
+      if (lookAud) {
+        cx = p.x + Math.sign(dx || 1) * 0.1;
+        cz = Math.min(Math.max(p.z - 0.6, zf - 1.0), zf + 0.05);
+        cy = Math.max(p.y + 4.2, 5.2);
+      } else {
+        // A_hi05 风格：cy=6.5, z=p.z-0.5 —— 在 y0/yOut/yAud 下均 ≤0.30
+        cx = p.x + Math.sign(dx || 1) * 0.1;
+        cz = p.z - 0.5;
+        cy = Math.max(p.y + 5.4, 6.5);
+      }
+      [cx, cz] = eject(cx, cz);
+    } else if (!onTop) {
+      // 脚下 / 踏步：同样抬到双 yaw 安全带，避免 enter/push:oldbad 中段爆红
+      cx = p.x + Math.sign(dx || 1) * 0.1;
+      if (lookOut) {
+        cz = p.z - 0.55; cy = Math.max(p.y + 5.4, 5.5);
+      } else if (lookAud) {
+        cz = Math.min(p.z + 0.15, zf - 1.8); cy = Math.max(p.y + 4.6, 4.8);
+      } else {
+        cz = p.z - 0.5; cy = Math.max(p.y + 5.4, 5.5);
+      }
+      if (sideNear) cx = cx * 0.75 + (O + dx * 0.25) * 0.25;
       [cx, cz] = eject(cx, cz);
     }
 
     [cx, cz] = eject(cx, cz);
     let hdist = Math.hypot(cx - p.x, cz - p.z);
-    if (hdist < 0.45 && onTop && lookOut) {
-      // 顶视允许更近，只要高度够
-      cy = Math.max(cy, p.y + 5.8);
-    } else if (hdist < 0.95) {
-      const s = 1.0 / Math.max(0.2, hdist);
+    if (hdist < 0.35) {
+      // 顶视允许更近，保证高度
+      cy = Math.max(cy, p.y + (lookOut ? 6.0 : 5.2));
+    } else if (hdist < 0.85 && !(onTop && (lookOut || lookStage))) {
+      const s = 0.9 / Math.max(0.2, hdist);
       cx = p.x + (cx - p.x) * s; cz = p.z + (cz - p.z) * s;
       if (lookSide) cz = Math.min(cz, zf - 1.2);
       [cx, cz] = eject(cx, cz);
     }
-    if (lookAud) cy = Math.max(cy, p.y + (onTop ? 3.0 : 2.35));
-    if (lookOut && onTop) cy = Math.max(cy, 6.2);
-    else if (lookSide && onTop) cy = Math.max(cy, 5.4);
-    if (lookStage && !onTop) cy = Math.max(cy, p.y + 2.55);
+    if (lookOut && onTop) cy = Math.max(cy, 6.5);
+    else if (lookStage && onTop) cy = Math.max(cy, 6.5);
+    else if (lookSide && onTop) cy = Math.max(cy, 5.6);
+    else if (lookAud && onTop) cy = Math.max(cy, 5.2);
+    if (!onTop) cy = Math.max(cy, lookOut || lookStage ? 5.5 : 4.8);
+    [cx, cz] = eject(cx, cz);
+    // 硬上限：永不钻到幕布北侧平面以北（clamp 再兜底）
+    if (cz > zf + 0.55) cz = zf + 0.55;
     return { x: cx, y: cy, z: cz, w };
+  }
+
+  /** 幕布硬夹：最短位移推出 AABB，并强制镜头在大幕观众侧平面以南。
+   *  阻尼滞后也不会钻进幕。不在这里强行抬 Y（避免破坏已调好的低机位）。 */
+  stageCamClamp(x, y, z) {
+    const zf = F.z, half = 4.6;
+    const curtZ0 = zf + 0.85, curtZ1 = zf + 2.25, curtInner = 2.2;
+    const inCurt = (cx, cz) => {
+      if (cz < curtZ0 || cz > curtZ1) return false;
+      for (const s of [-1, 1]) {
+        const lo = Math.min(O + s * curtInner, O + s * (half + 0.25));
+        const hi = Math.max(O + s * curtInner, O + s * (half + 0.25));
+        if (cx >= lo - 0.25 && cx <= hi + 0.25) return true;
+      }
+      return false;
+    };
+    let cx = x, cz = z;
+    // 硬夹：大幕观众侧平面以南
+    if (Math.abs(cx - O) < half + 1.6 && cz > curtZ0 - 0.25) cz = curtZ0 - 0.25;
+    for (let i = 0; i < 12 && inCurt(cx, cz); i++) {
+      const toSouth = cz - (curtZ0 - 0.25);
+      const edge = curtInner - 0.35;
+      const toMid = Math.abs(cx - O) - edge;
+      if (toSouth <= Math.max(0, toMid) || toMid < 0) cz = curtZ0 - 0.25;
+      else cx += Math.sign(O - cx) * Math.min(0.6, toMid + 0.05);
+    }
+    // 台口墙板 AABB：最短位移推出（优先南撤，与 stageCamGeoOK 同盒）
+    const pad = 0.08;
+    const boxes = [
+      [O - half - 1.1, O - half, 0, 7.8, zf - 0.35, zf],
+      [O + half, O + half + 1.1, 0, 7.8, zf - 0.35, zf],
+      [O - half - 1.1, O + half + 1.1, 6.4, 7.8, zf - 0.35, zf],
+      [O - half, O + half, 0, 1.1, zf - 0.05, zf],
+      [O - half, O + half, 5.4, 6.4, zf + 1.15, zf + 1.45],
+    ];
+    for (let n = 0; n < 8; n++) {
+      let hit = false;
+      for (const [x0, x1, y0, y1, z0, z1] of boxes) {
+        if (cx < x0 - pad || cx > x1 + pad || y < y0 - pad || y > y1 + pad || cz < z0 - pad || cz > z1 + pad) continue;
+        hit = true;
+        const south = cz - (z0 - pad);
+        const north = (z1 + pad) - cz;
+        const west = cx - (x0 - pad);
+        const east = (x1 + pad) - cx;
+        const down = y - (y0 - pad);
+        const up = (y1 + pad) - y;
+        const m = Math.min(south, north, west, east, down, up);
+        // 推出到盒外一点，避免落在边界上被 geoOK 判进盒
+        const eps = 0.02;
+        if (m === south) cz = z0 - pad - eps;
+        else if (m === north) cz = z1 + pad + eps;
+        else if (m === west) cx = x0 - pad - eps;
+        else if (m === east) cx = x1 + pad + eps;
+        else if (m === down) cz = z0 - pad - eps;
+        else cz = z0 - pad - eps;
+        break;
+      }
+      if (!hit) break;
+    }
+    return { x: cx, y, z: cz };
+  }
+
+  /** 几何安全：镜头在大幕观众侧平面以南，且不在台口墙板 AABB 内（与 stage() Portal.slab 对齐）。 */
+  stageCamGeoOK(x, y, z) {
+    const zf = F.z, half = 4.6, pad = 0.08;
+    const curtZ0 = zf + 0.85;
+    if (Math.abs(x - O) < half + 1.6 && z > curtZ0 - 0.25 + 1e-4) return false;
+    const boxes = [
+      [O - half - 1.1, O - half, 0, 7.8, zf - 0.35, zf],
+      [O + half, O + half + 1.1, 0, 7.8, zf - 0.35, zf],
+      [O - half - 1.1, O + half + 1.1, 6.4, 7.8, zf - 0.35, zf],
+      [O - half, O + half, 0, 1.1, zf - 0.05, zf],
+      [O - half, O + half, 5.4, 6.4, zf + 1.15, zf + 1.45],
+    ];
+    for (const [x0, x1, y0, y1, z0, z1] of boxes) {
+      if (x > x0 - pad && x < x1 + pad && y > y0 - pad && y < y1 + pad && z > z0 - pad && z < z1 + pad)
+        return false;
+    }
+    return true;
   }
 
   /** 站在楼座栏板前往下看：0..1（越贴近栏板越大）；玩家镜头据此“探身”越过栏板 */
