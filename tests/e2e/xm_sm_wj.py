@@ -24,6 +24,18 @@ async def both(pg, name, label, x, y, z, yaw, pitch=0.0, zone='street'):   # 世
   await view(pg, 'first'); await pose(pg, x, y, z, yaw, pitch); await shot(pg, name + '-1p', label + ' (1st person)'); await view(pg, 'third')
   s = await S(pg); ok(name + ':pose', s['zone'] == zone and abs(s['pos'][2] - z) < 2)
 
+SKY = (159, 199, 235)   # 清屏色（render.js clearColor 0.62/0.78/0.92）：楼里任何地方都不该露出这个颜色
+async def sky_frac(pg):
+  import io
+  from PIL import Image
+  im = Image.open(io.BytesIO(await pg.screenshot())).convert('RGB').resize((160, 120))
+  return sum(1 for r, g, b in im.getdata() if abs(r - SKY[0]) <= 6 and abs(g - SKY[1]) <= 6 and abs(b - SKY[2]) <= 6) / (160 * 120)
+async def no_sky(pg, name, label, x, y, z, yaw, pitch):   # 小美 pr20 A / B：拍两种视角，并检查画面里没有露天（清屏色像素 < 0.4%）
+  for v, t in (('third', '3p'), ('first', '1p')):
+    await view(pg, v); await pose(pg, x, y, z, yaw, pitch); await shot(pg, f'{name}-{t}', f'{label} ({v} person)')
+    f = await sky_frac(pg); log('sky', name, v, round(f, 4)); ok(f'{name}:noSky{t}', f < 0.004)
+  await view(pg, 'third')
+
 async def enter_gate(pg, tag):
   await pose(pg, XS + GX, 0.05, GZ - 2.5, 0); await auto(pg, [[XS + GX, GZ + 2.5]]); await asyncio.sleep(1)
   s = await S(pg); good = ok(f'{tag}:in', s['inside'] == 'sm-wj' and s['zone'] == 'interior')
@@ -51,6 +63,11 @@ async def main():
         await both(pg, 'wj-stalls', 'West stalls: 富贵开心果 / 茉酸奶 / 小周 / 有堂古', X + 1.5, 0.05, Z + 15, -math.pi / 2 - 0.45, -0.05, 'interior')
         await both(pg, 'wj-metro', 'South hall: Line 1 ticket gates (出闸入旺) + directory', X + 3, 0.05, Z - 4.5, -math.pi / 2 - 0.32, 0.02, 'interior')
         await both(pg, 'wj-north', 'North hall: escalator + stair to Phase I 1F, glass to B1', X - 5, 0.05, Z + 50, 0.45, 0.12, 'interior')
+        # 小美 pr20：A 1F 扶梯 / 楼梯顶往南看旺街顶棚；B 南厅楼梯脚往上看出口；C 楼梯脚第三人称不穿头；D 镜头不钻进铺位柜台
+        await no_sky(pg, 'wj-1F-landing-S', 'North hall 1F landing looking south over 旺街 (closed roof + lightbox wall)', X + 4, 5.55, Z + 67.6, math.pi, 0.25)
+        await no_sky(pg, 'wj-stair-up', 'South hall stair foot looking up at the exit (canopy + plaza view, no open sky)', X + 6, 0.05, Z - 1, math.pi, -0.25)
+        await both(pg, 'wj-seats-rice-E', 'Camera vs west counters (z 42), looking east', X - 2, 0.05, Z + 42, math.pi / 2 + 0.4, -0.05, 'interior')
+        await both(pg, 'wj-shops-W-lease', 'Camera vs east counters (z 31), looking west', X + 2, 0.05, Z + 31, -math.pi / 2 - 0.5, -0.05, 'interior')
         await view(pg, 'third'); await pose(pg, X + 6, 0.05, Z - 2.6, 0)
       # 拍完：南厅楼梯上街（gate 'main' → 入口亭南边）
       await view(pg, 'third'); await xb.go(pg, o, [[6, -4], [6, -12.6]]); await asyncio.sleep(1); s = await S(pg)

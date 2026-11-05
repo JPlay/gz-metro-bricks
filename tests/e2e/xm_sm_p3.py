@@ -27,7 +27,7 @@ async def walk_peak(pg, name, mode, pts, pitch=-0.25):
   await pg.evaluate(f'__game.player.pitch = {pitch}'); await pg.evaluate(PEAK_ON)
   await auto(pg, await xb.split(pg, [[XS + x, z] for x, z in pts[1:]], 8)); d = await pg.evaluate(PEAK_OFF); await view(pg, 'third')
   R['perf'][name] = d; log('walkPeak', name, d); ok(name + ':budget', d['n'] > 20 and d['tris'] <= xb.TRIS and d['draws'] <= xb.DRAWS)
-XIAHUA_LOOP = [[-44, 128], [-44, 160], [-44, 198], [-56, 198], [-58.6, 168], [-58.6, 152], [-56, 130], [-44, 128]]
+XIAHUA_LOOP = [[-44, 128], [-44, 160], [-44, 198], [-56, 198], [-58.6, 168], [-58.6, 152], [-52.5, 149], [-52.5, 128], [-44, 128]]   # BR2 西楼梯顶下面封成设备间（小美 pr20 E），从楼梯东边绕
 
 async def street(pg):
   await both(pg, 'p3-east-plaza', 'Phase III east face on 嘉禾路 + 夏花 plaza', XS - 40, 140, math.atan2(-14, 26), -0.12)
@@ -48,6 +48,10 @@ async def main():
     si = await pg.evaluate('__game.xmMetro.street.info()'); log('street atlas', si); ok('streetAtlas', si['atlasOverflow'] == 0)
     await street(pg)
     await walk_peak(pg, 'p3-xiahua-walk-3p', 'third', XIAHUA_LOOP); await walk_peak(pg, 'p3-xiahua-walk-1p', 'first', XIAHUA_LOOP)
+    # 小美 pr20 E：BR2 西楼梯顶下面那个凹角（以前在 (XS−56.93, 140.37) 卡死）已封成设备间：往那儿直走只会停在设备间北墙外（z > 145.5），再绕到楼梯东边能走出去
+    await view(pg, 'third'); await pose(pg, XS - 58.6, 0.05, 152, math.pi)
+    await auto(pg, [[XS - 56.93, 140.37]]); s = await S(pg); ok('br2:noPocket', s['pos'][2] > 145.5)
+    r = await auto(pg, [[XS - 52.5, 149], [XS - 52.5, 132]]); s = await S(pg); ok('br2:noWedge', r and abs(s['pos'][0] - XS + 52.5) < 1.2 and abs(s['pos'][2] - 132) < 1.2)
     if os.environ.get('PEAK_ONLY') == '1':
       R['errors'] = errs(logs); print(json.dumps(R['perf'], ensure_ascii=False)); print('XMSMP3', 'PEAK-ONLY', [k for k, v in R['checks'].items() if not v], flush=True); await b.close(); return
     # ---- 1F 正门进三期 ----
