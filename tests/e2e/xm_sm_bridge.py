@@ -3,6 +3,8 @@
 #  · 一期：楼梯间 1F → 2F → 1F
 #  · 天桥：一期 2F 门 → 天桥 1 → 黄宝石 2F → 回一期；一期 2F 门 → 天桥 2 → 三期 2F → 回一期；每次进门后走到扶梯口
 #  · 每个视角 ≤ 9 万三角形、≤ 50 draw；SHOTS=目录 时存截图（带 FPS / draws / tris 角标）
+#  · 黄宝石中庭金环吊灯（topaz_chandelier）：1F 仰视 / 3F 平视 / 5F 走廊斜看（1p + 3p）+ 3P 穿中庭行走峰值 < WALK_TRIS（8.5 万）、≤ 50 draw；
+#    关裁剪全量只记录。CHAND=1 时只跑这一段（配 MALLS= SKIP_BRIDGES=1）
 import asyncio, sys, json, os, math
 sys.path.insert(0, os.path.dirname(__file__))
 from common import *
@@ -12,6 +14,15 @@ URL = sys.argv[1] if len(sys.argv) > 1 else 'http://localhost:8177/'
 OUT = os.environ.get('SHOTS'); OUT2 = os.environ.get('SHOTS2') or OUT
 ONLY = (os.environ.get('MALLS') or 'sm-city,sm-topaz,sm-ruby,sm-sapphire').split(',')
 XS, TRIS, DRAWS, FH = 4000, 90000, 50, 5.5
+WALK_TRIS = int(os.environ.get('WALK_TRIS', '85000'))   # 3P 行走峰值上限（严格小于）
+# 行走峰值记录（与 xm_sm_p4 同款；这里单独一份，免得循环 import）
+PK_RESET = "() => { window.__pk = { tris: 0, draws: 0, at: null, dat: null, n: 0 }; }"
+PK_ON = """() => { const g = __game, s = g.scene, e = g.engine, o = g.xmMetro.street.inside ? g.xmMetro.street.inside.o : { x: 0, y: 0, z: 0 };
+  window.__pkObs = s.onAfterRenderObservable.add(() => { const t = Math.round(s.getActiveIndices() / 3), d = (e._drawCalls && e._drawCalls.current) || 0, P = window.__pk, q = g.player.position; P.n++;
+    const here = [q.x - o.x, q.y - o.y, q.z - o.z].map(v => Math.round(v * 10) / 10); if (t > P.tris) { P.tris = t; P.at = here; } if (d > P.draws) { P.draws = d; P.dat = here; } }); }"""
+PK_PAUSE = "() => { __game.scene.onAfterRenderObservable.remove(window.__pkObs); return window.__pk; }"
+FULL = """() => { const s = __game.scene, mm = s.meshes; for (const m of mm) m.alwaysSelectAsActiveMesh = true; s.render(); const t = Math.round(s.getActiveIndices() / 3), n = s.getActiveMeshes().length;
+  for (const m of mm) m.alwaysSelectAsActiveMesh = false; s.render(); return { tris: t, n }; }"""
 R = {'checks': {}, 'perf': {}}
 def ok(k, v): R['checks'][k] = bool(v); log('check', k, bool(v)); return v
 ST = '(() => { const m = __game.xmMetro, s = __game.state(), i = m.street && m.street.inside; return { pos: s.pos, zone: s.zone, inside: i ? i.id : null, gate: i ? i.o.gate : null, floor: s.zone === "interior" && i ? i.floorOf(__game.player.position) + 1 : null, lift: i && i.lift ? i.info().lift : null }; })()'
@@ -131,6 +142,29 @@ async def esc_only(pg, mid):   # 只补拍 2F→3F 扶梯（已完整跑过的�
   if os.environ.get('FC') == '1': await fc_shot(pg, mid, I, o)
   await pose(pg, o['x'], o['y'] + 0.05, o['z'] + 4, math.pi); s = await leave_main(pg, o); ok(f'{mid}:escOnlyOut', s['inside'] is None)
 
+async def topaz_chandelier(pg, o):   # 黄宝石中庭金环吊灯（xmSMMall.js topazChandelier；中庭中心 = 楼内 (0, 21)，环在 y 23.9–26.7）
+  async def both(name, label, x, f, z, yaw, p1, p3=None):
+    for v, pt in (('first', p1), ('third', p1 if p3 is None else p3)):
+      await view(pg, v); await pose(pg, o['x'] + x, o['y'] + f * FH + 0.05, o['z'] + z, yaw, pt)
+      await shot(pg, f'{name}-{v[0]}p', f'{label} ({v} person)', OUT2)
+    await view(pg, 'third'); s = await S(pg); ok(f'{name}:floor', s['floor'] == f + 1)
+  await both('topaz-chand-1F-up', 'Topaz 1F under the atrium, looking up at the gold-ring chandelier', 4.5, 0, 21 - 13, -0.33, -1.05, -0.35)
+  await both('topaz-chand-3F', 'Topaz 3F corridor, eye level across the atrium', 3.2, 2, 21 - 12.2, -0.26, -0.3, -0.3)
+  await both('topaz-chand-5F-oblique', 'Topaz 5F corridor, oblique view of the chandelier', 4.0, 4, 21 - 10.6, -0.36, -0.08, -0.1)
+  # 3P 穿中庭行走峰值：1F 从门厅走进中庭、在吊灯下方东西两侧各走一个来回（避开扶梯 |x| < 3.4、西侧电梯井 x < −5.3，不穿北端扶梯脚），再到 5F 走廊绕半圈
+  await view(pg, 'third'); await pg.evaluate(PK_RESET)
+  await pose(pg, o['x'], o['y'] + 0.05, o['z'] + 4, 0); await asyncio.sleep(0.6); await pg.evaluate(PK_ON)
+  r1 = await go(pg, o, [[0, 7], [4.4, 13.5], [4.4, 28.5], [4.4, 13.5], [0, 7], [-4.4, 13.5], [-4.4, 28.5], [-4.4, 13.5], [0, 7]]); s = await S(pg)
+  ok('topaz-chand-walk1F', r1 and s['floor'] == 1)
+  await pg.evaluate(PK_PAUSE); await pose(pg, o['x'] + 4.0, o['y'] + 4 * FH + 0.05, o['z'] + 21 - 10.6, -0.36); await asyncio.sleep(0.6); await pg.evaluate(PK_ON)
+  r5 = await go(pg, o, [[round(10.6 * math.cos(math.radians(a)), 2), round(21 + 10.6 * math.sin(math.radians(a)), 2)] for a in range(-70, 11, 20)]); s = await S(pg)
+  ok('topaz-chand-walk5F', r5 and s['floor'] == 5)
+  d = await pg.evaluate(PK_PAUSE); R['perf']['topaz-chand-walk-3p'] = d; log('walkPeak topaz-chand-walk-3p', d)
+  ok('topaz-chand-walk-3p:budget', d['n'] > 50 and d['tris'] < WALK_TRIS and d['draws'] <= DRAWS)
+  await pose(pg, o['x'], o['y'] + 0.05, o['z'] + 13, 0, -0.3); await asyncio.sleep(0.6)
+  f = await pg.evaluate(FULL); R['perf']['topaz-full'] = f; log('FULL topaz (info only)', f)
+  await pose(pg, o['x'], o['y'] + 0.05, o['z'] + 4, 0)
+
 async def mall_full(pg, mid):
   if not await enter_main(pg, mid): return
   I = await info(pg); o = await org(pg)
@@ -141,6 +175,7 @@ async def mall_full(pg, mid):
     await view(pg, 'first'); await pose(pg, o['x'] + 5, 0.05, o['z'] + 16, -0.95, -0.55)
     await shot(pg, f'{mid}-atrium-up', f'{mid} 1F atrium, escalators to {I["floors"]}F', OUT2); await view(pg, 'third')
     await pose(pg, o['x'], 0.05, o['z'] + 4, 0)
+  if mid == 'sm-topaz': await topaz_chandelier(pg, o)
   if mid == 'sm-city': await stairwell(pg, o, I)
   side = await climb(pg, I, o, mid)
   s = await S(pg); await fc_shot(pg, mid, I, o); await pose(pg, s['pos'][0], s['pos'][1], s['pos'][2], 0)
@@ -221,6 +256,8 @@ async def main():
     if os.environ.get('SKIP_BRIDGES') != '1': await bridges(pg)
     for mid in (os.environ.get('ESCONLY') or '').split(','):
       if mid: await esc_only(pg, mid)
+    if os.environ.get('CHAND') == '1' and await enter_main(pg, 'sm-topaz'):
+      o = await org(pg); await topaz_chandelier(pg, o); s = await leave_main(pg, o); ok('sm-topaz:chandOut', s['inside'] is None)
     for mid in ONLY:
       if mid: await mall_full(pg, mid)
     R['errors'] = errs(logs); good = all(R['checks'].values()) and not R['errors']
