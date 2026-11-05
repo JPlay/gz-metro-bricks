@@ -4,7 +4,8 @@
 #    → 第二次进门上楼座：仍然没有卡
 # 另外每个机位记录绘制调用 / 三角形（面数），预算 90k 面 / 50 次绘制。
 # 用法：python tests/e2e/jnt_hall.py [base-url]
-import asyncio, sys, json, os
+import asyncio, sys, json, os, math
+from PIL import Image
 sys.path.insert(0, os.path.dirname(__file__))
 from common import *
 from journey import GCLOCK, auto, wait, log
@@ -37,6 +38,53 @@ async def balcony(pg, n):
     await no_card(pg, f'balcony{n}:noArrivalCard')
     if n == 1: await P(pg, 'balcony')
     await walk(pg, DOWN_BALCONY); s = await st(pg); ok(f'balcony{n}:backDown', s['pos'][1] < 0.3, s['pos'])
+
+# 舞台 3P 镜头区：三个坏点 × yaw 0..2π/8 + 匾下横走；每帧主角可见、红幕占比 ≤ 30%
+STAGE_SPOTS = [
+    ('E_top', 602.9, 1.1, 9.81),
+    ('W_top', 597.1, 1.1, 9.8),
+    ('oldbad', 597.03, 0.05, 6.72),
+]
+STAGE_YAWS = [i * math.pi / 4 for i in range(8)]
+async def red_frac(pg, path):
+    await safe_shot(pg, path=path, type='jpeg', quality=70, timeout=180000)
+    im = Image.open(path).convert('RGB').resize((64, 40))
+    px = list(im.getdata())
+    return sum(1 for (R, G, B) in px if R > 120 and G < 70 and B < 70) / len(px)
+async def stage_cam_audit(pg):
+    if await pg.evaluate('__game.player.view') != 'third':
+        await pg.evaluate('__game.toggleView()')
+    for name, x, y, z in STAGE_SPOTS:
+        for i, yaw in enumerate(STAGE_YAWS):
+            await pg.evaluate(f'__game.teleport({x},{y},{z},{yaw}); __game.player.pitch=-0.1; __game.player._stageCamK=1')
+            await asyncio.sleep(1.0)
+            info = await pg.evaluate('(()=>{const pl=__game.player,c=pl.cam;return{en:pl.model.isEnabled(),fade:+(pl._heroFade??1).toFixed(3),k:+(pl._stageCamK||0).toFixed(3),pos:[+pl.position.x.toFixed(2),+pl.position.y.toFixed(2),+pl.position.z.toFixed(2)],cam:[+c.position.x.toFixed(2),+c.position.y.toFixed(2),+c.position.z.toFixed(2)],aimYaw:pl.aimYaw}})()')
+            vis = info['en'] and info['fade'] > 0.5
+            rf = await red_frac(pg, SHOTS + f'stageCam_{name}_y{i}.jpg')
+            ok(f'stageCam:{name}:yaw{i}:hero', vis, info)
+            ok(f'stageCam:{name}:yaw{i}:red', rf <= 0.30, {'redFrac': round(rf, 3), **info})
+    # 匾下东→西横走：每帧主角不得被藏；若干采样点红幕 ≤ 30%
+    await pg.evaluate("""(()=>{
+      if (window.__scObs) { __game.scene.onAfterRenderObservable.remove(window.__scObs); window.__scObs=null; }
+      const H=window.__scH={n:0,hid:0};
+      window.__scObs=__game.scene.onAfterRenderObservable.add(()=>{
+        const pl=__game.player; if (pl.view!=='third') return;
+        H.n++; if (!pl.model.isEnabled() || (pl._heroFade??1)<0.5) H.hid++;
+      });
+    })()""")
+    await pg.evaluate('__game.teleport(602.9,1.1,9.7,Math.PI); __game.player.pitch=-0.1; __game.player._stageCamK=1')
+    await asyncio.sleep(0.6)
+    walked = await walk(pg, [[601.4, 9.7], [600.0, 9.7], [598.6, 9.7], [597.1, 9.7]])
+    hid = await pg.evaluate('(()=>{const H=window.__scH||{n:0,hid:0}; if(window.__scObs){__game.scene.onAfterRenderObservable.remove(window.__scObs);window.__scObs=null;} return H;})()')
+    ok('stageCam:plaqueWalk:reached', walked, hid)
+    ok('stageCam:plaqueWalk:heroVisible', hid.get('n', 0) > 0 and hid.get('hid', 1) == 0, hid)
+    for tag, x in (('plaqueE', 602.5), ('plaqueM', 600.0), ('plaqueW', 597.5)):
+        await pg.evaluate(f'__game.teleport({x},1.1,9.7,Math.PI); __game.player.pitch=-0.1; __game.player._stageCamK=1')
+        await asyncio.sleep(0.8)
+        info = await pg.evaluate('(()=>{const pl=__game.player;return{en:pl.model.isEnabled(),fade:+(pl._heroFade??1).toFixed(3),cam:[+pl.cam.position.x.toFixed(2),+pl.cam.position.y.toFixed(2),+pl.cam.position.z.toFixed(2)]}})()')
+        rf = await red_frac(pg, SHOTS + f'stageCam_{tag}.jpg')
+        ok(f'stageCam:{tag}:hero', info['en'] and info['fade'] > 0.5, info)
+        ok(f'stageCam:{tag}:red', rf <= 0.30, {'redFrac': round(rf, 3), **info})
 async def main():
     async with async_playwright() as p:
         b, pg, logs = await open_game(p, BASE + '?q=1&start=jnt&line=2')
@@ -59,6 +107,7 @@ async def main():
             await walk(pg, [[600, 9.7]]); s = await st(pg)
             ok('stage:underPlaque', s['pos'][1] > 1.0 and abs(s['pos'][0] - 600) < 0.6 and 9.2 < s['pos'][2] < 10.4, s['pos'])
             await pg.evaluate('__game.player.yaw=Math.PI; __game.player.pitch=0.1'); await asyncio.sleep(1.0); await P(pg, 'stageUnderPlaque')
+            await stage_cam_audit(pg)
             await pg.evaluate('__game.teleport(600,0.05,0,0); __game.player.pitch=0.05'); await asyncio.sleep(1.5); await P(pg, 'stageSteps')
             await walk(pg, [[600, 5.4], [602.9, 6.4], [602.9, 9.7], [600, 9.7]])   # 摆机位后回到台上
             await walk(pg, [[597.1, 9.7], [597.1, 8.2], [597.1, 6.4]]); s = await st(pg)

@@ -194,6 +194,34 @@ export class HallInterior {
   update() {}
   wantsExit(p) { return p.z < -23.3 && Math.abs(p.x - O) < 2.2 && p.y < 2; }
   /** 离玩家最近的空座位（水平 0.9m 内，高度差 1m 内） */
+
+  /** 舞台 / 两侧踏步上的 3P 镜头区：强制把镜头放在大幕观众侧（z < 台口），短臂 + 略抬高，
+   *  不跟玩家 yaw 转到幕布后面。返回 {x,y,z,w}（w=0..1 融合权重），区外返回 null。
+   *  只影响纪念堂大厅，其它场景 leanFn/stageCamFn 都是 null。 */
+  stageCam(p) {
+    const zf = F.z, half = 4.6, dx = p.x - O;
+    const inX = Math.abs(dx) < half + 0.5;
+    const onTop = p.y > 0.85 && p.z > zf - 0.25 && p.z < zf + 5.5 && inX;                 // 舞台面（匾下 / 踏步顶）
+    const onSteps = p.z > zf - 2.3 && p.z < zf + 0.35 && p.y < 1.45
+      && ((dx > 2.0 && dx < 3.95) || (dx < -2.0 && dx > -3.95));                           // 两侧踏步
+    const atFoot = p.y < 0.55 && p.z > 5.6 && p.z < zf - 0.15
+      && ((dx > 1.7 && dx < 4.1) || (dx < -1.7 && dx > -4.1));                             // 踏步脚下（含旧坏点 597,6.7）
+    if (!(onTop || onSteps || atFoot)) return null;
+    let w = 1;
+    if (atFoot && !onSteps) w = Math.max(0.35, Math.min(1, (p.z - 5.6) / 1.6));           // 脚下渐入，仍盖住 yaw 侧向
+    if (onSteps && p.z < zf - 0.8) w = Math.max(w, 0.6 + 0.4 * (p.z - (zf - 2.3)) / 1.5);
+    const boom = onTop ? 2.55 : 2.85;
+    const elev = onTop ? 1.75 : 1.5;
+    // 往中轴收一点，躲开两侧幕布圆柱的 x；再夹在台口开口内
+    let cx = O + dx * 0.5;
+    cx = Math.max(O - 3.1, Math.min(O + 3.1, cx));
+    // 永远停在大幕观众侧：比玩家更南，且不超过 zf − 0.7
+    let cz = Math.min(p.z - boom, zf - 0.7);
+    if (p.z > zf - 0.1) cz = zf - boom;                                                   // 人已上台：镜头钉在台口外
+    const cy = Math.max(p.y + elev, 1.6);
+    return { x: cx, y: cy, z: cz, w };
+  }
+
   /** 站在楼座栏板前往下看：0..1（越贴近栏板越大）；玩家镜头据此“探身”越过栏板 */
   lean(p) {
     if (p.y < BAL.y - 0.4 || p.y > BAL.y + 0.6) return 0;

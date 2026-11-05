@@ -146,6 +146,7 @@ export class Player {
     const cam = this.cam, p = this.position;
     const fwd = new B.Vector3(Math.sin(this.yaw) * Math.cos(this.pitch), -Math.sin(this.pitch), Math.cos(this.yaw) * Math.cos(this.pitch));
     if (this.view === 'first') {
+      this.aimYaw = undefined; this._stageCamK = 0;
       // 轻微头部起伏：竖直按步频、左右按半步频，幅度随速度
       const k = this.grounded ? Math.min(1, this.speed / 3.5) : 0; this.bobK = (this.bobK || 0) + (k - (this.bobK || 0)) * Math.min(1, dt * 8);
       const ph = this.person.phase || this.walkPhase, bob = Math.abs(Math.sin(ph)) * 0.035 * this.bobK, sway = Math.sin(ph) * 0.012 * this.bobK;
@@ -205,6 +206,31 @@ export class Player {
       this.model.setEnabled(f > 0.02);
       if (f !== this._heroFade) { this._heroFade = f; for (const m of [this.model, ...this.model.getChildMeshes()]) m.visibility = f; }
       this.blob.setEnabled(true);
+      // 纪念堂舞台镜头区（HallInterior.stageCam）：人在舞台 / 两侧踏步 / 踏步脚下时，把 3P 镜头融到大幕观众侧，
+      //   短臂、略抬高，不跟 yaw 转到幕布后面（满屏红、主角被藏）。区外 _stageCamK→0，其它场景 stageCamFn 为 null。
+      this.aimYaw = undefined;
+      const wantSC = this.stageCamFn && !this.seat ? this.stageCamFn(p) : null;
+      if (wantSC) this._stageCamLast = wantSC;
+      const wantK = wantSC && wantSC.w > 0 ? wantSC.w : 0;
+      this._stageCamK = this._stageCamK === undefined ? 0 : this._stageCamK;
+      this._stageCamK += (wantK - this._stageCamK) * Math.min(1, dt * (wantK > this._stageCamK ? 8 : 3));
+      const sc = wantSC || this._stageCamLast;
+      if (this._stageCamK > 0.02 && sc) {
+        const k = this._stageCamK;
+        cam.position.x += (sc.x - cam.position.x) * k;
+        cam.position.y += (sc.y - cam.position.y) * k;
+        cam.position.z += (sc.z - cam.position.z) * k;
+        const lx = p.x, ly = p.y + 1.25, lz = p.z;
+        const hx = lx - cam.position.x, hz = lz - cam.position.z, hd2 = Math.hypot(hx, hz);
+        this.aimYaw = Math.atan2(hx, hz);
+        this.aimPitch = hd2 > 0.2 ? Math.atan2(cam.position.y - ly, hd2) : this.pitch;
+        const ay2 = Math.min(p.y + 1.45, Math.max(p.y + 0.1, cam.position.y));
+        const d2 = Math.hypot(cam.position.x - p.x, cam.position.y - ay2, cam.position.z - p.z);
+        const f2 = Math.max(0, Math.min(1, (d2 - 0.75) / 0.35));
+        this.model.setEnabled(f2 > 0.02);
+        if (f2 !== this._heroFade) { this._heroFade = f2; for (const m of [this.model, ...this.model.getChildMeshes()]) m.visibility = f2; }
+        if (d2 > this.camDist) this.camDist = d2;
+      } else if (this._stageCamK <= 0.02) { this._stageCamK = 0; this._stageCamLast = null; }
       // 取景模式（到达中山纪念堂）：镜头放在主角正前方偏一侧、离 D 米、高 h 米，朝上看向主角身后的大殿，主角和整座纪念堂同框
       const F = this.frame;
       if (F) {
@@ -218,7 +244,7 @@ export class Player {
     }
     // 近裁剪面随镜头调整：第三人称镜头离墙至少 0.3m（见上面的射线），0.25 不会切进墙；第一人称眼睛离墙可能只有 0.18m，用 0.1
     const nz = this.view === 'first' ? (this.seat ? 0.05 : 0.1) : this.camDist < 0.8 ? 0.1 : 0.25; if (this.view === 'first') this.aimPitch = undefined; if (cam.minZ !== nz) cam.minZ = nz;
-    cam.rotation.set(this.view === 'first' || this.aimPitch === undefined ? this.pitch : this.aimPitch, this.yaw, 0);
+    cam.rotation.set(this.view === 'first' || this.aimPitch === undefined ? this.pitch : this.aimPitch, this.aimYaw !== undefined ? this.aimYaw : this.yaw, 0);
   }
   toggleView() {
     this.view = this.view === 'first' ? 'third' : 'first';
