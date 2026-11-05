@@ -126,8 +126,9 @@ export function dishGeo(id) {
 
 /* ---------------- 贴图集 ---------------- */
 export class FoodAtlas {
-  constructor(scene, S = 1024) {
-    this.S = S; this.x = 0; this.y = 0; this.row = 0; this.scene = scene; this.overflow = 0;
+  /** opt.bestFit = 倍数：按「最矮能放下的那一行」装（行高超过 ph×倍数 就另开一行）；不给 = 老办法按顺序一行行排 */
+  constructor(scene, S = 1024, opt = {}) {
+    this.S = S; this.x = 0; this.y = 0; this.row = 0; this.scene = scene; this.overflow = 0; this.fit = opt.bestFit || 0; this.shelves = [];
     this.tex = new B.DynamicTexture('foodSigns', { width: S, height: S }, scene, true);
     this.tex.hasAlpha = false; this.tex.anisotropicFilteringLevel = 8; this.ctx = this.tex.getContext();
     this.ctx.fillStyle = '#222'; this.ctx.fillRect(0, 0, S, S);
@@ -136,11 +137,23 @@ export class FoodAtlas {
   /** 画一块 w×h 米的牌子（paint(c, pw, ph)），返回 uv */
   draw(w, h, paint, ppm = 110) {
     let k = Math.min(ppm, 1000 / w, 500 / h); const pw = Math.round(w * k), ph = Math.round(h * k);
+    if (this.fit) return this._drawFit(pw, ph, paint);
     if (this.x + pw > this.S) { this.x = 0; this.y += this.row + 3; this.row = 0; }
     if (this.y + ph > this.S) { this.overflow++; this.x = 0; this.y = 0; console.warn('food atlas overflow'); }
     const r = { x: this.x, y: this.y }; this.x += pw + 3; this.row = Math.max(this.row, ph);
     const c = this.ctx; c.save(); c.beginPath(); c.rect(r.x, r.y, pw, ph); c.clip(); c.translate(r.x, r.y); paint(c, pw, ph); c.restore();
     const S = this.S; return { u0: (r.x + 0.5) / S, u1: (r.x + pw - 0.5) / S, v0: 1 - (r.y + ph - 0.5) / S, v1: 1 - (r.y + 0.5) / S };
+  }
+  _drawFit(pw, ph, paint) {
+    const S = this.S; let b = null;
+    for (const r of this.shelves) if (r.h >= ph && r.x + pw <= S && (!b || r.h < b.h)) b = r;
+    if (!b || (b.h > ph * this.fit + 8 && this.y + ph <= S)) {
+      if (this.y + ph > S) { this.overflow++; console.warn('food atlas overflow'); b = { y: 0, h: ph, x: 0 }; }
+      else { b = { y: this.y, h: ph, x: 0 }; this.shelves.push(b); this.y += ph + 3; }
+    }
+    const r = { x: b.x, y: b.y }; b.x += pw + 3;
+    const c = this.ctx; c.save(); c.beginPath(); c.rect(r.x, r.y, pw, ph); c.clip(); c.translate(r.x, r.y); paint(c, pw, ph); c.restore();
+    return { u0: (r.x + 0.5) / S, u1: (r.x + pw - 0.5) / S, v0: 1 - (r.y + ph - 0.5) / S, v1: 1 - (r.y + 0.5) / S };
   }
   /** face：正面法线 = (sin a, 0, cos a) */
   quad(x, y, z, w, h, a, uv) {

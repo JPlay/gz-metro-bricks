@@ -16,7 +16,7 @@ import { FoodAtlas } from '../game/food-art.js';
 import { textPaint, FONT, FONT_EN } from './xmStreet.js';
 import { bakePerson, randomLook, preseed, prnd, POSES } from './people.js';
 import { pressable } from '../game/input.js';
-import { escalator, lowPerson, shopper, family, brandPaint, storefront, flatQ } from './xmSM.js';
+import { escalator, lowPerson, shopper, family, brandPaint, storefront, flatQ, goldRing } from './xmSM.js';
 const B = window.BABYLON;
 
 const TAU = Math.PI * 2, CZ = 21, AV = 8, AS = 15, AW = 21, FH = 5.5;
@@ -33,18 +33,32 @@ export const POOL = {
     '面包新语', '蜜雪冰城', '张亮麻辣烫', '老乡鸡', '鼓浪屿馅饼', '八市海鲜', '湘鄂情', '点都德'],
 };
 const THEME = { beauty: ['化妆品 · 珠宝', 'Beauty & Jewellery'], ladies: ['女装', 'Ladies'], men: ['男装', 'Menswear'], sports: ['运动', 'Sports'], kids: ['童装 · 玩具', 'Kids & Toys'],
-  men_sports: ['男装 · 运动', 'Men & Sports'], food: ['美食广场 · 影城', 'Food Court & Cinema'] };
+  men_sports: ['男装 · 运动', 'Men & Sports'], food: ['美食广场 · 影城', 'Food Court & Cinema'],
+  // 三期（定位「都市潮流聚落 · 新锐社交空间」；SM 官网开业稿 newsdisp.aspx?aid=14054 + 官网三期楼层指引）
+  trend: ['国际潮牌 · 旗舰', 'Flagships'], designer: ['运动 · 设计师 · 数码', 'Sports, Designer & Tech'], family: ['亲子 · 潮玩 · 甜品', 'Family, Toys & Cinema'], dining: ['餐饮 · 娱乐 · 喜剧', 'Dining & Fun'] };
+/** 某个主题的店名不够时从哪个池补 */
+const FALLBACK = { trend: 'sports', designer: 'ladies', family: 'kids', dining: 'food' };
 const PLAN = { 6: ['beauty', 'ladies', 'men', 'sports', 'kids', 'food'], 5: ['beauty', 'ladies', 'men_sports', 'kids', 'food'], 4: ['beauty', 'ladies', 'men_sports', 'food'] };
 /** 各栋楼：边数、层数、颜色、影城、天桥门（s = 哪一边，c = 沿边的位置，f = 楼层 0 起） */
 export const MALLS = {
   'sm-city': { n: 4, NF: 6, title: 'SM城市广场', en: 'SM CITY XIAMEN', accent: '#2E5DA8', warm: '#E4EEF8', seed: 6262, off: 0, cinema: 'SM 影城',
     gates: { br1: { s: 3, c: 7, f: 1, zh: 'SM 天桥 → SM新生活广场（二期）', en: 'SKYBRIDGE TO SM LIFESTYLE' }, br2: { s: 3, c: -7, f: 1, zh: '天桥 → SM 三期', en: 'SKYBRIDGE TO PHASE III' } } },
   'sm-topaz': { n: 16, NF: 5, title: 'SM新生活广场 · 黄宝石', en: 'SM LIFESTYLE · TOPAZ', accent: '#C9A24A', warm: '#F6E7C4', seed: 6161, off: 5, gold: true, cinema: 'CGV 影城',
-    gates: { br1: { s: 0, c: 0, f: 1, zh: 'SM 天桥 → SM城市广场（一期）', en: 'SKYBRIDGE TO SM CITY' } } },
+    gates: { br1: { s: 0, c: 0, f: 1, zh: 'SM 天桥 → SM城市广场（一期）', en: 'SKYBRIDGE TO SM CITY' },
+      lk3: { s: 8, c: 0, f: 2, zh: '3F 连廊 → SM 三期', en: 'L3 LINK TO PHASE III' } } },
   'sm-ruby': { n: 4, NF: 5, title: 'SM新生活广场 · 红宝石', en: 'SM LIFESTYLE · RUBY', accent: '#C8102E', warm: '#F8E4E4', seed: 6363, off: 9, cinema: 'UA 影城', gates: {} },
   'sm-sapphire': { n: 4, NF: 5, title: 'SM新生活广场 · 蓝宝石', en: 'SM LIFESTYLE · SAPPHIRE', accent: '#2A5BAE', warm: '#E2EAF8', seed: 6464, off: 13, cinema: '万达影城', gates: {} },
-  'sm-p3': { n: 4, NF: 4, title: 'SM 三期', en: 'SM XIAMEN PHASE III', accent: '#4F7F8F', warm: '#E6EEF0', seed: 6565, off: 3, cinema: '中影国际影城',
-    gates: { br2: { s: 0, c: 0, f: 1, zh: '天桥 → SM城市广场（一期）', en: 'SKYBRIDGE TO SM CITY' } } },
+  // 三期：1F 国际潮牌旗舰，2F 运动 / 设计师 / 华为，3F 亲子潮玩 + 万达影城（官网 3F-328），4F 餐饮 + 来疯喜剧；3F 南边连廊 → 二期黄宝石 3F
+  'sm-p3': { n: 4, NF: 4, title: 'SM 三期', en: 'SM XIAMEN PHASE III', accent: '#4F7F8F', warm: '#E6EEF0', seed: 6565, off: 3, cinema: '万达影城', cinemaF: 2,
+    plan: ['trend', 'designer', 'family', 'dining'],
+    // 店名按 SM 官网三期楼层指引（smsupermalls.cn/city/threefloor.aspx，2026-11 抓取）
+    names: [['NIKE RISE 1200', '丝芙兰 SEPHORA', 'Maison Kitsuné', 'TOMMY HILFIGER', 'J.LINDEBERG', 'Aape', 'I.T', '星巴克', '雪乐山室内滑雪', '极氪 ZEEKR', 'Monologue', 'MAISON LE FAME'],
+      ['HUAWEI 智能生活馆', 'adidas', 'Champion', 'MELAND CLUB', 'nshare', 'RuirUiruI', 'NINE WEST', 'CROCS', 'K·SWISS', 'moussy', '小大董', "Domino's Pizza"],
+      ['卡通尼', 'att-store', 'UPGAME', 'PM TOYS', '卡游', '泰谣 Home Thai', '哈根达斯', '一米天妇罗', 'KOI PLUS', '暴龙眼镜', '叫我熊猫', 'TIME 时代'],
+      ['怂重庆火锅厂', '哲平鳗满', '霞初铁板烧', '来疯喜剧', '玩刻', 'DELL 戴尔', '樊登书店 × 22 SPACE', '南蛮鸭', '汉烟火', '众玩殿堂 ZONE ONE', '宇宙治茶', '潮玩星球']],
+    play: ['卡通尼'],
+    gates: { br2: { s: 0, c: 0, f: 1, zh: '天桥 → SM城市广场（一期）', en: 'SKYBRIDGE TO SM CITY' },
+      lk3: { s: 0, c: -7, f: 2, zh: '3F 连廊 → 二期 黄宝石', en: 'L3 LINK TO TOPAZ' } } },
 };
 const STEEL = hex('#C3C9CF'), DARK = hex('#3A3F45'), WHITE = hex('#F3F1EC'), FLOOR = hex('#E9E5DD'), GOLD = hex('#D4A84A');
 
@@ -56,6 +70,16 @@ function foodStall(c, pw, ph) {
     c.fillStyle = '#5A3A22'; c.fillRect(pw * (0.08 + i * 0.22), ph * 0.34, pw * 0.18, ph * 0.04); }
   c.fillStyle = '#D9D4CA'; c.fillRect(0, ph * 0.62, pw, ph * 0.08); c.fillStyle = '#8A5A3A'; c.fillRect(0, ph * 0.7, pw, ph * 0.3);
   c.fillStyle = 'rgba(255,255,255,0.18)'; for (let x = 0; x < pw; x += pw / 12) c.fillRect(x, ph * 0.72, 2, ph * 0.28);
+}
+/** 亲子乐园门面（卡通尼 / 神奇科学家 / 乐海豚）：彩色软包 + 波波球 + 滑梯 */
+function playFront(c, pw, ph) {
+  c.fillStyle = '#3A3F45'; c.fillRect(0, 0, pw, ph);
+  const g = c.createLinearGradient(0, 0, 0, ph); g.addColorStop(0, '#FFF6D8'); g.addColorStop(1, '#BFE8F6'); c.fillStyle = g; c.fillRect(pw * 0.02, ph * 0.08, pw * 0.96, ph * 0.9);
+  const C = ['#F2545B', '#F2C230', '#3FB27F', '#3E8EDE', '#B567D6', '#FF8C42'];
+  for (let i = 0; i < 6; i++) { c.fillStyle = C[i]; c.fillRect(pw * (0.05 + i * 0.15), ph * 0.18, pw * 0.12, ph * 0.3); }
+  c.fillStyle = '#F2545B'; c.beginPath(); c.moveTo(pw * 0.62, ph * 0.5); c.quadraticCurveTo(pw * 0.8, ph * 0.55, pw * 0.92, ph * 0.95); c.lineTo(pw * 0.84, ph * 0.95); c.quadraticCurveTo(pw * 0.74, ph * 0.62, pw * 0.6, ph * 0.58); c.fill();
+  for (let i = 0; i < 46; i++) { c.fillStyle = C[i % 6]; c.beginPath(); c.arc(pw * (0.05 + ((i * 37) % 53) / 100), ph * (0.72 + ((i * 17) % 23) / 100), ph * 0.035, 0, TAU); c.fill(); }
+  c.fillStyle = 'rgba(255,255,255,0.3)'; c.fillRect(pw * 0.02, ph * 0.08, pw * 0.96, ph * 0.04);
 }
 function cinemaPaint(name, accent) {
   return (c, pw, ph) => { c.fillStyle = '#141826'; c.fillRect(0, 0, pw, ph); c.fillStyle = accent; c.fillRect(0, ph * 0.78, pw, ph * 0.22);
@@ -85,7 +109,7 @@ export class SmMall {
     const k = this.kit = new Kit(scene, 'smMall'); k.root.position.set(origin.x, origin.y, origin.z);
     const A = this.atlas = new FoodAtlas(scene, 2048);
     const P = k.solid, GL = k.glass, G = k.glow, GR = k.g('granite'), Mt = k.metal;
-    const gold = !!cfg.gold, accent = hex(cfg.accent), plan = PLAN[NF];
+    const gold = !!cfg.gold, accent = hex(cfg.accent), plan = this.plan = cfg.plan || PLAN[NF], cinF = cfg.cinemaF ?? NF - 1;
     const GM = gold ? k.g('metal@gold') : Mt;
     if (gold) bucketMat(scene, k.M, 'metal@gold').emissiveColor.set(0.32, 0.23, 0.07);
     preseed(cfg.seed);
@@ -117,12 +141,16 @@ export class SmMall {
 
     // ---------- 店名 ----------
     const used = {}, take = pool => { const L = POOL[pool], i = used[pool] = (used[pool] || 0); used[pool]++; return L[(cfg.off + i) % L.length]; };
-    const nameFor = (f, i) => { const th = plan[f]; if (th === 'men_sports') return take(i % 2 ? 'sports' : 'men'); return take(th); };
+    const got = new Set(), nf = new Array(NF).fill(0);
+    const nameFor = (f, i) => { const th = plan[f], L = cfg.names && cfg.names[f];
+      if (L) while (nf[f] < L.length) { const nm = L[nf[f]++]; if (!got.has(nm)) { got.add(nm); return nm; } }
+      for (let k2 = 0; k2 < 40; k2++) { const nm = take(th === 'men_sports' ? (i % 2 ? 'sports' : 'men') : FALLBACK[th] || th); if (!got.has(nm)) { got.add(nm); return nm; } }
+      return take(FALLBACK[th] || th); };
     this.shops = []; this.shopFloors = [];
 
     // ---------- 每层每边的分段 ----------
     const segsOf = (f, s) => {
-      const half = AS * t, L = 2 * half, per = Math.max(1, Math.round(L / 9)), top = f === NF - 1;
+      const half = AS * t, L = 2 * half, per = Math.max(1, Math.round(L / 9)), top = f === cinF;
       if (top && cinemaSides.includes(s)) return [[-half, half, 'cinema']];
       if (st.extraWall.includes(s)) return [[-half, half, 'wall']];
       const cuts = [];
@@ -174,7 +202,8 @@ export class SmMall {
           const w = b - a, c = (a + b) / 2, [x, z] = pt(fr, AS, c);
           if (kind === 'shop') {
             const nm = nameFor(f, shopIdx++); names.push(nm);
-            A.quad(x, y + 1.9, z, w - 0.02, 3.4, fr.aIn, f === NF - 1 ? (this._stall || (this._stall = A.draw(9, 3.6, foodStall, 24))) : (this._glass || (this._glass = A.draw(9, 3.6, storefront(cfg.warm), 24))));
+            const play = cfg.play && cfg.play.includes(nm);
+            A.quad(x, y + 1.9, z, w - 0.02, 3.4, fr.aIn, play ? (this._play || (this._play = A.draw(9, 3.6, playFront, 24))) : f === NF - 1 ? (this._stall || (this._stall = A.draw(9, 3.6, foodStall, 24))) : (this._glass || (this._glass = A.draw(9, 3.6, storefront(cfg.warm), 24))));
             const [sx, sz] = pt(fr, AS - 0.05, c); A.quad(sx, y + 4.3, sz, Math.min(w - 0.6, 6), 0.8, fr.aIn, sUv(nm));
             boxRC(P, fr, AS, AS + 0.2, a, b, y + 3.6, y + 5.0, DARK);
             colRC(fr, AS, AS + 0.3, a, b, y, y + FH - 0.6);
@@ -303,7 +332,7 @@ export class SmMall {
     // ---------- 楼层指引（每层一块，标「您在这里」） ----------
     const dPos = n === 16 ? [8.13, CZ - 8.13] : [11.5, CZ - 11.5], dF = [-Math.SQRT1_2, Math.SQRT1_2], dry = Math.atan2(dF[0], dF[1]);
     const dirRows = []; for (let f = NF - 1; f >= 0; f--) { const th = THEME[plan[f]], ex = this.shopFloors[f].slice(0, 2).join(' · ');
-      dirRows.push([f, `${f + 1}F`, th[0] + (f === NF - 1 ? ` · ${cfg.cinema}` : ''), th[1], ex]); }
+      dirRows.push([f, `${f + 1}F`, th[0] + (f === cinF ? ` · ${cfg.cinema}` : ''), th[1], ex]); }
     for (let f = 0; f < NF; f++) {
       const y = f * FH;
       P.box(dPos[0], y + 1.3, dPos[1], 1.9, 2.6, 0.3, hex('#2B3036'), dry, 0, 0, 1, { ao: false }); k.col(dPos[0], y + 1.3, dPos[1], 1.9, 2.6, 0.3, { ry: dry });
@@ -320,12 +349,15 @@ export class SmMall {
     // 美食广场招牌（顶层中空边上挂一块）
     { const y = (NF - 1) * FH, uv = txt(['美食广场 FOOD COURT'], '#C8443A', '#FFFFFF', 5, 0.8, 50); A.quad(0, y + 4.4, edgeZ(0, 1) + 3, 5, 0.8, Math.PI, uv); A.quad(0, y + 4.4, edgeZ(0, -1) - 3, 5, 0.8, 0, uv); }
 
-    // ---------- 中庭吊饰（避开扶梯 |x| < 3.6） ----------
-    const gy = RY - 2.6;
-    k.metal.tube([0, RY, CZ], [0, gy + 1.6, CZ], 0.05, hex('#9AA1A8'), 4);
-    P.cyl(0, gy, CZ, 2.0, 1.6, accent, 8, 0, 0, 0, 0.2, { ao: false }); P.cyl(0, gy + 1.1, CZ, 1.0, 0.5, accent, 8, 0, 0, 0, 2.0, { ao: false });
-    for (const a of [Math.PI / 6, 5 * Math.PI / 6, 7 * Math.PI / 6, 11 * Math.PI / 6]) { const x = Math.cos(a) * 5.2, z = CZ + Math.sin(a) * 5.2;
-      k.metal.tube([x, RY, z], [x, gy - 0.2, z], 0.03, hex('#9AA1A8'), 4); k.glass.cyl(x, gy - 0.7, z, 0.9, 1.0, hex(gold ? '#F2D48A' : '#9CC7EE'), 6, 0, 0, 0, 0.1, { ao: false }); }
+    // ---------- 中庭吊饰 ----------
+    if (gold) topazChandelier(k, CZ, RY);   // 黄宝石：天窗下的哑光金环吊灯（替换原来的棕色八角筒 + 4 个玻璃灯笼）
+    else {   // 其它楼：避开扶梯 |x| < 3.6
+      const gy = RY - 2.6;
+      k.metal.tube([0, RY, CZ], [0, gy + 1.6, CZ], 0.05, hex('#9AA1A8'), 4);
+      P.cyl(0, gy, CZ, 2.0, 1.6, accent, 8, 0, 0, 0, 0.2, { ao: false }); P.cyl(0, gy + 1.1, CZ, 1.0, 0.5, accent, 8, 0, 0, 0, 2.0, { ao: false });
+      for (const a of [Math.PI / 6, 5 * Math.PI / 6, 7 * Math.PI / 6, 11 * Math.PI / 6]) { const x = Math.cos(a) * 5.2, z = CZ + Math.sin(a) * 5.2;
+        k.metal.tube([x, RY, z], [x, gy - 0.2, z], 0.03, hex('#9AA1A8'), 4); k.glass.cyl(x, gy - 0.7, z, 0.9, 1.0, hex('#9CC7EE'), 6, 0, 0, 0, 0.1, { ao: false }); }
+    }
 
     // ---------- 远处的人（外壳里，低模） ----------
     const spots = (f, m) => { const out = []; for (let i = 0; out.length < m && i < 80; i++) { const a = prnd() * TAU, r = 9.5 + prnd() * 4.5, x = Math.cos(a) * r, z = CZ + Math.sin(a) * r;
@@ -467,4 +499,22 @@ export class SmMall {
     if (this.panel) this.panel.remove();
     this.atlas.dispose(); this.kit.root.getChildMeshes(false).forEach(m => m.dispose()); this.kit.root.dispose();
   }
+}
+
+/** 黄宝石中庭金环吊灯：5 圈哑光金环（#C9A75E，同四期金环）上大下小、错层吊在天窗下，像倒置的层叠灯；
+ *  只有环底一圈细灯带 + 两圈小珠灯 + 中心垂珠是暖白自发光，环本身不发光。全部进 metal / glow 两个已有桶（不加 draw），
+ *  约 2k 三角形，无实时光源。环最大 R 5.0 —— 西边观光电梯井内壁在 x = −5.3，不碰；最低点 y ≈ RY − 3.6，在 5F 楼面（RY − 5.5）上方。 */
+export const TOPAZ_RINGS = [[5.0, 0.8, 0.12, 40], [4.1, 1.45, 0.11, 36], [3.2, 2.1, 0.1, 30], [2.3, 2.7, 0.09, 24], [1.4, 3.2, 0.08, 18]];   // [R, 距 RY 往下, 管半径, 段数]
+function topazChandelier(k, CZ, RY) {
+  const M = k.metal, G = k.glow, cable = hex('#8C9096'), warm = hex('#FFF1D0'), top = RY + 1.15;
+  const bead = (x, y, z, s) => {   // 小八面体珠灯（8 三角形，正面朝外）
+    const v = [[0, s, 0], [s, 0, 0], [0, 0, s], [-s, 0, 0], [0, 0, -s], [0, -s, 0]], b0 = G.p.length / 3;
+    for (const [dx, dy, dz] of v) { const l = Math.hypot(dx, dy, dz); G.push(x + dx, y + dy, z + dz, dx / l, dy / l, dz / l, warm); }
+    for (const [a, b] of [[1, 2], [2, 3], [3, 4], [4, 1]]) G.i.push(b0, b0 + a, b0 + b, b0 + 5, b0 + b, b0 + a); };
+  TOPAZ_RINGS.forEach(([R, dy, r, seg], i) => {
+    const y = RY - dy; goldRing(k, 0, y, CZ, R, r, seg, '#FFF1D0');
+    for (let j = 0; j < 4; j++) { const a = (j + (i % 2) * 0.5) / 4 * Math.PI * 2 + Math.PI / 4, x = Math.cos(a) * R, z = CZ + Math.sin(a) * R; M.tube([x, top, z], [x, y + r, z], 0.025, cable, 4, false); }
+    if (i === 0 || i === 2) { const nb = i === 0 ? 20 : 14; for (let j = 0; j < nb; j++) { const a = (j + 0.5) / nb * Math.PI * 2; bead(Math.cos(a) * R, y - r - 0.16, CZ + Math.sin(a) * R, 0.07); } }
+  });
+  const yb = RY - 3.6; M.tube([0, top, CZ], [0, yb + 0.2, CZ], 0.07, hex('#C9A75E'), 6, false); bead(0, yb, CZ, 0.2);
 }
