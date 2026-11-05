@@ -241,6 +241,12 @@ export function smCity(S) {
   bridgeStairs(S, 2, 45, BR1.z0, true); bridgeStairs(S, -66, 45, BR1.z0, true);
   skybridge(S, BR2, [[-58.2, -53.8], [1.8, 8.6]], [-30], 'SM城市广场 ⇄ SM三期', 'SM CITY  ·  PHASE III');
   bridgeStairs(S, 2, 125, BR2.z0, true); bridgeStairs(S, -58, 125, BR2.z0, false);
+  // BR2 西头楼梯顶端下面（桥面底下 z 140–146，三期东墙到楼梯东沿）原来是个三面堵死的凹角，人顺着三期门前往南走会钻进去卡住（小美 pr20 E）：
+  //   封成一间设备房（实心 + 碰撞体），北面一扇门 + 门牌；夏花水池 → 三期正门那条 x≈−58.6 的通道在 z 146 以北，不受影响
+  { const P = S.kit.solid, x0 = BR2.x0, x1 = -53.85, z0 = 140.05, z1 = 145.9;
+    P.slab(x0, x1, 0, 4.15, z0, z1, hex('#D8D3CA'), { ao: false }); S.kit.colSlab(x0, x1, 0, 4.15, z0, z1);
+    P.slab(-57.6, -56.2, 0, 2.2, z1, z1 + 0.04, hex('#8A9098'), { ao: false });
+    S.atlas.quad(-56.9, 2.6, z1 + 0.05, 2.0, 0.36, aS(0, 1), S.atlas.draw(2.0, 0.36, textPaint(['设备间 · 闲人免进'], { bg: '#2B3036', fg: '#FFFFFF', fit: true }), 60)); }
 
   // ---------- 公交站「SM城市广场」（嘉禾路东侧人行道） ----------
   const bx0 = -12.6, bz0 = 84, bz1 = 96;
