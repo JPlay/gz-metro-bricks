@@ -381,13 +381,13 @@ const CHAO_SHOPS = [['WM.HOME', '#EDE7DC', '#2B2B2B'], ['喧哗世界', '#E8306B
 const BB_HI = hex('#3D64AE'), BB_LO = hex('#24467F'), BB_BEAM = hex('#1C3766');   // 大步路蓝顶（比 CHAO_BLUE 暗、低饱和）
 const mixC = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
 /** 金色圆环灯：哑光金属金的圆截面环（36×6 段）+ 内圈一条微微发光的细环带 */
-function goldRing(k, cx, y, cz, R, r) {
-  const M = k.metal, G = k.glow, SEG = 28, SIDE = 4, col = hex('#C9A75E'), b0 = M.p.length / 3;
+export function goldRing(k, cx, y, cz, R, r, SEG = 28, gcol = '#F3D48C') {
+  const M = k.metal, G = k.glow, SIDE = 4, col = hex('#C9A75E'), b0 = M.p.length / 3;
   for (let i = 0; i <= SEG; i++) { const a = i / SEG * Math.PI * 2, ca = Math.cos(a), sa = Math.sin(a);
     for (let j = 0; j <= SIDE; j++) { const b = (j / SIDE + 0.125) * Math.PI * 2, cb = Math.cos(b), sb = Math.sin(b);
       M.push(cx + (R + r * cb) * ca, y + r * sb, cz + (R + r * cb) * sa, cb * ca, sb, cb * sa, col); } }
   for (let i = 0; i < SEG; i++) for (let j = 0; j < SIDE; j++) { const a = b0 + i * (SIDE + 1) + j, b = a + SIDE + 1; M.i.push(a, b, a + 1, a + 1, b, b + 1); }
-  const g0 = G.p.length / 3, gc = hex('#F3D48C'), ri = R - r * 0.9, ro = R - r * 0.35, yy = y - r * 0.75;
+  const g0 = G.p.length / 3, gc = hex(gcol), ri = R - r * 0.9, ro = R - r * 0.35, yy = y - r * 0.75;
   for (let i = 0; i <= SEG; i++) { const a = i / SEG * Math.PI * 2, ca = Math.cos(a), sa = Math.sin(a);
     G.push(cx + ri * ca, yy, cz + ri * sa, 0, -1, 0, gc); G.push(cx + ro * ca, yy, cz + ro * sa, 0, -1, 0, gc); }
   for (let i = 0; i < SEG; i++) { const a = g0 + i * 2; G.i.push(a, a + 2, a + 1, a + 1, a + 2, a + 3); }

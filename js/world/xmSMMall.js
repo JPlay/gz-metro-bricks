@@ -16,7 +16,7 @@ import { FoodAtlas } from '../game/food-art.js';
 import { textPaint, FONT, FONT_EN } from './xmStreet.js';
 import { bakePerson, randomLook, preseed, prnd, POSES } from './people.js';
 import { pressable } from '../game/input.js';
-import { escalator, lowPerson, shopper, family, brandPaint, storefront, flatQ } from './xmSM.js';
+import { escalator, lowPerson, shopper, family, brandPaint, storefront, flatQ, goldRing } from './xmSM.js';
 const B = window.BABYLON;
 
 const TAU = Math.PI * 2, CZ = 21, AV = 8, AS = 15, AW = 21, FH = 5.5;
@@ -349,12 +349,15 @@ export class SmMall {
     // 美食广场招牌（顶层中空边上挂一块）
     { const y = (NF - 1) * FH, uv = txt(['美食广场 FOOD COURT'], '#C8443A', '#FFFFFF', 5, 0.8, 50); A.quad(0, y + 4.4, edgeZ(0, 1) + 3, 5, 0.8, Math.PI, uv); A.quad(0, y + 4.4, edgeZ(0, -1) - 3, 5, 0.8, 0, uv); }
 
-    // ---------- 中庭吊饰（避开扶梯 |x| < 3.6） ----------
-    const gy = RY - 2.6;
-    k.metal.tube([0, RY, CZ], [0, gy + 1.6, CZ], 0.05, hex('#9AA1A8'), 4);
-    P.cyl(0, gy, CZ, 2.0, 1.6, accent, 8, 0, 0, 0, 0.2, { ao: false }); P.cyl(0, gy + 1.1, CZ, 1.0, 0.5, accent, 8, 0, 0, 0, 2.0, { ao: false });
-    for (const a of [Math.PI / 6, 5 * Math.PI / 6, 7 * Math.PI / 6, 11 * Math.PI / 6]) { const x = Math.cos(a) * 5.2, z = CZ + Math.sin(a) * 5.2;
-      k.metal.tube([x, RY, z], [x, gy - 0.2, z], 0.03, hex('#9AA1A8'), 4); k.glass.cyl(x, gy - 0.7, z, 0.9, 1.0, hex(gold ? '#F2D48A' : '#9CC7EE'), 6, 0, 0, 0, 0.1, { ao: false }); }
+    // ---------- 中庭吊饰 ----------
+    if (gold) topazChandelier(k, CZ, RY);   // 黄宝石：天窗下的哑光金环吊灯（替换原来的棕色八角筒 + 4 个玻璃灯笼）
+    else {   // 其它楼：避开扶梯 |x| < 3.6
+      const gy = RY - 2.6;
+      k.metal.tube([0, RY, CZ], [0, gy + 1.6, CZ], 0.05, hex('#9AA1A8'), 4);
+      P.cyl(0, gy, CZ, 2.0, 1.6, accent, 8, 0, 0, 0, 0.2, { ao: false }); P.cyl(0, gy + 1.1, CZ, 1.0, 0.5, accent, 8, 0, 0, 0, 2.0, { ao: false });
+      for (const a of [Math.PI / 6, 5 * Math.PI / 6, 7 * Math.PI / 6, 11 * Math.PI / 6]) { const x = Math.cos(a) * 5.2, z = CZ + Math.sin(a) * 5.2;
+        k.metal.tube([x, RY, z], [x, gy - 0.2, z], 0.03, hex('#9AA1A8'), 4); k.glass.cyl(x, gy - 0.7, z, 0.9, 1.0, hex('#9CC7EE'), 6, 0, 0, 0, 0.1, { ao: false }); }
+    }
 
     // ---------- 远处的人（外壳里，低模） ----------
     const spots = (f, m) => { const out = []; for (let i = 0; out.length < m && i < 80; i++) { const a = prnd() * TAU, r = 9.5 + prnd() * 4.5, x = Math.cos(a) * r, z = CZ + Math.sin(a) * r;
@@ -496,4 +499,22 @@ export class SmMall {
     if (this.panel) this.panel.remove();
     this.atlas.dispose(); this.kit.root.getChildMeshes(false).forEach(m => m.dispose()); this.kit.root.dispose();
   }
+}
+
+/** 黄宝石中庭金环吊灯：5 圈哑光金环（#C9A75E，同四期金环）上大下小、错层吊在天窗下，像倒置的层叠灯；
+ *  只有环底一圈细灯带 + 两圈小珠灯 + 中心垂珠是暖白自发光，环本身不发光。全部进 metal / glow 两个已有桶（不加 draw），
+ *  约 2k 三角形，无实时光源。环最大 R 5.0 —— 西边观光电梯井内壁在 x = −5.3，不碰；最低点 y ≈ RY − 3.6，在 5F 楼面（RY − 5.5）上方。 */
+export const TOPAZ_RINGS = [[5.0, 0.8, 0.12, 40], [4.1, 1.45, 0.11, 36], [3.2, 2.1, 0.1, 30], [2.3, 2.7, 0.09, 24], [1.4, 3.2, 0.08, 18]];   // [R, 距 RY 往下, 管半径, 段数]
+function topazChandelier(k, CZ, RY) {
+  const M = k.metal, G = k.glow, cable = hex('#8C9096'), warm = hex('#FFF1D0'), top = RY + 1.15;
+  const bead = (x, y, z, s) => {   // 小八面体珠灯（8 三角形，正面朝外）
+    const v = [[0, s, 0], [s, 0, 0], [0, 0, s], [-s, 0, 0], [0, 0, -s], [0, -s, 0]], b0 = G.p.length / 3;
+    for (const [dx, dy, dz] of v) { const l = Math.hypot(dx, dy, dz); G.push(x + dx, y + dy, z + dz, dx / l, dy / l, dz / l, warm); }
+    for (const [a, b] of [[1, 2], [2, 3], [3, 4], [4, 1]]) G.i.push(b0, b0 + a, b0 + b, b0 + 5, b0 + b, b0 + a); };
+  TOPAZ_RINGS.forEach(([R, dy, r, seg], i) => {
+    const y = RY - dy; goldRing(k, 0, y, CZ, R, r, seg, '#FFF1D0');
+    for (let j = 0; j < 4; j++) { const a = (j + (i % 2) * 0.5) / 4 * Math.PI * 2 + Math.PI / 4, x = Math.cos(a) * R, z = CZ + Math.sin(a) * R; M.tube([x, top, z], [x, y + r, z], 0.025, cable, 4, false); }
+    if (i === 0 || i === 2) { const nb = i === 0 ? 20 : 14; for (let j = 0; j < nb; j++) { const a = (j + 0.5) / nb * Math.PI * 2; bead(Math.cos(a) * R, y - r - 0.16, CZ + Math.sin(a) * R, 0.07); } }
+  });
+  const yb = RY - 3.6; M.tube([0, top, CZ], [0, yb + 0.2, CZ], 0.07, hex('#C9A75E'), 6, false); bead(0, yb, CZ, 0.2);
 }
