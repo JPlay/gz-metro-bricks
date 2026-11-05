@@ -72,6 +72,9 @@ export class HallInterior {
     for (const s of [-1, 1]) k.stairs('z', zf - 1.8, 0, zf, 1.1, O + s * 2.2, O + s * 3.6, 0, hex('#7B4A2C'), { rails: false, nosing: '#5A3420' });
     // 大幕（两边收起）+ 檐幕 + 天幕
     for (const s of [-1, 1]) for (let i = 0; i < 4; i++) P.cyl(O + s * (half - 0.35 - i * 0.42), 3.75, zf + 0.6, 0.5, 5.3, i % 2 ? C.red2 : C.red, 8);
+    // 大幕只挡镜头不挡人：第三人称镜头以前会退到幕布后面（踏步脚下回头看观众席 → 满屏红、看不到主角）。
+    //   一块隐形的“镜头墙”罩住每边 4 束幕布（往里一直盖到踏步内侧 O ± 2.2）；不是碰撞体（metadata.camBlock，player.js 的镜头射线认它），人照样从踏步走上台
+    for (const s of [-1, 1]) { const m = k.colSlab(O + s * 2.2, O + s * half, 1.1, 6.4, zf + 0.3, zf + 0.9, { name: 'camBlock' }); m.checkCollisions = false; m.metadata = { camBlock: true }; }
     P.slab(O - half, O + half, 5.4, 6.4, zf + 0.3, zf + 0.6, C.red2, { ao: false });
     P.slab(O - half, O + half, 1.1, 6.4, 16.4, 16.6, hex('#2B3E66'), { ao: false });
     k.glow.slab(O - 3.5, O + 3.5, 1.12, 1.16, zf + 1.2, zf + 1.6, hex('#FFE7A8'), { ao: false });   // 台口脚光

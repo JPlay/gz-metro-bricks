@@ -166,8 +166,8 @@ export class Player {
       this.camY = this.camY === undefined ? p.y : this.camY + (p.y - this.camY) * Math.min(1, dt * 7);
       if (Math.abs(this.camY - p.y) > 2) this.camY = p.y;
       const target = new B.Vector3(p.x, this.camY + 1.25, p.z);
-      // 镜头的障碍物：碰撞体（换乘楼梯扶手上方的隐形高挡墙 noCam 除外）+ 标牌（吊牌没有碰撞体，以前从换乘楼梯脚进通道时镜头直接钻进通道口的吊牌，上半屏一片黑）
-      const pred = this._camPred || (this._camPred = m => m.isEnabled() && m !== this.collider && !(m.metadata && m.metadata.noCam) && (m.checkCollisions || m.name === 'signs'));
+      // 镜头的障碍物：碰撞体（换乘楼梯扶手上方的隐形高挡墙 noCam 除外）+ 只挡镜头的 camBlock（纪念堂大幕）+ 标牌（吊牌没有碰撞体，以前从换乘楼梯脚进通道时镜头直接钻进通道口的吊牌，上半屏一片黑）
+      const pred = this._camPred || (this._camPred = m => m.isEnabled() && m !== this.collider && !(m.metadata && m.metadata.noCam) && (m.checkCollisions || m.name === 'signs' || (m.metadata && m.metadata.camBlock)));
       const ray = new B.Ray(target, fwd.scale(-1), this.dist + 0.3);
       const hit = scene.pickWithRay(ray, pred);
       let want = this.dist; if (hit && hit.hit) want = Math.max(0.35, hit.distance - 0.3);
