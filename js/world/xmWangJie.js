@@ -83,6 +83,27 @@ function b1Beyond(c, pw, ph) {
   c.fillStyle = '#3A3F45'; c.font = `800 ${ph * 0.1}px ${FONT}`; c.textAlign = 'center'; c.fillText('SM城市广场 一期 B1', pw / 2, ph * 0.14);
 }
 
+/** 楼梯顶头：从入口亭门口往南看出去（门框 + 亭子屋檐 + 门前广场 + 嘉禾路对面的楼 + 一条天），代替以前露天的洞口 */
+function plazaView(c, pw, ph) {
+  const g = c.createLinearGradient(0, 0, 0, ph * 0.4); g.addColorStop(0, '#BFD6E4'); g.addColorStop(1, '#E4ECEE'); c.fillStyle = g; c.fillRect(0, 0, pw, ph * 0.4);
+  const bl = [['#C9BBA6', 0.0, 0.16, 0.22], ['#8E9AA6', 0.2, 0.08, 0.2], ['#D8D2C6', 0.38, 0.2, 0.18], ['#A99683', 0.55, 0.12, 0.2], ['#7F8C98', 0.74, 0.05, 0.27]];
+  for (const [col, x, y, w] of bl) { c.fillStyle = col; c.fillRect(pw * x, ph * y, pw * w, ph * (0.6 - y));
+    c.fillStyle = 'rgba(60,70,80,0.35)'; for (let yy = y + 0.04; yy < 0.56; yy += 0.05) for (let xx = x + 0.015; xx < x + w - 0.02; xx += 0.035) c.fillRect(pw * xx, ph * yy, pw * 0.02, ph * 0.025); }
+  c.fillStyle = '#5E8A4A'; for (let i = 0; i < 7; i++) { c.beginPath(); c.arc(pw * (0.07 + i * 0.145), ph * 0.56, ph * 0.07, 0, Math.PI * 2); c.fill(); }
+  c.fillStyle = '#6F7378'; c.fillRect(0, ph * 0.6, pw, ph * 0.08);   // 嘉禾路
+  c.fillStyle = '#F4F4F2'; for (let x = 0.02; x < 1; x += 0.12) c.fillRect(pw * x, ph * 0.635, pw * 0.06, ph * 0.008);
+  c.fillStyle = '#C9C3B8'; c.fillRect(0, ph * 0.68, pw, ph * 0.32);   // 门前广场铺地
+  c.strokeStyle = 'rgba(120,112,100,0.5)'; c.lineWidth = Math.max(1, ph * 0.006);
+  for (let i = -6; i <= 6; i++) { c.beginPath(); c.moveTo(pw * (0.5 + i * 0.03), ph * 0.68); c.lineTo(pw * (0.5 + i * 0.16), ph); c.stroke(); }
+  for (const y of [0.72, 0.78, 0.86, 0.96]) { c.beginPath(); c.moveTo(0, ph * y); c.lineTo(pw, ph * y); c.stroke(); }
+  c.fillStyle = 'rgba(200,228,240,0.18)'; c.fillRect(0, ph * 0.12, pw, ph * 0.88);   // 门玻璃
+  c.fillStyle = '#4A5058'; for (const x of [0, 0.485, 0.97]) c.fillRect(pw * x, ph * 0.12, pw * 0.03, ph * 0.88);   // 门框
+  c.fillRect(0, ph * 0.5, pw, ph * 0.02);
+  c.fillStyle = '#6E767E'; c.fillRect(0, 0, pw, ph * 0.07);   // 亭子屋檐
+  c.fillStyle = '#B3261E'; c.fillRect(0, ph * 0.07, pw, ph * 0.06);
+  c.fillStyle = '#F6D36B'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `800 ${ph * 0.045}px ${FONT}`; c.fillText('SM 旺街 · 出口 EXIT → 门前广场', pw / 2, ph * 0.1);
+}
+
 export class SmWangJie {
   constructor(scene, origin, id = 'sm-wj') {
     this.id = id; this.o = origin; this.scene = scene;
@@ -99,6 +120,10 @@ export class SmWangJie {
     const ceil = (x0, x1, z0, z1, y = H, col = hex('#3A2E2A')) => flatQ(P, [[x0, z0], [x1, z0], [x1, z1], [x0, z1]], y, col, false);
     ceil(-10, 4, -14, 0); ceil(8, 10, -14, 0); ceil(4, 8, -4, 0); ceil(-7.5, 7.5, Z0, Z1); ceil(-18, -10, -9, -5, 3.2, hex('#E9E5DD'));
     ceil(-10, 10, Z1, 70, 9.6, hex('#E9E5DD'));
+    // 旺街顶棚上面也封一层（朝上）+ 北厅 z=54 这面墙从 4.4 一直封到 9.6：从 1F 扶梯 / 楼梯顶往南看不再看到天、看到铺位墙顶（小美 pr20 A）
+    flatQ(P, [[-7.8, Z0], [7.8, Z0], [7.8, Z1 + 0.3], [-7.8, Z1 + 0.3]], H + 0.01, hex('#4A4440'), true);
+    P.slab(-10, 10, H, 9.6, Z1, Z1 + 0.3, CREAM, { ao: false }); k.colSlab(-10, 10, H, 9.6, Z1, Z1 + 0.3);
+    A.quad(0, 7.1, Z1 + 0.32, 11, 1.9, a(0, 1), A.draw(11, 1.9, textPaint(['SM 旺街 · 人旺财旺精神旺', 'WANG STREET · B1 FOOD STREET ↓'], { bg: '#B3261E', fg: '#F6D36B', frame: '#F6D36B' }), 40));
     const wall = (x0, x1, z0, z1, y1 = H, col = CREAM, Bk = P) => { Bk.slab(x0, x1, 0, y1, z0, z1, col, { ao: false }); k.colSlab(x0, x1, 0, y1, z0, z1); };
     wall(-10.3, -10, -14, -9); wall(-10.3, -10, -5, 0); wall(-18.3, -18, -9, -5, 3.2, hex('#E9E5DD'));
     for (const z of [-9.3, -5]) wall(-18, -10, z, z + 0.3, 3.2, hex('#E9E5DD'));
@@ -110,8 +135,14 @@ export class SmWangJie {
     // ---------- 南厅：楼梯上街（东） ----------
     k.stairs('z', -4, 0, -13, 3.9, 4, 8, -0.3, '#D9D4CA', { rails: true, railWall: true });
     floor(4, 8, -14, -13, hex('#D9D4CA')); P.slab(4, 8, 3.6, 3.9, -14, -13, hex('#D9D4CA'), { ao: false });
-    wall(3.7, 4, -14, -4, 3.9 + 3); wall(8, 8.3, -14, -4, 3.9 + 3);
-    G.slab(4, 8, 7.2, 7.3, -14, -4, hex('#FFF6E0'), { ao: false });      // 楼梯井顶：亮光（街上的天光）
+    // 楼梯井：两侧墙一直封到顶；顶上是入口亭的灰色金属屋面底 + 灯带；楼梯口上方一道门头墙；楼梯顶头画上亭子门口看出去的门前广场
+    //   （以前顶上是一块亮色平板、尽头和两侧缝里直接露天，从楼梯底往上看就是一片天蓝色 —— 小美 pr20 B）
+    wall(3.7, 4, -14.3, -4, 7.35); wall(8, 8.3, -14.3, -4, 7.35);
+    P.slab(3.7, 8.3, 7.2, 7.35, -14.3, -4, hex('#6E767E'), { ao: false }); k.colSlab(3.7, 8.3, 7.2, 7.5, -14.3, -4);
+    for (const x of [4.9, 7.1]) G.slab(x - 0.1, x + 0.1, 7.15, 7.2, -13.6, -4.4, hex('#FFF6E0'), { ao: false });
+    P.slab(3.7, 8.3, H, 7.2, -4.15, -4.0, CREAM, { ao: false }); k.colSlab(3.7, 8.3, H, 7.2, -4.15, -4.0);
+    P.slab(3.7, 8.3, 3.9, 7.2, -14.3, -14.0, CREAM, { ao: false }); k.colSlab(4, 8, 3.9, 7.2, -14.3, -14.0);
+    A.quad(6, 3.9 + 1.65, -13.97, 4, 3.3, a(0, 1), A.draw(4, 3.3, plazaView, 55));
     A.sign(6, 5.6, -3.98, 4, 1.0, a(0, 1), textPaint(['↑ 出站 · SM城市广场 门前广场', 'TO STREET · SM CITY PLAZA'], { bg: '#2E2A28', fg: '#F6D36B' }));
     // ---------- 南厅：西墙地铁通道 + 闸机 ----------
     for (const z of [-8.6, -7, -5.4]) { Mt.slab(-14.3, -13.1, 0, 1.0, z - 0.14, z + 0.14, STEEL, { ao: false }); k.colSlab(-14.3, -13.1, 0, 1.1, z - 0.15, z + 0.15); G.slab(-14.25, -14.1, 1.0, 1.05, z - 0.12, z + 0.12, hex('#4CD06A'), { ao: false }); }
@@ -149,7 +180,7 @@ export class SmWangJie {
           continue;
         }
         // 开着的铺：柜台 + 后墙灯箱菜单 + 门头招牌 + 暖光灯带
-        P.slab(Math.min(s * 3.7, s * 4.4), Math.max(s * 3.7, s * 4.4), 0, 1.05, z0 + 0.4, z1 - 0.4, hex(sh.bg), { ao: false }); k.colSlab(Math.min(s * 3.6, s * 4.4), Math.max(s * 3.6, s * 4.4), 0, 1.1, z0, z1);
+        P.slab(Math.min(s * 3.7, s * 4.4), Math.max(s * 3.7, s * 4.4), 0, 1.05, z0 + 0.4, z1 - 0.4, hex(sh.bg), { ao: false }); k.colSlab(Math.min(s * 3.6, s * 4.4), Math.max(s * 3.6, s * 4.4), 0, H, z0, z1);   // 碰撞体一直到顶：第三人称镜头不会越过柜台钻进铺里（小美 pr20 D）
         P.slab(Math.min(s * 3.65, s * 4.45), Math.max(s * 3.65, s * 4.45), 1.05, 1.1, z0 + 0.35, z1 - 0.35, hex('#EDE7DC'), { ao: false });
         A.sign(xo - s * 0.02, 2.0, zc, L - 1, 1.6, a(-s, 0), menuWall(sh.kind));
         P.slab(Math.min(s * 6.2, s * 7.4), Math.max(s * 6.2, s * 7.4), 0, 0.9, z0 + 0.5, z1 - 0.5, hex('#B9B2A6'), { ao: false });
