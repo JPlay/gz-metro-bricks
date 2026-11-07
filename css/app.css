@@ -435,6 +435,8 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #1d2b3a; fon
 #liftPanel .fl { display: flex; flex-direction: column; gap: 12px; }
 /* #hud 整层 pointer-events: none，面板和楼层按钮必须自己打开，否则触摸 / 点击直接穿到画面上（iPad 上按不动的原因） */
 #liftPanel { pointer-events: auto; touch-action: none; -webkit-user-select: none; user-select: none; }
+/* 同理：动车坐下弹出的「去哪个城市？」卡片（east.js openPicker 挂在 #hud 里） */
+#destPick, #destPick .dp-card { pointer-events: auto; touch-action: manipulation; }
 #liftPanel .flb { pointer-events: auto; touch-action: none; -webkit-tap-highlight-color: transparent; cursor: pointer; padding: 0;
   width: 108px; height: 108px; border-radius: 50%; border: 4px solid #8F979F; background: radial-gradient(circle at 40% 30%, #fff, #dfe4ea 60%, #c3cad1);
   display: flex; flex-direction: column; align-items: center; justify-content: center; font: 800 40px/1 var(--font, sans-serif); color: #2B2F33; box-shadow: 0 6px 16px rgba(0,0,0,.22); transition: transform .12s; }
