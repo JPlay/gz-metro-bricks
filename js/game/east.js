@@ -314,13 +314,16 @@ export class EastCtl {
     const el = this.picker = document.createElement('div'); el.id = 'destPick'; el.className = 'destpick';
     el.innerHTML = `<div class="dp-title">去哪个城市？<small>Where to?</small></div><div class="dp-cards">${ds.map(d => { const c = CITIES[d], t = tripFor(this.side, d);
       return `<button class="dp-card" data-dest="${d}"><span class="dp-ico">${c.icon}</span><span class="dp-zh">${c.zh}</span><span class="dp-en">${c.en}</span><span class="dp-no">${t.train} · ${t.to}</span></button>`; }).join('')}</div>`;
-    el.style.cssText = 'position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:60;background:rgba(20,26,34,.92);color:#fff;border-radius:22px;padding:18px 22px;text-align:center;font-family:inherit';
+    el.style.cssText = 'position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:60;background:rgba(20,26,34,.92);color:#fff;border-radius:22px;padding:18px 22px;text-align:center;font-family:inherit;pointer-events:auto;touch-action:manipulation';
+    // #hud 整层 pointer-events: none：卡片必须自己打开 pointer-events，否则真机点击穿到 3D 画面（iPad「点不下去」）；
+    // 同时拦住冒泡，免得点卡片时摇杆 / 转镜头也吃到这次触摸（同 food.js / hotel.js / character.js）
+    ['pointerdown', 'pointermove', 'pointerup', 'touchstart', 'click'].forEach(t => el.addEventListener(t, e => e.stopPropagation()));
     hud.appendChild(el);
     el.querySelector('.dp-title').style.cssText = 'font-size:26px;font-weight:800;margin-bottom:12px';
     el.querySelector('.dp-title small').style.cssText = 'display:block;font-size:15px;font-weight:500;opacity:.75';
     el.querySelector('.dp-cards').style.cssText = 'display:flex;gap:16px;justify-content:center';
     el.querySelectorAll('.dp-card').forEach(b => {
-      b.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:4px;min-width:150px;padding:16px 18px;border:0;border-radius:18px;background:#fff;color:#1B2530;font-family:inherit;touch-action:manipulation';
+      b.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:4px;min-width:150px;padding:16px 18px;border:0;border-radius:18px;background:#fff;color:#1B2530;font-family:inherit;touch-action:manipulation;pointer-events:auto;cursor:pointer';
       b.querySelector('.dp-ico').style.fontSize = '44px'; b.querySelector('.dp-zh').style.cssText = 'font-size:28px;font-weight:800'; b.querySelector('.dp-en').style.cssText = 'font-size:15px;opacity:.7'; b.querySelector('.dp-no').style.cssText = 'font-size:14px;color:#D3121A;font-weight:700';
       b.addEventListener('pointerup', e => { e.preventDefault(); e.stopPropagation(); this.Audio.blip && this.Audio.blip('tap'); this.pick(b.dataset.dest); });
     });

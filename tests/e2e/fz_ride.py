@@ -60,7 +60,11 @@ async def pick_card(pg, dest, want):
     ok(f'picker:{dest}', await wait(pg, '__game.east.info().picker', 8))
     cards = await pg.evaluate("[...document.querySelectorAll('#destPick .dp-card')].map(b=>b.dataset.dest+'|'+b.textContent)")
     R.setdefault('cards', []).append(cards); ok(f'cards:{dest}', [c.split('|')[0] for c in cards] == want)
-    await pg.evaluate(f"document.querySelector('#destPick .dp-card[data-dest={dest}]').dispatchEvent(new PointerEvent('pointerup', {{bubbles:true}}))")
+    # 真点（Playwright 命中检查）：卡片 pointer-events 是 none 时会被 3D 画面截走 → 超时失败
+    sel = f'#destPick .dp-card[data-dest={dest}]'
+    ok(f'hit:{dest}', await pg.evaluate("s => { const b=document.querySelector(s), r=b.getBoundingClientRect(), h=document.elementFromPoint(r.x+r.width/2, r.y+r.height/2); return !!h && b.contains(h); }", sel))
+    try: await pg.locator(sel).click(timeout=15000); ok(f'click:{dest}', True)
+    except Exception as ex: print('click fail', dest, str(ex)[:300], flush=True); ok(f'click:{dest}', False)
     return await wait(pg, f'!__game.east.info().picker && __game.east.info().dest==="{dest}"', 4)
 async def leave_car(pg):
     if (await st(pg))['seat'].get('seated'): await pg.evaluate('__game.act()'); await asyncio.sleep(0.6)

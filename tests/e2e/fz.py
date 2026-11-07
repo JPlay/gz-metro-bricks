@@ -93,7 +93,11 @@ async def main():
     ok('seated', await sit_row14(pg))
     ok('picker', await wait(pg, '__game.east.info().picker', 6))
     ok('pickerCards', await pg.evaluate("[...document.querySelectorAll('#destPick .dp-card')].map(b=>b.dataset.dest).join()==='gz,fz'"))
-    await pg.evaluate("document.querySelector('#destPick .dp-card[data-dest=fz]').dispatchEvent(new PointerEvent('pointerup', {bubbles:true}))")
+    # 真点：#hud 整层 pointer-events:none，卡片没打开 pointer-events 时真机点不下去（dispatchEvent 会绕过命中测试，测不出来）。
+    # 先查卡片中心命中的就是卡片本身，再用 Playwright 真实触摸 tap（有命中检查：被画布截走会超时 → 失败）。
+    ok('pickerHitFz', await pg.evaluate("(() => { const b=document.querySelector('#destPick .dp-card[data-dest=fz]'), r=b.getBoundingClientRect(), h=document.elementFromPoint(r.x+r.width/2, r.y+r.height/2); return getComputedStyle(b).pointerEvents!=='none' && !!h && b.contains(h); })()"))
+    try: await pg.locator('#destPick .dp-card[data-dest=fz]').tap(timeout=15000); ok('pickerTapFz', True)
+    except Exception as ex: log('tap', 'fz', str(ex)[:300]); ok('pickerTapFz', False)
     ok('pickedFz', await wait(pg, '!__game.east.info().picker && __game.east.info().dest==="fz"', 3))
     ok('rideFz', await wait(pg, '!!__game.east.info().ride && __game.east.info().ride.dest==="fz"', 6))
     T = await pg.evaluate('(() => { const t=__game.east.interior.trip; return {train:t.train, dep:t.dep, arr:t.arr, to:t.to}; })()'); R['trip'] = T
