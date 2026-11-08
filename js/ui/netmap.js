@@ -414,6 +414,8 @@ export function xmNetworkSVG(here, { portrait = false } = {}) {
     if (a.code === 'lcu') { ix = portrait ? x - 50 : x - 40; iy = portrait ? y - 44 : y + 40; }
     else if (onL1) { if (portrait) { const k = (alt.p1 = !alt.p1) ? 1 : 2; ix = x - 40 * k; iy = y; } else { const k = (alt.l1 = !alt.l1) ? 1 : 2; ix = x; iy = y + 22 + 26 * k; } }
     else { if (portrait) { const k = (alt.p2 = !alt.p2) ? 1 : 2; ix = x + 8; iy = y - 30 - 40 * k; } else { const k = (alt.l2 = !alt.l2) ? 1 : 2; ix = x + 70 + 46 * (k - 1); iy = y; } }
+    // 横屏时 2 号线「湿地公园」图标会压住 3 号线东段的「鼓锣」，往上挪开
+    if (a.code === 'sdy' && !portrait) iy -= 42;
     tx = ix; ty = iy + XR + 12;
     s += `<line x1="${x}" y1="${y}" x2="${ix}" y2="${iy}" stroke="#9AA3AD" stroke-width="2" stroke-dasharray="2 4"/>`;
     s += `<g class="attr" data-attr="${a.id}" data-code="${a.code}"><circle cx="${ix}" cy="${iy}" r="${XR + 10}" fill="#fff" fill-opacity="0"/>${iconSVG(a.icon, ix, iy, XR, XM_LINES[S.lines[0]].color)}`;
