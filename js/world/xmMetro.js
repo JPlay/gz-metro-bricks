@@ -52,6 +52,8 @@ const THEME = {
   jiageng: { wall: '#F5F0E8', dado: '#A8432E', beam: '#E9E4DA', accent: '#1F5F8B', floor: '#E2DCD2' },
   // 3 号线：白墙 + 云天青腰带（dado = 腰带色），浅灰铝格栅（beam），白鹭
   xm3: { wall: '#F6F8F9', dado: '#30BFD6', beam: '#D5DCE0', accent: '#30BFD6', floor: '#D9DDE0', header: '#E3E8EB', modern: true },
+  // 4 号线：白墙 + 官方红腰带 + 白海豚；不指定特色站
+  xm4: { wall: '#F6F8F9', dado: '#FF0000', beam: '#D5DCE0', accent: '#FF0000', floor: '#D9DDE0', header: '#E3E8EB', modern: true, badge: 'dolphin' },
   timetravel: { wall: '#F7F8F6', dado: '#30BFD6', beam: '#34424D', accent: '#30BFD6', floor: '#D3D6D4', header: '#2F3B45', modern: true, rail: true }
 };
 /** 白鹭（3 号线识别符号）：云天青圆底 + 白色白鹭剪影（S 形长颈、黄喙、细长腿） */
@@ -61,6 +63,25 @@ function egretPaint(bg = '#30BFD6', fg = '#FFFFFF', round = true) {
     const s = Math.min(pw, ph), cx = pw / 2, cy = ph / 2;
     if (round) { c.fillStyle = bg; c.beginPath(); c.arc(cx, cy, s * 0.48, 0, Math.PI * 2); c.fill(); }
     egret(c, cx, cy, s * 0.9, fg);
+  };
+}
+/** 中华白海豚：红底白色跃水剪影（长喙、背鳍、胸鳍、分叉尾），与 3 号线白鹭独立缓存。 */
+function dolphinPaint() {
+  return (c, pw, ph) => {
+    c.fillStyle = '#F6F8F9'; c.fillRect(0, 0, pw, ph);
+    const s = Math.min(pw, ph); c.save(); c.translate(pw / 2, ph / 2); c.scale(s, s);
+    c.fillStyle = '#FF0000'; c.beginPath(); c.arc(0, 0, 0.48, 0, Math.PI * 2); c.fill();
+    c.fillStyle = '#FFFFFF'; c.beginPath();
+    c.moveTo(-0.38, 0.05); c.quadraticCurveTo(-0.31, -0.07, -0.23, -0.1);
+    c.bezierCurveTo(-0.12, -0.26, 0.13, -0.25, 0.28, -0.06);
+    c.quadraticCurveTo(0.34, 0.04, 0.32, 0.18); c.lineTo(0.42, 0.18); c.lineTo(0.35, 0.26);
+    c.lineTo(0.23, 0.29); c.lineTo(0.25, 0.19); c.lineTo(0.3, 0.18);
+    c.bezierCurveTo(0.2, -0.01, 0.03, -0.06, -0.14, 0.01);
+    c.quadraticCurveTo(-0.25, 0.06, -0.28, 0.03); c.closePath(); c.fill();
+    c.beginPath(); c.moveTo(-0.01, -0.19); c.lineTo(0.05, -0.34); c.lineTo(0.14, -0.18); c.closePath(); c.fill();
+    c.beginPath(); c.moveTo(-0.04, -0.03); c.quadraticCurveTo(0.08, 0.11, 0.12, 0.12); c.lineTo(0.1, -0.07); c.closePath(); c.fill();
+    c.fillStyle = '#FF0000'; c.beginPath(); c.arc(-0.23, -0.06, 0.012, 0, Math.PI * 2); c.fill();
+    c.restore();
   };
 }
 /** 在 (cx, cy) 画一只站立的白鹭，s = 大小（像素），flip = 朝右 */
@@ -304,7 +325,7 @@ export class XmStation {
   /** 白鹭 / 车轮标志贴图：每站画一次，所有墙面 / 柱面共用同一块 uv */
   markUV(kind) {
     const M = this._marks || (this._marks = {});
-    return M[kind] || (M[kind] = this.atlas.draw(1.9, 1.9, kind === 'wheel' ? wheelPaint() : egretPaint()));
+    return M[kind] || (M[kind] = this.atlas.draw(1.9, 1.9, kind === 'wheel' ? wheelPaint() : kind === 'dolphin' ? dolphinPaint() : egretPaint()));
   }
   /** 3 号线轨行区侧墙（wz = 墙面，sz = 哪一侧）：白色搪瓷板（2.4 m 一道板缝）+ 浅灰勒脚 + 云天青腰带 + 白鹭标志；
    *  「时光之旅」（th.rail）：腰带上方再加两道钢轨线，墙中间挂一幅白鹭 + 车轮长卷 */
@@ -319,7 +340,7 @@ export class XmStation {
       this.atlas.quad(-8.5, y + 2.75, fz, 12, 2.0, a, this._mural || (this._mural = this.atlas.draw(12, 2.0, timeMuralPaint('厦门火车站 · Xiamen Railway Station'))));
       Pv.slab(-14.6, -2.4, y + 1.68, y + 3.82, wz - sz * 0.045, wz + sz * 0.045, hex('#2F3B45'), o);
       for (const x of [24, -32]) this.atlas.quad(x, y + 2.6, fz, 1.6, 1.6, a, this.markUV('wheel'));
-    } else for (const x of [-8, 24]) this.atlas.quad(x, y + 2.6, fz, 1.6, 1.6, a, this.markUV('egret'));
+    } else for (const x of [-8, 24]) this.atlas.quad(x, y + 2.6, fz, 1.6, 1.6, a, this.markUV(this.th.badge || 'egret'));
   }
   /** 燕尾脊：一根脊 + 两端上翘分叉的“燕尾”（闽南古厝屋脊）。dir: 'x' 沿 x */
   yanwei(G, x0, x1, y, z, d, col, k = 1) {
@@ -422,7 +443,7 @@ export class XmStation {
           Pv.slab(xa - (e > 0 ? 0.02 : 0), xb + (e < 0 ? 0.02 : 0), y + 1.1, y + 1.55, a0, a1, SEA, { ao: false });
         }
         if (!open) { const xq = xa + (e > 0 ? -0.025 : xb - xa + 0.025), a = e > 0 ? -Math.PI / 2 : Math.PI / 2;
-          this.atlas.quad(xq, y + 2.75, zc, 1.9, 1.9, a, this.markUV(th.rail ? 'wheel' : 'egret')); }
+          this.atlas.quad(xq, y + 2.75, zc, 1.9, 1.9, a, this.markUV(th.rail ? 'wheel' : (th.badge || 'egret'))); }
       } else {
         // 白石勒脚 + 红砖墙身 + 海蓝瓷砖腰线 + 燕尾脊山墙轮廓
         for (const [a0, a1] of zr) {
@@ -480,7 +501,7 @@ export class XmStation {
           Pv.cyl(x, CY - 0.35, zc, 1.5, 0.12, hex('#34424D'), 20, 0, 0, 0, undefined, { ao: false });
           Pv.cyl(x, CY - 0.27, zc, 1.62, 0.05, SEA, 20, 0, 0, 0, undefined, { ao: false });
           for (const f of [-1, 1]) this.atlas.quad(x + f * 0.43, y + 2.45, zc, 0.78, 0.78, f > 0 ? Math.PI / 2 : -Math.PI / 2, this.markUV('wheel'));
-        } else for (const f of [-1, 1]) this.atlas.quad(x + f * 0.43, y + 2.45, zc, 0.7, 0.7, f > 0 ? Math.PI / 2 : -Math.PI / 2, this.markUV('egret'));
+        } else for (const f of [-1, 1]) this.atlas.quad(x + f * 0.43, y + 2.45, zc, 0.7, 0.7, f > 0 ? Math.PI / 2 : -Math.PI / 2, this.markUV(this.th.badge || 'egret'));
       } else {
         Pv.slab(x - 0.55, x + 0.55, y, y + 0.45, zc - 0.55, zc + 0.55, STONE, { ao: false });
         const CT = CY - 1.25;   // 砖柱顶
@@ -754,7 +775,7 @@ export class XmStation {
     k.g(this.dadoG).slab(-20, 20, y + dy, y + 1.4, -8.05, -8, hex(th.dado), { ao: false });
     // 3 号线站厅北墙：白鹭标志；厦门火车站付费区：「时光之旅」长卷（云天青）
     if (th.rail) { Pv.slab(-13.2, 3.2, y + 1.45, y + 3.35, -8.08, -8.05, hex('#2F3B45'), { ao: false }); this.atlas.quad(-5, y + 2.4, -8.09, 16, 1.8, Math.PI, this.atlas.draw(16, 1.8, timeMuralPaint('厦门地铁 3 号线 · 白鹭'))); }
-    else if (th.modern) for (const x of [-12, 10]) this.atlas.quad(x, y + 2.35, -8.07, 1.5, 1.5, Math.PI, this.markUV('egret'));
+    else if (th.modern) for (const x of [-12, 10]) this.atlas.quad(x, y + 2.35, -8.07, 1.5, 1.5, Math.PI, this.markUV(this.th.badge || 'egret'));
     // 站厅吊顶 + 灯带
     Pv.slab(-24.6, 20.4, y + 3.5, y + 3.75, -18.4, -7.7, hex('#F4F2EE'), { ao: false });
     for (const z of [-15.5, -10.5]) G.slab(-23.5, 19.5, y + 3.46, y + 3.5, z - 0.2, z + 0.2, hex('#FFF8EC'), { ao: false });

@@ -1,7 +1,7 @@
 // 厦门地铁 3 号线数据检查（不开浏览器）：node tests/unit/xm_line3.mjs
 // 1. 运营段 21 站、站序（厦门火车站 → 蔡厝）；2. 站 code 全网唯一（不和广州 / 福州 / 厦门 1、2 号线撞）；
 // 3. 四个换乘站复用 1、2 号线原 code，注册后 lines 含 3，xmTransfers 两个方向都能报出对方线；x 里不再重复写 3；
-// 4. 不做的：4 / 6 号线、南延段、翔安机场段不在 XM_LINES 里；洪坑只留 x:[4] 占位；
+// 4. 不做的：6 号线、南延段、翔安机场段不在 XM_LINES 里；洪坑现已换乘 4 号线；
 // 5. 3 号线所有报站片段（普通话 / 闽南语 / 英语）都有 MP3 且登记在 assets/audio/manifest.json。
 import fs from 'node:fs';
 import path from 'node:path';
@@ -26,7 +26,7 @@ const shared = { hbd: 1, hjy: 1, tyz: 2, wyw: 2 };
 const own = L3.stations.filter(c => !shared[c]);
 const gz = new Set(Object.keys(G.STATIONS)), fz = new Set(Object.keys(F.FZ_STATIONS));
 ok('new codes do not collide with Guangzhou / Fuzhou', own.every(c => !gz.has(c) && !fz.has(c)), own.filter(c => gz.has(c) || fz.has(c)));
-ok('new codes only on line 3 (no silent reuse of a Line 1/2 code)', own.every(c => JSON.stringify(X.XM_STATIONS[c].lines) === '[3]'), own.filter(c => JSON.stringify(X.XM_STATIONS[c].lines) !== '[3]'));
+ok('new codes only on line 3 (no silent reuse of a Line 1/2 code)', own.every(c => JSON.stringify(X.XM_STATIONS[c].lines) === (c === 'hkg' ? '[3,4]' : '[3]')), own.filter(c => JSON.stringify(X.XM_STATIONS[c].lines) !== (c === 'hkg' ? '[3,4]' : '[3]')));
 ok('后村 is not hcu (何厝)', X.XM_STATIONS.hcu.zh === '何厝' && L3.stations.includes('hcun') && X.XM_STATIONS.hcun.zh === '后村');
 ok('dir keys unique across XM lines', (() => { const k = Object.values(X.XM_LINES).flatMap(L => Object.keys(L.dirs)); return new Set(k).size === k.length; })());
 for (const [c, other] of Object.entries(shared)) {
@@ -37,8 +37,8 @@ for (const [c, other] of Object.entries(shared)) {
   ok(`${c}: no duplicate transfer`, new Set(X.xmTransfers(c, 3)).size === X.xmTransfers(c, 3).length && !s.x.includes(3));
 }
 ok('xmhc theme timetravel (only feature station)', X.XM_STATIONS.xmhc.theme === 'timetravel' && own.filter(c => X.XM_STATIONS[c].theme).join() === 'xmhc');
-ok('洪坑 keeps x:[4] placeholder', JSON.stringify(X.XM_STATIONS.hkg.x) === '[4]');
-ok('no Line 4 / 6 built', !X.XM_LINES[4] && !X.XM_LINES[6]);
+ok('洪坑 reuses code for Line 4', JSON.stringify(X.XM_STATIONS.hkg.lines) === '[3,4]' && !X.XM_STATIONS.hkg.x.includes(4));
+ok('no Line 6 built', !X.XM_LINES[6]);
 ok('no south extension / airport stations', !Object.values(X.XM_STATIONS).some(s => /沙坡尾|厦门大学|白城|曾厝垵|上李|翔安机场|蔡厝南|阳塘|双沪|空港|机场西/.test(s.zh)));
 // 报站：普通话 → 闽南语 → 英语；文字
 const dep = xmDepartSegs(3, 'hbd', 'ccuo', 1, true);
@@ -46,7 +46,7 @@ ok('depart xmhc→hbd: zh/nan/en order', dep.map(s => s.lang).join() === 'zh,nan
 ok('next 湖滨东路 on line 3 says 可换乘1号线', dep.some(s => s.id === 'voice.next.hbd3.zh' && s.text === '下一站，湖滨东路，可换乘1号线。'));
 ok('next 湖滨东路 on line 1 says 可换乘3号线', xmDepartSegs(1, 'hbd', 'zhl', 1, false).some(s => s.id === 'voice.next.hbd1.zh' && s.text.includes('可换乘3号线')));
 ok('terminal 蔡厝', xmDepartSegs(3, 'ccuo', 'ccuo', 1, false).some(s => s.id === 'voice.terminal.xmccuo.zh'));
-ok('next 洪坑 says 可换乘4号线', xmDepartSegs(3, 'hkg', 'ccuo', 1, false).some(s => s.id === 'voice.next.hkg.zh' && s.text.includes('可换乘4号线')));
+ok('next 洪坑 says 可换乘4号线', xmDepartSegs(3, 'hkg', 'ccuo', 1, false).some(s => s.id === 'voice.next.hkg3.zh' && s.text.includes('可换乘4号线')));
 // 音频齐全
 const man = JSON.parse(fs.readFileSync(path.join(root, 'assets/audio/manifest.json'), 'utf8'));
 const have = new Map(man.assets.filter(a => a.group === 'voice').map(a => [a.id, a]));

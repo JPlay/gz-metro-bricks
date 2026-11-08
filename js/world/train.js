@@ -20,7 +20,7 @@ export const CAR_X = [-18.6, 0, 18.6], DOOR_DX = [-6, 0, 6], HALF = 27.9, DOOR_W
 export const DOOR_XS = CAR_X.flatMap(c => DOOR_DX.map(d => c + d));
 const WHITE = [1, 1, 1], STEEL = hex('#BFC6CE'), DARK = hex('#2A2E33'), INT = hex('#F1F0EC'), FLOORC = hex('#8E979F');
 // 涂装（对照实车）：1 号线 A1 型 = 黄色车身 + 红色腰带；2 号线 = 香槟色车身 + 线路蓝腰带
-const BODY = { 1: '#F4CF3A', 2: '#E9DEC6', xm1: '#F5E6D8', xm2: '#E6F3EA', xm3: '#E8F6F9', fz1: '#F4F5F3', fz2: '#F4F5F3', fz4: '#F4F5F3', fz5: '#F4F5F3', fz6: '#F4F5F3', fz20: '#F4F5F3' }, STRIPE = { 1: '#D52B1E', 2: '#00629B', xm1: '#F2711C', xm2: '#00A651', xm3: '#30BFD6', fz1: '#CB333B', fz2: '#046A38', fz4: '#FF7F41', fz5: '#893B67', fz6: '#005EB8', fz20: '#00B0B9' };   // 福州：白车身 + 线路色腰带
+const BODY = { 1: '#F4CF3A', 2: '#E9DEC6', xm1: '#F5E6D8', xm2: '#E6F3EA', xm3: '#E8F6F9', xm4: '#FFF1F1', fz1: '#F4F5F3', fz2: '#F4F5F3', fz4: '#F4F5F3', fz5: '#F4F5F3', fz6: '#F4F5F3', fz20: '#F4F5F3' }, STRIPE = { 1: '#D52B1E', 2: '#00629B', xm1: '#F2711C', xm2: '#00A651', xm3: '#30BFD6', xm4: '#FF0000', fz1: '#CB333B', fz2: '#046A38', fz4: '#FF7F41', fz5: '#893B67', fz6: '#005EB8', fz20: '#00B0B9' };   // 福州：白车身 + 线路色腰带
 /** 当前列车跑哪张网：'gz' | 'xm' | …（线路图 / 站名来自各城市的 *-lines.js）。新城市：registerNet(net, LINES, STATIONS) + BODY/STRIPE 加 `${net}${line}` */
 const NETS = { gz: { LINES, STATIONS }, xm: { LINES: XM_LINES, STATIONS: XM_STATIONS }, fz: { LINES: FZ_LINES, STATIONS: FZ_STATIONS } };
 export function registerNet(net, lines, stations, colors) {

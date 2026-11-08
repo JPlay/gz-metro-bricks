@@ -89,15 +89,6 @@
   "tries": 4,
   "flag": true
  },
- "voice.next.xmnb.nan": {
-  "fp": "7d607c5604361d5f2c69cbb15e084ab7e5f51672be50ccc1f29517163f9ba2c1",
-  "model": "cosyvoice-v3.5-flash",
-  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
-  "sim": 0.4,
-  "asr": "子可完乘四号线。",
-  "tries": 1,
-  "flag": false
- },
  "voice.platform.xmyan.2.nan": {
   "fp": "ea91d2647ccdbd61f66858bd5e6abf3eb5b7ff753303b5de999de1b4947ca6e8",
   "model": "cosyvoice-v3.5-flash",
@@ -2285,15 +2276,6 @@
   "tries": 4,
   "flag": true
  },
- "voice.next.hkg.nan": {
-  "fp": "df6172777d816fd0fb0259841376141c604cc26a965dc391900719161634b0bb",
-  "model": "cosyvoice-v3.5-flash",
-  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
-  "sim": 0.5,
-  "asr": "三烘庆可换乘四号线。",
-  "tries": 1,
-  "flag": false
- },
  "voice.arrive.hkg.nan": {
   "fp": "d3c33f9162e88ad6efe7ee483108bf9449ad9460c584adb03bbdbeb23ac082a5",
   "model": "cosyvoice-v3.5-flash",
@@ -2462,6 +2444,258 @@
   "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
   "sim": 0.909,
   "asr": "列车机将到达后村站，请小心列车及站台之间的空隙。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.next.xmnb1.nan": {
+  "fp": "7d607c5604361d5f2c69cbb15e084ab7e5f51672be50ccc1f29517163f9ba2c1",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.4,
+  "asr": "子可完乘四号线。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.next.hkg3.nan": {
+  "fp": "df6172777d816fd0fb0259841376141c604cc26a965dc391900719161634b0bb",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.5,
+  "asr": "三烘庆可换乘四号线。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.destination.xmqwu.nan": {
+  "fp": "c3d024b76954fbf8436030358691d398f63f5db665cd79de2b26628ce4dd6634",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.9,
+  "asr": "本次列车终点站为前无。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.platform.xmqwu.2.nan": {
+  "fp": "00ec4f2ed5d81176c2a40ce3e913f163cdf7e67e579022e06f4c7b3c26327cfd",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.692,
+  "asr": "自站台全部风向列车即将进站。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.platform.xmqwu.1.nan": {
+  "fp": "b8addc01d7a3334be4bf7615ef8e89ffff1c01a9dab1e3e37588caa7fe235b66",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.769,
+  "asr": "直站台前无风向列车即将进站。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.terminal.xmqwu.nan": {
+  "fp": "e3cb9761dffd6bbabbb72651417f74eaab4eb7a25a85b89edf60b7a3b6386fdf",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.9,
+  "asr": "下一站是本次列车的终点站水某，请全部乘客带齐行李物品在此站下车。欢迎再次行走厦门地铁。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.platform.xmjsrb.2.nan": {
+  "fp": "0bffbc5e36f0fde38b1f968cabe0d61293092b5cfca7424f81d125488572e394",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.588,
+  "asr": "李站台及备乱建患北方向列车至将进站。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.destination.xmjsrb.nan": {
+  "fp": "435663ea808cf02a8642ac1342018d470657eb97bf4ba580cae8ca3e5fbc3c6a",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.857,
+  "asr": "本次列车终点站为吉美软件环北。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.platform.xmjsrb.1.nan": {
+  "fp": "9076b2ae2982f295d65fba60b8b922fe6a87882e81a6e8d7397bc853ee44f67b",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.765,
+  "asr": "即站在1米软件园北方向，列车即将进站。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.next.hxi.nan": {
+  "fp": "3fa9d5241852b80ca96e1d7250f2580dea54e3b262d4559bac1ee7154104b4e4",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.0,
+  "asr": "诶只针牛。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.terminal.xmjsrb.nan": {
+  "fp": "43ad21426d14cc594faa2c146db7aa8d628484fa5586c17f9bc6d465f08a8a1e",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.966,
+  "asr": "一站是本次列车的终点站集美软件园北。请全部乘客带持行李物品在此站下车，欢迎再次乘坐厦门地铁。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.arrive.jsrb.nan": {
+  "fp": "052ce1648d4f5ae54f8202c3c53bff1a9bfe80b99830bbbcb187643e4d2e2e42",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.923,
+  "asr": "列车即将到达壹米软件园北站，请小心列车与站台之间的空隙。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.welcome.hxi.nan": {
+  "fp": "2e71248f124f3322e8ec20bf7c4846c9c2ebbf6f57812428a8038ac82a40cbb7",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.562,
+  "asr": "欢迎光临奥企站车排队候车。新系号雄。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.next.gxn.nan": {
+  "fp": "0994d4c3c57a9a60f732d531dde0dfdbaecc277ab2c74093a893888a7992740c",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.364,
+  "asr": "下一站官讯科完成。若好算。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.welcome.jsrb.nan": {
+  "fp": "98dbbca51a7b4ed23cfc5568aa9986c40106a49234a544086a19b2f3aa480eea",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.8,
+  "asr": "欢迎光临极米软件环北站，请排队候车。先后后上。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.welcome.gxn.nan": {
+  "fp": "f067a3fdc565a3add478c4515d21d6a60f007cf60d3940ee968ee1489793ab2d",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.562,
+  "asr": "欢迎光临观宣站车牌队候车。新下奥尚。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.arrive.hxi.nan": {
+  "fp": "7c567ea3aa36fb40b2edf9e6420bd3fbdfd6ea032105182d072fe414037586a8",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.773,
+  "asr": "在车之从到达奥汽站，请小心列车与站台之间的空隙。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.next.bzhou.nan": {
+  "fp": "047c205320cb4ef3428d4a4bd14fc460a981b730b8372f8640a3f42ec9a514f8",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.6,
+  "asr": "下一站冰焦。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.next.xmnb4.nan": {
+  "fp": "2fb3160ad5f14fb03cf4c23820d4d6afc4cac7aeaa0802ae0476847665c5b009",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.923,
+  "asr": "下一站厦门北站可换乘一号线。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.next.cch.nan": {
+  "fp": "a870af20e6d7d3b8530d41ffa0cc0c0e875eed56d577c6d70940dc96c82d7926",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.6,
+  "asr": "下一站社长。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.arrive.gxn.nan": {
+  "fp": "ddbd4aee94ff7f0da4cefa597889610fbd276f0384955fdaf346f7a31262429e",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.909,
+  "asr": "列车即将到达关船站，请小心列车与站台之间的空隙。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.welcome.cch.nan": {
+  "fp": "3b445eb6a510b41940fd80cfb3b0e943ee9ea8793214f9a9086e50ca21a44ddc",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.688,
+  "asr": "欢迎光临峡订赞车排队候车，先会后上。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.arrive.bzhou.nan": {
+  "fp": "386f17278e04fc9c5aa5fc31b8931e3849659024312bf8b18f4e9894ec108d98",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.909,
+  "asr": "列车即将到达宾州站，请小心列车与站台之间的空隙。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.next.hkg4.nan": {
+  "fp": "ba2aa55075f9dc952ef4c55dd0f6b1f9360beeea8952e0bab18d667db3dc4a2c",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.636,
+  "asr": "下一站红坑可远成三号线。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.welcome.bzhou.nan": {
+  "fp": "03c99758aae9e00d90bf021033527fc12e8b5f625d4c5d71b1b7b656a33a3957",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.75,
+  "asr": "欢迎光临郴州站。车排队候车先后后上。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.welcome.qwu.nan": {
+  "fp": "10c54edf8447b528e46cdb6791c47abe5f6e83131ae47c689cfc2809644afea9",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.688,
+  "asr": "欢迎光临节目站，请排队候车先。火号巷。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.arrive.cch.nan": {
+  "fp": "33fe314482f336430c222ad93e744f2c1a82d10f9e8dfa2e08612bde6c70ce2b",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.909,
+  "asr": "列车即将到达商场站，请小心列车及站台之间的空隙。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.arrive.qwu.nan": {
+  "fp": "f8632c58ecfc38dc91ab01ef6013b305ecce1e78d1298a6204ee0700fb4de6cc",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.864,
+  "asr": "列车即将到达前无站车，小心列车距站台之间的空隙。",
   "tries": 4,
   "flag": true
  }

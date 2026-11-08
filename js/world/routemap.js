@@ -9,7 +9,7 @@
 import { LINES, STATIONS, OTHER_LINES } from '../data/lines.js';
 import { XM_LINES, XM_STATIONS } from '../data/xm-lines.js';
 import { FZ_LINES, FZ_STATIONS } from '../data/fz-lines.js';
-const NET = { gz: { LINES, STATIONS, OTHER: OTHER_LINES }, xm: { LINES: XM_LINES, STATIONS: XM_STATIONS, OTHER: { 4: { zh: '4号线', en: 'Line 4', color: '#E60012' }, 6: { zh: '6号线', en: 'Line 6', color: '#8B5CF6' } } } };
+const NET = { gz: { LINES, STATIONS, OTHER: OTHER_LINES }, xm: { LINES: XM_LINES, STATIONS: XM_STATIONS, OTHER: { 6: { zh: '6号线', en: 'Line 6', color: '#8B5CF6' } } } };
 // 福州：第三批起 1/2/4/5/6 号线 + 滨海快线都在 FZ_LINES 里，没有“游戏外”的已开通换乘线了
 const FZ_OTHER = {};
 NET.fz = { LINES: FZ_LINES, STATIONS: FZ_STATIONS, OTHER: FZ_OTHER };
