@@ -15,7 +15,7 @@ import { Kit, bucketMat } from './kit.js';
 import { FoodAtlas } from '../game/food-art.js';
 import { textPaint, FONT, FONT_EN } from './xmStreet.js';
 import { bakePerson, randomLook, preseed, prnd, POSES } from './people.js';
-import { pressable } from '../game/input.js';
+import { pressable, hudHit } from '../game/input.js';
 import { escalator, lowPerson, shopper, family, brandPaint, storefront, flatQ, goldRing } from './xmSM.js';
 const B = window.BABYLON;
 
@@ -424,7 +424,7 @@ export class SmMall {
       const rows = []; for (let f = NF; f >= 1; f--) rows.push(f);
       this.panel.querySelector('.fl').innerHTML = rows.map(f => `<button class="flb" data-f="${f}"><span>${f}F</span><small>${f === 1 ? '大堂' : f === NF ? '美食' : THEME[plan[f - 1]][0].split(' ')[0]}</small></button>`).join('');
       this.panel.querySelectorAll('.flb').forEach(b => pressable(b, () => this.press(+b.dataset.f)));
-      ['pointerdown', 'pointermove', 'pointerup', 'touchstart', 'click'].forEach(tp => this.panel.addEventListener(tp, e => e.stopPropagation()));
+      hudHit(this.panel);
     }
   }
   setDetail(fl) { if (fl === this._detailFloor) return; this._detailFloor = fl; this.detail.forEach((d, f) => { const en = Math.abs(f - fl) <= 1; if (d.root.isEnabled() !== en) d.root.setEnabled(en); }); }
