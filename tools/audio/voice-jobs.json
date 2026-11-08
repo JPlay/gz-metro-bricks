@@ -14652,6 +14652,24 @@
   "file": "voice/fz-doorsClosing-en.mp3"
  },
  {
+  "id": "voice.xm.doorsClosing.zh",
+  "lang": "zh",
+  "text": "车门即将关闭，请注意安全，谨防被夹。",
+  "file": "voice/xm-doorsClosing-zh.mp3"
+ },
+ {
+  "id": "voice.xm.doorsClosing.nan",
+  "lang": "nan",
+  "text": "车门即将关闭，请注意安全，谨防被夹。",
+  "file": "voice/xm-doorsClosing-nan.mp3"
+ },
+ {
+  "id": "voice.xm.doorsClosing.en",
+  "lang": "en",
+  "text": "The doors are closing. Please stand clear of the doors.",
+  "file": "voice/xm-doorsClosing-en.mp3"
+ },
+ {
   "id": "voice.doorsClosing.zh",
   "lang": "zh",
   "text": "车门即将关闭，请注意安全，谨防被夹。",

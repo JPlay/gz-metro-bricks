@@ -28094,6 +28094,45 @@
       "language_type": "English",
       "duration": 6.0,
       "bytes": 48236
+    },
+    {
+      "id": "voice.xm.doorsClosing.zh",
+      "file": "voice/xm-doorsClosing-zh.mp3",
+      "group": "voice",
+      "label": "xm.doorsClosing.zh",
+      "lang": "zh",
+      "text": "车门即将关闭，请注意安全，谨防被夹。",
+      "model": "cosyvoice-v2",
+      "voice": "longxiaobai_v2",
+      "language_type": "Chinese",
+      "duration": 3.864,
+      "bytes": 31148
+    },
+    {
+      "id": "voice.xm.doorsClosing.nan",
+      "file": "voice/xm-doorsClosing-nan.mp3",
+      "group": "voice",
+      "label": "xm.doorsClosing.nan",
+      "lang": "nan",
+      "text": "车门即将关闭，请注意安全，谨防被夹。",
+      "model": "cosyvoice-v3.5-flash",
+      "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+      "language_type": "Chinese",
+      "duration": 4.536,
+      "bytes": 36524
+    },
+    {
+      "id": "voice.xm.doorsClosing.en",
+      "file": "voice/xm-doorsClosing-en.mp3",
+      "group": "voice",
+      "label": "xm.doorsClosing.en",
+      "lang": "en",
+      "text": "The doors are closing. Please stand clear of the doors.",
+      "model": "cosyvoice-v2",
+      "voice": "longxiaobai_v2",
+      "language_type": "English",
+      "duration": 3.216,
+      "bytes": 25964
     }
   ],
   "routes": {

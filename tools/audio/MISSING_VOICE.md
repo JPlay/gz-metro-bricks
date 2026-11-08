@@ -1,6 +1,6 @@
 # 缺失的报站语音片段
 
-由 `node tools/audio/export_jobs.mjs` 生成。全网共需 2492 条片段，已有 MP3 2118 条，缺 374 条（普通话 0 / 粤语 0 / 英语 0）。
+由 `node tools/audio/export_jobs.mjs` 生成。全网共需 2495 条片段，已有 MP3 2118 条，缺 377 条（普通话 1 / 粤语 0 / 英语 1）。
 缺失片段在游戏里自动用 Web Speech 朗读（zh-CN → zh-HK（若有）→ en-US（若有），语速 0.95），并照常显示字幕。
 
 生成方法：设置环境变量 DASHSCOPE_API_KEY 后运行 `python3 tools/audio/generate_voice.py`（会读取 voice-jobs.json，只生成缺的）。
@@ -381,3 +381,6 @@
 | voice.fz.arrive.fzwl.fzh | fzh | 列车即将到达文岭站，请小心列车与站台之间的空隙。 |
 | voice.fz.welcome.fzwl.fzh | fzh | 欢迎光临文岭站。请排队候车，先下后上。 |
 | voice.fz.doorsClosing.fzh | fzh | 车门即将关闭，请注意安全。 |
+| voice.xm.doorsClosing.zh | zh | 车门即将关闭，请注意安全，谨防被夹。 |
+| voice.xm.doorsClosing.nan | nan | 车门即将关闭，请注意安全，谨防被夹。 |
+| voice.xm.doorsClosing.en | en | The doors are closing. Please stand clear of the doors. |

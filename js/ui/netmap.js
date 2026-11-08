@@ -417,6 +417,13 @@ export function xmNetworkSVG(here, { portrait = false } = {}) {
       else { lx = x + 13; ly = y + 4; anc = 'start'; }
     }
     if (S.lines[0] === 4) { if (portrait) { lx = x - 14; ly = y + 4; anc = 'end'; } else ly = y - 16; }
+    // 厦门北站：横屏写到橙线下方空位，避免和岩内、天水路叠字，也不压到 4 号线红线；竖屏写到圆点右侧，避免被上下橙色站点圈挡住
+    if (c === 'xmnb') {
+      if (portrait) { lx = x + 16; ly = y + 4; anc = 'start'; }
+      else { lx = x; ly = y + 24; anc = 'middle'; }
+    }
+    // 前浯：竖屏站名改到终点外侧，避免和东界相向伸展叠字
+    if (c === 'qwu' && portrait) { lx = x + 14; ly = y + 4; anc = 'start'; }
     s += `<text x="${lx}" y="${ly}" text-anchor="${anc}" font-size="${hereOn ? 13 : 10}" font-weight="${hereOn ? 800 : 600}" fill="#1B2530" paint-order="stroke" stroke="#fff" stroke-width="3" stroke-linejoin="round">${label}</text>`;
   }
   // 景点小图标（和广州图一样可点开小卡片）：1 号线横排时放线下方，2 号线竖排时放线右侧；相邻两站错开

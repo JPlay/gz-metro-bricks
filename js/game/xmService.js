@@ -21,7 +21,7 @@ export const XM_SVC = {
   station: (scene, code) => new XmStation(scene, code),
   street: (scene, code) => new XmStreet(scene, code),
   next: xmNext,
-  ann: { platform: Ann.xmPlatform, depart: Ann.xmDepart, arrive: Ann.arrive, welcome: Ann.welcome, exit: Ann.xmExit },
+  ann: { platform: Ann.xmPlatform, depart: Ann.xmDepart, arrive: Ann.arrive, welcome: Ann.welcome, exit: Ann.xmExit, doorsClosing: Ann.xmDoorsClosing },
   exitSegs: xmExitSegs, departSegs: xmDepartSegs,
   /** 这个站能不能从站厅出口走到街区（厦门北没有出口街区：XM_EXITS 里本来就没有 xmnb） */
   streetAt: code => !!XM_EXITS[code],

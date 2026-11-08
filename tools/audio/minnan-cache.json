@@ -2698,5 +2698,14 @@
   "asr": "列车即将到达前无站车，小心列车距站台之间的空隙。",
   "tries": 4,
   "flag": true
+ },
+ "voice.xm.doorsClosing.nan": {
+  "fp": "2b15b6987dbf80c40e49f6bd9ca1ba174a8995002e0f58d072eccbf1b0732ff0",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.867,
+  "asr": "车门即将关闭，且注意安全，谨防被急。",
+  "tries": 4,
+  "flag": true
  }
 }
