@@ -1,7 +1,7 @@
 /*
- * 厦门地铁 1 号线、2 号线车站数据（游戏里列车真正停靠的全部车站）。
+ * 厦门地铁 1 号线、2 号线、3 号线车站数据（游戏里列车真正停靠的全部车站）。
  *
- * 数据来源（2026-10-22 核对）：
+ * 数据来源（1、2 号线 2026-10-22 核对；3 号线 2026-11-08 核对）：
  *   [1] 中文维基百科 厦门轨道交通1号线
  *       https://zh.wikipedia.org/wiki/厦门轨道交通1号线
  *       —— 24 站顺序（岩内 … 镇海路）、英文站名、标识色橙色 C0 M68 Y100 K0 ≈ #F2711C、
@@ -14,14 +14,28 @@
  *       —— 1↔2 唯一换乘站：吕厝；换乘标识 1→2 用绿色、2→1 用闽南红
  *   [4] 厦门本地宝 / 东南网：2 号线“一线一景·海上花园生态绿岛”；五缘湾站主题“扬帆再起航”；
  *       古地石站名取自岩石地名，本游戏用岩石色站台作 2 号线特色镜头
+ *   [5] 中文维基百科 厦门轨道交通3号线（2026-11-08 查阅）
+ *       https://zh.wikipedia.org/wiki/厦门轨道交通3号线
+ *       —— 运营段 厦门火车站—蔡厝 21 站（2021-06-25 开通；国际博览中心 / 东界 / 洪坑 / 翔安市民公园 2023-06-25 启用，
+ *          浦边 2022-09-05 启用）；标识色青色 C63 M0 Y18 K0（云天青），标志符号白鹭；换乘：湖滨东路、火炬园 ↔ 1 号线，
+ *          体育中心、五缘湾 ↔ 2 号线，洪坑 ↔ 4 号线（本游戏未做 4 号线，只报“可换乘4号线”）。
+ *          南延段（沙坡尾 … 上李）在建、蔡厝以东到翔安机场段未开通：游戏里都不做。
+ *   [6] 地铁通 MetroMan 厦门地铁3号线 https://www.metroman.cn/cities/xiamen/lines/line-3（2026-11-08 查阅）
+ *       —— 同样 21 站、同样站序；线路色 #30BFD6；官方英文站名（HR Service Center、Huli Park …）
+ *   [7] 东南网 2021-06-10 http://xm.fjsen.com/2021-06/10/content_30751956.htm
+ *       —— 3 号线车站装修：标准站白色墙面 / 柱面 + 云天青腰带；特色站厦门火车站「时光之旅」（白鹭 + 铁轨车轮意象，付费区云天青）
  *
  * 英文站名按厦门地铁导向惯例用拼音 / 官方英文（厦门北站 Xiamen North Railway Station）。
  * 方向：数组顺序 = 站号递增。1 号线递增 = 往镇海路（'zhl'），递减 = 往岩内（'yan'）；
- *       2 号线递增 = 往五缘湾（'wyw'），递减 = 往天竺山（'tzs'）。
+ *       2 号线递增 = 往五缘湾（'wyw'），递减 = 往天竺山（'tzs'）；
+ *       3 号线递增 = 往蔡厝（'ccuo'），递减 = 往厦门火车站（'xmhc'）。
+ * 换乘站共用同一个 code（湖滨东路 hbd、火炬园 hjy、体育中心 tyz、五缘湾 wyw）：注册循环把 3 号线也写进 s.lines，
+ *       车站就自动建成上下两层站台 + 中间换乘楼梯（和吕厝 1↔2 同一套）。3 号线新站的 theme 默认取线路的 theme（'xm3' 标准站）。
  * code 与广州地铁错开（广州用 gyq/njs…），语音片段 id 用 xm. 前缀在 phrases 里拼。
  */
 export const XM_L1 = '#F2711C';   // 闽南红 / 橙红 C0 M68 Y100 K0
 export const XM_L2 = '#00A651';   // 鹭岛绿（官方 CMYK C69 M0 Y100 K0 的实用色）
+export const XM_L3 = '#30BFD6';   // 云天青（官方 CMYK C63 M0 Y18 K0；MetroMan 线路色 #30BFD6）
 
 export const XM_LINES = {
   1: {
@@ -42,6 +56,16 @@ export const XM_LINES = {
     },
     // 一期开通站序（含马銮中心 / 鼎美暂缓开通的相邻站仍列入，游戏里可停；与维基一致）
     stations: ['tzs', 'dfu', 'dya', 'dme', 'mlz', 'xyd', 'xan', 'wjl', 'mql', 'hxz', 'hsw', 'hcw', 'ylz', 'jyl', 'hbz', 'tyz', 'yxd', 'lcu', 'jtou', 'hpu', 'ctg', 'gds', 'ldo', 'rjy', 'hcu', 'gys', 'dzh', 'jrz', 'wto', 'sdy', 'zzh', 'wyw']
+  },
+  3: {
+    id: 3, zh: '3号线', en: 'Line 3', color: XM_L3, ink: '#FFFFFF', soft: '#D6F2F7',
+    mark: '白鹭', city: '厦门地铁', theme: 'xm3',   // 标准站：白墙 + 云天青腰带 + 白鹭
+    dirs: {
+      ccuo: { zh: '蔡厝', en: 'Caicuo', step: 1 },
+      xmhc: { zh: '厦门火车站', en: 'Xiamen Railway Station', step: -1 }
+    },
+    // 运营段 21 站（南延段、蔡厝以东机场段未开通，不做）
+    stations: ['xmhc', 'hbd', 'tyz', 'rczx', 'hlgy', 'hrl', 'hjy', 'xds', 'adou', 'bsh', 'hlcx', 'wyw', 'gjbl', 'djie', 'hkg', 'lqn', 'glo', 'xasm', 'pbn', 'hcun', 'ccuo']
   }
 };
 
@@ -61,13 +85,13 @@ export const XM_STATIONS = {
   jmx: { zh: '集美学村', en: 'Jimei School Village', x: [], theme: 'jiageng' },  // 真实：高架
   gqi: { zh: '高崎', en: 'Gaoqi', x: [] },
   dqn: { zh: '殿前', en: 'Dianqian', x: [] },
-  hjy: { zh: '火炬园', en: 'Torch Hi-Tech Park', x: [3] },
+  hjy: { zh: '火炬园', en: 'Torch Hi-Tech Park', x: [] },
   tbn: { zh: '塘边', en: 'Tangbian', x: [] },
   wsp: { zh: '乌石浦', en: 'Wushipu', x: [] },
   lcu: { zh: '吕厝', en: 'Lücuo', x: [], theme: 'transfer' },                 // 1↔2 唯一换乘
   lhj: { zh: '莲花路口', en: 'Lianhua Lukou', x: [] },
   lbn: { zh: '莲坂', en: 'Lianban', x: [] },
-  hbd: { zh: '湖滨东路', en: 'Hubin Donglu', x: [3] },
+  hbd: { zh: '湖滨东路', en: 'Hubin Donglu', x: [] },
   wza: { zh: '文灶', en: 'Wenzao', x: [] },
   jjc: { zh: '将军祠', en: 'Jiangjunci', x: [] },
   zsp: { zh: '中山公园', en: 'Zhongshan Gongyuan', x: [] },
@@ -88,7 +112,7 @@ export const XM_STATIONS = {
   ylz: { zh: '邮轮中心', en: 'Cruise Center', x: [], theme: 'sail' },
   jyl: { zh: '建业路', en: 'Jianye Lu', x: [] },
   hbz: { zh: '湖滨中路', en: 'Hubin Zhonglu', x: [] },
-  tyz: { zh: '体育中心', en: 'Tiyu Zhongxin', x: [3] },
+  tyz: { zh: '体育中心', en: 'Tiyu Zhongxin', x: [] },
   yxd: { zh: '育秀东路', en: 'Yuxiu Donglu', x: [] },
   jtou: { zh: '江头', en: 'Jiangtou', x: [] },
   hpu: { zh: '后埔', en: 'Houpu', x: [] },
@@ -103,7 +127,25 @@ export const XM_STATIONS = {
   wto: { zh: '五通', en: 'Wutong', x: [] },
   sdy: { zh: '湿地公园', en: 'Wetland Park', x: [], theme: 'sea' },
   zzh: { zh: '钟宅', en: 'Zhongzhai', x: [] },
-  wyw: { zh: '五缘湾', en: 'Wuyuanwan', x: [3], theme: 'sail' }                // “扬帆再起航”
+  wyw: { zh: '五缘湾', en: 'Wuyuanwan', x: [], theme: 'sail' },               // “扬帆再起航”（2 号线站台；3 号线站台用 3 号线标准站）
+  // —— 3 号线（hbd / tyz / hjy / wyw 已在上面：换乘站共用 code）
+  xmhc: { zh: '厦门火车站', en: 'Xiamen Railway Station', x: [], theme: 'timetravel' },   // 特色站「时光之旅」；真实为地下二层侧式，游戏用岛式
+  rczx: { zh: '人才中心', en: 'HR Service Center', x: [] },
+  hlgy: { zh: '湖里公园', en: 'Huli Park', x: [] },
+  hrl: { zh: '华荣路', en: 'Huarong Road', x: [] },
+  xds: { zh: '小东山', en: 'Xiaodongshan', x: [] },
+  adou: { zh: '安兜', en: 'Andou', x: [] },
+  bsh: { zh: '坂尚', en: 'Banshang', x: [] },                                // 真实：地下一层侧式，游戏用岛式
+  hlcx: { zh: '湖里创新园', en: 'Huli Innovation Park', x: [] },
+  gjbl: { zh: '国际博览中心', en: 'International Expo Center', x: [] },       // 2023-08-15 由“体育会展”更名
+  djie: { zh: '东界', en: 'Dongjie', x: [] },
+  hkg: { zh: '洪坑', en: 'Hongkeng', x: [4] },                               // 真实可换乘 4 号线（本游戏未做）
+  lqn: { zh: '林前', en: 'Linqian', x: [] },
+  glo: { zh: '鼓锣', en: 'Guluo', x: [] },
+  xasm: { zh: '翔安市民公园', en: "Xiang'an Public Park", x: [] },
+  pbn: { zh: '浦边', en: 'Pubian', x: [] },
+  hcun: { zh: '后村', en: 'Houcun', x: [] },                                 // 注意：hcu 已是 2 号线何厝
+  ccuo: { zh: '蔡厝', en: 'Caicuo', x: [] }                                  // 真实为高架站；游戏里和其他站一样在地下
 };
 
 for (const [id, l] of Object.entries(XM_LINES)) l.stations.forEach(c => {
