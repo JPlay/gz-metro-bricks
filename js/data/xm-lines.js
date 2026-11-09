@@ -1,7 +1,7 @@
 /*
- * 厦门地铁 1 号线、2 号线、3 号线、4 号线车站数据（游戏里列车真正停靠的全部车站）。
+ * 厦门地铁 1 号线、2 号线、3 号线、4 号线、6 号线车站数据（游戏里列车真正停靠的全部车站）。
  *
- * 数据来源（1、2 号线 2026-10-22 核对；3、4 号线 2026-11-08 核对）：
+ * 数据来源（1、2 号线 2026-10-22 核对；3、4 号线 2026-11-08 核对；6 号线 2026-11-09 核对）：
  *   [1] 中文维基百科 厦门轨道交通1号线
  *       https://zh.wikipedia.org/wiki/厦门轨道交通1号线
  *       —— 24 站顺序（岩内 … 镇海路）、英文站名、标识色橙色 C0 M68 Y100 K0 ≈ #F2711C、
@@ -41,10 +41,25 @@
  *       https://news.xmnn.cn/xmxw/202609/t20260915_450952.html
  *       —— 4 号线白色为底、红色点缀、现代简约、中华白海豚；本游戏仅标准模板，无指定特色站
  *
+ *   [12] 地铁通 MetroMan 厦门地铁6号线（2026-11-09 查阅）
+ *       https://www.metroman.cn/cities/xiamen/lines/line-6
+ *       —— 角江路 … 华侨大学 17 站顺序 / 官方英文名（Jiaojiang Road、Jiaomei Center、Maluan Center、Huaqiao University …）；
+ *          鼎美、马銮中心 ↔ 2 号线，官任 ↔ 1 号线
+ *   [13] 中文维基百科 厦门轨道交通6号线 / Module:Adjacent stations/厦门轨道交通（2026-11-09 查阅）
+ *       https://zh.wikipedia.org/wiki/厦门轨道交通6号线
+ *       https://zh.wikipedia.org/wiki/Module:Adjacent_stations/厦门轨道交通（Template:厦门轨道交通颜色 读这里）
+ *       —— 标志色紫色 C50 M90 Y0 K0、颜色模板 #93328E；标示符号三角梅；2026-09-16 角江路—华侨大学开放试乘；
+ *          陈井 预计 2027-06 启用（未开通）；龙江明珠、石美、孙厝、嘉庚体育馆、凤林 未开通；马銮中心 4 号线仅规划
+ *   [14] 厦门本地宝 2026-09-02 http://xm.bendibao.com/traffic/202691/97286.shtm
+ *       厦门广电网 2026-09-01 https://www.xmtv.cn/xmtv/2026-09-01/7132de37d77f6f85.html（2026-11-09 查阅）
+ *       —— 试乘开行角江路站至华侨大学站交路，陈井站跳停；换乘：官任（1）、鼎美（2）、马銮中心（2）、华侨大学（BRT）；
+ *          官浔 只换乘 4 号线和 BRT（不是 6 号线）
+ *
  * 英文站名按厦门地铁导向惯例用拼音 / 官方英文（厦门北站 Xiamen North Railway Station）。
  * 方向：数组顺序 = 站号递增。1 号线递增 = 往镇海路（'zhl'），递减 = 往岩内（'yan'）；
  *       2 号线递增 = 往五缘湾（'wyw'），递减 = 往天竺山（'tzs'）；
- *       3 号线递增 = 往蔡厝（'ccuo'），递减 = 往厦门火车站（'xmhc'）；4 号线递增 = 往前浯（'qwu'），递减 = 往集美软件园北（'jsrb'）。
+ *       3 号线递增 = 往蔡厝（'ccuo'），递减 = 往厦门火车站（'xmhc'）；4 号线递增 = 往前浯（'qwu'），递减 = 往集美软件园北（'jsrb'）；
+ *       6 号线递增 = 往华侨大学（'hqdx'），递减 = 往角江路（'jjl'）。
  * 换乘站共用同一个 code（湖滨东路 hbd、火炬园 hjy、体育中心 tyz、五缘湾 wyw）：注册循环把 3 号线也写进 s.lines，
  *       车站就自动建成上下两层站台 + 中间换乘楼梯（和吕厝 1↔2 同一套）。3 号线新站的 theme 默认取线路的 theme（'xm3' 标准站）。
  * code 与广州地铁错开（广州用 gyq/njs…），语音片段 id 用 xm. 前缀在 phrases 里拼。
@@ -54,6 +69,7 @@ export const XM_L2 = '#00A651';   // 鹭岛绿（官方 CMYK C69 M0 Y100 K0 的�
 export const XM_L3 = '#30BFD6';   // 云天青（官方 CMYK C63 M0 Y18 K0；MetroMan 线路色 #30BFD6）
 
 export const XM_L4 = '#FF0000';   // 官方红 C0 M100 Y100 K0；与现有 1 号线 #F2711C 橙红明显区分，未另调色
+export const XM_L6 = '#93328E';   // 紫色 C50 M90 Y0 K0（维基颜色模板 #93328E）；与 1 橙红 / 2 绿 / 3 青 / 4 红都分得开
 
 export const XM_LINES = {
   1: {
@@ -94,6 +110,16 @@ export const XM_LINES = {
     },
     // 仅运营段：西岩跳停，不做；前浯以东（洞庭 / 机场西 / 翔安机场）不开放
     stations: ['jsrb', 'hxi', 'xmnb', 'gxn', 'bzhou', 'cch', 'hkg', 'qwu']
+  },
+  6: {
+    id: 6, zh: '6号线', en: 'Line 6', color: XM_L6, ink: '#FFFFFF', soft: '#F0DDF0',
+    mark: '三角梅', city: '厦门地铁', theme: 'xm6', // 三角梅；白墙标准模板，不做特色站
+    dirs: {
+      hqdx: { zh: '华侨大学', en: 'Huaqiao University', step: 1 },
+      jjl: { zh: '角江路', en: 'Jiaojiang Road', step: -1 }
+    },
+    // 仅试乘运营段 角江路—华侨大学；陈井 未开通（列车通过不停，不建站）；龙江明珠 / 石美 / 孙厝以东不做
+    stations: ['jjl', 'jmzx', 'wpl', 'jhl', 'jmdo', 'ynong', 'ldai', 'dme', 'mlz', 'xbin', 'btou', 'xbn', 'nmao', 'dren', 'grn', 'xlw', 'hqdx']
   }
 };
 
@@ -106,7 +132,7 @@ export const XM_STATIONS = {
   jmd: { zh: '集美大道', en: 'Jimei Dadao', x: [] },
   jsr: { zh: '集美软件园', en: 'Jimei Software Park', x: [] },
   cyg: { zh: '诚毅广场', en: 'Chengyi Guangchang', x: [] },
-  grn: { zh: '官任', en: 'Guanren', x: [6] },
+  grn: { zh: '官任', en: 'Guanren', x: [] },                                   // 1↔6 共用 code，双层步行换乘
   xjl: { zh: '杏锦路', en: 'Xingjin Lu', x: [] },
   xlv: { zh: '杏林村', en: 'Xinglin Cun', x: [] },
   yby: { zh: '园博苑', en: 'Yuanboyuan', x: [] },
@@ -128,8 +154,8 @@ export const XM_STATIONS = {
   tzs: { zh: '天竺山', en: 'Tianzhushan', x: [] },
   dfu: { zh: '东孚', en: 'Dongfu', x: [] },
   dya: { zh: '东瑶', en: 'Dongyao', x: [] },
-  dme: { zh: '鼎美', en: 'Dingmei', x: [6] },
-  mlz: { zh: '马銮中心', en: 'Maluan Zhongxin', x: [4, 6] },
+  dme: { zh: '鼎美', en: 'Dingmei', x: [] },                                   // 2↔6 共用 code
+  mlz: { zh: '马銮中心', en: 'Maluan Zhongxin', x: [] },                           // 2↔6 共用 code；4 号线此站仅规划，不报
   xyd: { zh: '新阳大道', en: 'Xinyang Dadao', x: [] },
   xan: { zh: '新垵', en: "Xin'an", x: [] },
   wjl: { zh: '翁角路', en: 'Wengjiao Lu', x: [] },
@@ -177,10 +203,25 @@ export const XM_STATIONS = {
   // —— 4 号线（xmnb / hkg 复用；高架段在游戏中沿用地下站台模板）
   jsrb: { zh: '集美软件园北', en: 'Jimei Software Park North', x: [] },
   hxi: { zh: '后溪', en: 'Houxi', x: [] },
-  gxn: { zh: '官浔', en: 'Guanxun', x: [6] },                                // 仅占位，不建设 6 号线
+  gxn: { zh: '官浔', en: 'Guanxun', x: [] },                                 // 真实只换乘 4 号线和 BRT（6 号线不经过官浔）
   bzhou: { zh: '丙洲', en: 'Bingzhou', x: [] },
   cch: { zh: '城场', en: 'Chengchang', x: [] },
-  qwu: { zh: '前浯', en: 'Qianwu', x: [] }                                 // 浯 U+6D6F；临时终点，绝非“前浔”
+  qwu: { zh: '前浯', en: 'Qianwu', x: [] },                                // 浯 U+6D6F；临时终点，绝非“前浔”
+  // —— 6 号线（dme / mlz 复用 2 号线，grn 复用 1 号线；陈井未开通不建）
+  jjl: { zh: '角江路', en: 'Jiaojiang Road', x: [] },
+  jmzx: { zh: '角美中心', en: 'Jiaomei Center', x: [] },
+  wpl: { zh: '文圃路', en: 'Wenpu Road', x: [] },
+  jhl: { zh: '角海路', en: 'Jiaohai Road', x: [] },
+  jmdo: { zh: '角美东', en: 'Jiaomei East', x: [] },                           // 注意：jmd 已是 1 号线集美大道
+  ynong: { zh: '一农', en: 'Yinong', x: [] },
+  ldai: { zh: '林埭', en: 'Lindai', x: [] },
+  xbin: { zh: '西滨', en: 'Xibin', x: [] },
+  btou: { zh: '碑头', en: 'Beitou', x: [] },
+  xbn: { zh: '杏滨', en: 'Xingbin', x: [] },
+  nmao: { zh: '内茂', en: 'Neimao', x: [] },
+  dren: { zh: '董任', en: 'Dongren', x: [] },
+  xlw: { zh: '杏林湾', en: 'Xinglinwan', x: [] },
+  hqdx: { zh: '华侨大学', en: 'Huaqiao University', x: [] }                    // 真实可换乘 BRT（游戏不做 BRT）
 };
 
 for (const [id, l] of Object.entries(XM_LINES)) l.stations.forEach(c => {

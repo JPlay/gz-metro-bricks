@@ -224,15 +224,6 @@
   "tries": 4,
   "flag": true
  },
- "voice.next.grn.nan": {
-  "fp": "f4a6709865a215c9fcea558ba451fd4d164c5448b886260b4a45e41c226c3751",
-  "model": "cosyvoice-v3.5-flash",
-  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
-  "sim": 0.0,
-  "asr": "吉和酸。",
-  "tries": 1,
-  "flag": false
- },
  "voice.welcome.grn.nan": {
   "fp": "16c1f47725d517905e1d40865f8ac432c1ea71c7333a7aedb11f8fca79c9f833",
   "model": "cosyvoice-v3.5-flash",
@@ -827,30 +818,12 @@
   "tries": 1,
   "flag": false
  },
- "voice.next.dme.nan": {
-  "fp": "b2ef432ec058b16f0eb7048f5e822df21105a00d482bef5ddc861510e26f1465",
-  "model": "cosyvoice-v3.5-flash",
-  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
-  "sim": 0.545,
-  "asr": "下一站点米可完成六号线。",
-  "tries": 1,
-  "flag": false
- },
  "voice.welcome.dme.nan": {
   "fp": "8b55ca06048ae9351aef29c19c994c73ee822df372bd86aac452f9154d93660d",
   "model": "cosyvoice-v3.5-flash",
   "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
   "sim": 0.688,
   "asr": "欢迎光临顶V赞车排队，后车先下后上。",
-  "tries": 1,
-  "flag": false
- },
- "voice.next.mlz.nan": {
-  "fp": "aff44bb55135c92d75931e317ff1dd9eb452fd5f8eb3561ae5a21fb46de09687",
-  "model": "cosyvoice-v3.5-flash",
-  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
-  "sim": 0.581,
-  "asr": "一阵马乱。中心可完成四号线六号线。",
   "tries": 1,
   "flag": false
  },
@@ -2565,11 +2538,11 @@
   "flag": false
  },
  "voice.next.gxn.nan": {
-  "fp": "0994d4c3c57a9a60f732d531dde0dfdbaecc277ab2c74093a893888a7992740c",
+  "fp": "97d48aff56db091eb9e4a25d76b60e785232ac34481eb8fd5eee5a0b9e39481d",
   "model": "cosyvoice-v3.5-flash",
   "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
-  "sim": 0.364,
-  "asr": "下一站官讯科完成。若好算。",
+  "sim": 0.6,
+  "asr": "下一站关心。",
   "tries": 1,
   "flag": false
  },
@@ -2705,6 +2678,492 @@
   "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
   "sim": 0.867,
   "asr": "车门即将关闭，且注意安全，谨防被急。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.next.grn1.nan": {
+  "fp": "f4a6709865a215c9fcea558ba451fd4d164c5448b886260b4a45e41c226c3751",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.0,
+  "asr": "吉和酸。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.next.dme2.nan": {
+  "fp": "b2ef432ec058b16f0eb7048f5e822df21105a00d482bef5ddc861510e26f1465",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.545,
+  "asr": "下一站点米可完成六号线。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.next.wpl.nan": {
+  "fp": "fbbce063b8ac55030bbef4d979ddc0123ed8cd3ef87333213a33e7130df6cb7b",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.364,
+  "asr": "A站门坡路。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.next.jmzx.nan": {
+  "fp": "3d807e66650afac3a36fd7784825a791883f57cc992e12868ecc66d03e2e133b",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.615,
+  "asr": "壹站甲美中心。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.next.mlz2.nan": {
+  "fp": "152f68a9c3a504d22aa9eb6db96f0722d2c9db9684846c84c5f223bec554e9ec",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.56,
+  "asr": "一站慢弯中心可唤行六号线。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.next.jhl.nan": {
+  "fp": "3abe55e690ff4ec81a5c75844a8f56f89ad8455a578f364154e0682da3febbd2",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.2,
+  "asr": "站加系咯。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.next.ldai.nan": {
+  "fp": "0f4e2f69cfaa26b19913aed79919b8693e0eb24a9be15966aa065c22a4ae99ac",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.2,
+  "asr": "诶节站点大。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.next.dme6.nan": {
+  "fp": "af76bf53142491a6eb18f8096f6b8408470cabc42ffbebf3f0eb65b564cc21ac",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.364,
+  "asr": "下一站顶面可完成离合算。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.next.mlz6.nan": {
+  "fp": "9a3228266e27d95fd71a9652b14f6d304018aab889d7f0098adf7e4ff12ed58b",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.615,
+  "asr": "下一站美元中心可完成二号线。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.next.xbin.nan": {
+  "fp": "dd246333c207c709c41ae71a21a46cade6b4573caffcd5aff441f9508a2c51ed",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.667,
+  "asr": "一站西边。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.next.btou.nan": {
+  "fp": "3c7f7a9c7d8aed155519d348fda7dbffcb4f38837067ec436a0143ccec5064d3",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.0,
+  "asr": "実为important é？",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.next.ynong.nan": {
+  "fp": "97603df576409fffd79c3b885654f60db856e4d7e08cee3c7e9d2faf98b4d71c",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.8,
+  "asr": "下一站一浓。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.next.xbn.nan": {
+  "fp": "987cdb32477a1578e57cb991dc8846d406282ca914d663f92a59ed92584ff037",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.6,
+  "asr": "下一站兴兵。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.next.jmdo.nan": {
+  "fp": "bed4f33484f42c9ecbadfa1bb762c6ed0cd2e6226d012e5381e184f1ea46e7c1",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.909,
+  "asr": "下一站美东。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.next.nmao.nan": {
+  "fp": "65fd3defd075907e1685a528bc9d4b514f7752aace2076b6e7813f8a174b1a95",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.5,
+  "asr": "站内貌。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.next.dren.nan": {
+  "fp": "ad36e30aabe4cc47bdc21a754b66ea30a63f661ce0edb07074ea7e088c7c2d59",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.6,
+  "asr": "下一站同论。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.next.xlw.nan": {
+  "fp": "d2cdbf03ce8d6528c21680d738160fc07b1470e05394f2b44970a6227d0c78ab",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.667,
+  "asr": "下一站兴宁湾。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.next.grn6.nan": {
+  "fp": "710ff1c35d4921cad1cd0d5495a8fca290668a84faea0a336770cb06540b4fdc",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.545,
+  "asr": "下一站馆等可完成一号线。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.arrive.jhl.nan": {
+  "fp": "908aead587e03cce27d673feb8e6f4178db91421b4167a359164ec8578a06d89",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.522,
+  "asr": "雷恰即将告大告害罗站亲修心的车距站台之间的空隙。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.arrive.jjl.nan": {
+  "fp": "d87ee326619effa9f4e5b683faaf7e86ba398dc0e981d2616cb73bff0fbb1758",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.889,
+  "asr": "列车即将到达甲港路站，请小心列车站台之间的空隙。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.arrive.jmzx.nan": {
+  "fp": "9873afedf2a13ea9fbf0f3aae83a6a75f44cac39c0e4598082af79033cf025f0",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.875,
+  "asr": "列车即将到达教易中心站，请小心列车到站台之间的空隙。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.arrive.wpl.nan": {
+  "fp": "feef2ed1129f6dced8aa0d2fc00ea311dbd94deac6ed53d27d9f370e33bffe0d",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.87,
+  "asr": "列车即将到达文婆路站，请小心列车至站台之间的空司。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.arrive.jmdo.nan": {
+  "fp": "4432193af0ec3f29b5c7955d5308a184d75ebef965324607675225dbace8a3ab",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.783,
+  "asr": "列车7钟到达九武东站，请小心列车去站台之间的空隙。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.arrive.ynong.nan": {
+  "fp": "cc20cd05a12cd4d9b6b91b443df49d261fa188fd33c94f09d99d37ab536adeb7",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.909,
+  "asr": "列车即将到达伊动站，请小心列车与站台之间的空隙。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.arrive.ldai.nan": {
+  "fp": "413b497573e30b6eb51509ecf53a0155c0fccd4543348b134cfcef7600434d19",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.909,
+  "asr": "列车即将到达林台站，请小心列车距站台之间的空隙。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.arrive.xbin.nan": {
+  "fp": "4abb0a85492910e736e0d3f4345753565d012d90b195b70d0fc56b802477848e",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.864,
+  "asr": "列车即将高达四边站，请小心列车与站台之间的空隙。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.arrive.btou.nan": {
+  "fp": "4e2e9818f30c2584a546bebf2dcc3195a121eed5d1b457764a7840dc9fb4e299",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.818,
+  "asr": "列车即将到达白头站，请小心在车和站台之间的空气。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.arrive.xbn.nan": {
+  "fp": "f4315f0b5bb8895078fc92a92dab142e80c2cec79f28cec42630e2411e0211d8",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.909,
+  "asr": "列车即将到达兴宾站，请小心列车与站台之间的空隙。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.arrive.nmao.nan": {
+  "fp": "406c43e67e53b4413868f46a3634534e3ad4d0fbbb206cb70aae0bba01039635",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.773,
+  "asr": "汝车去将到达礼貌站，请小心列车距站台之间的空隙。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.arrive.dren.nan": {
+  "fp": "c0645915512c2913c9d7089cd2bbe511f29d9230bdcd363b456f92c877a9edb2",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.909,
+  "asr": "列车即将到达东人站，请小心列车与站台之间的空隙。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.arrive.xlw.nan": {
+  "fp": "bf561996a719bbc0d6efa073b17f50141e3c63a34cd7215c5828d26102e1dad6",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.957,
+  "asr": "列车即将到达杏林湾站，请小心列车距站台之间的空隙。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.arrive.hqdx.nan": {
+  "fp": "2bb0ed27dc01a964981c6ebb512d3ce73fcb0067744807a0943205b89ed61ddc",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.792,
+  "asr": "列车这种高大华侨大学站，请小心列车及站台之间的空隙。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.welcome.wpl.nan": {
+  "fp": "b8f04eb733d47d2b7cd4945afb2808665be0bf7557160027785f2e69ca79ec3a",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.529,
+  "asr": "欢迎光临云坡罗站，车牌队号车先下奥尚。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.welcome.jjl.nan": {
+  "fp": "a5d4224351fb281af450d3d91cf1c78b143ec9e4b951e393cd9276470075441d",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.647,
+  "asr": "欢迎光临甲江路站车牌队候车。新系号上。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.welcome.jmdo.nan": {
+  "fp": "122a58d92220d7d0596525571d91f4a6e2b50003a843bdff7afb22102e0ca225",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.529,
+  "asr": "欢迎光临隔壁东站车牌队候车。星核号胜。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.welcome.ldai.nan": {
+  "fp": "fca8a61057d8d182f967148cc3b78287d1c597749a4f1ce008cdd196ee5f6fec",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.312,
+  "asr": "欢迎光临零带，咱恰派对后恰先A奥雄。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.welcome.jmzx.nan": {
+  "fp": "39d0428d773949b9ef78d7abaf2b4bd37e805f2219551d6f9f85be21f1e37464",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.778,
+  "asr": "欢迎光临格美中心站，请排队候车。新系号上。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.welcome.xbin.nan": {
+  "fp": "17a183b923e4bd62c85960e1c14979878b357cddc1bdf9e918ee405de25bc106",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.688,
+  "asr": "欢迎光临西边站车排队候车，心下豪雄。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.welcome.jhl.nan": {
+  "fp": "29254729ac30f40b0dc73813b229bb13fb4f29d4a131077bb61fec03954043c3",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.824,
+  "asr": "欢迎光临郊蟹路站，请排队候车。先系后上。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.welcome.btou.nan": {
+  "fp": "622d9d9828a1924d2eff61ff07b13295ecd3604a3dab1d1ecfd41107e73f1108",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.688,
+  "asr": "欢迎光临北斗站，请排队候车。审系好上。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.welcome.xbn.nan": {
+  "fp": "78f7cfcfa27b7954477b383e27d4343d80d06ec03d30d8aa9388a75d8af2b5c7",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.688,
+  "asr": "欢迎光临轻宾站，请排队候车先核候生。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.welcome.ynong.nan": {
+  "fp": "8a1de4e9304c31a447fc1802b1af51856d6c75202033489fabb87c7430defea9",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.75,
+  "asr": "欢迎光临一龙站车排队候车，星下后翔。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.welcome.xlw.nan": {
+  "fp": "04bb0506b240613cf923c4bfc0c9e9eb58320077d2a9fe05909d50354e1f1b07",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.471,
+  "asr": "欢迎光临杏林湾站，恰牌对号恰心啊奥雄。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.welcome.nmao.nan": {
+  "fp": "6c1f6d5ffe55351529a0db59ecd533927fe03899ddca075adddee0dffb66fb0e",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.75,
+  "asr": "欢迎光临艺贸站，请排队学车。先系后上。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.welcome.dren.nan": {
+  "fp": "315750c2c3ce88b2b04160e58f0ab26546cb652864496dde0941afb88185382e",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.812,
+  "asr": "欢迎光临董令站车排队候车身下后上。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.welcome.hqdx.nan": {
+  "fp": "ad6206f7a6e603e2ae967d00887057011999c4fd1915b913f8fcebe6018c6aef",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.889,
+  "asr": "欢迎光临华侨大学站，请排队候车先下翱翔。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.destination.xmjjl.nan": {
+  "fp": "139dd52419fbb55e01689e4752c4e3fbdbe7472b12a39d70f65acce25b0fcbbd",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 1.0,
+  "asr": "本次列车终点站为角江路。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.destination.xmhqdx.nan": {
+  "fp": "d1859e20f61f97421cb8d0a2f8b07c3435959b122a615730f02ac23c8e09ee93",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 1.0,
+  "asr": "本次列车终点站为华侨大学。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.terminal.xmjjl.nan": {
+  "fp": "4d1999b50c290b391b6299a1f6a749798feed809e1c37bb7c87c23a14d30ee3d",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.878,
+  "asr": "下一站是本次列车的终点站到公路，请全部乘客带齐行李物品再次站下车。欢迎再次乘走厦门地铁。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.terminal.xmhqdx.nan": {
+  "fp": "64759543eef2bd91a71724d331573835866052bb4fba83daa98a873f3be0050a",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.952,
+  "asr": "下一站是本次列车的终点站华侨大学。请全部乘客带齐行李物品在此站下车，欢迎再次行走厦门地铁。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.platform.xmjjl.1.nan": {
+  "fp": "5cdd5b24a0019cb1ee14cf2330a5443c9feb915ae18d34a2b4a2ab99982751a8",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.643,
+  "asr": "一站台阁岗路轰向列车之中进站。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.platform.xmhqdx.2.nan": {
+  "fp": "b270e82f1bd9a566f4c9b8bafdc71dcf1eae5c2956f07a04ff990cecaa5a8033",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.867,
+  "asr": "而三台华侨大学方向列车即将进站。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.platform.xmjjl.2.nan": {
+  "fp": "6927915507164490e10d3bb005c92353ab0b0941973878a2031e9ab1d1b1d886",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.714,
+  "asr": "离镇大九江路方向列车即将进站。",
+  "tries": 4,
+  "flag": true
+ },
+ "voice.platform.xmhqdx.1.nan": {
+  "fp": "8d29b8dfaba8c95b161e2190fd5bb1e130e56f65bb9492f5cbc3340d7ab675cc",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.733,
+  "asr": "这站台，花侨大学风向列车集将进站。",
   "tries": 4,
   "flag": true
  }

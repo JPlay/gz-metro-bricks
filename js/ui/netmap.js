@@ -384,6 +384,32 @@ export function xmNetworkSVG(here, { portrait = false } = {}) {
     });
     pos.qwu = portrait ? [B[0] + 105, B[1] - 35] : [B[0] + 160, B[1] - 65];
   }
+  // 6 号线（示意）：鼎美 / 马銮中心（2 号线）、官任（1 号线）保持原位。
+  // 横屏：角美段从鼎美往左一字排开；马銮中心 → 官任 斜线等分（避开 4 号线横段，不把站点压在红线上）；杏林湾 / 华侨大学挂在官任右下。
+  // 竖屏：角美段从鼎美往下排（左下空白处）；马銮中心往上走一列，再往右穿过 4 号线，从左下进官任；
+  //       杏林湾 / 华侨大学挂在官任右下。
+  const l6lbl = {};
+  if (XM_LINES[6]) {
+    const L6 = XM_LINES[6].stations, iD = L6.indexOf('dme'), iM = L6.indexOf('mlz'), iG = L6.indexOf('grn');
+    const D = pos.dme, M = pos.mlz, Gr = pos.grn;
+    const mid = L6.slice(iM + 1, iG), tail = L6.slice(iG + 1);
+    L6.slice(0, iD).forEach((c, i, a) => { const k = a.length - i; pos[c] = portrait ? [D[0], D[1] + 16 + 40 * k] : [D[0] - 46 * k, D[1]]; l6lbl[c] = portrait ? 'L' : 'U'; });
+    if (portrait) {
+      // 竖屏 1 号线圆点几乎挨着，从站间穿过一定压圆点 → 6 号线只在官任本站和 1 号线相交：
+      // 杏滨往右、在官浔和丙洲正中间穿过 4 号线竖段，从左下进官任（官任 / 诚毅广场的景点图标挪到 1 号线右侧，见景点循环）
+      const P = [[M[0], M[1] - 85], [M[0], M[1] - 168], [M[0], M[1] - 252], [Gr[0] - 257, Gr[1] + 57], [Gr[0] - 82, Gr[1] + 37]], LB = ['L', 'L', 'L', 'U', 'U'];
+      mid.forEach((c, i) => { pos[c] = P[i]; l6lbl[c] = LB[i]; });
+      tail.forEach((c, i) => { pos[c] = [Gr[0] + 34 * (i + 1), Gr[1] + 34 * (i + 1)]; l6lbl[c] = 'R'; });
+    } else {
+      // 西滨 / 碑头 / 杏滨：从马銮中心往左下缓斜，到官浔和丙洲正中间才穿过 4 号线横段（不压丙洲圆点）；内茂 / 董任陡一点落到官任。
+      // 缓斜段站名写在左上（左下走向的线，左上方是空的；右下会撞 2 号线 / 丙洲站名），陡段写在左边。
+      const xc = (pos.gxn[0] + pos.bzhou[0]) / 2, R = pos.gxn[1];
+      const P = [[M[0] - 50, M[1] + 36], [M[0] - 110, M[1] + 76], [xc + 48, R - 55], [xc - 16, R + 40], [Gr[0] + 18, Gr[1] - 35]], LB = ['UL', 'UL', 'UL', 'L', 'L'];
+      mid.forEach((c, i) => { pos[c] = P[i]; l6lbl[c] = LB[i]; });
+      // 官任以后往正下方走两站（官任的景点图标相应往下挪，见下面景点循环）
+      tail.forEach((c, i) => { pos[c] = [Gr[0], Gr[1] + 40 * (i + 1)]; l6lbl[c] = i ? 'D' : 'R'; });
+    }
+  }
   // 归一到画布边距
   const xs = Object.values(pos).map(p => p[0]), ys = Object.values(pos).map(p => p[1]);
   const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
@@ -392,7 +418,7 @@ export function xmNetworkSVG(here, { portrait = false } = {}) {
   for (const c of Object.keys(pos)) pos[c] = [pad + (pos[c][0] - minX) * sc, pad + (pos[c][1] - minY) * sc];
   let s = `<svg class="netmap" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
   s += `<text x="${W/2}" y="36" text-anchor="middle" font-size="22" font-weight="800" fill="#1B2530">厦门地铁</text>`;
-  s += `<text x="${W/2}" y="56" text-anchor="middle" font-size="13" fill="#6B7280">Xiamen Metro · 1号线 闽南红 · 2号线 鹭岛绿${XM_LINES[3] ? ' · 3号线 云天青' : ''}${XM_LINES[4] ? ' · 4号线 红色' : ''}</text>`;
+  s += `<text x="${W/2}" y="56" text-anchor="middle" font-size="13" fill="#6B7280">Xiamen Metro · 1号线 闽南红 · 2号线 鹭岛绿${XM_LINES[3] ? ' · 3号线 云天青' : ''}${XM_LINES[4] ? ' · 4号线 红色' : ''}${XM_LINES[6] ? ' · 6号线 紫色' : ''}</text>`;
   for (const [id, L] of Object.entries(XM_LINES)) {
     const pts = L.stations.map(c => pos[c]);
     s += `<polyline points="${pts.map(p => p[0] + ',' + p[1]).join(' ')}" fill="none" stroke="${L.color}" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>`;
@@ -424,6 +450,25 @@ export function xmNetworkSVG(here, { portrait = false } = {}) {
     }
     // 前浯：竖屏站名改到终点外侧，避免和东界相向伸展叠字
     if (c === 'qwu' && portrait) { lx = x + 14; ly = y + 4; anc = 'start'; }
+    // 6 号线自己的站：按上面布局时记下的方位（L 左 / R 右 / U 上 / D 下）写站名，不压 6 号线本身
+    const k6 = l6lbl[c];
+    if (k6 === 'L') { lx = x - 13; ly = y + 4; anc = 'end'; }
+    else if (k6 === 'R') { lx = x + 13; ly = y + 4; anc = 'start'; }
+    else if (k6 === 'U') { lx = x; ly = y - 14; anc = 'middle'; }
+    else if (k6 === 'D') { lx = x; ly = y + 22; anc = 'middle'; }
+    else if (k6 === 'UL') { lx = x - 8; ly = y - 12; anc = 'end'; }
+    // 鼎美 / 马銮中心（2 ↔ 6）：横屏 2 号线竖排，站名写到右侧（左边是 6 号线角美段 / 斜线）；
+    // 竖屏 2 号线横排，鼎美下面是角美段、马銮中心上面是 6 号线竖列 → 鼎美写左上、马銮中心写右上
+    if (XM_LINES[6] && (c === 'dme' || c === 'mlz')) {
+      if (!portrait) { lx = x + 16; ly = y + 4; anc = 'start'; }
+      else if (c === 'dme') { lx = x - 8; ly = y - 19; anc = 'end'; }
+      else { lx = x + 10; ly = y - 19; anc = 'start'; }
+    }
+    // 官任（1 ↔ 6）：横屏 6 号线从右上斜进、往正下方出 → 站名写左下；竖屏从右上进、往右下出 → 站名写在两段紫线夹角里（左边是诚毅广场的景点图标）
+    if (XM_LINES[6] && c === 'grn') {
+      if (portrait) { lx = x + 15; ly = y + 3; anc = 'start'; }
+      else { lx = x - 12; ly = y + 26; anc = 'end'; }
+    }
     s += `<text x="${lx}" y="${ly}" text-anchor="${anc}" font-size="${hereOn ? 13 : 10}" font-weight="${hereOn ? 800 : 600}" fill="#1B2530" paint-order="stroke" stroke="#fff" stroke-width="3" stroke-linejoin="round">${label}</text>`;
   }
   // 景点小图标（和广州图一样可点开小卡片）：1 号线横排时放线下方，2 号线竖排时放线右侧；相邻两站错开
@@ -436,6 +481,10 @@ export function xmNetworkSVG(here, { portrait = false } = {}) {
     else { if (portrait) { const k = (alt.p2 = !alt.p2) ? 1 : 2; ix = x + 8; iy = y - 30 - 40 * k; } else { const k = (alt.l2 = !alt.l2) ? 1 : 2; ix = x + 70 + 46 * (k - 1); iy = y; } }
     // 横屏时 2 号线「湿地公园」图标会压住 3 号线东段的「鼓锣」，往上挪开
     if (a.code === 'sdy' && !portrait) iy -= 42;
+    // 横屏 6 号线杏林湾 / 华侨大学挂在官任正下方：官任景点图标挪到它们下面
+    if (a.code === 'grn' && !portrait && XM_LINES[6]) iy = y + 22 + 26 * 5;
+    // 竖屏 6 号线从左下进官任：诚毅广场 / 官任两个景点图标挪到 1 号线右侧（上下错开，不压杏林湾 / 华侨大学）
+    if (portrait && XM_LINES[6] && (a.code === 'cyg' || a.code === 'grn')) { ix = x + 70; iy = a.code === 'cyg' ? y - 55 : y - 28; }
     tx = ix; ty = iy + XR + 12;
     s += `<line x1="${x}" y1="${y}" x2="${ix}" y2="${iy}" stroke="#9AA3AD" stroke-width="2" stroke-dasharray="2 4"/>`;
     s += `<g class="attr" data-attr="${a.id}" data-code="${a.code}"><circle cx="${ix}" cy="${iy}" r="${XR + 10}" fill="#fff" fill-opacity="0"/>${iconSVG(a.icon, ix, iy, XR, XM_LINES[S.lines[0]].color)}`;
