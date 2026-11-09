@@ -397,7 +397,7 @@ export function xmNetworkSVG(here, { portrait = false } = {}) {
     if (portrait) {
       // 竖屏 1 号线圆点几乎挨着，从站间穿过一定压圆点 → 6 号线只在官任本站和 1 号线相交：
       // 杏滨往右、在官浔和丙洲正中间穿过 4 号线竖段，从左下进官任（官任 / 诚毅广场的景点图标挪到 1 号线右侧，见景点循环）
-      const P = [[M[0], M[1] - 85], [M[0], M[1] - 168], [M[0], M[1] - 252], [Gr[0] - 257, Gr[1] + 57], [Gr[0] - 82, Gr[1] + 37]], LB = ['L', 'L', 'L', 'U', 'U'];
+      const P = [[M[0], M[1] - 85], [M[0], M[1] - 168], [M[0], M[1] - 252], [Gr[0] - 257, Gr[1] + 57], [Gr[0] - 82, Gr[1] + 57]], LB = ['L', 'L', 'L', 'U', 'D'];
       mid.forEach((c, i) => { pos[c] = P[i]; l6lbl[c] = LB[i]; });
       tail.forEach((c, i) => { pos[c] = [Gr[0] + 34 * (i + 1), Gr[1] + 34 * (i + 1)]; l6lbl[c] = 'R'; });
     } else {
@@ -464,11 +464,16 @@ export function xmNetworkSVG(here, { portrait = false } = {}) {
       else if (c === 'dme') { lx = x - 8; ly = y - 19; anc = 'end'; }
       else { lx = x + 10; ly = y - 19; anc = 'start'; }
     }
-    // 官任（1 ↔ 6）：横屏 6 号线从右上斜进、往正下方出 → 站名写左下；竖屏从右上进、往右下出 → 站名写在两段紫线夹角里（左边是诚毅广场的景点图标）
+    // 官任（1 ↔ 6）：横屏 6 号线从右上斜进、往正下方出 → 站名写左下；竖屏从左下进、往右下出 → 站名写左上
     if (XM_LINES[6] && c === 'grn') {
-      if (portrait) { lx = x + 15; ly = y + 3; anc = 'start'; }
+      if (portrait) { lx = x - 24; ly = y - 2; anc = 'end'; }
       else { lx = x - 12; ly = y + 26; anc = 'end'; }
     }
+    // 竖屏：董任 → 官任 这段紫线从左下方斜进，官任站名写在它左上方；诚毅广场站名也挪到圆点左边
+    // （原来在圆点下方，会被官任圆点和紫线压住；右边是景点图标）。两者都避开上面「集美软件」站名（x 不超过圆点 − 24）
+    if (XM_LINES[6] && portrait && c === 'cyg') { lx = x - 24; ly = y + 4; anc = 'end'; }
+    // 横屏：董任写在圆点右边，左边会和 1 号线「诚毅广场」叠字；略抬高，离「杏锦路」远一点
+    if (XM_LINES[6] && !portrait && c === 'dren') { lx = x + 14; ly = y + 1; anc = 'start'; }
     s += `<text x="${lx}" y="${ly}" text-anchor="${anc}" font-size="${hereOn ? 13 : 10}" font-weight="${hereOn ? 800 : 600}" fill="#1B2530" paint-order="stroke" stroke="#fff" stroke-width="3" stroke-linejoin="round">${label}</text>`;
   }
   // 景点小图标（和广州图一样可点开小卡片）：1 号线横排时放线下方，2 号线竖排时放线右侧；相邻两站错开
