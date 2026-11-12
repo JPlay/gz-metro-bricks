@@ -1,7 +1,7 @@
 // 厦门地铁 3 号线数据检查（不开浏览器）：node tests/unit/xm_line3.mjs
 // 1. 运营段 21 站、站序（厦门火车站 → 蔡厝）；2. 站 code 全网唯一（不和广州 / 福州 / 厦门 1、2 号线撞）；
 // 3. 四个换乘站复用 1、2 号线原 code，注册后 lines 含 3，xmTransfers 两个方向都能报出对方线；x 里不再重复写 3；
-// 4. 不做的：6 号线、南延段、翔安机场段不在 XM_LINES 里；洪坑现已换乘 4 号线；
+// 4. 不做的：南延段、翔安机场段不在 XM_LINES 里；洪坑现已换乘 4 号线；6 号线只有角江路—华侨大学运营段；
 // 5. 3 号线所有报站片段（普通话 / 闽南语 / 英语）都有 MP3 且登记在 assets/audio/manifest.json。
 import fs from 'node:fs';
 import path from 'node:path';
@@ -38,7 +38,7 @@ for (const [c, other] of Object.entries(shared)) {
 }
 ok('xmhc theme timetravel (only feature station)', X.XM_STATIONS.xmhc.theme === 'timetravel' && own.filter(c => X.XM_STATIONS[c].theme).join() === 'xmhc');
 ok('洪坑 reuses code for Line 4', JSON.stringify(X.XM_STATIONS.hkg.lines) === '[3,4]' && !X.XM_STATIONS.hkg.x.includes(4));
-ok('no Line 6 built', !X.XM_LINES[6]);
+ok('Line 6 only its operating segment (角江路—华侨大学), not this line', X.XM_LINES[6].stations[0] === 'jjl' && X.XM_LINES[6].stations.at(-1) === 'hqdx' && !L3.stations.some(c => X.XM_STATIONS[c].lines.includes(6)));
 ok('no south extension / airport stations', !Object.values(X.XM_STATIONS).some(s => /沙坡尾|厦门大学|白城|曾厝垵|上李|翔安机场|蔡厝南|阳塘|双沪|空港|机场西/.test(s.zh)));
 // 报站：普通话 → 闽南语 → 英语；文字
 const dep = xmDepartSegs(3, 'hbd', 'ccuo', 1, true);

@@ -9,6 +9,7 @@
  *   sea     — 海沧湾公园 / 湿地公园，青绿海波
  *   jiageng — 集美学村，嘉庚红墙白石
  *   xm3     — 3 号线标准站：白墙白柱 + 云天青腰带 + 白鹭标志（东南网 2021-06-10：火炬园等标准站）
+ *   xm4 / xm6 — 4 号线（白墙 + 红腰带 + 白海豚）/ 6 号线（白墙 + 紫腰带 + 三角梅）标准站，无特色站
  *   timetravel — 3 号线厦门火车站「时光之旅」：标准站的白 + 云天青，再加铁轨天花、车轮柱饰、白鹭长卷
  * 换乘站两层站台各用各线的装修：站台 theme = 车站 theme（第一条线）；第二条线自己有 theme（3 号线 'xm3'）时那一层用线路 theme。
  * 坐标：root 在 XO；站台沿 x，轨行区 z = zc ± TRACK；侧式站（xmnb/zhl）只有一侧站台。
@@ -54,6 +55,8 @@ const THEME = {
   xm3: { wall: '#F6F8F9', dado: '#30BFD6', beam: '#D5DCE0', accent: '#30BFD6', floor: '#D9DDE0', header: '#E3E8EB', modern: true },
   // 4 号线：白墙 + 官方红腰带 + 白海豚；不指定特色站
   xm4: { wall: '#F6F8F9', dado: '#FF0000', beam: '#D5DCE0', accent: '#FF0000', floor: '#D9DDE0', header: '#E3E8EB', modern: true, badge: 'dolphin' },
+  // 6 号线：白墙 + 官方紫腰带 + 三角梅；不指定特色站
+  xm6: { wall: '#F6F8F9', dado: '#93328E', beam: '#D5DCE0', accent: '#93328E', floor: '#D9DDE0', header: '#E3E8EB', modern: true, badge: 'bougainvillea' },
   timetravel: { wall: '#F7F8F6', dado: '#30BFD6', beam: '#34424D', accent: '#30BFD6', floor: '#D3D6D4', header: '#2F3B45', modern: true, rail: true }
 };
 /** 白鹭（3 号线识别符号）：云天青圆底 + 白色白鹭剪影（S 形长颈、黄喙、细长腿） */
@@ -63,6 +66,27 @@ function egretPaint(bg = '#30BFD6', fg = '#FFFFFF', round = true) {
     const s = Math.min(pw, ph), cx = pw / 2, cy = ph / 2;
     if (round) { c.fillStyle = bg; c.beginPath(); c.arc(cx, cy, s * 0.48, 0, Math.PI * 2); c.fill(); }
     egret(c, cx, cy, s * 0.9, fg);
+  };
+}
+/** 三角梅（6 号线标示符号）：紫色圆底 + 三片白色心形苞片围一圈，中心三朵黄白小花 */
+function bougainvilleaPaint() {
+  return (c, pw, ph) => {
+    c.fillStyle = '#F6F8F9'; c.fillRect(0, 0, pw, ph);
+    const s = Math.min(pw, ph); c.save(); c.translate(pw / 2, ph / 2); c.scale(s, s);
+    c.fillStyle = '#93328E'; c.beginPath(); c.arc(0, 0, 0.48, 0, Math.PI * 2); c.fill();
+    c.fillStyle = '#FFFFFF';
+    for (let i = 0; i < 3; i++) {
+      c.save(); c.rotate(i * Math.PI * 2 / 3 - Math.PI / 2);
+      c.beginPath(); c.moveTo(0.02, 0);
+      c.bezierCurveTo(0.12, -0.17, 0.36, -0.14, 0.36, 0.0);
+      c.bezierCurveTo(0.36, 0.14, 0.12, 0.17, 0.02, 0);
+      c.closePath(); c.fill();
+      c.strokeStyle = '#E3C4E1'; c.lineWidth = 0.012; c.beginPath(); c.moveTo(0.05, 0); c.lineTo(0.3, 0); c.stroke();
+      c.restore();
+    }
+    c.fillStyle = '#F5D547';
+    for (let i = 0; i < 3; i++) { const a = i * Math.PI * 2 / 3 - Math.PI / 6; c.beginPath(); c.arc(Math.cos(a) * 0.045, Math.sin(a) * 0.045, 0.03, 0, Math.PI * 2); c.fill(); }
+    c.restore();
   };
 }
 /** 中华白海豚：红底白色跃水剪影（长喙、背鳍、胸鳍、分叉尾），与 3 号线白鹭独立缓存。 */
@@ -325,7 +349,7 @@ export class XmStation {
   /** 白鹭 / 车轮标志贴图：每站画一次，所有墙面 / 柱面共用同一块 uv */
   markUV(kind) {
     const M = this._marks || (this._marks = {});
-    return M[kind] || (M[kind] = this.atlas.draw(1.9, 1.9, kind === 'wheel' ? wheelPaint() : kind === 'dolphin' ? dolphinPaint() : egretPaint()));
+    return M[kind] || (M[kind] = this.atlas.draw(1.9, 1.9, kind === 'wheel' ? wheelPaint() : kind === 'dolphin' ? dolphinPaint() : kind === 'bougainvillea' ? bougainvilleaPaint() : egretPaint()));
   }
   /** 3 号线轨行区侧墙（wz = 墙面，sz = 哪一侧）：白色搪瓷板（2.4 m 一道板缝）+ 浅灰勒脚 + 云天青腰带 + 白鹭标志；
    *  「时光之旅」（th.rail）：腰带上方再加两道钢轨线，墙中间挂一幅白鹭 + 车轮长卷 */

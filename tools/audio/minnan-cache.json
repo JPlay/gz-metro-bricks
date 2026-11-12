@@ -224,15 +224,6 @@
   "tries": 4,
   "flag": true
  },
- "voice.next.grn.nan": {
-  "fp": "f4a6709865a215c9fcea558ba451fd4d164c5448b886260b4a45e41c226c3751",
-  "model": "cosyvoice-v3.5-flash",
-  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
-  "sim": 0.0,
-  "asr": "吉和酸。",
-  "tries": 1,
-  "flag": false
- },
  "voice.welcome.grn.nan": {
   "fp": "16c1f47725d517905e1d40865f8ac432c1ea71c7333a7aedb11f8fca79c9f833",
   "model": "cosyvoice-v3.5-flash",
@@ -827,30 +818,12 @@
   "tries": 1,
   "flag": false
  },
- "voice.next.dme.nan": {
-  "fp": "b2ef432ec058b16f0eb7048f5e822df21105a00d482bef5ddc861510e26f1465",
-  "model": "cosyvoice-v3.5-flash",
-  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
-  "sim": 0.545,
-  "asr": "下一站点米可完成六号线。",
-  "tries": 1,
-  "flag": false
- },
  "voice.welcome.dme.nan": {
   "fp": "8b55ca06048ae9351aef29c19c994c73ee822df372bd86aac452f9154d93660d",
   "model": "cosyvoice-v3.5-flash",
   "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
   "sim": 0.688,
   "asr": "欢迎光临顶V赞车排队，后车先下后上。",
-  "tries": 1,
-  "flag": false
- },
- "voice.next.mlz.nan": {
-  "fp": "aff44bb55135c92d75931e317ff1dd9eb452fd5f8eb3561ae5a21fb46de09687",
-  "model": "cosyvoice-v3.5-flash",
-  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
-  "sim": 0.581,
-  "asr": "一阵马乱。中心可完成四号线六号线。",
   "tries": 1,
   "flag": false
  },
@@ -2565,11 +2538,11 @@
   "flag": false
  },
  "voice.next.gxn.nan": {
-  "fp": "0994d4c3c57a9a60f732d531dde0dfdbaecc277ab2c74093a893888a7992740c",
+  "fp": "97d48aff56db091eb9e4a25d76b60e785232ac34481eb8fd5eee5a0b9e39481d",
   "model": "cosyvoice-v3.5-flash",
   "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
-  "sim": 0.364,
-  "asr": "下一站官讯科完成。若好算。",
+  "sim": 0.6,
+  "asr": "下一站关心。",
   "tries": 1,
   "flag": false
  },
@@ -2707,5 +2680,565 @@
   "asr": "车门即将关闭，且注意安全，谨防被急。",
   "tries": 4,
   "flag": true
+ },
+ "voice.next.grn1.nan": {
+  "fp": "f4a6709865a215c9fcea558ba451fd4d164c5448b886260b4a45e41c226c3751",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.0,
+  "asr": "吉和酸。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.next.dme2.nan": {
+  "fp": "b2ef432ec058b16f0eb7048f5e822df21105a00d482bef5ddc861510e26f1465",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.545,
+  "asr": "下一站点米可完成六号线。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.next.wpl.nan": {
+  "fp": "fbbce063b8ac55030bbef4d979ddc0123ed8cd3ef87333213a33e7130df6cb7b",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.364,
+  "asr": "A站门坡路。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.next.jmzx.nan": {
+  "fp": "3d807e66650afac3a36fd7784825a791883f57cc992e12868ecc66d03e2e133b",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.615,
+  "asr": "壹站甲美中心。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.next.mlz2.nan": {
+  "fp": "152f68a9c3a504d22aa9eb6db96f0722d2c9db9684846c84c5f223bec554e9ec",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.56,
+  "asr": "一站慢弯中心可唤行六号线。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.next.jhl.nan": {
+  "fp": "3abe55e690ff4ec81a5c75844a8f56f89ad8455a578f364154e0682da3febbd2",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.2,
+  "asr": "站加系咯。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.next.ldai.nan": {
+  "fp": "0f4e2f69cfaa26b19913aed79919b8693e0eb24a9be15966aa065c22a4ae99ac",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.2,
+  "asr": "诶节站点大。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.next.dme6.nan": {
+  "fp": "af76bf53142491a6eb18f8096f6b8408470cabc42ffbebf3f0eb65b564cc21ac",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.364,
+  "asr": "下一站顶面可完成离合算。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.next.mlz6.nan": {
+  "fp": "9a3228266e27d95fd71a9652b14f6d304018aab889d7f0098adf7e4ff12ed58b",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.615,
+  "asr": "下一站美元中心可完成二号线。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.next.xbin.nan": {
+  "fp": "dd246333c207c709c41ae71a21a46cade6b4573caffcd5aff441f9508a2c51ed",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.667,
+  "asr": "一站西边。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.next.btou.nan": {
+  "fp": "3c7f7a9c7d8aed155519d348fda7dbffcb4f38837067ec436a0143ccec5064d3",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.0,
+  "asr": "実为important é？",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.next.ynong.nan": {
+  "fp": "58f9884f34d125a86fc64628d8728b770ba81984899c56f80235e7f2ee46c9fb",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.222,
+  "asr": "A站1弄。",
+  "tries": 1,
+  "flag": false,
+  "seed": 7993,
+  "prev_sim": 0.8,
+  "instr": "请用地道厦门腔闽南话（白话音，不要用普通话发音）播报，女声，地铁广播播音员平稳中性的语调。"
+ },
+ "voice.next.xbn.nan": {
+  "fp": "987cdb32477a1578e57cb991dc8846d406282ca914d663f92a59ed92584ff037",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.6,
+  "asr": "下一站兴兵。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.next.jmdo.nan": {
+  "fp": "51f6696fa5c8c15d891a6e0a1fa559d0c5fbc2268e178100c360d0a3103d46a3",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.545,
+  "asr": "下站到密东。",
+  "tries": 1,
+  "flag": false,
+  "seed": 62595,
+  "prev_sim": 0.909,
+  "instr": "请用地道厦门腔闽南话（白话音，不要用普通话发音）播报，女声，地铁广播播音员平稳中性的语调。"
+ },
+ "voice.next.nmao.nan": {
+  "fp": "65fd3defd075907e1685a528bc9d4b514f7752aace2076b6e7813f8a174b1a95",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.5,
+  "asr": "站内貌。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.next.dren.nan": {
+  "fp": "ad36e30aabe4cc47bdc21a754b66ea30a63f661ce0edb07074ea7e088c7c2d59",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.6,
+  "asr": "下一站同论。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.next.xlw.nan": {
+  "fp": "d2cdbf03ce8d6528c21680d738160fc07b1470e05394f2b44970a6227d0c78ab",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.667,
+  "asr": "下一站兴宁湾。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.next.grn6.nan": {
+  "fp": "710ff1c35d4921cad1cd0d5495a8fca290668a84faea0a336770cb06540b4fdc",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.545,
+  "asr": "下一站馆等可完成一号线。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.arrive.jhl.nan": {
+  "fp": "908aead587e03cce27d673feb8e6f4178db91421b4167a359164ec8578a06d89",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.522,
+  "asr": "雷恰即将告大告害罗站亲修心的车距站台之间的空隙。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.arrive.jjl.nan": {
+  "fp": "b7984f048e249f39ea713af7eaa3c8a8c2b214fb1a7144b716338b3ce6ef69ad",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.652,
+  "asr": "列车即将到达高刚漏站，强消型列，掐古站台之间的空隙。",
+  "tries": 8,
+  "flag": false,
+  "seed": 46682,
+  "prev_sim": 0.889,
+  "instr": "请用地道厦门腔闽南话（白话音，不要用普通话发音）播报，女声，地铁广播播音员平稳中性的语调。"
+ },
+ "voice.arrive.jmzx.nan": {
+  "fp": "9873afedf2a13ea9fbf0f3aae83a6a75f44cac39c0e4598082af79033cf025f0",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.708,
+  "asr": "在车之中到达交委中心站，请小心在车库站台之间的空隙。",
+  "tries": 8,
+  "flag": true,
+  "seed": 32426,
+  "prev_sim": 0.875
+ },
+ "voice.arrive.wpl.nan": {
+  "fp": "51fe9076fed4e318995712c350732275a593995f92ec17c7712cd06913220a85",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.652,
+  "asr": "列车即将到达文浦路站青萧兴的家与站台机杆的空隙。",
+  "tries": 8,
+  "flag": false,
+  "seed": 890,
+  "prev_sim": 0.87,
+  "instr": "请用地道厦门腔闽南话（白话音，不要用普通话发音）播报，女声，地铁广播播音员平稳中性的语调。"
+ },
+ "voice.arrive.jmdo.nan": {
+  "fp": "91f6a640145041b951e8c3fbdf3f4de02952cef5a91662934a1553012142dbf2",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.696,
+  "asr": "列车即将到达港美东站，青霄新列车以站台之干点空隙。",
+  "tries": 8,
+  "flag": false,
+  "seed": 18128,
+  "prev_sim": 0.783,
+  "instr": "请用地道厦门腔闽南话（白话音，不要用普通话发音）播报，女声，地铁广播播音员平稳中性的语调。"
+ },
+ "voice.arrive.ynong.nan": {
+  "fp": "c5c3594f393d8550bfddf320d8e214b4bb01ceb2b5b78a1ef84a02040790bf97",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.682,
+  "asr": "列车即将到达一龙站，秦霄新列车以站台至今的空隙。",
+  "tries": 8,
+  "flag": false,
+  "seed": 21202,
+  "prev_sim": 0.909,
+  "instr": "请用地道厦门腔闽南话（白话音，不要用普通话发音）播报，女声，地铁广播播音员平稳中性的语调。"
+ },
+ "voice.arrive.ldai.nan": {
+  "fp": "413b497573e30b6eb51509ecf53a0155c0fccd4543348b134cfcef7600434d19",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.682,
+  "asr": "汝车七张到大林台站车，小心列车距站台之间的空隙。",
+  "tries": 8,
+  "flag": false,
+  "seed": 28318,
+  "prev_sim": 0.909
+ },
+ "voice.arrive.xbin.nan": {
+  "fp": "4abb0a85492910e736e0d3f4345753565d012d90b195b70d0fc56b802477848e",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.818,
+  "asr": "列车即将到达水边站，请小心列车距站台之间的空气。",
+  "tries": 8,
+  "flag": true,
+  "seed": 39736,
+  "prev_sim": 0.864
+ },
+ "voice.arrive.btou.nan": {
+  "fp": "5cd94f4a9c8c2d1e75360265eb9f630d756178dbfdaaf18a3992ede3dbd8307f",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.682,
+  "asr": "了恰即将到大逼头站，恰小心地恰与站台之间的空隙。",
+  "tries": 8,
+  "flag": false,
+  "seed": 54098,
+  "prev_sim": 0.818,
+  "instr": "请用地道厦门腔闽南话（白话音，不要用普通话发音）播报，女声，地铁广播播音员平稳中性的语调。"
+ },
+ "voice.arrive.xbn.nan": {
+  "fp": "40905c5c5e5fd44533ee298ee23e599efc47a21247ada2ad8951d81b0d6f7305",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.727,
+  "asr": "列车即将到达兴宾站，秦孝兴列车个站台之间的空隙。",
+  "tries": 8,
+  "flag": true,
+  "seed": 38512,
+  "prev_sim": 0.909,
+  "instr": "请用地道厦门腔闽南话（白话音，不要用普通话发音）播报，女声，地铁广播播音员平稳中性的语调。"
+ },
+ "voice.arrive.nmao.nan": {
+  "fp": "5b7fa9d002f86aec69bb40a74d7fea6bfdefc79960b738fc98acee616c59d0ed",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.682,
+  "asr": "列车即将到达雷帽子秦霄欣列车古站台之间的空隙。",
+  "tries": 8,
+  "flag": false,
+  "seed": 38924,
+  "prev_sim": 0.773,
+  "instr": "请用地道厦门腔闽南话（白话音，不要用普通话发音）播报，女声，地铁广播播音员平稳中性的语调。"
+ },
+ "voice.arrive.dren.nan": {
+  "fp": "c0645915512c2913c9d7089cd2bbe511f29d9230bdcd363b456f92c877a9edb2",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.682,
+  "asr": "6车即将到达东陵站，抢修新列车到站台之间的空隙。",
+  "tries": 8,
+  "flag": false,
+  "seed": 40067,
+  "prev_sim": 0.909
+ },
+ "voice.arrive.xlw.nan": {
+  "fp": "bf561996a719bbc0d6efa073b17f50141e3c63a34cd7215c5828d26102e1dad6",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.864,
+  "asr": "列车即中到达临站，请小心列车与站台之间的空隙。",
+  "tries": 8,
+  "flag": true,
+  "seed": 24018,
+  "prev_sim": 0.957
+ },
+ "voice.arrive.hqdx.nan": {
+  "fp": "2bb0ed27dc01a964981c6ebb512d3ce73fcb0067744807a0943205b89ed61ddc",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.75,
+  "asr": "伫车即将到达华侨大学站，抢修新的车具，站台之间的空隙。",
+  "tries": 8,
+  "flag": true,
+  "seed": 22276,
+  "prev_sim": 0.792
+ },
+ "voice.welcome.wpl.nan": {
+  "fp": "b8f04eb733d47d2b7cd4945afb2808665be0bf7557160027785f2e69ca79ec3a",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.529,
+  "asr": "欢迎光临云坡罗站，车牌队号车先下奥尚。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.welcome.jjl.nan": {
+  "fp": "a5d4224351fb281af450d3d91cf1c78b143ec9e4b951e393cd9276470075441d",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.647,
+  "asr": "欢迎光临甲江路站车牌队候车。新系号上。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.welcome.jmdo.nan": {
+  "fp": "122a58d92220d7d0596525571d91f4a6e2b50003a843bdff7afb22102e0ca225",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.529,
+  "asr": "欢迎光临隔壁东站车牌队候车。星核号胜。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.welcome.ldai.nan": {
+  "fp": "fca8a61057d8d182f967148cc3b78287d1c597749a4f1ce008cdd196ee5f6fec",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.312,
+  "asr": "欢迎光临零带，咱恰派对后恰先A奥雄。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.welcome.jmzx.nan": {
+  "fp": "b422ee68bc26b0d2e971a6a82c9fbca12bf69e4ce1dfc2c2d6f35ccfa1fb8e9c",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.5,
+  "asr": "欢迎光临瓜米中心，咱掐排队后掐，先嘿后响。",
+  "tries": 5,
+  "flag": false,
+  "seed": 53479,
+  "prev_sim": 0.778,
+  "instr": "请用地道厦门腔闽南话（白话音，不要用普通话发音）播报，女声，地铁广播播音员平稳中性的语调。"
+ },
+ "voice.welcome.xbin.nan": {
+  "fp": "17a183b923e4bd62c85960e1c14979878b357cddc1bdf9e918ee405de25bc106",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.688,
+  "asr": "欢迎光临西边站车排队候车，心下豪雄。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.welcome.jhl.nan": {
+  "fp": "21051c1ba28f94616e4d5054eb785fe7f712bed86997cffc5d4d325d28f916f6",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.529,
+  "asr": "欢迎光临角海老站。强排对后掐，先喊后雄。",
+  "tries": 1,
+  "flag": false,
+  "seed": 14271,
+  "prev_sim": 0.824,
+  "instr": "请用地道厦门腔闽南话（白话音，不要用普通话发音）播报，女声，地铁广播播音员平稳中性的语调。"
+ },
+ "voice.welcome.btou.nan": {
+  "fp": "622d9d9828a1924d2eff61ff07b13295ecd3604a3dab1d1ecfd41107e73f1108",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.688,
+  "asr": "欢迎光临北斗站，请排队候车。审系好上。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.welcome.xbn.nan": {
+  "fp": "78f7cfcfa27b7954477b383e27d4343d80d06ec03d30d8aa9388a75d8af2b5c7",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.688,
+  "asr": "欢迎光临轻宾站，请排队候车先核候生。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.welcome.ynong.nan": {
+  "fp": "8a1de4e9304c31a447fc1802b1af51856d6c75202033489fabb87c7430defea9",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.438,
+  "asr": "欢迎光临逸动站，车牌队号车审核号上。",
+  "tries": 4,
+  "flag": false,
+  "seed": 15879,
+  "prev_sim": 0.75
+ },
+ "voice.welcome.xlw.nan": {
+  "fp": "04bb0506b240613cf923c4bfc0c9e9eb58320077d2a9fe05909d50354e1f1b07",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.471,
+  "asr": "欢迎光临杏林湾站，恰牌对号恰心啊奥雄。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.welcome.nmao.nan": {
+  "fp": "210baa6f9ef17fafbe94fd8d188efcdae6d2d53d3cd8f51acb5329dcee768e6e",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.5,
+  "asr": "欢迎光临内贸展。前排队后掐，先哈后怂。",
+  "tries": 1,
+  "flag": false,
+  "seed": 33661,
+  "prev_sim": 0.75,
+  "instr": "请用地道厦门腔闽南话（白话音，不要用普通话发音）播报，女声，地铁广播播音员平稳中性的语调。"
+ },
+ "voice.welcome.dren.nan": {
+  "fp": "789dd48eff6e41693a08736a91dd0b2e1462e131fa74c0d37ca884e48c04bf13",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.5,
+  "asr": "欢迎光临。董忍赞轻排队后掐先哈后嗓。",
+  "tries": 1,
+  "flag": false,
+  "seed": 3384,
+  "prev_sim": 0.812,
+  "instr": "请用地道厦门腔闽南话（白话音，不要用普通话发音）播报，女声，地铁广播播音员平稳中性的语调。"
+ },
+ "voice.welcome.hqdx.nan": {
+  "fp": "e27b0d9dde530bde797a849530938ffd1412b6d2dd6be997a24a37e67a04068d",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.5,
+  "asr": "欢迎光临华椒大鹅赞青排队后掐先哈，好雄。",
+  "tries": 1,
+  "flag": false,
+  "seed": 17682,
+  "prev_sim": 0.889,
+  "instr": "请用地道厦门腔闽南话（白话音，不要用普通话发音）播报，女声，地铁广播播音员平稳中性的语调。"
+ },
+ "voice.destination.xmjjl.nan": {
+  "fp": "c09ba2031d4a81ddf43f6f4639c77b2631d020588b53d807c2015e07e01f1ee9",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.636,
+  "asr": "本汽列车终点站的到公路。",
+  "tries": 8,
+  "flag": false,
+  "seed": 19258,
+  "prev_sim": 1.0,
+  "instr": "请用地道厦门腔闽南话（白话音，不要用普通话发音）播报，女声，地铁广播播音员平稳中性的语调。"
+ },
+ "voice.destination.xmhqdx.nan": {
+  "fp": "d1859e20f61f97421cb8d0a2f8b07c3435959b122a615730f02ac23c8e09ee93",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.609,
+  "asr": "本厝列车终点站为花桥道。",
+  "tries": 8,
+  "flag": false,
+  "seed": 42830,
+  "prev_sim": 1.0
+ },
+ "voice.terminal.xmjjl.nan": {
+  "fp": "4d1999b50c290b391b6299a1f6a749798feed809e1c37bb7c87c23a14d30ee3d",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.684,
+  "asr": "10分次里车的终点站，公路车全部乘客带指行李物品在此站下车，欢迎在此行者。厦门地铁。",
+  "tries": 8,
+  "flag": false,
+  "seed": 22399,
+  "prev_sim": 0.878
+ },
+ "voice.terminal.xmhqdx.nan": {
+  "fp": "fb7521d994f8dd0f7ba73208ca31e83c18f829d710393224df080f675cac90ec",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.667,
+  "asr": "下一站是本次列车的终点站，华侨大鹅将全舶行客带其行李舞聘再次展下掐。欢迎再次请坐爱盟地铁。",
+  "tries": 8,
+  "flag": false,
+  "seed": 32282,
+  "prev_sim": 0.952,
+  "instr": "请用地道厦门腔闽南话（白话音，不要用普通话发音）播报，女声，地铁广播播音员平稳中性的语调。"
+ },
+ "voice.platform.xmjjl.1.nan": {
+  "fp": "5cdd5b24a0019cb1ee14cf2330a5443c9feb915ae18d34a2b4a2ab99982751a8",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.643,
+  "asr": "一站台阁岗路轰向列车之中进站。",
+  "tries": 1,
+  "flag": false
+ },
+ "voice.platform.xmhqdx.2.nan": {
+  "fp": "b270e82f1bd9a566f4c9b8bafdc71dcf1eae5c2956f07a04ff990cecaa5a8033",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.552,
+  "asr": "二阵台华侨岛风向列车机站金站。",
+  "tries": 8,
+  "flag": false,
+  "seed": 2327,
+  "prev_sim": 0.867
+ },
+ "voice.platform.xmjjl.2.nan": {
+  "fp": "35aa0bddcd0cc5c5514b0ca7885998aabe9b436092601ebc2e6d6209ec2fcbe4",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.286,
+  "asr": "座胎江路红红列车集重gin湛。",
+  "tries": 5,
+  "flag": false,
+  "seed": 49064,
+  "prev_sim": 0.714,
+  "instr": "请用地道厦门腔闽南话（白话音，不要用普通话发音）播报，女声，地铁广播播音员平稳中性的语调。"
+ },
+ "voice.platform.xmhqdx.1.nan": {
+  "fp": "9e6604daa37e62600785da10ccbceb23bbaec63c500a313e5e415ac54a3fe99d",
+  "model": "cosyvoice-v3.5-flash",
+  "voice": "cosyvoice-v3.5-flash-ljv35f-eb898fe35c044e0e89ff3e553b701375",
+  "sim": 0.6,
+  "asr": "一针台花椒大河轰雄列车即将进站。",
+  "tries": 8,
+  "flag": false,
+  "seed": 16400,
+  "prev_sim": 0.733,
+  "instr": "请用地道厦门腔闽南话（白话音，不要用普通话发音）播报，女声，地铁广播播音员平稳中性的语调。"
  }
 }

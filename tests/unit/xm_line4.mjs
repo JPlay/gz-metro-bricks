@@ -15,7 +15,7 @@ ok('eight stations west→east', L.stations.length === 8 && JSON.stringify(L.sta
 ok('unique station codes', new Set(L.stations).size === 8);
 ok('qianwu correct character and English', X.XM_STATIONS.qwu.zh === '前\u6d6f' && X.XM_STATIONS.qwu.en === 'Qianwu');
 ok('temporary terminus directions', L.dirs.qwu.step === 1 && L.dirs.jsrb.step === -1 && X.xmIsTerminal(4,'qwu',1) && X.xmIsTerminal(4,'jsrb',-1));
-ok('no unopened stops / Line 6', !X.XM_LINES[6] && !Object.values(X.XM_STATIONS).some(s=>/西岩|前浔|洞庭|机场西|翔安机场/.test(s.zh)));
+ok('no unopened stops / Line 6 not via 官浔', JSON.stringify(X.XM_STATIONS.gxn.lines) === '[4]' && !X.XM_STATIONS.gxn.x.includes(6) && !Object.values(X.XM_STATIONS).some(s=>/西岩|前浔|洞庭|机场西|翔安机场/.test(s.zh)));
 ok('official red distinct from Line 1 orange-red', L.color === X.XM_L4 && L.color === '#FF0000' && X.XM_L1 === '#F2711C');
 ok('white dolphin standard template, no feature station', L.theme === 'xm4' && L.mark === '白海豚' && L.stations.filter(c=>!['xmnb','hkg'].includes(c)).every(c=>!X.XM_STATIONS[c].theme));
 const own = L.stations.filter(c=>!['xmnb','hkg'].includes(c));
