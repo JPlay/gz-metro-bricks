@@ -345,7 +345,7 @@ export function panZoom(box, onTap) {
   return { reset() { k = 1; tx = ty = 0; pts.clear(); apply(); }, set(nk, x = 0, y = 0) { k = nk; tx = x; ty = y; apply(); }, get scale() { return k; } };
 }
 
-/** 厦门地铁全网图（1 橙红 + 2 鹭岛绿，吕厝换乘）；和广州图同款交互 */
+/** 厦门地铁全网图（1 橙红 + 2 鹭岛绿，吕厝换乘；3 云天青，湖滨东路 / 火炬园换 1、体育中心 / 五缘湾换 2）；和广州图同款交互 */
 export function xmNetworkSVG(here, { portrait = false } = {}) {
   const W = portrait ? 720 : 1100, H = portrait ? 1100 : 720;
   // 简易坐标：1 号线竖排，2 号线横排，交于吕厝
@@ -359,6 +359,20 @@ export function xmNetworkSVG(here, { portrait = false } = {}) {
     const [lx, ly] = pos.lcu;
     pos[c] = portrait ? [lx + (i - iLcu2) * 28, ly] : [lx, ly + (i - iLcu2) * 22];
   });
+  const l3tail = new Set();
+  // 3 号线（示意）：四个换乘站已经在 1 / 2 号线上有位置 → 中间的站在相邻两个换乘站之间等分；
+  // 厦门火车站挂在湖滨东路旁边，五缘湾以东（过海到翔安）沿 1 号线的方向往外排
+  if (XM_LINES[3]) {
+    const L3 = XM_LINES[3].stations, hb = pos.hbd;
+    pos[L3[0]] = portrait ? [hb[0] + 40, hb[1] + 20] : [hb[0] + 20, hb[1] + 40];
+    const known = L3.map((c, i) => pos[c] ? i : -1).filter(i => i >= 0), last = known[known.length - 1];
+    L3.forEach((c, i) => {
+      if (pos[c]) return;
+      if (i > last) { const [wx, wy] = pos[L3[last]], k = i - last; pos[c] = portrait ? [wx, wy + k * 30] : [wx + k * 30, wy]; l3tail.add(c); return; }
+      const a = known.filter(j => j < i).pop(), b = known.find(j => j > i), t = (i - a) / (b - a), A = pos[L3[a]], B = pos[L3[b]];
+      pos[c] = [A[0] + (B[0] - A[0]) * t, A[1] + (B[1] - A[1]) * t];
+    });
+  }
   // 归一到画布边距
   const xs = Object.values(pos).map(p => p[0]), ys = Object.values(pos).map(p => p[1]);
   const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
@@ -367,24 +381,30 @@ export function xmNetworkSVG(here, { portrait = false } = {}) {
   for (const c of Object.keys(pos)) pos[c] = [pad + (pos[c][0] - minX) * sc, pad + (pos[c][1] - minY) * sc];
   let s = `<svg class="netmap" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
   s += `<text x="${W/2}" y="36" text-anchor="middle" font-size="22" font-weight="800" fill="#1B2530">厦门地铁</text>`;
-  s += `<text x="${W/2}" y="56" text-anchor="middle" font-size="13" fill="#6B7280">Xiamen Metro · 1号线 闽南红 · 2号线 鹭岛绿</text>`;
+  s += `<text x="${W/2}" y="56" text-anchor="middle" font-size="13" fill="#6B7280">Xiamen Metro · 1号线 闽南红 · 2号线 鹭岛绿${XM_LINES[3] ? ' · 3号线 云天青' : ''}</text>`;
   for (const [id, L] of Object.entries(XM_LINES)) {
     const pts = L.stations.map(c => pos[c]);
     s += `<polyline points="${pts.map(p => p[0] + ',' + p[1]).join(' ')}" fill="none" stroke="${L.color}" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>`;
   }
+  let l3alt = false;
   for (const [c, [x, y]] of Object.entries(pos)) {
     const S = XM_STATIONS[c], both = S.lines.length > 1, hereOn = c === here;
     if (both) {
-      s += `<circle cx="${x}" cy="${y}" r="11" fill="#fff" stroke="${XM_LINES[1].color}" stroke-width="5"/>`;
-      s += `<circle cx="${x}" cy="${y}" r="5" fill="${XM_LINES[2].color}"/>`;
+      s += `<circle cx="${x}" cy="${y}" r="11" fill="#fff" stroke="${XM_LINES[S.lines[0]].color}" stroke-width="5"/>`;
+      s += `<circle cx="${x}" cy="${y}" r="5" fill="${XM_LINES[S.lines[1]].color}"/>`;
     } else {
       const lc = XM_LINES[S.lines[0]].color;
       s += `<circle cx="${x}" cy="${y}" r="8" fill="#fff" stroke="${lc}" stroke-width="5"/>`;
     }
     if (hereOn) s += `<circle cx="${x}" cy="${y}" r="16" fill="none" stroke="#FF5A4E" stroke-width="3"><animate attributeName="r" values="14;20;14" dur="1.6s" repeatCount="indefinite"/></circle>`;
     const label = S.zh.length > 4 ? S.zh.slice(0, 4) : S.zh;
-    const ly = y + (portrait ? 18 : (S.lines[0] === 1 ? -14 : 18));
-    s += `<text x="${x}" y="${ly}" text-anchor="middle" font-size="${hereOn ? 13 : 10}" font-weight="${hereOn ? 800 : 600}" fill="#1B2530">${label}</text>`;
+    let lx = x, ly = y + (portrait ? 18 : (S.lines[0] === 1 ? -14 : 18)), anc = 'middle';
+    // 3 号线自己的站：五缘湾以东一字排开的上下交错，中间那段（夹在 1 / 2 号线之间）写在圆点右边，少压别的线
+    if (S.lines.length === 1 && S.lines[0] === 3) {
+      if (l3tail.has(c)) { if (portrait) { lx = x + 14; ly = y + 4; anc = 'start'; } else ly = y + ((l3alt = !l3alt) ? -14 : 22); }
+      else { lx = x + 13; ly = y + 4; anc = 'start'; }
+    }
+    s += `<text x="${lx}" y="${ly}" text-anchor="${anc}" font-size="${hereOn ? 13 : 10}" font-weight="${hereOn ? 800 : 600}" fill="#1B2530" paint-order="stroke" stroke="#fff" stroke-width="3" stroke-linejoin="round">${label}</text>`;
   }
   // 景点小图标（和广州图一样可点开小卡片）：1 号线横排时放线下方，2 号线竖排时放线右侧；相邻两站错开
   const XR = 13, alt = {};
@@ -394,6 +414,8 @@ export function xmNetworkSVG(here, { portrait = false } = {}) {
     if (a.code === 'lcu') { ix = portrait ? x - 50 : x - 40; iy = portrait ? y - 44 : y + 40; }
     else if (onL1) { if (portrait) { const k = (alt.p1 = !alt.p1) ? 1 : 2; ix = x - 40 * k; iy = y; } else { const k = (alt.l1 = !alt.l1) ? 1 : 2; ix = x; iy = y + 22 + 26 * k; } }
     else { if (portrait) { const k = (alt.p2 = !alt.p2) ? 1 : 2; ix = x + 8; iy = y - 30 - 40 * k; } else { const k = (alt.l2 = !alt.l2) ? 1 : 2; ix = x + 70 + 46 * (k - 1); iy = y; } }
+    // 横屏时 2 号线「湿地公园」图标会压住 3 号线东段的「鼓锣」，往上挪开
+    if (a.code === 'sdy' && !portrait) iy -= 42;
     tx = ix; ty = iy + XR + 12;
     s += `<line x1="${x}" y1="${y}" x2="${ix}" y2="${iy}" stroke="#9AA3AD" stroke-width="2" stroke-dasharray="2 4"/>`;
     s += `<g class="attr" data-attr="${a.id}" data-code="${a.code}"><circle cx="${ix}" cy="${iy}" r="${XR + 10}" fill="#fff" fill-opacity="0"/>${iconSVG(a.icon, ix, iy, XR, XM_LINES[S.lines[0]].color)}`;
