@@ -17,7 +17,7 @@ import { Kit } from '../world/kit.js';
 import { hex, mix, Geo } from '../core/geo.js';
 import { FoodAtlas } from './food-art.js';
 import { Person, randomLook } from '../world/people.js';
-import { pressable } from './input.js';
+import { pressable, hudHit } from './input.js';
 import { HOTEL_DOOR } from '../world/njs.js';
 const B = window.BABYLON;
 export const HO = { x: 1000, z: 0 };
@@ -434,7 +434,7 @@ export class HotelCtl {
     this.panel = document.getElementById('liftPanel');
     this.panel.querySelector('.fl').innerHTML = [3, 2, 1].map(n => `<button class="flb" data-f="${n}"><span>${n}</span><small>${n === 1 ? '大堂' : n + ' 楼'}</small></button>`).join('');
     this.panel.querySelectorAll('.flb').forEach(b => pressable(b, () => this.press(+b.dataset.f)));
-    ['pointerdown', 'pointermove', 'pointerup', 'touchstart', 'click'].forEach(t => this.panel.addEventListener(t, e => e.stopPropagation()));
+    hudHit(this.panel);
   }
   enter(st) {
     if (!this.interior) this.interior = new HotelInterior(this.scene, this.M);

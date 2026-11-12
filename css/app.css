@@ -35,6 +35,16 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #1d2b3a; fon
 @keyframes breathe { 50% { transform: scale(1.04); opacity: .75; } }
 
 #hud { position: fixed; inset: 0; z-index: 4; pointer-events: none; }
+/* #hud 整层不接收点击，好让摇杆 / 转头点到 3D 画面。可点子项统一在这里打开：
+   原生 button / 链接 / 表单，以及 js 里 hudHit() 打上的 .hud-hit。
+   漏写就会出现 iPad「点了没反应」（动车选城市、掉进河里回岸上都属于这一类）。 */
+#hud button,
+#hud [role="button"],
+#hud a,
+#hud input,
+#hud select,
+#hud textarea,
+#hud .hud-hit { pointer-events: auto; touch-action: manipulation; }
 
 /* 站名牌 */
 #where { position: absolute; left: calc(14px + env(safe-area-inset-left)); top: calc(12px + env(safe-area-inset-top)); display: flex; align-items: center; gap: 14px;
@@ -473,3 +483,12 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #1d2b3a; fon
 #bFast[hidden] { display: none; }
 #bFast .emo { font-size: 32px; line-height: 1; }
 #bFast.on { background: linear-gradient(#FFB54A, #F07A1F); box-shadow: 0 8px 22px rgba(180, 80, 0, .45); }
+/* 掉进河里：「回到岸上」（不要送回地铁站台） */
+#bShore { position: absolute; left: 50%; bottom: calc(140px + env(safe-area-inset-bottom));
+  transform: translateX(-50%); width: auto; min-width: 220px; height: 96px; padding: 0 32px;
+  border-radius: 28px; flex-direction: row; gap: 10px; z-index: 30;
+  background: radial-gradient(circle at 40% 30%, #ffffff, #d5f0ea 55%, #8fd4c4);
+  border: 3px solid rgba(255,255,255,.95); color: #0d6b5c;
+  box-shadow: 0 10px 26px rgba(10,60,50,.28); }
+#bShore .lbl { font-size: 26px; font-weight: 800; white-space: nowrap; color: #0d6b5c; }
+#bShore[hidden] { display: none; }

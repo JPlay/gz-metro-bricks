@@ -10,6 +10,7 @@ import { Hud } from './ui/hud.js';
 import { Station, SPAWN, MAIN, GYQ2, YC } from './world/station.js';
 import { Player } from './game/player.js';
 import { Input, pressable } from './game/input.js';
+import { installShore } from './game/water.js';
 import { Metro } from './game/service.js';
 import { Tickets } from './game/ticket.js';
 import { SeatCtl } from './game/seat.js';
@@ -200,6 +201,7 @@ export async function start() {
   let fpsAcc = 0, fpsN = 0, fpsT = 0, lowCount = 0;
   window.addEventListener('resize', () => engine.resize());
 
+  const shore = installShore({ player, hud, Audio });
   // —— 主循环
   let stepAcc = 0, hotel = null, clan = null, east = null;
   scene.onBeforeRenderObservable.add(() => {
@@ -328,8 +330,10 @@ export async function start() {
       if (player.grounded && !G.aboard && !player.seat && v > 0.35 && v < 15) { stepAcc += v * dt; if (stepAcc >= stride) { stepAcc -= stride; Audio.footstep({ surface, k: Math.min(1.2, 0.75 + v * 0.08) }); } }
       else stepAcc = Math.min(stepAcc, stride * 0.55);
       if (player.landed) { player.landed = false; Audio.footstep({ surface, land: true }); } }
-    // 掉出世界 → 回到站台 / 站口
-    if (!G.inTunnel && p.y < -40) {
+    // 掉进河里：托在水面，给出「回到岸上」；不要送回地铁站台
+    const inWater = shore.tick({ street: cm && cm.street, zone: G.zone, inTunnel: G.inTunnel });
+    // 掉出世界 → 回到站台 / 站口（河里不算）
+    if (!G.inTunnel && p.y < -40 && !inWater) {
       if (inXm) {
         const P = cm.station.platforms[0];
         const z = P.sideOnly === 'A' ? P.zc - 2.2 : P.sideOnly === 'B' ? P.zc + 2.2 : P.zc + 2;
@@ -427,7 +431,7 @@ export async function start() {
       babylon: { version: B.Engine.Version, source: window.__babylonSource, attempts: window.__babylonAttempts },
       drawCalls: (engine._drawCalls && engine._drawCalls.current) ?? null, activeMeshes: scene.getActiveMeshes().length, depthBits: depthBits(), minZ: cam.minZ, gates: G.station.gates.map(g => +g.f.toFixed(2)),
       security: G.station.security.flash > 0, probes: R.probes.length, atlas: G.station.kit.atlas ? { y: G.station.kit.atlas.y + G.station.kit.atlas.row, overflow: G.station.kit.atlas.overflow } : null, audio: Audio.getState(),
-      ticket: tickets.info(), seat: seats.info(), social: social.info(), discover: discovery.info(), hotel: hotel ? hotel.info() : null, clan: clan ? clan.info() : null, east: east ? east.info() : null, hall: G.station && G.station.interior ? G.station.interior.info() : null, mapOpen: !!G.mapOpen, attrCard: G.attrCard || null, act: hud.act ? { id: hud.act.id, label: hud.act.label } : null
+      ticket: tickets.info(), seat: seats.info(), social: social.info(), discover: discovery.info(), hotel: hotel ? hotel.info() : null, clan: clan ? clan.info() : null, east: east ? east.info() : null, hall: G.station && G.station.interior ? G.station.interior.info() : null, mapOpen: !!G.mapOpen, attrCard: G.attrCard || null, act: hud.act ? { id: hud.act.id, label: hud.act.label } : null, inWater: !!(document.getElementById('bShore') && !document.getElementById('bShore').hidden)
     }),
     teleport: (x, y, z, yaw) => player.spawn(x, y, z, yaw ?? player.yaw),
     setMove: (x, y, run) => { input.virtual = (x || y) ? { x, y, run } : null; },

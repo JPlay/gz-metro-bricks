@@ -77,8 +77,20 @@ export class Input {
     return out;
   }
 }
-/** 按钮：按下立即变色缩放（不等 click） */
+const HUD_HOLD = ['pointerdown', 'pointermove', 'pointerup', 'touchstart', 'click'];
+/** #hud 整层 pointer-events: none。往上面挂可点控件时调用：打开点击并拦住冒泡，免得真机点到 3D 画面（iPad「点了没反应」）。 */
+export function hudHit(el) {
+  if (!el) return el;
+  el.classList.add('hud-hit');
+  if (!el.dataset.hudHit) {
+    el.dataset.hudHit = '1';
+    HUD_HOLD.forEach(t => el.addEventListener(t, e => e.stopPropagation()));
+  }
+  return el;
+}
+/** 按钮：按下立即变色缩放（不等 click）；顺带按 hudHit 打开点击 */
 export function pressable(el, fn) {
+  hudHit(el);
   const on = e => { e.preventDefault(); e.stopPropagation(); el.classList.add('press'); fn(e); };
   const off = () => el.classList.remove('press');
   el.addEventListener('pointerdown', on); el.addEventListener('pointerup', off); el.addEventListener('pointercancel', off); el.addEventListener('pointerleave', off);
