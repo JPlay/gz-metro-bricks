@@ -2700,22 +2700,22 @@
   "file": "voice/welcome-yan-en.mp3"
  },
  {
-  "id": "voice.next.xmnb.zh",
+  "id": "voice.next.xmnb1.zh",
   "lang": "zh",
   "text": "下一站，厦门北站，可换乘4号线。",
-  "file": "voice/next-xmnb-zh.mp3"
+  "file": "voice/next-xmnb1-zh.mp3"
  },
  {
-  "id": "voice.next.xmnb.nan",
+  "id": "voice.next.xmnb1.nan",
   "lang": "nan",
   "text": "下一站，厦门北站，可换乘4号线。",
-  "file": "voice/next-xmnb-nan.mp3"
+  "file": "voice/next-xmnb1-nan.mp3"
  },
  {
-  "id": "voice.next.xmnb.en",
+  "id": "voice.next.xmnb1.en",
   "lang": "en",
   "text": "The next station is Xiamen North Railway Station, the interchange with Line 4.",
-  "file": "voice/next-xmnb-en.mp3"
+  "file": "voice/next-xmnb1-en.mp3"
  },
  {
   "id": "voice.arrive.xmnb.zh",
@@ -7128,22 +7128,22 @@
   "file": "voice/welcome-djie-en.mp3"
  },
  {
-  "id": "voice.next.hkg.zh",
+  "id": "voice.next.hkg3.zh",
   "lang": "zh",
   "text": "下一站，洪坑，可换乘4号线。",
-  "file": "voice/next-hkg-zh.mp3"
+  "file": "voice/next-hkg3-zh.mp3"
  },
  {
-  "id": "voice.next.hkg.nan",
+  "id": "voice.next.hkg3.nan",
   "lang": "nan",
   "text": "下一站，洪坑，可换乘4号线。",
-  "file": "voice/next-hkg-nan.mp3"
+  "file": "voice/next-hkg3-nan.mp3"
  },
  {
-  "id": "voice.next.hkg.en",
+  "id": "voice.next.hkg3.en",
   "lang": "en",
   "text": "The next station is Hongkeng, the interchange with Line 4.",
-  "file": "voice/next-hkg-en.mp3"
+  "file": "voice/next-hkg3-en.mp3"
  },
  {
   "id": "voice.arrive.hkg.zh",
@@ -7486,6 +7486,474 @@
   "lang": "en",
   "text": "Welcome to Caicuo station. Please line up for the train. Let the passengers get off first before you get on.",
   "file": "voice/welcome-ccuo-en.mp3"
+ },
+ {
+  "id": "voice.destination.xmqwu.zh",
+  "lang": "zh",
+  "text": "本次列车终点站为前浯。",
+  "file": "voice/destination-xmqwu-zh.mp3"
+ },
+ {
+  "id": "voice.destination.xmqwu.nan",
+  "lang": "nan",
+  "text": "本次列车终点站为前浯。",
+  "file": "voice/destination-xmqwu-nan.mp3"
+ },
+ {
+  "id": "voice.destination.xmqwu.en",
+  "lang": "en",
+  "text": "The destination of this train is Qianwu.",
+  "file": "voice/destination-xmqwu-en.mp3"
+ },
+ {
+  "id": "voice.terminal.xmqwu.zh",
+  "lang": "zh",
+  "text": "下一站是本次列车的终点站，前浯。请全部乘客带齐行李物品在此站下车，欢迎再次乘坐厦门地铁。",
+  "file": "voice/terminal-xmqwu-zh.mp3"
+ },
+ {
+  "id": "voice.terminal.xmqwu.nan",
+  "lang": "nan",
+  "text": "下一站是本次列车的终点站，前浯。请全部乘客带齐行李物品在此站下车，欢迎再次乘坐厦门地铁。",
+  "file": "voice/terminal-xmqwu-nan.mp3"
+ },
+ {
+  "id": "voice.terminal.xmqwu.en",
+  "lang": "en",
+  "text": "The next station is Qianwu, the terminal of this journey. Please take all your belongings and leave the train. Thank you for travelling on Xiamen Metro.",
+  "file": "voice/terminal-xmqwu-en.mp3"
+ },
+ {
+  "id": "voice.platform.xmqwu.1.zh",
+  "lang": "zh",
+  "text": "一站台，前浯方向列车即将进站。",
+  "file": "voice/platform-xmqwu-1-zh.mp3"
+ },
+ {
+  "id": "voice.platform.xmqwu.1.nan",
+  "lang": "nan",
+  "text": "一站台，前浯方向列车即将进站。",
+  "file": "voice/platform-xmqwu-1-nan.mp3"
+ },
+ {
+  "id": "voice.platform.xmqwu.1.en",
+  "lang": "en",
+  "text": "The train bound for Qianwu is approaching at Platform 1.",
+  "file": "voice/platform-xmqwu-1-en.mp3"
+ },
+ {
+  "id": "voice.platform.xmqwu.2.zh",
+  "lang": "zh",
+  "text": "二站台，前浯方向列车即将进站。",
+  "file": "voice/platform-xmqwu-2-zh.mp3"
+ },
+ {
+  "id": "voice.platform.xmqwu.2.nan",
+  "lang": "nan",
+  "text": "二站台，前浯方向列车即将进站。",
+  "file": "voice/platform-xmqwu-2-nan.mp3"
+ },
+ {
+  "id": "voice.platform.xmqwu.2.en",
+  "lang": "en",
+  "text": "The train bound for Qianwu is approaching at Platform 2.",
+  "file": "voice/platform-xmqwu-2-en.mp3"
+ },
+ {
+  "id": "voice.destination.xmjsrb.zh",
+  "lang": "zh",
+  "text": "本次列车终点站为集美软件园北。",
+  "file": "voice/destination-xmjsrb-zh.mp3"
+ },
+ {
+  "id": "voice.destination.xmjsrb.nan",
+  "lang": "nan",
+  "text": "本次列车终点站为集美软件园北。",
+  "file": "voice/destination-xmjsrb-nan.mp3"
+ },
+ {
+  "id": "voice.destination.xmjsrb.en",
+  "lang": "en",
+  "text": "The destination of this train is Jimei Software Park North.",
+  "file": "voice/destination-xmjsrb-en.mp3"
+ },
+ {
+  "id": "voice.terminal.xmjsrb.zh",
+  "lang": "zh",
+  "text": "下一站是本次列车的终点站，集美软件园北。请全部乘客带齐行李物品在此站下车，欢迎再次乘坐厦门地铁。",
+  "file": "voice/terminal-xmjsrb-zh.mp3"
+ },
+ {
+  "id": "voice.terminal.xmjsrb.nan",
+  "lang": "nan",
+  "text": "下一站是本次列车的终点站，集美软件园北。请全部乘客带齐行李物品在此站下车，欢迎再次乘坐厦门地铁。",
+  "file": "voice/terminal-xmjsrb-nan.mp3"
+ },
+ {
+  "id": "voice.terminal.xmjsrb.en",
+  "lang": "en",
+  "text": "The next station is Jimei Software Park North, the terminal of this journey. Please take all your belongings and leave the train. Thank you for travelling on Xiamen Metro.",
+  "file": "voice/terminal-xmjsrb-en.mp3"
+ },
+ {
+  "id": "voice.platform.xmjsrb.1.zh",
+  "lang": "zh",
+  "text": "一站台，集美软件园北方向列车即将进站。",
+  "file": "voice/platform-xmjsrb-1-zh.mp3"
+ },
+ {
+  "id": "voice.platform.xmjsrb.1.nan",
+  "lang": "nan",
+  "text": "一站台，集美软件园北方向列车即将进站。",
+  "file": "voice/platform-xmjsrb-1-nan.mp3"
+ },
+ {
+  "id": "voice.platform.xmjsrb.1.en",
+  "lang": "en",
+  "text": "The train bound for Jimei Software Park North is approaching at Platform 1.",
+  "file": "voice/platform-xmjsrb-1-en.mp3"
+ },
+ {
+  "id": "voice.platform.xmjsrb.2.zh",
+  "lang": "zh",
+  "text": "二站台，集美软件园北方向列车即将进站。",
+  "file": "voice/platform-xmjsrb-2-zh.mp3"
+ },
+ {
+  "id": "voice.platform.xmjsrb.2.nan",
+  "lang": "nan",
+  "text": "二站台，集美软件园北方向列车即将进站。",
+  "file": "voice/platform-xmjsrb-2-nan.mp3"
+ },
+ {
+  "id": "voice.platform.xmjsrb.2.en",
+  "lang": "en",
+  "text": "The train bound for Jimei Software Park North is approaching at Platform 2.",
+  "file": "voice/platform-xmjsrb-2-en.mp3"
+ },
+ {
+  "id": "voice.arrive.jsrb.zh",
+  "lang": "zh",
+  "text": "列车即将到达集美软件园北站，请小心列车与站台之间的空隙。",
+  "file": "voice/arrive-jsrb-zh.mp3"
+ },
+ {
+  "id": "voice.arrive.jsrb.nan",
+  "lang": "nan",
+  "text": "列车即将到达集美软件园北站，请小心列车与站台之间的空隙。",
+  "file": "voice/arrive-jsrb-nan.mp3"
+ },
+ {
+  "id": "voice.arrive.jsrb.en",
+  "lang": "en",
+  "text": "The train is arriving at Jimei Software Park North. Please mind the gap between the train and the platform.",
+  "file": "voice/arrive-jsrb-en.mp3"
+ },
+ {
+  "id": "voice.welcome.jsrb.zh",
+  "lang": "zh",
+  "text": "欢迎光临集美软件园北站。请排队候车，先下后上。",
+  "file": "voice/welcome-jsrb-zh.mp3"
+ },
+ {
+  "id": "voice.welcome.jsrb.nan",
+  "lang": "nan",
+  "text": "欢迎光临集美软件园北站。请排队候车，先下后上。",
+  "file": "voice/welcome-jsrb-nan.mp3"
+ },
+ {
+  "id": "voice.welcome.jsrb.en",
+  "lang": "en",
+  "text": "Welcome to Jimei Software Park North station. Please line up for the train. Let the passengers get off first before you get on.",
+  "file": "voice/welcome-jsrb-en.mp3"
+ },
+ {
+  "id": "voice.next.hxi.zh",
+  "lang": "zh",
+  "text": "下一站，后溪。",
+  "file": "voice/next-hxi-zh.mp3"
+ },
+ {
+  "id": "voice.next.hxi.nan",
+  "lang": "nan",
+  "text": "下一站，后溪。",
+  "file": "voice/next-hxi-nan.mp3"
+ },
+ {
+  "id": "voice.next.hxi.en",
+  "lang": "en",
+  "text": "The next station is Houxi.",
+  "file": "voice/next-hxi-en.mp3"
+ },
+ {
+  "id": "voice.arrive.hxi.zh",
+  "lang": "zh",
+  "text": "列车即将到达后溪站，请小心列车与站台之间的空隙。",
+  "file": "voice/arrive-hxi-zh.mp3"
+ },
+ {
+  "id": "voice.arrive.hxi.nan",
+  "lang": "nan",
+  "text": "列车即将到达后溪站，请小心列车与站台之间的空隙。",
+  "file": "voice/arrive-hxi-nan.mp3"
+ },
+ {
+  "id": "voice.arrive.hxi.en",
+  "lang": "en",
+  "text": "The train is arriving at Houxi. Please mind the gap between the train and the platform.",
+  "file": "voice/arrive-hxi-en.mp3"
+ },
+ {
+  "id": "voice.welcome.hxi.zh",
+  "lang": "zh",
+  "text": "欢迎光临后溪站。请排队候车，先下后上。",
+  "file": "voice/welcome-hxi-zh.mp3"
+ },
+ {
+  "id": "voice.welcome.hxi.nan",
+  "lang": "nan",
+  "text": "欢迎光临后溪站。请排队候车，先下后上。",
+  "file": "voice/welcome-hxi-nan.mp3"
+ },
+ {
+  "id": "voice.welcome.hxi.en",
+  "lang": "en",
+  "text": "Welcome to Houxi station. Please line up for the train. Let the passengers get off first before you get on.",
+  "file": "voice/welcome-hxi-en.mp3"
+ },
+ {
+  "id": "voice.next.xmnb4.zh",
+  "lang": "zh",
+  "text": "下一站，厦门北站，可换乘1号线。",
+  "file": "voice/next-xmnb4-zh.mp3"
+ },
+ {
+  "id": "voice.next.xmnb4.nan",
+  "lang": "nan",
+  "text": "下一站，厦门北站，可换乘1号线。",
+  "file": "voice/next-xmnb4-nan.mp3"
+ },
+ {
+  "id": "voice.next.xmnb4.en",
+  "lang": "en",
+  "text": "The next station is Xiamen North Railway Station, the interchange with Line 1.",
+  "file": "voice/next-xmnb4-en.mp3"
+ },
+ {
+  "id": "voice.next.gxn.zh",
+  "lang": "zh",
+  "text": "下一站，官浔，可换乘6号线。",
+  "file": "voice/next-gxn-zh.mp3"
+ },
+ {
+  "id": "voice.next.gxn.nan",
+  "lang": "nan",
+  "text": "下一站，官浔，可换乘6号线。",
+  "file": "voice/next-gxn-nan.mp3"
+ },
+ {
+  "id": "voice.next.gxn.en",
+  "lang": "en",
+  "text": "The next station is Guanxun, the interchange with Line 6.",
+  "file": "voice/next-gxn-en.mp3"
+ },
+ {
+  "id": "voice.arrive.gxn.zh",
+  "lang": "zh",
+  "text": "列车即将到达官浔站，请小心列车与站台之间的空隙。",
+  "file": "voice/arrive-gxn-zh.mp3"
+ },
+ {
+  "id": "voice.arrive.gxn.nan",
+  "lang": "nan",
+  "text": "列车即将到达官浔站，请小心列车与站台之间的空隙。",
+  "file": "voice/arrive-gxn-nan.mp3"
+ },
+ {
+  "id": "voice.arrive.gxn.en",
+  "lang": "en",
+  "text": "The train is arriving at Guanxun. Please mind the gap between the train and the platform.",
+  "file": "voice/arrive-gxn-en.mp3"
+ },
+ {
+  "id": "voice.welcome.gxn.zh",
+  "lang": "zh",
+  "text": "欢迎光临官浔站。请排队候车，先下后上。",
+  "file": "voice/welcome-gxn-zh.mp3"
+ },
+ {
+  "id": "voice.welcome.gxn.nan",
+  "lang": "nan",
+  "text": "欢迎光临官浔站。请排队候车，先下后上。",
+  "file": "voice/welcome-gxn-nan.mp3"
+ },
+ {
+  "id": "voice.welcome.gxn.en",
+  "lang": "en",
+  "text": "Welcome to Guanxun station. Please line up for the train. Let the passengers get off first before you get on.",
+  "file": "voice/welcome-gxn-en.mp3"
+ },
+ {
+  "id": "voice.next.bzhou.zh",
+  "lang": "zh",
+  "text": "下一站，丙洲。",
+  "file": "voice/next-bzhou-zh.mp3"
+ },
+ {
+  "id": "voice.next.bzhou.nan",
+  "lang": "nan",
+  "text": "下一站，丙洲。",
+  "file": "voice/next-bzhou-nan.mp3"
+ },
+ {
+  "id": "voice.next.bzhou.en",
+  "lang": "en",
+  "text": "The next station is Bingzhou.",
+  "file": "voice/next-bzhou-en.mp3"
+ },
+ {
+  "id": "voice.arrive.bzhou.zh",
+  "lang": "zh",
+  "text": "列车即将到达丙洲站，请小心列车与站台之间的空隙。",
+  "file": "voice/arrive-bzhou-zh.mp3"
+ },
+ {
+  "id": "voice.arrive.bzhou.nan",
+  "lang": "nan",
+  "text": "列车即将到达丙洲站，请小心列车与站台之间的空隙。",
+  "file": "voice/arrive-bzhou-nan.mp3"
+ },
+ {
+  "id": "voice.arrive.bzhou.en",
+  "lang": "en",
+  "text": "The train is arriving at Bingzhou. Please mind the gap between the train and the platform.",
+  "file": "voice/arrive-bzhou-en.mp3"
+ },
+ {
+  "id": "voice.welcome.bzhou.zh",
+  "lang": "zh",
+  "text": "欢迎光临丙洲站。请排队候车，先下后上。",
+  "file": "voice/welcome-bzhou-zh.mp3"
+ },
+ {
+  "id": "voice.welcome.bzhou.nan",
+  "lang": "nan",
+  "text": "欢迎光临丙洲站。请排队候车，先下后上。",
+  "file": "voice/welcome-bzhou-nan.mp3"
+ },
+ {
+  "id": "voice.welcome.bzhou.en",
+  "lang": "en",
+  "text": "Welcome to Bingzhou station. Please line up for the train. Let the passengers get off first before you get on.",
+  "file": "voice/welcome-bzhou-en.mp3"
+ },
+ {
+  "id": "voice.next.cch.zh",
+  "lang": "zh",
+  "text": "下一站，城场。",
+  "file": "voice/next-cch-zh.mp3"
+ },
+ {
+  "id": "voice.next.cch.nan",
+  "lang": "nan",
+  "text": "下一站，城场。",
+  "file": "voice/next-cch-nan.mp3"
+ },
+ {
+  "id": "voice.next.cch.en",
+  "lang": "en",
+  "text": "The next station is Chengchang.",
+  "file": "voice/next-cch-en.mp3"
+ },
+ {
+  "id": "voice.arrive.cch.zh",
+  "lang": "zh",
+  "text": "列车即将到达城场站，请小心列车与站台之间的空隙。",
+  "file": "voice/arrive-cch-zh.mp3"
+ },
+ {
+  "id": "voice.arrive.cch.nan",
+  "lang": "nan",
+  "text": "列车即将到达城场站，请小心列车与站台之间的空隙。",
+  "file": "voice/arrive-cch-nan.mp3"
+ },
+ {
+  "id": "voice.arrive.cch.en",
+  "lang": "en",
+  "text": "The train is arriving at Chengchang. Please mind the gap between the train and the platform.",
+  "file": "voice/arrive-cch-en.mp3"
+ },
+ {
+  "id": "voice.welcome.cch.zh",
+  "lang": "zh",
+  "text": "欢迎光临城场站。请排队候车，先下后上。",
+  "file": "voice/welcome-cch-zh.mp3"
+ },
+ {
+  "id": "voice.welcome.cch.nan",
+  "lang": "nan",
+  "text": "欢迎光临城场站。请排队候车，先下后上。",
+  "file": "voice/welcome-cch-nan.mp3"
+ },
+ {
+  "id": "voice.welcome.cch.en",
+  "lang": "en",
+  "text": "Welcome to Chengchang station. Please line up for the train. Let the passengers get off first before you get on.",
+  "file": "voice/welcome-cch-en.mp3"
+ },
+ {
+  "id": "voice.next.hkg4.zh",
+  "lang": "zh",
+  "text": "下一站，洪坑，可换乘3号线。",
+  "file": "voice/next-hkg4-zh.mp3"
+ },
+ {
+  "id": "voice.next.hkg4.nan",
+  "lang": "nan",
+  "text": "下一站，洪坑，可换乘3号线。",
+  "file": "voice/next-hkg4-nan.mp3"
+ },
+ {
+  "id": "voice.next.hkg4.en",
+  "lang": "en",
+  "text": "The next station is Hongkeng, the interchange with Line 3.",
+  "file": "voice/next-hkg4-en.mp3"
+ },
+ {
+  "id": "voice.arrive.qwu.zh",
+  "lang": "zh",
+  "text": "列车即将到达前浯站，请小心列车与站台之间的空隙。",
+  "file": "voice/arrive-qwu-zh.mp3"
+ },
+ {
+  "id": "voice.arrive.qwu.nan",
+  "lang": "nan",
+  "text": "列车即将到达前浯站，请小心列车与站台之间的空隙。",
+  "file": "voice/arrive-qwu-nan.mp3"
+ },
+ {
+  "id": "voice.arrive.qwu.en",
+  "lang": "en",
+  "text": "The train is arriving at Qianwu. Please mind the gap between the train and the platform.",
+  "file": "voice/arrive-qwu-en.mp3"
+ },
+ {
+  "id": "voice.welcome.qwu.zh",
+  "lang": "zh",
+  "text": "欢迎光临前浯站。请排队候车，先下后上。",
+  "file": "voice/welcome-qwu-zh.mp3"
+ },
+ {
+  "id": "voice.welcome.qwu.nan",
+  "lang": "nan",
+  "text": "欢迎光临前浯站。请排队候车，先下后上。",
+  "file": "voice/welcome-qwu-nan.mp3"
+ },
+ {
+  "id": "voice.welcome.qwu.en",
+  "lang": "en",
+  "text": "Welcome to Qianwu station. Please line up for the train. Let the passengers get off first before you get on.",
+  "file": "voice/welcome-qwu-en.mp3"
  },
  {
   "id": "voice.fz.destination.sjk.zh",
@@ -14182,6 +14650,24 @@
   "lang": "en",
   "text": "The doors are closing. Please stand clear of the doors.",
   "file": "voice/fz-doorsClosing-en.mp3"
+ },
+ {
+  "id": "voice.xm.doorsClosing.zh",
+  "lang": "zh",
+  "text": "车门即将关闭，请注意安全，谨防被夹。",
+  "file": "voice/xm-doorsClosing-zh.mp3"
+ },
+ {
+  "id": "voice.xm.doorsClosing.nan",
+  "lang": "nan",
+  "text": "车门即将关闭，请注意安全，谨防被夹。",
+  "file": "voice/xm-doorsClosing-nan.mp3"
+ },
+ {
+  "id": "voice.xm.doorsClosing.en",
+  "lang": "en",
+  "text": "The doors are closing. Please stand clear of the doors.",
+  "file": "voice/xm-doorsClosing-en.mp3"
  },
  {
   "id": "voice.doorsClosing.zh",

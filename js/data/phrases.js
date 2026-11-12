@@ -174,6 +174,8 @@ const FZ_EXIT_T = {
 };
 /** 福州地铁关门提示：普通话 → 福州话（空位）→ 英语，不播粤语 */
 export const fzDoorsClosingSegs = () => fseg('doorsClosing', '车门即将关闭，请注意安全。', 'The doors are closing. Please stand clear of the doors.');
+/** 厦门地铁关门提示：普通话 → 闽南语 → 英语，不播粤语 */
+export const xmDoorsClosingSegs = () => xseg('xm.doorsClosing', '车门即将关闭，请注意安全，谨防被夹。', 'The doors are closing. Please stand clear of the doors.');
 /** 站内出口提示：福州火车南站用 FZ_EXIT_T；有景点的站用 fz-visits.js 的“前往××的乘客，请从×出口出站” */
 export const fzExitSegs = code => { const t = FZ_EXIT_T[code]; if (t) return fseg('exit.' + code, t[0], t[1]); const v = fzExitTexts(code); return v ? fseg('fzexit.' + code, v[0], v[2]) : []; };
 /** 报“下一站”后接一句景点（“东街口站附近有三坊七巷，欢迎下车游玩，请从C出口出站。”） */
@@ -200,6 +202,7 @@ export function allJobs() {
     L.stations.forEach((c, i) => { if (i > 0 && i < L.stations.length - 1) add(fzNextSegs(line, c)); add(arriveSegs(c)); add(welcomeSegs(c)); add(fzVisitSegs(c)); add(fzExitSegs(c)); });
   }
   add(fzDoorsClosingSegs());
+  add(xmDoorsClosingSegs());
   add(doorsClosingSegs()); add(gapSegs()); add(emuJobs()); Object.keys(SAFETY).forEach(k => add(safetySegs(k)));
   return [...out.values()].map(s => ({ ...s, file: 'voice/' + s.id.slice(6).replace(/\./g, '-') + '.mp3' }));
 }
