@@ -14,6 +14,7 @@ import { hex, mix } from '../core/geo.js';
 import * as D from './decor.js';
 import { FZR, WY, RIVERS, BRIDGES, PIERS, KIOSKS, isWater, isLand, isDry, shoreFor, soffitAt, deckAt, humpRise, pierNext, ROUTE, useNet, netOfKiosk } from '../data/fz-river.js';
 import { FzBoat } from '../game/fzBoat.js';
+import { Haze, RIVER_HAZE } from '../game/haze.js';
 import { FZ_EXITS } from '../data/fz-exits.js';
 import { FZ_LINES } from '../data/fz-lines.js';
 
@@ -55,6 +56,8 @@ export class FzRiverStreet extends XmStreet {
     this.boundary();
   }
   after() {
+    // 1B：河面水汽远景（200 → 350 m 线性雾、远裁剪 380 m）；离开街区时 dispose 还原
+    if (RIVER_HAZE[this.net]) { this.haze = new Haze(this.scene, this.scene.activeCamera, RIVER_HAZE[this.net]); this.haze.apply(); }
     this.boat = new FzBoat(this, ROUTE.canopy || 'red');
     this.lodT = 0; this.lodNow(true);
   }
@@ -412,6 +415,7 @@ export class FzRiverStreet extends XmStreet {
   }
   update(pl) {
     this.pl = pl; const p = pl.position, w = this.toW(p);
+    if (this.haze && p.y > -50) this.haze.reassert();   // 别处（onTunnel 等）关掉了就写回；隧道在 y≈-300，不抢隧道雾
     if (!pl.seat) for (const o of this.others) { const lx = w.x - o.x, lz = w.z - o.z; if (lz < -2.6 && lz > -6 && Math.abs(lx) < 1.9 && p.y < 1.5) { this.backTo = { code: o.code, n: o.n }; return 'back'; } }
     return super.update(pl);
   }
@@ -426,7 +430,7 @@ export class FzRiverStreet extends XmStreet {
     return { key: this.key, surfaceY: WY, shore: { x: this.wx(s.x), y: 0.05, z: this.wz(s.z), yaw: s.yaw } };
   }
   info() { return { ...super.info(), river: true, net: this.net, route: ROUTE.id, kiosk: this.K.code, boat: this.boat ? this.boat.info() : null, cellsOn: this.cellKeys ? this.cellKeys.filter(k => this.kit.groupNodes['c:' + k].isEnabled(false)).length : 0, cells: this.cellKeys ? this.cellKeys.length : 0 }; }
-  dispose() { if (this.boat) this.boat.dispose(); super.dispose(); }
+  dispose() { if (this.haze) { this.haze.restore(); this.haze = null; } if (this.boat) this.boat.dispose(); super.dispose(); }
 }
 const FZ_STATIONS_ZH = c => ({ fzxm: '西门', fzxiy: '西洋', fzdm: '斗门', fzdmn: '东门', fzgmg: '光明港' })[c] || '';
 export { FzRiverStreet as default };

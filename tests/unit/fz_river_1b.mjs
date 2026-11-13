@@ -1,6 +1,8 @@
 // 福州内河 1B（晋安河 1:3 + 光明港 1:4；游船 B 线白篷 温泉公园—福新问渡—东门停靠点—河口—光明港）：河网数据 / 船体在水里 / 篷顶过桥净空 / 出口接入 / 码头牌 / 报站（普通话 + 英语）。
 import * as R from '../../js/data/fz-river.js';
 import { FZ_EXITS, FZ_EXIT_TABLE } from '../../js/data/fz-exits.js';
+import { RIVER_HAZE, Haze, hazeAmount, FOGMODE_NONE, FOGMODE_LINEAR } from '../../js/game/haze.js';
+import fs from 'node:fs';
 import { allJobs, fzBoatDepartSegs, fzBoatArriveSegs, fzBoatJobs } from '../../js/data/phrases.js';
 const fails = [];
 function ok(n, v, info) { console.log(`${v ? 'PASS' : 'FAIL'} ${n}${!v && info !== undefined ? ' ' + JSON.stringify(info) : ''}`); if (!v) fails.push(n); }
@@ -115,5 +117,26 @@ ok(`always-on ground+water tris ≤ 1.6 × 1A (${tris(F.land) + tris(F.water)} v
 ok(`houses ≤ 1A × 1.3 (${F.houses.length} vs ${A.houses.length})`, F.houses.length <= A.houses.length * 1.3);
 R.useNet('a');
 ok('useNet(a) restores 1A', R.NET === 'a' && R.STOPS.map(s => s.id).join() === 'xihu,xsg,lmh' && R.ROUTE.line.len === lenA);
+// ---- 河面水汽远景（只在 1B）----
+{ const H = RIVER_HAZE.e;
+  ok('haze: 1B only, linear 200 → 350 m, far clip 380 m', H && !RIVER_HAZE.a && H.start === 200 && H.end === 350 && H.maxZ === 380);
+  ok('haze colour ≈ sky horizon (sky.jpg horizon 0.58/0.77/0.96, clearColor 0.62/0.78/0.92)', H.color.every((c, i) => Math.abs(c - [0.59, 0.775, 0.94][i]) < 0.04), H.color);
+  ok('near view keeps colours: zero haze ≤ 200 m (banyans / bridges / buildings < 150 m untouched)', [0, 50, 150, 199, 200].every(d => hazeAmount(H, d) === 0));
+  ok('half haze at 275 m, fully blended at ≥ 350 m', Math.abs(hazeAmount(H, 275) - 0.5) < 1e-9 && hazeAmount(H, 350) === 1 && hazeAmount(H, 420) === 1);
+  // 进出还原：模拟 main.js 的场景（隧道雾参数 25 / 85、暗色，户外 fogMode NONE）+ 相机 maxZ 420
+  const scene = { fogMode: FOGMODE_NONE, fogStart: 25, fogEnd: 85, fogColor: { r: 0.08, g: 0.09, b: 0.11 } }, cam = { maxZ: 420 };
+  const before = JSON.stringify([scene, cam]);
+  const hz = new Haze(scene, cam, H); hz.apply();
+  ok('enter 1B: fog linear 200/350 with haze colour, maxZ 380', scene.fogMode === FOGMODE_LINEAR && scene.fogStart === 200 && scene.fogEnd === 350 && scene.fogColor.r === H.color[0] && scene.fogColor.b === H.color[2] && cam.maxZ === 380);
+  scene.fogMode = FOGMODE_NONE; scene.fogStart = 25; hz.reassert();   // 别处（onTunnel(false)）关掉了 → 每帧写回
+  ok('reassert after something else turned fog off', scene.fogMode === FOGMODE_LINEAR && scene.fogStart === 200);
+  hz.apply();   // 重复 apply 不覆盖最初保存的值
+  hz.restore();
+  ok('leave 1B: fog mode / start / end / colour and camera maxZ restored exactly', JSON.stringify([scene, cam]) === before, [scene, cam]);
+  hz.restore(); ok('restore twice is harmless', JSON.stringify([scene, cam]) === before);
+  const src = fs.readFileSync(new URL('../../js/world/fzRiver.js', import.meta.url), 'utf8'), rnd = fs.readFileSync(new URL('../../js/core/render.js', import.meta.url), 'utf8');
+  ok('fzRiver wires haze: apply in after() for nets with RIVER_HAZE, reassert above tunnels, restore in dispose()', /RIVER_HAZE\[this\.net\]\)\s*\{\s*this\.haze = new Haze\(this\.scene, this\.scene\.activeCamera/.test(src) && /this\.haze && p\.y > -50\) this\.haze\.reassert\(\)/.test(src) && /dispose\(\) \{ if \(this\.haze\) \{ this\.haze\.restore\(\)/.test(src));
+  ok('sky dome ignores fog (not flattened)', /sm\.fogEnabled = false/.test(rnd) && /sky\.applyFog = false/.test(rnd));
+}
 console.log(fails.length ? `\n${fails.length} FAILED: ${fails.join(', ')}` : '\nALL PASS');
 process.exit(fails.length ? 1 : 0);
