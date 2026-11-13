@@ -275,6 +275,15 @@ async def run_1b(pg):
 HAZE_ST = "(() => { const s = __game.scene, c = s.activeCamera; return { mode: s.fogMode, start: s.fogStart, end: s.fogEnd, color: [s.fogColor.r, s.fogColor.g, s.fogColor.b].map(v => +v.toFixed(3)), maxZ: c.maxZ }; })()"
 async def probe_stage(pg, D):
     R['probe'] = {'shore': {}, 'boat': [], 'haze': []}
+    # 远处是什么（雾里的剪影）：四个朝向，在画面上半部打射线，记 > 150 m 的网格名 / 距离
+    far = []
+    for k in range(4):
+        await pg.evaluate(f"__game.player.yaw = {k} * Math.PI / 2; __game.player.pitch = 0.05"); await asyncio.sleep(0.8)
+        far.append(await pg.evaluate("""(() => { const sc = __game.scene, cv = sc.getEngine().getRenderingCanvas(), out = {};
+          for (let i = 0; i < 12; i++) for (let j = 0; j < 8; j++) { const h = sc.pick(cv.clientWidth * (i + 0.5) / 12, cv.clientHeight * (0.12 + j * 0.05), m => m.isEnabled() && m.isVisible);
+            if (h && h.hit && h.distance > 150) { const n = h.pickedMesh.name; out[n] = Math.max(out[n] || 0, Math.round(h.distance)); } }
+          return out; })()"""))
+    R['probe']['far'] = far; log('far meshes', far)
     hz = await pg.evaluate(HAZE_ST); ok('haze:onInRiverArea', hz['mode'] == 3 and hz['start'] == 200 and hz['end'] == 350 and hz['maxZ'] == 380, hz)
     async def views(label):
         best = None
