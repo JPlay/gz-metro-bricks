@@ -158,8 +158,8 @@ ok('useNet(a) restores 1A', R.NET === 'a' && R.STOPS.map(s => s.id).join() === '
   }
   console.log('INFO canopy share of screen height (lz, dir, hip, first, third):', JSON.stringify(rows));
   const front = rows.filter(r => r[0] * r[1] > 0), rear = rows.filter(r => r[0] * r[1] < 0), wf = Math.max(...front.map(r => Math.max(r[3], r[4]))), wr = Math.max(...rear.map(r => Math.max(r[3], r[4])));
-  ok(`seated boat view (1A seat params eye ${EYE1}, pitch ${P1}/${P3}): front-half seats canopy ≤ 20% of screen height (worst ${(wf * 100).toFixed(1)}%)`, wf <= 0.2, front);
-  console.log(`INFO rear-half seats (facing travel, whole canopy ahead): worst ${(wr * 100).toFixed(1)}% — analytic eave-plane estimate; e2e measures the real picks`);
+  ok(`seated boat view (eye ${EYE1}, pitch ${P1}/${P3}): front-half seats canopy ≤ 20% of screen height (worst ${(wf * 100).toFixed(1)}%)`, wf <= 0.2, front);
+  ok(`seated boat view: rear-half seats (whole canopy ahead) canopy ≤ 20% of screen height too (worst ${(wr * 100).toFixed(1)}%; 1A's 0.14/0.17 gave 24.4%)`, wr <= 0.2, rear);
   ok(`canopy still clears every 1B bridge by ≥ ${R.CLEAR_MIN} m with the 1A canopy (top ${Bt.top}, ±${Bt.canopyHalfLen} m)`, R.clearanceReport(0.25).ok && R.clearanceReport(0.25).min >= R.CLEAR_MIN, R.clearanceReport(0.25).min);
   console.log('INFO 1B min canopy clearance', R.clearanceReport(0.25).min.toFixed(3));
   const bsrc = fs.readFileSync(new URL('../../js/game/fzBoat.js', import.meta.url), 'utf8');
