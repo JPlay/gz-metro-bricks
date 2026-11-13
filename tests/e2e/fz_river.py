@@ -213,6 +213,43 @@ async def main():
         onLand = await pg.evaluate(f"(async () => {{ const M = await import('/js/data/fz-river.js'); const R = __game.fzMetro.street.kit.root.position, p = __game.player.position; return M.isLand(p.x - R.x, p.z - R.z); }})()")
         R['steps'][sid] = {'down': s['pos'], 'inWater': s_in['pos'], 'after': s2['pos'], 'shown': shown, 'tapped': tapped, 'onLand': onLand}
         ok(f'steps:{sid}:downIntoWaterAndBack', downOk and shown and s_in['pos'][1] < -0.5 and tapped and abs(s2['pos'][1]) < 0.4 and onLand and s2['zone'] == 'street', R['steps'][sid])
+    if 'shots' in STAGES:
+      # ---------- 补拍：西水关码头牌（看得到石底座）+ 船过桂芳桥（拱在头顶 / 正前方） ----------
+      xsg = [p for p in D['piers'] if p['id'] == 'xsg'][0]; sg = await W(pg, *xsg['sign']); tt, nn = xsg['t'], xsg['n']
+      if await pg.evaluate("__game.player.view") != 'first': await pg.evaluate("__game.toggleView()")
+      for k, (a, b) in enumerate([(-4.5, 0), (-4.0, 2.5), (-4.0, -2.5), (-6.0, 1.5), (4.5, 0)]):
+        c = await pg.evaluate(f'__fzNav.snap({sg[0] - nn[0] * a + tt[0] * b}, {sg[1] - nn[1] * a + tt[1] * b})')
+        if not c or not await go(pg, *c, f'sign view {k}'): continue
+        s = await st(pg); await pg.evaluate(f"__game.player.yaw = Math.atan2({sg[0] - s['pos'][0]}, {sg[1] - s['pos'][2]}); __game.player.pitch = 0.18"); await asyncio.sleep(0.8)
+        await shot(pg, f'pier_sign_xishuiguan_base_{k}')
+      await pg.evaluate("__game.toggleView()")
+      if await board(pg, D, 'xsg', 'shotleg'):
+        sbm5 = D['clrRep']['bm5']['s']; took = set(); t0 = time.time(); b0 = await boat(pg)
+        # 船从西水关往黎明湖（s 增大）；船中心在桥前 9 / 5 / 2 m、桥下各拍一张，第一人称（拱在正前方 / 头顶）+ 第三人称
+        marks = [(9, 'ahead9'), (5, 'ahead5'), (2, 'ahead2'), (-1, 'under')]
+        while time.time() - t0 < 600 and len(took) < len(marks):
+          bb = await boat(pg); d = sbm5 - bb['s']
+          for m, name in marks:
+            if name not in took and d <= m:
+              took.add(name)
+              v = await pg.evaluate("__game.player.view")
+              if v != 'first': await pg.evaluate("__game.toggleView()")
+              await pg.evaluate("__game.player.pitch = 0.25"); await shot(pg, f'boat_bridge_bm5_guifang_{name}_first')
+              await pg.evaluate("__game.toggleView()"); await shot(pg, f'boat_bridge_bm5_guifang_{name}_third')
+          await asyncio.sleep(0.15)
+        ok('shots:bm5:taken', len(took) == len(marks), sorted(took))
+        c = await pg.evaluate('window.__clr'); ok('shotleg:canopyClearance', c['min'] >= D['clr'] - 0.02, c)
+    if 'boat34' in STAGES:
+      # ---------- 4b. 只跑后半程：西水关上船 → 西湖（leg3）下船 → 西湖上船 → 西水关（leg4）下船 → 走回西门 C 进站 ----------
+      if await board(pg, D, 'xsg', 'leg3'):
+        await ride(pg, D, 'leg3', 'xihu')
+        R['perf']['xihuPier'] = await sample(pg, 'xihuPier')
+        await alight(pg, D, 'xihu', 'leg3')
+      if await board(pg, D, 'xihu', 'leg4'):
+        await ride(pg, D, 'leg4', 'xsg')
+        await alight(pg, D, 'xsg', 'leg4')
+      okk, s, m = await enter_kiosk(pg, D, 'fzxm'); ok('xsg:walkBackToXimenC:intoStation', okk, [s['pos'], m])
+      ok('boat34:bothDirections', sorted({l['dir'] for l in R['legs']}) == [-1, 1], [(l['from'], l['to'], l['dir']) for l in R['legs']])
     if 'boat' in STAGES:
       # ---------- 4. 游船 ----------
       xsg = [p for p in D['piers'] if p['id'] == 'xsg'][0]
