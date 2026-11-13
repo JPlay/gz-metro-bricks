@@ -167,8 +167,15 @@ async def main():
       # ---------- 2. 桥：每座来回 ----------
       order = ['bm3', 'bm2', 'bm1', 'bm4', 'bm5', 'bm6', 'bm7', 'bm8', 'bm9', 'bm10', 'bm11', 'dx1', 'at1', 'at2', 'at3', 'at4', 'at5', 'at6', 'at7', 'at8', 'at9']
       for bid in order:
-        br = [x for x in D['bridges'] if x['id'] == bid][0]; e = br['half'] + 2.8
-        A = await pg.evaluate(f'__fzNav.snap(...{json.dumps(await W(pg, *bf(br, -e)))})'); B_ = await pg.evaluate(f'__fzNav.snap(...{json.dumps(await W(pg, *bf(br, e)))})')
+        br = [x for x in D['bridges'] if x['id'] == bid][0]
+        # 桥两头的落脚点：桥面外 2.8 m；桥头紧挨着另一条河的栏杆（西关 白马北路桥南头）就往回收，保证从对面桥头直线走得到
+        async def end(sg):
+          far = await W(pg, *bf(br, -sg * (br['half'] - 0.6)))
+          for e in (2.8, 2.2, 1.6, 1.1, 0.7):
+            c = await pg.evaluate(f'__fzNav.snap(...{json.dumps(await W(pg, *bf(br, sg * (br["half"] + e))))})')
+            if c and await pg.evaluate(f'__fzNav.clear({far[0]}, {far[1]}, {c[0]}, {c[1]})'): return c
+          return await pg.evaluate(f'__fzNav.snap(...{json.dumps(await W(pg, *bf(br, sg * (br["half"] + 2.8))))})')
+        A = await end(-1); B_ = await end(1)
         reached = await go(pg, *A, 'promenade → ' + bid)
         if bid in ('bm4', 'at3', 'at8', 'bm9'): R['perf']['bridge:' + bid] = await sample(pg, 'bridge:' + bid)
         await jreset(pg); r1 = await legs(pg, [B_], True); j1 = await jget(pg); n1 = await near(pg, *B_, 0.8)

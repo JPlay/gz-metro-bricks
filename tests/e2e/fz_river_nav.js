@@ -60,7 +60,7 @@ async () => {
     const out = [raw[0]]; let a = 0; while (a < raw.length - 1) { let b = raw.length - 1; while (b > a + 1 && !los(raw[a], raw[b])) b--; out.push(raw[b]); a = b; }
     return { ok: true, len: +(g[t] * RES).toFixed(1), pts: out.map(k => [+(R.x + cx(k % NX)).toFixed(2), +(R.z + cz((k / NX) | 0)).toFixed(2)]) };
   };
-  window.__fzNav = { path, snap: (x, z) => { const k = snap(x - R.x, z - R.z); return k < 0 ? null : [+(R.x + cx(k % NX)).toFixed(2), +(R.z + cz((k / NX) | 0)).toFixed(2)]; }, dbg: (x, z) => { const k = idx(x - R.x, z - R.z); return k < 0 ? -1 : (walk[k] ? 1 : 0) + (block[k] ? 2 : 0); }, isOk: (x, z) => { const k = idx(x - R.x, z - R.z); return k >= 0 && !!ok[k]; } };
+  window.__fzNav = { path, snap: (x, z) => { const k = snap(x - R.x, z - R.z); return k < 0 ? null : [+(R.x + cx(k % NX)).toFixed(2), +(R.z + cz((k / NX) | 0)).toFixed(2)]; }, dbg: (x, z) => { const k = idx(x - R.x, z - R.z); return k < 0 ? -1 : (walk[k] ? 1 : 0) + (block[k] ? 2 : 0); }, clear: (ax, az, bx, bz) => { const a = idx(ax - R.x, az - R.z), b = idx(bx - R.x, bz - R.z); return a >= 0 && b >= 0 && ok[a] && ok[b] && los(a, b); }, isOk: (x, z) => { const k = idx(x - R.x, z - R.z); return k >= 0 && !!ok[k]; } };
   let n = 0; for (const v of ok) n += v;
   return { NX, NZ, walkCells: n, blockers: nb, walkables: nw };
 }
