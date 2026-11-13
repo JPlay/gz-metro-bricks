@@ -273,7 +273,7 @@ for k in CL:
   for side in (-1, 1):
     s = 4.0
     while s < g.length - 4:
-      w = random.uniform(16, 24); d_ = random.uniform(10, 13); h = random.choice([15, 18, 21, 24, 30])
+      w = random.uniform(16, 24); d_ = random.uniform(10, 13); h = random.choice([15, 18, 21, 24])   # 立面贴图最多 8 层（fzRiver.js facades）
       off = hw + band - 1.0 - d_ / 2
       (cx, cz), t, n = at_s(k, s + w / 2, side * off); ry = math.atan2(t[0], t[1])
       poly = Polygon([(cx + t[0] * a + n[0] * side * b, cz + t[1] * a + n[1] * side * b) for a, b in [(-w / 2, -d_ / 2), (w / 2, -d_ / 2), (w / 2, d_ / 2), (-w / 2, d_ / 2)]])
