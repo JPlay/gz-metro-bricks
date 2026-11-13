@@ -219,6 +219,8 @@ export class FzRiverStreet extends XmStreet {
     for (const p of PIERS) {
       const F = this.pierFrame(p);
       this.stairAlong(F, -10, -3.6, 0, 1.5, 0, top, 14, { rail: true });
+      // 台阶顶平台：台阶口（栏杆缺口 a −10.2 … −8.3）比台阶顶多出来的一小条补成条石平台，斜着上岸不会踩空掉进墙缝
+      { const [lx, lz] = F.P(-10.3, 0.75); GR.box(lx, (WY - 0.4) / 2, lz, 1.5, -(WY - 0.4), 0.62, hex('#9A9385'), F.ryT, 0, 0, 1, NO); k.col(lx, -0.15, lz, 1.5, 0.3, 0.62, { ry: F.ryT, name: 'colStairTop' }); }
       // 浮码头：木面 + 深色浮箱
       const [cx, cz] = F.P(2.4, 1.35);
       P.box(cx, top - 0.06, cz, 2.7, 0.12, 12, hex('#9C7A55'), F.ryT, 0, 0, 1, NO);
@@ -416,6 +418,8 @@ export class FzRiverStreet extends XmStreet {
   update(pl) {
     this.pl = pl; const p = pl.position, w = this.toW(p);
     if (this.haze && p.y > -50) this.haze.reassert();   // 别处（onTunnel 等）关掉了就写回；隧道在 y≈-300，不抢隧道雾
+    // 兜底：万一从台阶 / 墙缝掉到地面以下（低帧率一步跨太大），自由下落到水面以下 1 m 就放回最近的岸上（同「回到岸上」的落点）
+    if (!pl.seat && !pl.grounded && pl.vy < -3 && p.y < WY - 1 && p.y > -40) { const sh = shoreFor(w.x, w.z); if (sh) { pl.spawn(this.wx(sh.x), 0.05, this.wz(sh.z), sh.yaw); this.fellThrough = (this.fellThrough || 0) + 1; } }
     if (!pl.seat) for (const o of this.others) { const lx = w.x - o.x, lz = w.z - o.z; if (lz < -2.6 && lz > -6 && Math.abs(lx) < 1.9 && p.y < 1.5) { this.backTo = { code: o.code, n: o.n }; return 'back'; } }
     return super.update(pl);
   }
@@ -437,7 +441,7 @@ export class FzRiverStreet extends XmStreet {
     }
     return { badge: '内河', zh: '福州内河', en: 'Fuzhou Inland Rivers', color };
   }
-  info() { return { ...super.info(), river: true, net: this.net, route: ROUTE.id, kiosk: this.K.code, boat: this.boat ? this.boat.info() : null, cellsOn: this.cellKeys ? this.cellKeys.filter(k => this.kit.groupNodes['c:' + k].isEnabled(false)).length : 0, cells: this.cellKeys ? this.cellKeys.length : 0 }; }
+  info() { return { ...super.info(), fellThrough: this.fellThrough || 0, river: true, net: this.net, route: ROUTE.id, kiosk: this.K.code, boat: this.boat ? this.boat.info() : null, cellsOn: this.cellKeys ? this.cellKeys.filter(k => this.kit.groupNodes['c:' + k].isEnabled(false)).length : 0, cells: this.cellKeys ? this.cellKeys.length : 0 }; }
   dispose() { if (this.haze) { this.haze.restore(); this.haze = null; } if (this.boat) this.boat.dispose(); super.dispose(); }
 }
 const FZ_STATIONS_ZH = c => ({ fzxm: '西门', fzxiy: '西洋', fzdm: '斗门', fzdmn: '东门', fzgmg: '光明港' })[c] || '';

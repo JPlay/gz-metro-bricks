@@ -166,6 +166,7 @@ ok('useNet(a) restores 1A', R.NET === 'a' && R.STOPS.map(s => s.id).join() === '
   R.useNet('e');
   const ann = R.STOPS.map(st => fzBoatArriveSegs(st.id, false, 'B').map(x => x.en || x.text || '').join(' ')).join(' | ');
   ok('announcements use the same English pier names as the signs', R.STOPS.every(st => JSON.stringify(fzBoatArriveSegs(st.id, false, 'B')).includes(st.pier.en)), ann.slice(0, 300));
+  ok('pier stair top has a stone landing over the railing gap (no strip to fall through) + fall-through safety net back to shore', /colStairTop/.test(fsrc) && /F\.P\(-10\.3, 0\.75\)/.test(fsrc) && /pl\.vy < -3 && p\.y < WY - 1 && p\.y > -40\) \{ const sh = shoreFor/.test(fsrc));
   // 左上角牌：岸上「福州内河」、船上「B线 · 下一站码头」
   ok('HUD plate in river area: shore 「福州内河」, on boat 「B线 · <next pier>」 (not metro station names)', /zh: '福州内河'/.test(fsrc) && /zh: `\$\{id\}线 · \$\{n\.pier\.zh\}`/.test(fsrc) && /cm\.street\.riverHud \? cm\.street\.riverHud\(player\)/.test(fs.readFileSync(new URL('../../js/main.js', import.meta.url), 'utf8')));
   // 下一站逻辑（和 fzBoat.nextStop 同一公式）：停在码头 = 按方向下一个，终点掉头后指回去

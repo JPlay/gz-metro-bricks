@@ -87,8 +87,9 @@ async def enter_kiosk(pg, D, code):
 async def board(pg, D, pid, leg):
     P = [p for p in D['piers'] if p['id'] == pid][0]
     land = await W(pg, *pf(P, -11.6, -1.6)); top = await W(pg, *pf(P, -9.4, 0.75)); bot = await W(pg, *pf(P, -4.0, 0.75)); pont = await W(pg, *pf(P, 1.2, 1.5))
+    gap = await W(pg, *pf(P, -9.3, -0.8))   # 台阶口（栏杆缺口）岸上一侧：从这里直着下台阶，不斜穿墙角
     r1 = await go(pg, *land, 'to pier ' + pid)
-    await legs(pg, [top, bot, pont], False)
+    await legs(pg, [gap, top, bot, pont], False)
     s = await st(pg); ok(f'{leg}:downStairsToPontoon:{pid}', abs(s['pos'][1] - (D['wy'] + 0.45)) < 0.3 and r1, s['pos'])
     if leg == 'leg1': await shot(pg, 'pier_pontoon_' + pid)
     # 船不在这个码头就会被“叫”过来（站在浮码头上）
@@ -164,8 +165,10 @@ async def alight(pg, D, pid, leg):
     up = await wait(pg, '!__game.player.seat', 8)
     ok(f'{leg}:standViaTap:{pid}', st_ok and up)
     door = await W(pg, *pf(P, 2.4, 3.9)); edge = await W(pg, *pf(P, 2.4, 2.3)); pont = await W(pg, *pf(P, 0.0, 1.4))
-    bot = await W(pg, *pf(P, -4.0, 0.75)); top = await W(pg, *pf(P, -9.4, 0.75)); land = await W(pg, *pf(P, -11.6, -1.6))
-    await legs(pg, [door, edge, pont], False); await legs(pg, [bot, top, land], False)
+    bot = await W(pg, *pf(P, -4.0, 0.75)); top = await W(pg, *pf(P, -9.4, 0.75)); land = await W(pg, *pf(P, -11.6, -1.6)); gap = await W(pg, *pf(P, -9.3, -0.8))
+    await legs(pg, [door, edge, pont], False); await legs(pg, [bot, top, gap, land], False)
+    if E1B:
+        fell = (await street_info(pg) or {}).get('fellThrough', 0); ok(f'{leg}:noFallThrough:{pid}', fell == 0, fell)
     s = await st(pg); r = ok(f'{leg}:upToShore:{pid}', abs(s['pos'][1]) < 0.4 and await near(pg, *land, 1.2), s['pos'])
     if E1B: await hud_shore(pg, leg)
     return r
