@@ -12,7 +12,7 @@
 import { XmStreet, textPaint, FONT, FONT_EN, facadePaint } from './xmStreet.js';
 import { hex, mix } from '../core/geo.js';
 import * as D from './decor.js';
-import { FZR, WY, RIVERS, BRIDGES, PIERS, KIOSKS, isWater, isLand, isDry, shoreFor, soffitAt, deckAt, humpRise, pierNext, ROUTE, useNet, netOfKiosk } from '../data/fz-river.js';
+import { FZR, WY, RIVERS, BRIDGES, PIERS, KIOSKS, isWater, isLand, isDry, shoreFor, soffitAt, deckAt, humpRise, pierNext, ROUTE, STOPS, nextStop, useNet, netOfKiosk } from '../data/fz-river.js';
 import { FzBoat } from '../game/fzBoat.js';
 import { Haze, RIVER_HAZE } from '../game/haze.js';
 import { FZ_EXITS } from '../data/fz-exits.js';
@@ -219,8 +219,19 @@ export class FzRiverStreet extends XmStreet {
     for (const p of PIERS) {
       const F = this.pierFrame(p);
       this.stairAlong(F, -10, -3.6, 0, 1.5, 0, top, 14, { rail: true });
-      // 台阶顶平台：台阶口（栏杆缺口 a −10.2 … −8.3）比台阶顶多出来的一小条补成条石平台，斜着上岸不会踩空掉进墙缝
-      { const [lx, lz] = F.P(-10.3, 0.75); GR.box(lx, (WY - 0.4) / 2, lz, 1.5, -(WY - 0.4), 0.62, hex('#9A9385'), F.ryT, 0, 0, 1, NO); k.col(lx, -0.15, lz, 1.5, 0.3, 0.62, { ry: F.ryT, name: 'colStairTop' }); }
+      // 湖边码头（西湖）：湖岸线是弯的，台阶靠岸一侧和岸地之间空着一条 0.7 m 宽的水缝 —— 下船走上台阶顶，一脚踩进缝里掉下去、回不到岸上（小美 1A 验收 ①）。
+      // 补一道贴着台阶的花岗岩岸墙（顶面和岸地齐平、带碰撞），台阶顶直接接上岸地。河边码头台阶本来就贴着岸地，不加。
+      // 所有码头：台阶靠岸一侧的岸地底下垫一块实心碰撞体（岸地只是一层没有厚度的三角网，人从半截台阶横着往岸上走会钻到岸地下面掉下去）
+      { const [qx, qz] = F.P(-10, -0.3), [cx, cz] = F.P(-7.3, -0.4), y0 = WY - 0.4, y1 = -0.004;
+        if (!isLand(qx, qz)) GR.box(cx, (y0 + y1) / 2, cz, 0.8, y1 - y0, 7.4, hex('#9A9385'), F.ryT, 0, 0, 1, NO);
+        k.col(cx, (y0 + y1) / 2, cz, 0.8, y1 - y0, 7.4, { ry: F.ryT, name: 'colQuay' }); }
+      // 台阶顶平台：台阶顶外侧（a < -10）原来是空的水面，上到台阶顶一步走过头就掉下去；补 1 m 花岗岩平台 + 外侧栏杆，上岸从平台转身进岸墙缺口
+      { const y0 = WY - 0.4, y1 = -0.004, [cx, cz] = F.P(-10.5, 0.75);
+        GR.box(cx, (y0 + y1) / 2, cz, 1.5, y1 - y0, 1.0, hex('#A39C8E'), F.ryT, 0, 0, 1, NO); k.col(cx, (y0 + y1) / 2, cz, 1.5, y1 - y0, 1.0, { ry: F.ryT, name: 'colStairHead' });
+        const [ex, ez] = F.P(-10.96, 0.75), [sx, sz] = F.P(-10.5, 1.44);
+        k.col(ex, 0.6, ez, 1.5, 1.2, 0.08, { ry: F.ryT, name: 'colStairHeadRail' }); k.col(sx, 0.6, sz, 0.12, 1.2, 1.0, { ry: F.ryT, name: 'colStairHeadRail' });
+        k.metal.box(ex, 0.95, ez, 1.5, 0.06, 0.06, hex('#4A5560'), F.ryT, 0, 0, 1, NO); k.metal.box(sx, 0.95, sz, 0.06, 0.06, 1.0, hex('#4A5560'), F.ryT, 0, 0, 1, NO);
+        for (const [a, b] of [[-10.96, 0.06], [-10.96, 1.44], [-10.0, 1.44]]) { const [px, pz] = F.P(a, b); k.metal.box(px, 0.48, pz, 0.05, 0.96, 0.05, hex('#4A5560'), 0, 0, 0, 1, NO); } }
       // 浮码头：木面 + 深色浮箱
       const [cx, cz] = F.P(2.4, 1.35);
       P.box(cx, top - 0.06, cz, 2.7, 0.12, 12, hex('#9C7A55'), F.ryT, 0, 0, 1, NO);
@@ -433,15 +444,14 @@ export class FzRiverStreet extends XmStreet {
     const s = shoreFor(w.x, w.z); if (!s) return null;
     return { key: this.key, surfaceY: WY, shore: { x: this.wx(s.x), y: 0.05, z: this.wz(s.z), yaw: s.yaw } };
   }
-  /** 左上角牌（main.js 每帧调，hud.whereRail 有 key 去重）：岸上「福州内河」，坐船「B线 · 下一站码头」；颜色 = 线路章色 */
+  /** 左上角站名牌：岸上「福州内河」；在船上（坐着或站在船上）「<线>线 · 下一站」；line / color = 本片河网的船线（A 红 / B 蓝灰，同码头牌线路章） */
   riverHud(pl) {
-    const id = ROUTE.id || 'A', color = id === 'B' ? '#2E5E8C' : '#B3261E', b = this.boat;
-    if (b && pl && pl.seat && pl.seat.seat.boat === b) {
-      const n = b.nextStop(); if (n) return { badge: id + '线', zh: `${id}线 · ${n.pier.zh}`, en: `Line ${id} · ${n.pier.en}`, color };
-    }
-    return { badge: '内河', zh: '福州内河', en: 'Fuzhou Inland Rivers', color };
+    const line = ROUTE.id || 'A', color = line === 'B' ? '#2E5E8C' : '#B3261E', b = this.boat; if (!b || !pl) return { boat: false, line, color };
+    if (!(b.passengerSeated(pl) || b.onBoard(pl))) return { boat: false, line, color };
+    const j = b.phase === 'go' ? b.target : nextStop(b.i, b.dir), P = STOPS[j].pier;
+    return { boat: true, line, color, next: { id: P.id, zh: P.zh, en: P.en } };
   }
-  info() { return { ...super.info(), fellThrough: this.fellThrough || 0, river: true, net: this.net, route: ROUTE.id, kiosk: this.K.code, boat: this.boat ? this.boat.info() : null, cellsOn: this.cellKeys ? this.cellKeys.filter(k => this.kit.groupNodes['c:' + k].isEnabled(false)).length : 0, cells: this.cellKeys ? this.cellKeys.length : 0 }; }
+  info() { return { ...super.info(), fellThrough: this.fellThrough || 0, net: this.net, route: ROUTE.id, river: true, kiosk: this.K.code, boat: this.boat ? this.boat.info() : null, cellsOn: this.cellKeys ? this.cellKeys.filter(k => this.kit.groupNodes['c:' + k].isEnabled(false)).length : 0, cells: this.cellKeys ? this.cellKeys.length : 0 }; }
   dispose() { if (this.haze) { this.haze.restore(); this.haze = null; } if (this.boat) this.boat.dispose(); super.dispose(); }
 }
 const FZ_STATIONS_ZH = c => ({ fzxm: '西门', fzxiy: '西洋', fzdm: '斗门', fzdmn: '东门', fzgmg: '光明港' })[c] || '';

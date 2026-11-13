@@ -8,7 +8,7 @@
  */
 import { Kit } from '../world/kit.js';
 import { hex } from '../core/geo.js';
-import { WY, BOAT, STOPS, ROUTE, routePose, goStep, BOAT_DWELL, BOAT_STAY, seatAim } from '../data/fz-river.js';
+import { WY, BOAT, STOPS, ROUTE, routePose, goStep, BOAT_DWELL, BOAT_STAY } from '../data/fz-river.js';
 export { BOAT_DWELL };
 import { say } from '../audio/announcements.js';
 import { fzBoatDepartSegs, fzBoatArriveSegs } from '../data/phrases.js';
@@ -58,7 +58,7 @@ export class FzBoat {
     for (const sx of [-1, 1]) {
       for (const z of [-L, -2.0, BOAT.door[0], BOAT.door[1], 2.0, L]) P.box(sx * (BOAT.beam / 2 - 0.06), (G + RU) / 2, z, 0.09, RU - G, 0.09, post, 0, 0, 0, 1, NO);
       P.box(sx * (BOAT.beam / 2 - 0.06), RU - 0.06, 0, 0.1, 0.12, 2 * L, post, 0, 0, 0, 1, NO);        // 窗上横梁
-      for (const z of [-2.35, -1.3, 1.3, 2.35]) P.box(sx * (BOAT.beam / 2 - 0.06), (G + RU) / 2, z, 0.04, RU - G, 0.04, post, 0, 0, 0, 1, NO);   // 窗棂
+      for (const z of [-2.4, -1.35, 1.35, 2.4]) P.box(sx * (BOAT.beam / 2 - 0.06), (G + RU) / 2, z, 0.04, RU - G, 0.04, post, 0, 0, 0, 1, NO);   // 窗棂
     }
     // 弧形篷顶（顶面 = BOAT.top）+ 白色垂边
     const n = 7, W = BOAT.canopyHalfW;
@@ -67,17 +67,14 @@ export class FzBoat {
       P.box(xm, RU + h + 0.03, 0, x1 - x0 + 0.02, 0.06, 2 * L + 0.3, canopy, 0, 0, Math.atan2(-0.09 * Math.PI / 2 / W * Math.sin(xm / W * Math.PI / 2), 1), 1, NO);
     }
     for (const sx of [-1, 1]) P.box(sx * W, RU - 0.03, 0, 0.03, 0.1, 2 * L + 0.3, trim, 0, 0, 0, 1, NO);
-    // 两头篷檐 + 小灯笼：挂在篷檐两角（不在正前方挡视线），细绳吊着（小美：灯笼不能悬空）
     for (const e of [-1, 1]) {
       P.box(0, RU - 0.03, e * (L + 0.15), 2 * W, 0.1, 0.03, trim, 0, 0, 0, 1, NO);
-      for (const sx of [-1, 1]) {
-        const lx = sx * (W - 0.2), lzz = e * (L + 0.12);
-        P.box(lx, RU - 0.15, lzz, 0.02, 0.15, 0.02, dark, 0, 0, 0, 1, NO);        // 吊绳（篷檐底 RU−0.08 → 灯笼顶盖）
-        P.box(lx, RU - 0.235, lzz, 0.11, 0.03, 0.11, dark, 0, 0, 0, 1, NO);       // 灯笼顶盖
-        P.ellipsoid(lx, RU - 0.38, lzz, 0.22, 0.28, 0.22, hex('#D7262E'), 1);
-        P.box(lx, RU - 0.535, lzz, 0.11, 0.03, 0.11, dark, 0, 0, 0, 1, NO);       // 底盖
-        P.box(lx, RU - 0.59, lzz, 0.05, 0.08, 0.05, hex('#E8B23A'), 0, 0, 0, 1, NO); // 穗
-      }
+      // 船头小灯笼：用一根细绳挂在篷檐横梁下（小美：灯笼别悬空）+ 顶盖 / 底穗
+      const lz = e * (L + 0.1);
+      P.box(0, RU - 0.155, lz, 0.018, 0.17, 0.018, dark, 0, 0, 0, 1, NO);                       // 绳：横梁底 RU-0.08 → 灯笼顶盖
+      P.box(0, RU - 0.245, lz, 0.1, 0.03, 0.1, hex('#C9A13B'), 0, 0, 0, 1, NO);                  // 顶盖
+      P.ellipsoid(0, RU - 0.37, lz, 0.2, 0.24, 0.2, hex('#D7262E'), 1);                          // 灯笼
+      P.box(0, RU - 0.51, lz, 0.025, 0.06, 0.025, hex('#C9A13B'), 0, 0, 0, 1, NO);               // 底穗
     }
     // 碰撞：甲板 + 舷墙（中门留空）+ 两头 + 停靠时伸出去的跳板
     const c = (x, y, z, w, h, d, name) => k.col(x, y, z, w, h, d, { dynamic: true, name, parent: k.root });
@@ -88,7 +85,7 @@ export class FzBoat {
     this.plankVis = this.planks.map(m => { const v = B.MeshBuilder.CreateBox('fzBoatPlank', { width: 0.62, height: 0.05, depth: BOAT.door[1] - BOAT.door[0] - 0.1 }, this.scene); v.parent = k.root; v.position.copyFrom(m.position); v.position.y = D - 0.02; v.material = this.kit.meshes[0] ? this.kit.meshes[0].material : null; v.isPickable = false; v.setEnabled(false); return v; });
     // 座位（世界坐标，每帧更新）
     this.seats = [];
-    for (const z of BOAT.rows) for (const sx of [-1, 1]) this.seats.push({ world: true, boat: this, follow: true, id: 'boat:' + z + ':' + sx, lz: z, lx: sx * BOAT.seatX, free: true, wx: 0, wy: 0, wz: 0, face: 0, eye: 1.1, camT: 0.8, camDist: 1.7, aim: view => seatAim(view, z * this.dir < 0), stand: { x: 0, z: 0 } });   // aim：后半排（按行进方向）镜头压低，篷顶 ≤ 1/5 屏高
+    for (const z of BOAT.rows) for (const sx of [-1, 1]) this.seats.push({ world: true, boat: this, follow: true, id: 'boat:' + z + ':' + sx, lz: z, lx: sx * BOAT.seatX, free: true, wx: 0, wy: 0, wz: 0, face: 0, eye: 1.0, camT: 0.75, camDist: 1.7, pitch: 0.17, pitchFirst: 0.14, stand: { x: 0, z: 0 } });
   }
   /* ---------- 位置 ---------- */
   pose() { return routePose(this.s); }
@@ -136,28 +133,24 @@ export class FzBoat {
     this.i = this.target; this.s = STOPS[this.i].s; this.v = 0; this.phase = 'dock'; this.dwell = 0; this.setPlank(true);
     const pax = this.passengerSeated(pl), term = this.i === 0 || this.i === STOPS.length - 1;
     if (term) this.dir = this.i === 0 ? 1 : -1;
-    this.departIn = pax && !term ? BOAT_STAY : null;   // 中途站：坐着的乘客有 BOAT_STAY（9）秒点「起身」下船，不起身就接着坐到下一站
+    this.departIn = pax && !term ? BOAT_STAY : null;   // 中途站：坐着的乘客有 10 秒点「起身」下船，不起身就接着坐到下一站
+    // 终点站（西湖 / 黎明湖）：带着乘客到了就一直停着，等乘客点「起身」下船（以前 3 秒后又带着人开回去，「起身」按不上、上不了岸）
+    this.holdTerm = pax && term;
     this.stats.arrives++; this.log.push({ t: +this.t.toFixed(1), ev: 'arrive', at: STOPS[this.i].id, pax });
     if (pax) say(fzBoatArriveSegs(STOPS[this.i].id, term), { key: 'boat', interrupt: true });
   }
   update(dt, pl) {
     dt = Math.min(dt, 0.25);
-    // 坐着过终点掉头：座位从前半排变成后半排（或反过来）→ 没动过镜头的话，俯角按新位置重算（篷顶别占半屏）
-    const ss = pl && pl.seat && pl.seat.seat;
-    if (ss && ss.boat === this && ss.aim) {
-      const rear = ss.lz * this.dir < 0;
-      if (this._aim && this._aim.seat === ss && this._aim.rear !== rear && Math.abs(pl.pitch - this._aim.pitch) < 0.015) pl.pitch = ss.aim(pl.view);
-      if (!this._aim || this._aim.seat !== ss || this._aim.rear !== rear || this._aim.view !== pl.view) this._aim = { seat: ss, rear, view: pl.view, pitch: pl.pitch };
-    } else this._aim = null;
     if (this.phase === 'dock') {
       this.dwell += dt; if (this.dwell < 0.2) this.setPlank(true);
       const seated = this.passengerSeated(pl);
-      if (seated) {
+      if (seated && this.holdTerm) { this.departIn = null; }   // 终点站：乘客没起身就不开
+      else if (seated) {
         if (this.departIn === undefined || this.departIn === null) this.departIn = BOAT_DWELL;
         this.departIn -= dt;
         if (this.departIn <= 0) { this.departIn = null; const j = this.i + this.dir; this.depart(j >= 0 && j < STOPS.length ? j : this.i - this.dir, true); }
       } else {
-        this.departIn = null;
+        this.departIn = null; if (!seated) this.holdTerm = false;
         // 叫船：人站在别的码头（浮码头上，或码头牌 / 台阶口附近），船空船开过去
         if (pl && !this.onBoard(pl) && this.dwell > 1.5) {
           const w = this.S.toW(pl.position);
@@ -173,8 +166,6 @@ export class FzBoat {
     }
     this.place(dt);
   }
-  /** 下一站（HUD 用）：行驶中 = 目标码头；停靠中 = 按当前方向的下一个码头 */
-  nextStop() { return this.phase === 'go' ? STOPS[this.target] : STOPS[this.i + this.dir] || STOPS[this.i - this.dir]; }
-  info() { return { phase: this.phase, i: this.i, at: STOPS[this.i].id, target: STOPS[this.target].id, s: +this.s.toFixed(2), v: +this.v.toFixed(2), dir: this.dir, seatsFree: this.seats.filter(s => s.free).length, stats: { ...this.stats, maxStep: +this.stats.maxStep.toFixed(3), maxYawStep: +this.stats.maxYawStep.toFixed(4) }, log: this.log.slice(-12), x: +this.node.position.x.toFixed(2), z: +this.node.position.z.toFixed(2) }; }
+  info() { return { holdTerm: !!this.holdTerm, phase: this.phase, i: this.i, at: STOPS[this.i].id, target: STOPS[this.target].id, s: +this.s.toFixed(2), v: +this.v.toFixed(2), dir: this.dir, seatsFree: this.seats.filter(s => s.free).length, stats: { ...this.stats, maxStep: +this.stats.maxStep.toFixed(3), maxYawStep: +this.stats.maxYawStep.toFixed(4) }, log: this.log.slice(-12), x: +this.node.position.x.toFixed(2), z: +this.node.position.z.toFixed(2) }; }
   dispose() { this.kit.dispose(); this.node.dispose(); }
 }

@@ -28,6 +28,16 @@ export class Hud {
     const n = $('next');
     if (nextCode && XS[nextCode]) { n.hidden = false; n.innerHTML = `<span class="tag">下一站<small>Next</small></span><span class="nm">${XS[nextCode].zh}<small>${XS[nextCode].en}</small></span>`; n.style.setProperty('--line', L.color); } else n.hidden = true;
   }
+  /** 福州内河（js/world/fzRiver.js）：岸上显示「福州内河」；在船上显示「<线>线 · 下一站码头名」（不再显示出来的那个地铁站）；o.line / o.color：A 线红、B 线蓝灰 */
+  whereRiver(o) {
+    const line = o.line || 'A', key = 'river:' + line + ':' + (o.boat ? o.next.zh : 'shore'); if (key === this.key) return; this.key = key;
+    const w = $('where'), color = o.color || '#B3261E'; w.style.setProperty('--line', color); w.style.setProperty('--ink', '#FFFFFF');
+    const ln = $('whereLine');
+    if (o.boat) { ln.innerHTML = `<b>${line}</b><small>线</small>`; ln.setAttribute('aria-label', '内河游船' + line + '线'); $('whereName').textContent = line + '线 · ' + o.next.zh; $('whereEn').textContent = 'Line ' + line + ' · ' + o.next.en; }
+    else { ln.innerHTML = '<b>河</b><small>内河</small>'; ln.setAttribute('aria-label', '福州内河'); $('whereName').textContent = '福州内河'; $('whereEn').textContent = 'Fuzhou Inland Rivers'; }
+    w.classList.remove('swap'); void w.offsetWidth; w.classList.add('swap');
+    $('next').hidden = true;
+  }
   /** 国铁（动车 / 厦门北站）：左上角换成车次徽标 + 名字；o = { badge, zh, en, color, next: { zh, en } } */
   whereRail(o) {
     const key = 'rail:' + o.badge + o.zh + o.en + (o.next ? o.next.zh : ''); if (key === this.key) return; this.key = key;
