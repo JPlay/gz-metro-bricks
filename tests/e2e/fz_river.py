@@ -240,16 +240,18 @@ async def main():
         ok('shots:bm5:taken', len(took) == len(marks), sorted(took))
         c = await pg.evaluate('window.__clr'); ok('shotleg:canopyClearance', c['min'] >= D['clr'] - 0.02, c)
     if 'boat34' in STAGES:
-      # ---------- 4b. 只跑后半程：西水关上船 → 西湖（leg3）下船 → 西湖上船 → 西水关（leg4）下船 → 走回西门 C 进站 ----------
-      if await board(pg, D, 'xsg', 'leg3'):
-        await ride(pg, D, 'leg3', 'xihu')
-        R['perf']['xihuPier'] = await sample(pg, 'xihuPier')
+      # ---------- 4b. 只跑后半程 ----------
+      # 新开的游戏里船停在西水关、往黎明湖方向（dir +1），没法直接从西水关坐到西湖；所以：
+      # 沿河走到西湖码头 → 站上浮码头把船“叫”过来（西水关 → 西湖，空船）→ 上船坐下 → 真点「起身」在西湖下船上岸（= leg3 西湖下船）
+      # → 再上船 → 西湖 → 西水关（leg4）下船 → 走回西门 C 出口亭进站。leg3（西水关 → 西湖，带人）在完整 boat 阶段已跑过。
+      if await board(pg, D, 'xihu', 'leg3call'):
         await alight(pg, D, 'xihu', 'leg3')
+      if OUT: await shot(pg, 'boat_at_xihu_pier_b')
       if await board(pg, D, 'xihu', 'leg4'):
         await ride(pg, D, 'leg4', 'xsg')
         await alight(pg, D, 'xsg', 'leg4')
       okk, s, m = await enter_kiosk(pg, D, 'fzxm'); ok('xsg:walkBackToXimenC:intoStation', okk, [s['pos'], m])
-      ok('boat34:bothDirections', sorted({l['dir'] for l in R['legs']}) == [-1, 1], [(l['from'], l['to'], l['dir']) for l in R['legs']])
+      ok('boat34:leg4:xihuToXsg:dirPlus', [(l['from'], l['to'], l['dir']) for l in R['legs']] == [('xihu', 'xsg', 1)], [(l['from'], l['to'], l['dir']) for l in R['legs']])
     if 'boat' in STAGES:
       # ---------- 4. 游船 ----------
       xsg = [p for p in D['piers'] if p['id'] == 'xsg'][0]
