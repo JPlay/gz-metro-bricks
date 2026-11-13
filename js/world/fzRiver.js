@@ -252,7 +252,7 @@ export class FzRiverStreet extends XmStreet {
       cv.fillStyle = '#FFF'; cv.font = `800 ${ph * 0.085}px ${FONT}`; cv.fillText((ROUTE.id || 'A') + '线', pw * 0.16, ph * 0.765);
       cv.fillStyle = '#2B1A0E'; cv.textAlign = 'left';
       fit('下一站  ' + nx.map(q => q.zh).join(' / '), 700, ph * 0.075, FONT, pw * 0.29, ph * 0.72, pw * 0.66);
-      fit('Next: ' + nx.map(q => q.en.replace(/ (Pier|Boat Stop)$/, '')).join(' / '), 600, ph * 0.055, FONT_EN, pw * 0.29, ph * 0.83, pw * 0.66);
+      fit('Next: ' + nx.map(q => q.en).join(' / '), 600, ph * 0.055, FONT_EN, pw * 0.29, ph * 0.83, pw * 0.66);
     };
     const uv = A.draw(1.65, 1.6, paint, 150);
     A.quad(x + s * 0.07, 1.55, z + c * 0.07, 1.65, 1.6, Math.atan2(fx, -fz), uv);
@@ -428,6 +428,14 @@ export class FzRiverStreet extends XmStreet {
     if (this.boat && this.boat.contains(w.x, w.z)) return null;
     const s = shoreFor(w.x, w.z); if (!s) return null;
     return { key: this.key, surfaceY: WY, shore: { x: this.wx(s.x), y: 0.05, z: this.wz(s.z), yaw: s.yaw } };
+  }
+  /** 左上角牌（main.js 每帧调，hud.whereRail 有 key 去重）：岸上「福州内河」，坐船「B线 · 下一站码头」；颜色 = 线路章色 */
+  riverHud(pl) {
+    const id = ROUTE.id || 'A', color = id === 'B' ? '#2E5E8C' : '#B3261E', b = this.boat;
+    if (b && pl && pl.seat && pl.seat.seat.boat === b) {
+      const n = b.nextStop(); if (n) return { badge: id + '线', zh: `${id}线 · ${n.pier.zh}`, en: `Line ${id} · ${n.pier.en}`, color };
+    }
+    return { badge: '内河', zh: '福州内河', en: 'Fuzhou Inland Rivers', color };
   }
   info() { return { ...super.info(), river: true, net: this.net, route: ROUTE.id, kiosk: this.K.code, boat: this.boat ? this.boat.info() : null, cellsOn: this.cellKeys ? this.cellKeys.filter(k => this.kit.groupNodes['c:' + k].isEnabled(false)).length : 0, cells: this.cellKeys ? this.cellKeys.length : 0 }; }
   dispose() { if (this.haze) { this.haze.restore(); this.haze = null; } if (this.boat) this.boat.dispose(); super.dispose(); }

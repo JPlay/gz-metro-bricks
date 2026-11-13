@@ -20,8 +20,12 @@ export function netOfKiosk(code) { for (const [id, F] of Object.entries(NETS)) i
 export let FZR = FZR_A, NET = 'a';
 export const WY = FZR_A.WY;
 /** 船（米，船体局部：+z 船头、+x 右舷）。双头船：两头一样，掉头不用转身；长凳没有靠背，乘客总是朝行进方向坐 */
-export const BOAT = { len: 8, beam: 2.4, deck: 0.45, gunwale: 1.0, roofUnder: 1.95, top: 2.07, canopyHalfLen: 3.25, canopyHalfW: 1.27,
+export const BOAT = { len: 8, beam: 2.4, deck: 0.45, gunwale: 1.0, roofUnder: 2.05, top: 2.17, canopyHalfLen: 2.7, canopyHalfW: 1.27,
   rows: [2.15, 1.3, -1.3, -2.15], seatX: 0.72, door: [-0.6, 0.6] };
+/** 坐船默认俯角（弧度，正 = 往下看）[前半排, 后半排]：后半排往前看要越过整段篷顶，镜头压低一点，篷顶 ≤ 1/5 屏高（小美验收）。
+ *  篷顶 2.05 / 篷长 ±2.7 + 这组俯角：四排座位第一 / 第三人称篷顶都 ≤ 20% 屏高（tests/unit/fz_river_1b.mjs 按镜头公式算，e2e 实测拾取） */
+export const SEAT_AIM = { first: [0.1, 0.24], third: [0.14, 0.26] };
+export const seatAim = (view, rear) => SEAT_AIM[view === 'first' ? 'first' : 'third'][rear ? 1 : 0];
 export const CLEAR_MIN = 0.25;          // 篷顶与桥底最小净空
 export const FLAT_SOFFIT = -0.4;        // 平桥 / 路桥梁底
 export const ARCH_CROWN = -0.3;         // 拱桥拱顶（拱腹最高点）

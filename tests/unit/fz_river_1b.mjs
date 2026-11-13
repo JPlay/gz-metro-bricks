@@ -138,5 +138,39 @@ ok('useNet(a) restores 1A', R.NET === 'a' && R.STOPS.map(s => s.id).join() === '
   ok('fzRiver wires haze: apply in after() for nets with RIVER_HAZE, reassert above tunnels, restore in dispose()', /RIVER_HAZE\[this\.net\]\)\s*\{\s*this\.haze = new Haze\(this\.scene, this\.scene\.activeCamera/.test(src) && /this\.haze && p\.y > -50\) this\.haze\.reassert\(\)/.test(src) && /dispose\(\) \{ if \(this\.haze\) \{ this\.haze\.restore\(\)/.test(src));
   ok('sky dome ignores fog (not flattened)', /sm\.fogEnabled = false/.test(rnd) && /sky\.applyFog = false/.test(rnd));
 }
+// ---- 小美 1A 验收同款问题（1B 一并修）----
+{ // 坐船视角篷顶 ≤ 1/5 屏高：按 player.js 镜头公式（第一人称眼 = 甲板 + 1.1、往前 0.12；第三人称 target = 脚 + camT、往后 camDist）在屏幕中线打射线，
+  // 落在篷檐 / 篷底平面（篷长 ±(L+0.15)）里的行数占比。四排座位 × 前后（按行进方向）× 两种视角 × 大人 / 小孩
+  const Bt = R.BOAT, D = Bt.deck, RUe = Bt.roofUnder - 0.08, Lc = Bt.canopyHalfLen + 0.15;
+  const cover = (ey, ez, pitch, fov, NR = 1000) => { let n = 0; const t = Math.tan(fov / 2);
+    for (let i = 0; i < NR; i++) { const v = (1 - 2 * (i + 0.5) / NR) * t, dy = v * Math.cos(pitch) - Math.sin(pitch), dz = v * Math.sin(pitch) + Math.cos(pitch);
+      if (dy <= 0) continue; const k = (RUe - ey) / dy; if (k <= 0) continue; const z = ez + dz * k; if (z >= -Lc && z <= Lc) n++; }
+    return n / NR; };
+  const rows = []; let worst = 0;
+  for (const lz of Bt.rows) for (const fwd of [1, -1]) for (const hip of [0.86, 0.6]) {   // fwd = 行进方向（船头 +1 / 船尾 −1）
+    const rel = lz * fwd, rear = rel < 0;   // 座位在行进方向上的位置（负 = 后半排）
+    const p1 = R.seatAim('first', rear), p3 = R.seatAim('third', rear);
+    const f = cover(D + 1.1, rel + 0.12, p1, 1.0);
+    const ty = D + 0.55 - hip + 0.8, cy = ty + Math.sin(p3) * 1.7, cz = rel - Math.cos(p3) * 1.7, t3 = cover(cy, cz, p3, 0.92);
+    rows.push([lz, fwd, hip, +f.toFixed(3), +t3.toFixed(3)]); worst = Math.max(worst, f, t3);
+  }
+  ok(`seated boat view: canopy ≤ 20% of screen height for every row / direction / view / adult+kid (worst ${(worst * 100).toFixed(1)}%)`, worst <= 0.2, rows);
+  ok('boat camera aims lower only for the rear half (front rows look almost level)', R.seatAim('first', false) <= 0.12 && R.seatAim('first', true) > R.seatAim('first', false) && R.seatAim('third', true) <= 0.28);
+  ok(`canopy still clears every 1B bridge by ≥ ${R.CLEAR_MIN} m after raising it to ${Bt.top}`, R.clearanceReport(0.25).ok && R.clearanceReport(0.25).min >= R.CLEAR_MIN, R.clearanceReport(0.25).min);
+  const bsrc = fs.readFileSync(new URL('../../js/game/fzBoat.js', import.meta.url), 'utf8');
+  ok('boat lanterns hang on a cord from the eave (no floating lantern), and sit at the eave corners, not dead ahead', /吊绳/.test(bsrc) && /lx = sx \* \(W - 0\.2\)/.test(bsrc) && !/P\.ellipsoid\(0, RU/.test(bsrc));
+  ok('boat seats re-aim the camera when the boat turns round at a terminal (if the player has not moved it)', /_aim\.rear !== rear && Math\.abs\(pl\.pitch - this\._aim\.pitch\) < 0\.015\) pl\.pitch = ss\.aim\(pl\.view\)/.test(bsrc));
+  // 码头牌英文：当前站 + 下一站都用码头自己的英文全名（和报站同一个字符串，不再去掉 Pier / Boat Stop）
+  const fsrc = fs.readFileSync(new URL('../../js/world/fzRiver.js', import.meta.url), 'utf8');
+  ok('pier sign English = each pier\'s own full English name (current + next), same strings as announcements', /fit\(p\.en,/.test(fsrc) && /'Next: ' \+ nx\.map\(q => q\.en\)\.join/.test(fsrc) && !/replace\(\/ \(Pier\|Boat Stop\)/.test(fsrc));
+  R.useNet('e');
+  const ann = R.STOPS.map(st => fzBoatArriveSegs(st.id, false, 'B').map(x => x.en || x.text || '').join(' ')).join(' | ');
+  ok('announcements use the same English pier names as the signs', R.STOPS.every(st => JSON.stringify(fzBoatArriveSegs(st.id, false, 'B')).includes(st.pier.en)), ann.slice(0, 300));
+  // 左上角牌：岸上「福州内河」、船上「B线 · 下一站码头」
+  ok('HUD plate in river area: shore 「福州内河」, on boat 「B线 · <next pier>」 (not metro station names)', /zh: '福州内河'/.test(fsrc) && /zh: `\$\{id\}线 · \$\{n\.pier\.zh\}`/.test(fsrc) && /cm\.street\.riverHud \? cm\.street\.riverHud\(player\)/.test(fs.readFileSync(new URL('../../js/main.js', import.meta.url), 'utf8')));
+  // 下一站逻辑（和 fzBoat.nextStop 同一公式）：停在码头 = 按方向下一个，终点掉头后指回去
+  const nextOf = (phase, i, dir, target) => phase === 'go' ? R.STOPS[target] : R.STOPS[i + dir] || R.STOPS[i - dir];
+  ok('next pier: docked at 温泉公园 (dir +1) → 福新问渡; at 光明港 after turning (dir −1) → 河口; sailing → target', nextOf('dock', 0, 1).id === 'fx' && nextOf('dock', 4, -1).id === 'hk' && nextOf('go', 1, 1, 2).id === 'dmn' && nextOf('dock', 4, 1).id === 'hk');
+}
 console.log(fails.length ? `\n${fails.length} FAILED: ${fails.join(', ')}` : '\nALL PASS');
 process.exit(fails.length ? 1 : 0);
