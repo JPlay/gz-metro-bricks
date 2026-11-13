@@ -16,6 +16,7 @@ const B = window.BABYLON;
 const NO = { ao: false };
 export const BOAT_DWELL = 3.0;   // 坐下后几秒开船
 
+const BOAT_STAY = 10;
 export class FzBoat {
   constructor(S, variant = 'red') {
     this.S = S; this.scene = S.scene; this.variant = variant;
@@ -123,11 +124,12 @@ export class FzBoat {
     this.i = this.target; this.s = STOPS[this.i].s; this.v = 0; this.phase = 'dock'; this.dwell = 0; this.setPlank(true);
     const pax = this.passengerSeated(pl), term = this.i === 0 || this.i === STOPS.length - 1;
     if (term) this.dir = this.i === 0 ? 1 : -1;
+    this.departIn = pax && !term ? BOAT_STAY : null;   // 中途站：坐着的乘客有 10 秒点「起身」下船，不起身就接着坐到下一站
     this.stats.arrives++; this.log.push({ t: +this.t.toFixed(1), ev: 'arrive', at: STOPS[this.i].id, pax });
     if (pax) say(fzBoatArriveSegs(STOPS[this.i].id, term), { key: 'boat', interrupt: true });
   }
   update(dt, pl) {
-    dt = Math.min(dt, 0.1);
+    dt = Math.min(dt, 0.25);
     if (this.phase === 'dock') {
       this.dwell += dt; if (this.dwell < 0.2) this.setPlank(true);
       const seated = this.passengerSeated(pl);
