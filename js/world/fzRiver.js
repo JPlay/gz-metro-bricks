@@ -9,7 +9,7 @@
 import { XmStreet, textPaint, FONT, FONT_EN, facadePaint } from './xmStreet.js';
 import { hex, mix } from '../core/geo.js';
 import * as D from './decor.js';
-import { FZR, WY, RIVERS, BRIDGES, PIERS, KIOSKS, isWater, isDry, shoreFor, soffitAt, deckAt, humpRise, pierNext, ROUTE } from '../data/fz-river.js';
+import { FZR, WY, RIVERS, BRIDGES, PIERS, KIOSKS, isWater, isLand, isDry, shoreFor, soffitAt, deckAt, humpRise, pierNext, ROUTE } from '../data/fz-river.js';
 import { FzBoat } from '../game/fzBoat.js';
 import { FZ_EXITS } from '../data/fz-exits.js';
 import { FZ_LINES } from '../data/fz-lines.js';
@@ -381,7 +381,7 @@ export class FzRiverStreet extends XmStreet {
     for (const sx of [-1, 1]) { k.rail(sx * 1.9 + ox, -2.6 + oz, sx * 1.9 + ox, -6.2 + oz, 0); }
     sl(M, -2.9, 2.9, 3.0, 3.25, -6.8, 0.7, hex('#6E767E'), NO);
     sl(k.g('band'), -2.92, 2.92, 2.75, 3.0, 0.62, 0.72, hex(lc), NO);
-    // 亭子下面那块地是“洞”（往下的踏步）：岸地三角网在这里也有地面 → 用一块看不见的盖板之外的方式：踏步区域的地面碰撞体压低不了，直接让踏步看得见、走进去就回车站（wantsBack）
+    // 亭子里往下的踏步：岸地三角网在这里挖了洞（tools/fzriver/gen.py），走进去 = 回站
     const sign = (c, pw, ph) => {
       c.fillStyle = '#20272E'; c.fillRect(0, 0, pw, ph);
       c.fillStyle = lc; c.fillRect(0, 0, ph, ph); c.fillStyle = '#FFF'; c.textAlign = 'center'; c.textBaseline = 'middle';
@@ -412,6 +412,8 @@ export class FzRiverStreet extends XmStreet {
     return super.update(pl);
   }
   /** 落水判定（js/game/water.js 用）：在河道 / 湖面里（不在台阶、浮码头、船上）→ 水面高度 + 上岸点 */
+  /** 「回到岸上」能记作安全点的位置：岸地（不含台阶 / 桥面 / 浮码头 / 船） */
+  safeAt(p) { const w = this.toW(p); return isLand(w.x, w.z) && !(this.boat && this.boat.contains(w.x, w.z)); }
   waterAt(p) {
     const w = this.toW(p);
     if (!isWater(w.x, w.z)) return null;

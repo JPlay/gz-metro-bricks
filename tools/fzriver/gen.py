@@ -136,7 +136,7 @@ def step_at(k, s, side, sid):
   def P(a, b): return (bx + t[0] * a - nn[0] * b, bz + t[1] * a - nn[1] * b)
   STEPS.append({'id': sid, 'river': k, 's': round(s, 2), 'x': round(bx, 2), 'z': round(bz, 2), 't': [round(t[0], 4), round(t[1], 4)], 'n': [round(nn[0], 4), round(nn[1], 4)]})
   DRY.append(Polygon([P(-4.2, 0), P(4.2, 0), P(4.2, 1.4), P(-4.2, 1.4)]))
-  GAPS.append(Polygon([(bx + t[0] * a + nn[0] * b, bz + t[1] * a + nn[1] * b) for a, b in [(-4.4, -1), (-2.6, -1), (-2.6, 1), (-4.4, 1)]]))
+  GAPS.append(Polygon([(bx + t[0] * a + nn[0] * b, bz + t[1] * a + nn[1] * b) for a, b in [(-4.6, -1), (-1.8, -1), (-1.8, 1), (-4.6, 1)]]))
 
 # ---------- 桥 ----------
 BR = []
@@ -223,6 +223,8 @@ region = unary_union(reg).intersection(box(-446, -700, 200, LAKE_BOX[3])).buffer
 if region.geom_type != 'Polygon': region = max(region.geoms, key=lambda g: g.area)
 region = Polygon(region.exterior)
 land = region.difference(water).buffer(0)
+# 出口亭里往下的踏步：地面挖掉（和 XmStreet 一样，走进去就回站）
+for K_ in KIOSK.values(): land = land.difference(box(K_['x'] - 1.9, K_['z'] - 6.4, K_['x'] + 1.9, K_['z'] - 2.6)).buffer(0)
 print('region', round(region.area), 'land', round(land.area), land.geom_type)
 
 def tri(poly):

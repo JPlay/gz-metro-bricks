@@ -191,8 +191,8 @@ async def main():
     if 'steps' in STAGES:
       # ---------- 3. 水埠头：走下去、走进水里、点「回到岸上」 ----------
       for S_ in D['steps']:
-        sid = S_['id']; land = await W(pg, *pf(S_, -5.6, -1.6)); top = await W(pg, *pf(S_, -3.9, 0.7)); low = await W(pg, *pf(S_, 2.0, 0.7)); ld = await W(pg, *pf(S_, 3.2, 0.7)); wet = await W(pg, *pf(S_, 3.2, 3.2))
-        r = await go(pg, *land, 'to steps ' + sid); await legs(pg, [top, low, ld], False)
+        sid = S_['id']; land = await W(pg, *pf(S_, -5.6, -1.6)); top = await W(pg, *pf(S_, -3.0, 0.7)); low = await W(pg, *pf(S_, 2.0, 0.7)); ld = await W(pg, *pf(S_, 3.2, 0.7)); wet = await W(pg, *pf(S_, 3.2, 3.2))
+        r = await go(pg, *land, 'to steps ' + sid) and await go(pg, *top, 'onto steps ' + sid); await legs(pg, [low, ld], False)
         s = await st(pg); downOk = r and s['pos'][1] < D['wy'] + 0.9
         await legs(pg, [wet], False); await asyncio.sleep(1.0)
         shown = await wait(pg, "(() => { const b = document.getElementById('bShore'); return !!b && !b.hidden; })()", 10)
