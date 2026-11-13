@@ -105,15 +105,16 @@ async def enter_kiosk(pg, D, code):
     return m['code'] == code and not m['street'], s, m
 
 async def landpt(pg, P):
-    # 岸上落脚点：码头牌旁边；1B 用 A* 网格吸附到最近的可走格（有的码头这里有树 / 灯杆）
-    w = await W(pg, *pf(P, -9.6, -2.8))
-    if not E1B: return w
-    c = await pg.evaluate(f'__fzNav.snap(...{json.dumps(w)})'); return c or w
+    # 岸上落脚点：码头牌旁边
+    return await W(pg, *pf(P, -9.6, -2.8))
 async def board(pg, D, pid, leg):
     P = [p for p in D['piers'] if p['id'] == pid][0]
     # 岸上落脚点在码头牌旁边（不是牌子里面）→ 台阶顶平台 → 台阶 → 浮码头
     land = await landpt(pg, P); head = await W(pg, *pf(P, -10.5, 0.6)); top = await W(pg, *pf(P, -9.4, 0.75)); bot = await W(pg, *pf(P, -4.0, 0.75)); pont = await W(pg, *pf(P, 1.2, 1.5))
     r1 = await go(pg, *land, 'to pier ' + pid)
+    if E1B and not await near(pg, *land, 1.0):
+        # 福新问渡：码头牌后面这块步行栅格没铺上（e2e 导航网格的问题，人能走）→ A* 先到最近能到的格子，再直线走过去
+        await legs(pg, [land], False); r1 = await near(pg, *land, 1.0); log('board: last stretch to land straight', pid, r1)
     gap = await W(pg, *pf(P, -9.6, -0.9))   # 1B：岸墙缺口正中（a −10.2…−8.3）直下台阶顶，不贴着栏杆端柱斜穿
     await legs(pg, ([gap, top] if E1B else [head, top]) + [bot, pont], False)
     s = await st(pg); ok(f'{leg}:downStairsToPontoon:{pid}', abs(s['pos'][1] - (D['wy'] + 0.45)) < 0.3 and r1, s['pos'])
