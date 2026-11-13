@@ -169,6 +169,7 @@ export class Player {
       this.camY = this.camY === undefined ? p.y : this.camY + (p.y - this.camY) * Math.min(1, dt * 7);
       if (Math.abs(this.camY - p.y) > 2) this.camY = p.y;
       // 船上座位：镜头压低（看得到水面和两岸的榕树）、拉近（留在篷里）
+      { const s0 = this.seat && this.seat.seat; if (s0 && s0.camT !== undefined) this.pitch = Math.max(-0.3, Math.min(0.22, this.pitch)); }   // 船上：镜头别穿出篷顶
       const ss = this.seat && this.seat.seat, camT = ss && ss.camT !== undefined ? ss.camT : 1.25, dist = ss && ss.camDist ? Math.min(this.dist, ss.camDist) : this.dist;
       const target = new B.Vector3(p.x, this.camY + camT, p.z);
       // 镜头的障碍物：碰撞体（换乘楼梯扶手上方的隐形高挡墙 noCam 除外）+ 只挡镜头的 camBlock（纪念堂大幕）+ 标牌（吊牌没有碰撞体，以前从换乘楼梯脚进通道时镜头直接钻进通道口的吊牌，上半屏一片黑）

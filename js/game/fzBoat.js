@@ -66,7 +66,7 @@ export class FzBoat {
       P.box(xm, RU + h + 0.03, 0, x1 - x0 + 0.02, 0.06, 2 * L + 0.3, canopy, 0, 0, Math.atan2(-0.09 * Math.PI / 2 / W * Math.sin(xm / W * Math.PI / 2), 1), 1, NO);
     }
     for (const sx of [-1, 1]) P.box(sx * W, RU - 0.03, 0, 0.03, 0.1, 2 * L + 0.3, trim, 0, 0, 0, 1, NO);
-    for (const e of [-1, 1]) { P.box(0, RU - 0.03, e * (L + 0.15), 2 * W, 0.1, 0.03, trim, 0, 0, 0, 1, NO); P.ellipsoid(0, RU - 0.32, e * (L + 0.05), 0.32, 0.38, 0.32, hex('#D7262E'), 1); }
+    for (const e of [-1, 1]) { P.box(0, RU - 0.03, e * (L + 0.15), 2 * W, 0.1, 0.03, trim, 0, 0, 0, 1, NO); P.ellipsoid(0, RU - 0.2, e * (L + 0.05), 0.2, 0.26, 0.2, hex('#D7262E'), 1);   // 船头小灯笼（挂在篷檐下，不挡视线） }
     // 碰撞：甲板 + 舷墙（中门留空）+ 两头 + 停靠时伸出去的跳板
     const c = (x, y, z, w, h, d, name) => k.col(x, y, z, w, h, d, { dynamic: true, name, parent: k.root });
     this.cols = [c(0, D - 0.15, 0, BOAT.beam - 0.1, 0.3, 7.7, 'colBoatDeck')];
@@ -76,7 +76,7 @@ export class FzBoat {
     this.plankVis = this.planks.map(m => { const v = B.MeshBuilder.CreateBox('fzBoatPlank', { width: 0.62, height: 0.05, depth: BOAT.door[1] - BOAT.door[0] - 0.1 }, this.scene); v.parent = k.root; v.position.copyFrom(m.position); v.position.y = D - 0.02; v.material = this.kit.meshes[0] ? this.kit.meshes[0].material : null; v.isPickable = false; v.setEnabled(false); return v; });
     // 座位（世界坐标，每帧更新）
     this.seats = [];
-    for (const z of BOAT.rows) for (const sx of [-1, 1]) this.seats.push({ world: true, boat: this, follow: true, id: 'boat:' + z + ':' + sx, lz: z, lx: sx * BOAT.seatX, free: true, wx: 0, wy: 0, wz: 0, face: 0, eye: 1.1, camT: 0.95, camDist: 2.1, pitch: 0.03, stand: { x: 0, z: 0 } });
+    for (const z of BOAT.rows) for (const sx of [-1, 1]) this.seats.push({ world: true, boat: this, follow: true, id: 'boat:' + z + ':' + sx, lz: z, lx: sx * BOAT.seatX, free: true, wx: 0, wy: 0, wz: 0, face: 0, eye: 1.1, camT: 0.8, camDist: 1.7, pitch: -0.04, stand: { x: 0, z: 0 } });
   }
   /* ---------- 位置 ---------- */
   pose() { return routePose(this.s); }
