@@ -172,6 +172,11 @@ ok('useNet(a) restores 1A', R.NET === 'a' && R.STOPS.map(s => s.id).join() === '
   const ann = R.STOPS.map(st => fzBoatArriveSegs(st.id, false, 'B').map(x => x.en || x.text || '').join(' ')).join(' | ');
   ok('announcements use the same English pier names as the signs', R.STOPS.every(st => JSON.stringify(fzBoatArriveSegs(st.id, false, 'B')).includes(st.pier.en)), ann.slice(0, 300));
   ok('pier stair head: 1 m granite landing + outer rail, solid quay under the stair side, fall-through safety net back to shore', /colStairHead'/.test(fsrc) && /colStairHeadRail/.test(fsrc) && /colQuay/.test(fsrc) && /pl\.vy < -3 && p\.y < WY - 1 && p\.y > -40\) \{ const sh = shoreFor/.test(fsrc));
+  // 台阶口岸墙缺口：每个码头 a −10.2 … −8.3（|b| ≤ 1）里没有栏杆段（福新问渡原来整段是栏杆，台阶顶上不了岸）
+  { const bad = [];
+    for (const P of R.PIERS) { const loc = (x, z) => { const dx = x - P.x, dz = z - P.z; return [dx * P.t[0] + dz * P.t[1], dx * P.n[0] + dz * P.n[1]]; };
+      for (const w of R.FZR.wall) { if (w[4] !== 0) continue; for (let k = 1; k < 20; k++) { const t = k / 20, [a, b] = loc(w[0] + (w[2] - w[0]) * t, w[1] + (w[3] - w[1]) * t); if (a > -10.15 && a < -8.35 && Math.abs(b) < 0.95) { bad.push(P.id); break; } } } }
+    ok('every pier stair mouth (a −10.2…−8.3) is open in the bank railing', bad.length === 0, bad); }
   // 左上角牌：岸上「福州内河」、船上「B线 · 下一站码头」
   { const hsrc = fs.readFileSync(new URL('../../js/ui/hud.js', import.meta.url), 'utf8');
     ok('HUD plate in river area: shore 「福州内河」, on boat 「<line>线 · <next pier>」 with the route colour (B = #2E5E8C), not metro station names', /'福州内河'/.test(hsrc) && /line \+ '线 · ' \+ o\.next\.zh/.test(hsrc) && /color = o\.color \|\| '#B3261E'/.test(hsrc) && /line = ROUTE\.id \|\| 'A', color = line === 'B' \? '#2E5E8C'/.test(fsrc) && /hud\.whereRiver\(rv\)/.test(fs.readFileSync(new URL('../../js/main.js', import.meta.url), 'utf8'))); }

@@ -58,10 +58,36 @@ export function mkLine(flat) {
 }
 export let RIVERS, ROUTE, PIERS, PIER, STOPS, BRIDGES, KIOSKS, SPEED_CAP;
 const CACHE = {};
+/** 码头台阶口的岸墙缺口（a −10.2 … −8.3，|b| ≤ 1，同生成器 GAPS）：生成器按 2 m 一段、看中点在不在缺口里定栏杆 / 缺口，
+ *  缺口只有 1.9 m 宽，中点刚好落在外面就整段都是栏杆（福新问渡：台阶顶被栏杆封死，上不了岸）。这里按缺口矩形精确切开岸墙段（幂等）。 */
+function cutPierGaps(F) {
+  if (F._pierGapsCut) return; F._pierGapsCut = true;
+  for (const P of F.piers) {
+    const out = [];
+    for (const w of F.wall) {
+      if (w[4] !== 0) { out.push(w); continue; }
+      const loc = (x, z) => { const dx = x - P.x, dz = z - P.z; return [dx * P.t[0] + dz * P.t[1], dx * P.n[0] + dz * P.n[1]]; };
+      const [a0, b0] = loc(w[0], w[1]), [a1, b1] = loc(w[2], w[3]); let t0 = 0, t1 = 1;
+      for (const [p, q] of [[-(a1 - a0), a0 + 10.2], [a1 - a0, -8.3 - a0], [-(b1 - b0), b0 + 1], [b1 - b0, 1 - b0]]) {   // Liang–Barsky
+        if (Math.abs(p) < 1e-9) { if (q < 0) { t0 = 1; t1 = 0; } continue; }
+        const r = q / p; if (p < 0) t0 = Math.max(t0, r); else t1 = Math.min(t1, r);
+      }
+      const L = Math.hypot(w[2] - w[0], w[3] - w[1]);
+      if (t1 - t0 < 0.05 / (L || 1)) { out.push(w); continue; }
+      const pt = t => [+(w[0] + (w[2] - w[0]) * t).toFixed(2), +(w[1] + (w[3] - w[1]) * t).toFixed(2)];
+      const A = pt(t0), B = pt(t1);
+      if (t0 > 1e-4) out.push([w[0], w[1], ...A, 0, w[5]]);
+      out.push([...A, ...B, 1, w[5]]);
+      if (t1 < 1 - 1e-4) out.push([...B, w[2], w[3], 0, w[5]]);
+    }
+    F.wall.length = 0; F.wall.push(...out);
+  }
+}
 /** 换河网（活绑定）；返回河网 id */
 export function useNet(id) {
   if (!NETS[id]) id = 'a';
   if (!CACHE[id]) {
+    cutPierGaps(NETS[id]);
     const F = NETS[id], rivers = Object.fromEntries(Object.entries(F.rivers).map(([k, r]) => [k, { ...r, line: mkLine(r.p) }]));
     const route = { ...F.route, line: mkLine(F.route.p) }, pier = Object.fromEntries(F.piers.map(p => [p.id, p]));
     CACHE[id] = { F, rivers, route, piers: F.piers, pier, stops: F.route.stops.map(s => ({ ...s, pier: pier[s.id] })), bridges: F.bridges, kiosks: F.kiosks, cap: null };
