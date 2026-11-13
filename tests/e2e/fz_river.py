@@ -289,7 +289,7 @@ async def probe_stage(pg, D):
             if (h && h.hit && h.distance > 150) { const n = h.pickedMesh.name; out[n] = Math.max(out[n] || 0, Math.round(h.distance)); } }
           return out; })()"""))
     R['probe']['far'] = far; log('far meshes', far)
-    hz = await pg.evaluate(HAZE_ST); ok('haze:onInRiverArea', hz['mode'] == 3 and hz['start'] == 200 and hz['end'] == 350 and hz['maxZ'] == 380, hz)
+    hz = await pg.evaluate(HAZE_ST); ok('haze:onInRiverArea', hz['mode'] == 3 and hz['start'] == 200 and hz['end'] == 350 and hz['maxZ'] == 420, hz)
     async def views(label):
         best = None
         for k in range(4):
@@ -332,7 +332,7 @@ async def probe_stage(pg, D):
             await asyncio.sleep(1.5); await shot(pg, f'haze_off_{name}')
             await pg.evaluate("(() => { const S = __game.fzMetro.street; S.haze.reassert = S.haze._re; S.haze.apply(); })()")
             R['probe']['haze'].append(name)
-        await asyncio.sleep(1.0); hz = await pg.evaluate(HAZE_ST); ok('haze:reappliedAfterComparison', hz['mode'] == 3 and hz['maxZ'] == 380, hz)
+        await asyncio.sleep(1.0); hz = await pg.evaluate(HAZE_ST); ok('haze:reappliedAfterComparison', hz['mode'] == 3 and hz['maxZ'] == 420, hz)
     await pg.evaluate("(() => { const b = __game.fzMetro.street.boat; b.s = b.s; b.update = b._upd; })()")
     # 把船摆回温泉公园码头停靠，起身上岸，走进斗门 C 出口亭 → 离开街区后雾和远裁剪还原
     await pg.evaluate("(() => { const b = __game.fzMetro.street.boat; b.i = 0; b.target = 0; b.s = b.s; })()")

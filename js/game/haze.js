@@ -5,7 +5,7 @@
  */
 /** 雾色 = 天空贴图 assets/tex/sky.jpg 地平线一圈的平均色（0.58, 0.77, 0.96）和 clearColor（0.62, 0.78, 0.92）之间，略偏水汽白 */
 export const RIVER_HAZE = {
-  e: { start: 200, end: 350, color: [0.6, 0.775, 0.945], maxZ: 380 },
+  e: { start: 200, end: 350, color: [0.6, 0.775, 0.945], maxZ: null },   // 远裁剪不动（420）：天空穹顶半径约 400 m，裁到 380 会在天上切出一块浅色缺口
 };
 export const FOGMODE_NONE = 0, FOGMODE_LINEAR = 3;   // = BABYLON.Scene.FOGMODE_*
 /** 线性雾在距离 d 的“雾量”（0 = 原色，1 = 全是雾色），同 Babylon：f = (end − d) / (end − start) 夹到 0..1，雾量 = 1 − f */

@@ -56,7 +56,7 @@ export class FzRiverStreet extends XmStreet {
     this.boundary();
   }
   after() {
-    // 1B：河面水汽远景（200 → 350 m 线性雾、远裁剪 380 m）；离开街区时 dispose 还原
+    // 1B：河面水汽远景（200 → 350 m 线性雾；远裁剪保持 420 m，不切天空穹顶）；离开街区时 dispose 还原
     if (RIVER_HAZE[this.net]) { this.haze = new Haze(this.scene, this.scene.activeCamera, RIVER_HAZE[this.net]); this.haze.apply(); }
     this.boat = new FzBoat(this, ROUTE.canopy || 'red');
     this.lodT = 0; this.lodNow(true);

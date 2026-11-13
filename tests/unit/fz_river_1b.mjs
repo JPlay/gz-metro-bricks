@@ -119,7 +119,7 @@ R.useNet('a');
 ok('useNet(a) restores 1A', R.NET === 'a' && R.STOPS.map(s => s.id).join() === 'xihu,xsg,lmh' && R.ROUTE.line.len === lenA);
 // ---- 河面水汽远景（只在 1B）----
 { const H = RIVER_HAZE.e;
-  ok('haze: 1B only, linear 200 → 350 m, far clip 380 m', H && !RIVER_HAZE.a && H.start === 200 && H.end === 350 && H.maxZ === 380);
+  ok('haze: 1B only, linear 200 → 350 m, far clip left alone (sky dome ~400 m must not be clipped)', H && !RIVER_HAZE.a && H.start === 200 && H.end === 350 && !H.maxZ);
   ok('haze colour ≈ sky horizon (sky.jpg horizon 0.58/0.77/0.96, clearColor 0.62/0.78/0.92)', H.color.every((c, i) => Math.abs(c - [0.59, 0.775, 0.94][i]) < 0.04), H.color);
   ok('near view keeps colours: zero haze ≤ 200 m (banyans / bridges / buildings < 150 m untouched)', [0, 50, 150, 199, 200].every(d => hazeAmount(H, d) === 0));
   ok('half haze at 275 m, fully blended at ≥ 350 m', Math.abs(hazeAmount(H, 275) - 0.5) < 1e-9 && hazeAmount(H, 350) === 1 && hazeAmount(H, 420) === 1);
@@ -127,7 +127,7 @@ ok('useNet(a) restores 1A', R.NET === 'a' && R.STOPS.map(s => s.id).join() === '
   const scene = { fogMode: FOGMODE_NONE, fogStart: 25, fogEnd: 85, fogColor: { r: 0.08, g: 0.09, b: 0.11 } }, cam = { maxZ: 420 };
   const before = JSON.stringify([scene, cam]);
   const hz = new Haze(scene, cam, H); hz.apply();
-  ok('enter 1B: fog linear 200/350 with haze colour, maxZ 380', scene.fogMode === FOGMODE_LINEAR && scene.fogStart === 200 && scene.fogEnd === 350 && scene.fogColor.r === H.color[0] && scene.fogColor.b === H.color[2] && cam.maxZ === 380);
+  ok('enter 1B: fog linear 200/350 with haze colour, camera maxZ untouched (420)', scene.fogMode === FOGMODE_LINEAR && scene.fogStart === 200 && scene.fogEnd === 350 && scene.fogColor.r === H.color[0] && scene.fogColor.b === H.color[2] && cam.maxZ === 420);
   scene.fogMode = FOGMODE_NONE; scene.fogStart = 25; hz.reassert();   // 别处（onTunnel(false)）关掉了 → 每帧写回
   ok('reassert after something else turned fog off', scene.fogMode === FOGMODE_LINEAR && scene.fogStart === 200);
   hz.apply();   // 重复 apply 不覆盖最初保存的值
