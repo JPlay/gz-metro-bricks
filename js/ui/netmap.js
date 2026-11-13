@@ -346,7 +346,14 @@ export function panZoom(box, onTap) {
 }
 
 /** 厦门地铁全网图（1 橙红 + 2 鹭岛绿，吕厝换乘；3 云天青，湖滨东路 / 火炬园换 1、体育中心 / 五缘湾换 2；4 红色，厦门北换 1、洪坑换 3）；和广州图同款交互 */
+// 自动避让要算一阵（手机上一两百毫秒）：同一个「当前站 + 横竖屏」只算一次
+const XM_SVG_CACHE = new Map();
 export function xmNetworkSVG(here, { portrait = false } = {}) {
+  const key = here + '|' + portrait;
+  if (!XM_SVG_CACHE.has(key)) XM_SVG_CACHE.set(key, xmNetworkSVGBuild(here, portrait));
+  return XM_SVG_CACHE.get(key);
+}
+function xmNetworkSVGBuild(here, portrait) {
   const W = portrait ? 720 : 1100, H = portrait ? 1100 : 720;
   // 简易坐标：1 号线竖排，2 号线横排，交于吕厝
   const L1 = XM_LINES[1].stations, L2 = XM_LINES[2].stations;
@@ -414,8 +421,10 @@ export function xmNetworkSVG(here, { portrait = false } = {}) {
   const xs = Object.values(pos).map(p => p[0]), ys = Object.values(pos).map(p => p[1]);
   const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
   const pad = 70, sx = (W - 2 * pad) / Math.max(1, maxX - minX), sy = (H - 2 * pad) / Math.max(1, maxY - minY);
-  const sc = Math.min(sx, sy);
-  for (const c of Object.keys(pos)) pos[c] = [pad + (pos[c][0] - minX) * sc, pad + (pos[c][1] - minY) * sc];
+  // 横屏宽度、竖屏高度原来只用了一半多（等比缩放被另一方向卡住）→ 空着的方向单独拉开（最多 2 倍），1 号线 / 2 号线一排站距跟着变大，站名不再挤成一串
+  const sc = Math.min(sx, sy), scx = Math.min(sx, sc * 2), scy = Math.min(sy, sc * 2);
+  const offX = (W - 2 * pad - (maxX - minX) * scx) / 2, offY = (H - 2 * pad - (maxY - minY) * scy) / 2;
+  for (const c of Object.keys(pos)) pos[c] = [pad + offX + (pos[c][0] - minX) * scx, pad + offY + (pos[c][1] - minY) * scy];
   let s = `<svg class="netmap" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
   s += `<text x="${W/2}" y="36" text-anchor="middle" font-size="22" font-weight="800" fill="#1B2530">厦门地铁</text>`;
   s += `<text x="${W/2}" y="56" text-anchor="middle" font-size="13" fill="#6B7280">Xiamen Metro · 1号线 闽南红 · 2号线 鹭岛绿${XM_LINES[3] ? ' · 3号线 云天青' : ''}${XM_LINES[4] ? ' · 4号线 红色' : ''}${XM_LINES[6] ? ' · 6号线 紫色' : ''}</text>`;
@@ -424,14 +433,15 @@ export function xmNetworkSVG(here, { portrait = false } = {}) {
     s += `<polyline points="${pts.map(p => p[0] + ',' + p[1]).join(' ')}" fill="none" stroke="${L.color}" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>`;
   }
   let l3alt = false;
+  const want = [];
   for (const [c, [x, y]] of Object.entries(pos)) {
     const S = XM_STATIONS[c], both = S.lines.length > 1, hereOn = c === here;
     if (both) {
-      s += `<circle cx="${x}" cy="${y}" r="11" fill="#fff" stroke="${XM_LINES[S.lines[0]].color}" stroke-width="5"/>`;
+      s += `<circle data-st="${c}" cx="${x}" cy="${y}" r="11" fill="#fff" stroke="${XM_LINES[S.lines[0]].color}" stroke-width="5"/>`;
       s += `<circle cx="${x}" cy="${y}" r="5" fill="${XM_LINES[S.lines[1]].color}"/>`;
     } else {
       const lc = XM_LINES[S.lines[0]].color;
-      s += `<circle cx="${x}" cy="${y}" r="8" fill="#fff" stroke="${lc}" stroke-width="5"/>`;
+      s += `<circle data-st="${c}" cx="${x}" cy="${y}" r="8" fill="#fff" stroke="${lc}" stroke-width="5"/>`;
     }
     if (hereOn) s += `<circle cx="${x}" cy="${y}" r="16" fill="none" stroke="#FF5A4E" stroke-width="3"><animate attributeName="r" values="14;20;14" dur="1.6s" repeatCount="indefinite"/></circle>`;
     // 集美软件园北不截成‘集美软件’（会与 1 号线集美软件园混淆）。
@@ -464,20 +474,125 @@ export function xmNetworkSVG(here, { portrait = false } = {}) {
       else if (c === 'dme') { lx = x - 8; ly = y - 19; anc = 'end'; }
       else { lx = x + 10; ly = y - 19; anc = 'start'; }
     }
-    // 官任（1 ↔ 6）：横屏 6 号线从右上斜进、往正下方出 → 站名写左下；竖屏从左下进、往右下出 → 站名写左上
+    // 官任（1 ↔ 6）：横屏 6 号线从右上斜进、往正下方出 → 站名写左上紧贴圆圈；竖屏从左下进、往右下出 → 站名写左上
     if (XM_LINES[6] && c === 'grn') {
       if (portrait) { lx = x - 24; ly = y - 2; anc = 'end'; }
-      else { lx = x - 12; ly = y + 26; anc = 'end'; }
+      else { lx = x - 4; ly = y - 19; anc = 'end'; }   // 横屏贴着换乘大圆写在左上（右上是 6 号线斜进来；下面 6 号线往下走、左下离诚毅广场太近会被认成那站）
     }
     // 竖屏：董任 → 官任 这段紫线从左下方斜进，官任站名写在它左上方；诚毅广场站名也挪到圆点左边
     // （原来在圆点下方，会被官任圆点和紫线压住；右边是景点图标）。两者都避开上面「集美软件」站名（x 不超过圆点 − 24）
     if (XM_LINES[6] && portrait && c === 'cyg') { lx = x - 24; ly = y + 4; anc = 'end'; }
     // 横屏：董任写在圆点右边，左边会和 1 号线「诚毅广场」叠字；略抬高，离「杏锦路」远一点
-    if (XM_LINES[6] && !portrait && c === 'dren') { lx = x + 14; ly = y + 1; anc = 'start'; }
-    s += `<text x="${lx}" y="${ly}" text-anchor="${anc}" font-size="${hereOn ? 13 : 10}" font-weight="${hereOn ? 800 : 600}" fill="#1B2530" paint-order="stroke" stroke="#fff" stroke-width="3" stroke-linejoin="round">${label}</text>`;
+    if (XM_LINES[6] && !portrait && c === 'dren') { lx = x + (hereOn ? 24 : 22); ly = y + 4; anc = 'start'; }   // 右上是 6 号线往内茂去的斜线，往右多让 8 像素；当前站时再让 2 像素躲开红圈
+    // 上面这些是每站的「首选」方位；真正落笔前统一过一遍自动避让（见下面景点循环之后）
+    want.push({ c, x, y, dx: lx - x, dy: ly - y, anc, label, fs: hereOn ? 13 : 10, fw: hereOn ? 800 : 600, hub: both });
   }
   // 景点小图标（和广州图一样可点开小卡片）：1 号线横排时放线下方，2 号线竖排时放线右侧；相邻两站错开
   const XR = 13, alt = {};
+  // —— 自动避让（3 / 4 / 6 号线合进来以后，横屏 1 号线一排、竖屏 2 号线一排站距只剩 20 来像素，固定方位会字压字）——
+  // 障碍物：所有车站圆点、所有线路（14 像素粗的折线段）、已放好的站名 / 景点图标；先按「当前站 → 换乘站 → 其他站」给站名挑位置，再放景点图标。
+  // 每站 / 每个图标先试上面写好的首选方位（以前人工调过的位置照旧生效），压到东西才换候选方位。
+  const boxes = [], segs = [];
+  const tw = (t, fs) => [...t].reduce((w, ch) => w + (ch.charCodeAt(0) > 255 ? fs : 0.6 * fs), 0);
+  const tbox = (x, y, t, fs, anc) => { const w = tw(t, fs), x0 = anc === 'middle' ? x - w / 2 : anc === 'end' ? x - w : x; return [x0 - 2, y - 0.9 * fs - 2, x0 + w + 2, y + 0.2 * fs + 2]; };
+  // 竖排站名（anc = 'v'）：(x, y) 是第一个字的上沿中点，一字一行往下排
+  const vbox = (x, y, t, fs) => [x - fs / 2 - 3, y - 2, x + fs / 2 + 3, y + [...t].length * fs + 2];
+  const ov = (A, B) => Math.max(0, Math.min(A[2], B[2]) - Math.max(A[0], B[0])) * Math.max(0, Math.min(A[3], B[3]) - Math.max(A[1], B[1]));
+  // 线段穿过矩形（矩形按线宽外扩）的长度：Liang–Barsky 裁剪
+  const segIn = (B, [ax, ay, bx, by, hw]) => {
+    const x0 = B[0] - hw, y0 = B[1] - hw, x1 = B[2] + hw, y1 = B[3] + hw, dx = bx - ax, dy = by - ay;
+    if ((ax < x0 && bx < x0) || (ax > x1 && bx > x1) || (ay < y0 && by < y0) || (ay > y1 && by > y1)) return 0;
+    let t0 = 0, t1 = 1;
+    for (const [p, q] of [[-dx, ax - x0], [dx, x1 - ax], [-dy, ay - y0], [dy, y1 - ay]]) {
+      if (p === 0) { if (q < 0) return 0; continue; }
+      const r = q / p; if (p < 0) { if (r > t1) return 0; if (r > t0) t0 = r; } else { if (r < t0) return 0; if (r < t1) t1 = r; }
+    }
+    return (t1 - t0) * Math.hypot(dx, dy);
+  };
+  // 权重：字压字（站名 / 图标，boxes 第 5 项缺省 = 60）按面积最重；压圆点按压进去的深度；压线按穿过长度 × 30
+  // 站名离哪个圆点最近，小朋友就会以为是哪一站：最近的圆点（字框到圆点圆心的距离）必须是自己这站，否则重罚
+  const dotR = c => c === here ? 10 : 0;   // 当前站外面多一圈半径 20 的红圈（普通圆点半径约 10），看上去大一圈，扣掉这 10 像素   // 按圆点圆心算（按外沿算的话，竖屏 2 号线这种站距 17 像素的密排，紧贴自己圆点的字也会被判成离邻站更近）
+  const rectD = (B, x, y) => Math.hypot(Math.max(B[0] - x, 0, x - B[2]), Math.max(B[1] - y, 0, y - B[3]));
+  const stCodes = Object.keys(pos);
+  const notMine = (B, c) => { const d0 = rectD(B, ...pos[c]) - dotR(c); return stCodes.some(o => o !== c && rectD(B, ...pos[o]) - dotR(o) <= d0 + 1); };
+  const NEAR = 5000;   // 不带引线的站名：硬约束
+  // 圆点（boxes 第 5 项 = 10）按真实圆形算：字框到圆心距离小于圆半径（含描边）才算压到
+  const dotHit = (B, O) => { const r = (O[2] - O[0]) / 2 - 0.5, d = rectD(B, (O[0] + O[2]) / 2, (O[1] + O[3]) / 2); return d < r ? 200 + (r - d) * 100 : 0; };
+  const cost = (bs, own) => bs.reduce((t, B) => t + boxes.reduce((u, O) => u + (O[4] === 10 ? dotHit(B, O) : ov(B, O) * (O[4] ?? 60)), 0) + segs.reduce((u, g) => u + (g[6] && g[6] === own ? 0 : segIn(B, g) * g[5]), 0)
+    + (B[0] < 4 || B[2] > W - 4 || B[1] < 62 || B[3] > H - 4 ? 1e5 : 0), 0);
+  for (const L of Object.values(XM_LINES)) for (let i = 1; i < L.stations.length; i++) { const [ax, ay] = pos[L.stations[i - 1]], [bx, by] = pos[L.stations[i]]; segs.push([ax, ay, bx, by, 7, 30]); }
+  for (const [c, [x, y]] of Object.entries(pos)) { const r = c === here ? 21 : XM_STATIONS[c].lines.length > 1 ? 14 : 11; boxes.push([x - r, y - r, x + r, y + r, 10]); }   // 当前站外面有一圈跳动的红圈（半径到 20）
+  const ICAND = [[0, 0], [0, 26], [0, -40], [-36, 0], [36, 0], [-40, 26], [40, 26], [-40, -30], [40, -30], [0, 52], [0, -64], [-70, 0], [70, 0], [-60, 40], [60, 40], [-60, -40], [60, -40]];
+  for (const R of [24, 40, 56, 72, 90, 110, 130, 150, 180, 210, 240]) for (let k = 0; k < 24; k++) ICAND.push([Math.round(Math.cos(k * Math.PI / 12) * R), Math.round(Math.sin(k * Math.PI / 12) * R)]);
+  // 站名候选方位（相对圆点；换乘站圆点大 3 像素，往外再推 3）：右、左、上、下、四个斜角，再远一圈
+  const LCAND = [[14, 4, 'start'], [-14, 4, 'end'], [0, -15, 'middle'], [0, 23, 'middle'], [10, -11, 'start'], [-10, -11, 'end'], [10, 19, 'start'], [-10, 19, 'end'],
+    [0, -27, 'middle'], [0, 35, 'middle'], [22, 4, 'start'], [-22, 4, 'end'], [14, -21, 'start'], [-14, -21, 'end'], [14, 29, 'start'], [-14, 29, 'end'], [0, -39, 'middle'], [0, 47, 'middle'],
+    // 实在放不下（竖屏 2 号线横排一站只有 18 像素宽）：站名竖排写在圆点正下 / 正上方
+    [0, 14, 'v'], [0, -14, 'v'], [0, 26, 'v'], [0, -26, 'v']];
+  // 候选顺序按这站所在线段的走向排：横着走的一排（如横屏 1 号线）先试正上 / 正下，竖着走的先试左 / 右——
+  // 斜角方位离圆点远一点就分不清是哪一站的字，排在后面
+  const dirOf = c => {
+    const nb = [];
+    for (const L of Object.values(XM_LINES)) { const i = L.stations.indexOf(c); if (i < 0) continue; if (i > 0) nb.push(L.stations[i - 1]); if (i < L.stations.length - 1) nb.push(L.stations[i + 1]); }
+    const [x, y] = pos[c], d = nb.map(n => { const ax = Math.abs(pos[n][0] - x), ay = Math.abs(pos[n][1] - y); return ay < 0.35 * ax ? 'H' : ax < 0.35 * ay ? 'V' : 'D'; });
+    const gap = Math.min(...nb.map(n => Math.abs(pos[n][0] - x)));
+    // 横排站距连「上下交错」都放不下（两站距 < 字宽，如竖屏 2 号线），竖排字排到最前
+    if (d.every(k => k === 'H') && 2 * gap < 48) return 'Hv';   // 48 = 四字站名 + 边距；按整排算，短站名也跟着竖排，一排看着整齐
+    return d.every(k => k === 'H') ? 'H' : d.every(k => k === 'V') ? 'V' : 'D';
+  };
+  const rank = { Hv: ([a, b, n]) => n === 'v' ? (Math.abs(b) < 20 ? 0 : 1) : a === 0 ? 2 : 5, H: ([a, b, n]) => n === 'v' ? 9 : a === 0 ? (Math.abs(b) < 30 ? 0 : 2) : b > 6 || b < -6 ? 3 : 5, V: ([a, b, n]) => n === 'v' ? 9 : b === 4 ? (Math.abs(a) < 20 ? 0 : 1) : 3, D: () => 0 };
+  const pick = (w, fine) => {
+    const r = w.c === here ? 9 : w.hub ? 3 : 0, big = w.fs > 10 ? 3 : 0, rk = rank[w.dir || (w.dir = dirOf(w.c))];
+    const cand = LCAND.map((q, i) => [rk(q) * 100 + i, q]).sort((p, q) => p[0] - q[0]).map(([, [a, b, n]]) => [a + Math.sign(a) * r, b + Math.sign(b) * r + (b > 6 ? big : 0), n]);
+    let best = null;
+    for (const [dx0, dy0, anc] of [...(w.dir === 'Hv' ? [] : [[w.dx, w.dy, w.anc]]), ...cand])
+      for (const [jx, jy] of fine ? [[0, 0], [0, 3], [0, -3], [3, 0], [-3, 0], [0, 6], [0, -6], [6, 0], [-6, 0]] : [[0, 0]]) {
+        const tx = w.x + dx0 + jx, ty = w.y + dy0 + jy + (anc === 'v' && dy0 < 0 ? -[...w.label].length * w.fs : 0);
+        const bx = anc === 'v' ? vbox(tx, ty, w.label, w.fs) : tbox(tx, ty, w.label, w.fs, anc), k = cost([bx], w.c) + (notMine(bx, w.c) ? NEAR : 0);
+        if (!best || k < best.k - 0.5) best = { ...w, k, tx, ty, anc, bx }; if (k === 0) return best;
+      }
+    return best;
+  };
+  // 先放：当前站 → 换乘站 → 以前人工调过方位的站（董任写右边、诚毅广场、厦门北、前浯、鼎美、马銮中心）→ 其他站
+  const PIN = new Set(['dren', 'cyg', 'xmnb', 'qwu', 'dme', 'mlz']);
+  const order = want.slice().sort((p, q) => (q.c === here) - (p.c === here) || q.hub - p.hub || PIN.has(q.c) - PIN.has(p.c));
+  const lab = order.map(w => { const b = pick(w, false); boxes.push(b.bx); return b; });
+  // 第二遍：还压着别人的站名，拿掉自己再细挪（±3 / ±6 像素）找空位
+  for (let pass = 0; pass < 3; pass++) for (let i = 0; i < lab.length; i++) {
+    boxes.splice(boxes.indexOf(lab[i].bx), 1);
+    if (cost([lab[i].bx], lab[i].c) + (notMine(lab[i].bx, lab[i].c) ? NEAR : 0) > 0) lab[i] = pick(lab[i], true);
+    boxes.push(lab[i].bx);
+  }
+  // 第三遍（换乘核心区：吕厝一带 1 / 2 / 3 / 4 号线挤在一起）：附近实在没空位的站名，拉到稍远的空白处，用细灰线连回圆点
+  let leads = '';
+  for (let i = 0; i < lab.length; i++) {
+    boxes.splice(boxes.indexOf(lab[i].bx), 1);
+    const w = lab[i];
+    // 竖屏杏林村：左边离董任太近、右边是华侨大学，贴着圆点写会夹在杏林村和园博苑中间分不清 → 和杏锦路一样拉引线
+    const force = portrait && w.c === 'xlv';
+    const cur = force ? Infinity : cost([w.bx], w.c) + (notMine(w.bx, w.c) ? NEAR : 0);
+    if (cur > 0) {
+      let best = null;
+      for (const R of [20, 26, 34, 46, 58, 72, 88, 104, 122, 140]) {
+        for (let k = 0; k < 24; k++) {
+          const t = k * Math.PI / 12, ex = Math.cos(t) * R, ey = Math.sin(t) * R, anc = ex > 8 ? 'start' : ex < -8 ? 'end' : 'middle';
+          const tx = w.x + ex, ty = w.y + ey + 4, bx = tbox(tx, ty, w.label, w.fs, anc);
+          const lx = Math.max(bx[0], Math.min(w.x, bx[2])), ly = Math.max(bx[1], Math.min(w.y, bx[3]));
+          // 细线压到别的站名 / 圆点 / 图标就扣分（自己这站的圆点不算）
+          const lead = boxes.reduce((u, O) => u + (!(O[0] <= w.x && w.x <= O[2] && O[1] <= w.y && w.y <= O[3]) && segIn(O, [w.x, w.y, lx, ly, 0]) > 0.5 ? 60 : 0), 0);
+          // 带引线的站名有细线连着自己的圆点，最近圆点规则降为软约束（仍优先满足），字压字照样重罚
+          const kk = cost([bx], w.c) + (notMine(bx, w.c) ? 400 : 0) + Math.max(0, lead) + R * 0.05;
+          if (!best || kk < best.kk) best = { ...w, kk, k: 0, tx, ty, anc, bx, lx, ly };
+        }
+        if (best.kk < R * 0.05 + 0.5) break;
+      }
+      if (best.kk < cur) { lab[i] = { ...best, lead: true }; segs.push([w.x, w.y, best.lx, best.ly, 1, 5]); leads += `<line x1="${+w.x.toFixed(1)}" y1="${+w.y.toFixed(1)}" x2="${+best.lx.toFixed(1)}" y2="${+best.ly.toFixed(1)}" stroke="#6B7280" stroke-width="1"/>`; }
+    }
+    boxes.push(lab[i].bx);
+  }
+  s += leads;
+  // 景点图标最后放（站名优先贴着自己的圆点；图标带虚线，挪远一点也认得出是哪站的）
+  let sa = '';
   for (const a of XM_ATTRACTIONS) {
     const [x, y] = pos[a.code], S = XM_STATIONS[a.code], onL1 = S.lines.includes(1);
     let ix, iy, anc = 'middle', tx, ty;
@@ -490,11 +605,24 @@ export function xmNetworkSVG(here, { portrait = false } = {}) {
     if (a.code === 'grn' && !portrait && XM_LINES[6]) iy = y + 22 + 26 * 5;
     // 竖屏 6 号线从左下进官任：诚毅广场 / 官任两个景点图标挪到 1 号线右侧（上下错开，不压杏林湾 / 华侨大学）
     if (portrait && XM_LINES[6] && (a.code === 'cyg' || a.code === 'grn')) { ix = x + 70; iy = a.code === 'cyg' ? y - 55 : y - 28; }
+    // 首选位置压到线 / 圆点 / 站名 / 别的图标时，在它周围找空位（图标 + 图标名一起算）
+    const ownLab = (lab.find(b => b.c === a.code) || {}).bx;
+    let best = null;
+    for (const [ox, oy] of ICAND) {
+      if (best && 0.4 * Math.hypot(ox, oy) >= best.k) continue;   // 光距离分就已经比现有最好的差，不用算了
+      const jx = ix + ox, jy = iy + oy, bs = [[jx - XR - 2, jy - XR - 2, jx + XR + 2, jy + XR + 2], tbox(jx, jy + XR + 12, a.name, 10, 'middle')];
+      // 虚线压到站名 / 圆点也扣分（自己这站的圆点不算）；图标 / 图标名压东西按面积重罚
+      const k = cost(bs) + boxes.reduce((u, O) => u + (!(O[0] <= x && x <= O[2] && O[1] <= y && y <= O[3]) && segIn(O, [x, y, jx, jy, 0]) > 0.5 ? (O[4] === 10 ? 3 : O === ownLab ? 80 : 12) : 0), 0) + 0.4 * Math.hypot(ox, oy);   // 穿过自己站名重罚；离首选位置越远越扣分
+      if (!best || k < best.k - 0.5) best = { k, jx, jy, bs }; if (k === 0) break;   // 首选位置本身就空着才会是 0
+    }
+    ix = best.jx; iy = best.jy; boxes.push(...best.bs); segs.push([x, y, ix, iy, 1.5, 2, a.code]);
     tx = ix; ty = iy + XR + 12;
-    s += `<line x1="${x}" y1="${y}" x2="${ix}" y2="${iy}" stroke="#9AA3AD" stroke-width="2" stroke-dasharray="2 4"/>`;
-    s += `<g class="attr" data-attr="${a.id}" data-code="${a.code}"><circle cx="${ix}" cy="${iy}" r="${XR + 10}" fill="#fff" fill-opacity="0"/>${iconSVG(a.icon, ix, iy, XR, XM_LINES[S.lines[0]].color)}`;
-    s += `<text x="${tx}" y="${ty}" font-size="10" font-weight="700" fill="#34404F" text-anchor="${anc}" paint-order="stroke" stroke="#fff" stroke-width="4" stroke-linejoin="round">${a.name}</text></g>`;
+    sa += `<line x1="${x}" y1="${y}" x2="${ix}" y2="${iy}" stroke="#9AA3AD" stroke-width="2" stroke-dasharray="2 4"/>`;
+    sa += `<g class="attr" data-attr="${a.id}" data-code="${a.code}"><circle cx="${ix}" cy="${iy}" r="${XR + 10}" fill="#fff" fill-opacity="0"/>${iconSVG(a.icon, ix, iy, XR, XM_LINES[S.lines[0]].color)}`;
+    sa += `<text x="${tx}" y="${ty}" font-size="10" font-weight="700" fill="#34404F" text-anchor="${anc}" paint-order="stroke" stroke="#fff" stroke-width="4" stroke-linejoin="round">${a.name}</text></g>`;
   }
+  for (const b of lab) s += `<text data-code="${b.c}"${b.lead ? ' data-lead="1"' : ''} x="${+b.tx.toFixed(1)}" y="${+b.ty.toFixed(1)}" ${b.anc === 'v' ? 'writing-mode="vertical-rl" text-anchor="start"' : `text-anchor="${b.anc}"`} font-size="${b.fs}" font-weight="${b.fw}" fill="#1B2530" paint-order="stroke" stroke="#fff" stroke-width="3" stroke-linejoin="round">${b.label}</text>`;
+  s += sa;
   s += `</svg>`;
   return s;
 }
