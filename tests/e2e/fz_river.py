@@ -280,7 +280,8 @@ async def run_1b(pg):
     R['perf']['kiosk:fzdm'] = await sample(pg, 'kiosk:fzdm')
     if OUT: await shot(pg, 'kiosk_fzdm_C')
     wq = [p for p in D['piers'] if p['id'] == 'wq'][0]; sg = await W(pg, *wq['sign'])
-    await jreset(pg); ok('fzdm:C:walkToPier', await go(pg, sg[0] - wq['n'][0] * 4, sg[1] - wq['n'][1] * 4, 'kiosk C → 温泉公园码头牌') and (await jget(pg))['max'] < TELEPORT)
+    lp = await W(pg, *pf(wq, -9.6, -2.8))   # 码头牌旁边的岸上落脚点（同 board()）
+    await jreset(pg); ok('fzdm:C:walkToPier', await go(pg, *lp, 'kiosk C → 温泉公园码头牌') and (await jget(pg))['max'] < TELEPORT)
     if OUT:
         s = await st(pg); await pg.evaluate(f"__game.player.yaw = Math.atan2({sg[0] - s['pos'][0]}, {sg[1] - s['pos'][2]}); __game.player.pitch = 0.05"); await asyncio.sleep(0.8); await shot(pg, 'pier_sign_wenquan')
     if 'e_bridges' in STAGES:
