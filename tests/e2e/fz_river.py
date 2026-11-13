@@ -245,8 +245,8 @@ async def main():
       # ---------- 补拍：西水关码头牌（看得到石底座）+ 船过桂芳桥（拱在头顶 / 正前方） ----------
       xsg = [p for p in D['piers'] if p['id'] == 'xsg'][0]; sg = await W(pg, *xsg['sign']); tt, nn = xsg['t'], xsg['n']
       if await pg.evaluate("__game.player.view") != 'first': await pg.evaluate("__game.toggleView()")
-      for k, (a, b) in enumerate([(-4.5, 0), (-4.0, 2.5), (-4.0, -2.5), (-6.0, 1.5), (4.5, 0)]):
-        c = await pg.evaluate(f'__fzNav.snap({sg[0] - nn[0] * a + tt[0] * b}, {sg[1] - nn[1] * a + tt[1] * b})')
+      for k, (da, db) in enumerate([(-4.5, 0), (-4.0, 2.5), (-4.0, -2.5), (-6.0, 1.5), (4.5, 0)]):
+        c = await pg.evaluate(f'__fzNav.snap({sg[0] - nn[0] * da + tt[0] * db}, {sg[1] - nn[1] * da + tt[1] * db})')
         if not c or not await go(pg, *c, f'sign view {k}'): continue
         s = await st(pg); await pg.evaluate(f"__game.player.yaw = Math.atan2({sg[0] - s['pos'][0]}, {sg[1] - s['pos'][2]}); __game.player.pitch = 0.18"); await asyncio.sleep(0.8)
         await shot(pg, f'pier_sign_xishuiguan_base_{k}')
