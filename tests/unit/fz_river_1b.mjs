@@ -1,0 +1,81 @@
+// 福州内河 1B（晋安河 1:3 + 光明港 1:4；游船 B 线白篷 温泉公园—福新问渡—东门停靠点—河口—光明港）：河网数据 / 船体在水里 / 篷顶过桥净空 / 出口接入 / 码头牌 / 报站（普通话 + 英语）。
+import * as R from '../../js/data/fz-river.js';
+import { FZ_EXITS, FZ_EXIT_TABLE } from '../../js/data/fz-exits.js';
+import { allJobs, fzBoatDepartSegs, fzBoatArriveSegs, fzBoatJobs } from '../../js/data/phrases.js';
+const fails = [];
+function ok(n, v, info) { console.log(`${v ? 'PASS' : 'FAIL'} ${n}${!v && info !== undefined ? ' ' + JSON.stringify(info) : ''}`); if (!v) fails.push(n); }
+// ---- 河网切换 ----
+ok('kiosk → net: 斗门/东门/光明港 = e, 西门/西洋 = a', ['fzdm', 'fzdmn', 'fzgmg'].every(c => R.netOfKiosk(c) === 'e') && ['fzxm', 'fzxiy'].every(c => R.netOfKiosk(c) === 'a'));
+const lenA = R.ROUTE.line.len;
+R.useNet('e');
+ok('useNet(e) swaps live bindings', R.NET === 'e' && R.FZR.id === 'e' && R.ROUTE.id === 'B' && R.ROUTE.line.len !== lenA);
+const F = R.FZR;
+// ---- 数据 ----
+ok('two rivers ja/gm (晋安河 / 光明港)', Object.keys(R.RIVERS).join() === 'ja,gm' && R.RIVERS.ja.zh === '晋安河' && R.RIVERS.gm.zh === '光明港');
+ok('compression 晋安河 1:3, 光明港 1:4', F.K === 3 && F.Kgm === 4);
+ok('same water level as 1A', F.WY === -3);
+ok('land + water meshes present', Object.keys(F.land).length > 30 && Object.keys(F.water).length > 30);
+// 晋安河口接光明港：晋安河中线末点在光明港水面里
+{ const L = R.RIVERS.ja.line, e = L.at(L.len); ok('晋安河 mouth joins 光明港 water', R.isWater(e.x, e.z) && R.RIVERS.gm.line.project(e.x, e.z).d < 3); }
+ok('15 bridges (OSM, twins merged)', R.BRIDGES.length === 15, R.BRIDGES.length);
+const named = R.BRIDGES.filter(b => b.name).map(b => b.name);
+ok('named bridges 温泉公园路/六一北路/塔头路/国货东路/文博路/北光明港路/长乐南路/连江中路/前横南路', ['温泉公园路', '六一北路', '塔头路', '国货东路', '文博路', '北光明港路', '长乐南路', '连江中路', '前横南路'].every(n => named.includes(n)), named);
+ok('unnamed bridges have no plate (⑧)', R.BRIDGES.filter(b => !b.name).every(b => !b.plate));
+ok('no arch bridge on route B (flat bridges only)', R.BRIDGES.every(b => !['arch', 'hump'].includes(b.kind)));
+ok('bridge ids unique', new Set(R.BRIDGES.map(b => b.id)).size === R.BRIDGES.length);
+ok('every bridge spans water', R.BRIDGES.every(b => R.isWater(b.x, b.z)), R.BRIDGES.filter(b => !R.isWater(b.x, b.z)).map(b => b.id));
+const endsLand = b => [-1, 1].every(sg => R.isLand(b.x + b.n[0] * sg * (b.hw + 2.5), b.z + b.n[1] * sg * (b.hw + 2.5)));
+ok('both bridge ends on land (walkable both ways)', R.BRIDGES.every(endsLand), R.BRIDGES.filter(b => !endsLand(b)).map(b => b.id));
+ok('flat bridge soffit ≥ water + 2.6 m', R.FLAT_SOFFIT - R.WY >= 2.6 - 1e-9);
+let shoreBad = 0; for (const k in R.RIVERS) { const L = R.RIVERS[k].line; for (let s = 5; s < L.len - 5; s += 10) { const a = L.at(s); if (!R.isWater(a.x, a.z)) continue; const sh = R.shoreFor(a.x, a.z); if (!sh || !R.isLand(sh.x, sh.z) || Math.hypot(sh.x - a.x, sh.z - a.z) > 30) shoreBad++; } }
+ok('shoreFor finds land from every river point (fall-in return)', shoreBad === 0, shoreBad);
+ok('three water steps (水埠头) marked dry', F.steps.length === 3 && F.steps.every(s => R.isDry(s.x - s.n[0] * 0.7, s.z - s.n[1] * 0.7)));
+// ---- 航线 / 码头 ----
+ok('route B: 温泉公园 → 福新问渡 → 东门停靠点 → 河口 → 光明港', R.STOPS.map(s => s.id).join() === 'wq,fx,dmn,hk,gmg' && R.STOPS.map(s => s.pier.zh).join() === '温泉公园码头,福新问渡码头,东门停靠点,河口码头,光明港码头');
+ok('white canopy', R.ROUTE.canopy === 'white');
+ok('stops ascending along route & on the berth line', R.STOPS.every((s, i) => i === 0 || s.s > R.STOPS[i - 1].s) && R.STOPS.every(s => s.d < 0.5) && R.STOPS[4].s <= R.ROUTE.line.len);
+let hullOut = 0; for (let s = 0; s <= R.ROUTE.line.len; s += 0.5) for (const { x, z } of R.hullPts(s)) if (!R.isWater(x, z) && !R.isDry(x, z)) { hullOut++; break; }
+ok('boat hull stays inside water along whole route', hullOut === 0, hullOut);
+const cr = R.clearanceReport(0.25);
+ok(`canopy never clips a bridge (min clearance ${cr.min.toFixed(3)} ≥ ${R.CLEAR_MIN})`, cr.ok && cr.min >= R.CLEAR_MIN, cr.per);
+ok('route passes under all 15 bridges', Object.keys(cr.per).length === 15, Object.keys(cr.per));
+ok('speed cap: cruise same as 1A (3.5), slower under bridges', Math.max(...R.SPEED_CAP) <= R.CRUISE + 1e-9 && Math.min(...R.SPEED_CAP) <= R.SLOW + 1e-6);
+// 单程时间（按限速积分 + 每站加减速 + 中间站停 20 s）：报告，≤ 8 min 是目标（同速下做不到 → 只记录，见报告）
+{ let t = 0; for (let i = 0; i < R.SPEED_CAP.length; i++) t += 1 / R.SPEED_CAP[i]; const total = t + 3 * 20 + 4 * (R.CRUISE / R.ACC);
+  console.log(`INFO route B len ${R.ROUTE.line.len.toFixed(0)} m, pure run ${(t / 60).toFixed(1)} min, one-way est ${(total / 60).toFixed(1)} min`);
+  ok('route B one-way estimate < 14 min (sanity)', total < 14 * 60, total); }
+// 码头间距：浮码头不压桥
+// 码头沿河占 [s-10.2（台阶口）, s+8.4（浮码头尾）]，桥占 [s-w/2, s+w/2]：中间至少留 2 m
+const pierHit = p => R.BRIDGES.filter(b => b.river === p.river && Math.min(p.s + 8.4, b.s + b.w / 2) - Math.max(p.s - 10.2, b.s - b.w / 2) > -2).map(b => b.id);
+ok('piers clear of bridges (≥ 2 m)', R.PIERS.every(p => !pierHit(p).length), R.PIERS.map(p => [p.id, pierHit(p)]));
+ok('pier signs: zh + English + B线 next stops', R.PIERS.every(p => R.pierNext(p.id).length >= 1) && R.pierNext('dmn').map(p => p.id).join() === 'fx,hk' && R.pierNext('wq').map(p => p.id).join() === 'fx');
+ok('东门 game-only stop is not named 码头 (sign must not look like a real pier)', R.PIER.dmn.zh === '东门停靠点' && !/Pier/.test(R.PIER.dmn.en) && /游戏增设/.test(R.PIER.dmn.note || ''));
+ok('real piers keep 码头 / Pier', ['wq', 'fx', 'hk', 'gmg'].every(id => R.PIER[id].zh.endsWith('码头') && /Pier$/.test(R.PIER[id].en)));
+// ---- 出口 ----
+const ex = { fzdm: ['C', 1, '温泉公园码头'], fzdmn: ['C', 4, '东门停靠点（内河游船）'], fzgmg: ['D', 4, '光明港码头'] };
+for (const [c, [n, line, to]] of Object.entries(ex)) {
+  const e = FZ_EXITS[c];
+  ok(`${c} ${n} → river (attr fzriver, line ${line})`, e && e.n === n && e.attr === 'fzriver' && e.line === line && e.to.includes(to) && e.verified === false, e);
+  ok(`${c} exit table lists ${n}`, (FZ_EXIT_TABLE[c] || []).some(r => r[0] === n));
+  const K = R.KIOSKS[c], P = K && R.PIER[K.pier];
+  ok(`${c} kiosk on land with walkable front, ≤ 120 m to its pier`, K && K.n === n && R.isLand(K.x, K.z + 3) && R.isLand(K.x, K.z + 0.5) && P && Math.hypot(K.x - P.sign[0], K.z - P.sign[1]) <= 120, K);
+  ok(`${c} kiosk stair hole cut out of the land`, K && !R.isLand(K.x, K.z - 4.5));
+}
+ok('斗门 C → 温泉公园, 东门 C → 东门停靠点, 光明港 D → 光明港码头', R.KIOSKS.fzdm.pier === 'wq' && R.KIOSKS.fzdmn.pier === 'dmn' && R.KIOSKS.fzgmg.pier === 'gmg');
+// ---- 报站 ----
+const jobs = fzBoatJobs(), ids = jobs.map(j => j.id);
+ok('B line jobs present (zh + en only)', ['wq', 'fx', 'dmn', 'hk', 'gmg'].every(id => ids.includes(`voice.fz.boat.arrive.${id}${['wq', 'gmg'].includes(id) ? '.end' : ''}.zh`) && ids.includes(`voice.fz.boat.next.${id}.en`)) && ids.includes('voice.fz.boat.b.depart.gmg.zh') && ids.includes('voice.fz.boat.b.depart.wq.en') && ids.every(id => /\.(zh|en)$/.test(id)), ids.filter(i => /b\.|wq|gmg/.test(i)));
+ok('A line ids unchanged', ids.includes('voice.fz.boat.depart.lmh.zh') && ids.includes('voice.fz.boat.depart.xihu.en'));
+ok('allJobs includes every boat job', (() => { const all = new Set(allJobs().map(j => j.id)); return ids.every(id => all.has(id)); })());
+const dep = fzBoatDepartSegs('gmg', 'fx', 'B'), txt = a => a.map(x => x.text).join(' ');
+ok('B depart: 内河游船B线 + 开往光明港码头 + 下一站 + English', /内河游船B线/.test(txt(dep)) && /光明港码头/.test(txt(dep)) && /福新问渡码头/.test(txt(dep)) && /Line B/.test(txt(dep)) && /Fuxin Wendu Pier/.test(txt(dep)) && dep[0].id === 'voice.fz.boat.b.depart.gmg.zh');
+ok('B arrive at 东门停靠点 / terminal 光明港', /东门停靠点到了/.test(txt(fzBoatArriveSegs('dmn', false))) && /终点/.test(txt(fzBoatArriveSegs('gmg', true))));
+// ---- 预算粗估：常开几何别比 1A 多太多 ----
+R.useNet('a'); const A = R.FZR; R.useNet('e');
+const tris = T => Object.values(T).reduce((a, c) => a + c.i.length / 3, 0);
+ok(`always-on ground+water tris ≤ 1.6 × 1A (${tris(F.land) + tris(F.water)} vs ${tris(A.land) + tris(A.water)})`, tris(F.land) + tris(F.water) <= 1.6 * (tris(A.land) + tris(A.water)));
+ok(`houses ≤ 1A × 1.3 (${F.houses.length} vs ${A.houses.length})`, F.houses.length <= A.houses.length * 1.3);
+R.useNet('a');
+ok('useNet(a) restores 1A', R.NET === 'a' && R.STOPS.map(s => s.id).join() === 'xihu,xsg,lmh' && R.ROUTE.line.len === lenA);
+console.log(fails.length ? `\n${fails.length} FAILED: ${fails.join(', ')}` : '\nALL PASS');
+process.exit(fails.length ? 1 : 0);

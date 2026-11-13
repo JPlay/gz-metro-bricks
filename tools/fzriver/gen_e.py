@@ -62,8 +62,9 @@ def flarePoly(k, s0, s1, w0, w1, n=10):
   L_ = [at_s(k, s0 + (s1 - s0) * i / n, -(w0 + (w1 - w0) * (i / n) ** 1.5))[0] for i in range(n + 1)]
   R_ = [at_s(k, s0 + (s1 - s0) * i / n, (w0 + (w1 - w0) * (i / n) ** 1.5))[0] for i in range(n + 1)]
   return Polygon(L_ + R_[::-1])
-flare = flarePoly('ja', ja.length - HW['gm'] - 34, ja.length - HW['gm'] + 1, HW['ja'], HW['ja'] + 20)
-water = unary_union([*chan.values(), flare]).buffer(0.01).buffer(-0.01).simplify(0.05)
+flare = flarePoly('ja', ja.length - HW['gm'] - 10, ja.length - HW['gm'] + 1, HW['ja'], HW['ja'] + 12)
+# 丁字口两个岸角倒圆（落水回岸找最近岸线时不会卡在尖角上）
+water = unary_union([*chan.values(), flare]).buffer(6, quad_segs=6).buffer(-6, quad_segs=6).simplify(0.05)
 if water.geom_type != 'Polygon': water = max(water.geoms, key=lambda g: g.area)
 water = Polygon(water.exterior)
 
@@ -158,7 +159,12 @@ for b in BR:
 print('kiosks', KIOSK)
 
 # ---------- 可走范围 / 岸地 ----------
-reg = [CL[k].buffer(HW[k] + BAND[k], cap_style='flat', quad_segs=6) for k in CL] + [flare.buffer(BAND['ja'])]
+def ext(g, m=5.0):
+  c = list(g.coords); (a0, a1), (b0, b1) = c[0], c[1]; l = math.dist(c[0], c[1]); h = (a0 - (b0 - a0) / l * m, a1 - (b1 - a1) / l * m)
+  (y0, y1), (z0, z1) = c[-1], c[-2]; l2 = math.dist(c[-1], c[-2]); e = (y0 + (y0 - z0) / l2 * m, y1 + (y1 - z1) / l2 * m)
+  return LineString([h] + c + [e])
+# 可走范围比水面两头各多 5 m（河道尽头的岸角落水回岸时不会被推到边界外）
+reg = [ext(CL[k]).buffer(HW[k] + BAND[k], cap_style='flat', quad_segs=6) for k in CL] + [flare.buffer(BAND['ja'])]
 reg += [r['poly'] for r in ROADS]
 region = unary_union(reg).buffer(0.01).buffer(-0.01).simplify(0.1)
 if region.geom_type != 'Polygon': region = max(region.geoms, key=lambda g: g.area)
