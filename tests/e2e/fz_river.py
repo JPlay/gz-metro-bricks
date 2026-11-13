@@ -104,12 +104,18 @@ async def enter_kiosk(pg, D, code):
     s = await st(pg); m = await pg.evaluate('({ code: __game.fzMetro.code, street: !!__game.fzMetro.street })')
     return m['code'] == code and not m['street'], s, m
 
+async def landpt(pg, P):
+    # 岸上落脚点：码头牌旁边；1B 用 A* 网格吸附到最近的可走格（有的码头这里有树 / 灯杆）
+    w = await W(pg, *pf(P, -9.6, -2.8))
+    if not E1B: return w
+    c = await pg.evaluate(f'__fzNav.snap(...{json.dumps(w)})'); return c or w
 async def board(pg, D, pid, leg):
     P = [p for p in D['piers'] if p['id'] == pid][0]
     # 岸上落脚点在码头牌旁边（不是牌子里面）→ 台阶顶平台 → 台阶 → 浮码头
-    land = await W(pg, *pf(P, -9.6, -2.8)); head = await W(pg, *pf(P, -10.5, 0.6)); top = await W(pg, *pf(P, -9.4, 0.75)); bot = await W(pg, *pf(P, -4.0, 0.75)); pont = await W(pg, *pf(P, 1.2, 1.5))
+    land = await landpt(pg, P); head = await W(pg, *pf(P, -10.5, 0.6)); top = await W(pg, *pf(P, -9.4, 0.75)); bot = await W(pg, *pf(P, -4.0, 0.75)); pont = await W(pg, *pf(P, 1.2, 1.5))
     r1 = await go(pg, *land, 'to pier ' + pid)
-    await legs(pg, [head, top, bot, pont], False)
+    gap = await W(pg, *pf(P, -9.6, -0.9))   # 1B：岸墙缺口正中（a −10.2…−8.3）直下台阶顶，不贴着栏杆端柱斜穿
+    await legs(pg, ([gap, top] if E1B else [head, top]) + [bot, pont], False)
     s = await st(pg); ok(f'{leg}:downStairsToPontoon:{pid}', abs(s['pos'][1] - (D['wy'] + 0.45)) < 0.3 and r1, s['pos'])
     if leg == 'leg1': await shot(pg, 'pier_pontoon_' + pid)
     # 船不在这个码头就会被“叫”过来（站在浮码头上）
@@ -160,8 +166,9 @@ async def alight(pg, D, pid, leg):
     up = await wait(pg, '!__game.player.seat', 8)
     ok(f'{leg}:standViaTap:{pid}', st_ok and up)
     door = await W(pg, *pf(P, 2.4, 3.9)); edge = await W(pg, *pf(P, 2.4, 2.3)); pont = await W(pg, *pf(P, 0.0, 1.4))
-    bot = await W(pg, *pf(P, -4.0, 0.75)); top = await W(pg, *pf(P, -9.4, 0.75)); head = await W(pg, *pf(P, -10.5, 0.6)); land = await W(pg, *pf(P, -9.6, -2.8))
-    await legs(pg, [door, edge, pont], False); await legs(pg, [bot, top], False); s1 = await st(pg); await legs(pg, [head], False); s2 = await st(pg); await legs(pg, [land], False)
+    bot = await W(pg, *pf(P, -4.0, 0.75)); top = await W(pg, *pf(P, -9.4, 0.75)); head = await W(pg, *pf(P, -10.5, 0.6)); land = await landpt(pg, P)
+    await legs(pg, [door, edge, pont], False); await legs(pg, [bot, top], False); s1 = await st(pg); await legs(pg, [await W(pg, *pf(P, -9.6, -0.9)) if E1B else head], False); s2 = await st(pg); await legs(pg, [land], False)
+    if E1B and not await near(pg, *land, 1.2): log('alight: straight line to land blocked, A*', pid, (await st(pg))['pos']); await go(pg, *land, 'stair head → shore ' + pid)
     s = await st(pg); log('alight path', pid, 'top', s1['pos'], 'head', s2['pos'], 'land', s['pos'])
     r = ok(f'{leg}:upToShore:{pid}', abs(s['pos'][1]) < 0.4 and await near(pg, *land, 1.2), s['pos'])
     if E1B:
@@ -280,7 +287,7 @@ async def run_1b(pg):
     R['perf']['kiosk:fzdm'] = await sample(pg, 'kiosk:fzdm')
     if OUT: await shot(pg, 'kiosk_fzdm_C')
     wq = [p for p in D['piers'] if p['id'] == 'wq'][0]; sg = await W(pg, *wq['sign'])
-    lp = await W(pg, *pf(wq, -9.6, -2.8))   # 码头牌旁边的岸上落脚点（同 board()）
+    lp = await landpt(pg, wq)   # 码头牌旁边的岸上落脚点（同 board()）
     await jreset(pg); ok('fzdm:C:walkToPier', await go(pg, *lp, 'kiosk C → 温泉公园码头牌') and (await jget(pg))['max'] < TELEPORT)
     if OUT:
         s = await st(pg); await pg.evaluate(f"__game.player.yaw = Math.atan2({sg[0] - s['pos'][0]}, {sg[1] - s['pos'][2]}); __game.player.pitch = 0.05"); await asyncio.sleep(0.8); await shot(pg, 'pier_sign_wenquan')
