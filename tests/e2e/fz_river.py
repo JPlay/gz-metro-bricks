@@ -325,8 +325,8 @@ async def probe_stage(pg, D):
     if OUT:
         if await pg.evaluate('__game.player.view') != 'first': await pg.evaluate('__game.toggleView()')
         fast = L[3]
-        for name, sv, dr, pitch in (('gmg_open_downstream', fast[0] + 15, 1, 0.02), ('gmg_open_upstream', s1 - 10, -1, 0.02), ('jinan_bridge_banyans', s0 + 120, 1, 0.06)):
-            await pg.evaluate(f"(() => {{ const b = __game.fzMetro.street.boat; b.s = {sv}; b.dir = {dr}; b.faceK = {dr}; b.place(0); __game.player.yaw = __game.player.seat.seat.face; __game.player.pitch = {pitch}; }})()")
+        for name, sv, dr, pitch in (('gmg_open_downstream', fast[0] + 15, 1, 0.02), ('gmg_open_upstream', s1 - 10, -1, 0.02), ('jinan_bridge_banyans', s0 + 120, 1, 0.06), ('jinan_downstream_far', s0 + 300, 1, 0.03)):
+            await pg.evaluate(f"(() => {{ const b = __game.fzMetro.street.boat; b.s = {sv}; b.dir = {dr}; b.faceK = {dr}; b.place(0); __game.player.yaw = b.node.rotation.y + ({dr} < 0 ? Math.PI : 0); __game.player.pitch = {pitch}; }})()")
             await asyncio.sleep(1.5); await shot(pg, f'haze_on_{name}')
             await pg.evaluate("(() => { const S = __game.fzMetro.street; S.haze._re = S.haze.reassert; S.haze.reassert = () => {}; S.haze.restore(); })()")
             await asyncio.sleep(1.5); await shot(pg, f'haze_off_{name}')
