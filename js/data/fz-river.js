@@ -3,14 +3,14 @@
  * 纯数据 + 几何工具（浏览器和 Node 单元测试共用，不碰 BABYLON）。
  *   坐标 W：x 东、z 北，米；原点 = 东街口站 ÷ 3。顺河方向距离按 1:3 压缩，河宽 / 桥 / 树 / 船按 1:1（小美 ①）。
  *   河道数据由 tools/fzriver/gen.py 从 OSM 生成到 fz-river-data.js（不要手改）。
- *   水面 y = WY（-3.0），岸顶 y = 0；船：甲板 WY+0.45（= 浮码头面），篷顶 WY+1.75。
+ *   水面 y = WY（-3.0），岸顶 y = 0；船：甲板 WY+0.45（= 浮码头面），篷顶 WY+2.29（小美：船上视角篷只占屏幕上方 ≤20%，篷抬高、缩短到只罩座位）。
  * 净空规则（PLAN.md）：平桥梁底 ≥ -0.4；拱桥在船篷两侧角点处的拱腹高度 ≥ 篷顶 + 0.25。
  */
 import { FZR } from './fz-river-data.js';
 export { FZR };
 export const WY = FZR.WY;
 /** 船（米，船体局部：+z 船头、+x 右舷）。双头船：两头一样，掉头不用转身；长凳没有靠背，乘客总是朝行进方向坐 */
-export const BOAT = { len: 8, beam: 2.4, deck: 0.45, gunwale: 1.0, roofUnder: 1.95, top: 2.07, canopyHalfLen: 3.25, canopyHalfW: 1.27,
+export const BOAT = { len: 8, beam: 2.4, deck: 0.45, gunwale: 1.0, roofUnder: 2.17, top: 2.29, canopyHalfLen: 2.75, canopyHalfW: 1.27,
   rows: [2.15, 1.3, -1.3, -2.15], seatX: 0.72, door: [-0.6, 0.6] };
 export const CLEAR_MIN = 0.25;          // 篷顶与桥底最小净空
 export const FLAT_SOFFIT = -0.4;        // 平桥 / 路桥梁底

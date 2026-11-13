@@ -9,7 +9,7 @@
 import { XmStreet, textPaint, FONT, FONT_EN, facadePaint } from './xmStreet.js';
 import { hex, mix } from '../core/geo.js';
 import * as D from './decor.js';
-import { FZR, WY, RIVERS, BRIDGES, PIERS, KIOSKS, isWater, isLand, isDry, shoreFor, soffitAt, deckAt, humpRise, pierNext, ROUTE } from '../data/fz-river.js';
+import { FZR, WY, RIVERS, BRIDGES, PIERS, KIOSKS, isWater, isLand, isDry, shoreFor, soffitAt, deckAt, humpRise, pierNext, ROUTE, STOPS, nextStop } from '../data/fz-river.js';
 import { FzBoat } from '../game/fzBoat.js';
 import { FZ_EXITS } from '../data/fz-exits.js';
 import { FZ_LINES } from '../data/fz-lines.js';
@@ -245,7 +245,7 @@ export class FzRiverStreet extends XmStreet {
       cv.fillStyle = '#FFF'; cv.font = `800 ${ph * 0.085}px ${FONT}`; cv.fillText('A线', pw * 0.16, ph * 0.765);
       cv.fillStyle = '#2B1A0E'; cv.textAlign = 'left';
       fit('下一站  ' + nx.map(q => q.zh).join(' / '), 700, ph * 0.075, FONT, pw * 0.29, ph * 0.72, pw * 0.66);
-      fit('Next: ' + nx.map(q => q.en.replace(' Pier', '')).join(' / '), 600, ph * 0.055, FONT_EN, pw * 0.29, ph * 0.83, pw * 0.66);
+      fit('Next: ' + nx.map(q => q.en).join(' / '), 600, ph * 0.055, FONT_EN, pw * 0.29, ph * 0.83, pw * 0.66);
     };
     const uv = A.draw(1.65, 1.6, paint, 150);
     A.quad(x + s * 0.07, 1.55, z + c * 0.07, 1.65, 1.6, Math.atan2(fx, -fz), uv);
@@ -420,6 +420,13 @@ export class FzRiverStreet extends XmStreet {
     if (this.boat && this.boat.contains(w.x, w.z)) return null;
     const s = shoreFor(w.x, w.z); if (!s) return null;
     return { key: 'fzriver', surfaceY: WY, shore: { x: this.wx(s.x), y: 0.05, z: this.wz(s.z), yaw: s.yaw } };
+  }
+  /** 左上角站名牌：岸上「福州内河」；在船上（坐着或站在船上）「A线 · 下一站」 */
+  riverHud(pl) {
+    const b = this.boat; if (!b || !pl) return { boat: false };
+    if (!(b.passengerSeated(pl) || b.onBoard(pl))) return { boat: false };
+    const j = b.phase === 'go' ? b.target : nextStop(b.i, b.dir), P = STOPS[j].pier;
+    return { boat: true, next: { id: P.id, zh: P.zh, en: P.en } };
   }
   info() { return { ...super.info(), river: true, kiosk: this.K.code, boat: this.boat ? this.boat.info() : null, cellsOn: this.cellKeys ? this.cellKeys.filter(k => this.kit.groupNodes['c:' + k].isEnabled(false)).length : 0, cells: this.cellKeys ? this.cellKeys.length : 0 }; }
   dispose() { if (this.boat) this.boat.dispose(); super.dispose(); }

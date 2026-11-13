@@ -33,7 +33,7 @@ export class Player {
   /** 坐下：seat = 列车座位（局部 x、侧 sd）。髋部对齐座垫，与烘焙乘客同一公式：脚底 y = 0.55 − 髋高 */
   sit(train, seat) {
     this.seat = { train, seat }; this.vel.set(0, 0, 0); this.vy = 0; this.speed = 0;
-    this.facing = seat.world ? seat.face : seat.sd > 0 ? Math.PI : 0; this.yaw = this.facing; this.pitch = this.view === 'first' ? 0.02 : seat.pitch !== undefined ? seat.pitch : seat.world ? 0.5 : 0.12;   // 大会堂座位：镜头抬高越过前排椅背，看到主角和舞台
+    this.facing = seat.world ? seat.face : seat.sd > 0 ? Math.PI : 0; this.yaw = this.facing; this.pitch = this.view === 'first' ? (seat.pitchFirst !== undefined ? seat.pitchFirst : 0.02) : seat.pitch !== undefined ? seat.pitch : seat.world ? 0.5 : 0.12;   // 大会堂座位：镜头抬高越过前排椅背，看到主角和舞台
     this.placeSeat();
   }
   hipH() { return (this.person.look.kid ? 0.6 : 0.86) * this.person.look.scale; }
