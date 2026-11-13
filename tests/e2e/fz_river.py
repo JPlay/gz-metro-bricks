@@ -264,7 +264,66 @@ async def run_1b(pg):
     if 'e_steps' in STAGES:
         # ---------- 3. 三处水埠头：落水 → 「回到岸上」 ----------
         await steps_stage(pg, D, 'ja_e')
+    if 'e_probe' in STAGES: await probe_stage(pg, D)
     await boat_stages(pg)
+
+# 性能 + 水汽远景探针（1B）：岸上每个码头 / 出口亭 4 个朝向各采一次；坐船（真走上船坐下）后把船按里程每 40 m 摆一次（双向、两种视角）采样；
+# 光明港开阔段 / 晋安河拍 雾开 vs 雾关 对比（同一机位），差异图标出哪些像素被雾改了。船的“摆位”只为采样，不算行船测试。
+HAZE_ST = "(() => { const s = __game.scene, c = s.activeCamera; return { mode: s.fogMode, start: s.fogStart, end: s.fogEnd, color: [s.fogColor.r, s.fogColor.g, s.fogColor.b].map(v => +v.toFixed(3)), maxZ: c.maxZ }; })()"
+async def probe_stage(pg, D):
+    R['probe'] = {'shore': {}, 'boat': [], 'haze': []}
+    hz = await pg.evaluate(HAZE_ST); ok('haze:onInRiverArea', hz['mode'] == 3 and hz['start'] == 200 and hz['end'] == 350 and hz['maxZ'] == 380, hz)
+    async def views(label):
+        best = None
+        for k in range(4):
+            await pg.evaluate(f"__game.player.yaw = {k} * Math.PI / 2; __game.player.pitch = 0.08"); d = await perf(pg, 3, 0.3)
+            R['probe']['shore'].setdefault(label, []).append(d)
+            if not best or d['tris'] > best['tris'] or d['draws'] > best['draws']: best = {**d, 'yaw': k}
+        R['perf']['shore:' + label] = best
+    for P in D['piers']:
+        c = await pg.evaluate(f'__fzNav.snap(...{json.dumps(await W(pg, *pf(P, -11.6, -1.6)))})')
+        if c: await pg.evaluate(f"__game.player.spawn({c[0]}, 0.05, {c[1]}, 0)"); await asyncio.sleep(1.2); await views('pier:' + P['id'])
+    for code, K in D['kiosks'].items():
+        c = await pg.evaluate(f'__fzNav.snap(...{json.dumps(await W(pg, K["x"], K["z"] + 4))})')
+        if c: await pg.evaluate(f"__game.player.spawn({c[0]}, 0.05, {c[1]}, 0)"); await asyncio.sleep(1.2); await views('kiosk:' + code)
+    # 回到温泉公园码头，真走上船坐下
+    wq = [p for p in D['piers'] if p['id'] == 'wq'][0]; c = await pg.evaluate(f'__fzNav.snap(...{json.dumps(await W(pg, *pf(wq, -11.6, -1.6)))})')
+    await pg.evaluate(f"__game.player.spawn({c[0]}, 0.05, {c[1]}, 0)"); await asyncio.sleep(1.2)
+    if not await board(pg, D, 'wq', 'probe'): return
+    L = await pg.evaluate("(async () => { const M = await import('/js/data/fz-river.js'); return [M.ROUTE.line.len, M.STOPS[0].s, M.STOPS[M.STOPS.length - 1].s, M.ROUTE.zones.fast]; })()")
+    await pg.evaluate("(() => { const b = __game.fzMetro.street.boat; b._upd = b.update; b.update = function () { this.place(0); }; })()")
+    s0, s1 = L[1], L[2]; pts = [s0 + k * 40 for k in range(int((s1 - s0) // 40) + 1)] + [s1]
+    for dr in (1, -1):
+        seq = pts if dr == 1 else pts[::-1]
+        for sv in seq:
+            await pg.evaluate(f"(() => {{ const b = __game.fzMetro.street.boat; b.s = {sv}; b.dir = {dr}; b.faceK = {dr}; b.place(0); }})()")
+            for v in ('third', 'first'):
+                if await pg.evaluate('__game.player.view') != v: await pg.evaluate('__game.toggleView()')
+                await pg.evaluate(f"__game.player.yaw = __game.player.seat.seat.face; __game.player.pitch = __game.player.seat.seat.aim('{v}')")
+                d = await perf(pg, 3, 0.3); d.update({'s': round(sv, 1), 'dir': dr, 'view': v}); R['probe']['boat'].append(d)
+    for v in ('third', 'first'):
+        rows = [d for d in R['probe']['boat'] if d['view'] == v]
+        if rows: R['perf']['boat:' + v] = {**max(rows, key=lambda d: d['tris']), 'draws': max(d['draws'] for d in rows), 'tris': max(d['tris'] for d in rows)}
+    # 雾开 / 雾关对比：光明港开阔段往下游（远处 ~300 m+）、晋安河桥前（近处榕树 / 桥）
+    if OUT:
+        if await pg.evaluate('__game.player.view') != 'first': await pg.evaluate('__game.toggleView()')
+        fast = L[3]
+        for name, sv, dr, pitch in (('gmg_open_downstream', fast[0] + 15, 1, 0.02), ('gmg_open_upstream', s1 - 10, -1, 0.02), ('jinan_bridge_banyans', s0 + 120, 1, 0.06)):
+            await pg.evaluate(f"(() => {{ const b = __game.fzMetro.street.boat; b.s = {sv}; b.dir = {dr}; b.faceK = {dr}; b.place(0); __game.player.yaw = __game.player.seat.seat.face; __game.player.pitch = {pitch}; }})()")
+            await asyncio.sleep(1.5); await shot(pg, f'haze_on_{name}')
+            await pg.evaluate("(() => { const S = __game.fzMetro.street; S.haze._re = S.haze.reassert; S.haze.reassert = () => {}; S.haze.restore(); })()")
+            await asyncio.sleep(1.5); await shot(pg, f'haze_off_{name}')
+            await pg.evaluate("(() => { const S = __game.fzMetro.street; S.haze.reassert = S.haze._re; S.haze.apply(); })()")
+            R['probe']['haze'].append(name)
+        await asyncio.sleep(1.0); hz = await pg.evaluate(HAZE_ST); ok('haze:reappliedAfterComparison', hz['mode'] == 3 and hz['maxZ'] == 380, hz)
+    await pg.evaluate("(() => { const b = __game.fzMetro.street.boat; b.s = b.s; b.update = b._upd; })()")
+    # 把船摆回温泉公园码头停靠，起身上岸，走进斗门 C 出口亭 → 离开街区后雾和远裁剪还原
+    await pg.evaluate("(() => { const b = __game.fzMetro.street.boat; b.i = 0; b.target = 0; b.s = b.s; })()")
+    await pg.evaluate("(async () => { const M = await import('/js/data/fz-river.js'); const b = __game.fzMetro.street.boat; b.s = M.STOPS[0].s; b.dir = 1; b.faceK = 1; b.phase = 'dock'; b.v = 0; b.dwell = 0; b.departIn = 999; b.setPlank(true); b.place(0); })()")
+    await asyncio.sleep(1.0)
+    await alight(pg, D, 'wq', 'probe')
+    okk, s_, m = await enter_kiosk(pg, D, 'fzdm'); ok('probe:walkIntoFzdmC', okk, [s_['pos'], m])
+    hz = await pg.evaluate(HAZE_ST); ok('haze:restoredAfterLeaving', not (hz['mode'] == 3 and hz['start'] == 200) and hz['maxZ'] == 420, hz)
 
 async def boat_stages(pg):
     B1 = 'e_boat' in STAGES or 'e_boat1' in STAGES
