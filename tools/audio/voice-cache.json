@@ -11794,5 +11794,101 @@
     "style": "cosy",
     "model": "cosyvoice-v2",
     "voice": "longxiaobai_v2"
+  },
+  "voice.fz.boat.next.xsg.zh": {
+    "fp": "4595a9b5e669f879ca60bc716e4d1c460be414d4470710bed11de1686e134454",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.boat.next.xsg.en": {
+    "fp": "ee6cbffe57213f2ae02e17cd397d3e0a1263c0bdf8bbce8825e31018bdbd3801",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.boat.depart.lmh.zh": {
+    "fp": "79c4666e01e7bd518ae9657713a15bc75a1c99166c88bf482a3e3e38cfe43ded",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.boat.depart.lmh.en": {
+    "fp": "fe2244794d768e06d880f45ed51f6c92d49afe2e3c267dc9ec138a39f36ff893",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.boat.next.lmh.zh": {
+    "fp": "8fc800e04f65edbcc993e95cce9a278d14b2115cf8d1b6db08a10ba758ecab87",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.boat.next.lmh.en": {
+    "fp": "f85b61bd25efe2ddc923c77ae48537fa63aee531d2e332c6e56293fd738842fa",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.boat.arrive.xihu.end.zh": {
+    "fp": "b312c5466e0beeb2ca17cc453f9cd6abe27469fcbc7ab451b898e0e394da985b",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.boat.arrive.xihu.end.en": {
+    "fp": "787fadb801331d214a4f01b1286be6ff20e6d1314f61a5a4b34b575f3c0e64bb",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.boat.next.xihu.en": {
+    "fp": "8dc81e5562ef9a870135d9ae4138e20e89fac8b1fd97e7bef5bf600386cad1c0",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.boat.next.xihu.zh": {
+    "fp": "e34059d5d2f821eb016250a84bafd2e22db1c46aef8959bfc8ac9e8b6a545bb7",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.boat.depart.xihu.zh": {
+    "fp": "501e5e097de34716bfef3d7ac8e32d2e4d8dcb13ca36407fe95b27cca1ef0a79",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.boat.depart.xihu.en": {
+    "fp": "d355dcc0e705d7b0f4525ddce2ce84e506caeecb4b8b56cf0eaf864347e25f07",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.boat.arrive.xsg.zh": {
+    "fp": "9ac3a3cfac0d4e40850af15ec9d2c72378429b1b891053b8e6463048dc0d8478",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.boat.arrive.xsg.en": {
+    "fp": "b1ca31037ce60e70454f364a47c3a150d3e1430a0f8e2692f8756bde99d28fde",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.boat.arrive.lmh.end.zh": {
+    "fp": "4ad5225e2450ef533ef050722485eea6c5a4fda0f47cebc56abc1b760ff1aebe",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.boat.arrive.lmh.end.en": {
+    "fp": "510b23d5fe7b4c9a38149b77c7d1705e4b69da803fed479a9f1ec677ba30b26a",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
   }
 }

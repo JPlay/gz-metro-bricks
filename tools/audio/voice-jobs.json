@@ -15570,6 +15570,102 @@
   "file": "voice/fz-doorsClosing-en.mp3"
  },
  {
+  "id": "voice.fz.boat.depart.lmh.zh",
+  "lang": "zh",
+  "text": "欢迎乘坐内河游船A线，本船开往黎明湖码头。",
+  "file": "voice/fz-boat-depart-lmh-zh.mp3"
+ },
+ {
+  "id": "voice.fz.boat.depart.lmh.en",
+  "lang": "en",
+  "text": "Welcome aboard Inland River Boat Line A. This boat is bound for Liming Lake Pier.",
+  "file": "voice/fz-boat-depart-lmh-en.mp3"
+ },
+ {
+  "id": "voice.fz.boat.next.xsg.zh",
+  "lang": "zh",
+  "text": "下一站，西水关码头。",
+  "file": "voice/fz-boat-next-xsg-zh.mp3"
+ },
+ {
+  "id": "voice.fz.boat.next.xsg.en",
+  "lang": "en",
+  "text": "The next stop is Xishuiguan Pier.",
+  "file": "voice/fz-boat-next-xsg-en.mp3"
+ },
+ {
+  "id": "voice.fz.boat.arrive.xihu.end.zh",
+  "lang": "zh",
+  "text": "西湖码头到了，这里是本线终点。请带好随身物品，小心上岸。",
+  "file": "voice/fz-boat-arrive-xihu-end-zh.mp3"
+ },
+ {
+  "id": "voice.fz.boat.arrive.xihu.end.en",
+  "lang": "en",
+  "text": "We have arrived at West Lake Pier, the end of this line. Please take your belongings and mind your step.",
+  "file": "voice/fz-boat-arrive-xihu-end-en.mp3"
+ },
+ {
+  "id": "voice.fz.boat.next.lmh.zh",
+  "lang": "zh",
+  "text": "下一站，黎明湖码头。",
+  "file": "voice/fz-boat-next-lmh-zh.mp3"
+ },
+ {
+  "id": "voice.fz.boat.next.lmh.en",
+  "lang": "en",
+  "text": "The next stop is Liming Lake Pier.",
+  "file": "voice/fz-boat-next-lmh-en.mp3"
+ },
+ {
+  "id": "voice.fz.boat.depart.xihu.zh",
+  "lang": "zh",
+  "text": "欢迎乘坐内河游船A线，本船开往西湖码头。",
+  "file": "voice/fz-boat-depart-xihu-zh.mp3"
+ },
+ {
+  "id": "voice.fz.boat.depart.xihu.en",
+  "lang": "en",
+  "text": "Welcome aboard Inland River Boat Line A. This boat is bound for West Lake Pier.",
+  "file": "voice/fz-boat-depart-xihu-en.mp3"
+ },
+ {
+  "id": "voice.fz.boat.next.xihu.zh",
+  "lang": "zh",
+  "text": "下一站，西湖码头。",
+  "file": "voice/fz-boat-next-xihu-zh.mp3"
+ },
+ {
+  "id": "voice.fz.boat.next.xihu.en",
+  "lang": "en",
+  "text": "The next stop is West Lake Pier.",
+  "file": "voice/fz-boat-next-xihu-en.mp3"
+ },
+ {
+  "id": "voice.fz.boat.arrive.xsg.zh",
+  "lang": "zh",
+  "text": "西水关码头到了。上岸请小心脚下。",
+  "file": "voice/fz-boat-arrive-xsg-zh.mp3"
+ },
+ {
+  "id": "voice.fz.boat.arrive.xsg.en",
+  "lang": "en",
+  "text": "We have arrived at Xishuiguan Pier. Please mind your step.",
+  "file": "voice/fz-boat-arrive-xsg-en.mp3"
+ },
+ {
+  "id": "voice.fz.boat.arrive.lmh.end.zh",
+  "lang": "zh",
+  "text": "黎明湖码头到了，这里是本线终点。请带好随身物品，小心上岸。",
+  "file": "voice/fz-boat-arrive-lmh-end-zh.mp3"
+ },
+ {
+  "id": "voice.fz.boat.arrive.lmh.end.en",
+  "lang": "en",
+  "text": "We have arrived at Liming Lake Pier, the end of this line. Please take your belongings and mind your step.",
+  "file": "voice/fz-boat-arrive-lmh-end-en.mp3"
+ },
+ {
   "id": "voice.xm.doorsClosing.zh",
   "lang": "zh",
   "text": "车门即将关闭，请注意安全，谨防被夹。",
