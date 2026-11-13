@@ -341,6 +341,7 @@ async def probe_stage(pg, D):
         seq = pts if dr == 1 else pts[::-1]
         for sv in seq:
             await pg.evaluate(f"(() => {{ const b = __game.fzMetro.street.boat; b.s = {sv}; b.dir = {dr}; b.faceK = {dr}; b.place(0); }})()")
+            await asyncio.sleep(0.25)   # 座位 follow：等玩家这一帧把船头转向吃掉，再按座位朝向摆视角（否则转向量会被加两次、看向岸边）
             for v in ('third', 'first'):
                 if await pg.evaluate('__game.player.view') != v: await pg.evaluate('__game.toggleView()')
                 await pg.evaluate(f"__game.player.yaw = __game.player.seat.seat.face; __game.player.pitch = '{v}' === 'first' ? __game.player.seat.seat.pitchFirst : __game.player.seat.seat.pitch")
@@ -353,7 +354,8 @@ async def probe_stage(pg, D):
         if await pg.evaluate('__game.player.view') != 'first': await pg.evaluate('__game.toggleView()')
         fast = L[3]
         for name, sv, dr, pitch in (('gmg_open_downstream', fast[0] + 15, 1, 0.02), ('gmg_open_upstream', s1 - 10, -1, 0.02), ('jinan_bridge_banyans', s0 + 120, 1, 0.06), ('jinan_downstream_far', s0 + 300, 1, 0.03)):
-            await pg.evaluate(f"(() => {{ const b = __game.fzMetro.street.boat; b.s = {sv}; b.dir = {dr}; b.faceK = {dr}; b.place(0); __game.player.yaw = b.node.rotation.y + ({dr} < 0 ? Math.PI : 0); __game.player.pitch = {pitch}; }})()")
+            await pg.evaluate(f"(() => {{ const b = __game.fzMetro.street.boat; b.s = {sv}; b.dir = {dr}; b.faceK = {dr}; b.place(0); }})()"); await asyncio.sleep(0.6)
+            await pg.evaluate(f"(() => {{ __game.player.yaw = __game.player.seat.seat.face; __game.player.pitch = {pitch}; }})()")   # 座位朝向 = 行进方向
             await asyncio.sleep(1.5); await shot(pg, f'haze_on_{name}')
             await pg.evaluate("(() => { const S = __game.fzMetro.street; S.haze._re = S.haze.reassert; S.haze.reassert = () => {}; S.haze.restore(); })()")
             await asyncio.sleep(1.5); await shot(pg, f'haze_off_{name}')
