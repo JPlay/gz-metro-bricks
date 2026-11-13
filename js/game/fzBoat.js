@@ -125,7 +125,7 @@ export class FzBoat {
     this.i = this.target; this.s = STOPS[this.i].s; this.v = 0; this.phase = 'dock'; this.dwell = 0; this.setPlank(true);
     const pax = this.passengerSeated(pl), term = this.i === 0 || this.i === STOPS.length - 1;
     if (term) this.dir = this.i === 0 ? 1 : -1;
-    this.departIn = pax && !term ? BOAT_STAY : null;   // 中途站：坐着的乘客有 10 秒点「起身」下船，不起身就接着坐到下一站
+    this.departIn = pax && !term ? BOAT_STAY : null;   // 中途站：坐着的乘客有 BOAT_STAY（9）秒点「起身」下船，不起身就接着坐到下一站
     this.stats.arrives++; this.log.push({ t: +this.t.toFixed(1), ev: 'arrive', at: STOPS[this.i].id, pax });
     if (pax) say(fzBoatArriveSegs(STOPS[this.i].id, term), { key: 'boat', interrupt: true });
   }

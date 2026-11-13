@@ -8,8 +8,8 @@
 #    行船中每帧检查：船篷四角在桥下的净空（按真实船位 + 起伏）≥ 0.25 m；人和船每帧位移（不跳）；
 # 5. 性能：每座桥头 / 码头 / 船上采样 draws / 三角形，报最差的视角；截图：河边、安泰河拱桥 + 白墙黛瓦、码头牌、船上座位视角、船过桥
 # 用法：python tests/e2e/fz_river.py [base-url] [截图目录或 -] [阶段（可选，逗号分隔：bridges,steps,boat / 1B：e_bridges,e_steps,e_boat）]
-# 1B（阶段名 e_ 开头）：斗门站台 → 站厅 → C 出口 → 晋安河（温泉公园码头旁）；15 座桥来回；3 处水埠头落水回岸；
-#   B 线：温泉公园 → 福新问渡 → 东门停靠点（下船走进东门 C 出口亭进站、再出来）→ 河口 → 光明港（下船走进光明港 D 进站、再出来）
+# 1B（阶段名 e_ 开头）：斗门站台 → 站厅 → C 出口 → 晋安河（温泉公园码头旁）；13 座桥来回；3 处水埠头落水回岸；
+#   （1:4 / 1:5 后 13 座桥）B 线：温泉公园 → 福新问渡 → 东门停靠点（下船走进东门 C 出口亭进站、再出来）→ 河口 → 光明港（下船走进光明港 D 进站、再出来）
 #   → 反向 光明港 → 河口 → 东门停靠点；每个码头都真点「起身」下船走上岸；行船每帧量篷顶净空 / 位移
 import asyncio, sys, json, os, time, math
 sys.path.insert(0, os.path.dirname(__file__))
@@ -220,9 +220,9 @@ async def run_1b(pg):
     if OUT:
         s = await st(pg); await pg.evaluate(f"__game.player.yaw = Math.atan2({sg[0] - s['pos'][0]}, {sg[1] - s['pos'][2]}); __game.player.pitch = 0.05"); await asyncio.sleep(0.8); await shot(pg, 'pier_sign_wenquan')
     if 'e_bridges' in STAGES:
-        # ---------- 2. 15 座桥每座来回（晋安河由北往南，再光明港由西往东） ----------
+        # ---------- 2. 13 座桥每座来回（晋安河由北往南，再光明港由西往东） ----------
         order = [b['id'] for b in D['bridges'] if b['river'] == 'ja'] + [b['id'] for b in D['bridges'] if b['river'] == 'gm']
-        await bridges_stage(pg, D, order, perf_at=('ja3', 'ja7', 'ja12', 'gm2'), shots={'ja3': 'jinan_from_ja3_liuyi', 'gm2': 'guangminggang_from_gm2'})
+        await bridges_stage(pg, D, order, perf_at=('ja2', 'ja6', 'ja10', 'gm2'), shots={'ja2': 'jinan_from_ja2_liuyi', 'gm2': 'guangminggang_from_gm2'})
     if 'e_steps' in STAGES:
         # ---------- 3. 三处水埠头：落水 → 「回到岸上」 ----------
         await steps_stage(pg, D, 'ja_e')

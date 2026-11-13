@@ -12,14 +12,15 @@ ok('useNet(e) swaps live bindings', R.NET === 'e' && R.FZR.id === 'e' && R.ROUTE
 const F = R.FZR;
 // ---- 数据 ----
 ok('two rivers ja/gm (晋安河 / 光明港)', Object.keys(R.RIVERS).join() === 'ja,gm' && R.RIVERS.ja.zh === '晋安河' && R.RIVERS.gm.zh === '光明港');
-ok('compression 晋安河 1:3, 光明港 1:4', F.K === 3 && F.Kgm === 4);
+ok('compression 晋安河 1:4, 光明港 1:5 (小美)', F.K === 4 && F.Kgm === 5);
 ok('same water level as 1A', F.WY === -3);
 ok('land + water meshes present', Object.keys(F.land).length > 30 && Object.keys(F.water).length > 30);
 // 晋安河口接光明港：晋安河中线末点在光明港水面里
 { const L = R.RIVERS.ja.line, e = L.at(L.len); ok('晋安河 mouth joins 光明港 water', R.isWater(e.x, e.z) && R.RIVERS.gm.line.project(e.x, e.z).d < 3); }
-ok('15 bridges (OSM, twins merged)', R.BRIDGES.length === 15, R.BRIDGES.length);
+ok('13 bridges (OSM, twins merged; 温泉公园步行桥 + 文博路 dropped)', R.BRIDGES.length === 13, R.BRIDGES.map(b => b.name || b.id));
+ok('dropped bridges recorded with reason', F.spacing.dropped.length === 2 && F.spacing.dropped.some(d => d.kind === 'foot') && F.spacing.dropped.some(d => d.name === '文博路') && F.spacing.dropped.every(d => d.why));
 const named = R.BRIDGES.filter(b => b.name).map(b => b.name);
-ok('named bridges 温泉公园路/六一北路/塔头路/国货东路/文博路/北光明港路/长乐南路/连江中路/前横南路', ['温泉公园路', '六一北路', '塔头路', '国货东路', '文博路', '北光明港路', '长乐南路', '连江中路', '前横南路'].every(n => named.includes(n)), named);
+ok('named bridges 温泉公园路/六一北路/塔头路/国货东路/北光明港路/长乐南路/连江中路/前横南路', ['温泉公园路', '六一北路', '塔头路', '国货东路', '北光明港路', '长乐南路', '连江中路', '前横南路'].every(n => named.includes(n)), named);
 ok('unnamed bridges have no plate (⑧)', R.BRIDGES.filter(b => !b.name).every(b => !b.plate));
 ok('no arch bridge on route B (flat bridges only)', R.BRIDGES.every(b => !['arch', 'hump'].includes(b.kind)));
 ok('bridge ids unique', new Set(R.BRIDGES.map(b => b.id)).size === R.BRIDGES.length);
@@ -38,7 +39,11 @@ let hullOut = 0; for (let s = 0; s <= R.ROUTE.line.len; s += 0.5) for (const { x
 ok('boat hull stays inside water along whole route', hullOut === 0, hullOut);
 const cr = R.clearanceReport(0.25);
 ok(`canopy never clips a bridge (min clearance ${cr.min.toFixed(3)} ≥ ${R.CLEAR_MIN})`, cr.ok && cr.min >= R.CLEAR_MIN, cr.per);
-ok('route passes under all 15 bridges', Object.keys(cr.per).length === 15, Object.keys(cr.per));
+{ const on = R.BRIDGES.filter(b => { const pr = R.ROUTE.line.project(b.x, b.z); return pr.d < b.hw && pr.s > R.STOPS[0].s && pr.s < R.STOPS[R.STOPS.length - 1].s; }).map(b => b.id);
+  ok(`route passes under every bridge between 温泉公园 and 光明港 (${on.length}; 温泉公园路 is north of the first pier)`, on.length === R.BRIDGES.length - 1 && on.every(id => cr.per[id]), { on, crossed: Object.keys(cr.per) }); }
+// 船不碰岸：船体外扩 0.3 m 的轮廓也全在水面（或浮码头）上
+let bankTouch = 0; for (let s = 0; s <= R.ROUTE.line.len; s += 0.5) for (const { x, z } of R.hullPts(s, -0.3)) if (!R.isWater(x, z) && !R.isDry(x, z)) { bankTouch++; break; }
+ok('bank clearance ≥ 0.3 m along whole route', bankTouch === 0, bankTouch);
 // ---- 速度分区（小美）：晋安河 3.5（同 A 线）；过桥 / 进出码头 3.5；只有光明港开阔段 5.5，平滑加减速 ----
 { const Z = R.ROUTE.zones, cap = R.SPEED_CAP, n = cap.length;
   ok('zones: cruise 3.5, 光明港 5.5, bridge 3.5, pier 3.5', Z && Z.cruise === 3.5 && Z.vFast === 5.5 && Z.vBridge === 3.5 && Z.vPier === 3.5 && Z.pierZone >= 40, Z);
@@ -59,13 +64,28 @@ ok('route passes under all 15 bridges', Object.keys(cr.per).length === 15, Objec
 { const f = R.runTime(0, 4), b = R.runTime(4, 0);
   console.log(`INFO route B len ${R.ROUTE.line.len.toFixed(0)} m; one-way 温泉公园→光明港 ${f.secs} s (${(f.secs / 60).toFixed(1)} min), back ${b.secs} s; legs ${f.legs.map(l => `${l.from}→${l.to} ${l.secs}s vmax ${l.vmax}`).join(', ')}`);
   ok('only the 光明港 leg (河口→光明港) goes above 3.5', f.legs.every(l => (l.to === 'gmg') === (l.vmax > 3.5 + 1e-6)), f.legs);
-  // ≤ 480 s 在 1:3 / 1:4 下做不到（晋安河段同速已 458 s）；只断言比单一 3.5 快、并记录数字。改压缩比后若 ≤ 480 再收紧
-  if (f.secs <= 480) ok('route B one-way ≤ 8 min', true); else ok('route B one-way < 11 min (8 min not reachable at 1:3 / 1:4, see report)', f.secs < 660 && b.secs < 660, [f.secs, b.secs]);
+  ok(`route B one-way ≤ 480 s both directions (${f.secs} / ${b.secs})`, f.secs <= 480 && b.secs <= 480, [f.secs, b.secs]);
+  ok('middle stop 9 s, start dwell 3 s', R.BOAT_STAY === 9 && R.BOAT_DWELL === 3);
 }
 // 码头间距：浮码头不压桥
-// 码头沿河占 [s-10.2（台阶口）, s+8.4（浮码头尾）]，桥占 [s-w/2, s+w/2]：中间至少留 2 m
-const pierHit = p => R.BRIDGES.filter(b => b.river === p.river && Math.min(p.s + 8.4, b.s + b.w / 2) - Math.max(p.s - 10.2, b.s - b.w / 2) > -2).map(b => b.id);
-ok('piers clear of bridges (≥ 2 m)', R.PIERS.every(p => !pierHit(p).length), R.PIERS.map(p => [p.id, pierHit(p)]));
+// ---- 压缩后的间距（小美）：桥不挤、码头不贴桥 ----
+{ const S = F.spacing;
+  ok('spacing rules: bridge edge gap 20 m, pier edge 8 m, pier berth ↔ bridge centre 25 m', S.bridgeGap === 20 && S.pierGapEdge === 8 && S.pierGapCentre === 25);
+  const tight = []; for (const k of ['ja', 'gm']) { const bs = R.BRIDGES.filter(b => b.river === k).sort((a, b) => a.s - b.s); for (let i = 1; i < bs.length; i++) { const g = (bs[i].s - bs[i].w / 2) - (bs[i - 1].s + bs[i - 1].w / 2); if (g < S.bridgeGap) tight.push([bs[i - 1].id, bs[i].id, +g.toFixed(1)]); } }
+  ok('no two bridges crammed together (deck edge gap ≥ 20 m)', !tight.length, tight);
+  // 码头沿河占 [s-10.2（台阶口）, s+8.4（浮码头尾）]，泊位 s+2.4
+  const pierHit = p => R.BRIDGES.filter(b => b.river === p.river && (Math.min(p.s + 8.4, b.s + b.w / 2) - Math.max(p.s - 10.2, b.s - b.w / 2) > -S.pierGapEdge || Math.abs(p.s + 2.4 - b.s) < S.pierGapCentre)).map(b => b.id);
+  ok('no bridge too close to a pier (footprint ≥ 8 m from deck, berth ≥ 25 m from bridge centre)', R.PIERS.every(p => !pierHit(p).length), R.PIERS.map(p => [p.id, pierHit(p)]));
+  const mv = S.pierMoves; console.log('INFO pier moves (game m, + = downstream):', JSON.stringify(mv));
+  ok('pier moves recorded and each ≤ 40 m', ['wq', 'fx', 'dmn', 'hk', 'gmg'].every(id => typeof mv[id] === 'number' && Math.abs(mv[id]) <= 40), mv);
+  ok('consecutive stops ≥ 60 m apart', R.STOPS.every((s, i) => i === 0 || s.s - R.STOPS[i - 1].s >= 60), R.STOPS.map(s => s.s));
+}
+// ---- 坐船视角：任何时刻最多看得见两座桥（视锥 + 驳岸挡视线；不算桥挡桥 / 房子树挡 → 偏保守） ----
+{ const bad = [], hist = {}; for (const dir of [1, -1]) for (let s = 0; s <= R.ROUTE.line.len; s += 2) { const v = R.bridgesInView(s, dir); hist[v.length] = (hist[v.length] || 0) + 1; if (v.length > 2) bad.push([dir, s, v]); }
+  console.log(`INFO bridges in view (seated, ${R.VIEW.dist} m, 16:9) histogram: ${JSON.stringify(hist)}`);
+  ok('≤ 2 bridges in view from the seated boat, every 2 m, both directions', !bad.length, bad.slice(0, 6));
+  ok('view check is live (sees ≥ 1 bridge most of the time, 2 somewhere)', (hist[2] || 0) > 0 && (hist[0] || 0) < (hist[1] || 0));
+}
 ok('pier signs: zh + English + B线 next stops', R.PIERS.every(p => R.pierNext(p.id).length >= 1) && R.pierNext('dmn').map(p => p.id).join() === 'fx,hk' && R.pierNext('wq').map(p => p.id).join() === 'fx');
 ok('东门 game-only stop is not named 码头 (sign must not look like a real pier)', R.PIER.dmn.zh === '东门停靠点' && !/Pier/.test(R.PIER.dmn.en) && /游戏增设/.test(R.PIER.dmn.note || ''));
 ok('real piers keep 码头 / Pier', ['wq', 'fx', 'hk', 'gmg'].every(id => R.PIER[id].zh.endsWith('码头') && /Pier$/.test(R.PIER[id].en)));

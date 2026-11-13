@@ -10,7 +10,7 @@ import { FZR as FZR_A } from './fz-river-data.js';
 import { FZR_E } from './fz-river-data-e.js';
 /*
  * 两片河网（一次只建一片街区，和 FS 街口一样）：
- *   a = 1A 西线（白马河 / 安泰河 / 东西河，A 线红篷）；e = 1B 东线（晋安河 1:3 + 光明港 1:4，B 线白篷，tools/fzriver/gen_e.py）。
+ *   a = 1A 西线（白马河 / 安泰河 / 东西河，A 线红篷）；e = 1B 东线（晋安河 1:4 + 光明港 1:5，B 线白篷，tools/fzriver/gen_e.py）。
  *   下面的 FZR / RIVERS / ROUTE / STOPS / BRIDGES / KIOSKS / SPEED_CAP 是 ES 模块“活绑定”：useNet(id) 换成另一片，
  *   所有 import 它们的模块（fzRiver.js / fzBoat.js）下一次读到的就是新的那片。街区构造时按出口亭所在河网调用 useNet。
  */
@@ -178,7 +178,7 @@ export function goStep(b, dt) {
   return false;
 }
 export const BOAT_DWELL = 3.0;   // 坐下后几秒开船
-export const BOAT_STAY = 10;     // 中途站停靠（坐着的乘客有 10 秒点「起身」）
+export const BOAT_STAY = 9;      // 中途站停靠（坐着的乘客有 9 秒点「起身」；小美定，B 线单程压到 8 分钟内）
 /** 坐着不下船从站 i0 到 i1 的时间（秒，dt 1/60）：起点坐下等 BOAT_DWELL + 各段行船 + 中途站 BOAT_STAY */
 export function runTime(i0, i1, dt = 1 / 60) {
   const dir = Math.sign(i1 - i0); let t = BOAT_DWELL, legs = [];
@@ -195,3 +195,43 @@ export const speedCap = s => SPEED_CAP[Math.max(0, Math.min(SPEED_CAP.length - 1
 export function nextStop(i, dir) { const j = i + dir; return j >= 0 && j < STOPS.length ? j : i - dir; }
 /** 码头牌上的“下一站”：两头只有一个方向，中间两个方向 */
 export function pierNext(id) { const i = STOPS.findIndex(s => s.id === id); return [STOPS[i - 1], STOPS[i + 1]].filter(Boolean).map(s => s.pier); }
+
+/* ---------- 坐船视角：同时看得见几座桥（小美：任何时刻 ≤ 2 座）---------- */
+/** 船上坐着的视点（W 坐标 + 高度）：前排靠窗、船中、第三人称（后上方 1.7 m）；朝行进方向 */
+// fov = 第一人称竖直视角（player.js FOV_FIRST），aspect 取 16:9（比 iPad 1.44 更宽，偏保守）；
+// dist = “认得出是一座桥”的距离 150 m（桥面 + 栏杆约 1.4 m 高，150 m 外在 820 px 高的屏上不到 8 px、桥跨不到 10°）。相机 maxZ 是 420 m（只算视锥会多到 5 座，见 1B 报告）
+export const VIEW = { fov: 1.0, aspect: 16 / 9, eyeY: WY + 0.45 + 1.1, thirdBack: 1.7, thirdUp: 0.8, dist: 150, maxZ: 420 };
+/**
+ * 从船线里程 s、行进方向 dir 看过去，视锥里、视线不被岸挡住的桥（不算桥挡桥、不算房子 / 树挡：偏保守，只会多算）。
+ * 视线挡判定：视线经过岸地（不是水面 / 台阶 / 浮码头）时，若那一点视线高度低于岸顶（y = 0）就算被驳岸挡住 —— 人坐在船上眼睛比岸低 1.45 m。
+ * 桥的取样点：桥面两侧栏杆顶（y = +1.0），横跨河道每 2 m 一点（只取河面上方 |v| ≤ hw + 1）。
+ */
+export function bridgesInView(s, dir, o = {}) {
+  const V = { ...VIEW, ...o }, p = routePose(s), fx = p.tx * dir, fz = p.tz * dir, nx = fz, nz = -fx;
+  const hf = Math.atan(Math.tan(V.fov / 2) * V.aspect), vf = V.fov / 2;
+  const eyes = [[0, 2.0, V.eyeY], [0.72, 2.0, V.eyeY], [-0.72, 2.0, V.eyeY], [0, -V.thirdBack, V.eyeY + V.thirdUp]].map(([lx, lz, y]) => ({ x: p.x + fx * lz + nx * lx, z: p.z + fz * lz + nz * lx, y }));
+  const seen = new Set();
+  const losClear = (e, tx, ty, tz) => {
+    const L = Math.hypot(tx - e.x, tz - e.z), n = Math.max(1, Math.ceil(L / 1.5));
+    for (let i = 1; i < n; i++) { const t = i / n, x = e.x + (tx - e.x) * t, z = e.z + (tz - e.z) * t, y = e.y + (ty - e.y) * t; if (y < 0.02 && isLand(x, z) && !isDry(x, z)) return false; }
+    return true;
+  };
+  for (const b of BRIDGES) {
+    const dc = Math.hypot(b.x - p.x, b.z - p.z); if (dc > V.dist + b.half + b.w) continue;
+    let vis = false;
+    for (const e of eyes) {
+      for (let v = 0; v <= b.hw + 1 && !vis; v += 2) for (const sv of v ? [-1, 1] : [1]) for (const su of [-1, 1]) {
+        if (vis) break;
+        const tx = b.x + b.t[0] * su * b.w / 2 + b.n[0] * sv * v, tz = b.z + b.t[1] * su * b.w / 2 + b.n[1] * sv * v, ty = 1.0;
+        const dx = tx - e.x, dz = tz - e.z, d = Math.hypot(dx, dz); if (d > V.dist || d < 0.01) continue;
+        const fwd = dx * fx + dz * fz, side = dx * nx + dz * nz; if (fwd <= 0.05) continue;
+        if (Math.abs(Math.atan2(side, fwd)) > hf) continue;
+        if (Math.abs(Math.atan2(ty - e.y, fwd)) > vf + 0.04) continue;   // 正头顶的桥（人在桥下）不在画面里
+        if (losClear(e, tx, ty, tz)) vis = true;
+      }
+      if (vis) break;
+    }
+    if (vis) seen.add(b.id);
+  }
+  return [...seen];
+}

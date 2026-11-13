@@ -1,5 +1,5 @@
 # 用法：/workspace/.venv-geo/bin/python tools/fzriver/gen_e.py（需要 shapely ≥ 2.1）
-# 福州内河 1B（东线）：晋安河（温泉公园 → 河口，沿河 1:3）+ 光明港（河口 → 光明港码头，沿河 1:4），游船 B 线（白篷）。
+# 福州内河 1B（东线）：晋安河（温泉公园 → 河口，沿河 1:4）+ 光明港（河口 → 光明港码头，沿河 1:5），游船 B 线（白篷）。
 # 输入 rivers_osm_m.json（© OpenStreetMap contributors，ODbL；米，原点东街口站）。坐标系与 1A 相同：W = 真实米 / 3（x 东、z 北）；
 # 光明港以晋安河口为基点按 1:4 缩（W = 河口/3 + (P − 河口)/4），两条河在河口严丝合缝接上。
 # 生成 js/data/fz-river-data-e.js（结构同 fz-river-data.js，导出 FZR_E）。
@@ -7,7 +7,7 @@ import json, math, sys, os, random
 import shapely
 from shapely.geometry import LineString, Polygon, Point, box
 from shapely.ops import substring, unary_union
-K = float(os.environ.get('FZR_KJ', 3.0)); K_GM = float(os.environ.get('FZR_KG', 4.0)); WY = -3.0   # 只为试算压缩比；正式数据用默认 1:3 / 1:4
+K = float(os.environ.get('FZR_KJ', 4.0)); K_GM = float(os.environ.get('FZR_KG', 5.0)); WY = -3.0   # 小美定：晋安河 1:4、光明港 1:5（单程约 479 s）；环境变量只为试算
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, '../../js/data/fz-river-data-e.js')
 d = json.load(open(os.path.join(HERE, 'rivers_osm_m.json')))
@@ -87,12 +87,32 @@ bridge('ja', J(4875), 22, 'road', note='OSM 无名主干道')
 bridge('ja', J(5401), 12, 'flat', note='OSM 无名')
 bridge('ja', J(5653), 16, 'road', note='OSM 无名次干道')
 bridge('ja', J(6125), 20, 'road', '国货东路', note='国货东路匝道双幅合一')
-bridge('ja', J(6312), 12, 'road', '文博路')
-bridge('ja', J(6522), 12, 'road', '北光明港路')
+# 文博路桥（s6312）不建：1:4 后它夹在国货东路桥（47 m）和北光明港路桥（52 m）中间，坐船视角会同时看到 3 座（小美：≤ 2 座，见单测 bridgesInView）
+VIEW_DROPPED = [{'river': 'ja', 'real_s': 6312, 'name': '文博路', 'why': '坐船视角 150 m 内与国货东路、北光明港路三桥同框'}]
+# 北光明港路桥真实就在河口（s6522）；1:4 后离光明港岸太近（东头会落进光明港水面），往上游挪到喇叭口之前
+_hk_max = ja.length - HW['gm'] - 10 - 3 - 6 - 3.0
+bridge('ja', min(J(6522), _hk_max), 12, 'road', '北光明港路', note=('真实在河口 s6522；1:4 后往上游挪 %.0f m，桥头别落进光明港' % (J(6522) - _hk_max)) if J(6522) > _hk_max else None)
 bridge('gm', G(2200), 30, 'road', '长乐南路', note='长乐南路双幅合一')
 bridge('gm', G(2790), 30, 'road', '连江中路', note='连江中路双幅合一')
 bridge('gm', G(3752), 30, 'road', '前横南路', note='前横南路双幅合一（光明港码头旁）')
 BR.sort(key=lambda b: (b['river'] != 'ja', b['s']))
+# 压缩后的桥距（小美）：相邻两桥桥面边到边 ≥ BRIDGE_GAP，否则去掉其中无名 / 较窄的那座（记进 DROPPED）
+BRIDGE_GAP = 20.0
+DROPPED = []
+changed = True
+while changed:
+  changed = False
+  for a, b in zip(BR, BR[1:]):
+    if a['river'] != b['river']: continue
+    gap = (b['s'] - b['w'] / 2) - (a['s'] + a['w'] / 2)
+    if gap < BRIDGE_GAP:
+      drop = min((a, b), key=lambda x: (x['name'] is not None, x['w']))
+      keep = b if drop is a else a
+      DROPPED.append({'river': drop['river'], 's': drop['s'], 'name': drop['name'], 'kind': drop['kind'], 'note': drop.get('note'), 'why': f'桥面边距 {gap:.1f} m < {BRIDGE_GAP:.0f} m（紧挨 {keep["name"] or keep["id"]}）'})
+      BR.remove(drop); changed = True; break
+cnt = {}
+for b in BR: cnt[b['river']] = cnt.get(b['river'], 0) + 1; b['id'] = f"{b['river']}{cnt[b['river']]}"
+print('dropped', DROPPED)
 for b in BR: print('bridge', b['id'], b['s'], b['kind'], b['name'], b['w'])
 
 # ---------- 码头 ----------
@@ -102,12 +122,30 @@ def bank_pier(k, s, side, nid, zh, en, note=None):
   if note: p['note'] = note
   return p
 bs = {b['name']: b for b in BR if b['name']}
-# 真实温泉公园码头在温泉公园路桥下（s2167），浮码头让到桥南 22 m；福新问渡让到六一北路桥南；东门停靠点（游戏增设）在塔头路桥南；河口码头在北光明港路桥北
-wq = bank_pier('ja', bs['温泉公园路']['s'] + 22, 1, 'wq', '温泉公园码头', 'Wenquan Park Pier', '真实在温泉公园路桥旁（OSM s2167），让开桥南移 22 m')
-fx = bank_pier('ja', bs['六一北路']['s'] + 28, 1, 'fx', '福新问渡码头', 'Fuxin Wendu Pier', '真实在六一北路桥旁（s2640），让开桥南移')
-dm = bank_pier('ja', bs['塔头路']['s'] + 26, -1, 'dmn', '东门停靠点', 'Dongmen Boat Stop', '游戏增设（现实无码头）；牌子不写“码头”')
-hk = bank_pier('ja', bs['北光明港路']['s'] - 17, 1, 'hk', '河口码头', 'Hekou Pier', '真实在晋安河口（s6480，光明港夜市旁）')
-gmp = bank_pier('gm', G(3898), 1, 'gmg', '光明港码头', 'Guangminggang Pier')
+# 码头和桥的间距（小美）：浮码头沿河占 [s-10.2（台阶口）, s+8.4（浮码头尾）]，泊位在 s+2.4。
+#   规则：码头占地离桥面边 ≥ PIER_GAP_EDGE，泊位离桥中线 ≥ PIER_GAP_CENTRE。从真实位置出发先往 prefer 方向 1 m 一步找第一个合规的位置（60 m 内），没有再往反方向。
+PIER_GAP_EDGE, PIER_GAP_CENTRE = 8.0, 25.0
+def pier_ok(k, s):
+  for b in BR:
+    if b['river'] != k: continue
+    if min(s + 8.4, b['s'] + b['w'] / 2) - max(s - 10.2, b['s'] - b['w'] / 2) > -PIER_GAP_EDGE: return False
+    if abs(s + 2.4 - b['s']) < PIER_GAP_CENTRE: return False
+  return 12 < s < CL[k].length - (HW['gm'] + 14 if k == 'ja' else 30)
+def pier_s(k, s0, prefer):
+  for sg in (prefer, -prefer):            # 先只往 prefer 方向找（最多 60 m），找不到再往回找
+    for d in range(0, 61):
+      if pier_ok(k, s0 + sg * d): return float(s0 + sg * d), sg * d
+  raise SystemExit('no pier spot near ' + str(s0))
+PIER_MOVES = {}
+def place(k, real, prefer, side, nid, zh, en, note):
+  s0 = rs(k, real); s, dd = pier_s(k, s0, prefer); PIER_MOVES[nid] = round(dd, 1)
+  return bank_pier(k, s, side, nid, zh, en, note + (f'；按桥距规则挪 {dd:+.0f} m（游戏米，+ = 顺流）' if abs(dd) >= 1 else ''))
+wq = place('ja', 2167, 1, 1, 'wq', '温泉公园码头', 'Wenquan Park Pier', '真实在温泉公园路桥旁（OSM s2167）')
+fx = place('ja', 2640, 1, 1, 'fx', '福新问渡码头', 'Fuxin Wendu Pier', '真实在六一北路桥旁（s2640）')
+dm = place('ja', 3600, 1, -1, 'dmn', '东门停靠点', 'Dongmen Boat Stop', '游戏增设（现实无码头，东门站旁 s3600）；牌子不写“码头”')
+hk = place('ja', 6480, -1, 1, 'hk', '河口码头', 'Hekou Pier', '真实在晋安河口（s6480，光明港夜市旁）')
+gmp = place('gm', 3898, 1, 1, 'gmg', '光明港码头', 'Guangminggang Pier', '真实在前横南路桥东（光明港 s3898）')
+print('pier moves (game m)', PIER_MOVES)
 PIERS = [wq, fx, dm, hk, gmp]
 for p in PIERS: print('pier', p['id'], p['river'], p['s'], p['side'], p['x'], p['z'])
 DRY = []; GAPS = []
@@ -354,8 +392,9 @@ DATA = {
   'piers': PIERS, 'steps': STEPS, 'dry': [[v for x, z in list(p.exterior.coords)[:-1] for v in (r2(x), r2(z))] for p in DRY],
   'kiosks': KIOSK, 'roads': [{**{k_: v for k_, v in r.items() if k_ != 'poly'}, 'poly': [v for x, z in list(r['poly'].exterior.coords)[:-1] for v in (r2(x), r2(z))]} for r in ROADS],
   'sfqx': None, 'houses': HOUSES, 'trees': TREES,
+  'spacing': {'bridgeGap': BRIDGE_GAP, 'pierGapEdge': PIER_GAP_EDGE, 'pierGapCentre': PIER_GAP_CENTRE, 'dropped': DROPPED + VIEW_DROPPED, 'pierMoves': PIER_MOVES},
   'route': {'id': 'B', 'canopy': 'white', 'zones': ZONES, 'p': [v for xz in RP for v in xz], 'stops': STOPS},
 }
-js = ('// 自动生成：tools/fzriver/gen_e.py（OSM 晋安河 1:3 + 光明港 1:4 → 游戏坐标；x 东、z 北，原点 = 东街口站 / 3）。不要手改。\n'
+js = ('// 自动生成：tools/fzriver/gen_e.py（OSM 晋安河 1:4 + 光明港 1:5 → 游戏坐标；x 东、z 北，原点 = 东街口站 / 3）。不要手改。\n'
       'export const FZR_E = ' + json.dumps(DATA, ensure_ascii=False, separators=(',', ':')) + ';\n')
 open(OUT, 'w').write(js); print('wrote', OUT, len(js))
