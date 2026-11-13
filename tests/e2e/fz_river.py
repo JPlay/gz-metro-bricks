@@ -72,22 +72,23 @@ def pf(p, a, b): return [p['x'] + p['t'][0] * a - p['n'][0] * b, p['z'] + p['t']
 def bf(b, v): return [b['x'] + b['n'][0] * v, b['z'] + b['n'][1] * v]
 async def plate(pg): return await pg.evaluate("document.getElementById('whereName').textContent")
 def canopy_frac(path):
-    """截图里船篷（红篷）从屏幕顶往下连续占了多少高度（只看中间 20%–55% 宽的列，避开左上站牌和右上按钮）"""
+    """截图里船篷（红篷）从屏幕顶往下连续占了多少高度"""
     from PIL import Image
-    im = Image.open(path).convert('RGB'); Wd, H = im.size; px = im.load(); x0, x1 = int(Wd * 0.2), int(Wd * 0.55); last, miss = -1, 0
+    # 列取 34.5%–43% 宽：避开左上站牌、顶部“开启声音”提示条、右上按钮；红篷色（g、b < 0.3 r，不算深色篷柱）
+    im = Image.open(path).convert('RGB'); Wd, H = im.size; px = im.load(); xs = range(int(Wd * 0.345), int(Wd * 0.43), 2); last, miss = -1, 0
     for y in range(H):
-        n = sum(1 for x in range(x0, x1, 2) if (lambda r, g, b: r > 50 and g < 0.42 * r and b < 0.42 * r)(*px[x, y]))
-        if n / ((x1 - x0) / 2) >= 0.5: last, miss = y, 0
+        n = sum(1 for x in xs if (lambda r, g, b: r > 70 and g < 0.3 * r and b < 0.3 * r)(*px[x, y]))
+        if n / len(xs) >= 0.5: last, miss = y, 0
         else:
             miss += 1
-            if miss > 4: break
+            if miss > H * 0.01: break
     return round((last + 1) / H, 3)
 async def seated_shots(pg, tag):
     """船上坐着：第一人称、第三人称各拍一张，量篷占屏高"""
     out = {}
     for v in ('first', 'third'):
         if await pg.evaluate("__game.player.view") != v: await pg.evaluate("__game.toggleView()")
-        pf0 = 0.14; await pg.evaluate(f"__game.player.pitch = {pf0}"); await asyncio.sleep(0.8)
+        await pg.evaluate("(() => { const s = __game.player.seat.seat; __game.player.pitch = __game.player.view === 'first' ? s.pitchFirst : s.pitch; })()"); await asyncio.sleep(0.8)   # 坐下时的默认俯仰
         name = f'boat_seated_{v}_{tag}'; await shot(pg, name)
         if OUT: out[v] = canopy_frac(OUT + name + '.jpg'); log('canopy', name, out[v])
     if await pg.evaluate("__game.player.view") != 'third': await pg.evaluate("__game.toggleView()")
@@ -264,6 +265,16 @@ async def main():
           await asyncio.sleep(0.15)
         ok('shots:bm5:taken', len(took) == len(marks), sorted(took))
         c = await pg.evaluate('window.__clr'); ok('shotleg:canopyClearance', c['min'] >= D['clr'] - 0.02, c)
+    if 'probe' in STAGES:
+      # 调试探针（不是验收）：直接放到浮码头上，按下船上岸的路线走，记录每段 y 和脚下碰撞体
+      for pid in ('xsg', 'xihu'):
+        P = [p for p in D['piers'] if p['id'] == pid][0]
+        pts = {k: await W(pg, *pf(P, a, b)) for k, (a, b) in {'pont': (0.0, 1.4), 'bot': (-4.0, 0.75), 'mid': (-7.0, 0.75), 'top': (-9.4, 0.75), 'land': (-11.6, -1.6)}.items()}
+        await pg.evaluate(f"__game.player.spawn({pts['pont'][0]}, {D['wy'] + 0.5}, {pts['pont'][1]}, 0)"); await asyncio.sleep(1.5)
+        for k in ('bot', 'mid', 'top', 'land'):
+          await legs(pg, [pts[k]], False); s = await st(pg)
+          hits = await pg.evaluate(f"""(() => {{ const out = []; for (const [k, p] of Object.entries({json.dumps(pts)})) {{ const r = new BABYLON.Ray(new BABYLON.Vector3(p[0], 5, p[1]), new BABYLON.Vector3(0, -1, 0), 20); const h = __game.scene.multiPickWithRay(r, m => m.checkCollisions && m.isEnabled()); out.push(k + ':' + (h || []).sort((a, b) => a.distance - b.distance).slice(0, 3).map(x => x.pickedMesh.name + '@' + (5 - x.distance).toFixed(2)).join('|')); }} return out; }})()""")
+          log('probe', pid, k, s['pos'], hits if k == 'bot' else '')
     if 'xihu' in STAGES:
       # ---------- 4c. 西湖终点站：坐到西湖 → 停着等起身 → 真点「起身」→ 上岸 → 走回浮码头再上船 ----------
       # 西洋 A 出来，船停在黎明湖（往西湖方向）：黎明湖上船 → 西水关（不起身，接着坐）→ 西湖
