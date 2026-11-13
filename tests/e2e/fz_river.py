@@ -88,8 +88,8 @@ async def board(pg, D, pid, leg):
     P = [p for p in D['piers'] if p['id'] == pid][0]
     land = await W(pg, *pf(P, -11.6, -1.6)); top = await W(pg, *pf(P, -9.4, 0.75)); bot = await W(pg, *pf(P, -4.0, 0.75)); pont = await W(pg, *pf(P, 1.2, 1.5))
     # 台阶口：岸上一侧（栏杆缺口 a −10.2…−8.3 里、a = −10.15）→ 台阶顶平台 → 台阶；不斜穿墙角、不从侧面跨台阶边
-    gap = await W(pg, *pf(P, -10.15, -0.9)); lnd = await W(pg, *pf(P, -10.15, 0.75))
-    if E1B: land = await W(pg, *pf(P, -10.15, -3.0))   # 1B：先走到台阶口正后方 3 m（land 原点就是码头牌位置，A* 走不进去）
+    gap = await W(pg, *pf(P, -9.85, -0.9)); lnd = await W(pg, *pf(P, -9.85, 0.75))
+    if E1B: land = await W(pg, *pf(P, -9.85, -3.0))   # 1B：先走到台阶口正后方 3 m（land 原点就是码头牌位置，A* 走不进去）
     r1 = await go(pg, *land, 'to pier ' + pid)
     await legs(pg, ([gap, lnd] if E1B else []) + [top, bot, pont], False)
     s = await st(pg); ok(f'{leg}:downStairsToPontoon:{pid}', abs(s['pos'][1] - (D['wy'] + 0.45)) < 0.3 and r1, s['pos'])
@@ -169,7 +169,7 @@ async def alight(pg, D, pid, leg):
     door = await W(pg, *pf(P, 2.4, 3.9)); edge = await W(pg, *pf(P, 2.4, 2.3)); pont = await W(pg, *pf(P, 0.0, 1.4))
     bot = await W(pg, *pf(P, -4.0, 0.75)); top = await W(pg, *pf(P, -9.4, 0.75)); land = await W(pg, *pf(P, -11.6, -1.6))
     if E1B:   # 台阶顶 → 平台 → 栏杆缺口 → 岸上（码头牌旁边 3 m，不往牌子里钻：land 点就是码头牌的位置）
-        lnd = await W(pg, *pf(P, -10.15, 0.75)); gap = await W(pg, *pf(P, -10.15, -0.9)); land = await W(pg, *pf(P, -10.15, -3.0))
+        lnd = await W(pg, *pf(P, -9.85, 0.75)); gap = await W(pg, *pf(P, -9.85, -0.9)); land = await W(pg, *pf(P, -9.85, -3.0))
         await legs(pg, [door, edge, pont], False); await legs(pg, [bot, top, lnd, gap, land], False)
     else: await legs(pg, [door, edge, pont], False); await legs(pg, [bot, top, land], False)
     if E1B:
