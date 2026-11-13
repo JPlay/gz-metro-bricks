@@ -33,7 +33,7 @@ export class Player {
   /** 坐下：seat = 列车座位（局部 x、侧 sd）。髋部对齐座垫，与烘焙乘客同一公式：脚底 y = 0.55 − 髋高 */
   sit(train, seat) {
     this.seat = { train, seat }; this.vel.set(0, 0, 0); this.vy = 0; this.speed = 0;
-    this.facing = seat.world ? seat.face : seat.sd > 0 ? Math.PI : 0; this.yaw = this.facing; this.pitch = this.view === 'first' ? 0.02 : seat.world ? 0.5 : 0.12;   // 大会堂座位：镜头抬高越过前排椅背，看到主角和舞台
+    this.facing = seat.world ? seat.face : seat.sd > 0 ? Math.PI : 0; this.yaw = this.facing; this.pitch = this.view === 'first' ? 0.02 : seat.pitch !== undefined ? seat.pitch : seat.world ? 0.5 : 0.12;   // 大会堂座位：镜头抬高越过前排椅背，看到主角和舞台
     this.placeSeat();
   }
   hipH() { return (this.person.look.kid ? 0.6 : 0.86) * this.person.look.scale; }
@@ -41,6 +41,8 @@ export class Player {
   /** 贴回座位并同步模型 / 影子（列车移动之后也要调用一次，避免慢一帧） */
   syncSeat() {
     if (!this.seat) return;
+    // 随船转向的座位（福州内河游船）：人和镜头跟着船头转
+    { const ss = this.seat.seat; if (ss.follow && !this.lying) { const d = ss.face - this.facing; if (d) { this.facing = ss.face; this.yaw += d; } } }
     this.placeSeat(); this.collider.computeWorldMatrix(true); this.groundY = this.position.y;
     const p = this.position, lie = this.lying && this.seat.seat.lie;
     // 躺在酒店床上：模型绕脚底往后倒 90°（脸朝上、头朝枕头）
@@ -166,12 +168,14 @@ export class Player {
       // 竖直方向平滑（上下楼梯 / 跳跃时镜头不抖），水平方向紧跟（坐车时不拖影）
       this.camY = this.camY === undefined ? p.y : this.camY + (p.y - this.camY) * Math.min(1, dt * 7);
       if (Math.abs(this.camY - p.y) > 2) this.camY = p.y;
-      const target = new B.Vector3(p.x, this.camY + 1.25, p.z);
+      // 船上座位：镜头压低（看得到水面和两岸的榕树）、拉近（留在篷里）
+      const ss = this.seat && this.seat.seat, camT = ss && ss.camT !== undefined ? ss.camT : 1.25, dist = ss && ss.camDist ? Math.min(this.dist, ss.camDist) : this.dist;
+      const target = new B.Vector3(p.x, this.camY + camT, p.z);
       // 镜头的障碍物：碰撞体（换乘楼梯扶手上方的隐形高挡墙 noCam 除外）+ 只挡镜头的 camBlock（纪念堂大幕）+ 标牌（吊牌没有碰撞体，以前从换乘楼梯脚进通道时镜头直接钻进通道口的吊牌，上半屏一片黑）
       const pred = this._camPred || (this._camPred = m => m.isEnabled() && m !== this.collider && !(m.metadata && m.metadata.noCam) && (m.checkCollisions || m.name === 'signs' || (m.metadata && m.metadata.camBlock)));
-      const ray = new B.Ray(target, fwd.scale(-1), this.dist + 0.3);
+      const ray = new B.Ray(target, fwd.scale(-1), dist + 0.3);
       const hit = scene.pickWithRay(ray, pred);
-      let want = this.dist; if (hit && hit.hit) want = Math.max(0.35, hit.distance - 0.3);
+      let want = dist; if (hit && hit.hit) want = Math.max(0.35, hit.distance - 0.3);
       // 拉近要立刻（不然穿墙），拉远平滑；界面（售票机等）关掉后的恢复也走这条平滑
       this.camDist = want < this.camDist ? want : this.camDist + (want - this.camDist) * Math.min(1, dt * 2.5);
       cam.position.copyFrom(target.subtract(fwd.scale(this.camDist)));
