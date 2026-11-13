@@ -66,7 +66,7 @@ export class FzBoat {
       P.box(xm, RU + h + 0.03, 0, x1 - x0 + 0.02, 0.06, 2 * L + 0.3, canopy, 0, 0, Math.atan2(-0.09 * Math.PI / 2 / W * Math.sin(xm / W * Math.PI / 2), 1), 1, NO);
     }
     for (const sx of [-1, 1]) P.box(sx * W, RU - 0.03, 0, 0.03, 0.1, 2 * L + 0.3, trim, 0, 0, 0, 1, NO);
-    for (const e of [-1, 1]) { P.box(0, RU - 0.03, e * (L + 0.15), 2 * W, 0.1, 0.03, trim, 0, 0, 0, 1, NO); P.ellipsoid(0, RU - 0.2, e * (L + 0.05), 0.2, 0.26, 0.2, hex('#D7262E'), 1);   // 船头小灯笼（挂在篷檐下，不挡视线） }
+    for (const e of [-1, 1]) { P.box(0, RU - 0.03, e * (L + 0.15), 2 * W, 0.1, 0.03, trim, 0, 0, 0, 1, NO); P.ellipsoid(0, RU - 0.2, e * (L + 0.05), 0.2, 0.26, 0.2, hex('#D7262E'), 1); }   // 船头小灯笼（挂在篷檐下，不挡视线）
     // 碰撞：甲板 + 舷墙（中门留空）+ 两头 + 停靠时伸出去的跳板
     const c = (x, y, z, w, h, d, name) => k.col(x, y, z, w, h, d, { dynamic: true, name, parent: k.root });
     this.cols = [c(0, D - 0.15, 0, BOAT.beam - 0.1, 0.3, 7.7, 'colBoatDeck')];
