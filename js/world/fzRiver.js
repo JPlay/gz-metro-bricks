@@ -402,7 +402,8 @@ export class FzRiverStreet extends XmStreet {
     }
   }
   tick(dt) {
-    if (this.boat) this.boat.update(dt, this.pl);
+    // 船按真实时间走（上限 0.25 s/帧，每帧最多挪 0.9 m；人坐在船上跟着走，不会“跳”）；街区其余逻辑仍用 0.1 s 上限
+    if (this.boat) this.boat.update(Math.min(0.25, this.scene.getEngine().getDeltaTime() / 1000), this.pl);
     this.lodT -= dt; if (this.lodT <= 0) { this.lodT = 0.25; this.lodNow(false); }
   }
   update(pl) {
