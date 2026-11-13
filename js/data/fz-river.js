@@ -150,10 +150,14 @@ export function clearanceReport(step = 0.25) {
 }
 /** 船线上每米的限速：过桥 / 急弯慢行 */
 function buildSpeedCap() {
-  const n = Math.ceil(ROUTE.line.len) + 1, cap = new Array(n).fill(CRUISE);
+  // 速度分区：A 线没有 zones（全程 3.5、过桥 2.0，和 1A 一样）；B 线见 gen_e.py ZONES（晋安河 3.5，光明港开阔段 5.5，过桥 / 进出码头 3.5）
+  const Z = ROUTE.zones || {}, n = Math.ceil(ROUTE.line.len) + 1, cap = new Array(n).fill(Z.cruise || CRUISE);
+  if (Z.fast) for (let i = Math.ceil(Z.fast[0]); i <= Math.min(n - 1, Z.fast[1]); i++) cap[i] = Z.vFast;
+  const vBridge = Z.vBridge || SLOW;
   for (let i = 0; i < n; i++) {
     const p = routePose(i);
-    for (const b of BRIDGES) { const { u, v } = bridgeLocal(b, p.x, p.z); if (Math.abs(u) < b.w / 2 + 10 && Math.abs(v) < b.half + 2) cap[i] = Math.min(cap[i], SLOW); }
+    for (const b of BRIDGES) { const { u, v } = bridgeLocal(b, p.x, p.z); if (Math.abs(u) < b.w / 2 + 10 && Math.abs(v) < b.half + 2) cap[i] = Math.min(cap[i], vBridge); }
+    if (Z.vPier) for (const st of STOPS) if (Math.abs(i - st.s) < Z.pierZone) cap[i] = Math.min(cap[i], Z.vPier);
     // 转弯半径（前后 4 m 的切线夹角）
     const a = routePose(Math.max(0, i - 4)), c = routePose(Math.min(ROUTE.line.len, i + 4)), da = Math.abs(Math.atan2(a.tx * c.tz - a.tz * c.tx, a.tx * c.tx + a.tz * c.tz));
     if (da > 0.02) { const R = 8 / da; cap[i] = Math.min(cap[i], Math.max(1.2, Math.sqrt(0.7 * R))); }
@@ -162,6 +166,28 @@ function buildSpeedCap() {
   for (let i = n - 2; i >= 0; i--) cap[i] = Math.min(cap[i], Math.sqrt(cap[i + 1] ** 2 + 2 * ACC * 1));
   for (let i = 1; i < n; i++) cap[i] = Math.min(cap[i], Math.sqrt(cap[i - 1] ** 2 + 2 * ACC * 1));
   return cap;
+}
+/** 行船一步（fzBoat.js 每帧调用；单测按同一套逻辑积分出单程时间）。b = { s, v, dir, target }；到站返回 true（调用方把 s 放到站点） */
+export function goStep(b, dt) {
+  const goal = STOPS[b.target].s, rem = (goal - b.s) * b.dir;
+  const vStop = Math.sqrt(Math.max(0, 2 * ACC * 0.9 * (rem - 0.05)));
+  const vMax = Math.min(speedCap(b.s), vStop), dv = vMax - b.v;
+  b.v += Math.max(-1.0 * dt, Math.min(ACC * dt, dv)); if (b.v < 0) b.v = 0;
+  if (rem < 0.08 || (rem < 0.6 && b.v < 0.12)) return true;
+  b.s += b.v * dt * b.dir; if (b.v < 0.15 && rem > 0.6) b.v = 0.15;   // 别停在半路（限速平滑后末段也至少蠕动）
+  return false;
+}
+export const BOAT_DWELL = 3.0;   // 坐下后几秒开船
+export const BOAT_STAY = 10;     // 中途站停靠（坐着的乘客有 10 秒点「起身」）
+/** 坐着不下船从站 i0 到 i1 的时间（秒，dt 1/60）：起点坐下等 BOAT_DWELL + 各段行船 + 中途站 BOAT_STAY */
+export function runTime(i0, i1, dt = 1 / 60) {
+  const dir = Math.sign(i1 - i0); let t = BOAT_DWELL, legs = [];
+  for (let i = i0; i !== i1; i += dir) {
+    const b = { s: STOPS[i].s, v: 0, dir, target: i + dir }; let lt = 0, vmax = 0;
+    while (!goStep(b, dt)) { lt += dt; vmax = Math.max(vmax, b.v); if (lt > 3600) break; }
+    legs.push({ from: STOPS[i].id, to: STOPS[i + dir].id, secs: +lt.toFixed(1), vmax: +vmax.toFixed(2) }); t += lt + (i + dir !== i1 ? BOAT_STAY : 0);
+  }
+  return { secs: +t.toFixed(1), legs };
 }
 useNet('a');
 export const speedCap = s => SPEED_CAP[Math.max(0, Math.min(SPEED_CAP.length - 1, Math.round(s)))];

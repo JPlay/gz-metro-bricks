@@ -125,7 +125,7 @@ async def ride(pg, D, leg, target, shots=False):
     b = await boat(pg); j = await jget(pg); c = await pg.evaluate('window.__clr')
     R['legs'].append({'leg': leg, 'from': b0['at'], 'to': b['at'], 'dir': b['dir'], 'stats': b['stats'], 'jump': j['max'], 'clr': c, 'secs': round(time.time() - t0), 'log': b['log']})
     ok(f'{leg}:arrived:{target}', done and b['at'] == target, b)
-    ok(f'{leg}:smooth', j['max'] < TELEPORT and b['stats']['maxStep'] < 1.0 and b['stats']['maxYawStep'] < 0.12, {'jump': j['max'], 'stats': b['stats']})
+    ok(f'{leg}:smooth', j['max'] < TELEPORT and b['stats']['maxStep'] < (1.45 if E1B else 1.0) and b['stats']['maxYawStep'] < 0.12, {'jump': j['max'], 'stats': b['stats']})
     ok(f'{leg}:canopyClearance', c['min'] >= D['clr'] - 0.02, c)
     ok(f'{leg}:stillSeated', await pg.evaluate("!!(__game.player.seat && __game.player.seat.seat.boat)"))
     return done

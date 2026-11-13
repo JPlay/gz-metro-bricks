@@ -39,11 +39,29 @@ ok('boat hull stays inside water along whole route', hullOut === 0, hullOut);
 const cr = R.clearanceReport(0.25);
 ok(`canopy never clips a bridge (min clearance ${cr.min.toFixed(3)} ≥ ${R.CLEAR_MIN})`, cr.ok && cr.min >= R.CLEAR_MIN, cr.per);
 ok('route passes under all 15 bridges', Object.keys(cr.per).length === 15, Object.keys(cr.per));
-ok('speed cap: cruise same as 1A (3.5), slower under bridges', Math.max(...R.SPEED_CAP) <= R.CRUISE + 1e-9 && Math.min(...R.SPEED_CAP) <= R.SLOW + 1e-6);
-// 单程时间（按限速积分 + 每站加减速 + 中间站停 20 s）：报告，≤ 8 min 是目标（同速下做不到 → 只记录，见报告）
-{ let t = 0; for (let i = 0; i < R.SPEED_CAP.length; i++) t += 1 / R.SPEED_CAP[i]; const total = t + 3 * 20 + 4 * (R.CRUISE / R.ACC);
-  console.log(`INFO route B len ${R.ROUTE.line.len.toFixed(0)} m, pure run ${(t / 60).toFixed(1)} min, one-way est ${(total / 60).toFixed(1)} min`);
-  ok('route B one-way estimate < 14 min (sanity)', total < 14 * 60, total); }
+// ---- 速度分区（小美）：晋安河 3.5（同 A 线）；过桥 / 进出码头 3.5；只有光明港开阔段 5.5，平滑加减速 ----
+{ const Z = R.ROUTE.zones, cap = R.SPEED_CAP, n = cap.length;
+  ok('zones: cruise 3.5, 光明港 5.5, bridge 3.5, pier 3.5', Z && Z.cruise === 3.5 && Z.vFast === 5.5 && Z.vBridge === 3.5 && Z.vPier === 3.5 && Z.pierZone >= 40, Z);
+  // 光明港段起点在河口转弯之后（船已在光明港中线附近）
+  const p0 = R.routePose(Z.fast[0]), gm = R.RIVERS.gm.line.project(p0.x, p0.z);
+  ok('fast zone starts in 光明港 (after the 河口 turn)', gm.d < R.RIVERS.gm.hw && R.STOPS.find(s => s.id === 'hk').s < Z.fast[0], { d: gm.d, fast: Z.fast });
+  const inJa = [...Array(Math.floor(Z.fast[0])).keys()];
+  ok('晋安河 never faster than 3.5', inJa.every(i => cap[i] <= 3.5 + 1e-9), Math.max(...inJa.map(i => cap[i])));
+  ok('never faster than 5.5 anywhere', cap.every(v => v <= 5.5 + 1e-9));
+  ok('光明港 open water reaches 5.5', cap.some((v, i) => i > Z.fast[0] && v >= 5.5 - 1e-9));
+  let bridgeBad = []; for (let i = 0; i < n; i++) { const q = R.routePose(i); for (const b of R.BRIDGES) { const { u, v } = R.bridgeLocal(b, q.x, q.z); if (Math.abs(u) < b.w / 2 + 10 && Math.abs(v) < b.half + 2 && cap[i] > 3.5 + 1e-9) bridgeBad.push([b.id, i]); } }
+  ok('under / near every bridge ≤ 3.5', !bridgeBad.length, bridgeBad.slice(0, 5));
+  const pierBad = R.STOPS.flatMap(st => [...Array(n).keys()].filter(i => Math.abs(i - st.s) < Z.pierZone && cap[i] > 3.5 + 1e-9).map(i => [st.id, i]));
+  ok('approaching / leaving every pier ≤ 3.5', !pierBad.length, pierBad.slice(0, 5));
+  ok('smooth: cap change per metre within ACC (v² step ≤ 2·ACC)', cap.every((v, i) => i === 0 || Math.abs(v * v - cap[i - 1] ** 2) <= 2 * R.ACC + 1e-6));
+}
+// 单程时间：用 fzBoat 每帧调用的同一个 goStep 积分（dt 1/60），起点坐下 3 s + 中途站各停 10 s
+{ const f = R.runTime(0, 4), b = R.runTime(4, 0);
+  console.log(`INFO route B len ${R.ROUTE.line.len.toFixed(0)} m; one-way 温泉公园→光明港 ${f.secs} s (${(f.secs / 60).toFixed(1)} min), back ${b.secs} s; legs ${f.legs.map(l => `${l.from}→${l.to} ${l.secs}s vmax ${l.vmax}`).join(', ')}`);
+  ok('only the 光明港 leg (河口→光明港) goes above 3.5', f.legs.every(l => (l.to === 'gmg') === (l.vmax > 3.5 + 1e-6)), f.legs);
+  // ≤ 480 s 在 1:3 / 1:4 下做不到（晋安河段同速已 458 s）；只断言比单一 3.5 快、并记录数字。改压缩比后若 ≤ 480 再收紧
+  if (f.secs <= 480) ok('route B one-way ≤ 8 min', true); else ok('route B one-way < 11 min (8 min not reachable at 1:3 / 1:4, see report)', f.secs < 660 && b.secs < 660, [f.secs, b.secs]);
+}
 // 码头间距：浮码头不压桥
 // 码头沿河占 [s-10.2（台阶口）, s+8.4（浮码头尾）]，桥占 [s-w/2, s+w/2]：中间至少留 2 m
 const pierHit = p => R.BRIDGES.filter(b => b.river === p.river && Math.min(p.s + 8.4, b.s + b.w / 2) - Math.max(p.s - 10.2, b.s - b.w / 2) > -2).map(b => b.id);

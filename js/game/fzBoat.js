@@ -8,15 +8,14 @@
  */
 import { Kit } from '../world/kit.js';
 import { hex } from '../core/geo.js';
-import { WY, BOAT, STOPS, ROUTE, routePose, speedCap, ACC } from '../data/fz-river.js';
+import { WY, BOAT, STOPS, ROUTE, routePose, goStep, BOAT_DWELL, BOAT_STAY } from '../data/fz-river.js';
+export { BOAT_DWELL };
 import { say } from '../audio/announcements.js';
 import { fzBoatDepartSegs, fzBoatArriveSegs } from '../data/phrases.js';
 
 const B = window.BABYLON;
 const NO = { ao: false };
-export const BOAT_DWELL = 3.0;   // 坐下后几秒开船
 
-const BOAT_STAY = 10;
 export class FzBoat {
   constructor(S, variant = 'red') {
     this.S = S; this.scene = S.scene; this.variant = variant;
@@ -152,12 +151,7 @@ export class FzBoat {
         }
       }
     } else {
-      const goal = STOPS[this.target].s, rem = (goal - this.s) * this.dir;
-      const vStop = Math.sqrt(Math.max(0, 2 * ACC * 0.9 * (rem - 0.05)));
-      const vMax = Math.min(speedCap(this.s), vStop), dv = vMax - this.v;
-      this.v += Math.max(-1.0 * dt, Math.min(ACC * dt, dv)); if (this.v < 0) this.v = 0;
-      if (rem < 0.08 || (rem < 0.6 && this.v < 0.12)) { this.s = goal; this.arrive(pl); }
-      else { this.s += this.v * dt * this.dir; if (this.v < 0.15 && rem > 0.6) this.v = 0.15; }   // 别停在半路（限速平滑后末段也至少蠕动）
+      if (goStep(this, dt)) { this.s = STOPS[this.target].s; this.arrive(pl); }   // 行船逻辑在 fz-river.js（单测按同一套算单程时间）
     }
     this.place(dt);
   }

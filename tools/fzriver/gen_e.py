@@ -7,7 +7,7 @@ import json, math, sys, os, random
 import shapely
 from shapely.geometry import LineString, Polygon, Point, box
 from shapely.ops import substring, unary_union
-K = 3.0; K_GM = 4.0; WY = -3.0
+K = float(os.environ.get('FZR_KJ', 3.0)); K_GM = float(os.environ.get('FZR_KG', 4.0)); WY = -3.0   # 只为试算压缩比；正式数据用默认 1:3 / 1:4
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, '../../js/data/fz-river-data-e.js')
 d = json.load(open(os.path.join(HERE, 'rivers_osm_m.json')))
@@ -338,6 +338,10 @@ for i in range(2, len(RP) - 2):
     q = Point(x + tx * u + nx * v, z + tz * u + nz * v)
     if not (navi.buffer(-0.1) if nearB else navi.buffer(-0.3)).contains(q): bad.append((i, round(q.x, 1), round(q.y, 1))); break
 print('hull outside water at', len(bad), bad[:12])
+# 速度分区（小美）：晋安河窄，全程 3.5 m/s（同 A 线）；进出码头、过桥也 3.5；只有开阔的光明港段（出了河口转弯以后）快到 5.5，平滑加减速
+FAST0 = rl.project(Point(*gmLeg[0]))
+ZONES = {'cruise': 3.5, 'fast': [round(FAST0, 1), round(L, 1)], 'vFast': 5.5, 'vBridge': 3.5, 'vPier': 3.5, 'pierZone': 45}
+print('zones', ZONES)
 print('route len', round(L, 1), 'stops', STOPS, 'minR', minRat(LineString(RP))[0])
 
 def r2(v): return round(v, 2)
@@ -350,7 +354,7 @@ DATA = {
   'piers': PIERS, 'steps': STEPS, 'dry': [[v for x, z in list(p.exterior.coords)[:-1] for v in (r2(x), r2(z))] for p in DRY],
   'kiosks': KIOSK, 'roads': [{**{k_: v for k_, v in r.items() if k_ != 'poly'}, 'poly': [v for x, z in list(r['poly'].exterior.coords)[:-1] for v in (r2(x), r2(z))]} for r in ROADS],
   'sfqx': None, 'houses': HOUSES, 'trees': TREES,
-  'route': {'id': 'B', 'canopy': 'white', 'p': [v for xz in RP for v in xz], 'stops': STOPS},
+  'route': {'id': 'B', 'canopy': 'white', 'zones': ZONES, 'p': [v for xz in RP for v in xz], 'stops': STOPS},
 }
 js = ('// 自动生成：tools/fzriver/gen_e.py（OSM 晋安河 1:3 + 光明港 1:4 → 游戏坐标；x 东、z 北，原点 = 东街口站 / 3）。不要手改。\n'
       'export const FZR_E = ' + json.dumps(DATA, ensure_ascii=False, separators=(',', ':')) + ';\n')
