@@ -6,9 +6,19 @@
  *   水面 y = WY（-3.0），岸顶 y = 0；船：甲板 WY+0.45（= 浮码头面），篷顶 WY+1.75。
  * 净空规则（PLAN.md）：平桥梁底 ≥ -0.4；拱桥在船篷两侧角点处的拱腹高度 ≥ 篷顶 + 0.25。
  */
-import { FZR } from './fz-river-data.js';
-export { FZR };
-export const WY = FZR.WY;
+import { FZR as FZR_A } from './fz-river-data.js';
+import { FZR_E } from './fz-river-data-e.js';
+/*
+ * 两片河网（一次只建一片街区，和 FS 街口一样）：
+ *   a = 1A 西线（白马河 / 安泰河 / 东西河，A 线红篷）；e = 1B 东线（晋安河 1:3 + 光明港 1:4，B 线白篷，tools/fzriver/gen_e.py）。
+ *   下面的 FZR / RIVERS / ROUTE / STOPS / BRIDGES / KIOSKS / SPEED_CAP 是 ES 模块“活绑定”：useNet(id) 换成另一片，
+ *   所有 import 它们的模块（fzRiver.js / fzBoat.js）下一次读到的就是新的那片。街区构造时按出口亭所在河网调用 useNet。
+ */
+export const NETS = { a: FZR_A, e: FZR_E };
+/** 出口亭（车站 code）→ 河网 id */
+export function netOfKiosk(code) { for (const [id, F] of Object.entries(NETS)) if (F.kiosks[code]) return id; return 'a'; }
+export let FZR = FZR_A, NET = 'a';
+export const WY = FZR_A.WY;
 /** 船（米，船体局部：+z 船头、+x 右舷）。双头船：两头一样，掉头不用转身；长凳没有靠背，乘客总是朝行进方向坐 */
 export const BOAT = { len: 8, beam: 2.4, deck: 0.45, gunwale: 1.0, roofUnder: 1.95, top: 2.07, canopyHalfLen: 3.25, canopyHalfW: 1.27,
   rows: [2.15, 1.3, -1.3, -2.15], seatX: 0.72, door: [-0.6, 0.6] };
@@ -46,14 +56,23 @@ export function mkLine(flat) {
   };
   return { x, z, s, len, at, project };
 }
-export const RIVERS = Object.fromEntries(Object.entries(FZR.rivers).map(([k, r]) => [k, { ...r, line: mkLine(r.p) }]));
-export const ROUTE = { ...FZR.route, line: mkLine(FZR.route.p) };
-export const PIERS = FZR.piers;
-export const PIER = Object.fromEntries(PIERS.map(p => [p.id, p]));
-/** A 线：码头顺序 = 船线里程顺序 */
-export const STOPS = FZR.route.stops.map(s => ({ ...s, pier: PIER[s.id] }));
-export const BRIDGES = FZR.bridges;
-export const KIOSKS = FZR.kiosks;
+export let RIVERS, ROUTE, PIERS, PIER, STOPS, BRIDGES, KIOSKS, SPEED_CAP;
+const CACHE = {};
+/** 换河网（活绑定）；返回河网 id */
+export function useNet(id) {
+  if (!NETS[id]) id = 'a';
+  if (!CACHE[id]) {
+    const F = NETS[id], rivers = Object.fromEntries(Object.entries(F.rivers).map(([k, r]) => [k, { ...r, line: mkLine(r.p) }]));
+    const route = { ...F.route, line: mkLine(F.route.p) }, pier = Object.fromEntries(F.piers.map(p => [p.id, p]));
+    CACHE[id] = { F, rivers, route, piers: F.piers, pier, stops: F.route.stops.map(s => ({ ...s, pier: pier[s.id] })), bridges: F.bridges, kiosks: F.kiosks, cap: null };
+  }
+  const C = CACHE[id];
+  NET = id; FZR = C.F; RIVERS = C.rivers; ROUTE = C.route; PIERS = C.piers; PIER = C.pier; STOPS = C.stops; BRIDGES = C.bridges; KIOSKS = C.kiosks;
+  if (!C.cap) C.cap = buildSpeedCap();
+  SPEED_CAP = C.cap;
+  return id;
+}
+/** 码头顺序 = 船线里程顺序（STOPS 在 useNet 里换） */
 
 /* ---------- 点在多边形 / 三角形 ---------- */
 export function inPoly(px, pz, f) {
@@ -130,7 +149,7 @@ export function clearanceReport(step = 0.25) {
   return { per, min: gaps.length ? Math.min(...gaps) : Infinity, ok: gaps.every(g => g >= CLEAR_MIN) };
 }
 /** 船线上每米的限速：过桥 / 急弯慢行 */
-export const SPEED_CAP = (() => {
+function buildSpeedCap() {
   const n = Math.ceil(ROUTE.line.len) + 1, cap = new Array(n).fill(CRUISE);
   for (let i = 0; i < n; i++) {
     const p = routePose(i);
@@ -143,7 +162,8 @@ export const SPEED_CAP = (() => {
   for (let i = n - 2; i >= 0; i--) cap[i] = Math.min(cap[i], Math.sqrt(cap[i + 1] ** 2 + 2 * ACC * 1));
   for (let i = 1; i < n; i++) cap[i] = Math.min(cap[i], Math.sqrt(cap[i - 1] ** 2 + 2 * ACC * 1));
   return cap;
-})();
+}
+useNet('a');
 export const speedCap = s => SPEED_CAP[Math.max(0, Math.min(SPEED_CAP.length - 1, Math.round(s)))];
 /** 下一站：从站序号 i 往 dir 方向 */
 export function nextStop(i, dir) { const j = i + dir; return j >= 0 && j < STOPS.length ? j : i - dir; }

@@ -105,7 +105,7 @@ bs = {b['name']: b for b in BR if b['name']}
 wq = bank_pier('ja', bs['温泉公园路']['s'] + 22, 1, 'wq', '温泉公园码头', 'Wenquan Park Pier', '真实在温泉公园路桥旁（OSM s2167），让开桥南移 22 m')
 fx = bank_pier('ja', bs['六一北路']['s'] + 28, 1, 'fx', '福新问渡码头', 'Fuxin Wendu Pier', '真实在六一北路桥旁（s2640），让开桥南移')
 dm = bank_pier('ja', bs['塔头路']['s'] + 26, -1, 'dmn', '东门停靠点', 'Dongmen Boat Stop', '游戏增设（现实无码头）；牌子不写“码头”')
-hk = bank_pier('ja', bs['北光明港路']['s'] - 17, -1, 'hk', '河口码头', 'Hekou Pier', '真实在晋安河口（s6480，光明港夜市旁）')
+hk = bank_pier('ja', bs['北光明港路']['s'] - 17, 1, 'hk', '河口码头', 'Hekou Pier', '真实在晋安河口（s6480，光明港夜市旁）')
 gmp = bank_pier('gm', G(3898), 1, 'gmg', '光明港码头', 'Guangminggang Pier')
 PIERS = [wq, fx, dm, hk, gmp]
 for p in PIERS: print('pier', p['id'], p['river'], p['s'], p['side'], p['x'], p['z'])

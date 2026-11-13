@@ -48,6 +48,10 @@ Object.assign(FZ_EXITS, {
     more: [{ n: 'C', x: -14, line: 4, road: '杨桥路', to: ['白马河', '西水关码头'], toEn: ['Baima River', 'Xishuiguan Pier'], attr: 'fzriver', verified: false }] },
   // 西洋 A：东西河边（黎明湖码头，游船 A 线）；出口号示意（verified:false）
   fzxiy: { n: 'A', x: 10, line: 2, road: '', to: ['东西河', '黎明湖码头'], toEn: ['Dongxi River', 'Liming Lake Pier'], attr: 'fzriver', verified: false },
+  // 内河 1B（东线，另一片河网 tools/fzriver/gen_e.py）：出口号来自福州新闻网 2025-04「乘地铁游福州」（斗门 C 温泉公园、光明港 D 光明港码头），东门 C 按计划示意；都未按站内导向图核实（verified:false）
+  fzdm: { n: 'C', x: 10, line: 1, road: '', to: ['晋安河', '温泉公园码头'], toEn: ['Jin\'an River', 'Wenquan Park Pier'], attr: 'fzriver', verified: false },
+  fzdmn: { n: 'C', x: 10, line: 4, road: '', to: ['晋安河', '东门停靠点（内河游船）'], toEn: ['Jin\'an River', 'Dongmen Boat Stop'], attr: 'fzriver', verified: false },
+  fzgmg: { n: 'D', x: 10, line: 4, road: '', to: ['光明港', '光明港码头'], toEn: ['Guangminggang River', 'Guangminggang Pier'], attr: 'fzriver', verified: false },
 });
 // 福州火车南站（fzfzn）不在这里：它的站厅就是国铁出站层，出口通道 A / B / F / D2 在 FzsStation 里（FZS_EXITS），不走街区
 
@@ -60,6 +64,9 @@ export const FZ_EXIT_TABLE = {
   fzdd: [['C', '上下杭（约850米）']],
   fzxm: [['B', '西湖公园（约800米）、福建博物院'], ['C', '杨桥路、白马河、西水关码头（内河游船）']],
   fzxiy: [['A', '东西河、黎明湖码头（内河游船）']],
+  fzdm: [['C', '晋安河、温泉公园码头（内河游船）']],
+  fzdmn: [['C', '晋安河、东门停靠点（内河游船）']],
+  fzgmg: [['D', '光明港、光明港码头（内河游船）']],
   fzst: [['A', '上藤路万春巷路口东侧'], ['B', '烟台山（约600米）'], ['C', '六一南路、汇达广场']],
   fzgs: [['A', '鼓山风景区（福马路东侧）'], ['B', '鼓山路口、鼓山公交总站'], ['C', '福马路东侧、省革命历史纪念馆'], ['D', '福马路东侧、廨院公交总站']],
   fzdl: [['A', '海峡奥体中心'], ['B', '海峡奥体中心'], ['C', '海峡奥体中心']],

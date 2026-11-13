@@ -8,7 +8,7 @@
  */
 import { Kit } from '../world/kit.js';
 import { hex } from '../core/geo.js';
-import { WY, BOAT, STOPS, routePose, speedCap, ACC } from '../data/fz-river.js';
+import { WY, BOAT, STOPS, ROUTE, routePose, speedCap, ACC } from '../data/fz-river.js';
 import { say } from '../audio/announcements.js';
 import { fzBoatDepartSegs, fzBoatArriveSegs } from '../data/phrases.js';
 
@@ -26,7 +26,9 @@ export class FzBoat {
     this.kit.finish(false);
     this.kit.meshes.forEach(m => { m.isPickable = false; m.receiveShadows = true; });
     // 起始：停在离出来的出口亭最近的码头
-    const start = S.K.code === 'fzxiy' ? STOPS.length - 1 : 1;
+    // 1A：西洋 A 出来停黎明湖（终点）、西门 C 出来停西水关；1B：停在出口亭登记的码头（K.pier）
+    const kp = S.K.pier ? STOPS.findIndex(st => st.id === S.K.pier) : -1;
+    const start = kp >= 0 ? kp : S.K.code === 'fzxiy' ? STOPS.length - 1 : 1;
     this.i = start; this.s = STOPS[start].s; this.v = 0; this.dir = start === STOPS.length - 1 ? -1 : 1; this.phase = 'dock'; this.target = start; this.dwell = 0; this.t = 0;
     this.faceK = this.dir; this.log = []; this.stats = { departs: 0, arrives: 0, calls: 0, maxStep: 0, maxYawStep: 0 };
     this.place(0);
@@ -118,7 +120,7 @@ export class FzBoat {
   depart(target, withPassenger) {
     this.target = target; this.dir = Math.sign(STOPS[target].s - this.s) || this.dir; this.phase = 'go'; this.dwell = 0; this.announcedNear = false; this.setPlank(false);
     this.stats.departs++; this.log.push({ t: +this.t.toFixed(1), ev: 'depart', from: STOPS[this.i].id, to: STOPS[target].id, pax: withPassenger });
-    if (withPassenger) { const term = this.dir > 0 ? STOPS[STOPS.length - 1].id : STOPS[0].id; say(fzBoatDepartSegs(term, STOPS[target].id), { key: 'boat', interrupt: true }); }
+    if (withPassenger) { const term = this.dir > 0 ? STOPS[STOPS.length - 1].id : STOPS[0].id; say(fzBoatDepartSegs(term, STOPS[target].id, ROUTE.id), { key: 'boat', interrupt: true }); }
   }
   arrive(pl) {
     this.i = this.target; this.s = STOPS[this.i].s; this.v = 0; this.phase = 'dock'; this.dwell = 0; this.setPlank(true);
