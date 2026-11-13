@@ -84,7 +84,7 @@ export class FzBoat {
     this.plankVis = this.planks.map(m => { const v = B.MeshBuilder.CreateBox('fzBoatPlank', { width: 0.62, height: 0.05, depth: BOAT.door[1] - BOAT.door[0] - 0.1 }, this.scene); v.parent = k.root; v.position.copyFrom(m.position); v.position.y = D - 0.02; v.material = this.kit.meshes[0] ? this.kit.meshes[0].material : null; v.isPickable = false; v.setEnabled(false); return v; });
     // 座位（世界坐标，每帧更新）
     this.seats = [];
-    for (const z of BOAT.rows) for (const sx of [-1, 1]) this.seats.push({ world: true, boat: this, follow: true, id: 'boat:' + z + ':' + sx, lz: z, lx: sx * BOAT.seatX, free: true, wx: 0, wy: 0, wz: 0, face: 0, eye: 1.0, camT: 0.75, camDist: 1.7, pitch: 0.1, pitchFirst: 0.1, stand: { x: 0, z: 0 } });
+    for (const z of BOAT.rows) for (const sx of [-1, 1]) this.seats.push({ world: true, boat: this, follow: true, id: 'boat:' + z + ':' + sx, lz: z, lx: sx * BOAT.seatX, free: true, wx: 0, wy: 0, wz: 0, face: 0, eye: 1.0, camT: 0.75, camDist: 1.7, pitch: 0.14, pitchFirst: 0.14, stand: { x: 0, z: 0 } });
   }
   /* ---------- 位置 ---------- */
   pose() { return routePose(this.s); }

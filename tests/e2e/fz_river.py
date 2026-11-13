@@ -87,7 +87,7 @@ async def seated_shots(pg, tag):
     out = {}
     for v in ('first', 'third'):
         if await pg.evaluate("__game.player.view") != v: await pg.evaluate("__game.toggleView()")
-        pf0 = 0.1; await pg.evaluate(f"__game.player.pitch = {pf0}"); await asyncio.sleep(0.8)
+        pf0 = 0.14; await pg.evaluate(f"__game.player.pitch = {pf0}"); await asyncio.sleep(0.8)
         name = f'boat_seated_{v}_{tag}'; await shot(pg, name)
         if OUT: out[v] = canopy_frac(OUT + name + '.jpg'); log('canopy', name, out[v])
     if await pg.evaluate("__game.player.view") != 'third': await pg.evaluate("__game.toggleView()")
@@ -284,7 +284,7 @@ async def main():
         ok('canopy:<=20%', all(v <= 0.20 for v in list(R['canopy'].values()) + list(R['canopyXihu'].values())) if OUT else True, [R['canopy'], R['canopyXihu']])
         # 终点站停着等：20 秒（游戏时间）后船还在西湖、「起身」还在
         g0 = await pg.evaluate('window.__gt'); await wait(pg, f'window.__gt - {g0} > 20', 120)
-        b = await boat(pg); ok('xihu:holdsAtTerminal', b['phase'] == 'dock' and b['at'] == 'xihu' and b['holdTerm'], b)
+        bh = await boat(pg); ok('xihu:holdsAtTerminal', bh['phase'] == 'dock' and bh['at'] == 'xihu' and bh['holdTerm'], bh)
         if OUT: await shot(pg, 'plate_on_boat_xihu')
         await alight(pg, D, 'xihu', 'xihuEnd')
         await asyncio.sleep(0.8); ok('plate:shore:xihu', await plate(pg) == '福州内河', await plate(pg))

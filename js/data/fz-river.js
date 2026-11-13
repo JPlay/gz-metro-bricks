@@ -10,7 +10,7 @@ import { FZR } from './fz-river-data.js';
 export { FZR };
 export const WY = FZR.WY;
 /** 船（米，船体局部：+z 船头、+x 右舷）。双头船：两头一样，掉头不用转身；长凳没有靠背，乘客总是朝行进方向坐 */
-export const BOAT = { len: 8, beam: 2.4, deck: 0.45, gunwale: 1.0, roofUnder: 2.17, top: 2.29, canopyHalfLen: 2.75, canopyHalfW: 1.27,
+export const BOAT = { len: 8, beam: 2.4, deck: 0.45, gunwale: 1.0, roofUnder: 2.17, top: 2.29, canopyHalfLen: 2.6, canopyHalfW: 1.27,
   rows: [2.15, 1.3, -1.3, -2.15], seatX: 0.72, door: [-0.6, 0.6] };
 export const CLEAR_MIN = 0.25;          // 篷顶与桥底最小净空
 export const FLAT_SOFFIT = -0.4;        // 平桥 / 路桥梁底

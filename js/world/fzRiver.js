@@ -212,6 +212,10 @@ export class FzRiverStreet extends XmStreet {
     for (const p of PIERS) {
       const F = this.pierFrame(p);
       this.stairAlong(F, -10, -3.6, 0, 1.5, 0, top, 14, { rail: true });
+      // 湖边码头（西湖）：湖岸线是弯的，台阶靠岸一侧和岸地之间空着一条 0.7 m 宽的水缝 —— 下船走上台阶顶，一脚踩进缝里掉下去、回不到岸上（小美 1A 验收 ①）。
+      // 补一道贴着台阶的花岗岩岸墙（顶面和岸地齐平、带碰撞），台阶顶直接接上岸地。河边码头台阶本来就贴着岸地，不加。
+      { const [qx, qz] = F.P(-10, -0.3); if (!isLand(qx, qz)) { const [cx, cz] = F.P(-7.3, -0.4), y0 = WY - 0.4, y1 = -0.004;
+        GR.box(cx, (y0 + y1) / 2, cz, 0.8, y1 - y0, 7.4, hex('#9A9385'), F.ryT, 0, 0, 1, NO); k.col(cx, (y0 + y1) / 2, cz, 0.8, y1 - y0, 7.4, { ry: F.ryT, name: 'colQuay' }); } }
       // 浮码头：木面 + 深色浮箱
       const [cx, cz] = F.P(2.4, 1.35);
       P.box(cx, top - 0.06, cz, 2.7, 0.12, 12, hex('#9C7A55'), F.ryT, 0, 0, 1, NO);
