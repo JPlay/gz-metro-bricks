@@ -385,15 +385,15 @@ async def under_walk(pg, D, uid, tag):
     """桥下步道：岸上 → 栏杆缺口下台阶 → 桥底平台走过去 → 另一头台阶上岸（直线真走）"""
     U = [u for u in D['unders'] if u['id'] == uid][0]; f, r = U['flat'], U['run']; e = f + r - 1.05
     P = lambda a, b: W(pg, *pf(U, a, b))
-    a0 = await P(-e, -1.8); a1 = await P(e, -1.8)
+    a0 = await P(-e, -1.8); a1 = await P(e, -1.8); a2 = await P(e, -(U['fill'][1] or 0) - 1.6)   # a2：越过阶顶填块和岸墙线、真到岸上（r4：阶顶被栏杆封住时 a1 的 1.2 m 容差会误判通过）
     reached = await go(pg, *a0, 'to under ' + uid)
     await jreset(pg)
     await legs(pg, [await P(-e, 0.8), await P(-f - 0.4, 0.8)], False); s_bot = await st(pg)
     await legs(pg, [await P(0, 0.8)], False); s_mid = await st(pg)
     if OUT: await look(pg, *(await P(f + r, 0.8)), 0.02); await shot(pg, f'under_walkway_{uid}_{tag}')
-    await legs(pg, [await P(f + 0.4, 0.8), await P(e, 0.8), a1], False); s_end = await st(pg); j = await jget(pg)
+    await legs(pg, [await P(f + 0.4, 0.8), await P(e, 0.8), a1, a2], False); s_end = await st(pg); j = await jget(pg)
     R.setdefault('unders', {})[uid] = {'name': U['name'], 'bot': s_bot['pos'], 'mid': s_mid['pos'], 'end': s_end['pos'], 'jump': j['max']}
-    ok(f'under:{uid}:{U["name"]}:walkThrough', reached and abs(s_mid['pos'][1] - U['y']) < 0.35 and abs(s_end['pos'][1]) < 0.4 and await near(pg, *a1, 1.2) and j['max'] < TELEPORT, R['unders'][uid])
+    ok(f'under:{uid}:{U["name"]}:walkThrough', reached and abs(s_mid['pos'][1] - U['y']) < 0.35 and abs(s_end['pos'][1]) < 0.4 and await near(pg, *a2, 0.5) and j['max'] < TELEPORT, R['unders'][uid])
     if OUT and uid == 'udx2':
         await look(pg, *(await P(0, 1.2)), -0.35); await shot(pg, f'under_walkway_{uid}_from_bank')
 
