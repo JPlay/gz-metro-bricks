@@ -94,6 +94,7 @@ export class Gfx {
     R.look = { ...LOOKS.orig, ...(this.up ? { hemiI: L.hemiI, hemiD: L.hemiD, hemiG: L.hemiG, sunI: L.sunI, sunD: L.sunD, sunDir: L.sunDir } : {}), envI: env ? L.envI : LOOKS.orig.envI };
     // 环境贴图：户外的立刻要；站内的按需（第一次进站内时 Render.preloadIndoor 才取）
     R.envOutO = env ? this.envTex(L.env) : null;
+    R.envPending = false;
     R.envInUrlO = env ? 'vendor/env/env_indoor.env' : null; R.envInO = env && this.envCache['vendor/env/env_indoor.env'] || null;
     R.envInGet = env ? () => (R.envInO = this.envTex('vendor/env/env_indoor.env')) : null;
     R.setSky(env ? L.sky : 'assets/tex/sky.jpg');

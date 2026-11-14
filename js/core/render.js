@@ -7,6 +7,7 @@
  *   档位 3：0.8x、同上但不用反射探针（只用环境贴图）
  */
 import { mats, setNormalMaps, tex } from './mats.js';
+import { CONFIG } from './config.js';
 const B = window.BABYLON;
 const lerp = (a, b, t) => a + (b - a) * t;
 
@@ -14,8 +15,8 @@ export class Render {
   constructor(engine, scene, cam) {
     this.engine = engine; this.scene = scene; this.cam = cam; this.tier = -1; this.indoor = 0; this.indoorTarget = 0; this.probes = [];
     scene.clearColor = new B.Color4(0.62, 0.78, 0.92, 1);
-    const env = this.env = B.CubeTexture.CreateFromPrefilteredData('vendor/env/environmentSpecular.env', scene);
-    env.name = 'env'; scene.environmentTexture = env; scene.environmentIntensity = 1.0;
+    // 原版环境贴图：升级画质（默认）用 env_day 代替，只有 ?mode=orig / ?no-env 才下载
+    this._env = null; this.envPending = !CONFIG.gfxOrig; if (CONFIG.gfxOrig) scene.environmentTexture = this.env; scene.environmentIntensity = 1.0;
     // 室内影棚环境延迟到第一次进站再加载，缩短首屏
     this.envIn = null; this._envInUrl = 'vendor/env/studio.env';
     const ip = scene.imageProcessingConfiguration;
@@ -35,12 +36,12 @@ export class Render {
     const sky = this.sky = B.MeshBuilder.CreateSphere('sky', { diameter: 800, segments: 16, sideOrientation: B.Mesh.BACKSIDE }, scene);
     const sm = new B.StandardMaterial('skyMat', scene); sm.disableLighting = true; sm.backFaceCulling = false; sm.fogEnabled = false;
     // 天空贴图上边 = 天顶、中线 = 地平线；FIXED_EQUIRECTANGULAR 下要 invertY=false 才是正的（否则云跑到地平线以下、看到的只有下半张的浅色）
-    const st = new B.Texture('assets/tex/sky.jpg', scene, false, false, B.Texture.TRILINEAR_SAMPLINGMODE); st.coordinatesMode = B.Texture.FIXED_EQUIRECTANGULAR_MODE; sm.emissiveTexture = st; sm.diffuseColor = new B.Color3(0, 0, 0); sm.specularColor = new B.Color3(0, 0, 0);
-    sm.emissiveColor = new B.Color3(0, 0, 0); st.level = 1.0; // emissiveColor 与贴图相加，必须为黑
+    sm.diffuseColor = new B.Color3(0, 0, 0); sm.specularColor = new B.Color3(0, 0, 0);
+    sm.emissiveColor = new B.Color3(0, 0, 0); // emissiveColor 与贴图相加，必须为黑
     sky.material = sm; sky.infiniteDistance = true; sky.isPickable = false; sky.applyFog = false;
     sky.renderingGroupId = 0;
     this.pipeline = null;
-    this.skyTex = { 'assets/tex/sky.jpg': st }; this.skyMat = sm;
+    this.skyTex = {}; this.skyMat = sm; if (CONFIG.gfxOrig) this.setSky('assets/tex/sky.jpg');   // 升级画质由 gfx.js 设 sky_day
     // 画质升级 Demo（js/core/gfx.js）可以覆盖的部分：灯光预设 look、户外 / 站内环境贴图、户外薄雾、关后期
     this.look = null; this.envOutO = null; this.envInO = null; this.envInGet = null; this.haze = null; this.tunnel = false; this.noPost = false;
     this.applyZone(0, true);
@@ -64,11 +65,13 @@ export class Render {
       s.environmentIntensity = lerp(L.envI[0], L.envI[1], f);
     }
     if (f > 0.5) this.preloadIndoor();
-    const eOut = this.envOutO || this.env, eIn = this.envInO || this.envIn;
-    const want = f > 0.5 && eIn ? eIn : eOut; if (s.environmentTexture !== want) s.environmentTexture = want;
+    // 启动时（gfx.js 还没接管）升级画质不先下载原版环境贴图
+    const eOut = this.envOutO || (this.envPending ? null : this.env), eIn = this.envInO || this.envIn;
+    const want = f > 0.5 && eIn ? eIn : eOut; if (want && s.environmentTexture !== want) s.environmentTexture = want;
     this.sky.setEnabled(f < 0.98);
     this.updateFog();
   }
+  get env() { if (!this._env) { this._env = B.CubeTexture.CreateFromPrefilteredData('vendor/env/environmentSpecular.env', this.scene); this._env.name = 'env'; } return this._env; }
   /** 天空贴图切换（原版 sky.jpg / 升级 sky_day / sky_dusk；缓存，切换瞬时） */
   setSky(url) {
     let t = this.skyTex[url];
