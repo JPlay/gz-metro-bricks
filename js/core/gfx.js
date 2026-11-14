@@ -105,7 +105,7 @@ export class Gfx {
     R.setNoPost(this.want('aa'));
     const wasOn = GS.on, wasW = GS.water.on, wasLight = this._light;
     GS.on = this.up; this._light = s.light;
-    if (this.up) { GS.sunDir.copyFrom(L.sunDir); GS.sunCol.copyFrom(L.leafCol); GS.sky.copyFrom(L.rimCol); GS.shadowK = s.light === 'dusk' ? 0.8 : 0.88; GS.rim = s.light === 'dusk' ? 0.07 : 0.05; GS.leaf = L.leaf ?? 1; }
+    if (this.up) { GS.sunDir.copyFrom(L.sunDir); GS.sunCol.copyFrom(L.leafCol); GS.sky.copyFrom(L.rimCol); GS.shadowK = s.light === 'dusk' ? 0.68 : 0.72; /* 0.88 时福州 / 厦门街面大块影子发深蓝发黑，留点天光 */ GS.rim = s.light === 'dusk' ? 0.07 : 0.05; GS.leaf = L.leaf ?? 1; }
     GS.water.on = this.want('water');
     this.applyTierParams();
     if (wasLight && wasLight !== s.light) this.dropShadow();
