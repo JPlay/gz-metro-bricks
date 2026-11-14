@@ -171,7 +171,7 @@ ok('useNet(a) restores 1A', R.NET === 'a' && R.STOPS.map(s => s.id).join() === '
   R.useNet('e');
   const ann = R.STOPS.map(st => fzBoatArriveSegs(st.id, false, 'B').map(x => x.en || x.text || '').join(' ')).join(' | ');
   ok('announcements use the same English pier names as the signs', R.STOPS.every(st => JSON.stringify(fzBoatArriveSegs(st.id, false, 'B')).includes(st.pier.en)), ann.slice(0, 300));
-  ok('pier stair head: 1 m granite landing + outer rail, solid quay under the stair side, fall-through safety net back to shore', /colStairHead'/.test(fsrc) && /colStairHeadRail/.test(fsrc) && /colQuay/.test(fsrc) && /pl\.vy < -3 && p\.y < WY - 1 && p\.y > -40\) \{ const sh = shoreFor/.test(fsrc));
+  ok('pier stair head: 1 m granite landing + outer rail, solid quay under the stair side, fall-through safety net back to shore', /colStairHead'/.test(fsrc) && /colStairHeadRail/.test(fsrc) && /colQuay/.test(fsrc) && /pl\.vy < -3 && p\.y < levelAt\(w\.x, w\.z\) - 1 && p\.y > -40\) \{ const sh = shoreFor/.test(fsrc));
   // 台阶口岸墙缺口：每个码头 a −10.2 … −8.3（|b| ≤ 1）里没有栏杆段（福新问渡原来整段是栏杆，台阶顶上不了岸）
   { const bad = [];
     for (const P of R.PIERS) { const loc = (x, z) => { const dx = x - P.x, dz = z - P.z; return [dx * P.t[0] + dz * P.t[1], dx * P.n[0] + dz * P.n[1]]; };

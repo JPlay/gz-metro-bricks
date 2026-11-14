@@ -245,73 +245,70 @@ export function willow(P, x, z, s = 1, kd = 0, y0 = 0) {
   for (let i = 0; i < 9; i++) { const a = i / 9 * TAU + kd, r = 2.2 * s, h = (3.6 + (i % 3) * 0.6) * s;
     P.cyl(x + lean + Math.cos(a) * r, y0 + 5.0 * s - h / 2, z + Math.sin(a) * r, 0.25 * s, h, hex(G[(i + kd + 1) % 3]), 5, 0, 0, 0, 1.5 * s); }
 }
-function xihu(S) {
-  const k = S.kit, P = k.solid, A = S.atlas, GR = k.g('granite'), WA = k.g('paint@sea');
-  front(S, '湖头街');
-  // 公园大门：三间牌楼（红柱、绿琉璃瓦），中间写“西湖公园”
+
+/* ---------- 2A：西门 B → 西湖公园并进内河场景（fzRiver.js 调用；局部坐标原点 = 西门 B 出口亭，x 东 z 北，不转向）----------
+ * 牌楼 / 观湖亭 / 柳堤 / 开化寺沿用老街区 xihu() 的造型和尺寸（小美：样子不变），只是摆到真实湖岸上：
+ * 湖面高度 o.WY（内河湖面），岸线 o.shore(x) → 该 x 处湖岸 z（局部）；观湖亭栈桥在 o.bwX；柳堤 / 开化寺放到远处湖面（只看）。 */
+export function xihuPark(S, o) {
+  const k = S.kit, P = k.solid, A = S.atlas, GR = k.g('granite'), WY = o.WY, X0 = o.x0, X1 = o.x1;
+  // 牌楼（同老街区）：出口亭正北 14 m；两边各一小段园墙（不拦河边步道）
   { const z = 14, gy = 7;
     for (const x of [-6.5, -2.6, 2.6, 6.5]) { P.cyl(x, (Math.abs(x) > 4 ? 5.4 : gy) / 2, z, 0.8, Math.abs(x) > 4 ? 5.4 : gy, hex('#B02A22'), 8); k.colSlab(x - 0.45, x + 0.45, 0, gy, z - 0.45, z + 0.45); }
     P.slab(-3, 3, gy - 1.5, gy - 0.2, z - 0.3, z + 0.3, hex('#B02A22'), NO);
     roof(P, 0, z, 6.4, 1.6, gy, 1.6, hex('#2F7D6D'), { ovh: 0.6, curl: 0.5 }); roof(P, -4.6, z, 4.4, 1.3, 5.4, 1.1, hex('#2F7D6D'), { ovh: 0.4 }); roof(P, 4.6, z, 4.4, 1.3, 5.4, 1.1, hex('#2F7D6D'), { ovh: 0.4 });
     const uv = A.draw(5.4, 1.1, textPaint(['西湖公园'], { bg: '#1F3B2E', fg: '#E9C46A' }), 60); A.quad(0, gy - 0.85, z - 0.32, 5.4, 1.1, 0, uv); A.quad(0, gy - 0.85, z + 0.32, 5.4, 1.1, Math.PI, uv);
-    for (const [a, b] of [[-60, -7.2], [7.2, 60]]) { P.slab(a, b, 0, 2.4, z - 0.3, z + 0.3, hex('#E9E3D6'), NO); P.slab(a, b, 2.4, 2.7, z - 0.5, z + 0.5, hex('#2F7D6D'), NO); k.colSlab(a, b, 0, 2.6, z - 0.3, z + 0.3); } }
+    for (const [a, b] of [[-18, -7.2], [7.2, 18]]) { P.slab(a, b, 0, 2.4, z - 0.3, z + 0.3, hex('#E9E3D6'), NO); P.slab(a, b, 2.4, 2.7, z - 0.5, z + 0.5, hex('#2F7D6D'), NO); k.colSlab(a, b, 0, 2.6, z - 0.3, z + 0.3); } }
   stone(S, 11, 8, 4.8, 1.5, '西湖公园', 'West Lake Park', { bg: '#7E786C' });
-  // 园路 + 草地（到湖岸 z 47.6）
-  P.slab(-160, 160, 0.02, 0.06, 15, 47.6, hex('#79A85A'), NO);
-  GR.slab(-3, 3, 0.061, 0.08, 15, 47.6, hex('#C9C3B6'), NO);
-  GR.slab(-160, 160, 0.061, 0.08, 43.2, 46.4, hex('#C9C3B6'), NO);   // 沿湖步道
-  // 湖：地面挖开（z 47.6 起），水面低 0.45 米；湖岸条石 + 很矮的石沿（看得见湖；1.2 米高的碰撞墙看不见，孩子掉不下去）
-  const WY = -0.45, Z0 = 47.6;
-  WA.slab(-160, 160, WY - 0.05, WY, Z0, 200, hex('#4F93A6'), NO);
-  k.colSlab(-160, 160, WY, WY + 0.08, Z0, 200);   // 湖面托一层，掉下去站在水面上
-  for (let i = 0; i < 30; i++) { const x = -150 + i * 10.3 + (i % 3) * 3, z = 54 + (i * 37) % 130; WA.slab(x, x + 6 + (i % 4), WY + 0.002, WY + 0.006, z, z + 0.35, hex('#B4DCE3'), NO); }
-  GR.slab(-160, 160, WY - 0.2, 0.06, Z0, Z0 + 0.5, hex('#9A9385'), NO);
-  for (const [a, b] of [[-160, -1.7], [1.7, 160]]) { GR.slab(a, b, 0.06, 0.4, Z0 - 0.1, Z0 + 0.4, hex('#C6BFB1'), NO); k.colSlab(a, b, 0, 1.2, Z0 - 0.1, Z0 + 0.4); }
-  // 观湖亭：立在湖面上（石墩托着的平台），一条窄木栈桥从岸边伸过去
-  const BZ0 = Z0, BZ1 = 58, PZ = 63.5, DY = 0.12, wood = hex('#8A6440');
-  P.slab(-1.6, 1.6, DY - 0.1, DY, BZ0, BZ1, wood, NO); k.colSlab(-1.6, 1.6, -0.6, DY - 0.02, BZ0, BZ1);
-  for (let z = BZ0 + 1.6; z < BZ1; z += 2.6) for (const x of [-1.3, 1.3]) GR.slab(x - 0.2, x + 0.2, WY - 0.1, DY - 0.1, z - 0.2, z + 0.2, hex('#8C8577'), NO);
-  for (const x of [-1.55, 1.55]) { P.slab(x - 0.06, x + 0.06, DY, DY + 0.75, BZ0 + 0.4, BZ1, hex('#B02A22'), NO); k.colSlab(x - 0.12, x + 0.12, 0, 1.2, BZ0 + 0.4, BZ1);
-    for (let z = BZ0 + 0.5; z <= BZ1; z += 1.5) P.slab(x - 0.08, x + 0.08, DY, DY + 0.8, z - 0.08, z + 0.08, hex('#8E2A22'), NO); }
-  GR.slab(-5, 5, DY - 0.3, DY, BZ1, PZ + 5, hex('#BDB6A8'), NO); k.colSlab(-5, 5, -0.6, DY - 0.02, BZ1, PZ + 5);
-  for (const [x, z] of [[-4.4, BZ1 + 0.6], [4.4, BZ1 + 0.6], [-4.4, PZ + 4.4], [4.4, PZ + 4.4]]) GR.slab(x - 0.5, x + 0.5, WY - 0.1, DY - 0.3, z - 0.5, z + 0.5, hex('#8C8577'), NO);
-  for (const [x0, x1, z0, z1] of [[-5, -1.6, BZ1, BZ1 + 0.2], [1.6, 5, BZ1, BZ1 + 0.2], [-5, -4.8, BZ1, PZ + 5], [4.8, 5, BZ1, PZ + 5], [-5, 5, PZ + 4.8, PZ + 5]]) { P.slab(x0, x1, DY, DY + 0.5, z0, z1, hex('#B02A22'), NO); k.colSlab(x0, x1, 0, 1.2, z0, z1); }
-  { const cx = 0, cz = PZ;   // 亭子：四根红柱 + 绿瓦攒尖顶
+  // 草地：牌楼往北一直铺到湖岸（盖住原来的白地），4 m 一条，每条铺到岸线前 1.2 m；中间一条园路到栈桥
+  for (let x = X0; x < X1 - 0.01; x += 4) { const xb = Math.min(X1, x + 4), zs = Math.min(o.shore(x), o.shore(xb), o.z1) - 1.2; if (zs > 15.5) P.slab(x, xb, 0.02, 0.06, 15, zs, hex('#79A85A'), NO); }
+  GR.slab(-3, 3, 0.061, 0.08, 15, o.shore(0) - 1.2, hex('#C9C3B6'), NO);
+  { const zb = o.shore(o.bwX); GR.slab(Math.min(-3, o.bwX - 1.6), Math.max(3, o.bwX + 1.6), 0.061, 0.08, zb - 4.5, zb - 0.6, hex('#C9C3B6'), NO); }
+  // 沿湖步道：沿着岸线一圈浅色石板（每 4 m 一块，斜着贴岸）
+  for (let x = X0; x < Math.min(X1, o.lakeX1) - 0.01; x += 4) { const xb = x + 4, za = o.shore(x) - 2.2, zb2 = o.shore(xb) - 2.2, L = Math.hypot(4, zb2 - za); GR.box(x + 2, 0.07, (za + zb2) / 2, L + 0.3, 0.02, 2.6, hex('#C9C3B6'), Math.atan2(-(zb2 - za), 4) + 0, 0, 0, 1, NO); }
+  // 观湖亭 + 木栈桥（同老街区尺寸：栈桥 10.4 m、平台 10×10.9）；栈桥从岸墙缺口伸出去
+  const BX = o.bwX, BZ0 = o.shore(BX) - 0.6, BZ1 = BZ0 + 10.4, PZ = BZ1 + 5.5, DY = 0.12, wood = hex('#8A6440');
+  P.slab(BX - 1.6, BX + 1.6, DY - 0.1, DY, BZ0, BZ1, wood, NO); k.colSlab(BX - 1.6, BX + 1.6, -0.6, DY - 0.02, BZ0, BZ1);
+  for (let z = BZ0 + 1.6; z < BZ1; z += 2.6) for (const x of [-1.3, 1.3]) GR.slab(BX + x - 0.2, BX + x + 0.2, WY - 0.1, DY - 0.1, z - 0.2, z + 0.2, hex('#8C8577'), NO);
+  for (const x of [-1.55, 1.55]) { P.slab(BX + x - 0.06, BX + x + 0.06, DY, DY + 0.75, BZ0 + 0.4, BZ1, hex('#B02A22'), NO); k.colSlab(BX + x - 0.12, BX + x + 0.12, 0, 1.2, BZ0 + 0.4, BZ1);
+    for (let z = BZ0 + 0.5; z <= BZ1; z += 1.5) P.slab(BX + x - 0.08, BX + x + 0.08, DY, DY + 0.8, z - 0.08, z + 0.08, hex('#8E2A22'), NO); }
+  GR.slab(BX - 5, BX + 5, DY - 0.3, DY, BZ1, PZ + 5, hex('#BDB6A8'), NO); k.colSlab(BX - 5, BX + 5, -0.6, DY - 0.02, BZ1, PZ + 5);
+  for (const [x, z] of [[-4.4, BZ1 + 0.6], [4.4, BZ1 + 0.6], [-4.4, PZ + 4.4], [4.4, PZ + 4.4]]) GR.slab(BX + x - 0.5, BX + x + 0.5, WY - 0.1, DY - 0.3, z - 0.5, z + 0.5, hex('#8C8577'), NO);
+  for (const [x0, x1, z0, z1] of [[-5, -1.6, BZ1, BZ1 + 0.2], [1.6, 5, BZ1, BZ1 + 0.2], [-5, -4.8, BZ1, PZ + 5], [4.8, 5, BZ1, PZ + 5], [-5, 5, PZ + 4.8, PZ + 5]]) { P.slab(BX + x0, BX + x1, DY, DY + 0.5, z0, z1, hex('#B02A22'), NO); k.colSlab(BX + x0, BX + x1, 0, 1.2, z0, z1); }
+  { const cx = BX, cz = PZ;
     for (const [x, z] of [[-3.2, -3.2], [3.2, -3.2], [3.2, 3.2], [-3.2, 3.2]]) { P.cyl(cx + x, DY + 1.9, cz + z, 0.42, 3.8, hex('#B02A22'), 8); k.colSlab(cx + x - 0.25, cx + x + 0.25, 0, 3.8, cz + z - 0.25, cz + z + 0.25); }
     P.slab(cx - 3.6, cx + 3.6, DY + 3.7, DY + 4.0, cz - 3.6, cz + 3.6, hex('#B02A22'), NO);
     P.cyl(cx, DY + 5.1, cz, 10, 2.2, hex('#2F7D6D'), 4, Math.PI / 4, 0, 0, 0.6); P.cyl(cx, DY + 6.6, cz, 0.6, 1, hex('#C9A23A'), 6, 0, 0, 0, 0.1);
-    const uv = A.draw(2.8, 0.6, textPaint(['观湖亭'], { bg: '#1F3B2E', fg: '#E9C46A' }), 60); A.quad(cx, DY + 3.2, cz - 3.62, 2.8, 0.6, 0, uv); A.quad(cx, DY + 3.2, cz + 3.62, 2.8, 0.6, Math.PI, uv); for (const d of [-1, 1]) P.box(cx, DY + 3.2, cz + d * 3.56, 2.9, 0.7, 0.06, hex('#1F3B2E'), 0, 0, 0, 1, NO); }
-  // 柳堤：远处一条从右岸伸到湖心岛的长堤（绿堤 + 一排垂柳），堤上一座白石拱桥
-  const CZ = 124, BX = 34, BH = 12, CX0 = -16;   // 堤中线 z、拱桥中心 x、半长
-  for (const [a, b] of [[CX0, BX - BH], [BX + BH, 160]]) { P.slab(a, b, WY, 0.35, CZ - 3, CZ + 3, hex('#7DAA55'), NO); GR.slab(a, b, WY, 0.1, CZ - 3.2, CZ - 2.9, hex('#A39C8E'), NO); }
-  for (let x = CX0 + 4; x < 160; x += 11) if (Math.abs(x - BX) > BH + 3) willow(P, x, CZ + (((x - CX0) / 11) % 2 ? 1.2 : -1.2), 0.95, ((x - CX0) / 11) | 0, 0.3);
-  P.slab(CX0 - 3, CX0 + 3, WY, 0.35, CZ, CZ + 13, hex('#7DAA55'), NO);   // 堤头接上湖心岛
+    const uv = A.draw(2.8, 0.6, textPaint(['观湖亭'], { bg: '#1F3B2E', fg: '#E9C46A' }), 60); A.quad(cx, DY + 3.2, cz - 3.62, 2.8, 0.6, 0, uv); A.quad(cx, DY + 3.2, cz + 3.62, 2.8, 0.6, Math.PI, uv);
+    for (const sz of [-1, 1]) P.slab(cx - 1.5, cx + 1.5, DY + 2.86, DY + 3.54, cz + sz * 3.6 - (sz > 0 ? 0.06 : 0), cz + sz * 3.6 + (sz < 0 ? 0.06 : 0), hex('#1F3B2E'), NO); }   // 匾背板：亭里 / 背面看不到反字
+  // 柳堤 + 白石拱桥 + 湖心岛开化寺：同老街区造型，往北推到远处湖面（只看不走）
+  const CZ = o.cz, BRX = 34, BH = 12, CX0 = -16, CX1 = o.cx1;
+  for (const [a, b] of [[CX0, BRX - BH], [BRX + BH, CX1]]) { P.slab(a, b, WY, 0.35, CZ - 3, CZ + 3, hex('#7DAA55'), NO); GR.slab(a, b, WY, 0.1, CZ - 3.2, CZ - 2.9, hex('#A39C8E'), NO); }
+  for (let x = CX0 + 4; x < CX1; x += 11) if (Math.abs(x - BRX) > BH + 3) willow(P, x, CZ + (((x - CX0) / 11) % 2 ? 1.2 : -1.2), 0.95, ((x - CX0) / 11) | 0, 0.3);
+  P.slab(CX0 - 3, CX0 + 3, WY, 0.35, CZ, CZ + 13, hex('#7DAA55'), NO);
   { const n = 24, ar = 6.5;
-    for (let i = 0; i < n; i++) { const x0 = BX - BH + 2 * BH * i / n, x1 = BX - BH + 2 * BH * (i + 1) / n, xm = (x0 + x1) / 2, u = (xm - BX) / BH;
-      const top = 0.4 + 3.6 * (1 - u * u), d = Math.abs(xm - BX), und = d < ar ? WY + Math.sqrt(ar * ar - d * d) * 0.82 : WY;
+    for (let i = 0; i < n; i++) { const x0 = BRX - BH + 2 * BH * i / n, x1 = BRX - BH + 2 * BH * (i + 1) / n, xm = (x0 + x1) / 2, u = (xm - BRX) / BH;
+      const top = 0.4 + 3.6 * (1 - u * u), d = Math.abs(xm - BRX), und = d < ar ? WY + Math.sqrt(ar * ar - d * d) * 0.82 : WY;
       GR.slab(x0, x1, und, top, CZ - 2.4, CZ + 2.4, hex('#E3DED3'), NO);
       for (const z of [CZ - 2.3, CZ + 2.3]) GR.slab(x0, x1, top, top + 0.55, z - 0.12, z + 0.12, hex('#D2CCC0'), NO);
-      if (d < ar) GR.slab(x0, x1, und, und + 0.35, CZ - 2.5, CZ + 2.5, hex('#B9B2A4'), NO); }
-    WA.slab(BX - ar, BX + ar, WY + 0.003, WY + 0.008, CZ - 7.5, CZ - 2.6, hex('#E3DED3'), NO); }   // 拱桥倒影（示意）
-  // 湖心岛上的开化寺：岛 + 榕树 + 白墙灰瓦的殿（红柱、翘檐），在远处
-  P.ellipsoid(-38, WY, 150, 70, 5, 40, hex('#5E8F45'), 2);
-  { const cx = -38, cz = 150, y0 = 1.6;
+      if (d < ar) GR.slab(x0, x1, und, und + 0.35, CZ - 2.5, CZ + 2.5, hex('#B9B2A4'), NO); } }
+  const TZ = CZ + 26;
+  P.ellipsoid(-38, WY, TZ, 70, 5, 40, hex('#5E8F45'), 2);
+  { const cx = -38, cz = TZ, y0 = 1.6;
     P.slab(cx - 11, cx + 11, 0, y0, cz - 7, cz + 7, hex('#A39C8E'), NO);
     P.slab(cx - 9, cx + 9, y0, y0 + 5.4, cz - 4, cz + 4, hex('#EFEBE2'), NO);
     for (let x = -8; x <= 8; x += 3.2) P.cyl(cx + x, y0 + 2.7, cz - 4.6, 0.55, 5.4, hex('#9E2B22'), 6);
     roof(P, cx, cz, 18, 8, y0 + 5.4, 3.6, hex('#3A3F45'), { ovh: 1.4, curl: 0.9 });
     P.slab(cx - 6, cx + 6, y0, y0 + 4.4, cz + 9, cz + 15, hex('#EFEBE2'), NO); roof(P, cx, cz + 12, 12, 6, y0 + 4.4, 2.8, hex('#3A3F45'), { ovh: 1.0, curl: 0.8 });
     const uv = A.draw(3.6, 0.9, textPaint(['开化寺'], { bg: '#2E1F14', fg: '#E9C46A' }), 60); A.quad(cx, y0 + 4.5, cz - 4.05, 3.6, 0.9, 0, uv); }
-  banyan(P, -64, 146, 1.1, 1, 1.5); banyan(P, -12, 156, 1.0, 2, 1.5); willow(P, -20, 136, 1.0, 1, 1.0); willow(P, -58, 134, 1.0, 2, 1.0);
-  // 对岸一排榕树
-  for (let x = -140; x <= 140; x += 28) banyan(P, x, 192, 1.0, (x / 28 + 6) % 4 | 0);
-  // 湖岸垂柳（沿岸一排，栈桥两边留空）
-  for (const x of [-46, -35, -24, -15, -7, 7, 15, 24, 35, 46]) willow(P, x, 46.2, 1.0, (x + 50) % 3);
-  for (const [x, z, s, i] of [[-40, 30, 0.9, 3], [42, 30, 1.0, 1]]) banyan(P, x, z, s, i);
+  banyan(P, -64, TZ - 4, 1.1, 1, 1.5); banyan(P, -12, TZ + 6, 1.0, 2, 1.5); willow(P, -20, TZ - 14, 1.0, 1, 1.0); willow(P, -58, TZ - 16, 1.0, 2, 1.0);
+  // 湖岸垂柳（沿岸一排，栈桥两边留空）+ 草地上两棵榕树
+  for (let x = X0 + 3; x < Math.min(X1, o.lakeX1) - 2; x += 7) if (Math.abs(x - BX) > 4) willow(P, x, o.shore(x) - 3.8, 1.0, ((x - X0) / 7 | 0) % 3);
+  for (const [x, z, s, i] of [[-14, 30, 0.9, 3], [16, 32, 1.0, 1]]) banyan(P, x, z, s, i);
   // 游人：园路、湖边步道、栈桥、亭子里
-  [[-2, 30, 0, 1], [2, 22, Math.PI, 2], [-8, 44.5, 1.6, 3], [9, 45, -1.6, 4], [-18, 44, 1.5, 5], [20, 45, -1.5, 6], [0.6, 53, Math.PI, 7], [-1.5, 62, 0.3, 8], [2, 65, -2.5, 9], [-30, 45, 1.5, 10]]
-    .forEach(([x, z, r, j]) => lowPerson(P, x, z > Z0 ? DY : 0, z, r, j * 3 + 4, j % 4 === 0));
-  S.filler([[-100, -40, 40, 14, 22, '#CFC7BA'], [100, -40, 40, 14, 26, '#D8D0C3']]);
+  const zs = o.shore(BX);
+  [[-2, 30, 0, 1], [2, 22, Math.PI, 2], [-8, o.shore(-8) - 2.4, 1.6, 3], [12, o.shore(12) - 2.4, -1.6, 4], [BX + 0.6, BZ0 + 5, Math.PI, 7], [BX - 1.5, PZ - 1.5, 0.3, 8], [BX + 2, PZ + 1.5, -2.5, 9]]
+    .forEach(([x, z, r, j]) => lowPerson(P, x, z > zs ? DY : 0, z, r, j * 3 + 4, j % 4 === 0));
+  return { decks: [[BX - 1.6, BX + 1.6, BZ0, BZ1], [BX - 5, BX + 5, BZ1, PZ + 5]] };   // 栈桥 + 亭子平台（局部）：站在上面不算落水
 }
 
 /* ============== 第三批 ============== */
@@ -561,14 +558,13 @@ function aoti(S) {
 }
 
 /** 景点街区地面挖洞（下沉的河道 / 湖面）：XmStreet.ground() 用 */
-export const FZ_ATTR_HOLES = { fzdd: [[-160, 160, 44, 56]], fzxm: [[-160, 160, 47.6, 200]] };
-export const FZ_ATTR_BUILD = { fzdjk: sanfang, fznmd: yushan, fzdd: shangxiahang, fzxm: xihu, fzst: yantai, fzgs: gushan, fzdl: aoti, fznmd_B: wushan };
+export const FZ_ATTR_HOLES = { fzdd: [[-160, 160, 44, 56]] };   // 2A：fzxm 西湖公园并进内河（fzRiver.xihuPark），老街区退役
+export const FZ_ATTR_BUILD = { fzdjk: sanfang, fznmd: yushan, fzdd: shangxiahang, fzst: yantai, fzgs: gushan, fzdl: aoti, fznmd_B: wushan };
 /** 到达点（街区局部 x, z）+ 半径：走到这里算“到了景点” */
 export const FZ_ATTR_GOAL = {
   fzdjk: { x: 0, z: 32, r: 4, name: '三坊七巷（南后街）', path: [[0, 10], [0, 20], [0, 32]], view: [0, 4, 0, -0.1] },
   fznmd: { x: -22, z: 60, r: 4, name: '于山白塔', path: [[0, 12], [-10, 36], [-22, 60]], view: [-14, 30, -0.18, -0.34] },
   fzdd: { x: 0, z: 50, r: 3, name: '上下杭（三通桥）', path: [[0, 14], [0, 30], [0, 42], [0, 50]], view: [-16, 42.4, 1.25, 0.16], back: [0, 50, Math.PI, 0.04] },
-  fzxm: { x: 0, z: 49, r: 3, name: '西湖公园（观湖亭）', path: [[0, 10], [0, 26], [0, 40], [0, 49]], view: [0, 36, 0, 0.02] },
   fzst: { x: 0, z: 64, r: 4, name: '烟台山（石厝教堂）', path: [[0, 10], [0, 30], [0, 50], [0, 64]], view: [-3, 44, 0.12, -0.12] },
   fzgs: { x: 0, z: 50, r: 4, name: '鼓山风景区（索道）', path: [[0, 10], [0, 30], [0, 50]], view: [-4, 18, 0.25, -0.2] },
   fzdl: { x: 0, z: 76, r: 4, name: '海峡奥体中心', path: [[0, 10], [0, 30], [0, 52], [0, 76]], view: [0, 16, 0, -0.16] },

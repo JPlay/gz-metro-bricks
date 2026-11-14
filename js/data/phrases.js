@@ -202,8 +202,10 @@ export function fzBoatArriveSegs(id, terminal) {
   return terminal ? bseg('arrive.' + id + '.end', `${P.zh}到了，这里是本线终点。请带好随身物品，小心上岸。`, `We have arrived at ${P.en}, the end of this line. Please take your belongings and mind your step.`)
     : bseg('arrive.' + id, `${P.zh}到了。上岸请小心脚下。`, `We have arrived at ${P.en}. Please mind your step.`);
 }
+/** 过西湖船闸（2A，小美：只播普通话 + 英语） */
+export function fzBoatLockSegs() { return bseg('lock.xihu', '船只正在通过西湖船闸，请坐稳。', 'The boat is passing through the West Lake lock. Please stay seated.'); }
 export function fzBoatJobs() {
-  const out = [];
+  const out = [...fzBoatLockSegs()];
   for (const F of [FZR, FZR_E]) {
     const line = F.route.id, ids = F.route.stops.map(s => s.id), first = ids[0], last = ids[ids.length - 1];
     ids.forEach((id, i) => {

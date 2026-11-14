@@ -26,7 +26,7 @@ ok('three water steps (水埠头) marked dry', F.steps.length === 3 && F.steps.e
 // ---- 航线 / 码头 ----
 ok('route A: 西湖码头 → 西水关码头 → 黎明湖码头', R.STOPS.map(s => s.id).join(',') === 'xihu,xsg,lmh' && R.STOPS.map(s => s.pier.zh).join(',') === '西湖码头,西水关码头,黎明湖码头');
 ok('stops ascending along route', R.STOPS[0].s < R.STOPS[1].s && R.STOPS[1].s < R.STOPS[2].s && R.STOPS[2].s <= R.ROUTE.line.len);
-let hullOut = 0; for (let s = 0; s <= R.ROUTE.line.len; s += 0.5) for (const { x, z } of R.hullPts(s)) if (!R.isWater(x, z) && !R.isDry(x, z)) { hullOut++; break; }
+let hullOut = 0; for (let s = 0; s <= R.ROUTE.line.len; s += 0.5) for (const { x, z } of R.hullPts(s)) if (!R.isWater(x, z) && !R.isDry(x, z) && !R.inChamber(x, z)) { hullOut++; break; }
 ok('boat hull stays inside water along whole route', hullOut === 0, hullOut);
 const cr = R.clearanceReport(0.25);
 ok(`canopy never clips a bridge (min clearance ${cr.min.toFixed(3)} ≥ ${R.CLEAR_MIN})`, cr.ok && cr.min >= R.CLEAR_MIN, cr.per);
