@@ -14,7 +14,7 @@ async () => {
       if (!((d1 < 0 || d2 < 0 || d3 < 0) && (d1 > 0 || d2 > 0 || d3 > 0))) arr[j * NX + i] = 1; }
   };
   for (const c of Object.values(F.land)) { const P = c.p, I = c.i; for (let k = 0; k < I.length; k += 3) fillTri(P[2 * I[k]], P[2 * I[k] + 1], P[2 * I[k + 1]], P[2 * I[k + 1] + 1], P[2 * I[k + 2]], P[2 * I[k + 2] + 1], walk); }
-  const WALKN = /^(colDeck|colStair$|colPontoon|colLanding)/, SKIP = /^(fzrLand|fzrWater)/;
+  const WALKN = /^(colDeck|colStair$|colPontoon|colLanding|colUnderFill)/, SKIP = /^(fzrLand|fzrWater)/;
   const hull = pts => { pts.sort((a, b) => a[0] - b[0] || a[1] - b[1]); const cr = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]); const lo = [], up = [];
     for (const p of pts) { while (lo.length >= 2 && cr(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); }
     for (const p of pts.slice().reverse()) { while (up.length >= 2 && cr(up[up.length - 2], up[up.length - 1], p) <= 0) up.pop(); up.push(p); }

@@ -25,7 +25,7 @@ export const BOAT = { len: 8, beam: 2.4, deck: 0.45, gunwale: 1.0, roofUnder: 2.
 export const CLEAR_MIN = 0.25;          // 篷顶与桥底最小净空
 export const FLAT_SOFFIT = -0.4;        // 平桥 / 路桥梁底
 export const ARCH_CROWN = -0.3;         // 拱桥拱顶（拱腹最高点）
-export const CRUISE = 3.5, SLOW = 2.0, ACC = 0.5;
+export const CRUISE = 3.5, SLOW = 2.0, ACC = 0.5, DEC = 1.0;
 
 /** 折线：累计里程、按里程取点（含横向偏移）、投影 */
 export function mkLine(flat) {
@@ -217,12 +217,15 @@ function buildSpeedCap() {
 }
 /** 行船一步（fzBoat.js 每帧调用；单测按同一套逻辑积分出单程时间）。b = { s, v, dir, target }；到站返回 true（调用方把 s 放到站点） */
 export function goStep(b, dt, goal = STOPS[b.target].s, cap = Infinity) {
-  const rem = (goal - b.s) * b.dir;
+  const rem = (goal - b.s) * b.dir, v0 = b.v;
+  // 到站：先按减速上限（1.0 m/s²）把船速降到 0 再算到（不再一帧从蠕动速度直接归零；小美 2B 加减速标准）
+  const near = rem < 0.08 || (rem < 0.6 && b.v < 0.12);
   const vStop = Math.sqrt(Math.max(0, 2 * ACC * 0.9 * (rem - 0.05)));
-  const vMax = Math.min(speedCap(b.s), vStop, cap), dv = vMax - b.v;
-  b.v += Math.max(-1.0 * dt, Math.min(ACC * dt, dv)); if (b.v < 0) b.v = 0;
-  if (rem < 0.08 || (rem < 0.6 && b.v < 0.12)) return true;
-  b.s += b.v * dt * b.dir; if (b.v < 0.15 && rem > 0.6) b.v = 0.15;   // 别停在半路（限速平滑后末段也至少蠕动）
+  const vMax = near ? 0 : Math.min(speedCap(b.s), vStop, cap), dv = vMax - b.v;
+  b.v += Math.max(-DEC * dt, Math.min(ACC * dt, dv)); if (b.v < 0) b.v = 0;
+  if (near && b.v <= 0) return true;
+  b.s += b.v * dt * b.dir;
+  if (b.v < 0.15 && rem > 0.6) b.v = Math.max(b.v, Math.min(0.15, v0 + ACC * dt));   // 别停在半路：末段至少蠕动，但也按加速上限爬到蠕动速度
   return false;
 }
 /**

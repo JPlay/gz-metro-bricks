@@ -54,12 +54,23 @@ export function lamp(k, x, y, z, face = 0) {
   k.glow.box(x + dx * 1.75, y + 7.095, z + dz * 1.75, 0.28, 0.01, 0.6, hex('#FFF4D8'), face);
   k.shade.shadeBlob(x, z, 0.5, 0.5, y + 0.015, 0.3);
 }
-/** 街边长椅（木条 + 铸铁腿） */
-export function bench(k, x, y, z, ry = 0) {
+/** 街边长椅（木条 + 铸铁腿）。ends：两端改成铸铁扶手侧框（前/后立柱 + 扶手），端面不再是 0.55×0.6 的实心黑方板 */
+export function bench(k, x, y, z, ry = 0, ends = false) {
   const c = Math.cos(ry), s = Math.sin(ry), P = k.solid, wood = hex('#B07A4A');
   for (let i = 0; i < 4; i++) P.rbox(x - s * (i * 0.12 - 0.18), y + 0.44, z - c * (i * 0.12 - 0.18), 1.8, 0.04, 0.09, wood, 0.02, ry, { ao: false });
   for (let i = 0; i < 3; i++) P.box(x + s * 0.27, y + 0.62 + i * 0.12, z + c * 0.27, 1.8, 0.08, 0.035, wood, ry, -0.15);
-  for (const kk of [-0.75, 0.75]) P.box(x + c * kk, y + 0.3, z - s * kk, 0.06, 0.6, 0.55, DARK, ry);
+  if (ends) {
+    const iron = hex('#4A5058');
+    for (const kk of [-0.88, 0.88]) {
+      const ex = x + c * kk, ez = z - s * kk;
+      P.box(ex + s * 0.28, y + 0.45, ez + c * 0.28, 0.07, 0.9, 0.08, iron, ry);            // 后立柱
+      P.box(ex - s * 0.18, y + 0.31, ez - c * 0.18, 0.07, 0.62, 0.08, iron, ry);           // 前立柱
+      P.box(ex + s * 0.05, y + 0.64, ez + c * 0.05, 0.07, 0.06, 0.52, iron, ry);           // 扶手
+      P.box(ex + s * 0.05, y + 0.69, ez + c * 0.05, 0.09, 0.045, 0.54, wood, ry, 0, 0, 1, { ao: false });   // 木扶手帽
+    }
+  } else {
+    for (const kk of [-0.75, 0.75]) P.box(x + c * kk, y + 0.3, z - s * kk, 0.06, 0.6, 0.55, DARK, ry);
+  }
   k.shade.shadeBlob(x, z, 1.1, 0.45, y + 0.012, 0.3, ry);
 }
 /** 站台不锈钢座椅（一排 n 个座） */

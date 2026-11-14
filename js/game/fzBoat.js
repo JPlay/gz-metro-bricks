@@ -141,7 +141,7 @@ export class FzBoat {
     if (pax) say(fzBoatArriveSegs(STOPS[this.i].id, term), { key: 'boat', interrupt: true });
   }
   update(dt, pl) {
-    dt = Math.min(dt, 0.25);
+    dt = Math.min(dt, 0.25); this.dtLast = dt;
     if (this.phase === 'dock') {
       this.dwell += dt; if (this.dwell < 0.2) this.setPlank(true);
       const seated = this.passengerSeated(pl);
