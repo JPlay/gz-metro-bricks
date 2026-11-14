@@ -10,7 +10,7 @@
  *   aa      锐利原生抗锯齿：去掉后期管线（FXAA + 1× 离屏 RT），由画布原生 MSAA 抗锯齿，色调映射在材质里做
  * 状态：mode 'orig' | 'up'，light 'day' | 'dusk'，f = 各项开关（只在 up 模式下生效）。
  */
-import { GS, markGfxDirty, baseOf } from './gfxUpgradePlugin.js';
+import { GS, markGfxDirty, baseOf, HOOKS, ensureWater } from './gfxUpgradePlugin.js';
 import { TEX, tex } from './mats.js';
 import { CONFIG } from './config.js';
 import { KITS } from '../world/kit.js';
@@ -68,6 +68,7 @@ export class Gfx {
     this.stats = { fps: 60, min: 60, draws: 0, tris: 0, w: 0, h: 0, bake: null, bakes: 0 };
     this._fpsWin = [];
     this.listeners = [];
+    HOOKS.onAttach = m => { if (this._applied) this.applyMat(m); };
     // 绘制调用 / 三角形要在这一帧画完之后读（onBeforeRender 时计数器刚清零）
     scene.onAfterRenderObservable.add(() => { const S = this.stats; S.draws = (engine._drawCalls && engine._drawCalls.current) || 0; S.tris = Math.round(scene.getActiveIndices() / 3); S.w = engine.getRenderWidth(); S.h = engine.getRenderHeight(); });
   }
@@ -145,28 +146,38 @@ export class Gfx {
     W.n1.onLoadObservable.addOnce(done); W.n2.onLoadObservable.addOnce(done);
   }
   normalsOn() { const q = CONFIG.qualityLevels[this.R.tier]; return q ? !!q.normals : true; }
-  applyMats() {
+  applyMats() { for (const m of this.scene.materials) if (m._gfx) this.applyMat(m); }
+  /** 河 / 海水面（'paint@sea' 桶，福州内河、厦门海边）：升级画质下换成流动水波 + 半哑光（不用漆面贴图；掠射不反白） */
+  applySea(m, o) {
+    const on = this.want('water');
+    if (on) { ensureWater(m); this.loadWater(); }
+    m.albedoTexture = on ? null : o.alb; m.bumpTexture = on ? null : (this.normalsOn() ? o.n : null); m._normalTex = on ? null : o.n;
+    const i = this.M.normals.indexOf(m); if (on && i >= 0) this.M.normals.splice(i, 1); else if (!on && o.n && i < 0) this.M.normals.push(m);
+    m.metallicTexture = null; m.useRoughnessFromMetallicTextureGreen = m.useMetallnessFromMetallicTextureBlue = m.useAmbientOcclusionFromMetallicTextureRed = false;
+    m.roughness = on ? 0.4 : o.rough; if (o.env == null) o.env = m.environmentIntensity; m.environmentIntensity = on ? 0.8 : o.env;
+    m.useHorizonOcclusion = false; m.useRadianceOcclusion = false;
+  }
+  applyMat(m) {
     const M = this.M, pbr = this.want('pbr'), nOn = this.normalsOn();
-    for (const m of this.scene.materials) {
-      if (!m._gfx) continue;
-      const b = baseOf(m.name), base = M[b];
-      if (!m._gfxOrig) m._gfxOrig = base && base !== m && base._gfxOrig ? { ...base._gfxOrig } : { alb: m.albedoTexture, n: m._normalTex || null, rough: m.roughness, inN: M.normals.includes(m) };
-      const o = m._gfxOrig, u = pbr && this.up_ ? this.up_[b] : null;
-      const alb = u && u.alb ? u.alb : o.alb, n = u && u.n ? u.n : o.n;
-      if (m.albedoTexture !== alb) m.albedoTexture = alb;
-      m._normalTex = n;
-      const inN = M.normals.indexOf(m);
-      if (n && inN < 0) M.normals.push(m); else if (!n && inN >= 0) M.normals.splice(inN, 1);
-      if (n) m.invertNormalMapY = false;
-      const bump = nOn ? n : null; if (m.bumpTexture !== bump) m.bumpTexture = bump;
-      const orm = u && u.orm ? u.orm : null;
-      if (m.metallicTexture !== orm) m.metallicTexture = orm;
-      m.useRoughnessFromMetallicTextureGreen = !!orm; m.useMetallnessFromMetallicTextureBlue = !!orm; m.useAmbientOcclusionFromMetallicTextureRed = !!orm;
-      m.useRoughnessFromMetallicTextureAlpha = false;
-      m.roughness = orm ? 1.0 : o.rough;
-      m.useHorizonOcclusion = !!(u && n); m.useRadianceOcclusion = !!u && UP[b].ro !== false;
-      if (u && UP[b] && UP[b].env != null) { if (o.env == null) o.env = m.environmentIntensity; m.environmentIntensity = UP[b].env; } else if (o.env != null) m.environmentIntensity = o.env;
-    }
+    const b = baseOf(m.name), base = M[b];
+    if (!m._gfxOrig) m._gfxOrig = base && base !== m && base._gfxOrig ? { ...base._gfxOrig, env: undefined } : { alb: m.albedoTexture, n: m._normalTex || null, rough: m.roughness, inN: M.normals.includes(m) };
+    const o = m._gfxOrig;
+    if (m.name === 'paint@sea') return this.applySea(m, o);
+    const u = pbr && this.up_ ? this.up_[b] : null;
+    const alb = u && u.alb ? u.alb : o.alb, n = u && u.n ? u.n : o.n;
+    if (m.albedoTexture !== alb) m.albedoTexture = alb;
+    m._normalTex = n;
+    const inN = M.normals.indexOf(m);
+    if (n && inN < 0) M.normals.push(m); else if (!n && inN >= 0) M.normals.splice(inN, 1);
+    if (n) m.invertNormalMapY = false;
+    const bump = nOn ? n : null; if (m.bumpTexture !== bump) m.bumpTexture = bump;
+    const orm = u && u.orm ? u.orm : null;
+    if (m.metallicTexture !== orm) m.metallicTexture = orm;
+    m.useRoughnessFromMetallicTextureGreen = !!orm; m.useMetallnessFromMetallicTextureBlue = !!orm; m.useAmbientOcclusionFromMetallicTextureRed = !!orm;
+    m.useRoughnessFromMetallicTextureAlpha = false;
+    m.roughness = orm ? 1.0 : o.rough;
+    m.useHorizonOcclusion = !!(u && n); m.useRadianceOcclusion = !!u && UP[b].ro !== false;
+    if (u && UP[b] && UP[b].env != null) { if (o.env == null) o.env = m.environmentIntensity; m.environmentIntensity = UP[b].env; } else if (o.env != null) m.environmentIntensity = o.env;
   }
   /** 公园前喷泉池的升级水面（station.js 里名为 water 的网格） */
   applyWater(st) {
@@ -188,7 +199,7 @@ export class Gfx {
     if ((S.t -= dt) > 0) return; S.t = 0.35;
     const f = this.focus && this.focus(); if (!f) return;
     const kits = this.casterKits();
-    const sig = kits.map(k => k.root.name).sort().join('|') + ':' + this.state.light;
+    const sig = kits.map(k => k.root.uniqueId).sort().join('|') + ':' + this.state.light;
     if (S.cur && S.cur.sig !== sig) this.dropShadow();     // 换了场景：旧图对不上，先关掉
     if (!kits.length || R.indoorTarget > 0.5) return;      // 室内 / 隧道：不烘（影子本来也渐隐掉了），出来再烘
     const c = S.cur;
@@ -270,7 +281,7 @@ export class Gfx {
     }
     busy += performance.now() - sliceT;
     // 烘焙期间换了场景（建新站 / 进出内景）：这张图作废，下一轮按新场景重烘
-    { const now = this.casterKits().map(k => k.root.name).sort().join('|') + ':' + this.state.light; if (now !== sig) return; }
+    { const now = this.casterKits().map(k => k.root.uniqueId).sort().join('|') + ':' + this.state.light; if (now !== sig) return; }
     // 上传：WebGL2 用单通道 R8（1536² = 2.3 MB），WebGL1 退回 RGBA
     const r8 = this.engine.webGLVersion >= 2;
     let data = hm; if (!r8) { data = new Uint8Array(RES * RES * 4); for (let i = 0, j = 0; i < hm.length; i++, j += 4) { data[j] = hm[i]; data[j + 3] = 255; } }

@@ -185,8 +185,10 @@ const ATTACHED = new WeakSet();
 /** 给静态桶材质挂升级插件（同一材质只挂一次；克隆出来的 'floor@P' 等也调这个） */
 export function ensureGfx(m) {
   if (!m || ATTACHED.has(m) || !m.getClassName || m.getClassName() !== 'PBRMaterial' || !GFX_BASES.has(baseOf(m.name))) return m;
-  ATTACHED.add(m); m._gfx = new GfxUpgradePlugin(m); return m;
+  ATTACHED.add(m); m._gfx = new GfxUpgradePlugin(m); if (HOOKS.onAttach) HOOKS.onAttach(m); return m;
 }
+/** gfx.js 挂的回调：新克隆的桶材质（各城市建场景时才出现）按当前画质状态配置 */
+export const HOOKS = { onAttach: null };
 export function ensureWater(m) { if (m && !m._gfxW) m._gfxW = new GfxWaterPlugin(m); return m; }
 /** 改了 GS.on / GS.water.on 之后调：让材质按新 define 重新取着色器（Babylon 按 define 串缓存 effect） */
 export function markGfxDirty(scene) {
