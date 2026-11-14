@@ -19,14 +19,14 @@ for (const [i0, i1] of [[0, 1], [1, 0]]) {
     if (b.lkEv === 'enter') tEnter = t;
     const st = b.lk ? b.lk.st : null; if (st !== stages[stages.length - 1]) stages.push(st);
     if (st === 'enter' && tIn === null) tIn = t; if (st === 'exit' && tOut === null) tOut = t;
-    for (const [gs, gk] of [[L.sU, 'gU'], [L.sD, 'gD']]) { const bow = Math.abs(b.s - gs) - R.BOAT.len / 2; if (bow < 1) minAng = Math.min(minAng, ease(S[gk]) * 108); }
+    for (const [gs, gk] of [[L.sU, 'gU'], [L.sD, 'gD']]) { const bow = Math.abs(b.s - gs) - R.BOAT.len / 2; if (bow < 1) minAng = Math.min(minAng, ease(S[gk])); }
     const y = R.levelAtS(b.s); maxDy = Math.max(maxDy, Math.abs(y - prevY)); prevY = y;
   }
   const name = i0 === 0 ? 'down (西湖 → 西水关)' : 'up (西水关 → 西湖)';
   ok(`${name}: lock sequence approach → enter → closeIn → level → openOut → exit`, stages.filter(Boolean).join(',') === 'approach,enter,closeIn,level,openOut,exit', stages);
   ok(`${name}: in-lock time (gate open → exit gate open) 25–40 s`, tOut - tEnter >= 25 && tOut - tEnter <= 40, +(tOut - tEnter).toFixed(1));
   ok(`${name}: chamber in → out about 30 s`, tOut - tIn >= 24 && tOut - tIn <= 34, +(tOut - tIn).toFixed(1));
-  ok(`${name}: never passes a gate that is not open (≥75° when bow < 1 m)`, minAng >= 75, +minAng.toFixed(1));
+  ok(`${name}: never passes a gate that is not open (≥70% open when bow < 1 m)`, minAng >= 0.7, +minAng.toFixed(1));
   ok(`${name}: boat level changes smoothly (no jump > 2 cm/frame)`, maxDy < 0.02, +maxDy.toFixed(4));
   ok(`${name}: ends at the other side level`, S.lvl === (i0 === 0 ? 0 : L.rise));
 }

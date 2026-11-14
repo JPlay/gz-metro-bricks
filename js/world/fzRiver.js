@@ -101,27 +101,27 @@ export class FzRiverStreet extends XmStreet {
     const yLo = WY - 0.3, yHi = WY + L.rise + 0.6;
     for (const sd of [-1, 1]) for (const a of [-half + 2.6, 0, half - 2.6]) {
       const [x, z] = this.lockP(a, sd * (L.hw - 0.012));
-      for (let y = yLo, i = 0; y < yHi - 1e-6; y += 0.1, i++) P.box(x, y + 0.05, z, 0.024, 0.1, 0.14, i % 2 ? WHITE : RED, ryN, 0, 0, 1, NO);
-      for (let y = WY - 0.0; y <= yHi + 1e-6; y += 0.5) P.box(x, y, z, 0.03, 0.025, 0.26, BLACK, ryN, 0, 0, 1, NO);
-      if (a === 0) for (const y of [WY, WY + L.rise]) P.box(x, y, z, 0.02, 0.03, 1.6, WHITE, ryN, 0, 0, 1, NO);
+      for (let y = yLo, i = 0; y < yHi - 1e-6; y += 0.1, i++) P.box(x, y + 0.05, z, 0.16, 0.1, 0.03, i % 2 ? WHITE : RED, ryN, 0, 0, 1, NO);
+      for (let y = WY - 0.0; y <= yHi + 1e-6; y += 0.5) P.box(x, y, z, 0.3, 0.025, 0.04, BLACK, ryN, 0, 0, 1, NO);
+      if (a === 0) for (const y of [WY, WY + L.rise]) P.box(x, y, z, 1.6, 0.03, 0.025, WHITE, ryN, 0, 0, 1, NO);
     }
     // 闸门两侧的门墩（花岗岩，顶面略高出岸地）
     for (const a of [-half, half]) for (const sd of [-1, 1]) { const [x, z] = this.lockP(a, sd * (L.hw + 0.35)); GR.box(x, (WY - 0.4 + 0.18) / 2, z, 0.7, 0.18 - (WY - 0.4), 1.1, hex('#8E887C'), ryT, 0, 0, 1, NO); }
     // 坝顶：闸室两头横着一道深色检修沟盖板（只是地面上的线，提示这里是闸）
-    for (const a of [-half - 0.9, half + 0.9]) { const [x, z] = this.lockP(a, 0); P.box(x, 0.006, z, 2 * L.damHw - 1, 0.01, 0.3, hex('#6E685C'), ryT, 0, 0, 1, NO); }
+    for (const a of [-half - 0.9, half + 0.9]) for (const sd of [-1, 1]) { const w = L.damHw - 0.5 - (L.hw + 0.8), [x, z] = this.lockP(a, sd * (L.hw + 0.8 + w / 2)); P.box(x, 0.006, z, 0.3, 0.01, w, hex('#6E685C'), ryN, 0, 0, 1, NO); }   // 只画在坝顶两侧，不横跨水面
   }
   lockGates() {
     const L = LOCK, half = (L.s[1] - L.s[0]) / 2, M = this.kit.M;
     const STEEL = hex('#474C52'), RIB = hex('#363A3F'), WALK = hex('#6B7075'), RAIL = hex('#2E3236'), RED = hex('#C62828'), WHITE = hex('#F4F1EA');
-    const hinge = L.hw - 0.19, Lf = hinge / Math.cos(0.32) + 0.03, y0 = WY - 0.6, y1 = 0.0, T = 0.34;   // 斜接角 18°
+    const hinge = L.hw - 0.3, Lf = hinge / Math.cos(0.32) + 0.03, y0 = WY - 0.6, y1 = 0.0, T = 0.34;   // 斜接角 18°
     const g = new Geo(), o = NO;
     g.box(Lf / 2, (y0 + y1) / 2, 0, Lf, y1 - y0, T, STEEL, 0, 0, 0, 1, o);
     for (let y = y0 + 0.5; y < y1 - 0.2; y += 0.5) for (const sz of [-1, 1]) g.box(Lf / 2, y, sz * (T / 2 + 0.02), Lf - 0.1, 0.07, 0.04, RIB, 0, 0, 0, 1, o);   // 横肋
     for (const xx of [0.06, Lf * 0.5]) for (const sz of [-1, 1]) g.box(xx, (y0 + y1) / 2, sz * (T / 2 + 0.02), 0.08, y1 - y0, 0.04, RIB, 0, 0, 0, 1, o);   // 竖肋
-    g.box(Lf / 2, y1 + 0.03, 0, Lf, 0.06, 0.8, WALK, 0, 0, 0, 1, o);   // 顶上走道
+    g.box(Lf / 2, y1 + 0.03, 0, Lf, 0.06, 0.56, WALK, 0, 0, 0, 1, o);   // 顶上走道（开门时贴墙不穿墙：门轴离墙 0.3 m）
     for (const sz of [-1, 1]) {
-      g.box(Lf / 2, y1 + 1.0, sz * 0.37, Lf, 0.05, 0.05, RAIL, 0, 0, 0, 1, o); g.box(Lf / 2, y1 + 0.55, sz * 0.37, Lf, 0.035, 0.035, RAIL, 0, 0, 0, 1, o);
-      for (let xx = 0.05; xx <= Lf; xx += Lf / 3) g.box(xx, y1 + 0.5, sz * 0.37, 0.045, 1.0, 0.045, RAIL, 0, 0, 0, 1, o);
+      g.box(Lf / 2, y1 + 1.0, sz * 0.25, Lf, 0.05, 0.05, RAIL, 0, 0, 0, 1, o); g.box(Lf / 2, y1 + 0.55, sz * 0.25, Lf, 0.035, 0.035, RAIL, 0, 0, 0, 1, o);
+      for (let xx = 0.05; xx <= Lf; xx += Lf / 3) g.box(xx, y1 + 0.5, sz * 0.25, 0.045, 1.0, 0.045, RAIL, 0, 0, 0, 1, o);
     }
     // 门缝一侧的红白警示条（两面 + 端面，0.25 m 一段）
     for (let y = y0 + 0.3, i = 0; y < y1; y += 0.25, i++) { const c = i % 2 ? WHITE : RED, h = Math.min(0.25, y1 - y); g.box(Lf - 0.08, y + h / 2, 0, 0.17, h, T + 0.02, c, 0, 0, 0, 1, o); }
@@ -131,9 +131,9 @@ export class FzRiverStreet extends XmStreet {
       const piv = new B.TransformNode('fzLockPiv', this.scene); piv.parent = this.kit.root;
       const [hx, hz] = this.lockP(a, sd * hinge); piv.position.set(hx, 0, hz);
       const m = src.createInstance('fzLockLeafI'); m.parent = piv; m.isPickable = false;
-      // 关：从门轴指向河中、略朝上游（-t）18°；开：贴着墙顺水朝下游（+t）
+      // 关：从门轴指向河中、略朝上游（-t）18°；开：贴着闸室墙转进闸室里（上闸门朝下游 +t、下闸门朝上游 -t），不伸到闸外
       const cx = -sd * L.n[0] * Math.cos(0.32) - L.t[0] * Math.sin(0.32), cz = -sd * L.n[1] * Math.cos(0.32) - L.t[1] * Math.sin(0.32);
-      const thC = Math.atan2(-cz, cx), thO0 = Math.atan2(-L.t[1], L.t[0]); let d = thO0 - thC; d = ((d + Math.PI) % TAU + TAU) % TAU - Math.PI;
+      const thC = Math.atan2(-cz, cx), dir = gk === 'gU' ? 1 : -1, thO0 = Math.atan2(-dir * L.t[1], dir * L.t[0]); let d = thO0 - thC; d = ((d + Math.PI) % TAU + TAU) % TAU - Math.PI;
       this.lock.leaves.push({ gk, piv, thC, d });
     }
     // 闸室水面：一块平面，高度跟着 LOCK_STATE.lvl
@@ -148,7 +148,7 @@ export class FzRiverStreet extends XmStreet {
     for (const l of this.lock.leaves) l.piv.rotation.y = l.thC + l.d * ease(S[l.gk]);
     this.lock.water.position.y = WY + S.lvl;
   }
-  /** 门扇和门轴线的夹角（度，0 = 关，约 108 = 全开贴墙）：单测 / e2e 用 */
+  /** 门扇和门轴线的夹角（度，0 = 关；全开贴闸室墙：上闸门约 108、下闸门约 72）：单测 / e2e 用 */
   lockAngles() { return this.lock ? this.lock.leaves.map(l => ({ g: l.gk, deg: +(Math.abs(l.d) * (LOCK_STATE[l.gk] ? ((u => u * u * (3 - 2 * u))(LOCK_STATE[l.gk])) : 0) * 180 / Math.PI).toFixed(1) })) : []; }
   /* ---------- 驳岸：墙面常开；压顶石 + 石栏（近处细节）+ 碰撞 ---------- */
   wallFaces() {
