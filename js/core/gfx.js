@@ -1,6 +1,7 @@
 /*
- * 画质升级 Demo 的总控（原版 ↔ 10× 零开销升级，全部运行时切换、不重载页面）：
- *   shadow  建筑与树冠日照投影：每站烘焙一张「最高遮挡高度」图（L8，1024²），着色器沿光线反投查表（0 次额外绘制）
+ * 画质升级总控（默认就是升级画质；?mode=orig / ?no-<项> / ?light=dusk / ?gfxdebug 面板只给测试和对比用）：
+ *   shadow  建筑与树冠日照投影：围绕玩家 200 m 见方烘焙「最高遮挡高度」图（R8，1536²），分帧烘焙不卡顿，
+ *           走远 60 m / 换场景自动重烘；着色器沿光线反投查表（0 次额外绘制）；室内 / 隧道渐隐
  *   pbr     漆面微纹理 + 全材质法线 / ORM（R=AO，G=粗糙度，B=金属度=1 → 直接用材质标量）
  *   env     天空同源 HDR 环境球：sky_day / sky_dusk + env_day / env_dusk / env_indoor（.env）+ 灯光 / 调色
  *   shader  着色器零纹理增强（去重复宏观变化、贴地暗边、树叶透光、天空色边缘光）
@@ -12,6 +13,7 @@
 import { GS, markGfxDirty, baseOf } from './gfxUpgradePlugin.js';
 import { TEX, tex } from './mats.js';
 import { CONFIG } from './config.js';
+import { KITS } from '../world/kit.js';
 const B = window.BABYLON;
 const V3 = (x, y, z) => new B.Vector3(x, y, z).normalize();
 const C3 = (r, g, b) => new B.Color3(r, g, b);
@@ -42,55 +44,74 @@ const UP = {
 };
 // 投影的遮挡体：静态不透明桶（地面类桶靠高度比较自动不产生影子，跳过省时间）
 const NO_CAST = new Set(['glass', 'glow', 'band', 'halo', 'shade', 'blob', 'ghost', 'water', 'waterDemo', 'paintHero', 'asphalt', 'grass', 'tactile', 'skyMat']);
-const H_STEP = 0.1;   // 高度图 1 级 = 0.1 m（L8 最高 25.5 m）
+const H_STEP = 0.1;   // 高度图 1 级 = 0.1 m（8 位最高 25.5 m，相对烘焙基准高度）
+// 会动的 / 内景 Kit 不投日照影子（列车、船、电梯轿厢、选人舞台、各种室内）
+const NO_CAST_KIT = /^(train|fzBoat|smLiftCar|charStage|food-int|hotel-|cjc-int|hall-int|emu-|xdfLobby)/;
+// 各档位：taps 阴影采样、noise 宏观噪声、dual 水面第二层法线、res 阴影图分辨率、shadow 是否烘焙日照投影、shader 零纹理增强
+export const TIER_GFX = [
+  { taps: 4, noise: 1, dual: 1, res: 1536, shadow: 1, shader: 1 },
+  { taps: 4, noise: 1, dual: 1, res: 1536, shadow: 1, shader: 1 },
+  { taps: 1, noise: 0, dual: 0, res: 1024, shadow: 1, shader: 1 },
+  { taps: 1, noise: 0, dual: 0, res: 1024, shadow: 0, shader: 0 }
+];
+const SH_EXT = 200, SH_MOVE = 60, SLICE_MS = 4;
 
 export class Gfx {
   constructor({ engine, scene, R, M }) {
     this.engine = engine; this.scene = scene; this.R = R; this.M = M;
     const P = new URLSearchParams(location.search);
+    this.debug = P.has('gfxdebug');
     this.state = { mode: P.get('mode') === 'orig' ? 'orig' : 'up', light: P.get('light') === 'dusk' ? 'dusk' : 'day', f: Object.fromEntries(FEATURES.map(([k]) => [k, true])) };
     for (const [k] of FEATURES) if (P.get('no-' + k) !== null) this.state.f[k] = false;
-    this.shadowTex = {}; this.station = null; this.envCache = {}; this.skyCache = {}; this.texLoaded = false;
-    this.stats = { fps: 60, min: 60, draws: 0, tris: 0, w: 0, h: 0, bakeMs: {} };
-    this._fpsWin = []; this._lastApply = 0;
+    this.envCache = {}; this.texLoaded = false; this.tier = 1; this.focus = null;
+    this.sh = { cur: null, job: null, spare: null, buf: null, t: 0 };
+    this.stats = { fps: 60, min: 60, draws: 0, tris: 0, w: 0, h: 0, bake: null, bakes: 0 };
+    this._fpsWin = [];
     this.listeners = [];
     // 绘制调用 / 三角形要在这一帧画完之后读（onBeforeRender 时计数器刚清零）
     scene.onAfterRenderObservable.add(() => { const S = this.stats; S.draws = (engine._drawCalls && engine._drawCalls.current) || 0; S.tris = Math.round(scene.getActiveIndices() / 3); S.w = engine.getRenderWidth(); S.h = engine.getRenderHeight(); });
   }
   on(f) { this.listeners.push(f); }
   get up() { return this.state.mode === 'up'; }
+  get T() { return TIER_GFX[this.tier] || TIER_GFX[1]; }
   want(k) { return this.up && !!this.state.f[k]; }
   setMode(m) { this.state.mode = m === 'orig' ? 'orig' : 'up'; this.apply(); }
   setLight(l) { this.state.light = l === 'dusk' ? 'dusk' : 'day'; if (this.state.mode !== 'up') this.state.mode = 'up'; this.apply(); }
   setFeature(k, v) { this.state.f[k] = !!v; this.apply(); }
-  /** 应用当前状态（材质 / 天空 / 环境 / 灯光 / 雾 / 后期 / 水 / 插件 define） */
+  /** 画质档位变了（main.js applyQuality）：只改 uniform 级参数，不触发重编译 */
+  setTier(t) { this.tier = t; this.applyTierParams(); this.applyMats(); }
+  applyTierParams() {
+    const T = this.T;
+    GS.taps = T.taps; GS.noise = T.noise; GS.water.dual = T.dual;
+    GS.shadow = this.want('shadow') && T.shadow ? 1 : 0; GS.shader = this.want('shader') && T.shader ? 1 : 0;
+    if (!GS.shadow) this.dropShadow();
+  }
+  /** 应用当前状态（材质 / 天空 / 环境 / 灯光 / 雾 / 后期 / 水 / 插件 define）；正常游玩只在启动时调一次 */
   apply() {
     const t0 = performance.now(), s = this.state, R = this.R, L = this.up ? LOOKS[s.light] : LOOKS.orig;
     if (this.up) this.loadTex();
-    // 灯光 + 环境 + 天空
     const env = this.want('env');
     R.look = { ...LOOKS.orig, ...(this.up ? { hemiI: L.hemiI, hemiD: L.hemiD, hemiG: L.hemiG, sunI: L.sunI, sunD: L.sunD, sunDir: L.sunDir } : {}), envI: env ? L.envI : LOOKS.orig.envI };
+    // 环境贴图：户外的立刻要；站内的按需（第一次进站内时 Render.preloadIndoor 才取）
     R.envOutO = env ? this.envTex(L.env) : null;
-    R.envInO = env ? this.envTex('vendor/env/env_indoor.env') : null;
+    R.envInUrlO = env ? 'vendor/env/env_indoor.env' : null; R.envInO = env && this.envCache['vendor/env/env_indoor.env'] || null;
+    R.envInGet = env ? () => (R.envInO = this.envTex('vendor/env/env_indoor.env')) : null;
     R.setSky(env ? L.sky : 'assets/tex/sky.jpg');
     this.setIP(env ? L.ip : ORIG_IP);
     R.haze = this.want('haze') ? { color: L.fog, start: L.fogStart, end: L.fogEnd } : null;
     R.applyZone(R.indoor, true); R.updateFog();
-    // 后期 / 抗锯齿
     R.setNoPost(this.want('aa'));
-    // 插件参数
-    const wasOn = GS.on, wasW = GS.water.on;
-    GS.on = this.up; GS.shadow = this.want('shadow') ? 1 : 0; GS.shader = this.want('shader') ? 1 : 0;
-    if (this.up) { GS.sunDir.copyFrom(L.sunDir); GS.sunCol.copyFrom(L.leafCol); GS.sky.copyFrom(L.rimCol); GS.shadowK = s.light === 'dusk' ? 0.8 : 0.88; GS.rim = s.light === 'dusk' ? 0.07 : 0.05; }
+    const wasOn = GS.on, wasW = GS.water.on, wasLight = this._light;
+    GS.on = this.up; this._light = s.light;
+    if (this.up) { GS.sunDir.copyFrom(L.sunDir); GS.sunCol.copyFrom(L.leafCol); GS.sky.copyFrom(L.rimCol); GS.shadowK = s.light === 'dusk' ? 0.8 : 0.88; GS.rim = s.light === 'dusk' ? 0.07 : 0.05; GS.leaf = L.leaf ?? 1; }
     GS.water.on = this.want('water');
-    if (GS.shadow && !this._deferBake) this.ensureShadow();
-    GS.shTex = GS.shadow && this.station ? (this.shadowTex[this.station.code + ':' + s.light] || {}).tex || null : null;
-    if (GS.shTex) { const e = this.shadowTex[this.station.code + ':' + s.light]; GS.shMap = e.map; GS.shTexel = e.texel; }
+    this.applyTierParams();
+    if (wasLight && wasLight !== s.light) this.dropShadow();
     this.applyMats();
     this.applyWater();
     if (wasOn !== GS.on || wasW !== GS.water.on) markGfxDirty(this.scene);
-    // 站内反射探针按新材质 / 环境重拍一次（静态，RENDER_ONCE）
-    clearTimeout(this._probeT); this._probeT = setTimeout(() => { try { R.refreshProbes(); } catch (_) {} }, 120);
+    if (this._applied) { clearTimeout(this._probeT); this._probeT = setTimeout(() => { try { R.refreshProbes(); } catch (_) {} }, 120); }
+    this._applied = true;
     this.stats.applyMs = +(performance.now() - t0).toFixed(1);
     this.listeners.forEach(f => f(this));
   }
@@ -104,7 +125,7 @@ export class Gfx {
     if (!this.envCache[url]) { const t = this.envCache[url] = B.CubeTexture.CreateFromPrefilteredData(url, this.scene); t.name = url.split('/').pop(); }
     return this.envCache[url];
   }
-  /** 升级贴图只在第一次进升级模式时加载（原版模式 0 额外下载） */
+  /** 升级贴图只在升级模式加载（?mode=orig 0 额外下载） */
   loadTex() {
     if (this.texLoaded) return; this.texLoaded = true; const s = this.scene;
     this.up_ = {};
@@ -113,9 +134,14 @@ export class Gfx {
       for (const key of ['alb', 'n', 'orm']) if (u[key]) { const t = tex(s, u[key]); t.uScale = t.vScale = 1 / size; o[key] = t; }
       if (o.n) o.n.level = u.nl ?? 0.7;
     }
-    const W = GS.water; W.n1 = new B.Texture('assets/tex/water_n1.jpg', s, false, true, B.Texture.TRILINEAR_SAMPLINGMODE); W.n2 = new B.Texture('assets/tex/water_n2.jpg', s, false, true, B.Texture.TRILINEAR_SAMPLINGMODE);
+  }
+  /** 水面法线：只有场景里真有升级水面时才下载 */
+  loadWater() {
+    const W = GS.water, s = this.scene; if (W.n1) return;
+    W.n1 = new B.Texture('assets/tex/water_n1.jpg', s, false, true, B.Texture.TRILINEAR_SAMPLINGMODE); W.n2 = new B.Texture('assets/tex/water_n2.jpg', s, false, true, B.Texture.TRILINEAR_SAMPLINGMODE);
     W.n1.anisotropicFilteringLevel = W.n2.anisotropicFilteringLevel = 4;
-    W.n1.onLoadObservable.addOnce(() => markGfxDirty(s)); W.n2.onLoadObservable.addOnce(() => markGfxDirty(s));
+    let n = 0; const done = () => { if (++n === 2) markGfxDirty(s); };
+    W.n1.onLoadObservable.addOnce(done); W.n2.onLoadObservable.addOnce(done);
   }
   normalsOn() { const q = CONFIG.qualityLevels[this.R.tier]; return q ? !!q.normals : true; }
   applyMats() {
@@ -138,100 +164,129 @@ export class Gfx {
       m.useRoughnessFromMetallicTextureAlpha = false;
       m.roughness = orm ? 1.0 : o.rough;
       m.useHorizonOcclusion = !!(u && n); m.useRadianceOcclusion = !!u;
+      if (u && UP[b] && UP[b].env != null) { if (o.env == null) o.env = m.environmentIntensity; m.environmentIntensity = UP[b].env; } else if (o.env != null) m.environmentIntensity = o.env;
     }
   }
-  applyWater() {
-    const st = this.station; if (!st) return;
-    const on = this.want('water');
-    for (const m of st.kit.root.getChildMeshes(false)) if (m.name === 'water') m.setEnabled(on);
+  /** 公园前喷泉池的升级水面（station.js 里名为 water 的网格） */
+  applyWater(st) {
+    st = st || this.station; if (!st || !st.kit) return;
+    const on = this.want('water'); let any = false;
+    for (const m of st.kit.root.getChildMeshes(false)) if (m.name === 'water') { m.setEnabled(on); any = true; }
+    if (on && any) this.loadWater();
   }
-  /** 新车站建好后调用：给新克隆的材质套当前状态、烘焙日照投影 */
-  onStation(st) {
-    if (this.station && this.station !== st) { for (const k of Object.keys(this.shadowTex)) { this.shadowTex[k].tex && this.shadowTex[k].tex.dispose(); delete this.shadowTex[k]; } }
-    this.station = st; GS.shTex = null;
-    // 车站刚建完的那几帧主线程很忙（材质编译 / GC）：阴影图延后 ~1 s 再烘，不卡进站
-    this._deferBake = true; this.apply(); this._deferBake = false;
-    clearTimeout(this._bakeT);
-    this._bakeT = setTimeout(() => { if (this.station === st && GS.shadow) { this.ensureShadow(); this.bindShadow(); } }, 1000);
-  }
-  /** 只把当前站 + 光照的阴影图挂到插件上（不重设材质） */
-  bindShadow() {
-    const e = this.station && this.shadowTex[this.station.code + ':' + this.state.light];
-    GS.shTex = GS.shadow && e ? e.tex || null : null;
-    if (GS.shTex) { GS.shMap = e.map; GS.shTexel = e.texel; }
-  }
-  ensureShadow() {
-    const st = this.station; if (!st) return;
-    const key = st.code + ':' + this.state.light; if (this.shadowTex[key]) return;
-    this.shadowTex[key] = this.bakeSunShadow(st, LOOKS[this.state.light].sunDir);
+  /** 广州新车站建好后调用（材质克隆自升级后的桶材质，已经是升级状态；这里只管水面） */
+  onStation(st) { this.station = st; this.applyWater(st); }
+  // ———————————————— 日照投影：分帧烘焙 ————————————————
+  dropShadow() { const c = this.sh.cur; this.sh.cur = null; this.sh.job = null; GS.shTex = null; if (c && c.tex) { if (this.sh.spare) this.sh.spare.dispose(); this.sh.spare = c.tex; } }
+  casterKits() { const out = []; for (const k of KITS) if (k.root.isEnabled() && !NO_CAST_KIT.test(k.root.name)) out.push(k); return out; }
+  shadowTick(dt) {
+    const R = this.R, S = this.sh;
+    GS.shFade = Math.max(0, 1 - R.indoor);
+    if (!GS.on || !GS.shadow) return;
+    if (S.job) { const dl = performance.now() + SLICE_MS; let r; try { r = S.job.next(dl); } catch (e) { console.warn('gfx shadow bake', e); S.job = null; return; } if (r.done) S.job = null; return; }
+    if ((S.t -= dt) > 0) return; S.t = 0.35;
+    if (R.indoorTarget > 0.5 && S.cur) return;     // 室内 / 隧道：不重烘（影子本来也渐隐掉了）
+    const f = this.focus && this.focus(); if (!f) return;
+    const kits = this.casterKits(); if (!kits.length) return;
+    const sig = kits.map(k => k.root.name).sort().join('|') + ':' + this.state.light;
+    const c = S.cur;
+    if (c && c.sig === sig && Math.abs(f.x - c.cx) < SH_MOVE && Math.abs(f.z - c.cz) < SH_MOVE && Math.abs(f.y - c.fy) < 5) return;
+    if (c && c.sig !== sig) this.dropShadow();     // 换了场景：旧图对不上，先关掉
+    S.job = this.bakeJob(kits, { x: f.x, y: f.y, z: f.z }, sig, LOOKS[this.state.light].sunDir);
   }
   /**
-   * 烘焙「最高遮挡高度」图：每个户外静态三角形沿光线 L 投到地面（G = P + L · y / −L.y），
-   * 在投影三角形覆盖的每个像素写 max(高度)。片元查表：同一条光线上有比自己高的遮挡点 = 在影子里。
+   * 烘焙「最高遮挡高度」图（生成器，next(deadline) 每次做到 deadline 就让出主线程）：
+   * 每个静态三角形沿光线 L 投到基准面（G = P + L · (y − base) / −L.y），覆盖的像素写 max(高度)。片元查表：同一条光线上有比自己高的遮挡点 = 在影子里。
    */
-  bakeSunShadow(st, L) {
-    const t0 = performance.now(), meshes = [];
-    for (const m of st.kit.root.getChildMeshes(false)) {
-      if (!m.material || m.skeleton || (m.metadata && m.metadata.collider) || !m.isVisible) continue;
-      const nm = m.material.name; if (NO_CAST.has(baseOf(nm)) || m.material.alpha < 0.5) continue;
-      if (m.getTotalVertices() < 3) continue; meshes.push(m);
-    }
-    // 范围：遮挡体的 xz 包围盒 + 投影长度，限制在 260 m 见方内
-    let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9; const kx = -L.x / L.y, kz = -L.z / L.y;
-    const tmp = new B.Vector3(), data = [];
-    for (const m of meshes) {
-      const P = m.getVerticesData(B.VertexBuffer.PositionKind), I = m.getIndices(); if (!P || !I) continue;
-      const wm = m.computeWorldMatrix(true), id = wm.isIdentity(), n = P.length / 3, X = new Float32Array(n), Y = new Float32Array(n), Z = new Float32Array(n);
-      let any = false;
-      for (let i = 0; i < n; i++) {
-        if (id) tmp.set(P[i * 3], P[i * 3 + 1], P[i * 3 + 2]); else B.Vector3.TransformCoordinatesFromFloatsToRef(P[i * 3], P[i * 3 + 1], P[i * 3 + 2], wm, tmp);
-        const y = tmp.y; Y[i] = y; X[i] = tmp.x + kx * Math.max(0, y); Z[i] = tmp.z + kz * Math.max(0, y);
-        if (y > 0.05 && y < 40) { any = true; x0 = Math.min(x0, tmp.x, X[i]); x1 = Math.max(x1, tmp.x, X[i]); z0 = Math.min(z0, tmp.z, Z[i]); z1 = Math.max(z1, tmp.z, Z[i]); }
-      }
-      if (any) data.push({ X, Y, Z, I });
-    }
-    if (!data.length) return { tex: null };
-    const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2, ext = Math.min(260, Math.max(x1 - x0, z1 - z0) + 4);
-    const RES = 1024, ox = cx - ext / 2, oz = cz - ext / 2, inv = RES / ext;
-    const hm = new Uint8Array(RES * RES); let tris = 0, px = 0;
-    for (const { X, Y, Z, I } of data) {
-      for (let t = 0; t < I.length; t += 3) {
-        const a = I[t], b = I[t + 1], c = I[t + 2];
-        const ya = Y[a], yb = Y[b], yc = Y[c]; if (ya < 0.08 && yb < 0.08 && yc < 0.08) continue;
-        if (ya > 60 || yb > 60 || yc > 60) continue;
-        const ax = (X[a] - ox) * inv, az = (Z[a] - oz) * inv, bx = (X[b] - ox) * inv, bz = (Z[b] - oz) * inv, qx = (X[c] - ox) * inv, qz = (Z[c] - oz) * inv;
-        const area = (bx - ax) * (qz - az) - (qx - ax) * (bz - az); if (Math.abs(area) < 1e-6) continue;
-        let minX = Math.max(0, Math.floor(Math.min(ax, bx, qx))), maxX = Math.min(RES - 1, Math.ceil(Math.max(ax, bx, qx)));
-        let minZ = Math.max(0, Math.floor(Math.min(az, bz, qz))), maxZ = Math.min(RES - 1, Math.ceil(Math.max(az, bz, qz)));
-        if (minX > maxX || minZ > maxZ) continue; tris++;
-        const ia = 1 / area, ha = Math.max(0, ya) / H_STEP, hb = Math.max(0, yb) / H_STEP, hc = Math.max(0, yc) / H_STEP;
-        // 很细的投影（细杆、薄板侧面）：按保守光栅化放宽半个像素，避免路灯杆 / 树干的影子断掉
-        const e = Math.abs(area) < 6 ? 0.5 / Math.sqrt(Math.abs(area)) : 0;
-        for (let z = minZ; z <= maxZ; z++) {
-          const pz = z + 0.5;
-          for (let x = minX; x <= maxX; x++) {
-            const pxx = x + 0.5;
-            let w0 = ((bx - pxx) * (qz - pz) - (qx - pxx) * (bz - pz)) * ia, w1 = ((qx - pxx) * (az - pz) - (ax - pxx) * (qz - pz)) * ia, w2 = 1 - w0 - w1;
-            if (w0 < -e || w1 < -e || w2 < -e) continue;
-            w0 = Math.max(0, w0); w1 = Math.max(0, w1); w2 = Math.max(0, 1 - w0 - w1);
-            const h = Math.min(255, Math.round(w0 * ha + w1 * hb + w2 * hc)), k = z * RES + x;
-            if (h > hm[k]) hm[k] = h; px++;
+  *bakeJob(kits, f, sig, L) {
+    const t0 = performance.now(); let busy = 0, frames = 0, dl = yield;
+    const RES = this.T.res, ext = SH_EXT, inv = RES / ext, ox = f.x - ext / 2, oz = f.z - ext / 2, base = Math.floor(f.y - 1);
+    const kx = -L.x / L.y, kz = -L.z / L.y, maxH = 255 * H_STEP;
+    if (!this.sh.buf || this.sh.buf.length !== RES * RES) this.sh.buf = new Uint8Array(RES * RES); const hm = this.sh.buf; hm.fill(0);
+    let tris = 0, px = 0, meshes = 0, n = 0, sliceT = performance.now();
+    const check = () => (++n & 15) === 0 && performance.now() > dl;
+    const pause = function* () { busy += performance.now() - sliceT; frames++; dl = yield; sliceT = performance.now(); };
+    const tmp = new B.Vector3(), mtx = new B.Matrix();
+    let X = new Float32Array(4096), Y = new Float32Array(4096), Z = new Float32Array(4096);
+    for (const k of kits) {
+      if (k.root.isDisposed()) continue;
+      for (const m of k.root.getChildMeshes(false)) {
+        if (!m.material || m.skeleton || (m.metadata && m.metadata.collider) || !m.isVisible || m.isDisposed()) continue;
+        if (NO_CAST.has(baseOf(m.material.name)) || m.material.alpha < 0.5 || m.getTotalVertices() < 3) continue;
+        const thin = m.hasThinInstances && m.thinInstanceCount > 0, bb = m.getBoundingInfo().boundingBox, mn = bb.minimumWorld, mx = bb.maximumWorld;
+        if (!thin && (mx.y < base + 0.1 || mn.y > base + 60)) continue;
+        const sx = kx * (mx.y - base), sz = kz * (mx.y - base);
+        if (!thin && (Math.max(mx.x, mx.x + sx) < ox || Math.min(mn.x, mn.x + sx) > ox + ext || Math.max(mx.z, mx.z + sz) < oz || Math.min(mn.z, mn.z + sz) > oz + ext)) continue;
+        const P = m.getVerticesData(B.VertexBuffer.PositionKind), I = m.getIndices(); if (!P || !I) continue;
+        const nv = P.length / 3; if (X.length < nv) { X = new Float32Array(nv); Y = new Float32Array(nv); Z = new Float32Array(nv); }
+        const wm = m.computeWorldMatrix(true);
+        const inst = thin ? m.thinInstanceGetWorldMatrices() : [null];
+        meshes++;
+        for (const im of inst) {
+          let W = wm; if (im) { im.multiplyToRef(wm, mtx); W = mtx; }
+          const id = W.isIdentity();
+          for (let i = 0; i < nv; i++) {
+            if (id) tmp.set(P[i * 3], P[i * 3 + 1], P[i * 3 + 2]); else B.Vector3.TransformCoordinatesFromFloatsToRef(P[i * 3], P[i * 3 + 1], P[i * 3 + 2], W, tmp);
+            const h = tmp.y - base; Y[i] = h; const hp = Math.max(0, h); X[i] = (tmp.x + kx * hp - ox) * inv; Z[i] = (tmp.z + kz * hp - oz) * inv;
+            if ((i & 2047) === 2047 && performance.now() > dl) yield* pause();
+          }
+          if (performance.now() > dl) yield* pause();
+          for (let t = 0; t < I.length; t += 3) {
+            if (check()) yield* pause();
+            const a = I[t], b = I[t + 1], c = I[t + 2];
+            const ya = Y[a], yb = Y[b], yc = Y[c]; if (ya < 0.08 && yb < 0.08 && yc < 0.08) continue;
+            if (ya > 60 || yb > 60 || yc > 60) continue;
+            const ax = X[a], az = Z[a], bx = X[b], bz = Z[b], qx = X[c], qz = Z[c];
+            const area = (bx - ax) * (qz - az) - (qx - ax) * (bz - az); if (Math.abs(area) < 1e-6) continue;
+            const minX = Math.max(0, Math.floor(Math.min(ax, bx, qx))), maxX = Math.min(RES - 1, Math.ceil(Math.max(ax, bx, qx)));
+            const minZ = Math.max(0, Math.floor(Math.min(az, bz, qz))), maxZ = Math.min(RES - 1, Math.ceil(Math.max(az, bz, qz)));
+            if (minX > maxX || minZ > maxZ) continue; tris++;
+            const ia = 1 / area, ha = Math.min(maxH, Math.max(0, ya)) / H_STEP, hb = Math.min(maxH, Math.max(0, yb)) / H_STEP, hc = Math.min(maxH, Math.max(0, yc)) / H_STEP;
+            // 很细的投影（细杆、薄板侧面）：保守光栅化放宽半个像素，避免路灯杆 / 树干的影子断掉
+            const e = Math.abs(area) < 6 ? 0.5 / Math.sqrt(Math.abs(area)) : 0;
+            // 每行用三条边的线性方程直接算出覆盖区间，只遍历区间内的像素
+            const A0 = -(qz - bz) * ia, A1 = -(az - qz) * ia;
+            for (let z = minZ; z <= maxZ; z++) {
+              const pz = z + 0.5;
+              const C0 = ((bx) * (qz - pz) - (qx) * (bz - pz)) * ia, C1 = ((qx) * (az - pz) - (ax) * (qz - pz)) * ia;
+              // w0(x) = C0 + A0·x，w1(x) = C1 + A1·x，w2 = 1 − w0 − w1
+              let lo = minX + 0.5, hi = maxX + 0.5;
+              const lim = (A, C) => { if (Math.abs(A) < 1e-12) return C >= -e; const r = (-e - C) / A; if (A > 0) { if (r > lo) lo = r; } else if (r < hi) hi = r; return true; };
+              if (!lim(A0, C0) || !lim(A1, C1) || !lim(-A0 - A1, 1 - C0 - C1)) continue;
+              const xs = Math.max(minX, Math.ceil(lo - 0.5)), xe = Math.min(maxX, Math.floor(hi - 0.5)); if (xs > xe) continue;
+              const row = z * RES;
+              for (let x = xs; x <= xe; x++) {
+                const pxx = x + 0.5; let w0 = C0 + A0 * pxx, w1 = C1 + A1 * pxx;
+                w0 = w0 < 0 ? 0 : w0 > 1 ? 1 : w0; w1 = w1 < 0 ? 0 : w1 > 1 - w0 ? 1 - w0 : w1; const w2 = 1 - w0 - w1;
+                const h = (w0 * ha + w1 * hb + w2 * hc + 0.5) | 0;
+                if (h > hm[row + x]) hm[row + x] = h > 255 ? 255 : h;
+              }
+              px += xe - xs + 1;
+            }
           }
         }
       }
     }
-    // RGBA8（只用 R）：L8 / R8 在部分 WebGL 实现里不能被 readPixels 校验，RGBA 最稳（1024² × 4 B = 4 MB 显存）
-    const rgba = new Uint8Array(RES * RES * 4); for (let i = 0, j = 0; i < hm.length; i++, j += 4) { rgba[j] = hm[i]; rgba[j + 3] = 255; }
-    const tex = new B.RawTexture(rgba, RES, RES, B.Engine.TEXTUREFORMAT_RGBA, this.scene, false, false, B.Texture.BILINEAR_SAMPLINGMODE);
-    tex.wrapU = tex.wrapV = B.Texture.CLAMP_ADDRESSMODE; tex.name = 'gfxSunShadow';
-    const ms = +(performance.now() - t0).toFixed(1);
-    this.stats.bakeMs[st.code + ':' + this.state.light] = ms;
-    return { tex, map: [ox, oz, 1 / ext, 1 / ext], texel: 1 / RES, ms, tris, px, ext: +ext.toFixed(1), meshes: meshes.length };
+    busy += performance.now() - sliceT;
+    // 上传：WebGL2 用单通道 R8（1536² = 2.3 MB），WebGL1 退回 RGBA
+    const r8 = this.engine.webGLVersion >= 2;
+    let data = hm; if (!r8) { data = new Uint8Array(RES * RES * 4); for (let i = 0, j = 0; i < hm.length; i++, j += 4) { data[j] = hm[i]; data[j + 3] = 255; } }
+    const fmt = r8 ? B.Engine.TEXTUREFORMAT_R : B.Engine.TEXTUREFORMAT_RGBA;
+    let tex = this.sh.spare; this.sh.spare = null;
+    if (tex && tex.getSize().width === RES && !tex.isDisposed()) tex.update(data);
+    else { if (tex) tex.dispose(); tex = new B.RawTexture(data, RES, RES, fmt, this.scene, false, false, B.Texture.BILINEAR_SAMPLINGMODE); tex.wrapU = tex.wrapV = B.Texture.CLAMP_ADDRESSMODE; tex.name = 'gfxSunShadow'; }
+    const old = this.sh.cur;
+    this.sh.cur = { tex, sig, cx: f.x, cz: f.z, fy: f.y, base, res: RES };
+    if (old && old.tex) this.sh.spare = old.tex;
+    GS.shTex = tex; GS.shMap = [ox, oz, 1 / ext, 1 / ext]; GS.shTexel = 1 / RES; GS.shBase = base;
+    this.stats.bakes++;
+    this.stats.bake = { busyMs: +busy.toFixed(1), wallMs: Math.round(performance.now() - t0), frames, tris, px, meshes, res: RES, kits: kits.length, base, at: [Math.round(f.x), Math.round(f.z)] };
   }
-  /** 每帧：水波滚动 + 性能读数 */
+  /** 每帧：日照投影烘焙时间片 + 水波滚动 + 性能读数 */
   update() {
     const dt = Math.min(0.1, this.engine.getDeltaTime() / 1000), W = GS.water;
     GS.time += dt;
+    this.shadowTick(dt);
     if (W.on) { W.off[0] += 0.021 * dt; W.off[1] += 0.013 * dt; W.off[2] -= 0.016 * dt; W.off[3] += 0.024 * dt; }
     const f = dt > 0 ? 1 / dt : 60, S = this.stats;
     S.fps += (f - S.fps) * 0.08;

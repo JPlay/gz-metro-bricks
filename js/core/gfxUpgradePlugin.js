@@ -21,9 +21,12 @@ export const GS = {
   sunDir: new B.Vector3(-0.48, -0.78, 0.40).normalize(), shadowK: 0.62,
   sunCol: new B.Color3(1.0, 0.86, 0.62), leaf: 1.0,
   sky: new B.Color3(0.62, 0.74, 0.9), rim: 0.06,
-  shTex: null, shMap: [0, 0, 1, 1], shTexel: 1 / 1024, shH: 25.5,
+  shTex: null, shMap: [0, 0, 1, 1], shTexel: 1 / 1024, shH: 25.5, shBase: 0,
+  shFade: 1,            // 室内 / 隧道渐隐（1 = 户外全开）
+  taps: 4,              // 阴影采样数：档位 0/1 = 4（软边），档位 2 = 1
+  noise: 1,             // 程序化宏观噪声（档位 2 关）
   time: 0,
-  water: { on: false, n1: null, n2: null, s1: 0.13, s2: 0.53, off: [0, 0, 0, 0], strength: 0.24, refl: 0.72, clamp: 2.5 }
+  water: { on: false, dual: 1, n1: null, n2: null, s1: 0.13, s2: 0.53, off: [0, 0, 0, 0], strength: 0.24, refl: 0.72, clamp: 2.5 }
 };
 const NOISE = `
 float gfxHash(vec2 p){ p = fract(p * vec2(0.1031, 0.1030)); p += dot(p, p.yx + 33.33); return fract((p.x + p.y) * p.x); }
@@ -53,12 +56,12 @@ uniform vec4 gfxF; uniform vec4 gfxSunDir; uniform vec4 gfxSunCol; uniform vec4 
   bindForSubMesh(ubo) {
     if (!GS.on) return;
     const has = GS.shadow && GS.shTex && GS.shTex.isReady();
-    ubo.updateFloat4('gfxF', has ? 1 : 0, GS.shader, GS.time, 0);
+    ubo.updateFloat4('gfxF', has ? GS.shFade : 0, GS.shader, GS.noise, 0);
     const d = GS.sunDir; ubo.updateFloat4('gfxSunDir', d.x, d.y, d.z, GS.shadowK);
     const c = GS.sunCol; ubo.updateFloat4('gfxSunCol', c.r, c.g, c.b, GS.leaf);
     const s = GS.sky; ubo.updateFloat4('gfxSky', s.r, s.g, s.b, GS.rim);
     const m = GS.shMap; ubo.updateFloat4('gfxShMap', m[0], m[1], m[2], m[3]);
-    ubo.updateFloat4('gfxShP', GS.shTexel, GS.shH, 0, 0);
+    ubo.updateFloat4('gfxShP', GS.shTexel, GS.shH, GS.shBase, GS.taps);
     if (GS.shTex) ubo.setTexture('gfxShadowSampler', GS.shTex);
   }
   getActiveTextures(a) { if (GS.shTex) a.push(GS.shTex); }
@@ -71,15 +74,18 @@ uniform sampler2D gfxShadowSampler;
 ${NOISE}
 float gfxShadowAt(vec3 P, vec3 Ng) {
   vec3 Q = P + Ng * 0.22;
-  float t = Q.y / max(0.06, -gfxSunDir.y);
+  float t = (Q.y - gfxShP.z) / max(0.06, -gfxSunDir.y);
   vec2 g = Q.xz + gfxSunDir.xz * t;
   vec2 uv = (g - gfxShMap.xy) * gfxShMap.zw;
   if (uv.x < 0.0 || uv.y < 0.0 || uv.x > 1.0 || uv.y > 1.0) return 0.0;
-  float o = gfxShP.x * 2.2, acc = 0.0, y0 = Q.y + 0.06, yb = y0 + 0.9;
-  acc += smoothstep(y0, yb, texture2D(gfxShadowSampler, uv + vec2(o, o * 0.4)).r * gfxShP.y);
-  acc += smoothstep(y0, yb, texture2D(gfxShadowSampler, uv + vec2(-o, -o * 0.4)).r * gfxShP.y);
-  acc += smoothstep(y0, yb, texture2D(gfxShadowSampler, uv + vec2(-o * 0.4, o)).r * gfxShP.y);
-  acc += smoothstep(y0, yb, texture2D(gfxShadowSampler, uv + vec2(o * 0.4, -o)).r * gfxShP.y);
+  float y0 = Q.y - gfxShP.z + 0.06, yb = y0 + 0.9, k = gfxShP.y;
+  if (gfxShP.w < 2.0) return smoothstep(y0, yb, texture2D(gfxShadowSampler, uv).r * k);
+  // 4 个旋转网格采样 + 半影带（高度差 0.9 m 内渐变）：边缘软、看不出 texel 台阶
+  float o = gfxShP.x * 1.6, acc = 0.0;
+  acc += smoothstep(y0, yb, texture2D(gfxShadowSampler, uv + vec2(o, o * 0.4)).r * k);
+  acc += smoothstep(y0, yb, texture2D(gfxShadowSampler, uv + vec2(-o, -o * 0.4)).r * k);
+  acc += smoothstep(y0, yb, texture2D(gfxShadowSampler, uv + vec2(-o * 0.4, o)).r * k);
+  acc += smoothstep(y0, yb, texture2D(gfxShadowSampler, uv + vec2(o * 0.4, -o)).r * k);
   return acc * 0.25;
 }
 #endif`,
@@ -87,9 +93,11 @@ float gfxShadowAt(vec3 P, vec3 Ng) {
 vec3 gfxNg = normalize(vNormalW);
 float gfxOut = smoothstep(-1.4, -0.5, vPositionW.y);
 if (gfxF.y > 0.5) {
+  if (gfxF.z > 0.5) {
   vec2 gq = vPositionW.xz + vec2(vPositionW.y * 0.37, -vPositionW.y * 0.23);
   float gm = (gfxNoise(gq * 0.043) - 0.5) * 0.085 + (gfxNoise(gq * 0.19 + 17.0) - 0.5) * 0.04 + (gfxNoise(gq * 0.83 + 5.0) - 0.5) * 0.015;
   surfaceAlbedo *= vec3(1.0 + gm * 1.25, 1.0 + gm, 1.0 + gm * 0.7);
+  }
   float gside = 1.0 - abs(gfxNg.y);
   surfaceAlbedo *= mix(1.0, mix(0.8, 1.0, smoothstep(0.0, 0.45, vPositionW.y)), gside * gfxOut);
 }
@@ -98,8 +106,8 @@ if (gfxF.y > 0.5) {
 {
   float gNdL = dot(gfxNg, -gfxSunDir.xyz);
   float gLit = 1.0;
-  if (gfxF.x > 0.5 && gfxOut > 0.01) {
-    float gsh = gfxShadowAt(vPositionW, gfxNg) * gfxOut;
+  if (gfxF.x > 0.01 && gfxOut > 0.01) {
+    float gsh = gfxShadowAt(vPositionW, gfxNg) * gfxOut * gfxF.x;
     gLit = 1.0 - gsh;
     finalDiffuse *= 1.0 - gsh * gfxSunDir.w * smoothstep(-0.05, 0.3, gNdL);
 #ifdef REFLECTION
@@ -132,15 +140,16 @@ export class GfxWaterPlugin extends B.MaterialPluginBase {
   prepareDefines(defines) { defines.GFXWATER = !!(GS.water.on && GS.water.n1 && GS.water.n2); }
   getSamplers(s) { s.push('gfxW1', 'gfxW2'); }
   getUniforms() {
-    return { ubo: [{ name: 'gfxWT', size: 4, type: 'vec4' }, { name: 'gfxWP', size: 4, type: 'vec4' }],
+    return { ubo: [{ name: 'gfxWT', size: 4, type: 'vec4' }, { name: 'gfxWP', size: 4, type: 'vec4' }, { name: 'gfxWQ', size: 4, type: 'vec4' }],
       fragment: `#ifdef GFXWATER
-uniform vec4 gfxWT; uniform vec4 gfxWP;
+uniform vec4 gfxWT; uniform vec4 gfxWP; uniform vec4 gfxWQ;
 #endif` };
   }
   bindForSubMesh(ubo) {
     const W = GS.water; if (!(W.on && W.n1 && W.n2)) return;
     ubo.updateFloat4('gfxWT', W.off[0], W.off[1], W.off[2], W.off[3]);
     ubo.updateFloat4('gfxWP', W.strength, W.refl, W.clamp, W.s1);
+    ubo.updateFloat4('gfxWQ', W.dual, 0, 0, 0);
     ubo.setTexture('gfxW1', W.n1); ubo.setTexture('gfxW2', W.n2);
   }
   getActiveTextures(a) { const W = GS.water; if (W.n1) a.push(W.n1, W.n2); }
@@ -155,7 +164,7 @@ uniform sampler2D gfxW1; uniform sampler2D gfxW2;
 {
   vec2 wp = vPositionW.xz;
   vec3 wn1 = texture2D(gfxW1, wp * gfxWP.w + gfxWT.xy).xyz * 2.0 - 1.0;
-  vec3 wn2 = texture2D(gfxW2, wp * (gfxWP.w * 1.9) + gfxWT.zw).xyz * 2.0 - 1.0;
+  vec3 wn2 = gfxWQ.x > 0.5 ? texture2D(gfxW2, wp * (gfxWP.w * 1.9) + gfxWT.zw).xyz * 2.0 - 1.0 : vec3(0.0);
   float wfade = 1.0 / (1.0 + 0.09 * length(vEyePosition.xyz - vPositionW));
   vec2 wd = (wn1.xy + wn2.xy * 0.8) * gfxWP.x * wfade;
   normalW = normalize(vec3(wd.x, 1.0, wd.y));

@@ -42,7 +42,7 @@ export class Render {
     this.pipeline = null;
     this.skyTex = { 'assets/tex/sky.jpg': st }; this.skyMat = sm;
     // 画质升级 Demo（js/core/gfx.js）可以覆盖的部分：灯光预设 look、户外 / 站内环境贴图、户外薄雾、关后期
-    this.look = null; this.envOutO = null; this.envInO = null; this.haze = null; this.tunnel = false; this.noPost = false;
+    this.look = null; this.envOutO = null; this.envInO = null; this.envInGet = null; this.haze = null; this.tunnel = false; this.noPost = false;
     this.applyZone(0, true);
   }
   /** indoor: 0 = 户外，1 = 地下站内 */
@@ -100,6 +100,7 @@ export class Render {
   }
   /** 室内影棚环境贴图：首屏之后空闲时再加载（不占加载时间） */
   preloadIndoor() {
+    if (this.envInGet) { if (!this.envInO) this.envInGet(); return; }   // 升级画质：站内用 env_indoor（第一次进站内才下载）
     if (this.envIn) return;
     this.envIn = B.CubeTexture.CreateFromPrefilteredData(this._envInUrl, this.scene); this.envIn.name = 'envIn';
   }

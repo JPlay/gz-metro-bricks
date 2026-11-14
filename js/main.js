@@ -60,8 +60,8 @@ export async function start() {
   const M = mats(scene);
   const cam = new B.FreeCamera('cam', new B.Vector3(0, 2, -52), scene); cam.minZ = 0.25; cam.maxZ = 420; // 近裁剪面：第三人称 0.25（深度精度 ≈ 距离² / 近裁剪面，比 0.08 好 3 倍），第一人称 / 镜头贴近时在 Player.updateCamera 里降到 0.1 cam.fov = 0.92; cam.inputs.clear();
   const R = new Render(engine, scene, cam);
-  // 画质升级 Demo（原版 ↔ 10× 零开销升级，运行时切换）：见 js/core/gfx.js
-  const gfx = new Gfx({ engine, scene, R, M }); gfx.apply();
+  // 画质升级（默认开；?mode=orig 原版对比、?gfxdebug 调试面板）：见 js/core/gfx.js
+  const gfx = new Gfx({ engine, scene, R, M }); gfx.tier = CONFIG.fixedQuality ?? 1; gfx.apply();
   mark('render');
   progress(0.55, '正在铺轨道…');
   await paint();
@@ -80,6 +80,7 @@ export async function start() {
   const bubbles = new Bubbles(scene, cam);
   player.onStandRequest = () => seats.stand();
   player.meshes().forEach(m => R.addShadowCaster(m));
+  gfx.focus = () => player.position;
   initCaptions();
   Audio.loadManifest().catch(e => console.warn('manifest', e));
 
@@ -200,7 +201,7 @@ export async function start() {
   ['pointerdown', 'touchend', 'click', 'keydown'].forEach(ev => document.addEventListener(ev, unlock, { capture: true, passive: true }));
 
   // —— 画质
-  const applyQuality = () => { R.setTier(G.tier, CONFIG.qualityLevels); gfx.applyMats(); };
+  const applyQuality = () => { R.setTier(G.tier, CONFIG.qualityLevels); gfx.setTier(G.tier); };
   applyQuality();
   mark('quality');
   let fpsAcc = 0, fpsN = 0, fpsT = 0, lowCount = 0;
@@ -432,7 +433,7 @@ export async function start() {
   { const hd = mapEl.querySelector('header'), b = document.createElement('button'); b.className = 'restart'; b.textContent = '回到起点'; b.setAttribute('aria-label', '回到起点');
     hd.insertBefore(b, hd.querySelector('.x'));
     pressable(b, () => { G.noSave = true; clearSave(); location.reload(); }); }
-  // 画质 Demo 面板 + 一键传送（只在广州地铁范围内：地面 / 站厅；在车上或外地先提示）
+  // 画质调试面板（只在 ?gfxdebug 时出现）+ 一键传送（只在广州地铁范围内：地面 / 站厅；在车上或外地先提示）
   const gfxGo = async v => {
     if (curMetro() || (east && east.cur) || G.aboard || G.inTunnel) { hud.toast('先回到广州的地面或站厅再传送哦', 2200); return false; }
     if (G.mapOpen) closeMap();
@@ -441,10 +442,10 @@ export async function start() {
     player.spawn(v.x, v.y, v.z, v.yaw); player.pitch = v.pitch ?? 0.08;
     return true;
   };
-  const demoPanel = installDemoPanel({ gfx, go: gfxGo });
+  const demoPanel = gfx.debug ? installDemoPanel({ gfx, go: gfxGo }) : null;
   window.__gfx = { gfx, go: id => gfxGo(require_view(id)), panel: demoPanel, get stats() { return gfx.stats; }, get state() { return gfx.state; },
-    bake: () => Object.fromEntries(Object.entries(gfx.shadowTex).map(([k, e]) => [k, { ms: e.ms, tris: e.tris, px: e.px, ext: e.ext, meshes: e.meshes }])) };
-  function require_view(id) { return (demoPanel && window.__gfxViews || []).find(v => v.id === id); }
+    bake: () => gfx.stats.bake, get baking() { return !!gfx.sh.job; } };
+  function require_view(id) { return (window.__gfxViews || []).find(v => v.id === id); }
   window.__game = {
     state: () => ({
       code: G.code, zone: G.zone.kind, pos: [player.position.x, player.position.y, player.position.z].map(v => +v.toFixed(2)), yaw: +player.yaw.toFixed(3), pitch: +player.pitch.toFixed(3),

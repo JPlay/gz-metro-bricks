@@ -37,10 +37,13 @@ function splitGeo(g, test) {
   }
   return out;
 }
+/** 所有活着的 Kit（画质升级的日照投影按「当前开着的静态 Kit」烘焙，见 js/core/gfx.js） */
+export const KITS = new Set();
 export class Kit {
   constructor(scene, name, parent) {
     this.scene = scene; this.M = mats(scene);
     this.root = new B.TransformNode(name, scene); if (parent) this.root.parent = parent;
+    KITS.add(this); this.root.onDisposeObservable.addOnce(() => KITS.delete(this));
     this.buckets = {}; this.colliders = []; this.atlas = null; this.meshes = []; this.byBucket = {}; this.mats = null; this.groups = null;
   }
   g(name) { return this.buckets[name] || (this.buckets[name] = new Geo()); }
