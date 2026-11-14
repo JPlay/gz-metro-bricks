@@ -612,9 +612,9 @@ async def run_2c(pg):
         R['perf']['under:ubm14'] = await sample(pg, 'under:ubm14')
         # 沿西岸往下游：沿途从岸上看每座新桥（单拱平桥 / 无名路桥 / 同德路 / 彬德桥），再到江滨西大道桥下步道
         for bid, nm in (('bm15', 'single_arch_flat'), ('bm16', 'nameless_road'), ('bm17', 'tongde'), ('bm18', 'bingde')):
-            br = [x for x in D['bridges'] if x['id'] == bid][0]; pt = await bmpt(pg, br['s'] - br['w'] / 2 - 22, 10.0 + 4.6)
+            br = [x for x in D['bridges'] if x['id'] == bid][0]; pt = await bmpt(pg, br['s'] - br['w'] / 2 - 9, 10.0 + 4.6)   # 桥头前 9 m（22 m 太远：广角下桥只剩地平线上一道）
             okg = await go(pg, *pt, 'west bank → ' + bid); ok(f'c_under:walkTo:{bid}', okg, (await st(pg))['pos'])
-            if OUT: await look_s(pg, br['s'], 0, 0.02); await shot(pg, f'bridge_{bid}_{nm}_from_bank')
+            if OUT: await look_s(pg, br['s'], 0, -0.06); await shot(pg, f'bridge_{bid}_{nm}_from_bank')
         R['perf']['bridge:bm18'] = await sample(pg, 'bridge:bm18')
         await under_walk(pg, D, 'ubm19', 'jiangbinxi')
         R['perf']['under:ubm19'] = await sample(pg, 'under:ubm19')
