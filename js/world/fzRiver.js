@@ -32,7 +32,9 @@ const LINE_COLOR = { A: '#B3261E', B: '#2E5E8C', C: '#2F7D4A' };
 const inC2 = (z) => !!FZR.c2 && z < FZR.c2.z0;
 // 2C 再按 z 切成 150 m 一段（每段一组，各自按玩家远近开关 + 视锥裁剪），闽江远景单独一组
 const C2B = 150, c2Band = (z) => Math.max(0, Math.floor((FZR.c2.z0 - z) / C2B));
-const ZN = -330, ZN_OFF = ZN - 440;   // 北半边（z > ZN）的常开墙面 / 桥身 / 房子 / 树单独一组 gN：玩家走到 z < ZN_OFF（远裁剪 420 m 之外）就整组关掉，画面不变
+// 常开的墙面 / 桥身 / 房子 / 树（1A / 2B 部分）按 z 切三条（gN0: -330…-30，gN1: -30…270，gN2: > 270），其余（2B 东西河南段）留在 rest：
+// 每条一组，视锥裁剪按条算（背后的整条不画）；离玩家 > 430 m（远裁剪 420 m 之外）整条关掉，画面不变
+const ZS = [-330, -30, 270], zStrip = (z) => z > ZS[2] ? 2 : z > ZS[1] ? 1 : z > ZS[0] ? 0 : -1;
 const C2D = 80, c2DBand = (z) => Math.max(0, Math.floor((FZR.c2.z0 - z) / C2D));   // 细节格子：横向并成一条（每 80 m 一组）
 
 export class FzRiverStreet extends XmStreet {
@@ -64,7 +66,7 @@ export class FzRiverStreet extends XmStreet {
     this.decks = r.decks.map(([x0, x1, z0, z1]) => [x0 + ox, x1 + ox, z0 + oz, z1 + oz]);
   }
   /** 2C 分段：这一遍该不该画 z 处的东西 */
-  c2ok(z) { return inC2(z) === !!this._c2pass && (this._c2pass ? c2Band(z) === this._c2band : this._nPass === undefined || (z > ZN) === this._nPass); }
+  c2ok(z) { return inC2(z) === !!this._c2pass && (this._c2pass ? c2Band(z) === this._c2band : this._nPass === undefined || zStrip(z) === this._nPass); }
   /** W → 世界 */
   wx(x) { return x + this.kit.root.position.x; }
   wz(z) { return z + this.kit.root.position.z; }
@@ -94,7 +96,7 @@ export class FzRiverStreet extends XmStreet {
       for (let i = 0; i < nb; i++) { this._c2band = i; this.bridges(); this.unders(); this.roads(); this.wallFaces(); this.bridgeBodies(); this.houseBodies(); this.treeBlobs(); k.group('c2:' + i); }
       this._c2band = -1; this.minjiang(); this.c2Sluice(); k.group('c2mj'); this._c2pass = false;
     }
-    if (FZR.c2) { this._nPass = true; this.wallFaces(); this.bridgeBodies(); this.houseBodies(); this.treeBlobs(); k.group('gN'); this._nPass = false; }
+    if (FZR.c2) { for (let i = 0; i < ZS.length; i++) { this._nPass = i; this.wallFaces(); this.bridgeBodies(); this.houseBodies(); this.treeBlobs(); k.group('gN' + i); } this._nPass = -1; }
     // 以下是常开的全局几何（rest 组）
     this.groundAndWater(); this.wallFaces(); this.bridgeBodies(); this.houseBodies(); this.treeBlobs(); this._nPass = undefined;
     for (const K of Object.values(KIOSKS)) this.kioskAt(K);
@@ -303,7 +305,7 @@ export class FzRiverStreet extends XmStreet {
   bridgeBodies() {
     const k = this.kit, GR = k.g('granite'), P = k.solid, A = this.atlas;
     for (const b of BRIDGES) {
-      if (!!b.c2 !== !!this._c2pass || (this._c2pass && c2Band(b.z) !== this._c2band) || (!this._c2pass && this._nPass !== undefined && (b.z > ZN) !== this._nPass)) continue;
+      if (!!b.c2 !== !!this._c2pass || (this._c2pass && c2Band(b.z) !== this._c2band) || (!this._c2pass && this._nPass !== undefined && zStrip(b.z) !== this._nPass)) continue;
       const F = this.bridgeFrame(b), half = b.half, w = b.w, rise = humpRise(b), hw = b.hw;
       if (b.kind === 'bingde') this.bingde(b);
       else if (!rise && b.kind !== 'sarch') {
@@ -722,7 +724,7 @@ export class FzRiverStreet extends XmStreet {
     if (this.c2Bands) {
       const z0 = FZR.c2.z0, set = (node, on) => { if (node && (force || node.isEnabled(false) !== on)) node.setEnabled(on); };
       for (let i = 0; i < this.c2Bands; i++) { const zt = z0 - i * C2B, zb = zt - C2B, d = p.z > zt ? p.z - zt : p.z < zb ? zb - p.z : 0; set(gn['c2:' + i], d < 330); }
-      set(gn.c2mj, p.z < FZR.c2.sluice.z + 450); set(gn.gN, p.z > ZN_OFF);
+      set(gn.c2mj, p.z < FZR.c2.sluice.z + 450); ZS.forEach((z0_, i) => { const z1_ = i + 1 < ZS.length ? ZS[i + 1] : 1e9, d = p.z < z0_ ? z0_ - p.z : p.z > z1_ ? p.z - z1_ : 0; set(gn['gN' + i], d < 430); });
       for (const i of this.c2Detail) { const zt = z0 - i * C2D, zb = zt - C2D, d = p.z > zt ? p.z - zt : p.z < zb ? zb - p.z : 0; set(gn['c2d:' + i], d < 110); }
     }
   }

@@ -140,7 +140,7 @@ async def ride(pg, D, leg, target, shots=False, bshots=None):
     await pg.evaluate('window.__clr.min = 99; window.__clr.per = {}')
     CR = D['clrRepC'] if b0.get('rid') == 'C' else D['clrRep']   # 2C：C 线桥的里程按 C 线
     sbm5 = (CR.get('bm5') or {}).get('s') if b0.get('rid') != 'C' else None; took = set(); perfs = []
-    t0 = time.time(); g0 = await pg.evaluate('window.__gt'); done = False
+    t0 = time.time(); g0 = await pg.evaluate('window.__gt'); a0 = await pg.evaluate('window.__acc ? window.__acc.goT : 0'); done = False
     while time.time() - t0 < 2400:
         b = await boat(pg)
         if b['stats']['arrives'] > arr0 and b['phase'] == 'dock': done = True; break
@@ -163,7 +163,8 @@ async def ride(pg, D, leg, target, shots=False, bshots=None):
                 took.add('un' + bid); await shot(pg, f'boat_under_{bid}_{nm}')
         await asyncio.sleep(0.25 if bshots else 0.5)
     b = await boat(pg); j = await jget(pg); c = await pg.evaluate('window.__clr')
-    R['legs'].append({'leg': leg, 'from': b0['at'], 'to': b['at'], 'dir': b['dir'], 'stats': b['stats'], 'jump': j['max'], 'clr': c, 'secs': round(time.time() - t0), 'log': b['log']})
+    gs = round(await pg.evaluate('window.__gt') - g0, 1); goT = await pg.evaluate('window.__acc ? window.__acc.goT : null')
+    R['legs'].append({'leg': leg, 'from': b0['at'], 'to': b['at'], 'dir': b['dir'], 'stats': b['stats'], 'jump': j['max'], 'clr': c, 'secs': round(time.time() - t0), 'gameSecs': gs, 'goSecs': round(goT - a0, 1) if goT is not None else None, 'log': b['log']})
     ok(f'{leg}:arrived:{target}', done and b['at'] == target, b)
     ok(f'{leg}:smooth', j['max'] < TELEPORT and b['stats']['maxStep'] < (1.45 if E1B or E2B or E2C else 1.0) and b['stats']['maxYawStep'] < 0.12, {'jump': j['max'], 'stats': b['stats']})
     ok(f'{leg}:canopyClearance', c['min'] >= D['clr'] - 0.02, c)
@@ -400,9 +401,9 @@ async def under_walk(pg, D, uid, tag):
         await look(pg, *(await P(0, 1.2)), -0.35); await shot(pg, f'under_walkway_{uid}_from_bank')
 
 # 2B：船速逐帧记录 → 最大加 / 减速度（m/s²，按游戏帧长）+ 相邻帧速度差
-ACCW = """(() => { window.__acc = { aMax: 0, dMax: 0, dvMax: 0, n: 0, stepOver: -9, stepMax: 0 }; let lv = null, lp = null;
+ACCW = """(() => { window.__acc = { aMax: 0, dMax: 0, dvMax: 0, n: 0, stepOver: -9, stepMax: 0, goT: 0 }; let lv = null, lp = null;
   __game.scene.onAfterRenderObservable.add(() => { const S = __game.fzMetro.street; if (!S || !S.boat) { lv = null; return; } const i = S.boat.info(), A = window.__acc; if (i.rid !== window.__accRid) { window.__accRid = i.rid; lv = null; lp = null; }
-    const dt = S.boat.dtLast || 0, vr = S.boat.v; if (lv !== null && dt > 0.004 && i.phase === 'go') { const dv = vr - lv; A.n++;
+    const dt = S.boat.dtLast || 0, vr = S.boat.v; if (lv !== null && dt > 0.004 && i.phase === 'go') { const dv = vr - lv; A.n++; A.goT += dt;
       if (dv / dt > A.aMax) A.aMax = +(dv / dt).toFixed(3); if (-dv / dt > A.dMax) A.dMax = +(-dv / dt).toFixed(3); if (Math.abs(dv) > A.dvMax) A.dvMax = +Math.abs(dv).toFixed(3); }
     const q = S.boat.node.getAbsolutePosition(); if (lp !== null && lv !== null && dt > 0.004 && i.phase === 'go') { const d = Math.hypot(q.x - lp[0], q.z - lp[1]); if (d > A.stepMax) A.stepMax = +d.toFixed(3); const o = d - Math.max(vr, lv) * dt; if (o > A.stepOver) A.stepOver = +o.toFixed(3); }
     lp = [q.x, q.z]; lv = vr; }); return true; })()"""
@@ -506,6 +507,9 @@ async def alight_xsgc(pg, D, leg):
     up = await wait(pg, '!__game.player.seat', 8); ok(f'{leg}:standViaTap:xsgc', st_ok and up)
     await legs(pg, [await bmpt(pg, C['s'], hw - 3.0), await bmpt(pg, C['s'], hw - 1.9), await bmpt(pg, C['s'], hw - 1.0)], False)
     s0 = await st(pg); ok(f'{leg}:plankToDeck:xsgc', abs(s0['pos'][1] - (D['wy'] + 0.45)) < 0.3, s0['pos'])
+    if OUT:   # 共用码头：站在 C 泊位旁的栈道上往上游看 —— C 船在自己的泊位，栈道沿岸墙接到 A 线浮码头（A 船停在那里）
+        await look(pg, *(await W(pg, *X['berth'])), -0.12); await shot(pg, 'xsg_shared_pier_from_C_berth_deck')
+        await look(pg, *(await bmpt(pg, C['s'], hw - 6.0)), -0.2); await shot(pg, 'xsgc_C_boat_at_own_berth')
     await legs(pg, await deck_path(pg, D, False), False)
     await legs(pg, [await W(pg, *pf(X, -4.0, 0.75)), await W(pg, *pf(X, -9.4, 0.75)), await W(pg, *pf(X, -9.6, -0.9)), await landpt(pg, X)], False)
     s = await st(pg); land = await landpt(pg, X)
@@ -517,7 +521,7 @@ async def cleg2(pg, D, BS):
     await pg.evaluate('window.__caps.length = 0')
     if await board_xsgc(pg, D, 'cleg2'):
         await ride(pg, D, 'cleg2', 'shw', bshots=BS if OUT else None)
-        await asyncio.sleep(6)
+        await wait(pg, "window.__caps.some(c => c[0] === 'voice.fz.boat.xfer.shw.en')", 1e6, 120)
         caps = await pg.evaluate('window.__caps.slice(-12)')
         xf = [c for c in caps if c[0] == 'voice.fz.boat.xfer.shw.zh']
         ok('cleg2:announce arrive 上海西码头 终点 + 换乘地铁宁化站，请从 A 口出站', any(c[0] == 'voice.fz.boat.arrive.shw.end.zh' for c in caps) and xf and xf[0][1] == '换乘地铁宁化站，请从 A 口出站。' and any(c[0] == 'voice.fz.boat.xfer.shw.en' for c in caps), caps)
@@ -533,12 +537,13 @@ async def c_boat_summary(pg, D):
     per = {}
     for l in R['legs']:
         for k_, v in (l['clr'].get('per') or {}).items(): per[k_] = min(per.get(k_, 99), v)
-    R['clearanceC'] = per; R['legSecs'] = {l['leg']: l['secs'] for l in R['legs']}
+    # 单程时间 = 船自己的时钟（每帧 dt，上限 0.25 s）在 'go' 阶段的累计（离岸 → 靠稳）；无头 1–2 fps 下墙钟时间没意义，另记 wall
+    R['clearanceC'] = per; R['legSecs'] = {l['leg']: {'boat': l['goSecs'], 'wall': l['secs']} for l in R['legs']}
     R['accel'] = await pg.evaluate('window.__acc')
     ok('cboat:smoothAccel', R['accel']['n'] > 100 and R['accel']['aMax'] <= 0.505 and R['accel']['dMax'] <= 1.005, R['accel'])
     ok('cboat:maxStep<=v*dt', R['accel']['stepOver'] <= 0.05, R['accel'])
     ok('cboat:clearanceAllBridgesOnC', per and all(v >= D['clr'] - 0.02 for v in per.values()) and set(D['clrRepC']).issubset(set(per)), {'per': per, 'want': list(D['clrRepC'])})
-    ok('cboat:oneWay<=8min', R['legSecs'] and all(v <= 480 for v in R['legSecs'].values()), R['legSecs'])
+    ok('cboat:oneWay<=8min (boat clock, depart → docked)', R['legSecs'] and all(0 < (v['boat'] or 0) <= 480 for v in R['legSecs'].values()), R['legSecs'])
 async def run_2c_from_xsg(pg):
     """c_boat2 单独跑（一次 3600 s 内跑不完两程）：西门 C 口出来 → 西水关（C 船停在 C 泊位）→ 回程到上海西码头"""
     await pg.evaluate('window.__fzNavRes = 0.35')
