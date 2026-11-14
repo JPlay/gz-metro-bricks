@@ -147,6 +147,7 @@ async def ride(pg, D, leg, target, shots=False, bshots=None):
         if await pg.evaluate('window.__gt') - g0 > 700: break
         if b['phase'] == 'go' and b['v'] > 1 and 'perf' not in took and abs(b['s'] - b0['s']) > 30:
             took.add('perf'); perfs.append(await sample(pg, f'{leg}:onBoat'))
+            if b0.get('rid') == 'C': await hud_boat(pg, leg, 'C', '#2F7D4A')   # 小美 2C ④：只有坐在 C 线船上才绿
         if shots and b['phase'] == 'go' and 'seat3' not in took and abs(b['s'] - b0['s']) > 20:
             took.add('seat3'); await pg.evaluate("if (__game.player.view!=='third') __game.toggleView()"); await shot(pg, 'boat_seated_third')
             await pg.evaluate("__game.toggleView()"); await asyncio.sleep(0.6); await shot(pg, 'boat_seated_first'); await pg.evaluate("__game.toggleView()")
@@ -513,9 +514,18 @@ async def alight_xsgc(pg, D, leg):
     await legs(pg, await deck_path(pg, D, False), False)
     await legs(pg, [await W(pg, *pf(X, -4.0, 0.75)), await W(pg, *pf(X, -9.4, 0.75)), await W(pg, *pf(X, -9.6, -0.9)), await landpt(pg, X)], False)
     s = await st(pg); land = await landpt(pg, X)
-    return ok(f'{leg}:upToShore:xsg', abs(s['pos'][1]) < 0.4 and await near(pg, *land, 1.2), s['pos'])
+    r = ok(f'{leg}:upToShore:xsg', abs(s['pos'][1]) < 0.4 and await near(pg, *land, 1.2), s['pos']); await hud_shore_red(pg, leg + ':xsg'); return r
 async def look_s(pg, s_, lat, pitch=0.02): await look(pg, *(await bmpt(pg, s_, lat)), pitch)
 
+async def hud_shore_red(pg, label):
+    """小美 2C ④：岸上左上角「河」牌永远红（a 网 A 线色 #B3261E），不管出口亭那边停的是哪条线的船"""
+    await asyncio.sleep(1.0)
+    col = await pg.evaluate("getComputedStyle(document.getElementById('where')).getPropertyValue('--line').trim()")
+    nm = await plate(pg); ln = await pg.evaluate("document.getElementById('whereLine').textContent")
+    return ok(f'hud:shoreRed:{label}', col.upper() == '#B3261E' and nm == '福州内河' and ln.startswith('河'), [col, nm, ln])
+async def hud_boat(pg, label, rid, color):
+    col = await pg.evaluate("getComputedStyle(document.getElementById('where')).getPropertyValue('--line').trim()")
+    nm = await plate(pg); return ok(f'hud:onBoat:{label}', col.upper() == color and nm.startswith(rid + '线'), [col, nm])
 async def cleg2(pg, D, BS):
     """C线 回程：西水关（A 线浮码头 → 栈道 → C 泊位）→ 上海西码头；终点播报 + 换乘句；下船上岸"""
     await pg.evaluate('window.__caps.length = 0')
@@ -532,7 +542,7 @@ async def cleg2(pg, D, BS):
             await look(pg, *(await W(pg, K['x'], K['z'])), 0.0); await shot(pg, 'shw_after_alight_toward_ninghua_A')
         # 下船后走回宁化 A 口（换乘句说的那条路：不过桥）
         K = D['kiosks']['fznh']; tgt = await W(pg, K['x'], K['z'] + 3); okw = await go(pg, *tgt, '上海西码头 → 宁化 A 口')
-        ok('cleg2:walkBackToNinghuaA', okw and await near(pg, *tgt, 1.5), (await st(pg))['pos'])
+        ok('cleg2:walkBackToNinghuaA', okw and await near(pg, *tgt, 1.5), (await st(pg))['pos']); await hud_shore_red(pg, 'cleg2:fznh')
 async def c_boat_summary(pg, D):
     per = {}
     for l in R['legs']:
@@ -551,7 +561,7 @@ async def run_2c_from_xsg(pg):
     ok('fzxm:C:boats A + C, C at its own 西水关 berth', si and set((si.get('boats') or {}).keys()) == {'A', 'C'} and si['boats']['C']['at'] == 'xsgc', si and {k: v.get('at') for k, v in (si.get('boats') or {}).items()})
     await pg.evaluate(CLEAR); await pg.evaluate(ACCW); await pg.evaluate(CAPS); D = await mod(pg); await nav(pg); await asyncio.sleep(1)
     X = [p for p in D['piers'] if p['id'] == 'xsg'][0]; Cp = [p for p in D['piers'] if p['id'] == 'xsgc'][0]
-    land = await landpt(pg, X); okw = await go(pg, *land, '西门 C → 西水关码头'); ok('fzxm:C:walkToXsg', okw)
+    land = await landpt(pg, X); okw = await go(pg, *land, '西门 C → 西水关码头'); ok('fzxm:C:walkToXsg', okw); await hud_shore_red(pg, 'fzxm:xsg')
     if OUT:
         await look(pg, *(await W(pg, *X['sign'])), 0.0); await shot(pg, 'pier_sign_xsg_A_C_from_ximen')
         await look(pg, *(await W(pg, (X['berth'][0] + Cp['berth'][0]) / 2, (X['berth'][1] + Cp['berth'][1]) / 2)), -0.25); await shot(pg, 'xsg_shared_pier_A_and_C_berths')
@@ -566,7 +576,7 @@ async def run_2c(pg):
     ok('fznh:A:net a, boats A + C', si and si.get('net') == 'a' and set((si.get('boats') or {}).keys()) == {'A', 'C'} and si['boats']['C']['at'] == 'shw' and si['boats']['A']['at'] == 'xsg', si and {'net': si.get('net'), 'boats': {k: v.get('at') for k, v in (si.get('boats') or {}).items()}})
     await pg.evaluate(CLEAR); await pg.evaluate(ACCW); await pg.evaluate(CAPS); D = await mod(pg); await nav(pg); await asyncio.sleep(1)
     R['perf']['kiosk:fznh'] = await sample(pg, 'kiosk:fznh')
-    await asyncio.sleep(0.6); ok('plate:shore:fznh', await plate(pg) == '福州内河', await plate(pg))
+    await asyncio.sleep(0.6); ok('plate:shore:fznh', await plate(pg) == '福州内河', await plate(pg)); await hud_shore_red(pg, 'fznh:kiosk')
     K = D['kiosks']['fznh']; P = [p for p in D['piers'] if p['id'] == 'shw'][0]; c2 = D['c2']
     if OUT: await look(pg, *(await W(pg, *P['sign'])), 0.02); await shot(pg, 'nh_walk_from_kiosk_A')
     # ⑤ 宁化 A → 上海西码头：不过桥（全程西岸），步道 ≤ 125 m
@@ -620,7 +630,7 @@ async def run_2c(pg):
         R['perf']['under:ubm19'] = await sample(pg, 'under:ubm19')
         S_ = c2['sluice']; vw = await W(pg, *S_['view']); await jreset(pg)
         okv = await go(pg, *vw, '江滨西大道下穿 → 彬德水闸观景处'); j = await jget(pg)
-        ok('c_under:sluiceViewpoint reached on foot (≤ 0.5 m)', okv and await near(pg, *vw, 0.5) and j['max'] < TELEPORT, (await st(pg))['pos'])
+        ok('c_under:sluiceViewpoint reached on foot (≤ 0.5 m)', okv and await near(pg, *vw, 0.5) and j['max'] < TELEPORT, (await st(pg))['pos']); await hud_shore_red(pg, 'sluiceView')
         if OUT:
             await look(pg, *(await W(pg, S_['x'], S_['z'])), -0.05); await shot(pg, 'bingde_sluice_from_viewpoint')
             await look(pg, *(await W(pg, S_['x'] + S_['t'][0] * 120, S_['z'] + S_['t'][1] * 120)), 0.02); await shot(pg, 'minjiang_view_from_viewpoint')

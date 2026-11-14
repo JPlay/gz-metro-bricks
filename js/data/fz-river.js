@@ -136,6 +136,10 @@ export function useRoute(rid) {
 /** 在船线 rid 上跑 fn（跑完切回原来的） */
 export function withRoute(rid, fn) { const prev = useRoute(rid); try { return fn(); } finally { useRoute(prev); } }
 /** 码头 id 在哪几条船线上（西水关：A；西水关 C 线泊位 xsgc：C） */
+/** 左上角「河」牌的线色：岸上 = 本片河网的主线（a 网 A 红、b 网 B 蓝灰，同 1A–2B）；只有人在船上（坐着 / 站在船上）才换成那条船的线色（C 绿）。
+ *  homeLine = 本片河网第一条线（Object.keys(ROUTES)[0]），onBoatRid = 玩家所在船的线（不在船上 = null） */
+export const LINE_COLORS = { A: '#B3261E', B: '#2E5E8C', C: '#2F7D4A' };
+export function hudLine(homeLine, onBoatRid) { const line = onBoatRid || homeLine || 'A'; return { line, color: LINE_COLORS[line] || '#B3261E' }; }
 export function routesOfPier(id) { return Object.keys(ROUTES).filter(r => ROUTES[r].stops.some(s => s.id === id)); }
 /** 码头顺序 = 船线里程顺序（STOPS 在 useNet 里换） */
 

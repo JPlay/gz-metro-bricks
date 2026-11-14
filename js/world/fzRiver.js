@@ -13,7 +13,7 @@ import { XmStreet, textPaint, FONT, FONT_EN, facadePaint } from './xmStreet.js';
 import { hex, mix, Geo } from '../core/geo.js';
 import { bucketMat } from './kit.js';
 import * as D from './decor.js';
-import { FZR, WY, RIVERS, BRIDGES, PIERS, KIOSKS, isWater, isLand, isDry, shoreFor, soffitAt, deckAt, humpRise, pierNext, ROUTE, STOPS, nextStop, useNet, netOfKiosk, levelAt, inChamber, LOCK, LOCK_STATE, ROUTES, routesOfPier } from '../data/fz-river.js';
+import { FZR, WY, RIVERS, BRIDGES, PIERS, KIOSKS, isWater, isLand, isDry, shoreFor, soffitAt, deckAt, humpRise, pierNext, ROUTE, STOPS, nextStop, useNet, netOfKiosk, levelAt, inChamber, LOCK, LOCK_STATE, ROUTES, routesOfPier, hudLine } from '../data/fz-river.js';
 import { FzBoat } from '../game/fzBoat.js';
 import { Haze, RIVER_HAZE } from '../game/haze.js';
 import { FZ_EXITS } from '../data/fz-exits.js';
@@ -758,9 +758,10 @@ export class FzRiverStreet extends XmStreet {
   /** 左上角站名牌：岸上「福州内河」；在船上（坐着或站在船上）「<线>线 · 下一站」；line / color = 本片河网的船线（A 红 / B 蓝灰，同码头牌线路章） */
   riverHud(pl) {
     let line = ROUTE.id || 'A', color = line === 'B' ? '#2E5E8C' : '#B3261E'; const b = this.boat;
-    if (b && b.rid) { line = b.rid; color = LINE_COLOR[line] || color; }   // 2C：a 网两条船线 —— 按玩家相关的那条船（坐着 / 站在上面 / 出口亭那条线）
-    if (!b || !pl) return { boat: false, line, color };
-    if (!(b.passengerSeated(pl) || b.onBoard(pl))) return { boat: false, line, color };
+    // 2C：岸上永远是本片河网主线色（a 网 A 红）—— 以前按“和玩家相关的船”取色，宁化 A 出来那条是 C 船，岸上就变绿了（小美 2C ④）
+    const home = this.homeLine || (this.homeLine = Object.keys(ROUTES)[0] || line), on = !!(b && pl && (b.passengerSeated(pl) || b.onBoard(pl)));
+    ({ line, color } = hudLine(home, on ? b.rid : null));
+    if (!on) return { boat: false, line, color };
     // 停靠时显示当前码头（和「××码头到了」的播报一致），开船后再切到下一站（小美 11-14）
     const docked = b.phase === 'dock', j = docked ? b.i : b.target, P = ROUTES[b.rid].stops[j].pier;
     return { boat: true, docked, line, color, next: { id: P.id, zh: P.zh, en: P.en } };

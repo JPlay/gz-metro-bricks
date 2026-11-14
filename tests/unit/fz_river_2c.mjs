@@ -119,5 +119,11 @@ ok('under-walk headroom ≥ 2.0 m and leaves the boat lane', U.every(u => R.FLAT
   const chL = Object.keys(M.land).filter(k => J(M.land[k]) !== J(F.land[k])), chW = Object.keys(M.water).filter(k => J(M.water[k]) !== J(F.water[k]));
   ok(`main land / water cells unchanged outside 2C (changed only at the 2C junction: land ${chL.join(' ')}, water ${chW.join(' ')})`, [...chL, ...chW].every(k => cellZ(k) <= -540), [chL, chW]);
   ok('白马河 centreline: main points kept as prefix', J(F.rivers.bm.p.slice(0, M.rivers.bm.p.length)) === J(M.rivers.bm.p) && J(F.rivers.dx) === J(M.rivers.dx) && J(F.rivers.at) === J(M.rivers.at)); }
+// ④ 左上角「河」牌：岸上永远红（a 网 A 线色，同 1A–2B），只有坐 / 站在 C 线船上才绿
+ok('HUD shore colour: hudLine(A, null) red; on C boat green; on A boat red; b net shore blue-grey',
+  R.hudLine('A', null).color === '#B3261E' && R.hudLine('A', 'C').color === '#2F7D4A' && R.hudLine('A', 'A').color === '#B3261E' && R.hudLine('B', null).color === '#2E5E8C' && R.hudLine('A', null).line === 'A');
+{ const src = fs.readFileSync(new URL('../../js/world/fzRiver.js', import.meta.url), 'utf8'), body = src.slice(src.indexOf('  riverHud(pl) {'), src.indexOf('  info() {', src.indexOf('  riverHud(pl) {')));
+  ok('riverHud: shore colour from the net home line, boat colour only when the player is on that boat (no b.rid colour on shore)', /hudLine\(home, on \? b\.rid : null\)/.test(body) && /Object\.keys\(ROUTES\)\[0\]/.test(body) && !/LINE_COLOR\[/.test(body)); }
+
 console.log(fails.length ? `\n${fails.length} FAILED: ${fails.join(', ')}` : '\nALL PASS');
 process.exit(fails.length ? 1 : 0);
