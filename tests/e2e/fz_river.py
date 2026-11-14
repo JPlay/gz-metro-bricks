@@ -398,11 +398,12 @@ async def under_walk(pg, D, uid, tag):
         await look(pg, *(await P(0, 1.2)), -0.35); await shot(pg, f'under_walkway_{uid}_from_bank')
 
 # 2B：船速逐帧记录 → 最大加 / 减速度（m/s²，按游戏帧长）+ 相邻帧速度差
-ACCW = """(() => { window.__acc = { aMax: 0, dMax: 0, dvMax: 0, n: 0 }; let lv = null;
+ACCW = """(() => { window.__acc = { aMax: 0, dMax: 0, dvMax: 0, n: 0, stepOver: -9, stepMax: 0 }; let lv = null, lp = null;
   __game.scene.onAfterRenderObservable.add(() => { const S = __game.fzMetro.street; if (!S || !S.boat) { lv = null; return; } const i = S.boat.info(), A = window.__acc;
     const dt = Math.min(0.25, __game.scene.getEngine().getDeltaTime() / 1000); if (lv !== null && dt > 0.004 && i.phase === 'go') { const dv = i.v - lv; A.n++;
       if (dv / dt > A.aMax) A.aMax = +(dv / dt).toFixed(3); if (-dv / dt > A.dMax) A.dMax = +(-dv / dt).toFixed(3); if (Math.abs(dv) > A.dvMax) A.dvMax = +Math.abs(dv).toFixed(3); }
-    lv = i.v; }); return true; })()"""
+    const q = S.boat.node.getAbsolutePosition(); if (lp !== null && lv !== null && dt > 0.004 && i.phase === 'go') { const d = Math.hypot(q.x - lp[0], q.z - lp[1]); if (d > A.stepMax) A.stepMax = +d.toFixed(3); const o = d - Math.max(i.v, lv) * dt; if (o > A.stepOver) A.stepOver = +o.toFixed(3); }
+    lp = [q.x, q.z]; lv = i.v; }); return true; })()"""
 async def run_2b(pg):
     await pg.evaluate('window.__fzNavRes = 0.35')
     ex, si = await station_to_exit(pg, 'fzsb', "x.attr === 'fzriver'", 'fzsb')
@@ -455,7 +456,8 @@ async def run_2b(pg):
             for k, v in (l['clr'].get('per') or {}).items(): per[k] = min(per.get(k, 99), v)
         R['clearance2B'] = {k: per.get(k) for k in BS}; R['legSecs'] = {l['leg']: l['secs'] for l in R['legs']}
         R['accel'] = await pg.evaluate('window.__acc')
-        ok('bboat:smoothAccel', R['accel']['n'] > 100 and R['accel']['aMax'] <= 0.55 and R['accel']['dMax'] <= 1.1, R['accel'])
+        ok('bboat:smoothAccel', R['accel']['n'] > 100 and R['accel']['aMax'] <= 0.505 and R['accel']['dMax'] <= 1.005, R['accel'])
+        ok('bboat:maxStep<=v*dt', R['accel']['stepOver'] <= 0.05, R['accel'])
         ok('bboat:clearanceAllNewBridges', all(per.get(k) is not None and per[k] >= D['clr'] - 0.02 for k in BS), R['clearance2B'])
 
 async def boat_stages(pg):
