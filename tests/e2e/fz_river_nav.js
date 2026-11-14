@@ -1,7 +1,7 @@
 // e2e 用：在页面里按街区真实碰撞体建一张 0.4 m 步行栅格（陆地 + 桥面 / 台阶 / 浮码头 − 碰撞体外扩 0.45 m），A* 找路，返回世界坐标路点（给 autopilot 真走）。
 async () => {
   const M = await import('/js/data/fz-river.js');
-  const S = __game.fzMetro.street, R = S.kit.root.position, F = M.FZR, RES = 0.25, CLR = 0.38;
+  const S = __game.fzMetro.street, R = S.kit.root.position, F = M.FZR, RES = window.__fzNavRes || 0.25, CLR = 0.38;   // 1B 河网大（约 1 × 1.5 km）：e2e 设 __fzNavRes = 0.35 省内存
   let x0 = 1e9, z0 = 1e9, x1 = -1e9, z1 = -1e9; for (const [x, z] of F.bound) { x0 = Math.min(x0, x); z0 = Math.min(z0, z); x1 = Math.max(x1, x); z1 = Math.max(z1, z); }
   x0 -= 2; z0 -= 2; const NX = Math.ceil((x1 - x0 + 4) / RES), NZ = Math.ceil((z1 - z0 + 4) / RES);
   const walk = new Uint8Array(NX * NZ), block = new Uint8Array(NX * NZ);

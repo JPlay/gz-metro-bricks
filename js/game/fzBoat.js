@@ -8,15 +8,14 @@
  */
 import { Kit } from '../world/kit.js';
 import { hex } from '../core/geo.js';
-import { WY, BOAT, STOPS, routePose, speedCap, ACC } from '../data/fz-river.js';
+import { WY, BOAT, STOPS, ROUTE, routePose, goStep, BOAT_DWELL, BOAT_STAY } from '../data/fz-river.js';
+export { BOAT_DWELL };
 import { say } from '../audio/announcements.js';
 import { fzBoatDepartSegs, fzBoatArriveSegs } from '../data/phrases.js';
 
 const B = window.BABYLON;
 const NO = { ao: false };
-export const BOAT_DWELL = 3.0;   // 坐下后几秒开船
 
-const BOAT_STAY = 10;
 export class FzBoat {
   constructor(S, variant = 'red') {
     this.S = S; this.scene = S.scene; this.variant = variant;
@@ -26,7 +25,9 @@ export class FzBoat {
     this.kit.finish(false);
     this.kit.meshes.forEach(m => { m.isPickable = false; m.receiveShadows = true; });
     // 起始：停在离出来的出口亭最近的码头
-    const start = S.K.code === 'fzxiy' ? STOPS.length - 1 : 1;
+    // 1A：西洋 A 出来停黎明湖（终点）、西门 C 出来停西水关；1B：停在出口亭登记的码头（K.pier）
+    const kp = S.K.pier ? STOPS.findIndex(st => st.id === S.K.pier) : -1;
+    const start = kp >= 0 ? kp : S.K.code === 'fzxiy' ? STOPS.length - 1 : 1;
     this.i = start; this.s = STOPS[start].s; this.v = 0; this.dir = start === STOPS.length - 1 ? -1 : 1; this.phase = 'dock'; this.target = start; this.dwell = 0; this.t = 0;
     this.faceK = this.dir; this.log = []; this.stats = { departs: 0, arrives: 0, calls: 0, maxStep: 0, maxYawStep: 0 };
     this.place(0);
@@ -84,7 +85,7 @@ export class FzBoat {
     this.plankVis = this.planks.map(m => { const v = B.MeshBuilder.CreateBox('fzBoatPlank', { width: 0.62, height: 0.05, depth: BOAT.door[1] - BOAT.door[0] - 0.1 }, this.scene); v.parent = k.root; v.position.copyFrom(m.position); v.position.y = D - 0.02; v.material = this.kit.meshes[0] ? this.kit.meshes[0].material : null; v.isPickable = false; v.setEnabled(false); return v; });
     // 座位（世界坐标，每帧更新）
     this.seats = [];
-    for (const z of BOAT.rows) for (const sx of [-1, 1]) this.seats.push({ world: true, boat: this, follow: true, id: 'boat:' + z + ':' + sx, lz: z, lx: sx * BOAT.seatX, free: true, wx: 0, wy: 0, wz: 0, face: 0, eye: 1.0, camT: 0.75, camDist: 1.7, pitch: 0.17, pitchFirst: 0.14, stand: { x: 0, z: 0 } });
+    for (const z of BOAT.rows) for (const sx of [-1, 1]) this.seats.push({ world: true, boat: this, follow: true, id: 'boat:' + z + ':' + sx, lz: z, lx: sx * BOAT.seatX, free: true, wx: 0, wy: 0, wz: 0, face: 0, eye: 1.0, camT: 0.75, camDist: 1.7, pitch: 0.22, pitchFirst: 0.2, stand: { x: 0, z: 0 } });
   }
   /* ---------- 位置 ---------- */
   pose() { return routePose(this.s); }
@@ -126,7 +127,7 @@ export class FzBoat {
   depart(target, withPassenger) {
     this.target = target; this.dir = Math.sign(STOPS[target].s - this.s) || this.dir; this.phase = 'go'; this.dwell = 0; this.announcedNear = false; this.setPlank(false);
     this.stats.departs++; this.log.push({ t: +this.t.toFixed(1), ev: 'depart', from: STOPS[this.i].id, to: STOPS[target].id, pax: withPassenger });
-    if (withPassenger) { const term = this.dir > 0 ? STOPS[STOPS.length - 1].id : STOPS[0].id; say(fzBoatDepartSegs(term, STOPS[target].id), { key: 'boat', interrupt: true }); }
+    if (withPassenger) { const term = this.dir > 0 ? STOPS[STOPS.length - 1].id : STOPS[0].id; say(fzBoatDepartSegs(term, STOPS[target].id, ROUTE.id), { key: 'boat', interrupt: true }); }
   }
   arrive(pl) {
     this.i = this.target; this.s = STOPS[this.i].s; this.v = 0; this.phase = 'dock'; this.dwell = 0; this.setPlank(true);
@@ -161,12 +162,7 @@ export class FzBoat {
         }
       }
     } else {
-      const goal = STOPS[this.target].s, rem = (goal - this.s) * this.dir;
-      const vStop = Math.sqrt(Math.max(0, 2 * ACC * 0.9 * (rem - 0.05)));
-      const vMax = Math.min(speedCap(this.s), vStop), dv = vMax - this.v;
-      this.v += Math.max(-1.0 * dt, Math.min(ACC * dt, dv)); if (this.v < 0) this.v = 0;
-      if (rem < 0.08 || (rem < 0.6 && this.v < 0.12)) { this.s = goal; this.arrive(pl); }
-      else { this.s += this.v * dt * this.dir; if (this.v < 0.15 && rem > 0.6) this.v = 0.15; }   // 别停在半路（限速平滑后末段也至少蠕动）
+      if (goStep(this, dt)) { this.s = STOPS[this.target].s; this.arrive(pl); }   // 行船逻辑在 fz-river.js（单测按同一套算单程时间）
     }
     this.place(dt);
   }

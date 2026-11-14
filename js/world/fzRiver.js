@@ -5,12 +5,16 @@
  *   视觉：窄河道、条石驳岸 + 石栏、榕树探到水面上；安泰河两岸白墙黛瓦 + 马鞍墙、石拱桥；白马河 / 东西河现代步道 + 平桥。
  *   远近：地面 / 水面 / 驳岸 / 房子 / 桥 / 远景树冠常开；栏杆、榕树细节、路灯长椅按 80 m 格子只开附近（iPad 帧率）。
  *   游船 A 线：js/game/fzBoat.js（西湖码头 → 西水关码头 → 黎明湖码头）。
+ * 第 1B 批（东线，另一片河网，useNet('e')）：斗门 C / 东门 C / 光明港 D 出站进来。
+ *   晋安河（温泉公园 → 河口，1:4）+ 光明港（河口 → 光明港码头，1:5）；现代步道 + 条石驳岸 + 石栏 + 榕树；平桥 / 路桥（全部 OSM 位置）。
+ *   游船 B 线（白篷）：温泉公园码头 → 福新问渡码头 → 东门停靠点（游戏增设）→ 河口码头 → 光明港码头。
  */
 import { XmStreet, textPaint, FONT, FONT_EN, facadePaint } from './xmStreet.js';
 import { hex, mix } from '../core/geo.js';
 import * as D from './decor.js';
-import { FZR, WY, RIVERS, BRIDGES, PIERS, KIOSKS, isWater, isLand, isDry, shoreFor, soffitAt, deckAt, humpRise, pierNext, ROUTE, STOPS, nextStop } from '../data/fz-river.js';
+import { FZR, WY, RIVERS, BRIDGES, PIERS, KIOSKS, isWater, isLand, isDry, shoreFor, soffitAt, deckAt, humpRise, pierNext, ROUTE, STOPS, nextStop, useNet, netOfKiosk } from '../data/fz-river.js';
 import { FzBoat } from '../game/fzBoat.js';
+import { Haze, RIVER_HAZE } from '../game/haze.js';
 import { FZ_EXITS } from '../data/fz-exits.js';
 import { FZ_LINES } from '../data/fz-lines.js';
 
@@ -25,10 +29,11 @@ export class FzRiverStreet extends XmStreet {
   constructor(scene, code, N, ex) { super(scene, code, { ...N, build: s => s.river() }, ex); }
   /** 不铺默认地面：整片河网自己的岸地；把根节点平移到当前出口亭 */
   ground() {
+    this.net = useNet(netOfKiosk(this.code));   // 先换河网（活绑定），下面读到的 KIOSKS / FZR 都是这一片的
     const K = KIOSKS[this.code] || Object.values(KIOSKS)[0];
     this.K = K; this.others = Object.values(KIOSKS).filter(k => k.code !== K.code);
     this.kit.root.position.set(this.O.x - K.x, 0, this.O.z - K.z);
-    this.cellFns = new Map(); this.key = 'fzriver';
+    this.cellFns = new Map(); this.key = this.net === 'a' ? 'fzriver' : 'fzriver-' + this.net;
   }
   kiosk() {}   // 两个亭子在 river() 末尾画（全局几何，不进远近格子）
   /** W → 世界 */
@@ -40,7 +45,7 @@ export class FzRiverStreet extends XmStreet {
   river() {
     const k = this.kit;
     this.facades();
-    this.walls(); this.bridges(); this.piers(); this.stepsDown(); this.roads(); this.houses(); this.trees(); this.promenade(); this.sanfang(); this.backdrops();
+    this.walls(); this.bridges(); this.piers(); this.stepsDown(); this.roads(); this.houses(); this.trees(); this.promenade(); if (FZR.sfqx) this.sanfang(); if (FZR.lakeBox) this.backdrops();
     k.group('g0');   // 上面直接画的东西（桥、码头、台阶、马路、牌坊…）常开：单独封一组，别被并进第一个细节格子
     // 近处细节：每格一个组（finish 时每组一个节点，tick 里按距离开关）
     this.cellKeys = [];
@@ -51,7 +56,9 @@ export class FzRiverStreet extends XmStreet {
     this.boundary();
   }
   after() {
-    this.boat = new FzBoat(this);
+    // 1B：河面水汽远景（200 → 350 m 线性雾；远裁剪保持 420 m，不切天空穹顶）；离开街区时 dispose 还原
+    if (RIVER_HAZE[this.net]) { this.haze = new Haze(this.scene, this.scene.activeCamera, RIVER_HAZE[this.net]); this.haze.apply(); }
+    this.boat = new FzBoat(this, ROUTE.canopy || 'red');
     this.lodT = 0; this.lodNow(true);
   }
   /* ---------- 地面 / 水面（三角网，碰撞体按 60 m 格子分开） ---------- */
@@ -253,9 +260,9 @@ export class FzRiverStreet extends XmStreet {
       fit(p.zh, 800, ph * 0.22, FONT, pw / 2, ph * 0.29, pw * 0.86);
       fit(p.en, 600, ph * 0.085, FONT_EN, pw / 2, ph * 0.48, pw * 0.86);
       cv.fillStyle = '#5E4128'; cv.fillRect(pw * 0.1, ph * 0.57, pw * 0.8, ph * 0.008);
-      // A 线小圆章 + 下一站
-      cv.fillStyle = '#B3261E'; cv.beginPath(); cv.arc(pw * 0.16, ph * 0.76, ph * 0.09, 0, TAU); cv.fill();
-      cv.fillStyle = '#FFF'; cv.font = `800 ${ph * 0.085}px ${FONT}`; cv.fillText('A线', pw * 0.16, ph * 0.765);
+      // 线路小圆章（A 线红 / B 线蓝灰）+ 下一站
+      cv.fillStyle = ROUTE.id === 'B' ? '#2E5E8C' : '#B3261E'; cv.beginPath(); cv.arc(pw * 0.16, ph * 0.76, ph * 0.09, 0, TAU); cv.fill();
+      cv.fillStyle = '#FFF'; cv.font = `800 ${ph * 0.085}px ${FONT}`; cv.fillText((ROUTE.id || 'A') + '线', pw * 0.16, ph * 0.765);
       cv.fillStyle = '#2B1A0E'; cv.textAlign = 'left';
       fit('下一站  ' + nx.map(q => q.zh).join(' / '), 700, ph * 0.075, FONT, pw * 0.29, ph * 0.72, pw * 0.66);
       fit('Next: ' + nx.map(q => q.en).join(' / '), 600, ph * 0.055, FONT_EN, pw * 0.29, ph * 0.83, pw * 0.66);
@@ -333,24 +340,28 @@ export class FzRiverStreet extends XmStreet {
       }
     });
   }
-  /* ---------- 榕树：远景树冠常开；树干 / 气根 / 副冠只开附近 ---------- */
+  /* ---------- 榕树：主干与主树冠进静态合批常开（不增 draw call，远景不悬空）；分杈 / 气根 / 副冠只开附近 ---------- */
   trees() {
-    for (const [x, z, fx, fz, s, kind] of FZR.trees) this.det(x, z, () => this.banyanNear(x, z, fx, fz, s, kind));
+    for (const [x, z, fx, fz, s, kind] of FZR.trees) if (kind !== 'lake') this.det(x, z, () => this.banyanNear(x, z, fx, fz, s));
   }
-  banyanNear(x, z, fx, fz, s, kind) {
+  banyanNear(x, z, fx, fz, s) {
     const P = this.kit.solid, trunk = hex('#6B5A48'), G = ['#2F6B34', '#3A7A3C', '#2A5F30'], lean = 1.6 * s;
-    if (kind === 'lake') { P.tube([x, 0, z], [x + fx * 0.8, 4.2 * s, z + fz * 0.8], 0.5 * s, hex('#5E4E3E'), 5, false); return; }
-    // 树干斜向水面，分两杈，树冠探出驳岸
-    P.tubeTaper([x, 0, z], [x + fx * lean, 3.4 * s, z + fz * lean], 1.0 * s, 0.7 * s, trunk, 6);
     for (const a of [-0.7, 0.7]) { const c = Math.cos(a), sn = Math.sin(a), dx = fx * c - fz * sn, dz = fz * c + fx * sn; P.tube([x + fx * lean, 3.2 * s, z + fz * lean], [x + fx * lean + dx * 2.6 * s, 5.0 * s, z + fz * lean + dz * 2.6 * s], 0.42 * s, trunk, 4, false); }
     P.ellipsoid(x + fx * (lean + 2.4 * s) - fz * 1.4, 5.9 * s, z + fz * (lean + 2.4 * s) + fx * 1.4, 6.2 * s, 2.6 * s, 5.6 * s, hex(G[(x | 0) % 3 < 0 ? 0 : (x | 0) % 3]), 1);
     for (let i = 0; i < 4; i++) { const r = (1.6 + i * 0.7) * s, sd = i % 2 ? 1 : -1, px = x + fx * (lean + r) + fz * sd * 1.2, pz = z + fz * (lean + r) - fx * sd * 1.2; P.tube([px, 4.6 * s, pz], [px, (2.2 - (i % 2) * 0.9) * s, pz], 0.1 * s, hex('#7A6A56'), 3, false); }   // 垂到水面上方的气根
   }
   treeBlobs() {
-    const P = this.kit.solid, G = ['#2F6B34', '#3A7A3C', '#2A5F30', '#447F3A'];
+    const P = this.kit.solid, trunk = hex('#6B5A48'), G = ['#2F6B34', '#3A7A3C', '#2A5F30', '#447F3A'];
     FZR.trees.forEach(([x, z, fx, fz, s, kind], i) => {
-      if (kind === 'lake') { P.ellipsoid(x + fx * 1.2, 5.0, z + fz * 1.2, 5.4, 2.6, 5.4, hex('#7FB347'), 1); return; }
-      const lean = 1.6 * s; P.ellipsoid(x + fx * (lean + 1.4 * s), 6.3 * s, z + fz * (lean + 1.4 * s), 9.5 * s, 3.4 * s, 8.5 * s, hex(G[i % 4]), 1, yawOf(fx, fz));
+      if (kind === 'lake') {
+        P.tube([x, 0, z], [x + fx * 0.8, 4.2 * s, z + fz * 0.8], 0.5 * s, hex('#5E4E3E'), 5, false);
+        P.ellipsoid(x + fx * 1.2, 5.0, z + fz * 1.2, 5.4, 2.6, 5.4, hex('#7FB347'), 1);
+        return;
+      }
+      const lean = 1.6 * s;
+      // 简模主干一直插进树冠底部（5.1 s，树冠底约 4.6 s），和树冠同在 kit.solid 静态合批（0 额外 draw call）
+      P.tubeTaper([x, 0, z], [x + fx * (lean + 0.8 * s), 5.1 * s, z + fz * (lean + 0.8 * s)], 1.0 * s, 0.45 * s, trunk, 5, false);
+      P.ellipsoid(x + fx * (lean + 1.4 * s), 6.3 * s, z + fz * (lean + 1.4 * s), 9.5 * s, 3.4 * s, 8.5 * s, hex(G[i % 4]), 1, yawOf(fx, fz));
     });
   }
   /* ---------- 步道：路灯 / 长椅 ---------- */
@@ -421,6 +432,9 @@ export class FzRiverStreet extends XmStreet {
   }
   update(pl) {
     this.pl = pl; const p = pl.position, w = this.toW(p);
+    if (this.haze && p.y > -50) this.haze.reassert();   // 别处（onTunnel 等）关掉了就写回；隧道在 y≈-300，不抢隧道雾
+    // 兜底：万一从台阶 / 墙缝掉到地面以下（低帧率一步跨太大），自由下落到水面以下 1 m 就放回最近的岸上（同「回到岸上」的落点）
+    if (!pl.seat && !pl.grounded && pl.vy < -3 && p.y < WY - 1 && p.y > -40) { const sh = shoreFor(w.x, w.z); if (sh) { pl.spawn(this.wx(sh.x), 0.05, this.wz(sh.z), sh.yaw); this.fellThrough = (this.fellThrough || 0) + 1; } }
     if (!pl.seat) for (const o of this.others) { const lx = w.x - o.x, lz = w.z - o.z; if (lz < -2.6 && lz > -6 && Math.abs(lx) < 1.9 && p.y < 1.5) { this.backTo = { code: o.code, n: o.n }; return 'back'; } }
     return super.update(pl);
   }
@@ -432,18 +446,18 @@ export class FzRiverStreet extends XmStreet {
     if (!isWater(w.x, w.z)) return null;
     if (this.boat && this.boat.contains(w.x, w.z)) return null;
     const s = shoreFor(w.x, w.z); if (!s) return null;
-    return { key: 'fzriver', surfaceY: WY, shore: { x: this.wx(s.x), y: 0.05, z: this.wz(s.z), yaw: s.yaw } };
+    return { key: this.key, surfaceY: WY, shore: { x: this.wx(s.x), y: 0.05, z: this.wz(s.z), yaw: s.yaw } };
   }
-  /** 左上角站名牌：岸上「福州内河」；在船上（坐着或站在船上）「A线 · 下一站」 */
+  /** 左上角站名牌：岸上「福州内河」；在船上（坐着或站在船上）「<线>线 · 下一站」；line / color = 本片河网的船线（A 红 / B 蓝灰，同码头牌线路章） */
   riverHud(pl) {
-    const b = this.boat; if (!b || !pl) return { boat: false };
-    if (!(b.passengerSeated(pl) || b.onBoard(pl))) return { boat: false };
+    const line = ROUTE.id || 'A', color = line === 'B' ? '#2E5E8C' : '#B3261E', b = this.boat; if (!b || !pl) return { boat: false, line, color };
+    if (!(b.passengerSeated(pl) || b.onBoard(pl))) return { boat: false, line, color };
     const j = b.phase === 'go' ? b.target : nextStop(b.i, b.dir), P = STOPS[j].pier;
-    return { boat: true, next: { id: P.id, zh: P.zh, en: P.en } };
+    return { boat: true, line, color, next: { id: P.id, zh: P.zh, en: P.en } };
   }
-  info() { return { ...super.info(), river: true, kiosk: this.K.code, boat: this.boat ? this.boat.info() : null, cellsOn: this.cellKeys ? this.cellKeys.filter(k => this.kit.groupNodes['c:' + k].isEnabled(false)).length : 0, cells: this.cellKeys ? this.cellKeys.length : 0 }; }
-  dispose() { if (this.boat) this.boat.dispose(); super.dispose(); }
+  info() { return { ...super.info(), fellThrough: this.fellThrough || 0, net: this.net, route: ROUTE.id, river: true, kiosk: this.K.code, boat: this.boat ? this.boat.info() : null, cellsOn: this.cellKeys ? this.cellKeys.filter(k => this.kit.groupNodes['c:' + k].isEnabled(false)).length : 0, cells: this.cellKeys ? this.cellKeys.length : 0 }; }
+  dispose() { if (this.haze) { this.haze.restore(); this.haze = null; } if (this.boat) this.boat.dispose(); super.dispose(); }
 }
-const FZ_STATIONS_ZH = c => ({ fzxm: '西门', fzxiy: '西洋' })[c] || '';
+const FZ_STATIONS_ZH = c => ({ fzxm: '西门', fzxiy: '西洋', fzdm: '斗门', fzdmn: '东门', fzgmg: '光明港' })[c] || '';
 export { FzRiverStreet as default };
 void mix; void lerp; void isDry; void ROUTE;

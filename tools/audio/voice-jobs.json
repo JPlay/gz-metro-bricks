@@ -15666,6 +15666,150 @@
   "file": "voice/fz-boat-arrive-lmh-end-en.mp3"
  },
  {
+  "id": "voice.fz.boat.b.depart.gmg.zh",
+  "lang": "zh",
+  "text": "欢迎乘坐内河游船B线，本船开往光明港码头。",
+  "file": "voice/fz-boat-b-depart-gmg-zh.mp3"
+ },
+ {
+  "id": "voice.fz.boat.b.depart.gmg.en",
+  "lang": "en",
+  "text": "Welcome aboard Inland River Boat Line B. This boat is bound for Guangminggang Pier.",
+  "file": "voice/fz-boat-b-depart-gmg-en.mp3"
+ },
+ {
+  "id": "voice.fz.boat.next.fx.zh",
+  "lang": "zh",
+  "text": "下一站，福新问渡码头。",
+  "file": "voice/fz-boat-next-fx-zh.mp3"
+ },
+ {
+  "id": "voice.fz.boat.next.fx.en",
+  "lang": "en",
+  "text": "The next stop is Fuxin Wendu Pier.",
+  "file": "voice/fz-boat-next-fx-en.mp3"
+ },
+ {
+  "id": "voice.fz.boat.arrive.wq.end.zh",
+  "lang": "zh",
+  "text": "温泉公园码头到了，这里是本线终点。请带好随身物品，小心上岸。",
+  "file": "voice/fz-boat-arrive-wq-end-zh.mp3"
+ },
+ {
+  "id": "voice.fz.boat.arrive.wq.end.en",
+  "lang": "en",
+  "text": "We have arrived at Wenquan Park Pier, the end of this line. Please take your belongings and mind your step.",
+  "file": "voice/fz-boat-arrive-wq-end-en.mp3"
+ },
+ {
+  "id": "voice.fz.boat.next.dmn.zh",
+  "lang": "zh",
+  "text": "下一站，东门停靠点。",
+  "file": "voice/fz-boat-next-dmn-zh.mp3"
+ },
+ {
+  "id": "voice.fz.boat.next.dmn.en",
+  "lang": "en",
+  "text": "The next stop is Dongmen Boat Stop.",
+  "file": "voice/fz-boat-next-dmn-en.mp3"
+ },
+ {
+  "id": "voice.fz.boat.b.depart.wq.zh",
+  "lang": "zh",
+  "text": "欢迎乘坐内河游船B线，本船开往温泉公园码头。",
+  "file": "voice/fz-boat-b-depart-wq-zh.mp3"
+ },
+ {
+  "id": "voice.fz.boat.b.depart.wq.en",
+  "lang": "en",
+  "text": "Welcome aboard Inland River Boat Line B. This boat is bound for Wenquan Park Pier.",
+  "file": "voice/fz-boat-b-depart-wq-en.mp3"
+ },
+ {
+  "id": "voice.fz.boat.next.wq.zh",
+  "lang": "zh",
+  "text": "下一站，温泉公园码头。",
+  "file": "voice/fz-boat-next-wq-zh.mp3"
+ },
+ {
+  "id": "voice.fz.boat.next.wq.en",
+  "lang": "en",
+  "text": "The next stop is Wenquan Park Pier.",
+  "file": "voice/fz-boat-next-wq-en.mp3"
+ },
+ {
+  "id": "voice.fz.boat.arrive.fx.zh",
+  "lang": "zh",
+  "text": "福新问渡码头到了。上岸请小心脚下。",
+  "file": "voice/fz-boat-arrive-fx-zh.mp3"
+ },
+ {
+  "id": "voice.fz.boat.arrive.fx.en",
+  "lang": "en",
+  "text": "We have arrived at Fuxin Wendu Pier. Please mind your step.",
+  "file": "voice/fz-boat-arrive-fx-en.mp3"
+ },
+ {
+  "id": "voice.fz.boat.next.hk.zh",
+  "lang": "zh",
+  "text": "下一站，河口码头。",
+  "file": "voice/fz-boat-next-hk-zh.mp3"
+ },
+ {
+  "id": "voice.fz.boat.next.hk.en",
+  "lang": "en",
+  "text": "The next stop is Hekou Pier.",
+  "file": "voice/fz-boat-next-hk-en.mp3"
+ },
+ {
+  "id": "voice.fz.boat.arrive.dmn.zh",
+  "lang": "zh",
+  "text": "东门停靠点到了。上岸请小心脚下。",
+  "file": "voice/fz-boat-arrive-dmn-zh.mp3"
+ },
+ {
+  "id": "voice.fz.boat.arrive.dmn.en",
+  "lang": "en",
+  "text": "We have arrived at Dongmen Boat Stop. Please mind your step.",
+  "file": "voice/fz-boat-arrive-dmn-en.mp3"
+ },
+ {
+  "id": "voice.fz.boat.next.gmg.zh",
+  "lang": "zh",
+  "text": "下一站，光明港码头。",
+  "file": "voice/fz-boat-next-gmg-zh.mp3"
+ },
+ {
+  "id": "voice.fz.boat.next.gmg.en",
+  "lang": "en",
+  "text": "The next stop is Guangminggang Pier.",
+  "file": "voice/fz-boat-next-gmg-en.mp3"
+ },
+ {
+  "id": "voice.fz.boat.arrive.hk.zh",
+  "lang": "zh",
+  "text": "河口码头到了。上岸请小心脚下。",
+  "file": "voice/fz-boat-arrive-hk-zh.mp3"
+ },
+ {
+  "id": "voice.fz.boat.arrive.hk.en",
+  "lang": "en",
+  "text": "We have arrived at Hekou Pier. Please mind your step.",
+  "file": "voice/fz-boat-arrive-hk-en.mp3"
+ },
+ {
+  "id": "voice.fz.boat.arrive.gmg.end.zh",
+  "lang": "zh",
+  "text": "光明港码头到了，这里是本线终点。请带好随身物品，小心上岸。",
+  "file": "voice/fz-boat-arrive-gmg-end-zh.mp3"
+ },
+ {
+  "id": "voice.fz.boat.arrive.gmg.end.en",
+  "lang": "en",
+  "text": "We have arrived at Guangminggang Pier, the end of this line. Please take your belongings and mind your step.",
+  "file": "voice/fz-boat-arrive-gmg-end-en.mp3"
+ },
+ {
   "id": "voice.xm.doorsClosing.zh",
   "lang": "zh",
   "text": "车门即将关闭，请注意安全，谨防被夹。",

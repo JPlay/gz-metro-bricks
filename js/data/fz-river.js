@@ -6,9 +6,19 @@
  *   水面 y = WY（-3.0），岸顶 y = 0；船：甲板 WY+0.45（= 浮码头面），篷顶 WY+2.29（小美：船上视角篷只占屏幕上方 ≤20%，篷抬高、缩短到只罩座位）。
  * 净空规则（PLAN.md）：平桥梁底 ≥ -0.4；拱桥在船篷两侧角点处的拱腹高度 ≥ 篷顶 + 0.25。
  */
-import { FZR } from './fz-river-data.js';
-export { FZR };
-export const WY = FZR.WY;
+import { FZR as FZR_A } from './fz-river-data.js';
+import { FZR_E } from './fz-river-data-e.js';
+/*
+ * 两片河网（一次只建一片街区，和 FS 街口一样）：
+ *   a = 1A 西线（白马河 / 安泰河 / 东西河，A 线红篷）；e = 1B 东线（晋安河 1:4 + 光明港 1:5，B 线白篷，tools/fzriver/gen_e.py）。
+ *   下面的 FZR / RIVERS / ROUTE / STOPS / BRIDGES / KIOSKS / SPEED_CAP 是 ES 模块“活绑定”：useNet(id) 换成另一片，
+ *   所有 import 它们的模块（fzRiver.js / fzBoat.js）下一次读到的就是新的那片。街区构造时按出口亭所在河网调用 useNet。
+ */
+export const NETS = { a: FZR_A, e: FZR_E };
+/** 出口亭（车站 code）→ 河网 id */
+export function netOfKiosk(code) { for (const [id, F] of Object.entries(NETS)) if (F.kiosks[code]) return id; return 'a'; }
+export let FZR = FZR_A, NET = 'a';
+export const WY = FZR_A.WY;
 /** 船（米，船体局部：+z 船头、+x 右舷）。双头船：两头一样，掉头不用转身；长凳没有靠背，乘客总是朝行进方向坐 */
 export const BOAT = { len: 8, beam: 2.4, deck: 0.45, gunwale: 1.0, roofUnder: 2.17, top: 2.29, canopyHalfLen: 2.6, canopyHalfW: 1.27,
   rows: [2.15, 1.3, -1.3, -2.15], seatX: 0.72, door: [-0.6, 0.6] };
@@ -46,14 +56,49 @@ export function mkLine(flat) {
   };
   return { x, z, s, len, at, project };
 }
-export const RIVERS = Object.fromEntries(Object.entries(FZR.rivers).map(([k, r]) => [k, { ...r, line: mkLine(r.p) }]));
-export const ROUTE = { ...FZR.route, line: mkLine(FZR.route.p) };
-export const PIERS = FZR.piers;
-export const PIER = Object.fromEntries(PIERS.map(p => [p.id, p]));
-/** A 线：码头顺序 = 船线里程顺序 */
-export const STOPS = FZR.route.stops.map(s => ({ ...s, pier: PIER[s.id] }));
-export const BRIDGES = FZR.bridges;
-export const KIOSKS = FZR.kiosks;
+export let RIVERS, ROUTE, PIERS, PIER, STOPS, BRIDGES, KIOSKS, SPEED_CAP;
+const CACHE = {};
+/** 码头台阶口的岸墙缺口（a −10.2 … −8.3，|b| ≤ 1，同生成器 GAPS）：生成器按 2 m 一段、看中点在不在缺口里定栏杆 / 缺口，
+ *  缺口只有 1.9 m 宽，中点刚好落在外面就整段都是栏杆（福新问渡：台阶顶被栏杆封死，上不了岸）。这里按缺口矩形精确切开岸墙段（幂等）。 */
+function cutPierGaps(F) {
+  if (F._pierGapsCut) return; F._pierGapsCut = true;
+  for (const P of F.piers) {
+    const out = [];
+    for (const w of F.wall) {
+      if (w[4] !== 0) { out.push(w); continue; }
+      const loc = (x, z) => { const dx = x - P.x, dz = z - P.z; return [dx * P.t[0] + dz * P.t[1], dx * P.n[0] + dz * P.n[1]]; };
+      const [a0, b0] = loc(w[0], w[1]), [a1, b1] = loc(w[2], w[3]); let t0 = 0, t1 = 1;
+      for (const [p, q] of [[-(a1 - a0), a0 + 10.2], [a1 - a0, -8.3 - a0], [-(b1 - b0), b0 + 1], [b1 - b0, 1 - b0]]) {   // Liang–Barsky
+        if (Math.abs(p) < 1e-9) { if (q < 0) { t0 = 1; t1 = 0; } continue; }
+        const r = q / p; if (p < 0) t0 = Math.max(t0, r); else t1 = Math.min(t1, r);
+      }
+      const L = Math.hypot(w[2] - w[0], w[3] - w[1]);
+      if (t1 - t0 < 0.05 / (L || 1)) { out.push(w); continue; }
+      const pt = t => [+(w[0] + (w[2] - w[0]) * t).toFixed(2), +(w[1] + (w[3] - w[1]) * t).toFixed(2)];
+      const A = pt(t0), B = pt(t1);
+      if (t0 > 1e-4) out.push([w[0], w[1], ...A, 0, w[5]]);
+      out.push([...A, ...B, 1, w[5]]);
+      if (t1 < 1 - 1e-4) out.push([...B, w[2], w[3], 0, w[5]]);
+    }
+    F.wall.length = 0; F.wall.push(...out);
+  }
+}
+/** 换河网（活绑定）；返回河网 id */
+export function useNet(id) {
+  if (!NETS[id]) id = 'a';
+  if (!CACHE[id]) {
+    cutPierGaps(NETS[id]);
+    const F = NETS[id], rivers = Object.fromEntries(Object.entries(F.rivers).map(([k, r]) => [k, { ...r, line: mkLine(r.p) }]));
+    const route = { ...F.route, line: mkLine(F.route.p) }, pier = Object.fromEntries(F.piers.map(p => [p.id, p]));
+    CACHE[id] = { F, rivers, route, piers: F.piers, pier, stops: F.route.stops.map(s => ({ ...s, pier: pier[s.id] })), bridges: F.bridges, kiosks: F.kiosks, cap: null };
+  }
+  const C = CACHE[id];
+  NET = id; FZR = C.F; RIVERS = C.rivers; ROUTE = C.route; PIERS = C.piers; PIER = C.pier; STOPS = C.stops; BRIDGES = C.bridges; KIOSKS = C.kiosks;
+  if (!C.cap) C.cap = buildSpeedCap();
+  SPEED_CAP = C.cap;
+  return id;
+}
+/** 码头顺序 = 船线里程顺序（STOPS 在 useNet 里换） */
 
 /* ---------- 点在多边形 / 三角形 ---------- */
 export function inPoly(px, pz, f) {
@@ -130,11 +175,15 @@ export function clearanceReport(step = 0.25) {
   return { per, min: gaps.length ? Math.min(...gaps) : Infinity, ok: gaps.every(g => g >= CLEAR_MIN) };
 }
 /** 船线上每米的限速：过桥 / 急弯慢行 */
-export const SPEED_CAP = (() => {
-  const n = Math.ceil(ROUTE.line.len) + 1, cap = new Array(n).fill(CRUISE);
+function buildSpeedCap() {
+  // 速度分区：A 线没有 zones（全程 3.5、过桥 2.0，和 1A 一样）；B 线见 gen_e.py ZONES（晋安河 3.5，光明港开阔段 5.5，过桥 / 进出码头 3.5）
+  const Z = ROUTE.zones || {}, n = Math.ceil(ROUTE.line.len) + 1, cap = new Array(n).fill(Z.cruise || CRUISE);
+  if (Z.fast) for (let i = Math.ceil(Z.fast[0]); i <= Math.min(n - 1, Z.fast[1]); i++) cap[i] = Z.vFast;
+  const vBridge = Z.vBridge || SLOW;
   for (let i = 0; i < n; i++) {
     const p = routePose(i);
-    for (const b of BRIDGES) { const { u, v } = bridgeLocal(b, p.x, p.z); if (Math.abs(u) < b.w / 2 + 10 && Math.abs(v) < b.half + 2) cap[i] = Math.min(cap[i], SLOW); }
+    for (const b of BRIDGES) { const { u, v } = bridgeLocal(b, p.x, p.z); if (Math.abs(u) < b.w / 2 + 10 && Math.abs(v) < b.half + 2) cap[i] = Math.min(cap[i], vBridge); }
+    if (Z.vPier) for (const st of STOPS) if (Math.abs(i - st.s) < Z.pierZone) cap[i] = Math.min(cap[i], Z.vPier);
     // 转弯半径（前后 4 m 的切线夹角）
     const a = routePose(Math.max(0, i - 4)), c = routePose(Math.min(ROUTE.line.len, i + 4)), da = Math.abs(Math.atan2(a.tx * c.tz - a.tz * c.tx, a.tx * c.tx + a.tz * c.tz));
     if (da > 0.02) { const R = 8 / da; cap[i] = Math.min(cap[i], Math.max(1.2, Math.sqrt(0.7 * R))); }
@@ -143,9 +192,72 @@ export const SPEED_CAP = (() => {
   for (let i = n - 2; i >= 0; i--) cap[i] = Math.min(cap[i], Math.sqrt(cap[i + 1] ** 2 + 2 * ACC * 1));
   for (let i = 1; i < n; i++) cap[i] = Math.min(cap[i], Math.sqrt(cap[i - 1] ** 2 + 2 * ACC * 1));
   return cap;
-})();
+}
+/** 行船一步（fzBoat.js 每帧调用；单测按同一套逻辑积分出单程时间）。b = { s, v, dir, target }；到站返回 true（调用方把 s 放到站点） */
+export function goStep(b, dt) {
+  const goal = STOPS[b.target].s, rem = (goal - b.s) * b.dir;
+  const vStop = Math.sqrt(Math.max(0, 2 * ACC * 0.9 * (rem - 0.05)));
+  const vMax = Math.min(speedCap(b.s), vStop), dv = vMax - b.v;
+  b.v += Math.max(-1.0 * dt, Math.min(ACC * dt, dv)); if (b.v < 0) b.v = 0;
+  if (rem < 0.08 || (rem < 0.6 && b.v < 0.12)) return true;
+  b.s += b.v * dt * b.dir; if (b.v < 0.15 && rem > 0.6) b.v = 0.15;   // 别停在半路（限速平滑后末段也至少蠕动）
+  return false;
+}
+export const BOAT_DWELL = 3.0;   // 坐下后几秒开船
+export const BOAT_STAY = 9;      // 中途站停靠（坐着的乘客有 9 秒点「起身」；小美定，B 线单程压到 8 分钟内）
+/** 坐着不下船从站 i0 到 i1 的时间（秒，dt 1/60）：起点坐下等 BOAT_DWELL + 各段行船 + 中途站 BOAT_STAY */
+export function runTime(i0, i1, dt = 1 / 60) {
+  const dir = Math.sign(i1 - i0); let t = BOAT_DWELL, legs = [];
+  for (let i = i0; i !== i1; i += dir) {
+    const b = { s: STOPS[i].s, v: 0, dir, target: i + dir }; let lt = 0, vmax = 0;
+    while (!goStep(b, dt)) { lt += dt; vmax = Math.max(vmax, b.v); if (lt > 3600) break; }
+    legs.push({ from: STOPS[i].id, to: STOPS[i + dir].id, secs: +lt.toFixed(1), vmax: +vmax.toFixed(2) }); t += lt + (i + dir !== i1 ? BOAT_STAY : 0);
+  }
+  return { secs: +t.toFixed(1), legs };
+}
+useNet('a');
 export const speedCap = s => SPEED_CAP[Math.max(0, Math.min(SPEED_CAP.length - 1, Math.round(s)))];
 /** 下一站：从站序号 i 往 dir 方向 */
 export function nextStop(i, dir) { const j = i + dir; return j >= 0 && j < STOPS.length ? j : i - dir; }
 /** 码头牌上的“下一站”：两头只有一个方向，中间两个方向 */
 export function pierNext(id) { const i = STOPS.findIndex(s => s.id === id); return [STOPS[i - 1], STOPS[i + 1]].filter(Boolean).map(s => s.pier); }
+
+/* ---------- 坐船视角：同时看得见几座桥（小美：任何时刻 ≤ 2 座）---------- */
+/** 船上坐着的视点（W 坐标 + 高度）：前排靠窗、船中、第三人称（后上方 1.7 m）；朝行进方向 */
+// fov = 第一人称竖直视角（player.js FOV_FIRST），aspect 取 16:9（比 iPad 1.44 更宽，偏保守）；
+// dist = “认得出是一座桥”的距离 150 m（桥面 + 栏杆约 1.4 m 高，150 m 外在 820 px 高的屏上不到 8 px、桥跨不到 10°）。相机 maxZ 是 420 m（只算视锥会多到 5 座，见 1B 报告）
+export const VIEW = { fov: 1.0, aspect: 16 / 9, eyeY: WY + 0.45 + 1.1, thirdBack: 1.7, thirdUp: 0.8, dist: 150, maxZ: 420 };
+/**
+ * 从船线里程 s、行进方向 dir 看过去，视锥里、视线不被岸挡住的桥（不算桥挡桥、不算房子 / 树挡：偏保守，只会多算）。
+ * 视线挡判定：视线经过岸地（不是水面 / 台阶 / 浮码头）时，若那一点视线高度低于岸顶（y = 0）就算被驳岸挡住 —— 人坐在船上眼睛比岸低 1.45 m。
+ * 桥的取样点：桥面两侧栏杆顶（y = +1.0），横跨河道每 2 m 一点（只取河面上方 |v| ≤ hw + 1）。
+ */
+export function bridgesInView(s, dir, o = {}) {
+  const V = { ...VIEW, ...o }, p = routePose(s), fx = p.tx * dir, fz = p.tz * dir, nx = fz, nz = -fx;
+  const hf = Math.atan(Math.tan(V.fov / 2) * V.aspect), vf = V.fov / 2;
+  const eyes = [[0, 2.0, V.eyeY], [0.72, 2.0, V.eyeY], [-0.72, 2.0, V.eyeY], [0, -V.thirdBack, V.eyeY + V.thirdUp]].map(([lx, lz, y]) => ({ x: p.x + fx * lz + nx * lx, z: p.z + fz * lz + nz * lx, y }));
+  const seen = new Set();
+  const losClear = (e, tx, ty, tz) => {
+    const L = Math.hypot(tx - e.x, tz - e.z), n = Math.max(1, Math.ceil(L / 1.5));
+    for (let i = 1; i < n; i++) { const t = i / n, x = e.x + (tx - e.x) * t, z = e.z + (tz - e.z) * t, y = e.y + (ty - e.y) * t; if (y < 0.02 && isLand(x, z) && !isDry(x, z)) return false; }
+    return true;
+  };
+  for (const b of BRIDGES) {
+    const dc = Math.hypot(b.x - p.x, b.z - p.z); if (dc > V.dist + b.half + b.w) continue;
+    let vis = false;
+    for (const e of eyes) {
+      for (let v = 0; v <= b.hw + 1 && !vis; v += 2) for (const sv of v ? [-1, 1] : [1]) for (const su of [-1, 1]) {
+        if (vis) break;
+        const tx = b.x + b.t[0] * su * b.w / 2 + b.n[0] * sv * v, tz = b.z + b.t[1] * su * b.w / 2 + b.n[1] * sv * v, ty = 1.0;
+        const dx = tx - e.x, dz = tz - e.z, d = Math.hypot(dx, dz); if (d > V.dist || d < 0.01) continue;
+        const fwd = dx * fx + dz * fz, side = dx * nx + dz * nz; if (fwd <= 0.05) continue;
+        if (Math.abs(Math.atan2(side, fwd)) > hf) continue;
+        if (Math.abs(Math.atan2(ty - e.y, fwd)) > vf + 0.04) continue;   // 正头顶的桥（人在桥下）不在画面里
+        if (losClear(e, tx, ty, tz)) vis = true;
+      }
+      if (vis) break;
+    }
+    if (vis) seen.add(b.id);
+  }
+  return [...seen];
+}

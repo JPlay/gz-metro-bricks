@@ -147,12 +147,12 @@ export class Geo {
     this.sphere(a[0], a[1], a[2], r0 * 2, col, 1); this.sphere(b[0], b[1], b[2], r1 * 2, col, 1);
     return this;
   }
-  tubeTaper(a, b, d0, d1, col, tess = 10) {
+  tubeTaper(a, b, d0, d1, col, tess = 10, caps = true) {
     const dx = b[0] - a[0], dy = b[1] - a[1], dz = b[2] - a[2], L = Math.hypot(dx, dy, dz); if (L < 1e-4) return this;
     const dir = new B.Vector3(dx / L, dy / L, dz / L), up = new B.Vector3(0, 1, 0);
     const axis = B.Vector3.Cross(up, dir), ang = Math.acos(Math.max(-1, Math.min(1, B.Vector3.Dot(up, dir))));
     const q = axis.length() < 1e-5 ? (dir.y > 0 ? B.Quaternion.Identity() : B.Quaternion.RotationAxis(new B.Vector3(1, 0, 0), Math.PI)) : B.Quaternion.RotationAxis(axis.normalize(), ang);
-    const ts = q2(d1 / d0), vd = proto('cy' + tess + '_' + ts + '_0,1', () => bandCyl(tess, [0, 1], ts));
+    const ts = q2(d1 / d0), vd = proto('cy' + tess + '_' + ts + '_0,1' + (caps ? '' : 'o'), () => bandCyl(tess, [0, 1], ts, caps));
     tmpS.set(d0, L, d0); tmpT.set((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2);
     B.Matrix.ComposeToRef(tmpS, q, tmpT, tmpM);
     return this.addVD(vd, tmpM, C(col));

@@ -10,6 +10,7 @@ import { xmVisitTexts, xmExitTexts } from './xm-visits.js';
 import { FZ_LINES, FZ_STATIONS, fzIsTerminal, fzTransfers, fzLineZh, fzLineEn } from './fz-lines.js';
 import { fzVisitTexts, fzExitTexts } from './fz-visits.js';
 import { FZR } from './fz-river-data.js';
+import { FZR_E } from './fz-river-data-e.js';
 
 export const LANGS = ['zh', 'yue', 'en'];
 /** 播放顺序：普通话 → 粤语（广州）/ 闽南语（厦门地铁）→ 英语。粤语只在广州、闽南语只在厦门地铁 1/2 号线；动车只有普通话 + 英语 */
@@ -186,12 +187,13 @@ export function fzDepartSegs(line, nextCode, dir, step, withDestination) {
   return fzIsTerminal(line, nextCode, step) ? [...head, ...fzTerminalSegs(line, dir)] : [...head, ...fzNextSegs(line, nextCode), ...fzVisitSegs(nextCode)];
 }
 /* ---------- 福州内河游船 A 线：只播普通话 + 英语（不走 fseg，没有福州话位） ---------- */
-const BOAT_P = Object.fromEntries(FZR.piers.map(p => [p.id, p]));
+const BOAT_P = Object.fromEntries([...FZR.piers, ...FZR_E.piers].map(p => [p.id, p]));
 const bseg = (key, zh, en) => [{ id: `voice.fz.boat.${key}.zh`, lang: 'zh', text: zh }, { id: `voice.fz.boat.${key}.en`, lang: 'en', text: en }];
 /** 开船：本船开往（终点码头）+ 下一站 */
-export function fzBoatDepartSegs(term, next) {
+export function fzBoatDepartSegs(term, next, line = 'A') {
   const T = BOAT_P[term], N = BOAT_P[next];
-  return [...bseg('depart.' + term, `欢迎乘坐内河游船A线，本船开往${T.zh}。`, `Welcome aboard Inland River Boat Line A. This boat is bound for ${T.en}.`),
+  // A 线沿用 1A 的 id（depart.<码头>）；B 线 id 带线名（b.depart.<码头>），以后线路多了也不撞
+  return [...bseg((line === 'A' ? '' : line.toLowerCase() + '.') + 'depart.' + term, `欢迎乘坐内河游船${line}线，本船开往${T.zh}。`, `Welcome aboard Inland River Boat Line ${line}. This boat is bound for ${T.en}.`),
     ...bseg('next.' + next, `下一站，${N.zh}。`, `The next stop is ${N.en}.`)];
 }
 /** 到站：终点站多一句“带好随身物品” */
@@ -201,13 +203,16 @@ export function fzBoatArriveSegs(id, terminal) {
     : bseg('arrive.' + id, `${P.zh}到了。上岸请小心脚下。`, `We have arrived at ${P.en}. Please mind your step.`);
 }
 export function fzBoatJobs() {
-  const ids = FZR.route.stops.map(s => s.id), first = ids[0], last = ids[ids.length - 1], out = [];
-  ids.forEach((id, i) => {
-    if (i < ids.length - 1) out.push(...fzBoatDepartSegs(last, ids[i + 1]));
-    if (i > 0) out.push(...fzBoatDepartSegs(first, ids[i - 1]));
-    out.push(...fzBoatArriveSegs(id, i === 0 || i === ids.length - 1));
-  });
-  return out;
+  const out = [];
+  for (const F of [FZR, FZR_E]) {
+    const line = F.route.id, ids = F.route.stops.map(s => s.id), first = ids[0], last = ids[ids.length - 1];
+    ids.forEach((id, i) => {
+      if (i < ids.length - 1) out.push(...fzBoatDepartSegs(last, ids[i + 1], line));
+      if (i > 0) out.push(...fzBoatDepartSegs(first, ids[i - 1], line));
+      out.push(...fzBoatArriveSegs(id, i === 0 || i === ids.length - 1));
+    });
+  }
+  const seen = new Set(); return out.filter(s => !seen.has(s.id) && seen.add(s.id));
 }
 export function allJobs() {
   const out = new Map(), add = list => list.forEach(s => out.set(s.id, s));
