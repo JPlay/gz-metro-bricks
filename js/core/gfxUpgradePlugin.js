@@ -119,7 +119,7 @@ if (gfxF.y > 0.5) {
   }
   if (gfxF.y > 0.5 && gfxOut > 0.01) {
     vec3 ga = surfaceAlbedo.rgb;
-    float gleaf = step(ga.r * 1.15, ga.g) * step(ga.b * 1.1, ga.g) * gfxOut * gfxSunCol.w;
+    float gleaf = step(ga.r * 1.15, ga.g) * step(ga.b * 1.1, ga.g) * gfxOut * gfxSunCol.w * (1.0 - smoothstep(0.7, 0.92, gfxNg.y) * 0.85);   // 朝上的草地不透光（夕阳下草地发黄）
     float gback = pow(max(0.0, dot(viewDirectionW, gfxSunDir.xyz)), 3.0);
     vec3 gtrans = gfxSunCol.rgb * ga * (gback * 1.6 * (0.35 + 0.65 * gLit) + max(0.0, gNdL * 0.5 + 0.5) * 0.18 * gLit);
     finalDiffuse += gtrans * gleaf;

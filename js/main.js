@@ -444,7 +444,7 @@ export async function start() {
   };
   const demoPanel = gfx.debug ? installDemoPanel({ gfx, go: gfxGo }) : null;
   window.__gfx = { gfx, go: id => gfxGo(require_view(id)), panel: demoPanel, get stats() { return gfx.stats; }, get state() { return gfx.state; },
-    bake: () => gfx.stats.bake, get baking() { return !!gfx.sh.job; } };
+    bake: () => gfx.stats.bake, get baking() { return !!gfx.sh.job; }, build: code => buildStation(code) };
   function require_view(id) { return (window.__gfxViews || []).find(v => v.id === id); }
   window.__game = {
     state: () => ({

@@ -27,8 +27,8 @@ export const LOOKS = {
     sunI: [2.4, 0.9], sunD: [C3(1.0, 0.95, 0.86), C3(1.0, 0.99, 0.96)], sunDir: V3(-0.42, -1, 0.55), envI: [1.0, 0.9] },
   day: { hemiI: [0.42, 0.9], hemiD: [C3(0.9, 0.95, 1.0), C3(1.0, 0.97, 0.92)], hemiG: [C3(0.52, 0.5, 0.46), C3(0.58, 0.6, 0.64)],
     sunI: [3.2, 0.85], sunD: [C3(1.0, 0.94, 0.84), C3(1.0, 0.97, 0.92)], sunDir: V3(-0.48, -0.78, 0.40), envI: [0.62, 0.7],
-    sky: 'assets/tex/sky_day.jpg', env: 'vendor/env/env_day.env', fog: C3(0.70, 0.78, 0.88), fogStart: 110, fogEnd: 380, leafCol: C3(1.0, 0.92, 0.62), rimCol: C3(0.55, 0.68, 0.9),
-    ip: { exposure: 1.0, contrast: 1.1, sat: 18, hiHue: 45, hiDen: 6, hiSat: 8, shHue: 215, shDen: 12, shSat: 26 } },
+    sky: 'assets/tex/sky_day.jpg', env: 'vendor/env/env_day.env', fog: C3(0.68, 0.77, 0.9), fogStart: 140, fogEnd: 480, leafCol: C3(1.0, 0.92, 0.62), rimCol: C3(0.55, 0.68, 0.9),
+    ip: { exposure: 1.02, contrast: 1.12, sat: 26, hiHue: 45, hiDen: 6, hiSat: 10, shHue: 215, shDen: 10, shSat: 24 } },
   dusk: { hemiI: [0.5, 0.9], hemiD: [C3(1.0, 0.84, 0.74), C3(1.0, 0.95, 0.88)], hemiG: [C3(0.55, 0.42, 0.32), C3(0.58, 0.58, 0.62)],
     sunI: [3.6, 0.85], sunD: [C3(1.0, 0.70, 0.42), C3(1.0, 0.95, 0.88)], sunDir: V3(-0.78, -0.34, 0.52), envI: [0.6, 0.7],
     sky: 'assets/tex/sky_dusk.jpg', env: 'vendor/env/env_dusk.env', fog: C3(0.92, 0.66, 0.45), fogStart: 90, fogEnd: 360, leafCol: C3(1.0, 0.62, 0.3), rimCol: C3(0.75, 0.55, 0.55),
@@ -38,7 +38,7 @@ const ORIG_IP = { exposure: 1.0, contrast: 1.12, sat: 22, hiHue: 30, hiDen: 0, h
 // 各桶升级贴图：alb 反照率、n 法线（没有就沿用原法线）、orm 打包贴图、nl 法线强度
 const UP = {
   paint: { alb: 'paint_d', n: 'paint_n', orm: 'paint_orm', size: 1.6, nl: 0.3 },
-  floor: { orm: 'floor_orm' }, pave: { orm: 'pave_orm' }, tactile: { orm: 'tactile_orm' }, ceiling: { orm: 'ceiling_orm' }, wall: { orm: 'wall_orm' },
+  floor: { orm: 'floor_orm', env: 1.3, ro: false }, pave: { orm: 'pave_orm' }, tactile: { orm: 'tactile_orm' }, ceiling: { orm: 'ceiling_orm' }, wall: { orm: 'wall_orm', env: 1.0 },
   metal: { n: 'steel_n', orm: 'steel_orm', nl: 0.3 }, concrete: { n: 'concrete_n', orm: 'concrete_orm', nl: 0.55 }, brick: { orm: 'brick_orm' }, qz: { orm: 'qingzhuan_orm' },
   granite: { orm: 'granite_orm' }, asphalt: { n: 'asphalt_n', orm: 'asphalt_orm', nl: 0.45 }, grass: { n: 'grass_n', orm: 'grass_orm', nl: 0.55 }, facade: { n: 'facade_n', orm: 'facade_orm', nl: 0.75 }
 };
@@ -163,7 +163,7 @@ export class Gfx {
       m.useRoughnessFromMetallicTextureGreen = !!orm; m.useMetallnessFromMetallicTextureBlue = !!orm; m.useAmbientOcclusionFromMetallicTextureRed = !!orm;
       m.useRoughnessFromMetallicTextureAlpha = false;
       m.roughness = orm ? 1.0 : o.rough;
-      m.useHorizonOcclusion = !!(u && n); m.useRadianceOcclusion = !!u;
+      m.useHorizonOcclusion = !!(u && n); m.useRadianceOcclusion = !!u && UP[b].ro !== false;
       if (u && UP[b] && UP[b].env != null) { if (o.env == null) o.env = m.environmentIntensity; m.environmentIntensity = UP[b].env; } else if (o.env != null) m.environmentIntensity = o.env;
     }
   }
@@ -185,13 +185,13 @@ export class Gfx {
     if (!GS.on || !GS.shadow) return;
     if (S.job) { const dl = performance.now() + SLICE_MS; let r; try { r = S.job.next(dl); } catch (e) { console.warn('gfx shadow bake', e); S.job = null; return; } if (r.done) S.job = null; return; }
     if ((S.t -= dt) > 0) return; S.t = 0.35;
-    if (R.indoorTarget > 0.5 && S.cur) return;     // 室内 / 隧道：不重烘（影子本来也渐隐掉了）
     const f = this.focus && this.focus(); if (!f) return;
-    const kits = this.casterKits(); if (!kits.length) return;
+    const kits = this.casterKits();
     const sig = kits.map(k => k.root.name).sort().join('|') + ':' + this.state.light;
+    if (S.cur && S.cur.sig !== sig) this.dropShadow();     // 换了场景：旧图对不上，先关掉
+    if (!kits.length || R.indoorTarget > 0.5) return;      // 室内 / 隧道：不烘（影子本来也渐隐掉了），出来再烘
     const c = S.cur;
-    if (c && c.sig === sig && Math.abs(f.x - c.cx) < SH_MOVE && Math.abs(f.z - c.cz) < SH_MOVE && Math.abs(f.y - c.fy) < 5) return;
-    if (c && c.sig !== sig) this.dropShadow();     // 换了场景：旧图对不上，先关掉
+    if (c && Math.abs(f.x - c.cx) < SH_MOVE && Math.abs(f.z - c.cz) < SH_MOVE && Math.abs(f.y - c.fy) < 5) return;
     S.job = this.bakeJob(kits, { x: f.x, y: f.y, z: f.z }, sig, LOOKS[this.state.light].sunDir);
   }
   /**
@@ -268,6 +268,8 @@ export class Gfx {
       }
     }
     busy += performance.now() - sliceT;
+    // 烘焙期间换了场景（建新站 / 进出内景）：这张图作废，下一轮按新场景重烘
+    { const now = this.casterKits().map(k => k.root.name).sort().join('|') + ':' + this.state.light; if (now !== sig) return; }
     // 上传：WebGL2 用单通道 R8（1536² = 2.3 MB），WebGL1 退回 RGBA
     const r8 = this.engine.webGLVersion >= 2;
     let data = hm; if (!r8) { data = new Uint8Array(RES * RES * 4); for (let i = 0, j = 0; i < hm.length; i++, j += 4) { data[j] = hm[i]; data[j + 3] = 255; } }

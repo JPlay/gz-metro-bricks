@@ -57,11 +57,11 @@ N = 512
 # ---------------- ORM（各桶）----------------
 #  name: (albedo, normal, 平面粗糙度, 缝粗糙度, AO 强度, 粗糙度起伏, seam gain)
 SPEC = {
-    'floor':     ('floor.jpg', 'floor_n.jpg', 0.15, 0.93, 0.45, 0.04, 6),
+    'floor':     ('floor.jpg', 'floor_n.jpg', 0.06, 0.93, 0.45, 0.03, 6),
     'paving':    ('paving.jpg', 'paving_n.jpg', 0.74, 0.95, 0.45, 0.10, 5),
     'tactile':   ('tactile.jpg', 'tactile_n.jpg', 0.55, 0.92, 0.40, 0.06, 5),
     'ceiling':   ('ceiling.jpg', 'ceiling_n.jpg', 0.40, 0.90, 0.40, 0.05, 5),
-    'wall':      ('wall.jpg', 'wall_n.jpg', 0.18, 0.92, 0.42, 0.03, 6),
+    'wall':      ('wall.jpg', 'wall_n.jpg', 0.12, 0.92, 0.42, 0.03, 6),
     'concrete':  ('concrete.jpg', None, 0.86, 0.97, 0.35, 0.10, 4),
     'brick':     ('brick.jpg', 'brick_n.jpg', 0.78, 0.95, 0.45, 0.10, 4),
     'qingzhuan': ('qingzhuan.jpg', 'qingzhuan_n.jpg', 0.62, 0.92, 0.42, 0.10, 5),
