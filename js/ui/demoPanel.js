@@ -7,7 +7,7 @@ import { FEATURES } from '../core/gfx.js';
 import { STATUE, AX } from '../world/sysy.js';
 export const VIEWS = [
   { id: 'street', icon: '🚶', label: '公园前街景', code: 'gyq', x: 6.5, y: 0.05, z: -55.5, yaw: -0.42, pitch: 0.1, view: 'third' },
-  { id: 'water', icon: '🌊', label: '广场水景', code: 'gyq', x: -16.2, y: 0.05, z: -45.2, yaw: -1.12, pitch: 0.16, view: 'third' },
+  { id: 'water', icon: '🌊', label: '广场水景', code: 'gyq', x: -17.6, y: 0.05, z: -44.3, yaw: -1.12, pitch: 0.3, view: 'third' },
   { id: 'sm', icon: '🏛️', label: '纪念堂红墙', code: 'jnt', x: AX + 5, y: 0.05, z: STATUE.z - 16, yaw: -0.18, pitch: 0.02, view: 'third' },
   { id: 'hall', icon: '🚇', label: '站厅地砖', code: 'gyq', x: 0, y: -5.95, z: -11, yaw: 0, pitch: 0.12, view: 'third' }
 ];

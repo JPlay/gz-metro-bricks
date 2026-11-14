@@ -23,7 +23,7 @@ export const GS = {
   sky: new B.Color3(0.62, 0.74, 0.9), rim: 0.06,
   shTex: null, shMap: [0, 0, 1, 1], shTexel: 1 / 1024, shH: 25.5,
   time: 0,
-  water: { on: false, n1: null, n2: null, s1: 0.28, s2: 0.53, off: [0, 0, 0, 0], strength: 0.32, refl: 0.72, clamp: 5.0 }
+  water: { on: false, n1: null, n2: null, s1: 0.13, s2: 0.53, off: [0, 0, 0, 0], strength: 0.24, refl: 0.72, clamp: 2.5 }
 };
 const NOISE = `
 float gfxHash(vec2 p){ p = fract(p * vec2(0.1031, 0.1030)); p += dot(p, p.yx + 33.33); return fract((p.x + p.y) * p.x); }
@@ -75,11 +75,11 @@ float gfxShadowAt(vec3 P, vec3 Ng) {
   vec2 g = Q.xz + gfxSunDir.xz * t;
   vec2 uv = (g - gfxShMap.xy) * gfxShMap.zw;
   if (uv.x < 0.0 || uv.y < 0.0 || uv.x > 1.0 || uv.y > 1.0) return 0.0;
-  float o = gfxShP.x * 1.5, acc = 0.0, y0 = Q.y + 0.06;
-  acc += smoothstep(y0, y0 + 0.35, texture2D(gfxShadowSampler, uv + vec2(o, o * 0.4)).r * gfxShP.y);
-  acc += smoothstep(y0, y0 + 0.35, texture2D(gfxShadowSampler, uv + vec2(-o, -o * 0.4)).r * gfxShP.y);
-  acc += smoothstep(y0, y0 + 0.35, texture2D(gfxShadowSampler, uv + vec2(-o * 0.4, o)).r * gfxShP.y);
-  acc += smoothstep(y0, y0 + 0.35, texture2D(gfxShadowSampler, uv + vec2(o * 0.4, -o)).r * gfxShP.y);
+  float o = gfxShP.x * 2.2, acc = 0.0, y0 = Q.y + 0.06, yb = y0 + 0.9;
+  acc += smoothstep(y0, yb, texture2D(gfxShadowSampler, uv + vec2(o, o * 0.4)).r * gfxShP.y);
+  acc += smoothstep(y0, yb, texture2D(gfxShadowSampler, uv + vec2(-o, -o * 0.4)).r * gfxShP.y);
+  acc += smoothstep(y0, yb, texture2D(gfxShadowSampler, uv + vec2(-o * 0.4, o)).r * gfxShP.y);
+  acc += smoothstep(y0, yb, texture2D(gfxShadowSampler, uv + vec2(o * 0.4, -o)).r * gfxShP.y);
   return acc * 0.25;
 }
 #endif`,
@@ -156,7 +156,8 @@ uniform sampler2D gfxW1; uniform sampler2D gfxW2;
   vec2 wp = vPositionW.xz;
   vec3 wn1 = texture2D(gfxW1, wp * gfxWP.w + gfxWT.xy).xyz * 2.0 - 1.0;
   vec3 wn2 = texture2D(gfxW2, wp * (gfxWP.w * 1.9) + gfxWT.zw).xyz * 2.0 - 1.0;
-  vec2 wd = (wn1.xy + wn2.xy * 0.8) * gfxWP.x;
+  float wfade = 1.0 / (1.0 + 0.09 * length(vEyePosition.xyz - vPositionW));
+  vec2 wd = (wn1.xy + wn2.xy * 0.8) * gfxWP.x * wfade;
   normalW = normalize(vec3(wd.x, 1.0, wd.y));
 }
 #endif`,
