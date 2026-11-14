@@ -15570,6 +15570,18 @@
   "file": "voice/fz-doorsClosing-en.mp3"
  },
  {
+  "id": "voice.fz.boat.lock.xihu.zh",
+  "lang": "zh",
+  "text": "船只正在通过西湖船闸，请坐稳。",
+  "file": "voice/fz-boat-lock-xihu-zh.mp3"
+ },
+ {
+  "id": "voice.fz.boat.lock.xihu.en",
+  "lang": "en",
+  "text": "The boat is passing through the West Lake lock. Please stay seated.",
+  "file": "voice/fz-boat-lock-xihu-en.mp3"
+ },
+ {
   "id": "voice.fz.boat.depart.lmh.zh",
   "lang": "zh",
   "text": "欢迎乘坐内河游船A线，本船开往黎明湖码头。",

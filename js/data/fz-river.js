@@ -56,7 +56,27 @@ export function mkLine(flat) {
   };
   return { x, z, s, len, at, project };
 }
-export let RIVERS, ROUTE, PIERS, PIER, STOPS, BRIDGES, KIOSKS, SPEED_CAP;
+export let RIVERS, ROUTE, PIERS, PIER, STOPS, BRIDGES, KIOSKS, SPEED_CAP, LOCK = null;
+/* ---------- 2A：西湖船闸（A 线：西湖码头 → 白马河出湖口直道；湖 + 闸上游 WY+rise，闸下游 WY）----------
+ *   LOCK_STATE：两道人字闸门开度（0 关 1 开）+ 闸室水位（相对 WY，0 … rise）。船（fzBoat.js）每帧推进，街区按它画闸门 / 闸室水面。
+ *   小美 2A：过闸约 30 s（开 / 关闸门各约 5 s，水位降约 8 s），闸室墙上有水位刻度线；过闸时不能「起身」。 */
+export const LOCK_T = { gate: 5, level: 8, wait: 7 };
+export const LOCK_STATE = { gU: 0, gD: 0, lvl: 0 };
+function mkLock(F, route) {
+  const L = F.lock; if (!L) return null;
+  const sU = route.line.project(L.up[0], L.up[1]).s, sD = route.line.project(L.dn[0], L.dn[1]).s, sC = route.line.project(L.mid[0], L.mid[1]).s;
+  return { ...L, sU: Math.min(sU, sD), sD: Math.max(sU, sD), sC, upLow: sU > sD };   // 船线方向：西湖（上游）s 小
+}
+/** 闸室内（W 坐标） */
+export function inChamber(x, z) { if (!LOCK) return false; const dx = x - LOCK.mid[0], dz = z - LOCK.mid[1], a = dx * LOCK.t[0] + dz * LOCK.t[1], b = dx * LOCK.n[0] + dz * LOCK.n[1]; return Math.abs(a) < (LOCK.s[1] - LOCK.s[0]) / 2 && Math.abs(b) < LOCK.hw; }
+/** 水面高（W 坐标）：湖 + 闸上游 WY+rise，闸室按当前水位，其余 WY */
+export function levelAt(x, z) {
+  if (!LOCK) return WY;
+  if (inChamber(x, z)) return WY + LOCK_STATE.lvl;
+  return (x - LOCK.mid[0]) * LOCK.t[0] + (z - LOCK.mid[1]) * LOCK.t[1] < 0 ? WY + LOCK.rise : WY;
+}
+/** 船线里程 s 处的水面高 */
+export function levelAtS(s) { if (!LOCK) return WY; if (s <= LOCK.sU) return WY + LOCK.rise; if (s >= LOCK.sD) return WY; return WY + LOCK_STATE.lvl; }
 const CACHE = {};
 /** 码头台阶口的岸墙缺口（a −10.2 … −8.3，|b| ≤ 1，同生成器 GAPS）：生成器按 2 m 一段、看中点在不在缺口里定栏杆 / 缺口，
  *  缺口只有 1.9 m 宽，中点刚好落在外面就整段都是栏杆（福新问渡：台阶顶被栏杆封死，上不了岸）。这里按缺口矩形精确切开岸墙段（幂等）。 */
@@ -90,10 +110,11 @@ export function useNet(id) {
     cutPierGaps(NETS[id]);
     const F = NETS[id], rivers = Object.fromEntries(Object.entries(F.rivers).map(([k, r]) => [k, { ...r, line: mkLine(r.p) }]));
     const route = { ...F.route, line: mkLine(F.route.p) }, pier = Object.fromEntries(F.piers.map(p => [p.id, p]));
-    CACHE[id] = { F, rivers, route, piers: F.piers, pier, stops: F.route.stops.map(s => ({ ...s, pier: pier[s.id] })), bridges: F.bridges, kiosks: F.kiosks, cap: null };
+    CACHE[id] = { F, rivers, route, piers: F.piers, pier, stops: F.route.stops.map(s => ({ ...s, pier: pier[s.id] })), bridges: F.bridges, kiosks: F.kiosks, cap: null, lock: mkLock(F, route) };
   }
   const C = CACHE[id];
-  NET = id; FZR = C.F; RIVERS = C.rivers; ROUTE = C.route; PIERS = C.piers; PIER = C.pier; STOPS = C.stops; BRIDGES = C.bridges; KIOSKS = C.kiosks;
+  NET = id; FZR = C.F; RIVERS = C.rivers; ROUTE = C.route; PIERS = C.piers; PIER = C.pier; STOPS = C.stops; BRIDGES = C.bridges; KIOSKS = C.kiosks; LOCK = C.lock;
+  if (LOCK) { LOCK_STATE.gU = LOCK_STATE.gD = 0; LOCK_STATE.lvl = 0; }
   if (!C.cap) C.cap = buildSpeedCap();
   SPEED_CAP = C.cap;
   return id;
@@ -126,14 +147,15 @@ export const isDry = (x, z) => FZR.dry.some(d => inPoly(x, z, d));
 
 /** 落水后的上岸点：最近一段有栏杆缺口 / 岸线，往岸上退 1.8 m（面朝河） */
 export function shoreFor(px, pz) {
-  let best = null;
+  let best = null, any = null;
   for (const w of FZR.wall) {
     if (w[4] > 1) continue;
     const [ax, az, bx, bz] = w, dx = bx - ax, dz = bz - az, L2 = dx * dx + dz * dz || 1, u = Math.max(0, Math.min(1, ((px - ax) * dx + (pz - az) * dz) / L2));
     const qx = ax + dx * u, qz = az + dz * u, d = Math.hypot(px - qx, pz - qz);
-    if (!best || d < best.d) { const L = Math.sqrt(L2), rx = dz / L, rz = -dx / L, sg = w[5]; best = { d, x: qx - rx * sg * 1.8, z: qz - rz * sg * 1.8, yaw: Math.atan2(rx * sg, rz * sg) }; }
+    if (!best || d < best.d) { const L = Math.sqrt(L2), rx = dz / L, rz = -dx / L, sg = w[5], c = { d, x: qx - rx * sg * 1.8, z: qz - rz * sg * 1.8, yaw: Math.atan2(rx * sg, rz * sg) };
+      if (isLand(c.x, c.z)) best = c; else if (!any || d < any.d) any = c; }   // 退 1.8 m 要落在岸地上（2A 闸坝拐角：最近那段墙退出去还在水上）
   }
-  return best;
+  return best || any;
 }
 
 /* ---------- 桥：桥下净空 ---------- */
@@ -194,14 +216,64 @@ function buildSpeedCap() {
   return cap;
 }
 /** 行船一步（fzBoat.js 每帧调用；单测按同一套逻辑积分出单程时间）。b = { s, v, dir, target }；到站返回 true（调用方把 s 放到站点） */
-export function goStep(b, dt) {
-  const goal = STOPS[b.target].s, rem = (goal - b.s) * b.dir;
+export function goStep(b, dt, goal = STOPS[b.target].s, cap = Infinity) {
+  const rem = (goal - b.s) * b.dir;
   const vStop = Math.sqrt(Math.max(0, 2 * ACC * 0.9 * (rem - 0.05)));
-  const vMax = Math.min(speedCap(b.s), vStop), dv = vMax - b.v;
+  const vMax = Math.min(speedCap(b.s), vStop, cap), dv = vMax - b.v;
   b.v += Math.max(-1.0 * dt, Math.min(ACC * dt, dv)); if (b.v < 0) b.v = 0;
   if (rem < 0.08 || (rem < 0.6 && b.v < 0.12)) return true;
   b.s += b.v * dt * b.dir; if (b.v < 0.15 && rem > 0.6) b.v = 0.15;   // 别停在半路（限速平滑后末段也至少蠕动）
   return false;
+}
+/**
+ * 行船一步，带过闸（fzBoat.js 每帧调用；单测 runTime 用同一套）。这一程要过闸时：
+ *   快到闸前等候线（入口闸门外 7 m）时闸室水位对齐来船一侧、开入口闸门 5 s（没开好船就在等候线停住等）→ 慢速进闸室中间停 → 关入口闸门 5 s
+ *   → 闸室水位升 / 降 8 s → 开出口闸门 5 s → 出闸接着开往码头（出闸 6 m 后关上出口闸门）。
+ * 返回 true = 到站；b.lk 是过闸进度（null = 不在过闸），b.lkEv 是这一步刚发生的事（'enter' = 开入口闸门，给播报用）。
+ */
+export function boatStep(b, dt) {
+  b.lkEv = null; const L = LOCK, S = LOCK_STATE;
+  if (L) {
+    // 没有过闸任务的闸门：自己慢慢关上
+    const busy = b.lk ? b.lk.gates : '';
+    if (!busy.includes('U')) S.gU = Math.max(0, S.gU - dt / LOCK_T.gate);
+    if (!busy.includes('D')) S.gD = Math.max(0, S.gD - dt / LOCK_T.gate);
+    const goal = STOPS[b.target].s;
+    if (!b.lk && b.phase !== 'dock' && Math.min(b.s, goal) < L.sU && Math.max(b.s, goal) > L.sD) {
+      const down = b.dir > 0;   // +s = 从西湖往下游
+      const e = down ? 'U' : 'D', x = down ? 'D' : 'U', se = down ? L.sU : L.sD, sx = down ? L.sD : L.sU;
+      if ((se - b.s) * b.dir > 0) b.lk = { st: 'approach', e, x, se, sx, wait: se - b.dir * LOCK_T.wait, lvIn: down ? L.rise : 0, lvOut: down ? 0 : L.rise, t: 0, gates: '' };
+    }
+    const k = b.lk;
+    if (k) {
+      k.t += dt; const g = 'g' + k.e, gx = 'g' + k.x, rate = L.rise / LOCK_T.level;
+      const toward = (v, to, r) => v < to ? Math.min(to, v + r) : Math.max(to, v - r);
+      switch (k.st) {
+        case 'approach': {
+          // 离等候线 25 m 内：闸室水位对齐来船一侧，再开入口闸门；闸门开好之前船开到等候线停住等，开好了就不停直接慢速进闸
+          const rem = (k.wait - b.s) * b.dir;
+          if (rem < 25) {
+            if (!k.gates) { S.lvl = toward(S.lvl, k.lvIn, rate * dt); if (S.lvl === k.lvIn && S.gU === 0 && S.gD === 0) { k.gates = k.e; b.lkEv = 'enter'; } }
+            else S[g] = Math.min(1, S[g] + dt / LOCK_T.gate);
+          }
+          const open = k.gates && S[g] >= 1;
+          if (open && rem < 0.5) { k.st = 'enter'; return false; }
+          if (goStep(b, dt, open ? L.sC : k.wait, rem < 20 ? SLOW : Infinity) && !open) { b.s = k.wait; b.v = 0; }
+          return false;
+        }
+        case 'enter': if (goStep(b, dt, L.sC, SLOW)) { b.s = L.sC; b.v = 0; k.st = 'closeIn'; } return false;
+        case 'closeIn': S[g] = Math.max(0, S[g] - dt / LOCK_T.gate); if (S[g] <= 0) { k.st = 'level'; k.gates = ''; } return false;
+        case 'level': S.lvl = toward(S.lvl, k.lvOut, rate * dt); if (S.lvl === k.lvOut) { k.st = 'openOut'; k.gates = k.x; } return false;
+        case 'openOut': S[gx] = Math.min(1, S[gx] + dt / LOCK_T.gate); if (S[gx] >= 1) k.st = 'exit'; return false;
+        case 'exit': {
+          const done = goStep(b, dt, goal, (b.s - k.sx) * b.dir < 4 ? 1.6 : Infinity);
+          if ((b.s - k.sx) * b.dir > 6) b.lk = null;   // 出闸 6 m：出口闸门交给上面自己关
+          return done;
+        }
+      }
+    }
+  }
+  return goStep(b, dt);
 }
 export const BOAT_DWELL = 3.0;   // 坐下后几秒开船
 export const BOAT_STAY = 9;      // 中途站停靠（坐着的乘客有 9 秒点「起身」；小美定，B 线单程压到 8 分钟内）
@@ -209,8 +281,8 @@ export const BOAT_STAY = 9;      // 中途站停靠（坐着的乘客有 9 秒�
 export function runTime(i0, i1, dt = 1 / 60) {
   const dir = Math.sign(i1 - i0); let t = BOAT_DWELL, legs = [];
   for (let i = i0; i !== i1; i += dir) {
-    const b = { s: STOPS[i].s, v: 0, dir, target: i + dir }; let lt = 0, vmax = 0;
-    while (!goStep(b, dt)) { lt += dt; vmax = Math.max(vmax, b.v); if (lt > 3600) break; }
+    const b = { s: STOPS[i].s, v: 0, dir, target: i + dir, phase: 'go', lk: null }; let lt = 0, vmax = 0;
+    while (!boatStep(b, dt)) { lt += dt; vmax = Math.max(vmax, b.v); if (lt > 3600) break; }
     legs.push({ from: STOPS[i].id, to: STOPS[i + dir].id, secs: +lt.toFixed(1), vmax: +vmax.toFixed(2) }); t += lt + (i + dir !== i1 ? BOAT_STAY : 0);
   }
   return { secs: +t.toFixed(1), legs };

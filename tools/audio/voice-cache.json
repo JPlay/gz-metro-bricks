@@ -12034,5 +12034,17 @@
     "style": "cosy",
     "model": "cosyvoice-v2",
     "voice": "longxiaobai_v2"
+  },
+  "voice.fz.boat.lock.xihu.zh": {
+    "fp": "877f2120658d44cb0503abb1fbb5332ce8c4f2b1caa51cd0a5f2699aaa575eef",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.boat.lock.xihu.en": {
+    "fp": "0726b9b72ce08531e81e4115dbd6112170eba0ac7a7a3f9cbb6be4c34d9b8852",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
   }
 }

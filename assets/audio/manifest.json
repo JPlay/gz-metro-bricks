@@ -29617,6 +29617,32 @@
       "bytes": 25964
     },
     {
+      "id": "voice.fz.boat.lock.xihu.zh",
+      "file": "voice/fz-boat-lock-xihu-zh.mp3",
+      "group": "voice",
+      "label": "fz.boat.lock.xihu.zh",
+      "lang": "zh",
+      "text": "船只正在通过西湖船闸，请坐稳。",
+      "model": "cosyvoice-v2",
+      "voice": "longxiaobai_v2",
+      "language_type": "Chinese",
+      "duration": 3.72,
+      "bytes": 29996
+    },
+    {
+      "id": "voice.fz.boat.lock.xihu.en",
+      "file": "voice/fz-boat-lock-xihu-en.mp3",
+      "group": "voice",
+      "label": "fz.boat.lock.xihu.en",
+      "lang": "en",
+      "text": "The boat is passing through the West Lake lock. Please stay seated.",
+      "model": "cosyvoice-v2",
+      "voice": "longxiaobai_v2",
+      "language_type": "English",
+      "duration": 3.84,
+      "bytes": 30956
+    },
+    {
       "id": "voice.fz.boat.depart.lmh.zh",
       "file": "voice/fz-boat-depart-lmh-zh.mp3",
       "group": "voice",

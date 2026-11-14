@@ -10,9 +10,10 @@
  *   游船 B 线（白篷）：温泉公园码头 → 福新问渡码头 → 东门停靠点（游戏增设）→ 河口码头 → 光明港码头。
  */
 import { XmStreet, textPaint, FONT, FONT_EN, facadePaint } from './xmStreet.js';
-import { hex, mix } from '../core/geo.js';
+import { hex, mix, Geo } from '../core/geo.js';
+import { bucketMat } from './kit.js';
 import * as D from './decor.js';
-import { FZR, WY, RIVERS, BRIDGES, PIERS, KIOSKS, isWater, isLand, isDry, shoreFor, soffitAt, deckAt, humpRise, pierNext, ROUTE, STOPS, nextStop, useNet, netOfKiosk } from '../data/fz-river.js';
+import { FZR, WY, RIVERS, BRIDGES, PIERS, KIOSKS, isWater, isLand, isDry, shoreFor, soffitAt, deckAt, humpRise, pierNext, ROUTE, STOPS, nextStop, useNet, netOfKiosk, levelAt, inChamber, LOCK, LOCK_STATE } from '../data/fz-river.js';
 import { FzBoat } from '../game/fzBoat.js';
 import { Haze, RIVER_HAZE } from '../game/haze.js';
 import { FZ_EXITS } from '../data/fz-exits.js';
@@ -30,8 +31,9 @@ export class FzRiverStreet extends XmStreet {
   /** 不铺默认地面：整片河网自己的岸地；把根节点平移到当前出口亭 */
   ground() {
     this.net = useNet(netOfKiosk(this.code));   // 先换河网（活绑定），下面读到的 KIOSKS / FZR 都是这一片的
-    const K = KIOSKS[this.code] || Object.values(KIOSKS)[0];
-    this.K = K; this.others = Object.values(KIOSKS).filter(k => k.code !== K.code);
+    // 同一个站两个出口亭都在河网里（2A：西门 C 口在白马河、西门 B 口在西湖公园）：按出口字母选，key = code_出口
+    const K = (this.ex && KIOSKS[this.code + '_' + this.ex.n]) || KIOSKS[this.code] || Object.values(KIOSKS)[0];
+    this.K = K; this.others = Object.values(KIOSKS).filter(k => k !== K);
     this.kit.root.position.set(this.O.x - K.x, 0, this.O.z - K.z);
     this.cellFns = new Map(); this.key = this.net === 'a' ? 'fzriver' : 'fzriver-' + this.net;
   }
@@ -45,7 +47,7 @@ export class FzRiverStreet extends XmStreet {
   river() {
     const k = this.kit;
     this.facades();
-    this.walls(); this.bridges(); this.piers(); this.stepsDown(); this.roads(); this.houses(); this.trees(); this.promenade(); if (FZR.sfqx) this.sanfang(); if (FZR.lakeBox) this.backdrops();
+    this.walls(); this.bridges(); this.piers(); this.stepsDown(); this.roads(); this.houses(); this.trees(); this.promenade(); if (FZR.sfqx) this.sanfang(); if (FZR.lakeBox) this.backdrops(); if (LOCK) this.lockStatic();
     k.group('g0');   // 上面直接画的东西（桥、码头、台阶、马路、牌坊…）常开：单独封一组，别被并进第一个细节格子
     // 近处细节：每格一个组（finish 时每组一个节点，tick 里按距离开关）
     this.cellKeys = [];
@@ -58,36 +60,96 @@ export class FzRiverStreet extends XmStreet {
   after() {
     // 1B：河面水汽远景（200 → 350 m 线性雾；远裁剪保持 420 m，不切天空穹顶）；离开街区时 dispose 还原
     if (RIVER_HAZE[this.net]) { this.haze = new Haze(this.scene, this.scene.activeCamera, RIVER_HAZE[this.net]); this.haze.apply(); }
+    if (LOCK) this.lockGates();
     this.boat = new FzBoat(this, ROUTE.canopy || 'red');
     this.lodT = 0; this.lodNow(true);
   }
   /* ---------- 地面 / 水面（三角网，碰撞体按 60 m 格子分开） ---------- */
   groundAndWater() {
     const k = this.kit, PV = k.g('pave'), WA = k.g('paint@sea');
-    const add = (G, T, y, col) => {
+    const add = (G, T, y, col) => {   // y：数 或 (x, z) => y（2A：湖 + 闸上游水面高 0.5 m）
       for (const c of Object.values(T)) {
         const P = c.p, I = c.i, base = G.p.length / 3;
-        for (let j = 0; j < P.length; j += 2) G.push(P[j], y, P[j + 1], 0, 1, 0, col);
+        for (let j = 0; j < P.length; j += 2) G.push(P[j], typeof y === 'function' ? y(P[j], P[j + 1]) : y, P[j + 1], 0, 1, 0, col);
         for (let j = 0; j < I.length; j += 3) G.i.push(base + I[j], base + I[j + 1], base + I[j + 2]);
       }
     };
-    add(PV, FZR.land, 0, hex('#CFC9BD')); add(WA, FZR.water, WY, hex('#2F6670'));
+    add(PV, FZR.land, 0, hex('#CFC9BD')); add(WA, FZR.water, levelAt, hex('#2F6670'));
     // 可走范围外：一圈地面 + 西湖其余湖面（只看，不碰撞；边界墙挡着走不过去）
-    add(k.solid, [FZR.skirt], -0.01, hex('#BDB7AA')); add(WA, [FZR.lakeFar], WY - 0.03, hex('#2F6670'));
+    add(k.solid, [FZR.skirt], -0.01, hex('#BDB7AA')); add(WA, [FZR.lakeFar], (LOCK ? WY + LOCK.rise : WY) - 0.03, hex('#2F6670'));
     for (const [x0, z0, x1, z1] of FZR.lakeShore) { const L = Math.hypot(x1 - x0, z1 - z0); k.g('granite').box((x0 + x1) / 2, (WY - 0.2) / 2, (z0 + z1) / 2, 0.5, -WY + 0.2, L + 0.3, hex('#8E887C'), yawOf(x1 - x0, z1 - z0), 0, 0, 1, NO); }
     // 碰撞：每格一个不可见网格
     const colMesh = (T, y, name) => {
       for (const [key, c] of Object.entries(T)) {
-        const P = [], I = c.i.slice(); for (let j = 0; j < c.p.length; j += 2) P.push(c.p[j], y, c.p[j + 1]);
+        const P = [], I = c.i.slice(); for (let j = 0; j < c.p.length; j += 2) P.push(c.p[j], typeof y === 'function' ? y(c.p[j], c.p[j + 1]) : y, c.p[j + 1]);
         const m = new B.Mesh(name + key, this.scene), vd = new B.VertexData(); vd.positions = P; vd.indices = I; vd.normals = []; B.VertexData.ComputeNormals(P, I, vd.normals); vd.applyToMesh(m);
         m.parent = k.root; m.isVisible = false; m.checkCollisions = true; m.isPickable = true; m.metadata = { collider: true }; m.computeWorldMatrix(true); m.freezeWorldMatrix(); k.colliders.push(m);
       }
     };
-    colMesh(FZR.land, 0, 'fzrLand'); colMesh(FZR.water, WY, 'fzrWater');
+    colMesh(FZR.land, 0, 'fzrLand'); colMesh(FZR.water, levelAt, 'fzrWater');
     // 水面上一点点亮纹（不规则短条），远看不死板
     let i = 0;
-    for (const r of Object.values(RIVERS)) for (let s = 6; s < r.line.len - 6; s += 13) { const a = r.line.at(s, ((i++ * 37) % 11 - 5) / 6 * r.hw * 0.6); WA.box(a.x, WY + 0.004, a.z, 0.25, 0.004, 4.5, hex('#8FC0C8'), yawOf(a.tx, a.tz), 0, 0, 1, NO); }
+    for (const r of Object.values(RIVERS)) for (let s = 6; s < r.line.len - 6; s += 13) { const a = r.line.at(s, ((i++ * 37) % 11 - 5) / 6 * r.hw * 0.6); if (inChamber(a.x, a.z)) continue; WA.box(a.x, levelAt(a.x, a.z) + 0.004, a.z, 0.25, 0.004, 4.5, hex('#8FC0C8'), yawOf(a.tx, a.tz), 0, 0, 1, NO); }
   }
+  /* ---------- 2A 西湖船闸（小美：深灰钢人字闸门，顶上走道 + 栏杆，门缝两边红白警示条；闸室墙上水位刻度线；不写字、不画箭头）---------- */
+  /** 闸室局部坐标 → W：a 顺水（闸室中点 0，下游 +），b 横向（LOCK.n 方向） */
+  lockP(a, b) { const L = LOCK; return [L.mid[0] + L.t[0] * a + L.n[0] * b, L.mid[1] + L.t[1] * a + L.n[1] * b]; }
+  lockStatic() {
+    const L = LOCK, k = this.kit, GR = k.g('granite'), P = k.solid, half = (L.s[1] - L.s[0]) / 2, ryT = yawOf(L.t[0], L.t[1]), ryN = yawOf(L.n[0], L.n[1]);
+    const RED = hex('#C62828'), WHITE = hex('#F4F1EA'), BLACK = hex('#22262A');
+    // 水位刻度尺：闸室两侧墙中间各一根 + 靠两道闸门各一根；0.1 m 一格红白相间，0.5 m 一道黑横线；上 / 下游两个水位各一道白线（贴墙 1.6 m 长）
+    const yLo = WY - 0.3, yHi = WY + L.rise + 0.6;
+    for (const sd of [-1, 1]) for (const a of [-half + 2.6, 0, half - 2.6]) {
+      const [x, z] = this.lockP(a, sd * (L.hw - 0.012));
+      for (let y = yLo, i = 0; y < yHi - 1e-6; y += 0.1, i++) P.box(x, y + 0.05, z, 0.024, 0.1, 0.14, i % 2 ? WHITE : RED, ryN, 0, 0, 1, NO);
+      for (let y = WY - 0.0; y <= yHi + 1e-6; y += 0.5) P.box(x, y, z, 0.03, 0.025, 0.26, BLACK, ryN, 0, 0, 1, NO);
+      if (a === 0) for (const y of [WY, WY + L.rise]) P.box(x, y, z, 0.02, 0.03, 1.6, WHITE, ryN, 0, 0, 1, NO);
+    }
+    // 闸门两侧的门墩（花岗岩，顶面略高出岸地）
+    for (const a of [-half, half]) for (const sd of [-1, 1]) { const [x, z] = this.lockP(a, sd * (L.hw + 0.35)); GR.box(x, (WY - 0.4 + 0.18) / 2, z, 0.7, 0.18 - (WY - 0.4), 1.1, hex('#8E887C'), ryT, 0, 0, 1, NO); }
+    // 坝顶：闸室两头横着一道深色检修沟盖板（只是地面上的线，提示这里是闸）
+    for (const a of [-half - 0.9, half + 0.9]) { const [x, z] = this.lockP(a, 0); P.box(x, 0.006, z, 2 * L.damHw - 1, 0.01, 0.3, hex('#6E685C'), ryT, 0, 0, 1, NO); }
+  }
+  lockGates() {
+    const L = LOCK, half = (L.s[1] - L.s[0]) / 2, M = this.kit.M;
+    const STEEL = hex('#474C52'), RIB = hex('#363A3F'), WALK = hex('#6B7075'), RAIL = hex('#2E3236'), RED = hex('#C62828'), WHITE = hex('#F4F1EA');
+    const hinge = L.hw - 0.19, Lf = hinge / Math.cos(0.32) + 0.03, y0 = WY - 0.6, y1 = 0.0, T = 0.34;   // 斜接角 18°
+    const g = new Geo(), o = NO;
+    g.box(Lf / 2, (y0 + y1) / 2, 0, Lf, y1 - y0, T, STEEL, 0, 0, 0, 1, o);
+    for (let y = y0 + 0.5; y < y1 - 0.2; y += 0.5) for (const sz of [-1, 1]) g.box(Lf / 2, y, sz * (T / 2 + 0.02), Lf - 0.1, 0.07, 0.04, RIB, 0, 0, 0, 1, o);   // 横肋
+    for (const xx of [0.06, Lf * 0.5]) for (const sz of [-1, 1]) g.box(xx, (y0 + y1) / 2, sz * (T / 2 + 0.02), 0.08, y1 - y0, 0.04, RIB, 0, 0, 0, 1, o);   // 竖肋
+    g.box(Lf / 2, y1 + 0.03, 0, Lf, 0.06, 0.8, WALK, 0, 0, 0, 1, o);   // 顶上走道
+    for (const sz of [-1, 1]) {
+      g.box(Lf / 2, y1 + 1.0, sz * 0.37, Lf, 0.05, 0.05, RAIL, 0, 0, 0, 1, o); g.box(Lf / 2, y1 + 0.55, sz * 0.37, Lf, 0.035, 0.035, RAIL, 0, 0, 0, 1, o);
+      for (let xx = 0.05; xx <= Lf; xx += Lf / 3) g.box(xx, y1 + 0.5, sz * 0.37, 0.045, 1.0, 0.045, RAIL, 0, 0, 0, 1, o);
+    }
+    // 门缝一侧的红白警示条（两面 + 端面，0.25 m 一段）
+    for (let y = y0 + 0.3, i = 0; y < y1; y += 0.25, i++) { const c = i % 2 ? WHITE : RED, h = Math.min(0.25, y1 - y); g.box(Lf - 0.08, y + h / 2, 0, 0.17, h, T + 0.02, c, 0, 0, 0, 1, o); }
+    const src = g.toMesh('fzLockLeaf', this.scene, M.solid, this.kit.root); src.isVisible = false; src.isPickable = false;
+    this.lock = { leaves: [], water: null };
+    for (const [gk, a] of [['gU', -half], ['gD', half]]) for (const sd of [-1, 1]) {
+      const piv = new B.TransformNode('fzLockPiv', this.scene); piv.parent = this.kit.root;
+      const [hx, hz] = this.lockP(a, sd * hinge); piv.position.set(hx, 0, hz);
+      const m = src.createInstance('fzLockLeafI'); m.parent = piv; m.isPickable = false;
+      // 关：从门轴指向河中、略朝上游（-t）18°；开：贴着墙顺水朝下游（+t）
+      const cx = -sd * L.n[0] * Math.cos(0.32) - L.t[0] * Math.sin(0.32), cz = -sd * L.n[1] * Math.cos(0.32) - L.t[1] * Math.sin(0.32);
+      const thC = Math.atan2(-cz, cx), thO0 = Math.atan2(-L.t[1], L.t[0]); let d = thO0 - thC; d = ((d + Math.PI) % TAU + TAU) % TAU - Math.PI;
+      this.lock.leaves.push({ gk, piv, thC, d });
+    }
+    // 闸室水面：一块平面，高度跟着 LOCK_STATE.lvl
+    const wg = new Geo(), WC = hex('#2F6670'), [cx0, cz0] = this.lockP(0, 0);
+    wg.box(0, -0.005, 0, 2 * L.hw + 0.02, 0.01, 2 * half + 0.02, WC, 0, 0, 0, 1, o);
+    const wm = wg.toMesh('fzLockWater', this.scene, bucketMat(this.scene, M, 'paint@sea'), this.kit.root); wm.isPickable = false;
+    wm.position.set(cx0, WY, cz0); wm.rotation.y = yawOf(L.t[0], L.t[1]); this.lock.water = wm;
+    this.lockPose();
+  }
+  lockPose() {
+    const S = LOCK_STATE, ease = u => u * u * (3 - 2 * u);
+    for (const l of this.lock.leaves) l.piv.rotation.y = l.thC + l.d * ease(S[l.gk]);
+    this.lock.water.position.y = WY + S.lvl;
+  }
+  /** 门扇和门轴线的夹角（度，0 = 关，约 108 = 全开贴墙）：单测 / e2e 用 */
+  lockAngles() { return this.lock ? this.lock.leaves.map(l => ({ g: l.gk, deg: +(Math.abs(l.d) * (LOCK_STATE[l.gk] ? ((u => u * u * (3 - 2 * u))(LOCK_STATE[l.gk])) : 0) * 180 / Math.PI).toFixed(1) })) : []; }
   /* ---------- 驳岸：墙面常开；压顶石 + 石栏（近处细节）+ 碰撞 ---------- */
   wallFaces() {
     const GR = this.kit.g('granite'), col = hex(WALLC), dark = hex('#6E685C');
@@ -215,8 +277,9 @@ export class FzRiverStreet extends XmStreet {
       for (let i = 0; i <= 4; i++) { const a = a0 + (a1 - a0) * i / 4, [px, pz] = F.P(a, b1 - 0.06), y = y0 + (y1 - y0) * i / 4; k.metal.box(px, y + 0.48, pz, 0.05, 0.96, 0.05, hex('#4A5560'), 0, 0, 0, 1, NO); } }
   }
   piers() {
-    const k = this.kit, GR = k.g('granite'), P = k.solid, A = this.atlas, top = WY + 0.45;
+    const k = this.kit, GR = k.g('granite'), P = k.solid, A = this.atlas;
     for (const p of PIERS) {
+      const top = levelAt(p.berth[0], p.berth[1]) + 0.45;   // 浮码头面 = 船甲板（西湖码头在闸上游，高 0.5 m）
       const F = this.pierFrame(p);
       this.stairAlong(F, -10, -3.6, 0, 1.5, 0, top, 14, { rail: true });
       // 湖边码头（西湖）：湖岸线是弯的，台阶靠岸一侧和岸地之间空着一条 0.7 m 宽的水缝 —— 下船走上台阶顶，一脚踩进缝里掉下去、回不到岸上（小美 1A 验收 ①）。
@@ -275,9 +338,9 @@ export class FzRiverStreet extends XmStreet {
   stepsDown() {
     for (const st of FZR.steps) {
       const F = this.pierFrame(st);
-      this.stairAlong(F, -4.2, 2.2, 0, 1.4, 0, WY + 0.25, 15);
+      const lv = levelAt(st.x, st.z); this.stairAlong(F, -4.2, 2.2, 0, 1.4, 0, lv + 0.25, 15);
       const k = this.kit, [cx, cz] = F.P(3.2, 0.7);
-      k.g('granite').box(cx, WY + 0.1, cz, 1.4, 0.3, 2.0, hex('#8E887C'), F.ryT, 0, 0, 1, NO); k.col(cx, WY + 0.1, cz, 1.4, 0.3, 2.0, { ry: F.ryT, name: 'colLanding' });
+      k.g('granite').box(cx, lv + 0.1, cz, 1.4, 0.3, 2.0, hex('#8E887C'), F.ryT, 0, 0, 1, NO); k.col(cx, lv + 0.1, cz, 1.4, 0.3, 2.0, { ry: F.ryT, name: 'colLanding' });
     }
   }
   /* ---------- 路 / 广场 ---------- */
@@ -428,13 +491,14 @@ export class FzRiverStreet extends XmStreet {
   tick(dt) {
     // 船按真实时间走（上限 0.25 s/帧，每帧最多挪 0.9 m；人坐在船上跟着走，不会“跳”）；街区其余逻辑仍用 0.1 s 上限
     if (this.boat) this.boat.update(Math.min(0.25, this.scene.getEngine().getDeltaTime() / 1000), this.pl);
+    if (this.lock) this.lockPose();
     this.lodT -= dt; if (this.lodT <= 0) { this.lodT = 0.25; this.lodNow(false); }
   }
   update(pl) {
     this.pl = pl; const p = pl.position, w = this.toW(p);
     if (this.haze && p.y > -50) this.haze.reassert();   // 别处（onTunnel 等）关掉了就写回；隧道在 y≈-300，不抢隧道雾
     // 兜底：万一从台阶 / 墙缝掉到地面以下（低帧率一步跨太大），自由下落到水面以下 1 m 就放回最近的岸上（同「回到岸上」的落点）
-    if (!pl.seat && !pl.grounded && pl.vy < -3 && p.y < WY - 1 && p.y > -40) { const sh = shoreFor(w.x, w.z); if (sh) { pl.spawn(this.wx(sh.x), 0.05, this.wz(sh.z), sh.yaw); this.fellThrough = (this.fellThrough || 0) + 1; } }
+    if (!pl.seat && !pl.grounded && pl.vy < -3 && p.y < levelAt(w.x, w.z) - 1 && p.y > -40) { const sh = shoreFor(w.x, w.z); if (sh) { pl.spawn(this.wx(sh.x), 0.05, this.wz(sh.z), sh.yaw); this.fellThrough = (this.fellThrough || 0) + 1; } }
     if (!pl.seat) for (const o of this.others) { const lx = w.x - o.x, lz = w.z - o.z; if (lz < -2.6 && lz > -6 && Math.abs(lx) < 1.9 && p.y < 1.5) { this.backTo = { code: o.code, n: o.n }; return 'back'; } }
     return super.update(pl);
   }
@@ -443,17 +507,18 @@ export class FzRiverStreet extends XmStreet {
   safeAt(p) { const w = this.toW(p); return isLand(w.x, w.z) && !(this.boat && this.boat.contains(w.x, w.z)); }
   waterAt(p) {
     const w = this.toW(p);
-    if (!isWater(w.x, w.z)) return null;
+    if (!isWater(w.x, w.z) && !inChamber(w.x, w.z)) return null;
     if (this.boat && this.boat.contains(w.x, w.z)) return null;
     const s = shoreFor(w.x, w.z); if (!s) return null;
-    return { key: this.key, surfaceY: WY, shore: { x: this.wx(s.x), y: 0.05, z: this.wz(s.z), yaw: s.yaw } };
+    return { key: this.key, surfaceY: levelAt(w.x, w.z), shore: { x: this.wx(s.x), y: 0.05, z: this.wz(s.z), yaw: s.yaw } };
   }
   /** 左上角站名牌：岸上「福州内河」；在船上（坐着或站在船上）「<线>线 · 下一站」；line / color = 本片河网的船线（A 红 / B 蓝灰，同码头牌线路章） */
   riverHud(pl) {
     const line = ROUTE.id || 'A', color = line === 'B' ? '#2E5E8C' : '#B3261E', b = this.boat; if (!b || !pl) return { boat: false, line, color };
     if (!(b.passengerSeated(pl) || b.onBoard(pl))) return { boat: false, line, color };
-    const j = b.phase === 'go' ? b.target : nextStop(b.i, b.dir), P = STOPS[j].pier;
-    return { boat: true, line, color, next: { id: P.id, zh: P.zh, en: P.en } };
+    // 停靠时显示当前码头（和「××码头到了」的播报一致），开船后再切到下一站（小美 11-14）
+    const docked = b.phase === 'dock', j = docked ? b.i : b.target, P = STOPS[j].pier;
+    return { boat: true, docked, line, color, next: { id: P.id, zh: P.zh, en: P.en } };
   }
   info() { return { ...super.info(), fellThrough: this.fellThrough || 0, net: this.net, route: ROUTE.id, river: true, kiosk: this.K.code, boat: this.boat ? this.boat.info() : null, cellsOn: this.cellKeys ? this.cellKeys.filter(k => this.kit.groupNodes['c:' + k].isEnabled(false)).length : 0, cells: this.cellKeys ? this.cellKeys.length : 0 }; }
   dispose() { if (this.haze) { this.haze.restore(); this.haze = null; } if (this.boat) this.boat.dispose(); super.dispose(); }

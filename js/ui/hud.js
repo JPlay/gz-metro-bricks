@@ -28,9 +28,9 @@ export class Hud {
     const n = $('next');
     if (nextCode && XS[nextCode]) { n.hidden = false; n.innerHTML = `<span class="tag">下一站<small>Next</small></span><span class="nm">${XS[nextCode].zh}<small>${XS[nextCode].en}</small></span>`; n.style.setProperty('--line', L.color); } else n.hidden = true;
   }
-  /** 福州内河（js/world/fzRiver.js）：岸上显示「福州内河」；在船上显示「<线>线 · 下一站码头名」（不再显示出来的那个地铁站）；o.line / o.color：A 线红、B 线蓝灰 */
+  /** 福州内河（js/world/fzRiver.js）：岸上显示「福州内河」；在船上显示「<线>线 · 码头名」（停靠时 = 当前码头，开船后 = 下一站）（不再显示出来的那个地铁站）；o.line / o.color：A 线红、B 线蓝灰 */
   whereRiver(o) {
-    const line = o.line || 'A', key = 'river:' + line + ':' + (o.boat ? o.next.zh : 'shore'); if (key === this.key) return; this.key = key;
+    const line = o.line || 'A', key = 'river:' + line + ':' + (o.boat ? (o.docked ? 'at:' : 'to:') + o.next.zh : 'shore'); if (key === this.key) return; this.key = key;
     const w = $('where'), color = o.color || '#B3261E'; w.style.setProperty('--line', color); w.style.setProperty('--ink', '#FFFFFF');
     const ln = $('whereLine');
     if (o.boat) { ln.innerHTML = `<b>${line}</b><small>线</small>`; ln.setAttribute('aria-label', '内河游船' + line + '线'); $('whereName').textContent = line + '线 · ' + o.next.zh; $('whereEn').textContent = 'Line ' + line + ' · ' + o.next.en; }
