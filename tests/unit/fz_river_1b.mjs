@@ -184,5 +184,37 @@ ok('useNet(a) restores 1A', R.NET === 'a' && R.STOPS.map(s => s.id).join() === '
   const nextOf = (phase, i, dir, target) => phase === 'go' ? R.STOPS[target] : R.STOPS[i + dir] || R.STOPS[i - dir];
   ok('next pier: docked at 温泉公园 (dir +1) → 福新问渡; at 光明港 after turning (dir −1) → 河口; sailing → target', nextOf('dock', 0, 1).id === 'fx' && nextOf('dock', 4, -1).id === 'hk' && nextOf('go', 1, 1, 2).id === 'dmn' && nextOf('dock', 4, 1).id === 'hk');
 }
+// ---- 1B 小美两处视觉修复回归检查 ----
+{ R.useNet('e');
+  const distSegPt = (ax, az, bx, bz, px, pz) => {
+    const dx = bx - ax, dz = bz - az, l2 = dx * dx + dz * dz;
+    const t = l2 < 1e-9 ? 0 : Math.max(0, Math.min(1, ((px - ax) * dx + (pz - az) * dz) / l2));
+    return Math.hypot(px - (ax + t * dx), pz - (az + t * dz));
+  };
+  const blocked = [];
+  for (const [k, K] of Object.entries(R.KIOSKS)) {
+    const P = R.PIER[K.pier];
+    for (const h of R.FZR.houses) {
+      const [tx, tz] = h.t, [fx, fz] = h.f;
+      let hit = false;
+      for (const sx of [-h.w / 2, 0, h.w / 2]) for (const sz of [-h.d / 2, 0, h.d / 2]) {
+        const px = h.x + sx * tx + sz * fx, pz = h.z + sx * tz + sz * fz;
+        if (distSegPt(K.x, K.z + 1, K.x, K.z + 28, px, pz) < 6 ||
+            distSegPt(K.x, K.z + 1, P.x, P.z, px, pz) < 6 ||
+            distSegPt(K.x, K.z + 1, P.sign[0], P.sign[1], px, pz) < 5) hit = true;
+      }
+      if (hit) blocked.push([k, h.x, h.z]);
+    }
+  }
+  ok('no house blocks any 1B kiosk exit (+z) or pier / sign sightline (东门 C open to river)', blocked.length === 0, blocked);
+
+  const fsrc = fs.readFileSync(new URL('../../js/world/fzRiver.js', import.meta.url), 'utf8');
+  const gsrc = fs.readFileSync(new URL('../../js/core/geo.js', import.meta.url), 'utf8');
+  const blobsBody = fsrc.slice(fsrc.indexOf('treeBlobs()'), fsrc.indexOf('promenade() {', fsrc.indexOf('treeBlobs()')));
+  const nearBody = fsrc.slice(fsrc.indexOf('banyanNear('), fsrc.indexOf('treeBlobs()'));
+  ok('treeBlobs() includes tapered trunks reaching inside canopy (5.1 * s > 4.6 * s) in static batch (0 extra draws)', /P\.tubeTaper\(.*5\.1 \* s.*5,\s*false\)/.test(blobsBody) && /kind === 'lake'[\s\S]*P\.tube\(/.test(blobsBody));
+  ok('banyanNear() has no duplicate main trunk (avoids z-fighting) and lake trees skip det', !/P\.tubeTaper/.test(nearBody) && /if \(kind !== 'lake'\) this\.det/.test(fsrc));
+  ok('geo.js tubeTaper supports caps = false with distinct proto key', /tubeTaper\([^)]*caps = true\)/.test(gsrc) && /caps \? '' : 'o'/.test(gsrc) && /bandCyl\(tess, \[0, 1\], ts, caps\)/.test(gsrc));
+}
 console.log(fails.length ? `\n${fails.length} FAILED: ${fails.join(', ')}` : '\nALL PASS');
 process.exit(fails.length ? 1 : 0);

@@ -301,7 +301,12 @@ BOUND = [[round(x, 2), round(z, 2)] for x, z in Polygon(region.exterior).simplif
 # ---------- 房子（现代楼，远段稀一些）/ 榕树 ----------
 random.seed(11)
 HOUSES = []; TREES = []
-occ = unary_union([water.buffer(7.5)] + [r['poly'].buffer(0.5) for r in ROADS] + [b['foot'].buffer(3) for b in BR])
+kiosk_clear = (
+  [LineString([(K_['x'], K_['z']), (K_['x'], K_['z'] + 28)]).buffer(9) for K_ in KIOSK.values()]
+  + [LineString([(K_['x'], K_['z'] + 1), (p['x'], p['z'])]).buffer(10) for K_ in KIOSK.values() for p in PIERS if p['id'] == K_['pier']]
+  + [LineString([(K_['x'], K_['z'] + 1), (p['sign'][0], p['sign'][1])]).buffer(8) for K_ in KIOSK.values() for p in PIERS if p['id'] == K_['pier']]
+)
+occ = unary_union([water.buffer(7.5)] + [r['poly'].buffer(0.5) for r in ROADS] + [b['foot'].buffer(3) for b in BR] + kiosk_clear)
 def try_house(poly, h, ry, info):
   global occ
   if not region.buffer(-0.5).contains(poly) or poly.intersects(occ): return False
