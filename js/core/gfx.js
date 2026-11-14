@@ -155,12 +155,13 @@ export class Gfx {
     const i = this.M.normals.indexOf(m); if (on && i >= 0) this.M.normals.splice(i, 1); else if (!on && o.n && i < 0) this.M.normals.push(m);
     m.metallicTexture = null; m.useRoughnessFromMetallicTextureGreen = m.useMetallnessFromMetallicTextureBlue = m.useAmbientOcclusionFromMetallicTextureRed = false;
     m.roughness = on ? 0.4 : o.rough; if (o.env == null) o.env = m.environmentIntensity; m.environmentIntensity = on ? 0.8 : o.env;
-    m.useHorizonOcclusion = false; m.useRadianceOcclusion = false;
+    if (o.ho == null) { o.ho = m.useHorizonOcclusion; o.ro = m.useRadianceOcclusion; }
+    m.useHorizonOcclusion = on ? false : o.ho; m.useRadianceOcclusion = on ? false : o.ro;
   }
   applyMat(m) {
     const M = this.M, pbr = this.want('pbr'), nOn = this.normalsOn();
     const b = baseOf(m.name), base = M[b];
-    if (!m._gfxOrig) m._gfxOrig = base && base !== m && base._gfxOrig ? { ...base._gfxOrig, env: undefined } : { alb: m.albedoTexture, n: m._normalTex || null, rough: m.roughness, inN: M.normals.includes(m) };
+    if (!m._gfxOrig) m._gfxOrig = base && base !== m && base._gfxOrig ? { ...base._gfxOrig, env: undefined, ho: undefined, ro: undefined } : { alb: m.albedoTexture, n: m._normalTex || null, rough: m.roughness, inN: M.normals.includes(m) };
     const o = m._gfxOrig;
     if (m.name === 'paint@sea') return this.applySea(m, o);
     const u = pbr && this.up_ ? this.up_[b] : null;
