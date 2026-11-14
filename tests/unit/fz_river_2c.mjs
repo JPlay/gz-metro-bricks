@@ -125,5 +125,16 @@ ok('HUD shore colour: hudLine(A, null) red; on C boat green; on A boat red; b ne
 { const src = fs.readFileSync(new URL('../../js/world/fzRiver.js', import.meta.url), 'utf8'), body = src.slice(src.indexOf('  riverHud(pl) {'), src.indexOf('  info() {', src.indexOf('  riverHud(pl) {')));
   ok('riverHud: shore colour from the net home line, boat colour only when the player is on that boat (no b.rid colour on shore)', /hudLine\(home, on \? b\.rid : null\)/.test(body) && /Object\.keys\(ROUTES\)\[0\]/.test(body) && !/LINE_COLOR\[/.test(body)); }
 
+// 小美 2C r2 ①②③：彬德水闸改条石墩 + 灰闸门 + 墩顶启闭房（不用 metal、没有深蓝 / 纯白块）；2C 楼四面贴立面、外圈草地；彬德桥两侧取景段不种树
+{ const src = fs.readFileSync(new URL('../../js/world/fzRiver.js', import.meta.url), 'utf8'), body = src.slice(src.indexOf('  c2Sluice() {'), src.indexOf('  /** 2C 闽江远景'));
+  const cols = [...body.matchAll(/'#([0-9A-Fa-f]{6})'/g)].map(m => m[1]), rgb = h => [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16));
+  const blue = cols.filter(h => { const [r, g, b] = rgb(h); return b > r + 12 && b > g + 4; }), white = cols.filter(h => Math.min(...rgb(h)) > 225);
+  ok('彬德水闸 r2: stone piers + gates + hoist house, no metal bucket, no blue-ish / pure-white colours', !/k\.metal/.test(body) && /启闭房/.test(body) && /colSluice/.test(body) && !blue.length && !white.length, { blue, white });
+  const hb = src.slice(src.indexOf('  houseBodies() {'), src.indexOf('  /* ---------- 榕树'));
+  ok('2C houses: façade on all four sides (no blank side walls)', /h\.back \|\| \(FZR\.c2 && h\.z < FZR\.c2\.z0\)/.test(hb));
+  ok('2C skirt outside the walkable area painted grass (no pure-white ground)', /z < c2z\) \? GRASS/.test(src));
+  const L = R.RIVERS.bm.line, b18 = R.BRIDGES.find(b => b.id === 'bm18'), near = F.trees.filter(t => { let best = 1e9, bs = 0; for (let s = b18.s - 40; s <= b18.s + 30; s += 0.5) { const a = L.at(s, 0), d = Math.hypot(a.x - t[0], a.z - t[1]); if (d < best) { best = d; bs = s; } } const a = L.at(bs, 13.5); return Math.hypot(a.x - t[0], a.z - t[1]) < 5.4 && ((bs > b18.s - 25 && bs < b18.s - 2) || (bs > b18.s + 2 && bs < b18.s + 15)); });
+  ok('彬德桥: no banyan on the west bank right up/downstream (front-on shots not blocked)', !near.length, near);
+  ok('彬德水闸 viewpoint: upstream of the sluice, on land, beyond the pier line', R.isLand(...c2.sluice.view) && ((c2.sluice.view[0] - c2.sluice.x) * c2.sluice.t[0] + (c2.sluice.view[1] - c2.sluice.z) * c2.sluice.t[1]) < -6); }
 console.log(fails.length ? `\n${fails.length} FAILED: ${fails.join(', ')}` : '\nALL PASS');
 process.exit(fails.length ? 1 : 0);

@@ -393,6 +393,8 @@ async def under_walk(pg, D, uid, tag):
     reached = await go(pg, *a0, 'to under ' + uid)
     await jreset(pg)
     await legs(pg, [await P(-e, 0.8), await P(-f - 0.4, 0.8)], False); s_bot = await st(pg)
+    if OUT and uid == 'ubm19':   # 小美 2C ③：下穿北口（桥底步道这头）正对着看彬德桥（上游 28 m）
+        b18 = [x for x in D['bridges'] if x['id'] == 'bm18'][0]; await look_s(pg, b18['s'], 0, 0.04); await shot(pg, 'bingde_bridge_front_from_underpass_exit')
     await legs(pg, [await P(0, 0.8)], False); s_mid = await st(pg)
     if OUT: await look(pg, *(await P(f + r, 0.8)), 0.02); await shot(pg, f'under_walkway_{uid}_{tag}')
     await legs(pg, [await P(f + 0.4, 0.8), await P(e, 0.8), a1, a2], False); s_end = await st(pg); j = await jget(pg)
@@ -622,7 +624,11 @@ async def run_2c(pg):
         R['perf']['under:ubm14'] = await sample(pg, 'under:ubm14')
         # 沿西岸往下游：沿途从岸上看每座新桥（单拱平桥 / 无名路桥 / 同德路 / 彬德桥），再到江滨西大道桥下步道
         for bid, nm in (('bm15', 'single_arch_flat'), ('bm16', 'nameless_road'), ('bm17', 'tongde'), ('bm18', 'bingde')):
-            br = [x for x in D['bridges'] if x['id'] == bid][0]; pt = await bmpt(pg, br['s'] - br['w'] / 2 - 9, 10.0 + 4.6)   # 桥头前 9 m（22 m 太远：广角下桥只剩地平线上一道）
+            br = [x for x in D['bridges'] if x['id'] == bid][0]
+            if bid == 'bm18':   # 小美 2C ③：彬德桥上游西岸栏杆边（这一段不种榕树）斜对着桥正面看
+                pf_ = await bmpt(pg, br['s'] - 20.5, 11.0); okf = await go(pg, *pf_, 'west bank → 彬德桥 upstream front'); ok('c_under:walkTo:bm18:upstreamFront', okf, (await st(pg))['pos'])
+                if OUT: await look(pg, *(await W(pg, br['x'], br['z'])), 0.0); await shot(pg, 'bingde_bridge_front_from_upstream_bank')
+            pt = await bmpt(pg, br['s'] - br['w'] / 2 - 9, 10.0 + 4.6)   # 桥头前 9 m（22 m 太远：广角下桥只剩地平线上一道）
             okg = await go(pg, *pt, 'west bank → ' + bid); ok(f'c_under:walkTo:{bid}', okg, (await st(pg))['pos'])
             if OUT: await look_s(pg, br['s'], 0, -0.06); await shot(pg, f'bridge_{bid}_{nm}_from_bank')
         R['perf']['bridge:bm18'] = await sample(pg, 'bridge:bm18')
@@ -632,9 +638,10 @@ async def run_2c(pg):
         okv = await go(pg, *vw, '江滨西大道下穿 → 彬德水闸观景处'); j = await jget(pg)
         ok('c_under:sluiceViewpoint reached on foot (≤ 0.5 m)', okv and await near(pg, *vw, 0.5) and j['max'] < TELEPORT, (await st(pg))['pos']); await hud_shore_red(pg, 'sluiceView')
         if OUT:
-            await look(pg, *(await W(pg, S_['x'], S_['z'])), -0.05); await shot(pg, 'bingde_sluice_from_viewpoint')
+            await look(pg, *(await W(pg, S_['x'] - S_['n'][0] * 4 + S_['t'][0] * 0.4, S_['z'] - S_['n'][1] * 4 + S_['t'][1] * 0.4)), 0.0); await shot(pg, 'bingde_sluice_from_viewpoint')   # 看中孔偏东：三扇闸门 + 启闭房正面
             await look(pg, *(await W(pg, S_['x'] + S_['t'][0] * 120, S_['z'] + S_['t'][1] * 120)), 0.02); await shot(pg, 'minjiang_view_from_viewpoint')
             await look_s(pg, S_['s'] - 30, 0, -0.05); await shot(pg, 'river_end_sluice_upstream_view')
+            b18 = [x for x in D['bridges'] if x['id'] == 'bm18'][0]; await look_s(pg, b18['s'], 0, 0.0); await shot(pg, 'bingde_bridge_front_from_viewpoint')   # 小美 2C ③
         R['perf']['sluiceView'] = await sample(pg, 'sluiceView')
 
 async def boat_stages(pg):

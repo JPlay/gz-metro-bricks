@@ -136,7 +136,8 @@ export class FzRiverStreet extends XmStreet {
           const base = G.p.length / 3; for (const q of [a, b, d]) G.push(P[q], 0.012, P[q + 1], 0, 1, 0, GRASS); G.i.push(base, base + 1, base + 2); } } } add(WA, FZR.water, levelAt, hex('#2F6670'));
     // 可走范围外：一圈地面 + 西湖其余湖面（只看，不碰撞；边界墙挡着走不过去）
     { const pk = FZR.sbwPark, inPk = (x, z) => pk && x > pk[0] && x < pk[2] && z > pk[1] && z < pk[3];   // 2B 水部步道两边：草地（小美 2B ②）
-      add(k.solid, [FZR.skirt], -0.01, (KIOSKS.fzxm_B || pk) ? ((x, z) => ((KIOSKS.fzxm_B && x > -620 && x < -190 && z > 60 && z < 600) || inPk(x, z)) ? GRASS : SKIRTC) : SKIRTC); } add(WA, [FZR.lakeFar], (LOCK ? WY + LOCK.rise : WY) - 0.03, hex('#2F6670'));
+      const c2z = FZR.c2 ? FZR.c2.z0 : -1e9;   // 2C（白马河下段）可走范围外的一圈也画草地（小美 2C ②：宁化 A 口出来左手一大片纯白地）
+      add(k.solid, [FZR.skirt], -0.01, (KIOSKS.fzxm_B || pk || FZR.c2) ? ((x, z) => ((KIOSKS.fzxm_B && x > -620 && x < -190 && z > 60 && z < 600) || inPk(x, z) || z < c2z) ? GRASS : SKIRTC) : SKIRTC); } add(WA, [FZR.lakeFar], (LOCK ? WY + LOCK.rise : WY) - 0.03, hex('#2F6670'));
     for (const [x0, z0, x1, z1] of FZR.lakeShore) { const L = Math.hypot(x1 - x0, z1 - z0); k.g('granite').box((x0 + x1) / 2, (WY - 0.2) / 2, (z0 + z1) / 2, 0.5, -WY + 0.2, L + 0.3, hex('#8E887C'), yawOf(x1 - x0, z1 - z0), 0, 0, 1, NO); }
     // 碰撞：每格一个不可见网格
     const colMesh = (T, y, name) => {
@@ -478,26 +479,44 @@ export class FzRiverStreet extends XmStreet {
   }
   /** 2C：彬德水闸 + 观景处（和闽江远景同一组 c2mj：离得远整组关；碰撞体挂 root 不受影响） */
   c2Sluice() {
-    const k = this.kit, P = k.solid, GR = k.g('granite'), M = k.metal, C2 = FZR.c2;
-    // 彬德水闸（口门前 4.5 m）：四座闸墩 + 三孔深灰钢闸门 + 墩顶工作桥 / 栏杆 + 每孔一座启闭机门架；西岸一间白墙启闭房
-    const S = C2.sluice, t = S.t, n = S.n, hw = S.hw, Pt = (a, b) => [S.x + t[0] * a + n[0] * b, S.z + t[1] * a + n[1] * b], ryT = yawOf(t[0], t[1]), ryN = yawOf(n[0], n[1]);
-    const STEEL = hex('#4E555B'), RIB = hex('#3A4045'), y0 = WY - 0.4;
-    for (let i = 0; i <= S.bays; i++) { const v = -hw + 2 * hw * i / S.bays, [x, z] = Pt(0, v);
-      GR.box(x, (y0 + 1.3) / 2, z, 1.0, 1.3 - y0, 3.2, hex('#8E887C'), ryN, 0, 0, 1, NO); k.col(x, (y0 + 1.3) / 2, z, 1.0, 1.3 - y0, 3.2, { ry: ryN, name: 'colSluice' });
-      const [ux, uz] = Pt(-1.9, v); GR.box(ux, (y0 + WY + 0.5) / 2, uz, 0.8, WY + 0.5 - y0, 0.8, hex('#8E887C'), ryN + Math.PI / 4, 0, 0, 1, NO); }   // 上游分水尖
-    for (let i = 0; i < S.bays; i++) { const v0 = -hw + 2 * hw * i / S.bays + 0.5, v1 = -hw + 2 * hw * (i + 1) / S.bays - 0.5, vm = (v0 + v1) / 2, [x, z] = Pt(0.3, vm), W = v1 - v0;
-      P.box(x, (y0 + 0.2) / 2, z, W, 0.2 - y0, 0.22, STEEL, ryN, 0, 0, 1, NO);
-      for (let y = WY + 0.2; y < 0.1; y += 0.55) P.box(...Pt(0.18, vm).flatMap((c, j) => j ? [y, c] : [c]), W, 0.07, 0.05, RIB, ryN, 0, 0, 1, NO);   // 横肋（上游面）
-      for (let y = WY + 0.2; y < 0.1; y += 0.55) P.box(...Pt(0.42, vm).flatMap((c, j) => j ? [y, c] : [c]), W, 0.07, 0.05, RIB, ryN, 0, 0, 1, NO);   // 横肋（下游面，看得见不是黑方块）
-      // 启闭机门架：两根立柱 + 横梁 + 机箱
-      for (const e of [-1, 1]) { const [px, pz] = Pt(0.3, vm + e * (W / 2 - 0.1)); M.box(px, 2.9, pz, 0.22, 3.2, 0.22, hex('#5C646C'), ryN, 0, 0, 1, NO); }
-      const [hx, hz] = Pt(0.3, vm); M.box(hx, 4.6, hz, W, 0.3, 0.4, hex('#5C646C'), ryN, 0, 0, 1, NO); P.box(hx, 5.05, hz, 1.6, 0.6, 1.0, hex('#C9CED2'), ryN, 0, 0, 1, NO); }
-    { const [x, z] = Pt(0, 0); GR.box(x, 1.45, z, 2 * hw + 1.0, 0.3, 2.4, hex('#A39C8E'), ryN, 0, 0, 1, NO);   // 墩顶工作桥
-      for (const e of [-1, 1]) { const [rx, rz] = Pt(e * 1.15, 0); M.box(rx, 2.35, rz, 0.06, 0.06, 2 * hw + 1.0, hex('#4A5560'), ryN, 0, 0, 1, NO); for (let v = -hw; v <= hw + 0.01; v += hw / 4) { const [px, pz] = Pt(e * 1.15, v); M.box(px, 1.95, pz, 0.05, 0.8, 0.05, hex('#4A5560'), 0, 0, 0, 1, NO); } } }
-    { const [x, z] = S.house; P.box(x, 1.6, z, 4.2, 3.2, 3.4, hex('#EDEAE2'), ryT, 0, 0, 1, NO); P.box(x, 3.35, z, 4.8, 0.3, 4.0, hex('#33373C'), ryT, 0, 0, 1, NO);
-      P.box(x + n[0] * 1.72, 1.1, z + n[1] * 1.72, 1.0, 2.1, 0.05, hex('#4A2A1C'), ryN, 0, 0, 1, NO); k.col(x, 1.6, z, 4.2, 3.2, 3.4, { ry: ryT, name: 'colSluiceHouse' });
-      const uv = this.atlas.draw(2.0, 0.5, textPaint(['彬德水闸'], { bg: '#6E675B', fg: '#F2E2B0' }), 70);   // 闸房门楣上的闸名（不画箭头 / 地图）
-      this.atlas.quad(x + n[0] * 1.73 + t[0] * 0.0, 2.6, z + n[1] * 1.73, 2.0, 0.5, Math.atan2(n[0], -n[1]), uv); }
+    const k = this.kit, P = k.solid, GR = k.g('granite'), C2 = FZR.c2;
+    // 彬德水闸 r2（小美 2C ①：原来像深蓝脚手架 + 没贴图的白方块）：四座条石 / 混凝土闸墩（和驳岸同色的灰米色）+ 墩间三扇灰色平板闸门（上下游两面横肋）
+    // + 墩顶一座横跨全闸的启闭房（米色墙、每孔两扇窗、灰瓦两坡顶、端墙上闸名）+ 闸门吊杆 + 下游低处一道条石工作桥（石栏）。不用 metal（远看发蓝）、不留纯白块
+    const S = C2.sluice, t = S.t, n = S.n, hw = S.hw, NB = S.bays, Pt = (a, b) => [S.x + t[0] * a + n[0] * b, S.z + t[1] * a + n[1] * b], ryT = yawOf(t[0], t[1]);
+    // a 沿水流（+ 往闽江）、b 横跨河；sa / sb = 沿 a / b 的尺寸
+    const bx = (M, a, b, y, sa, sy, sb, col) => { const [x, z] = Pt(a, b); M.box(x, y, z, sb, sy, sa, hex(col), ryT, 0, 0, 1, NO); };
+    const y0 = WY - 0.4, PT = 3.6, PW = 1.2, PA0 = -2.4, PA1 = 2.2, HB = 2 * hw / NB;
+    const PIER = '#A39C8E', CAP = '#B5AE9F', SLOT = '#6E685C', GATE = '#8A8C88', RIBC = '#74766F', WALL = '#D6CCB6', BASE = '#9A9385', ROOF = '#5E6266', WIN = '#5A6164', FRAME = '#8E887C';
+    for (let i = 0; i <= NB; i++) { const v = -hw + HB * i, [x, z] = Pt((PA0 + PA1) / 2, v);
+      bx(GR, (PA0 + PA1) / 2, v, (y0 + PT) / 2, PA1 - PA0, PT - y0, PW, PIER); k.col(x, (y0 + PT) / 2, z, PW, PT - y0, PA1 - PA0, { ry: ryT, name: 'colSluice' });
+      bx(GR, (PA0 + PA1) / 2, v, PT + 0.12, PA1 - PA0 + 0.3, 0.24, PW + 0.3, CAP);   // 墩帽
+      for (let y = WY + 0.6; y < PT - 0.3; y += 0.9) bx(GR, (PA0 + PA1) / 2, v, y, PA1 - PA0 + 0.02, 0.04, PW + 0.02, '#8E887C');   // 条石砌缝（一圈细线）
+      const [ux, uz] = Pt(PA0 - 0.2, v); GR.box(ux, (y0 + WY + 0.6) / 2, uz, 0.9, WY + 0.6 - y0, 0.9, hex(PIER), ryT + Math.PI / 4, 0, 0, 1, NO);   // 上游分水尖
+      for (const e of [-1, 1]) if ((i > 0 || e > 0) && (i < NB || e < 0)) bx(GR, 0.4, v + e * (PW / 2 + 0.005), (y0 + PT) / 2, 0.36, PT - y0, 0.02, SLOT); }   // 门槽
+    for (let i = 0; i < NB; i++) { const v0 = -hw + HB * i + PW / 2, v1 = -hw + HB * (i + 1) - PW / 2, vm = (v0 + v1) / 2, W = v1 - v0, gt = 0.3;
+      bx(GR, 0.4, vm, (y0 + gt) / 2, 0.26, gt - y0, W, GATE);   // 平板闸门（关着，顶比岸面高一点）
+      for (let y = WY + 0.35; y < gt - 0.1; y += 0.6) for (const sa of [-1, 1]) bx(GR, 0.4 + sa * 0.15, vm, y, 0.05, 0.09, W - 0.1, RIBC);   // 横肋：上下游两面
+      for (const sa of [-1, 1]) bx(GR, 0.4 + sa * 0.15, vm, (y0 + gt) / 2, 0.05, gt - y0, 0.09, RIBC);   // 中间竖肋
+      bx(GR, 0.4, vm, gt + 0.04, 0.34, 0.08, W, '#7A7C78');   // 门顶压条
+      for (const e of [-1, 1]) { bx(GR, 0.4, vm + e * W / 3, (gt + PT) / 2, 0.14, PT - gt, 0.14, '#7A7C78'); bx(GR, 0.4, vm + e * W / 3, gt + 0.12, 0.3, 0.16, 0.3, '#6E706C'); } }   // 吊杆 + 吊耳
+    // 启闭房：横跨全闸，坐在墩帽上
+    { const H0 = PT + 0.24, HH = 2.8, HA0 = -1.6, HA1 = 2.0, HAm = (HA0 + HA1) / 2, HD = HA1 - HA0, HL = 2 * hw + PW + 0.2;
+      bx(P, HAm, 0, H0 + HH / 2, HD, HH, HL, WALL); bx(GR, HAm, 0, H0 + 0.25, HD + 0.06, 0.5, HL + 0.06, BASE);   // 墙身 + 灰石勒脚
+      bx(GR, HAm, 0, H0 + HH + 0.08, HD + 0.2, 0.16, HL + 0.2, CAP);   // 檐口
+      const rise = 1.1, slope = Math.atan2(rise, HD / 2);
+      for (const sd of [-1, 1]) { const [rx, rz] = Pt(HAm + sd * HD / 4, 0); P.box(rx, H0 + HH + 0.16 + rise / 2, rz, HL + 0.5, 0.14, Math.hypot(HD / 2, rise) + 0.45, hex(ROOF), ryT, sd * slope, 0, 1, NO); }
+      bx(P, HAm, 0, H0 + HH + 0.18 + rise, 0.3, 0.2, HL + 0.5, '#4A4E52');   // 屋脊
+      for (const e of [-1, 1]) { const [gx, gz] = Pt(HAm, e * (HL / 2 + 0.02)); for (let j = 0; j < 4; j++) P.box(gx, H0 + HH + 0.16 + (j + 0.5) * rise / 4, gz, 0.04, rise / 4, HD * (1 - (j + 0.5) / 4), hex(WALL), ryT, 0, 0, 1, NO); }   // 山墙三角（台阶叠出来）
+      for (let i = 0; i < NB; i++) for (const q of [-0.22, 0.22]) { const vm = -hw + HB * (i + 0.5) + q * HB;   // 每孔两扇窗，上下游两面
+        for (const sa of [-1, 1]) { const aa = HAm + sa * (HD / 2 + 0.03); bx(GR, aa, vm, H0 + 1.55, 0.05, 1.3, 1.5, FRAME); bx(P, aa + sa * 0.02, vm, H0 + 1.55, 0.04, 1.1, 1.3, WIN); bx(P, aa + sa * 0.04, vm, H0 + 1.55, 0.03, 1.1, 0.06, FRAME); bx(GR, aa + sa * 0.06, vm, H0 + 0.88, 0.14, 0.08, 1.7, CAP); } }
+      for (const e of [-1, 1]) { const bb = e * (HL / 2 + 0.03);   // 两头端墙：一扇窗 + 闸名牌（灰石底、米黄字；不画箭头 / 地图）
+        bx(GR, HAm, bb, H0 + 1.0, 1.0, 1.0, 0.05, FRAME); bx(P, HAm, bb + e * 0.02, H0 + 1.0, 0.85, 0.85, 0.04, WIN);
+        const [qx, qz] = Pt(HAm, bb + e * 0.03), uv = this.atlas.draw(2.0, 0.5, textPaint(['彬德水闸'], { bg: '#6E675B', fg: '#F2E2B0' }), 70);
+        this.atlas.quad(qx, H0 + 2.2, qz, 2.0, 0.5, Math.atan2(n[0] * e, -n[1] * e), uv); }
+      { const [qx, qz] = Pt(HA0 - 0.04, 0), uv = this.atlas.draw(3.0, 0.6, textPaint(['彬德水闸'], { bg: '#6E675B', fg: '#F2E2B0' }), 80); this.atlas.quad(qx, H0 + 2.35, qz, 3.0, 0.6, Math.atan2(-t[0], t[1]), uv); } }   // 上游面正中
+    // 下游工作桥：墩间条石板 + 石栏（和驳岸石栏同款）
+    { const WA = PA1 - 0.8; bx(GR, WA, 0, -0.1, 1.4, 0.3, 2 * hw + PW, CAP);
+      for (const sa of [-1, 1]) { bx(GR, WA + sa * 0.62, 0, 0.74, 0.16, 0.1, 2 * hw + PW, '#B5AE9F'); for (let v = -hw; v <= hw + 0.01; v += HB / 3) bx(GR, WA + sa * 0.62, v, 0.38, 0.2, 0.72, 0.2, '#A8A193'); } }
     // 闸边观景处（江滨西大道下穿上来往南几步）：花岗岩铺地 + 一张长椅，朝闽江
     { const [x, z] = S.view; GR.box(x, 0.015, z, 3.2, 0.03, 3.2, hex('#ABA497'), ryT, 0, 0, 1, NO); D.bench(this.kit, x - n[0] * 1.0, 0, z - n[1] * 1.0, yawOf(t[0], t[1]), true); }
   }
@@ -611,7 +630,7 @@ export class FzRiverStreet extends XmStreet {
         P.box(h.x, h.h + 0.25, h.z, h.w + 0.3, 0.5, h.d + 0.3, hex('#E9E5DD'), ry, 0, 0, 1, NO);
         const fl = Math.max(4, Math.min(8, Math.round(h.h / 3)));
         A.quad(h.x + fx * (h.d / 2 + 0.03), h.h / 2, h.z + fz * (h.d / 2 + 0.03), h.w, h.h, Math.atan2(fx, -fz), this.fac['m' + fl + (i % 2)]);
-        if (h.back) {   // 背朝水部步道 / 亭子的楼：背面 + 两个侧面也贴立面（小美 2B ②：原来是没贴图的白方块）
+        if (h.back || (FZR.c2 && h.z < FZR.c2.z0)) {   // 2C 的楼四面都贴立面（小美 2C ②：宁化 A 口出来左手那栋侧墙是白方块）；背朝水部步道 / 亭子的楼：背面 + 两个侧面也贴立面（小美 2B ②：原来是没贴图的白方块）
           const fc = this.fac['m' + fl + ((i + 1) % 2)];
           A.quad(h.x - fx * (h.d / 2 + 0.03), h.h / 2, h.z - fz * (h.d / 2 + 0.03), h.w, h.h, Math.atan2(-fx, fz), fc);
           for (const se of [-1, 1]) A.quad(h.x + tx * se * (h.w / 2 + 0.03), h.h / 2, h.z + tz * se * (h.w / 2 + 0.03), h.d, h.h, Math.atan2(tx * se, -tz * se), fc);

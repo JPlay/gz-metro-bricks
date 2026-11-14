@@ -342,7 +342,7 @@ for p in PIERS_C: print('pier 2C', p['id'], p['s'], p['side'], p['x'], p['z'], '
 (_mx, _mz), _mt, _mn = at_s('bm', BM_END)
 (_sx, _sz), _st, _sn = at_s('bm', SLUICE_S)
 SLUICE = {'s': SLUICE_S, 'x': round(_sx, 2), 'z': round(_sz, 2), 't': [round(_st[0], 4), round(_st[1], 4)], 'n': [round(_sn[0], 4), round(_sn[1], 4)], 'hw': HW['bm'], 'bays': 3,
-          'house': [round(v, 2) for v in at_s('bm', SLUICE_S - 1.0, WEST * (HW['bm'] + 6.5))[0]], 'view': [round(v, 2) for v in at_s('bm', SLUICE_S - 0.5, WEST * (HW['bm'] + 2.2))[0]]}
+          'house': [round(v, 2) for v in at_s('bm', SLUICE_S - 1.0, WEST * (HW['bm'] + 6.5))[0]], 'view': [round(v, 2) for v in at_s('bm', SLUICE_S - 8.0, WEST * (HW['bm'] + 5.0))[0]]}   # 小美 2C ①：退到闸上游 8 m、离岸 5 m，斜着看得见三扇闸门 + 启闭房正面（不再被西头闸墩整个挡住）
 _cap = [at_s('bm', BM_END, -HW['bm'])[0], at_s('bm', BM_END, HW['bm'])[0]]
 MJ_ZB = round(min(_cap[0][1], _cap[1][1]) - 3.0, 2)   # 闽江北岸（游戏里按东西向一条直线；只看不走）
 MJ_LV = WY - 0.6
@@ -675,6 +675,11 @@ for side in (-1, 1): house_run('bm', side, BM_A_LEN + 2, BM_END - 4, RNG_C)
 _nT2 = len(TREES)
 for side in (-1, 1): tree_run('bm', side, BM_A_LEN + RNG_C.uniform(1, 6), BM_END - 3, RNG_C, region, water0)
 for t_ in TREES[_nT2:]: t_.append(1)
+# 小美 2C ③：彬德桥上下游西岸各留一段不种榕树（桥头取景 / 下穿北口正面看桥不被枝叶挡；只删树、不动随机数序列）
+_bd = [b for b in BR if b['id'] == 'bm18'][0]
+_bdClr = unary_union([Polygon([at_s('bm', s_, l_)[0] for s_, l_ in ((s0, 8.0), (s1, 8.0), (s1, 19.0), (s0, 19.0))]) for s0, s1 in ((_bd['s'] - 26.0, _bd['s'] - 1.5), (_bd['s'] + 1.5, _bd['s'] + 16.0))])
+_nTb = len(TREES); TREES = TREES[:_nT2] + [t_ for t_ in TREES[_nT2:] if not _bdClr.contains(Point(t_[0], t_[1]))]
+print('2C bingde clear zone: removed trees', _nTb - len(TREES))
 # 宁化步道两边一排榕树（树冠朝步道）
 for sv in (-1, 1):
   a_ = NH_LAT0 + 4.0
