@@ -114,18 +114,27 @@ export class FzRiverStreet extends XmStreet {
   lockStatic() {
     const L = LOCK, k = this.kit, GR = k.g('granite'), P = k.solid, half = (L.s[1] - L.s[0]) / 2, ryT = yawOf(L.t[0], L.t[1]), ryN = yawOf(L.n[0], L.n[1]);
     const RED = hex('#C62828'), WHITE = hex('#F4F1EA'), BLACK = hex('#22262A');
-    // 水位刻度尺：闸室两侧墙中间各一根 + 靠两道闸门各一根；0.1 m 一格红白相间，0.5 m 一道黑横线；上 / 下游两个水位各一道白线（贴墙 1.6 m 长）
-    const yLo = WY - 0.3, yHi = WY + L.rise + 0.6;
-    for (const sd of [-1, 1]) for (const a of [-half + 2.6, 0, half - 2.6]) {
-      const [x, z] = this.lockP(a, sd * (L.hw - 0.012));
-      for (let y = yLo, i = 0; y < yHi - 1e-6; y += 0.1, i++) P.box(x, y + 0.05, z, 0.16, 0.1, 0.03, i % 2 ? WHITE : RED, ryN, 0, 0, 1, NO);
-      for (let y = WY - 0.0; y <= yHi + 1e-6; y += 0.5) P.box(x, y, z, 0.3, 0.025, 0.04, BLACK, ryN, 0, 0, 1, NO);
-      if (a === 0) for (const y of [WY, WY + L.rise]) P.box(x, y, z, 1.6, 0.03, 0.025, WHITE, ryN, 0, 0, 1, NO);
+    // 水位刻度尺（小美 11-14 第二版）：直接贴在闸墙上的红白竖条，宽 0.3 m、0.1 m 一格；上游头、下游头各一条（同一侧墙，面向闸室）；
+    // 低水位旁标「0」、高水位旁标「0.5」——船降下去时数得出降了 5 格
+    const A = this.atlas, yLo = WY - 0.3, yHi = WY + L.rise + 0.3, GS = 1, fx = -GS * L.n[0], fz = -GS * L.n[1], qa = Math.atan2(fx, -fz);
+    const uv0 = A.draw(0.3, 0.24, textPaint(['0'], { bg: '#F4F1EA', fg: '#22262A' }), 160), uv5 = A.draw(0.42, 0.24, textPaint(['0.5'], { bg: '#F4F1EA', fg: '#22262A' }), 160);
+    for (const a of [-half + 2.85, half - 2.85]) {
+      const [x, z] = this.lockP(a, GS * (L.hw - 0.012));
+      for (let y = yLo, i = 0; y < yHi - 1e-6; y += 0.1, i++) P.box(x, y + 0.05, z, 0.3, 0.1, 0.024, i % 2 ? WHITE : RED, ryN, 0, 0, 1, NO);
+      for (const [y, uv, w] of [[WY, uv0, 0.3], [WY + L.rise, uv5, 0.42]]) {
+        const [qx, qz] = this.lockP(a + 0.15 + 0.06 + w / 2, GS * (L.hw - 0.03));   // 数字贴在刻度条下游侧，中心对准该水位
+        A.quad(qx, y, qz, w, 0.24, qa, uv);
+        const [mx, mz] = this.lockP(a, GS * (L.hw - 0.03)); P.box(mx, y, mz, 0.44, 0.022, 0.02, BLACK, ryN, 0, 0, 1, NO);   // 该水位一道黑短线
+      }
+    }
+    // 门龛：每扇门开到贴墙（约 90°）时收进墙上一个门龛——龛底深色衬板 + 龛尾一道花岗岩挡墩（门扇长 ~1.9 m）
+    for (const [a0, dir] of [[-half, 1], [half, -1]]) for (const sd of [-1, 1]) {
+      const aE = a0 + dir * 2.15, [bx, bz] = this.lockP((a0 + aE) / 2, sd * (L.hw - 0.01)), [px, pz] = this.lockP(aE + dir * 0.2, sd * (L.hw - 0.27));
+      P.box(bx, (WY - 0.6) / 2, bz, 0.02, -(WY - 0.6), 2.15, hex('#2B2F33'), ryT, 0, 0, 1, NO);
+      GR.box(px, (WY - 0.7) / 2, pz, 0.54, -(WY - 0.7), 0.4, hex('#8E887C'), ryT, 0, 0, 1, NO);
     }
     // 闸门两侧的门墩（花岗岩，顶面略高出岸地）
     for (const a of [-half, half]) for (const sd of [-1, 1]) { const [x, z] = this.lockP(a, sd * (L.hw + 0.35)); GR.box(x, (WY - 0.4 + 0.18) / 2, z, 0.7, 0.18 - (WY - 0.4), 1.1, hex('#8E887C'), ryT, 0, 0, 1, NO); }
-    // 坝顶：闸室两头横着一道深色检修沟盖板（只是地面上的线，提示这里是闸）
-    for (const a of [-half - 0.9, half + 0.9]) for (const sd of [-1, 1]) { const w = L.damHw - 0.5 - (L.hw + 0.8), [x, z] = this.lockP(a, sd * (L.hw + 0.8 + w / 2)); P.box(x, 0.006, z, 0.3, 0.01, w, hex('#6E685C'), ryN, 0, 0, 1, NO); }   // 只画在坝顶两侧，不横跨水面
   }
   lockGates() {
     const L = LOCK, half = (L.s[1] - L.s[0]) / 2, M = this.kit.M;
