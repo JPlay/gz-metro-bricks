@@ -278,7 +278,8 @@ export function xihuPark(S, o) {
     for (const [x, z] of [[-3.2, -3.2], [3.2, -3.2], [3.2, 3.2], [-3.2, 3.2]]) { P.cyl(cx + x, DY + 1.9, cz + z, 0.42, 3.8, hex('#B02A22'), 8); k.colSlab(cx + x - 0.25, cx + x + 0.25, 0, 3.8, cz + z - 0.25, cz + z + 0.25); }
     P.slab(cx - 3.6, cx + 3.6, DY + 3.7, DY + 4.0, cz - 3.6, cz + 3.6, hex('#B02A22'), NO);
     P.cyl(cx, DY + 5.1, cz, 10, 2.2, hex('#2F7D6D'), 4, Math.PI / 4, 0, 0, 0.6); P.cyl(cx, DY + 6.6, cz, 0.6, 1, hex('#C9A23A'), 6, 0, 0, 0, 0.1);
-    const uv = A.draw(2.8, 0.6, textPaint(['观湖亭'], { bg: '#1F3B2E', fg: '#E9C46A' }), 60); A.quad(cx, DY + 3.2, cz - 3.62, 2.8, 0.6, 0, uv); A.quad(cx, DY + 3.2, cz + 3.62, 2.8, 0.6, Math.PI, uv); }
+    const uv = A.draw(2.8, 0.6, textPaint(['观湖亭'], { bg: '#1F3B2E', fg: '#E9C46A' }), 60); A.quad(cx, DY + 3.2, cz - 3.62, 2.8, 0.6, 0, uv); A.quad(cx, DY + 3.2, cz + 3.62, 2.8, 0.6, Math.PI, uv);
+    for (const sz of [-1, 1]) P.slab(cx - 1.5, cx + 1.5, DY + 2.86, DY + 3.54, cz + sz * 3.6 - (sz > 0 ? 0.06 : 0), cz + sz * 3.6 + (sz < 0 ? 0.06 : 0), hex('#1F3B2E'), NO); }   // 匾背板：亭里 / 背面看不到反字
   // 柳堤 + 白石拱桥 + 湖心岛开化寺：同老街区造型，往北推到远处湖面（只看不走）
   const CZ = o.cz, BRX = 34, BH = 12, CX0 = -16, CX1 = o.cx1;
   for (const [a, b] of [[CX0, BRX - BH], [BRX + BH, CX1]]) { P.slab(a, b, WY, 0.35, CZ - 3, CZ + 3, hex('#7DAA55'), NO); GR.slab(a, b, WY, 0.1, CZ - 3.2, CZ - 2.9, hex('#A39C8E'), NO); }

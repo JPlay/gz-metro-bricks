@@ -51,7 +51,7 @@ export class FzRiverStreet extends XmStreet {
     const shoreCache = new Map(), shore = x => { const key = Math.round(x * 10); if (shoreCache.has(key)) return shoreCache.get(key);
       let z = 16; while (z < 76 && !isWater(x + ox, z + oz)) z += 0.1; shoreCache.set(key, z); return z; };
     let lakeX1 = -24; for (let x = -24; x <= 26; x += 0.5) if (shore(x) < 76) lakeX1 = x;
-    const r = xihuPark({ kit: pk, atlas: pa }, { WY: LOCK ? WY + LOCK.rise : WY, shore, x0: -24, x1: 26, z1: 76, lakeX1, bwX: 4, cz: 149, cx1: 80 });
+    const r = xihuPark({ kit: pk, atlas: pa }, { WY: LOCK ? WY + LOCK.rise : WY, shore, x0: -24, x1: 26, z1: 76, lakeX1, bwX: 4, cz: 114, cx1: 80 });
     for (const G of touched) G.xf = null;
     this.decks = r.decks.map(([x0, x1, z0, z1]) => [x0 + ox, x1 + ox, z0 + oz, z1 + oz]);
   }
@@ -84,16 +84,22 @@ export class FzRiverStreet extends XmStreet {
   /* ---------- 地面 / 水面（三角网，碰撞体按 60 m 格子分开） ---------- */
   groundAndWater() {
     const k = this.kit, PV = k.g('pave'), WA = k.g('paint@sea');
+    const GRASS = hex('#79A85A'), SKIRTC = hex('#BDB7AA'), PAVEC = hex('#CFC9BD');   // 2A：西湖公园一带的岸地 / 外圈画成草地（小美：站在牌楼、码头、栈道、柳堤看不到白边）
     const add = (G, T, y, col) => {   // y：数 或 (x, z) => y（2A：湖 + 闸上游水面高 0.5 m）
       for (const c of Object.values(T)) {
         const P = c.p, I = c.i, base = G.p.length / 3;
-        for (let j = 0; j < P.length; j += 2) G.push(P[j], typeof y === 'function' ? y(P[j], P[j + 1]) : y, P[j + 1], 0, 1, 0, col);
+        for (let j = 0; j < P.length; j += 2) G.push(P[j], typeof y === 'function' ? y(P[j], P[j + 1]) : y, P[j + 1], 0, 1, 0, typeof col === 'function' ? col(P[j], P[j + 1]) : col);
         for (let j = 0; j < I.length; j += 3) G.i.push(base + I[j], base + I[j + 1], base + I[j + 2]);
       }
     };
-    add(PV, FZR.land, 0, hex('#CFC9BD')); add(WA, FZR.water, levelAt, hex('#2F6670'));
+    add(PV, FZR.land, 0, PAVEC);
+    if (KIOSKS.fzxm_B) {   // 西湖公园一带的岸地盖一层草（园路 / 步道 / 栈桥都画在上面）；西边白马河岸和闸不动
+      const G = k.solid, inZ = (x, z) => x > -346 && x < -270 && z > 110.6 && z < 240;
+      for (const c of Object.values(FZR.land)) { const P = c.p, I = c.i;
+        for (let j = 0; j < I.length; j += 3) { const a = I[j] * 2, b = I[j + 1] * 2, d = I[j + 2] * 2; if (!inZ((P[a] + P[b] + P[d]) / 3, (P[a + 1] + P[b + 1] + P[d + 1]) / 3)) continue;
+          const base = G.p.length / 3; for (const q of [a, b, d]) G.push(P[q], 0.012, P[q + 1], 0, 1, 0, GRASS); G.i.push(base, base + 1, base + 2); } } } add(WA, FZR.water, levelAt, hex('#2F6670'));
     // 可走范围外：一圈地面 + 西湖其余湖面（只看，不碰撞；边界墙挡着走不过去）
-    add(k.solid, [FZR.skirt], -0.01, hex('#BDB7AA')); add(WA, [FZR.lakeFar], (LOCK ? WY + LOCK.rise : WY) - 0.03, hex('#2F6670'));
+    add(k.solid, [FZR.skirt], -0.01, KIOSKS.fzxm_B ? ((x, z) => (x > -620 && x < -190 && z > 60 && z < 600) ? GRASS : SKIRTC) : SKIRTC); add(WA, [FZR.lakeFar], (LOCK ? WY + LOCK.rise : WY) - 0.03, hex('#2F6670'));
     for (const [x0, z0, x1, z1] of FZR.lakeShore) { const L = Math.hypot(x1 - x0, z1 - z0); k.g('granite').box((x0 + x1) / 2, (WY - 0.2) / 2, (z0 + z1) / 2, 0.5, -WY + 0.2, L + 0.3, hex('#8E887C'), yawOf(x1 - x0, z1 - z0), 0, 0, 1, NO); }
     // 碰撞：每格一个不可见网格
     const colMesh = (T, y, name) => {
@@ -131,8 +137,8 @@ export class FzRiverStreet extends XmStreet {
       for (const [y, txt] of [[WY, '0'], [WY + L.rise, '05']]) {
         const [mx, mz] = this.lockP(a, GS * (L.hw - 0.03)); P.box(mx, y, mz, 0.44, 0.022, 0.02, BLACK, ryN, 0, 0, 1, NO);   // 该水位一道黑短线
         const u0 = sgn * (0.15 + 0.06 + dw / 2), step = sgn * (dw + 0.07);
-        if (txt === '0') digit(a + u0, y + 0.14, '0');
-        else { digit(a + u0, y + 0.14, '0'); const [px, pz] = this.lockP(a + u0 + step * 0.75, GS * (L.hw - 0.02)); P.box(px, y + 0.14 - dh / 2 + sw / 2, pz, sw, sw, 0.02, BLACK, ryN, 0, 0, 1, NO); digit(a + u0 + step * 1.5, y + 0.14, '5'); }
+        if (txt === '0') digit(a + u0, y + 0.17, '0');
+        else { digit(a + u0, y + 0.17, '0'); const [px, pz] = this.lockP(a + u0 + step * 0.75, GS * (L.hw - 0.02)); P.box(px, y + 0.17 - dh / 2 + sw / 2, pz, sw, sw, 0.02, BLACK, ryN, 0, 0, 1, NO); digit(a + u0 + step * 1.5, y + 0.17, '5'); }
       }
     }
     // 门龛：每扇门开到贴墙（约 90°）时收进墙上一个门龛——龛底深色衬板 + 龛尾一道花岗岩挡墩（门扇长 ~1.9 m）
