@@ -95,6 +95,7 @@ export async function start() {
   const social = new Social({ scene, player, bubbles, Audio, events, getStation: () => G.station, getCode: () => G.code, getMetro: () => metro });
   metro.trains.forEach(t => t.shadowMeshes.forEach(m => R.addShadowCaster(m)));
   scene.fogColor = new B.Color3(0.08, 0.09, 0.11); scene.fogStart = 25; scene.fogEnd = 85;
+  R.updateFog();   // 上面这行会把 gfx.apply() 设好的户外薄雾改成隧道黑雾参数（fogMode 仍是 LINEAR）→ 远处楼 / 树整片发黑；按当前状态重设
 
   function buildStation(code) {
     if (G.station) G.station.dispose();

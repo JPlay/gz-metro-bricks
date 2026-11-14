@@ -73,12 +73,15 @@ uniform vec4 gfxF; uniform vec4 gfxSunDir; uniform vec4 gfxSunCol; uniform vec4 
 uniform sampler2D gfxShadowSampler;
 ${NOISE}
 float gfxShadowAt(vec3 P, vec3 Ng) {
-  vec3 Q = P + Ng * 0.22;
+  // 墙面 / 侧面：高度图在竖直面上梯度很陡（1 texel ≈ 0.25 m 高差，再加保守光栅化 + 4 次偏移采样），
+  // 只靠 0.22 m 法线偏移会自阴影（向阳的楼面整面发黑）→ 侧面加大法线偏移 + 高度偏置（斜率偏置）
+  float gs = 1.0 - abs(Ng.y);
+  vec3 Q = P + Ng * (0.22 + 0.35 * gs);
   float t = (Q.y - gfxShP.z) / max(0.06, -gfxSunDir.y);
   vec2 g = Q.xz + gfxSunDir.xz * t;
   vec2 uv = (g - gfxShMap.xy) * gfxShMap.zw;
   if (uv.x < 0.0 || uv.y < 0.0 || uv.x > 1.0 || uv.y > 1.0) return 0.0;
-  float y0 = Q.y - gfxShP.z + 0.06, yb = y0 + 0.9, k = gfxShP.y;
+  float y0 = Q.y - gfxShP.z + 0.06 + 0.6 * gs, yb = y0 + 0.9, k = gfxShP.y;
   if (gfxShP.w < 2.0) return smoothstep(y0, yb, texture2D(gfxShadowSampler, uv).r * k);
   // 4 个旋转网格采样 + 半影带（高度差 0.9 m 内渐变）：边缘软、看不出 texel 台阶
   float o = gfxShP.x * 1.6, acc = 0.0;
