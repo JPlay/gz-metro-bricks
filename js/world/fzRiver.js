@@ -511,10 +511,15 @@ export class FzRiverStreet extends XmStreet {
   }
   /* ---------- 步道：路灯 / 长椅 ---------- */
   promenade() {
-    for (const r of Object.values(RIVERS)) for (const side of [-1, 1]) for (let s = 20; s < r.line.len - 10; s += 34) {
+    for (const [id, r] of Object.entries(RIVERS)) for (const side of [-1, 1]) for (let s = 20; s < r.line.len - 10; s += 34) {
       const a = r.line.at(s, side * (r.hw + 5.2)); if (isWater(a.x, a.z) || BRIDGES.some(b => Math.hypot(b.x - a.x, b.z - a.z) < b.w / 2 + b.half)) continue;
       const fx = -a.nx * side, fz = -a.nz * side;   // 朝河
-      this.det(a.x, a.z, () => { D.lamp(this.kit, a.x, 0, a.z, yawOf(fx, fz)); const b = r.line.at(s + 9, side * (r.hw + 4.2)); if (!isWater(b.x, b.z)) D.bench(this.kit, b.x, 0, b.z, yawOf(-fx, -fz)); });
+      this.det(a.x, a.z, () => {
+        D.lamp(this.kit, a.x, 0, a.z, yawOf(fx, fz));
+        const b = r.line.at(s + 9, side * (r.hw + 4.2));
+        // 2B 东西河东段（1A 段树最东约 x=-50）：沿河看去，原长椅端面是铸铁腿的实心黑方板，改用带扶手的侧框
+        if (!isWater(b.x, b.z)) D.bench(this.kit, b.x, 0, b.z, yawOf(-fx, -fz), id === 'dx' && b.x > -30);
+      });
     }
   }
   /* ---------- 三坊七巷南口（澳门桥北头 → 南后街）：石板街 + 牌坊 ---------- */
