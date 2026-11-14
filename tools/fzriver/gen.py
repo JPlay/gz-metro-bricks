@@ -205,6 +205,7 @@ for r_, w_, nm, und in [(205, 28, '五一中路', True), (427, 10, '海底支路
 # 桥下步道（小美 2B ②：五一中路、八一七中路）：北岸贴着岸墙在河道里做 1.6 m 宽石板步道，
 #   上游一侧石阶下到 WY+0.5（-2.5），从桥底平走过去（桥板底 -0.4，净高 2.1 m），下游一侧石阶上来；外沿栏杆，两个阶顶岸墙栏杆开口
 UNDERS = []
+UGAPS = []   # 桥下步道阶顶的栏杆缺口（单独记：岸墙按 2 m 切段时，缺口比一段还窄会被漏掉）
 UW = 1.6; UY = WY + 0.5; URUN = 5.0
 for bid, b_ in UNDER.items():
   sd = 1 if b_['n'][1] > 0 else -1   # 北岸 = +z
@@ -225,7 +226,7 @@ for bid, b_ in UNDER.items():
                  'flat': round(hw_, 2), 'run': URUN, 'w': UW, 'y': UY, 'fill': fill})
   print('under', bid, b_['name'], 'fill', fill)
   DRY.append(Polygon([P(-hw_ - URUN, 0), P(hw_ + URUN, 0), P(hw_ + URUN, UW), P(-hw_ - URUN, UW)]))
-  for e, fl in zip((-1, 1), fill): GAPS.append(Polygon([P(e * (hw_ + URUN - 0.2), -1 - fl), P(e * (hw_ + URUN - 1.9), -1 - fl), P(e * (hw_ + URUN - 1.9), 1), P(e * (hw_ + URUN - 0.2), 1)]))
+  for e, fl in zip((-1, 1), fill): UGAPS.append(Polygon([P(e * (hw_ + URUN - 0.2), -1 - fl), P(e * (hw_ + URUN - 1.9), -1 - fl), P(e * (hw_ + URUN - 1.9), 1), P(e * (hw_ + URUN - 0.2), 1)]))
 BR.sort(key=lambda b: (b['river'], b['s']))
 for b in BR: print('bridge', b['id'], b['river'], b['s'], b['kind'], b['name'], b['w'])
 # 桥面在岸上的落脚：栏杆缺口
@@ -379,6 +380,7 @@ for k in CL:
   for s in (g.length,) if k != 'bm' else (g.length,):
     (x, z), t, n = at_s(k, s); ends.append((k, x, z, t))
 gapU = unary_union(GAPS)
+ugapU = unary_union(UGAPS)
 def seg_kind(a, b):
   mx, mz = (a[0] + b[0]) / 2, (a[1] + b[1]) / 2
   if abs(mx - LAKE_BOX[0]) < 0.3 or abs(mz - LAKE_BOX[3]) < 0.3 or abs(mx - LAKE_BOX[2]) < 0.3 and mz > 140: return 'clip'
@@ -401,7 +403,8 @@ for ring in rings:
     for i in range(n):
       p0 = (a[0] + (b[0] - a[0]) * i / n, a[1] + (b[1] - a[1]) * i / n); p1 = (a[0] + (b[0] - a[0]) * (i + 1) / n, a[1] + (b[1] - a[1]) * (i + 1) / n)
       m = Point((p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2)
-      WALL.append([round(p0[0], 2), round(p0[1], 2), round(p1[0], 2), round(p1[1], 2), 1 if gapU.contains(m) else 0])
+      seg = LineString([p0, p1]); ug = seg.intersection(ugapU).length >= 0.4 * seg.length   # 八一七中路东头：缺口 1.7 m 落在两段中间、两段中点都不在缺口里 → 阶顶被栏杆封死（e2e r4 bleg1 nopath）
+      WALL.append([round(p0[0], 2), round(p0[1], 2), round(p1[0], 2), round(p1[1], 2), 1 if (gapU.contains(m) or ug) else 0])
 # 合并相邻同类、几乎共线的小段（碰撞体少一些）
 def merge(W):
   out = []
@@ -476,7 +479,7 @@ for sg in (-1, 1):
       HOUSES.append({'x': round(cx, 2), 'z': round(cz, 2), 'w': 10, 'd': 8, 't': [round(t_[0], 4), round(t_[1], 4)], 'f': [round(f_[0], 4), round(f_[1], 4)], 'river': 'at', 'h': 6.2, 'kind': 'mh', 'ry': 0})
 print('houses', len(HOUSES))
 # 榕树：岸边 1.6 m，树冠探向水面
-treeOcc = unary_union([b['foot'].buffer(2.5) for b in BR] + [g.buffer(1.5) for g in GAPS] + [r['poly'] for r in ROADS if not r.get('plaza')] + [box(K_['x'] - 6, K_['z'] - 8, K_['x'] + 6, K_['z'] + 4) for K_ in KIOSK.values()])
+treeOcc = unary_union([b['foot'].buffer(2.5) for b in BR] + [g.buffer(1.5) for g in GAPS + UGAPS] + [r['poly'] for r in ROADS if not r.get('plaza')] + [box(K_['x'] - 6, K_['z'] - 8, K_['x'] + 6, K_['z'] + 4) for K_ in KIOSK.values()])
 def tree_run(k, side, s, s_end, rnd, reg_):
   hw = HW[k]
   while s < s_end:
