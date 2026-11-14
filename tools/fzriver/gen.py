@@ -314,7 +314,8 @@ def bandP(s0, s1, b0, b1, sd, n_=24):
   return Polygon(L_ + R_[::-1])
 def hullAt(k, s, lat, L_=4.0, W_=1.2):
   (x, z), t, n = at_s(k, s, lat); return Polygon([(x + t[0] * u + n[0] * v, z + t[1] * u + n[1] * v) for u, v in [(-L_, -W_), (L_, -W_), (L_, W_), (-L_, W_)]])
-_sdx = xsg['side']; _stepP = [d_ for d_, st_ in zip(DRY[-len(STEPS):], STEPS) if st_['id'] == 'bm_e'][0]
+_sdx = xsg['side']; _st = [st_ for st_ in STEPS if st_['id'] == 'bm_e'][0]   # 1A 西岸水埠头石阶（栈道在它旁边让开；不能从 DRY 末尾取：后面还接了桥下步道）
+_stepP = Polygon([(_st['x'] + _st['t'][0] * a - _st['n'][0] * b, _st['z'] + _st['t'][1] * a - _st['n'][1] * b) for a, b in [(-4.2, 0), (4.2, 0), (4.2, 1.4), (-4.2, 1.4)]])
 _bm4 = [b for b in BR if b['name'] == '勺园里'][0]
 XSGC_S = None
 for _i in range(0, 160):

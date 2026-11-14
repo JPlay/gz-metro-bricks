@@ -401,7 +401,7 @@ async def under_walk(pg, D, uid, tag):
 
 # 2B：船速逐帧记录 → 最大加 / 减速度（m/s²，按游戏帧长）+ 相邻帧速度差
 ACCW = """(() => { window.__acc = { aMax: 0, dMax: 0, dvMax: 0, n: 0, stepOver: -9, stepMax: 0 }; let lv = null, lp = null;
-  __game.scene.onAfterRenderObservable.add(() => { const S = __game.fzMetro.street; if (!S || !S.boat) { lv = null; return; } const i = S.boat.info(), A = window.__acc;
+  __game.scene.onAfterRenderObservable.add(() => { const S = __game.fzMetro.street; if (!S || !S.boat) { lv = null; return; } const i = S.boat.info(), A = window.__acc; if (i.rid !== window.__accRid) { window.__accRid = i.rid; lv = null; lp = null; }
     const dt = S.boat.dtLast || 0, vr = S.boat.v; if (lv !== null && dt > 0.004 && i.phase === 'go') { const dv = vr - lv; A.n++;
       if (dv / dt > A.aMax) A.aMax = +(dv / dt).toFixed(3); if (-dv / dt > A.dMax) A.dMax = +(-dv / dt).toFixed(3); if (Math.abs(dv) > A.dvMax) A.dvMax = +Math.abs(dv).toFixed(3); }
     const q = S.boat.node.getAbsolutePosition(); if (lp !== null && lv !== null && dt > 0.004 && i.phase === 'go') { const d = Math.hypot(q.x - lp[0], q.z - lp[1]); if (d > A.stepMax) A.stepMax = +d.toFixed(3); const o = d - Math.max(vr, lv) * dt; if (o > A.stepOver) A.stepOver = +o.toFixed(3); }
@@ -481,8 +481,11 @@ async def deck_path(pg, D, toward_berth=True):
     """西水关：A 线浮码头下游端 → 栈道（离岸墙 1.0 m）→ C 线泊位门口"""
     X = [p for p in D['piers'] if p['id'] == 'xsg'][0]; C = [p for p in D['piers'] if p['id'] == 'xsgc'][0]; hw = 10.0
     pts = [await W(pg, *pf(X, 1.2, 1.2)), await W(pg, *pf(X, 7.6, 1.0))]
-    s0, s1 = X['s'] + 8.5, C['s']; n = max(2, int((s1 - s0) / 3))
-    for k in range(n + 1): pts.append(await bmpt(pg, s0 + (s1 - s0) * k / n, hw - 1.0))
+    # 1A 水埠头石阶（bm_e，离墙 0–1.4 m）旁边那段沿 lat 8.0 走（栈道在石阶外侧让开），过了石阶再回到离墙 1 m
+    st_ = [q for q in D['steps'] if q['id'] == 'bm_e'][0]; s0, s1, sx = X['s'] + 8.5, C['s'], st_['s'] + 4.5; n = max(2, int((sx - s0) / 3))
+    pts.append(await bmpt(pg, s0, hw - 2.0))
+    for k in range(n + 1): pts.append(await bmpt(pg, s0 + (sx - s0) * k / n, hw - 2.0))
+    pts.append(await bmpt(pg, sx + 0.8, hw - 1.0)); pts.append(await bmpt(pg, s1, hw - 1.0))
     return pts if toward_berth else pts[::-1]
 async def board_xsgc(pg, D, leg):
     X = [p for p in D['piers'] if p['id'] == 'xsg'][0]; hw = 10.0; C = [p for p in D['piers'] if p['id'] == 'xsgc'][0]
@@ -509,7 +512,50 @@ async def alight_xsgc(pg, D, leg):
     return ok(f'{leg}:upToShore:xsg', abs(s['pos'][1]) < 0.4 and await near(pg, *land, 1.2), s['pos'])
 async def look_s(pg, s_, lat, pitch=0.02): await look(pg, *(await bmpt(pg, s_, lat)), pitch)
 
+async def cleg2(pg, D, BS):
+    """C线 回程：西水关（A 线浮码头 → 栈道 → C 泊位）→ 上海西码头；终点播报 + 换乘句；下船上岸"""
+    await pg.evaluate('window.__caps.length = 0')
+    if await board_xsgc(pg, D, 'cleg2'):
+        await ride(pg, D, 'cleg2', 'shw', bshots=BS if OUT else None)
+        await asyncio.sleep(6)
+        caps = await pg.evaluate('window.__caps.slice(-12)')
+        xf = [c for c in caps if c[0] == 'voice.fz.boat.xfer.shw.zh']
+        ok('cleg2:announce arrive 上海西码头 终点 + 换乘地铁宁化站，请从 A 口出站', any(c[0] == 'voice.fz.boat.arrive.shw.end.zh' for c in caps) and xf and xf[0][1] == '换乘地铁宁化站，请从 A 口出站。' and any(c[0] == 'voice.fz.boat.xfer.shw.en' for c in caps), caps)
+        R['capsCleg2'] = caps
+        await alight(pg, D, 'shw', 'cleg2')
+        if OUT:
+            P = [p for p in D['piers'] if p['id'] == 'shw'][0]; K = D['kiosks']['fznh']
+            await look(pg, *(await W(pg, K['x'], K['z'])), 0.0); await shot(pg, 'shw_after_alight_toward_ninghua_A')
+        # 下船后走回宁化 A 口（换乘句说的那条路：不过桥）
+        K = D['kiosks']['fznh']; tgt = await W(pg, K['x'], K['z'] + 3); okw = await go(pg, *tgt, '上海西码头 → 宁化 A 口')
+        ok('cleg2:walkBackToNinghuaA', okw and await near(pg, *tgt, 1.5), (await st(pg))['pos'])
+async def c_boat_summary(pg, D):
+    per = {}
+    for l in R['legs']:
+        for k_, v in (l['clr'].get('per') or {}).items(): per[k_] = min(per.get(k_, 99), v)
+    R['clearanceC'] = per; R['legSecs'] = {l['leg']: l['secs'] for l in R['legs']}
+    R['accel'] = await pg.evaluate('window.__acc')
+    ok('cboat:smoothAccel', R['accel']['n'] > 100 and R['accel']['aMax'] <= 0.505 and R['accel']['dMax'] <= 1.005, R['accel'])
+    ok('cboat:maxStep<=v*dt', R['accel']['stepOver'] <= 0.05, R['accel'])
+    ok('cboat:clearanceAllBridgesOnC', per and all(v >= D['clr'] - 0.02 for v in per.values()) and set(D['clrRepC']).issubset(set(per)), {'per': per, 'want': list(D['clrRepC'])})
+    ok('cboat:oneWay<=8min', R['legSecs'] and all(v <= 480 for v in R['legSecs'].values()), R['legSecs'])
+async def run_2c_from_xsg(pg):
+    """c_boat2 单独跑（一次 3600 s 内跑不完两程）：西门 C 口出来 → 西水关（C 船停在 C 泊位）→ 回程到上海西码头"""
+    await pg.evaluate('window.__fzNavRes = 0.35')
+    ex, si = await station_to_exit(pg, 'fzxm', "x.attr === 'fzriver'", 'fzxm')
+    ok('fzxm:C:boats A + C, C at its own 西水关 berth', si and set((si.get('boats') or {}).keys()) == {'A', 'C'} and si['boats']['C']['at'] == 'xsgc', si and {k: v.get('at') for k, v in (si.get('boats') or {}).items()})
+    await pg.evaluate(CLEAR); await pg.evaluate(ACCW); await pg.evaluate(CAPS); D = await mod(pg); await nav(pg); await asyncio.sleep(1)
+    X = [p for p in D['piers'] if p['id'] == 'xsg'][0]; Cp = [p for p in D['piers'] if p['id'] == 'xsgc'][0]
+    land = await landpt(pg, X); okw = await go(pg, *land, '西门 C → 西水关码头'); ok('fzxm:C:walkToXsg', okw)
+    if OUT:
+        await look(pg, *(await W(pg, *X['sign'])), 0.0); await shot(pg, 'pier_sign_xsg_A_C_from_ximen')
+        await look(pg, *(await W(pg, (X['berth'][0] + Cp['berth'][0]) / 2, (X['berth'][1] + Cp['berth'][1]) / 2)), -0.25); await shot(pg, 'xsg_shared_pier_A_and_C_berths')
+    R['perf']['xsgShared'] = await sample(pg, 'xsgShared')
+    await cleg2(pg, D, {'bm12': 'douchi', 'bm13': 'jiaotongxi'})
+    await c_boat_summary(pg, D)
 async def run_2c(pg):
+    C1 = bool(STAGES & {'c_boat', 'c_boat1'}); C2 = bool(STAGES & {'c_boat', 'c_boat2'}); CU = 'c_under' in STAGES
+    if C2 and not C1 and not CU: return await run_2c_from_xsg(pg)
     await pg.evaluate('window.__fzNavRes = 0.35')
     ex, si = await station_to_exit(pg, 'fznh', "x.attr === 'fzriver'", 'fznh')
     ok('fznh:A:net a, boats A + C', si and si.get('net') == 'a' and set((si.get('boats') or {}).keys()) == {'A', 'C'} and si['boats']['C']['at'] == 'shw' and si['boats']['A']['at'] == 'xsg', si and {'net': si.get('net'), 'boats': {k: v.get('at') for k, v in (si.get('boats') or {}).items()}})
@@ -529,8 +575,8 @@ async def run_2c(pg):
         await look(pg, *(await W(pg, K['x'], K['z'])), 0.0); await shot(pg, 'nh_walk_kiosk_from_pier')
     ok('sign:shw: C线 / next 西水关码头', await pg.evaluate("(async () => { const M = await import('/js/data/fz-river.js'); return M.routesOfPier('shw').join() === 'C' && M.pierNext('shw').map(p => p.zh).join() === '西水关码头'; })()"))
     R['perf']['shwPier'] = await sample(pg, 'shwPier')
-    if 'c_boat' in STAGES:
-        BS = {'bm12': 'douchi', 'bm13': 'jiaotongxi'}
+    BS = {'bm12': 'douchi', 'bm13': 'jiaotongxi'}
+    if C1:
         if await board(pg, D, 'shw', 'cleg1'):
             if OUT:   # 上海西码头往下游看：工业路桥（桥下步道）
                 await pg.evaluate("if (__game.player.view!=='first') __game.toggleView()"); await look_s(pg, P['s'] + 40, 0, 0.0); await shot(pg, 'boat_at_shw_looking_gongye_bm14'); await pg.evaluate("__game.toggleView()")
@@ -552,22 +598,10 @@ async def run_2c(pg):
             ok('xsg:shared pier: A boat at A berth, C boat at its own berth', bA['at'] == 'xsg' and bC['at'] == 'xsgc' and math.hypot(bA['x'] - bC['x'], bA['z'] - bC['z']) > 12, [bA['at'], bC['at'], bA['x'], bA['z'], bC['x'], bC['z']])
             ok('sign:xsg: two rows A线 (西湖 / 黎明湖) + C线 (上海西)', await pg.evaluate("(async () => { const M = await import('/js/data/fz-river.js'); return M.pierNext('xsg', 'A').map(p => p.id).join() === 'xihu,lmh' && M.pierNext('xsgc', 'C').map(p => p.id).join() === 'shw' && M.PIERS.filter(q => q.shared === 'xsg').length === 1; })()"))
             R['perf']['xsgShared'] = await sample(pg, 'xsgShared')
-        await pg.evaluate('window.__caps.length = 0')
-        if await board_xsgc(pg, D, 'cleg2'):
-            await ride(pg, D, 'cleg2', 'shw', bshots=BS if OUT else None)
-            await asyncio.sleep(6)
-            caps = await pg.evaluate('window.__caps.slice(-12)')
-            xf = [c for c in caps if c[0] == 'voice.fz.boat.xfer.shw.zh']
-            ok('cleg2:announce arrive 上海西码头 终点 + 换乘地铁宁化站，请从 A 口出站', any(c[0] == 'voice.fz.boat.arrive.shw.end.zh' for c in caps) and xf and xf[0][1] == '换乘地铁宁化站，请从 A 口出站。' and any(c[0] == 'voice.fz.boat.xfer.shw.en' for c in caps), caps)
-            await alight(pg, D, 'shw', 'cleg2')
-        per = {}
-        for l in R['legs']:
-            for k_, v in (l['clr'].get('per') or {}).items(): per[k_] = min(per.get(k_, 99), v)
-        R['clearanceC'] = per; R['legSecs'] = {l['leg']: l['secs'] for l in R['legs']}
-        R['accel'] = await pg.evaluate('window.__acc')
-        ok('cboat:smoothAccel', R['accel']['n'] > 100 and R['accel']['aMax'] <= 0.505 and R['accel']['dMax'] <= 1.005, R['accel'])
-        ok('cboat:maxStep<=v*dt', R['accel']['stepOver'] <= 0.05, R['accel'])
-        ok('cboat:clearanceAllBridgesOnC', per and all(v >= D['clr'] - 0.02 for v in per.values()) and set(D['clrRepC']).issubset(set(per)), {'per': per, 'want': list(D['clrRepC'])})
+    if C2:
+        await cleg2(pg, D, BS)
+    if C1 or C2:
+        await c_boat_summary(pg, D)
     if 'c_under' in STAGES:
         await under_walk(pg, D, 'ubm14', 'gongye')
         R['perf']['under:ubm14'] = await sample(pg, 'under:ubm14')

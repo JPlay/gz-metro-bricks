@@ -21,6 +21,11 @@ ok('xsgc deck (栈道) + rail + deck in dry list', xsgc.deck && xsgc.deck.i.leng
   const ring = xsgc.deckRing, inside = (x, z) => R.inPoly(x, z, ring);
   const okPts = [[xsgc.berth[0] + xsgc.n[0] * 1.6, xsgc.berth[1] + xsgc.n[1] * 1.6]].every(([x, z]) => R.isDry(x, z));
   ok('deck next to the C berth is dry (plank lands on it)', okPts && inside(xsgc.berth[0] + xsgc.n[0] * 1.6, xsgc.berth[1] + xsgc.n[1] * 1.6)); }
+{ // 栈道不能压在 1A 西岸水埠头石阶（bm_e）上：石阶（沿岸 ±4.2 m、离墙 0–1.4 m）里没有一点是栈道；石阶旁边留 ≥ 0.9 m 的走道
+  const st = F.steps.find(q => q.id === 'bm_e'), ring = xsgc.deckRing, Pp = (a, b) => [st.x + st.t[0] * a - st.n[0] * b, st.z + st.t[1] * a - st.n[1] * b];
+  let over = 0; for (let a = -4.2; a <= 4.2; a += 0.2) for (let b = 0.02; b <= 1.38; b += 0.12) { const [x, z] = Pp(a, b); if (R.inPoly(x, z, ring)) over++; }
+  const L = R.RIVERS.bm.line; let walk = true; for (let s = st.s - 4.2; s <= st.s + 4.2; s += 0.2) for (const l of [7.7, 8.0, 8.3]) { const q = L.at(s, l); if (!R.inPoly(q.x, q.z, ring)) walk = false; }
+  ok('xsgc deck clears the 1A bm_e water stair (no overlap) and keeps a walkway beside it (lat 7.7–8.3)', over === 0 && walk, { over, walk }); }
 // 码头牌：西水关一块牌两行（A线 / C线，各自下一站）；上海西：C 线，下一站 西水关
 ok('pierNext(xsg) on A = 西湖 / 黎明湖; pierNext(xsgc, C) = 上海西; pierNext(shw) = 西水关', R.pierNext('xsg').map(p => p.id).join() === 'xihu,lmh' && R.pierNext('xsgc', 'C').map(p => p.id).join() === 'shw' && R.pierNext('shw').map(p => p.id).join() === 'xsgc');
 ok('routesOfPier: xsg → A, xsgc → C, shw → C', R.routesOfPier('xsg').join() === 'A' && R.routesOfPier('xsgc').join() === 'C' && R.routesOfPier('shw').join() === 'C');
