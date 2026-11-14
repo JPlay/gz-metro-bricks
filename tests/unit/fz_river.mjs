@@ -11,7 +11,7 @@ ok('along-river compression 1:3 (K=3)', F.K === 3);
 ok('water level below bank', R.WY < -2 && R.WY > -4);
 ok('land + water triangle meshes present', Object.keys(F.land).length > 20 && Object.keys(F.water).length > 20);
 const bn = R.BRIDGES.map(b => b.name).filter(Boolean);
-ok('26 bridges (2B +5 on 东西河)', R.BRIDGES.length === 26, R.BRIDGES.length);
+ok('34 bridges (2B +5 on 东西河, 2C +8 on 白马河下段)', R.BRIDGES.length === 34, R.BRIDGES.length);
 ok('安泰河 named arch/hump bridges 观音桥/馆驿桥/金斗桥/澳门桥 + 二桥亭桥 + 桂芳桥', ['观音桥', '馆驿桥', '金斗桥', '澳门桥', '二桥亭桥', '桂芳桥'].every(n => bn.includes(n)), bn);
 ok('unnamed small bridges have no plate (⑧)', R.BRIDGES.filter(b => !b.name).every(b => !b.plate));
 ok('bridge ids unique', new Set(R.BRIDGES.map(b => b.id)).size === R.BRIDGES.length);

@@ -57,6 +57,10 @@ export function mkLine(flat) {
   return { x, z, s, len, at, project };
 }
 export let RIVERS, ROUTE, PIERS, PIER, STOPS, BRIDGES, KIOSKS, SPEED_CAP, LOCK = null;
+/* 2C：一片河网可以有几条船线（a 网：A 线 + C 线，C 线和 A 线在西水关共用一座码头、各自泊位）。
+ *   ROUTES = 这片河网的全部船线 { A: ctx, C: ctx }；ROUTE / STOPS / SPEED_CAP / LOCK 是“当前船线”（活绑定），useRoute(id) 切换。
+ *   默认（useNet 之后）是第一条（F.route）—— 1A / 2A / 2B 的代码和单测不用改。 */
+export let ROUTES = {}, ROUTE_ID = 'A';
 /* ---------- 2A：西湖船闸（A 线：西湖码头 → 白马河出湖口直道；湖 + 闸上游 WY+rise，闸下游 WY）----------
  *   LOCK_STATE：两道人字闸门开度（0 关 1 开）+ 闸室水位（相对 WY，0 … rise）。船（fzBoat.js）每帧推进，街区按它画闸门 / 闸室水面。
  *   小美 2A：过闸约 30 s（开 / 关闸门各约 5 s，水位降约 8 s），闸室墙上有水位刻度线；过闸时不能「起身」。 */
@@ -83,6 +87,7 @@ const CACHE = {};
 function cutPierGaps(F) {
   if (F._pierGapsCut) return; F._pierGapsCut = true;
   for (const P of F.piers) {
+    if (P.shared) continue;   // 2C：西水关 C 线泊位和 A 线共用台阶 / 岸墙缺口（xsgc.shared = 'xsg'）
     const out = [];
     for (const w of F.wall) {
       if (w[4] !== 0) { out.push(w); continue; }
@@ -109,16 +114,29 @@ export function useNet(id) {
   if (!CACHE[id]) {
     cutPierGaps(NETS[id]);
     const F = NETS[id], rivers = Object.fromEntries(Object.entries(F.rivers).map(([k, r]) => [k, { ...r, line: mkLine(r.p) }]));
-    const route = { ...F.route, line: mkLine(F.route.p) }, pier = Object.fromEntries(F.piers.map(p => [p.id, p]));
-    CACHE[id] = { F, rivers, route, piers: F.piers, pier, stops: F.route.stops.map(s => ({ ...s, pier: pier[s.id] })), bridges: F.bridges, kiosks: F.kiosks, cap: null, lock: mkLock(F, route) };
+    const pier = Object.fromEntries(F.piers.map(p => [p.id, p]));
+    const mkCtx = (R, withLock) => { const route = { ...R, line: mkLine(R.p) }; return { route, stops: R.stops.map(s => ({ ...s, pier: pier[s.id] })), cap: null, lock: withLock ? mkLock(F, route) : null }; };
+    const routes = { [F.route.id || 'A']: mkCtx(F.route, true) };
+    for (const R of F.routes || []) routes[R.id] = mkCtx(R, false);   // 2C：C 线不过闸
+    CACHE[id] = { F, rivers, piers: F.piers, pier, bridges: F.bridges, kiosks: F.kiosks, routes, first: F.route.id || 'A' };
   }
   const C = CACHE[id];
-  NET = id; FZR = C.F; RIVERS = C.rivers; ROUTE = C.route; PIERS = C.piers; PIER = C.pier; STOPS = C.stops; BRIDGES = C.bridges; KIOSKS = C.kiosks; LOCK = C.lock;
+  NET = id; FZR = C.F; RIVERS = C.rivers; PIERS = C.piers; PIER = C.pier; BRIDGES = C.bridges; KIOSKS = C.kiosks; ROUTES = C.routes;
+  for (const rid of Object.keys(C.routes)) { useRoute(rid); if (!C.routes[rid].cap) C.routes[rid].cap = buildSpeedCap(); }
+  useRoute(C.first);
   if (LOCK) { LOCK_STATE.gU = LOCK_STATE.gD = 0; LOCK_STATE.lvl = 0; }
-  if (!C.cap) C.cap = buildSpeedCap();
-  SPEED_CAP = C.cap;
   return id;
 }
+/** 换当前船线（活绑定 ROUTE / STOPS / SPEED_CAP / LOCK）；返回之前的船线 id */
+export function useRoute(rid) {
+  const prev = ROUTE_ID, c = ROUTES[rid]; if (!c) return prev;
+  ROUTE_ID = rid; ROUTE = c.route; STOPS = c.stops; SPEED_CAP = c.cap; LOCK = c.lock;
+  return prev;
+}
+/** 在船线 rid 上跑 fn（跑完切回原来的） */
+export function withRoute(rid, fn) { const prev = useRoute(rid); try { return fn(); } finally { useRoute(prev); } }
+/** 码头 id 在哪几条船线上（西水关：A；西水关 C 线泊位 xsgc：C） */
+export function routesOfPier(id) { return Object.keys(ROUTES).filter(r => ROUTES[r].stops.some(s => s.id === id)); }
 /** 码头顺序 = 船线里程顺序（STOPS 在 useNet 里换） */
 
 /* ---------- 点在多边形 / 三角形 ---------- */
@@ -162,11 +180,13 @@ export function shoreFor(px, pz) {
 /** 桥面下沿（绝对 y），v = 横跨河道的坐标（米，0 = 河中线）；不在桥下返回 null */
 export function bridgeLocal(b, x, z) { const dx = x - b.x, dz = z - b.z; return { u: dx * b.t[0] + dz * b.t[1], v: dx * b.n[0] + dz * b.n[1] }; }
 export function soffitAt(b, v) {
-  if (b.kind === 'arch' || b.kind === 'hump') { const R = b.hw, H = ARCH_CROWN - WY, k = 1 - (v / R) ** 2; return k <= 0 ? WY : WY + H * Math.sqrt(k); }
+  // 2C：sarch = 普通单拱平桥（桥面平、拱洞，拱腹同拱桥）；bingde = 彬德桥（古石桥，步行：条石桥面厚 0.42，两墩三孔；没有船线经过）
+  if (b.kind === 'bingde') return deckAt(b, v) - 0.42;
+  if (b.kind === 'arch' || b.kind === 'hump' || b.kind === 'sarch') { const R = b.hw, H = ARCH_CROWN - WY, k = 1 - (v / R) ** 2; return k <= 0 ? WY : WY + H * Math.sqrt(k); }
   return FLAT_SOFFIT;
 }
 /** 拱桥（驼峰）桥面高：两头 0 → 中间 rise */
-export const humpRise = b => b.kind === 'hump' ? (b.w > 6 ? 0.9 : 0.75) : b.kind === 'arch' ? 0.9 : 0;
+export const humpRise = b => b.kind === 'hump' ? (b.w > 6 ? 0.9 : 0.75) : b.kind === 'arch' ? 0.9 : b.kind === 'bingde' ? 0.75 : 0;
 export function deckAt(b, v) { const r = humpRise(b); if (!r) return 0; const k = Math.max(0, 1 - Math.abs(v) / b.half); return r * (1 - (1 - k) * (1 - k)); }
 
 /* ---------- 船线 ---------- */
@@ -295,7 +315,10 @@ export const speedCap = s => SPEED_CAP[Math.max(0, Math.min(SPEED_CAP.length - 1
 /** 下一站：从站序号 i 往 dir 方向 */
 export function nextStop(i, dir) { const j = i + dir; return j >= 0 && j < STOPS.length ? j : i - dir; }
 /** 码头牌上的“下一站”：两头只有一个方向，中间两个方向 */
-export function pierNext(id) { const i = STOPS.findIndex(s => s.id === id); return [STOPS[i - 1], STOPS[i + 1]].filter(Boolean).map(s => s.pier); }
+export function pierNext(id, rid) {
+  const r = rid || (STOPS.some(s => s.id === id) ? ROUTE_ID : routesOfPier(id)[0]); if (!r) return [];
+  return withRoute(r, () => { const i = STOPS.findIndex(s => s.id === id); return i < 0 ? [] : [STOPS[i - 1], STOPS[i + 1]].filter(Boolean).map(s => s.pier); });
+}
 
 /* ---------- 坐船视角：同时看得见几座桥（小美：任何时刻 ≤ 2 座）---------- */
 /** 船上坐着的视点（W 坐标 + 高度）：前排靠窗、船中、第三人称（后上方 1.7 m）；朝行进方向 */

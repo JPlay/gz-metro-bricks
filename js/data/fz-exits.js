@@ -50,6 +50,8 @@ Object.assign(FZ_EXITS, {
   fzxiy: { n: 'A', x: 10, line: 2, road: '', to: ['东西河', '黎明湖码头'], toEn: ['Dongxi River', 'Liming Lake Pier'], attr: 'fzriver', verified: false },
   // 内河 2B：水部 C（古田路建华支巷交叉路口南侧，离东西河最近的口）→ 东西河北岸市民服务中心码头，步道约 106 m；出口号据维基站页（verified:false，未按站内导向图核实）
   fzsb: { n: 'C', x: -14, line: 2, road: '古田路', to: ['东西河', '市民服务中心码头'], toEn: ['Dongxi River', 'Civic Center Pier'], attr: 'fzriver', verified: false },
+  // 内河 2C：宁化 A（工业路北侧）→ 白马河西岸上海西码头（游船 C 线终点），步道约 63 m、不过桥；出口号按小美 2C 定稿（verified:false，未按站内导向图核实）
+  fznh: { n: 'A', x: 10, line: 2, road: '工业路', to: ['白马河', '上海西码头'], toEn: ['Baima River', 'Shanghai West Pier'], attr: 'fzriver', verified: false },
   // 内河 1B（东线，另一片河网 tools/fzriver/gen_e.py）：出口号来自福州新闻网 2025-04「乘地铁游福州」（斗门 C 温泉公园、光明港 D 光明港码头），东门 C 按计划示意；都未按站内导向图核实（verified:false）
   fzdm: { n: 'C', x: 10, line: 1, road: '', to: ['晋安河', '温泉公园码头'], toEn: ['Jin\'an River', 'Wenquan Park Pier'], attr: 'fzriver', verified: false },
   fzdmn: { n: 'C', x: 10, line: 4, road: '', to: ['晋安河', '东门停靠点（内河游船）'], toEn: ['Jin\'an River', 'Dongmen Boat Stop'], attr: 'fzriver', verified: false },
@@ -67,6 +69,7 @@ export const FZ_EXIT_TABLE = {
   fzxm: [['B', '西湖公园（约800米）、福建博物院'], ['C', '杨桥路、白马河、西水关码头（内河游船）']],
   fzxiy: [['A', '东西河、黎明湖码头（内河游船）']],
   fzsb: [['C', '古田路、东西河、市民服务中心码头（内河游船）']],
+  fznh: [['A', '工业路、白马河、上海西码头（内河游船 C 线）']],
   fzdm: [['C', '晋安河、温泉公园码头（内河游船）']],
   fzdmn: [['C', '晋安河、东门停靠点（内河游船）']],
   fzgmg: [['D', '光明港、光明港码头（内河游船）']],
