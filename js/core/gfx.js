@@ -83,7 +83,7 @@ export class Gfx {
     GS.on = this.up; GS.shadow = this.want('shadow') ? 1 : 0; GS.shader = this.want('shader') ? 1 : 0;
     if (this.up) { GS.sunDir.copyFrom(L.sunDir); GS.sunCol.copyFrom(L.leafCol); GS.sky.copyFrom(L.rimCol); GS.shadowK = s.light === 'dusk' ? 0.8 : 0.88; GS.rim = s.light === 'dusk' ? 0.07 : 0.05; }
     GS.water.on = this.want('water');
-    if (GS.shadow) this.ensureShadow();
+    if (GS.shadow && !this._deferBake) this.ensureShadow();
     GS.shTex = GS.shadow && this.station ? (this.shadowTex[this.station.code + ':' + s.light] || {}).tex || null : null;
     if (GS.shTex) { const e = this.shadowTex[this.station.code + ':' + s.light]; GS.shMap = e.map; GS.shTexel = e.texel; }
     this.applyMats();
@@ -149,7 +149,16 @@ export class Gfx {
   onStation(st) {
     if (this.station && this.station !== st) { for (const k of Object.keys(this.shadowTex)) { this.shadowTex[k].tex && this.shadowTex[k].tex.dispose(); delete this.shadowTex[k]; } }
     this.station = st; GS.shTex = null;
-    this.apply();
+    // 车站刚建完的那几帧主线程很忙（材质编译 / GC）：阴影图延后 ~1 s 再烘，不卡进站
+    this._deferBake = true; this.apply(); this._deferBake = false;
+    clearTimeout(this._bakeT);
+    this._bakeT = setTimeout(() => { if (this.station === st && GS.shadow) { this.ensureShadow(); this.bindShadow(); } }, 1000);
+  }
+  /** 只把当前站 + 光照的阴影图挂到插件上（不重设材质） */
+  bindShadow() {
+    const e = this.station && this.shadowTex[this.station.code + ':' + this.state.light];
+    GS.shTex = GS.shadow && e ? e.tex || null : null;
+    if (GS.shTex) { GS.shMap = e.map; GS.shTexel = e.texel; }
   }
   ensureShadow() {
     const st = this.station; if (!st) return;
