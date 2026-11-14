@@ -492,3 +492,38 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #1d2b3a; fon
   box-shadow: 0 10px 26px rgba(10,60,50,.28); }
 #bShore .lbl { font-size: 26px; font-weight: 800; white-space: nowrap; color: #0d6b5c; }
 #bShore[hidden] { display: none; }
+
+/* ===== 画质升级 Demo 面板（js/ui/demoPanel.js）：右上角按钮栏下方，可折叠成药丸 ===== */
+#gfxDemo { position: absolute; right: calc(12px + env(safe-area-inset-right)); top: calc(100px + env(safe-area-inset-top)); width: 336px; max-height: calc(100vh - 290px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  overflow: auto; border-radius: 20px; padding: 10px 12px 12px; z-index: 6; pointer-events: auto; color: #15191f; font-size: 14px; -webkit-overflow-scrolling: touch;
+  background: rgba(255,255,255,.72); -webkit-backdrop-filter: blur(16px) saturate(1.4); backdrop-filter: blur(16px) saturate(1.4); box-shadow: 0 10px 30px rgba(0,0,0,.16), inset 0 0 0 1px rgba(255,255,255,.6); }
+#gfxDemo header { display: grid; grid-template-columns: auto auto 1fr auto; grid-template-areas: "dot ttl tag fold" "tele tele tele tele"; align-items: center; column-gap: 8px; row-gap: 4px; cursor: pointer; }
+#gfxDemo header .dot { grid-area: dot; } #gfxDemo header b { grid-area: ttl; } #gfxDemo header .fold { grid-area: fold; }
+#gfxDemo header .tag { grid-area: tag; justify-self: start; font-size: 11.5px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: linear-gradient(135deg, #ff9a44, #fc6076); color: #fff; }
+#gfxDemo.orig header .tag { background: #8d96a0; }
+#gfxDemo header b { font-size: 15px; font-weight: 700; white-space: nowrap; }
+#gfxDemo header .dot { width: 9px; height: 9px; border-radius: 50%; background: linear-gradient(135deg, #ffb347, #ff5e62); box-shadow: 0 0 0 3px rgba(255,140,80,.22); flex: none; }
+#gfxDemo.orig header .dot { background: #9aa3ad; box-shadow: 0 0 0 3px rgba(150,160,170,.2); }
+#gfxDemo .tele { grid-area: tele; display: flex; justify-content: space-between; gap: 6px; padding: 5px 8px; border-radius: 10px; background: rgba(20,28,38,.82); font: 600 11.5px/1.2 "SF Mono", ui-monospace, Menlo, monospace; color: #dfe7ef; white-space: nowrap; overflow: hidden; }
+#gfxDemo .tele b { color: #7CF0B0; }
+#gfxDemo .tele i { font-style: normal; opacity: .6; }
+#gfxDemo .fold { flex: none; width: 30px; height: 30px; border: 0; border-radius: 10px; background: rgba(0,0,0,.06); font-size: 15px; color: #333; transition: transform .2s; }
+#gfxDemo.collapsed { width: 300px; padding: 7px 8px 7px 12px; border-radius: 18px; }
+#gfxDemo.collapsed .body { display: none; }
+#gfxDemo.collapsed .fold { transform: rotate(-90deg); }
+#gfxDemo .body { margin-top: 8px; display: flex; flex-direction: column; gap: 8px; }
+#gfxDemo .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 3px; border-radius: 13px; background: rgba(0,0,0,.07); }
+#gfxDemo .seg button { border: 0; border-radius: 10px; padding: 9px 4px; background: transparent; font: 600 14px/1.1 var(--font, sans-serif); color: #36404b; }
+#gfxDemo .seg button.on { background: #fff; color: #111; box-shadow: 0 2px 8px rgba(0,0,0,.14); }
+#gfxDemo .seg.mode button[data-mode="up"].on { background: linear-gradient(135deg, #ff9a44, #fc6076); color: #fff; }
+#gfxDemo .views { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+#gfxDemo .views button { border: 0; border-radius: 12px; padding: 9px 6px; background: rgba(255,255,255,.85); font: 600 13.5px/1.1 var(--font, sans-serif); color: #222; box-shadow: inset 0 0 0 1px rgba(0,0,0,.06); display: flex; align-items: center; gap: 6px; justify-content: center; }
+#gfxDemo .views button .i { font-size: 17px; }
+#gfxDemo .views button.busy { opacity: .5; }
+#gfxDemo details { border-radius: 12px; background: rgba(255,255,255,.55); padding: 6px 10px; }
+#gfxDemo summary { font-weight: 700; font-size: 13.5px; padding: 3px 0; cursor: pointer; }
+#gfxDemo label { display: flex; align-items: center; gap: 8px; padding: 5px 0; font-size: 13px; line-height: 1.2; }
+#gfxDemo label input { width: 18px; height: 18px; accent-color: #fc6076; flex: none; }
+#gfxDemo label input:disabled + span { opacity: .45; }
+#gfxDemo .note { font-size: 11.5px; color: #4a5562; line-height: 1.35; }
+@media (max-width: 760px) { #gfxDemo { top: calc(76px + env(safe-area-inset-top)); width: min(320px, calc(100vw - 24px)); } }

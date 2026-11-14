@@ -7,6 +7,7 @@
  */
 import { Geo, hex } from '../core/geo.js';
 import { mats } from '../core/mats.js';
+import { ensureGfx } from '../core/gfxUpgradePlugin.js';
 import { LINES, OTHER_LINES } from '../data/lines.js';
 const B = window.BABYLON;
 export const FONT = '"PingFang SC","Hiragino Sans GB","Noto Sans CJK SC","Noto Sans SC","Source Han Sans SC","Microsoft YaHei",sans-serif';
@@ -36,10 +37,13 @@ function splitGeo(g, test) {
   }
   return out;
 }
+/** 所有活着的 Kit（画质升级的日照投影按「当前开着的静态 Kit」烘焙，见 js/core/gfx.js） */
+export const KITS = new Set();
 export class Kit {
   constructor(scene, name, parent) {
     this.scene = scene; this.M = mats(scene);
     this.root = new B.TransformNode(name, scene); if (parent) this.root.parent = parent;
+    KITS.add(this); this.root.onDisposeObservable.addOnce(() => KITS.delete(this));
     this.buckets = {}; this.colliders = []; this.atlas = null; this.meshes = []; this.byBucket = {}; this.mats = null; this.groups = null;
   }
   g(name) { return this.buckets[name] || (this.buckets[name] = new Geo()); }
@@ -216,7 +220,7 @@ export function bucketMat(scene, M, name) {
   const [base, suf] = name.split('@');
   if (!suf) return M[base] || M.paint;
   const key = 'bucket:' + name;
-  if (!M.colored[key]) { const m = (M[base] || M.paint).clone(name); m._normalTex = M[base]._normalTex; if (M[base]._normalTex) M.normals.push(m); M.colored[key] = m; }
+  if (!M.colored[key]) { const m = (M[base] || M.paint).clone(name); m._normalTex = M[base]._normalTex; if (M[base]._normalTex) M.normals.push(m); ensureGfx(m); M.colored[key] = m; }
   return M.colored[key];
 }
 

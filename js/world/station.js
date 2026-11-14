@@ -231,6 +231,8 @@ export class Station {
       for (let i = 0; i < 14; i++) treeSpots.push([(D.rnd() < 0.5 ? -1 : 1) * (15 + D.rnd() * 10), -24 + D.rnd() * 50]);
       k.g('pave').cyl(-24, 0.3, -40, 7.4, 0.6, hex('#CFC8BC'), 32); P.cyl(-24, 0.55, -40, 6.6, 0.12, hex('#BDB6A8'), 32, 0, 0, 0, undefined, { ao: false });
       k.glass.cyl(-24, 0.62, -40, 6.5, 0.04, hex('#5FB4DA'), 32);
+      // 画质升级 Demo：同一池水的真 PBR 水面（独立 water 桶，只在升级模式下开；原版看到的仍是上面这片玻璃水）
+      k.g('water').cyl(-24, 0.632, -40, 6.42, 0.024, hex('#FFFFFF'), 40, 0, 0, 0, undefined, { ao: false });
       P.cyl(-24, 0.62, -40, 6.4, 0.02, hex('#3F8FB8'), 32, 0, 0, 0, undefined, { ao: false });
       k.g('pave').cyl(-24, 1.4, -40, 0.9, 1.8, hex('#E3DCCF'), 16); k.g('pave').cyl(-24, 2.35, -40, 2.2, 0.2, hex('#E3DCCF'), 20);
       k.glow.sphere(-24, 2.9, -40, 0.7, hex('#CFEFFF'), 2); for (let i = 0; i < 8; i++) { const a = i / 8 * 6.28; k.glow.sphere(-24 + Math.cos(a) * 1.4, 1.2 + (i % 2) * 0.3, -40 + Math.sin(a) * 1.4, 0.18, hex('#DFF6FF'), 1); }

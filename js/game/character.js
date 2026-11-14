@@ -25,7 +25,7 @@ export function makePerson(kind, scene, mat, name) { return kind === 'mingming' 
 export function applyCharacter(player, kind, R) {
   if (player.charKind === kind && player.person) return;
   const old = player.person, M = player._M;
-  const p = makePerson(kind, player.scene, M.paint, 'kid');
+  const p = makePerson(kind, player.scene, M.paintHero || M.paint, 'kid');
   player.person = p; player.model = p.mesh; player.charKind = kind;
   p.mesh.position.copyFrom(old.mesh.position); p.mesh.rotation.y = old.mesh.rotation.y;
   old.dispose();
@@ -66,7 +66,7 @@ export class CharSelect {
     // 两个小人：左 = 明明（哥哥），右 = 星星（从镜头看）
     this.models = {};
     for (const [kind, sx] of [['mingming', 1], ['xingxing', -1]]) {
-      const p = makePerson(kind, this.scene, this.M.paint, 'sel-' + kind);
+      const p = makePerson(kind, this.scene, this.M.paintHero || this.M.paint, 'sel-' + kind);
       p.mesh.position.set(O.x + sx * 0.85, O.y + 0.31, O.z); p.mesh.rotation.y = Math.PI + sx * 0.12;
       const bl = makeBlob(this.scene, this.M, 'selBlob', 0.5, 0.6); bl.position.set(O.x + sx * 0.85, O.y + 0.315, O.z); bl.parent = null;
       this.models[kind] = { p, bl, sx };

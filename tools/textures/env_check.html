@@ -1,0 +1,29 @@
+<!doctype html><meta charset="utf-8"><style>body{margin:0}canvas{width:800px;height:400px}</style>
+<canvas id="c" width="800" height="400"></canvas>
+<script src="/vendor/babylonjs/9.28.0/babylon.js"></script>
+<script>
+const P = new URLSearchParams(location.search), preset = P.get('p') || 'day', view = P.get('v') || 'sky';
+const L = preset === 'day' ? new BABYLON.Vector3(-0.48, -0.78, 0.40) : new BABYLON.Vector3(-0.78, -0.34, 0.52); L.normalize();
+let S = L.scale(-1); const F = P.get('f'); if (F) { const [a,b,c] = F.split(',').map(Number); const v=[S.x,S.y,S.z]; S = new BABYLON.Vector3(Math.sign(a)*v[Math.abs(a)-1], Math.sign(b)*v[Math.abs(b)-1], Math.sign(c)*v[Math.abs(c)-1]); }
+const engine = new BABYLON.Engine(document.getElementById('c'), true, { preserveDrawingBuffer: true });
+const scene = new BABYLON.Scene(engine);
+const env = BABYLON.CubeTexture.CreateFromPrefilteredData('/vendor/env/env_' + preset + '.env', scene); scene.environmentTexture = env;
+const sky = BABYLON.MeshBuilder.CreateSphere('sky', { diameter: 800, segments: 16, sideOrientation: BABYLON.Mesh.BACKSIDE }, scene);
+const sm = new BABYLON.StandardMaterial('sm', scene); sm.disableLighting = true; sm.backFaceCulling = false;
+const st = new BABYLON.Texture('/assets/tex/sky_' + preset + '.jpg', scene, false, false); st.coordinatesMode = BABYLON.Texture.FIXED_EQUIRECTANGULAR_MODE; sm.emissiveTexture = st; sm.diffuseColor = BABYLON.Color3.Black(); sm.specularColor = BABYLON.Color3.Black();
+sky.material = sm; sky.infiniteDistance = true;
+const sun = new BABYLON.DirectionalLight('sun', L, scene); sun.intensity = 2;
+const cam = new BABYLON.FreeCamera('cam', new BABYLON.Vector3(0, 0, 0), scene); cam.fov = 1.0;
+if (view === 'sky') { cam.setTarget(S.scale(10)); }
+else if (view === 'mirror') { cam.position = S.scale(4); cam.setTarget(BABYLON.Vector3.Zero()); cam.fov = 0.5; const m = BABYLON.MeshBuilder.CreateSphere('s', { diameter: 2, segments: 64 }, scene); const pm = new BABYLON.PBRMaterial('p', scene); pm.metallic = 1; pm.roughness = 0; m.material = pm; }
+else {
+  // 太阳在镜头背后：镜面球中心应当看到太阳的倒影，粗糙球中心是平行光高光
+  const ahead = L.clone(); cam.position = S.scale(6); cam.setTarget(BABYLON.Vector3.Zero());
+  const right = BABYLON.Vector3.Cross(BABYLON.Vector3.Up(), ahead).normalize();
+  for (const [r, off] of (view === 'mirror' ? [[0.0, 0]] : [[0.02, -1.3], [0.35, 1.3]])) {
+    const m = BABYLON.MeshBuilder.CreateSphere('s' + r, { diameter: 2, segments: 48 }, scene); m.position = right.scale(off);
+    const pm = new BABYLON.PBRMaterial('p' + r, scene); pm.metallic = 1; pm.roughness = r; pm.albedoColor = new BABYLON.Color3(0.95, 0.95, 0.95); m.material = pm;
+  }
+}
+scene.executeWhenReady(() => { let n = 0; engine.runRenderLoop(() => { scene.render(); if (++n === 3) window.__done = true; }); });
+</script>
