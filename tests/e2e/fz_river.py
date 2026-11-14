@@ -113,11 +113,11 @@ async def board(pg, D, pid, leg):
     # 岸上落脚点在码头牌旁边（不是牌子里面）→ 台阶顶平台 → 台阶 → 浮码头
     land = await landpt(pg, P); head = await W(pg, *pf(P, -10.5, 0.6)); top = await W(pg, *pf(P, -9.4, 0.75)); bot = await W(pg, *pf(P, -4.0, 0.75)); pont = await W(pg, *pf(P, 1.2, 1.5))
     r1 = await go(pg, *land, 'to pier ' + pid)
-    if E1B and not await near(pg, *land, 1.0):
+    if (E1B or E2B) and not await near(pg, *land, 1.0):
         # 福新问渡：码头牌后面这块步行栅格没铺上（e2e 导航网格的问题，人能走）→ A* 先到最近能到的格子，再直线走过去
         await legs(pg, [land], False); r1 = await near(pg, *land, 1.0); log('board: last stretch to land straight', pid, r1)
     gap = await W(pg, *pf(P, -9.6, -0.9))   # 1B：岸墙缺口正中（a −10.2…−8.3）直下台阶顶，不贴着栏杆端柱斜穿
-    await legs(pg, ([gap, top] if E1B else [head, top]) + [bot, pont], False)
+    await legs(pg, ([gap, top] if (E1B or E2B) else [head, top]) + [bot, pont], False)   # 2B 市民服务中心码头：同 1B 从岸墙缺口正中下（从 head 斜穿会被栏杆端柱挡住，18:12 那次 downStairsToPontoon:smc 就是这样）
     s = await st(pg); ok(f'{leg}:downStairsToPontoon:{pid}', abs(s['pos'][1] - (D['wy'] + 0.45)) < 0.3 and r1, s['pos'])
     if leg == 'leg1': await shot(pg, 'pier_pontoon_' + pid)
     # 船不在这个码头就会被“叫”过来（站在浮码头上）

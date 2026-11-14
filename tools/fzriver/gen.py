@@ -211,10 +211,21 @@ for bid, b_ in UNDER.items():
   (wx, wz), t, n = at_s('dx', b_['s'], sd * HW['dx']); nn = (n[0] * sd, n[1] * sd)   # nn 指向岸上
   hw_ = b_['w'] / 2 + 1.5
   def P(a, c, wx=wx, wz=wz, t=t, nn=nn): return (wx + t[0] * a - nn[0] * c, wz + t[1] * a - nn[1] * c)
+  # 阶顶靠岸一侧：河道拐弯处岸线往里退，阶顶和岸地之间会空出一条水缝（小美 2B ③：八一七中路东头）→ 量出缝有多深，补一块齐岸的花岗岩填块（带碰撞，算 DRY）
+  fill = []
+  for e in (-1, 1):
+    a0, a1 = sorted((e * (hw_ + URUN - 2.3), e * (hw_ + URUN + 0.16))); deep = 0.0
+    for i in range(12):
+      a = a0 + (a1 - a0) * i / 11; c = 0.0
+      while c > -4.0 and water.contains(Point(*P(a, c - 0.05))): c -= 0.1
+      deep = max(deep, -c)
+    fill.append(round(deep + 0.5, 2) if deep > 0.05 else 0)
+    if fill[-1]: DRY.append(Polygon([P(a0, -fill[-1]), P(a1, -fill[-1]), P(a1, 0.02), P(a0, 0.02)]))
   UNDERS.append({'id': 'u' + bid, 'bridge': bid, 'name': b_['name'], 'river': 'dx', 's': b_['s'], 'side': sd, 'x': round(wx, 2), 'z': round(wz, 2), 't': [round(t[0], 4), round(t[1], 4)], 'n': [round(nn[0], 4), round(nn[1], 4)],
-                 'flat': round(hw_, 2), 'run': URUN, 'w': UW, 'y': UY})
+                 'flat': round(hw_, 2), 'run': URUN, 'w': UW, 'y': UY, 'fill': fill})
+  print('under', bid, b_['name'], 'fill', fill)
   DRY.append(Polygon([P(-hw_ - URUN, 0), P(hw_ + URUN, 0), P(hw_ + URUN, UW), P(-hw_ - URUN, UW)]))
-  for e in (-1, 1): GAPS.append(Polygon([P(e * (hw_ + URUN - 0.2), -1), P(e * (hw_ + URUN - 1.9), -1), P(e * (hw_ + URUN - 1.9), 1), P(e * (hw_ + URUN - 0.2), 1)]))
+  for e, fl in zip((-1, 1), fill): GAPS.append(Polygon([P(e * (hw_ + URUN - 0.2), -1 - fl), P(e * (hw_ + URUN - 1.9), -1 - fl), P(e * (hw_ + URUN - 1.9), 1), P(e * (hw_ + URUN - 0.2), 1)]))
 BR.sort(key=lambda b: (b['river'], b['s']))
 for b in BR: print('bridge', b['id'], b['river'], b['s'], b['kind'], b['name'], b['w'])
 # 桥面在岸上的落脚：栏杆缺口
@@ -338,7 +349,7 @@ LAND = {k: pack(v) for k, v in tris_by_cell(land).items()}
 WATER = {k: pack(v) for k, v in tris_by_cell(water).items()}
 # 可走范围外的一圈地面（只看不走，无碰撞）：免得走到边上看见天；西湖剩下的湖面画成水
 xhFar = xh.buffer(0).simplify(2.5).difference(region).buffer(-0.05)
-skirt = box(-760, -960, 520, 560).difference(region).difference(xhFar).buffer(0)
+skirt = box(-760, -960, 720, 560).difference(region).difference(xhFar).buffer(0)
 def tris_flat(poly):
   out = []
   for g in (poly.geoms if hasattr(poly, 'geoms') else [poly]):
@@ -481,7 +492,10 @@ for k in CL:
     s0_ = random.uniform(3, 8)
     if k == 'dx': EXT_T.append((side, tree_run(k, side, s0_, DX_A_LEN - 3, random, regionA)))
     else: tree_run(k, side, s0_, CL[k].length - 3, random, regionA)
+_nA_pre = len(TREES)
 for side, s_ in EXT_T: tree_run('dx', side, max(s_, DX_A_LEN + 1), CL['dx'].length - 3, RNG_B, region)
+_nA = len(TREES)
+for t_ in TREES[_nA_pre:]: t_.append(1)   # 2B 东段新种的树：直立（小美 2B ④）
 # 湖边柳 / 榕
 c = list(lake.exterior.coords); acc = 0
 for a, b in zip(c, c[1:]):
@@ -501,8 +515,24 @@ TREES = [t for t in TREES if not PARKCUT.contains(Point(t[0], t[1]))]
 for sx in (-1, 1):
   z_ = SBW_Z0 + 6
   while z_ < (SBW_Z1 - 4 if sx < 0 else kz - 11):
-    TREES.append([round(SBW_X + sx * (SBW_W / 2 + SBW_V / 2 + 0.3), 2), round(z_, 2), -sx, 0, round(RNG_B.uniform(0.9, 1.1), 2), 'sbw']); z_ += 11.5
+    TREES.append([round(SBW_X + sx * (SBW_W / 2 + SBW_V / 2 + 0.3), 2), round(z_, 2), -sx, 0, round(RNG_B.uniform(0.9, 1.1), 2), 'sbw', 1]); z_ += 11.5
 print('trees', len(TREES), 'houses after park cut', len(HOUSES))
+# 2B 水部步道两边：可走范围外原来只有一层浅色 skirt（亭子往外看一片白地，小美 2B ②）→ 这块 skirt 改成草地；背朝步道 / 亭子的房子背面、侧面也贴立面（原来是没贴图的白方块）
+SBW_PARK = [round(SBW_X - 70, 1), round(SBW_Z0 - 30, 1), round(SBW_X + 70, 1), round(SBW_Z1 + 45, 1)]
+_pk = box(*SBW_PARK)
+for h in HOUSES:
+  bx_, bz_ = h['x'] - h['f'][0] * h['d'] / 2, h['z'] - h['f'][1] * h['d'] / 2
+  if _pk.contains(Point(bx_, bz_)) and h['f'][1] * (SBW_Z1 - h['z']) < 0: h['back'] = 1
+print('sbw park', SBW_PARK, 'houses back-faced', sum(1 for h in HOUSES if h.get('back')))
+# 码头牌子周围 1.5 m 不种树（小美 2B ①：市民服务中心码头木牌被斜树干穿过）。只剔 2B 新树（1A 已验收的不动）；直立树主干 1.0 s 粗、气根 r≤3.7 → 树根点离牌子 ≥ 1.5 + 2.0
+def _signclear(t_):
+  if len(t_) < 7: return True
+  return all(math.dist((t_[0], t_[1]), tuple(p_['sign'])) >= 3.5 for p_ in PIERS)
+_nb = len(TREES); TREES = [t_ for t_ in TREES if _signclear(t_)]
+print('sign-clear removed', _nb - len(TREES))
+for p_ in PIERS:
+  for t_ in TREES:
+    if len(t_) < 7 and math.dist((t_[0], t_[1]), tuple(p_['sign'])) < 3.5: print('  1A tree near sign', p_['id'], t_)
 _kx, _kz = KIOSK['fzsb']['x'], KIOSK['fzsb']['z']; _st = (smc['x'] - smc['t'][0] * 9.5 + smc['n'][0] * 0.6, smc['z'] - smc['t'][1] * 9.5 + smc['n'][1] * 0.6)
 SBW_WALK = round(math.dist((_kx, _kz + 1.5), (SBW_X, _kz + 3.0)) + (_kz + 3.0 - SBW_Z0) + math.dist((SBW_X, SBW_Z0), _st), 1)
 print('sbw', {'x': SBW_X, 'z0': SBW_Z0, 'z1': SBW_Z1, 'kiosk': KIOSK['fzsb'], 'stairTop': _st, 'walk_m': SBW_WALK})
@@ -572,7 +602,7 @@ DATA = {
   'K': K, 'WY': WY,
   'rivers': {k: {'zh': NAME[k][0], 'en': NAME[k][1], 'hw': HW[k], 'band': BAND[k], 'p': [v for x, z in CL[k].coords for v in (r2(x), r2(z))]} for k in CL},
   'lake': [v for x, z in lake.exterior.coords for v in (r2(x), r2(z))], 'lakeBox': LAKE_BOX,
-  'land': LAND, 'water': WATER, 'cell': CELL, 'skirt': SKIRT, 'lakeFar': LAKEFAR, 'lakeShore': LAKESHORE,
+  'land': LAND, 'water': WATER, 'cell': CELL, 'skirt': SKIRT, 'sbwPark': SBW_PARK, 'lakeFar': LAKEFAR, 'lakeShore': LAKESHORE,
   'wall': WALL, 'bound': BOUND,
   'bridges': [{k_: v for k_, v in b.items() if k_ != 'foot'} for b in BR],
   'piers': PIERS, 'steps': STEPS, 'unders': UNDERS, 'dry': [[v for x, z in list(p.exterior.coords)[:-1] for v in (r2(x), r2(z))] for p in DRY],
