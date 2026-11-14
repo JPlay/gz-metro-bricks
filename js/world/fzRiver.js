@@ -93,13 +93,13 @@ export class FzRiverStreet extends XmStreet {
     if (FZR.c2) {
       const nb = 1 + Math.max(...FZR.houses.map(h => h.z).concat(FZR.trees.map(t => t[1]), BRIDGES.filter(b => b.c2).map(b => b.z), FZR.wall.map(w => (w[1] + w[3]) / 2)).filter(inC2).map(c2Band));
       this._c2pass = true; this.c2Bands = nb;
-      for (let i = 0; i < nb; i++) { this._c2band = i; this.bridges(); this.unders(); this.roads(); this.wallFaces(); this.bridgeBodies(); this.houseBodies(); this.treeBlobs(); k.group('c2:' + i); }
+      for (let i = 0; i < nb; i++) { this._c2band = i; this.piers(); for (const K of Object.values(KIOSKS)) if (inC2(K.z) && c2Band(K.z) === i) this.kioskAt(K); this.bridges(); this.unders(); this.roads(); this.wallFaces(); this.bridgeBodies(); this.houseBodies(); this.treeBlobs(); k.group('c2:' + i); }
       this._c2band = -1; this.minjiang(); this.c2Sluice(); k.group('c2mj'); this._c2pass = false;
     }
     if (FZR.c2) { for (let i = 0; i < ZS.length; i++) { this._nPass = i; this.wallFaces(); this.bridgeBodies(); this.houseBodies(); this.treeBlobs(); k.group('gN' + i); } this._nPass = -1; }
     // 以下是常开的全局几何（rest 组）
     this.groundAndWater(); this.wallFaces(); this.bridgeBodies(); this.houseBodies(); this.treeBlobs(); this._nPass = undefined;
-    for (const K of Object.values(KIOSKS)) this.kioskAt(K);
+    for (const K of Object.values(KIOSKS)) if (!inC2(K.z)) this.kioskAt(K);   // 2C 的出口亭（宁化 A）在 2C 分段里画
     this.boundary();
   }
   after() {
@@ -387,6 +387,7 @@ export class FzRiverStreet extends XmStreet {
   piers() {
     const k = this.kit, GR = k.g('granite'), P = k.solid, A = this.atlas;
     for (const p of PIERS) {
+      if (!this.c2ok(p.z)) continue;   // 2C 的码头（上海西）在 2C 分段里画
       if (p.shared) continue;   // 2C 西水关 C 线泊位：共用 A 线台阶 + 码头牌，栈道 / 浮码头在 c2Static 里画
       const top = levelAt(p.berth[0], p.berth[1]) + 0.45;   // 浮码头面 = 船甲板（西湖码头在闸上游，高 0.5 m）
       const F = this.pierFrame(p);
