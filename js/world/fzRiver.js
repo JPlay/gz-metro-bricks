@@ -47,12 +47,10 @@ export class FzRiverStreet extends XmStreet {
     const pk = { g, get solid() { return g('paint'); }, M: real.M, root: real.root,
       col: (x, y, z, ...r) => real.col(x + ox, y, z + oz, ...r), colSlab: (x0, x1, y0, y1, z0, z1, ...r) => real.colSlab(x0 + ox, x1 + ox, y0, y1, z0 + oz, z1 + oz, ...r) };
     const pa = { draw: (...a) => A.draw(...a), quad: (x, y, z, ...r) => A.quad(x + ox, y, z + oz, ...r) };
-    // 湖岸线：lakeShore 段里落在公园这一带的，取该 x 处最南的 z（局部）
-    const segs = FZR.lakeShore.filter(([x0, z0, x1, z1]) => Math.max(z0, z1) > oz + 20 && Math.min(z0, z1) < oz + 140 && Math.max(x0, x1) > ox - 30 && Math.min(x0, x1) < ox + 30);
-    const lakeX1 = Math.max(...segs.map(([x0, , x1]) => Math.max(x0, x1))) - ox;
-    const shore = x => { const X = x + ox; let zb = Infinity;
-      for (const [x0, z0, x1, z1] of segs) { if ((X - x0) * (X - x1) > 0 || x0 === x1) continue; zb = Math.min(zb, z0 + (z1 - z0) * (X - x0) / (x1 - x0)); }
-      return zb === Infinity ? 76 : zb - oz; };
+    // 湖岸线：从牌楼往北扫，第一个落进湖面的 z（局部，0.1 m 精度）；扫到 z1 还没水 = 这一列没湖（东边）
+    const shoreCache = new Map(), shore = x => { const key = Math.round(x * 10); if (shoreCache.has(key)) return shoreCache.get(key);
+      let z = 16; while (z < 76 && !isWater(x + ox, z + oz)) z += 0.1; shoreCache.set(key, z); return z; };
+    let lakeX1 = -24; for (let x = -24; x <= 26; x += 0.5) if (shore(x) < 76) lakeX1 = x;
     const r = xihuPark({ kit: pk, atlas: pa }, { WY: LOCK ? WY + LOCK.rise : WY, shore, x0: -24, x1: 26, z1: 76, lakeX1, bwX: 4, cz: 149, cx1: 80 });
     for (const G of touched) G.xf = null;
     this.decks = r.decks.map(([x0, x1, z0, z1]) => [x0 + ox, x1 + ox, z0 + oz, z1 + oz]);
