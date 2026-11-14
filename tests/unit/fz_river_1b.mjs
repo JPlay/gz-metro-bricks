@@ -105,7 +105,7 @@ ok('斗门 C → 温泉公园, 东门 C → 东门停靠点, 光明港 D → 光
 // ---- 报站 ----
 const jobs = fzBoatJobs(), ids = jobs.map(j => j.id);
 ok('B line jobs present (zh + en only)', ['wq', 'fx', 'dmn', 'hk', 'gmg'].every(id => ids.includes(`voice.fz.boat.arrive.${id}${['wq', 'gmg'].includes(id) ? '.end' : ''}.zh`) && ids.includes(`voice.fz.boat.next.${id}.en`)) && ids.includes('voice.fz.boat.b.depart.gmg.zh') && ids.includes('voice.fz.boat.b.depart.wq.en') && ids.every(id => /\.(zh|en)$/.test(id)), ids.filter(i => /b\.|wq|gmg/.test(i)));
-ok('A line ids unchanged', ids.includes('voice.fz.boat.depart.lmh.zh') && ids.includes('voice.fz.boat.depart.xihu.en'));
+ok('A line ids unchanged', ids.includes('voice.fz.boat.depart.smc.zh') && ids.includes('voice.fz.boat.depart.xihu.en'));
 ok('allJobs includes every boat job', (() => { const all = new Set(allJobs().map(j => j.id)); return ids.every(id => all.has(id)); })());
 const dep = fzBoatDepartSegs('gmg', 'fx', 'B'), txt = a => a.map(x => x.text).join(' ');
 ok('B depart: 内河游船B线 + 开往光明港码头 + 下一站 + English', /内河游船B线/.test(txt(dep)) && /光明港码头/.test(txt(dep)) && /福新问渡码头/.test(txt(dep)) && /Line B/.test(txt(dep)) && /Fuxin Wendu Pier/.test(txt(dep)) && dep[0].id === 'voice.fz.boat.b.depart.gmg.zh');
@@ -116,7 +116,7 @@ const tris = T => Object.values(T).reduce((a, c) => a + c.i.length / 3, 0);
 ok(`always-on ground+water tris ≤ 1.6 × 1A (${tris(F.land) + tris(F.water)} vs ${tris(A.land) + tris(A.water)})`, tris(F.land) + tris(F.water) <= 1.6 * (tris(A.land) + tris(A.water)));
 ok(`houses ≤ 1A × 1.3 (${F.houses.length} vs ${A.houses.length})`, F.houses.length <= A.houses.length * 1.3);
 R.useNet('a');
-ok('useNet(a) restores 1A', R.NET === 'a' && R.STOPS.map(s => s.id).join() === 'xihu,xsg,lmh' && R.ROUTE.line.len === lenA);
+ok('useNet(a) restores 1A', R.NET === 'a' && R.STOPS.map(s => s.id).join() === 'xihu,xsg,lmh,smc' && R.ROUTE.line.len === lenA);
 // ---- 河面水汽远景（只在 1B）----
 { const H = RIVER_HAZE.e;
   ok('haze: 1B only, linear 200 → 350 m, far clip left alone (sky dome ~400 m must not be clipped)', H && !RIVER_HAZE.a && H.start === 200 && H.end === 350 && !H.maxZ);

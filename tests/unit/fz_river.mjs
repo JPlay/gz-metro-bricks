@@ -11,7 +11,7 @@ ok('along-river compression 1:3 (K=3)', F.K === 3);
 ok('water level below bank', R.WY < -2 && R.WY > -4);
 ok('land + water triangle meshes present', Object.keys(F.land).length > 20 && Object.keys(F.water).length > 20);
 const bn = R.BRIDGES.map(b => b.name).filter(Boolean);
-ok('21 bridges', R.BRIDGES.length === 21, R.BRIDGES.length);
+ok('26 bridges (2B +5 on 东西河)', R.BRIDGES.length === 26, R.BRIDGES.length);
 ok('安泰河 named arch/hump bridges 观音桥/馆驿桥/金斗桥/澳门桥 + 二桥亭桥 + 桂芳桥', ['观音桥', '馆驿桥', '金斗桥', '澳门桥', '二桥亭桥', '桂芳桥'].every(n => bn.includes(n)), bn);
 ok('unnamed small bridges have no plate (⑧)', R.BRIDGES.filter(b => !b.name).every(b => !b.plate));
 ok('bridge ids unique', new Set(R.BRIDGES.map(b => b.id)).size === R.BRIDGES.length);
@@ -24,7 +24,7 @@ let shoreBad = 0; for (const k in R.RIVERS) { const L = R.RIVERS[k].line; for (l
 ok('shoreFor finds land from every river point', shoreBad === 0, shoreBad);
 ok('three water steps (水埠头) marked dry', F.steps.length === 3 && F.steps.every(s => R.isDry(s.x - s.n[0] * 0.7, s.z - s.n[1] * 0.7)));
 // ---- 航线 / 码头 ----
-ok('route A: 西湖码头 → 西水关码头 → 黎明湖码头', R.STOPS.map(s => s.id).join(',') === 'xihu,xsg,lmh' && R.STOPS.map(s => s.pier.zh).join(',') === '西湖码头,西水关码头,黎明湖码头');
+ok('route A: 西湖码头 → 西水关码头 → 黎明湖码头 → 市民服务中心码头', R.STOPS.map(s => s.id).join(',') === 'xihu,xsg,lmh,smc' && R.STOPS.map(s => s.pier.zh).join(',') === '西湖码头,西水关码头,黎明湖码头,市民服务中心码头');
 ok('stops ascending along route', R.STOPS[0].s < R.STOPS[1].s && R.STOPS[1].s < R.STOPS[2].s && R.STOPS[2].s <= R.ROUTE.line.len);
 let hullOut = 0; for (let s = 0; s <= R.ROUTE.line.len; s += 0.5) for (const { x, z } of R.hullPts(s)) if (!R.isWater(x, z) && !R.isDry(x, z) && !R.inChamber(x, z)) { hullOut++; break; }
 ok('boat hull stays inside water along whole route', hullOut === 0, hullOut);
@@ -32,7 +32,7 @@ const cr = R.clearanceReport(0.25);
 ok(`canopy never clips a bridge (min clearance ${cr.min.toFixed(3)} ≥ ${R.CLEAR_MIN})`, cr.ok && cr.min >= R.CLEAR_MIN, cr.per);
 const crossed = Object.keys(cr.per || {});
 ok('route passes under bridges incl. 桂芳桥 arch', crossed.length >= 10 && crossed.includes('bm5'), crossed);
-ok('speed cap slower under bridges', R.BRIDGES.filter(b => crossed.includes(b.id)).length > 0 && Math.min(...R.SPEED_CAP) <= R.SLOW + 1e-6);
+ok('speed cap slower under bridges (2B: A 线沿用 B 线规则，过桥 ≤ zones.vBridge 3.5，低于东西河东段 5.5)', R.BRIDGES.filter(b => crossed.includes(b.id)).length > 0 && Math.min(...R.SPEED_CAP) <= ((R.ROUTE.zones || {}).vBridge || R.SLOW) + 1e-6 && (R.ROUTE.zones || {}).vBridge < (R.ROUTE.zones || {}).vFast);
 ok('pier signs: zh name + English + next stops', R.PIERS.every(p => p.zh.endsWith('码头') && /Pier$/.test(p.en) && R.pierNext(p.id).length >= 1) && R.pierNext('xsg').map(p => p.id).join() === 'xihu,lmh');
 ok('pier names (en)', R.PIER.xihu.en === 'West Lake Pier' && R.PIER.xsg.en === 'Xishuiguan Pier' && R.PIER.lmh.en === 'Liming Lake Pier');
 // ---- 出口 ----

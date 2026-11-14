@@ -15582,16 +15582,16 @@
   "file": "voice/fz-boat-lock-xihu-en.mp3"
  },
  {
-  "id": "voice.fz.boat.depart.lmh.zh",
+  "id": "voice.fz.boat.depart.smc.zh",
   "lang": "zh",
-  "text": "欢迎乘坐内河游船A线，本船开往黎明湖码头。",
-  "file": "voice/fz-boat-depart-lmh-zh.mp3"
+  "text": "欢迎乘坐内河游船A线，本船开往市民服务中心码头。",
+  "file": "voice/fz-boat-depart-smc-zh.mp3"
  },
  {
-  "id": "voice.fz.boat.depart.lmh.en",
+  "id": "voice.fz.boat.depart.smc.en",
   "lang": "en",
-  "text": "Welcome aboard Inland River Boat Line A. This boat is bound for Liming Lake Pier.",
-  "file": "voice/fz-boat-depart-lmh-en.mp3"
+  "text": "Welcome aboard Inland River Boat Line A. This boat is bound for Civic Center Pier.",
+  "file": "voice/fz-boat-depart-smc-en.mp3"
  },
  {
   "id": "voice.fz.boat.next.xsg.zh",
@@ -15666,16 +15666,40 @@
   "file": "voice/fz-boat-arrive-xsg-en.mp3"
  },
  {
-  "id": "voice.fz.boat.arrive.lmh.end.zh",
+  "id": "voice.fz.boat.next.smc.zh",
   "lang": "zh",
-  "text": "黎明湖码头到了，这里是本线终点。请带好随身物品，小心上岸。",
-  "file": "voice/fz-boat-arrive-lmh-end-zh.mp3"
+  "text": "下一站，市民服务中心码头。",
+  "file": "voice/fz-boat-next-smc-zh.mp3"
  },
  {
-  "id": "voice.fz.boat.arrive.lmh.end.en",
+  "id": "voice.fz.boat.next.smc.en",
   "lang": "en",
-  "text": "We have arrived at Liming Lake Pier, the end of this line. Please take your belongings and mind your step.",
-  "file": "voice/fz-boat-arrive-lmh-end-en.mp3"
+  "text": "The next stop is Civic Center Pier.",
+  "file": "voice/fz-boat-next-smc-en.mp3"
+ },
+ {
+  "id": "voice.fz.boat.arrive.lmh.zh",
+  "lang": "zh",
+  "text": "黎明湖码头到了。上岸请小心脚下。",
+  "file": "voice/fz-boat-arrive-lmh-zh.mp3"
+ },
+ {
+  "id": "voice.fz.boat.arrive.lmh.en",
+  "lang": "en",
+  "text": "We have arrived at Liming Lake Pier. Please mind your step.",
+  "file": "voice/fz-boat-arrive-lmh-en.mp3"
+ },
+ {
+  "id": "voice.fz.boat.arrive.smc.end.zh",
+  "lang": "zh",
+  "text": "市民服务中心码头到了，这里是本线终点。请带好随身物品，小心上岸。",
+  "file": "voice/fz-boat-arrive-smc-end-zh.mp3"
+ },
+ {
+  "id": "voice.fz.boat.arrive.smc.end.en",
+  "lang": "en",
+  "text": "We have arrived at Civic Center Pier, the end of this line. Please take your belongings and mind your step.",
+  "file": "voice/fz-boat-arrive-smc-end-en.mp3"
  },
  {
   "id": "voice.fz.boat.b.depart.gmg.zh",
