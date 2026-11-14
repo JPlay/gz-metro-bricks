@@ -119,12 +119,12 @@ export class FzRiverStreet extends XmStreet {
     const yLo = WY - 0.3, yHi = WY + L.rise + 0.3, GS = 1;
     // 数字用方块拼（七段式，高 0.2 m、笔画 0.035 m，黑色），和刻度条同一套朝向，贴墙不翘
     const SEG = { 0: 'abcdef', 5: 'acdfg' }, sw = 0.035, dw = 0.11, dh = 0.2;
+    const sgn = L.n[0] * L.t[1] - L.n[1] * L.t[0] > 0 ? -1 : 1;   // 站在闸室里面朝墙（朝 +n）：看过去的「右」沿 sgn·t
     const digit = (a0, y0, ch) => { const segs = SEG[ch];
-      const put = (u, y, w, h) => { const [x, z] = this.lockP(a0 + u, GS * (L.hw - 0.02)); P.box(x, y, z, w, h, 0.02, BLACK, ryN, 0, 0, 1, NO); };
+      const put = (u, y, w, h) => { const [x, z] = this.lockP(a0 + sgn * u, GS * (L.hw - 0.02)); P.box(x, y, z, w, h, 0.02, BLACK, ryN, 0, 0, 1, NO); };
       if (segs.includes('a')) put(0, y0 + dh / 2, dw, sw); if (segs.includes('g')) put(0, y0, dw, sw); if (segs.includes('d')) put(0, y0 - dh / 2, dw, sw);
       if (segs.includes('f')) put(-dw / 2, y0 + dh / 4, sw, dh / 2); if (segs.includes('b')) put(dw / 2, y0 + dh / 4, sw, dh / 2);
       if (segs.includes('e')) put(-dw / 2, y0 - dh / 4, sw, dh / 2); if (segs.includes('c')) put(dw / 2, y0 - dh / 4, sw, dh / 2); };
-    const sgn = L.n[0] * L.t[1] - L.n[1] * L.t[0] > 0 ? 1 : -1;   // 站在闸室里面朝墙：数字左→右的方向（沿 ±t）
     for (const a of [-half + 2.85, half - 2.85]) {
       const [x, z] = this.lockP(a, GS * (L.hw - 0.012));
       for (let y = yLo, i = 0; y < yHi - 1e-6; y += 0.1, i++) P.box(x, y + 0.05, z, 0.3, 0.1, 0.024, i % 2 ? WHITE : RED, ryN, 0, 0, 1, NO);
