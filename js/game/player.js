@@ -22,7 +22,7 @@ export class Player {
     this.buildModel(mats); camera.fov = FOV_THIRD;
   }
   buildModel(M) {
-    this.person = new Hero(this.scene, M.paint, { name: 'kid' });
+    this.person = new Hero(this.scene, M.paintHero || M.paint, { name: 'kid' });
     this.model = this.person.mesh;
     // 脚下的圆形软阴影（实时阴影只在最高画质档开）
     this.blob = makeBlob(this.scene, M, 'kidBlob', 0.44, 0.78); this.groundY = 0;

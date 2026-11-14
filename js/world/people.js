@@ -290,7 +290,7 @@ export class Crowd {
     const i = this.blobSrc.createInstance('nb'); i.parent = this.parent; i.isPickable = false; return i;
   }
   add(x, y, z, ry, look, mode = 'idle') {
-    const p = new Person(this.scene, this.M.paint, look, { parent: this.parent });
+    const p = new Person(this.scene, this.M.paintHero || this.M.paint, look, { parent: this.parent });
     p.mesh.position.set(x, y, z); p.mesh.rotation.y = ry; p.mode = mode;
     const sh = this.blob(); sh.position.set(x, y + 0.012, z);
     const n = { p, sh, path: null };
