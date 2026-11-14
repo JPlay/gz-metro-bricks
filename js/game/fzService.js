@@ -9,6 +9,7 @@ import { FZ_LINES, FZ_STATIONS, fzNext } from '../data/fz-lines.js';
 import { FZ_EXITS, fzExitZh } from '../data/fz-exits.js';
 import { FzStation, FZ_NET } from '../world/fzMetro.js';
 import { XmStreet } from '../world/xmStreet.js';
+import { FzRiverStreet } from '../world/fzRiver.js';
 import { fzStreet } from '../world/fzStreet.js';
 import { FZ_ATTR_BUILD, FZ_ATTR_HOLES } from '../world/fzAttr.js';
 import { XmMetro } from './xmService.js';
@@ -19,7 +20,8 @@ export const FZ_STREET = { O: FS, net: 'fz', EXITS: FZ_EXITS, LINES: FZ_LINES, S
 export const FZ_SVC = {
   N: FZ_NET, net: 'fz', ev: 'fz', ids: [20, 21],
   station: (scene, code) => new FzStation(scene, code),
-  street: (scene, code, ex) => new XmStreet(scene, code, FZ_STREET, ex),
+  // 内河出口（西门 C / 西洋 A，ex.attr = 'fzriver'）：同一片河网街区（js/world/fzRiver.js）
+  street: (scene, code, ex) => ex && ex.attr === 'fzriver' ? new FzRiverStreet(scene, code, FZ_STREET, ex) : new XmStreet(scene, code, FZ_STREET, ex),
   next: fzNext,
   ann: { platform: Ann.fzPlatform, depart: Ann.fzDepart, arrive: Ann.arrive, welcome: Ann.welcome, exit: Ann.fzExit, doorsClosing: Ann.fzDoorsClosing },
   exitSegs: fzExitSegs, departSegs: fzDepartSegs,

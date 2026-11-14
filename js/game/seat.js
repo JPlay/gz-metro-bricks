@@ -18,17 +18,21 @@ export class SeatCtl {
   }
   update() {
     const pl = this.player;
-    if (pl.seat) return { id: 'stand', label: '起身', icon: 'stand', run: () => this.stand() };
+    if (pl.seat) { const b = pl.seat.seat && pl.seat.seat.boat; if (b && !b.canStand()) return null;   // 船开着不能起身（到码头停稳了才出现「起身」）
+      return { id: 'stand', label: '起身', icon: 'stand', run: () => this.stand() }; }
     if (!pl.grounded) return null;
     // 中山纪念堂大会堂：座位是世界坐标（seat.world），没有列车
     const hall = this.hall && this.hall();
     if (hall) { const s = hall.seatNear(pl.position); return s ? { id: 'sit', label: '坐下', icon: 'seat', run: () => this.sit(HALL_TRAIN, s) } : null; }
+    // 福州内河游船：座位也是世界坐标（随船移动）
+    const boat = this.boat && this.boat();
+    if (boat) { const s = boat.seatNear(pl.position); if (s) return { id: 'sit', label: '坐下', icon: 'seat', run: () => this.sit(HALL_TRAIN, s) }; }
     const tr = this.trainAt(pl.position); if (!tr) return null;
     const l = tr.local(pl.position); let best = null, bd = 1.0;
     for (const s of tr.seats) if (s.free) { const d = Math.hypot(l.x - s.x, l.z - s.sd * 0.62); if (d < bd) { bd = d; best = s; } }
     return best ? { id: 'sit', label: '坐下', icon: 'seat', run: () => this.sit(tr, best) } : null;
   }
   sit(tr, s) { if (s.world) s.free = false; this.player.sit(tr, s); this.Audio.blip('sit'); this.count.sit++; this.events.emit('seat', { sit: true }); }
-  stand() { if (!this.player.seat) return; const ws = this.player.seat.seat; if (ws.world) ws.free = true; this.player.standUp(); this.Audio.blip('stand'); this.count.stand++; this.events.emit('seat', { sit: false }); }
+  stand() { if (!this.player.seat) return; const ws = this.player.seat.seat; if (ws.boat && !ws.boat.canStand()) return; if (ws.world) ws.free = true; this.player.standUp(); this.Audio.blip('stand'); this.count.stand++; this.events.emit('seat', { sit: false }); }
   info() { const s = this.player.seat; return !s ? { seated: false } : s.seat.world ? { seated: true, hall: true, id: s.seat.id, y: s.seat.wy } : { seated: true, x: +s.seat.x.toFixed(2), sd: s.seat.sd, train: s.train.id }; }
 }

@@ -15,6 +15,8 @@ function inBox(lx, lz, box) {
 /** 人现在是不是掉进了这条街登记过的水面坑（返回水面高度和最近岸边） */
 export function streetWaterAt(p, street) {
   if (!p || !street || !street.O) return null;
+  // 福州内河（js/world/fzRiver.js）：河道是任意形状的多边形，由街区自己判定（台阶 / 浮码头 / 船上不算水里）
+  if (typeof street.waterAt === 'function') return street.waterAt(p);
   const holes = (street.N && street.N.holes && street.N.holes[street.key]) || (street.N && street.N.net === 'fz' && FZ_ATTR_HOLES[street.key]) || [];
   if (!holes.length) return null;
   const O = street.O, lx = p.x - O.x, lz = p.z - O.z;
@@ -73,11 +75,14 @@ export function installShore({ player, hud, Audio }) {
     const p = player.position;
     const onStreet = !!(zone && zone.kind === 'street' && !(street && street.inside));
     // 不要求脚沾地：刚传送到岸上的那一帧也可能还没落地，照样记住岸上的位置
-    if (!inTunnel && onStreet && p.y > -0.15 && p.y < 4) {
+    // 内河街区：只记真正的岸地（台阶顶、桥面、船上都在河道范围里，救上来不能放回那儿）
+    if (!inTunnel && onStreet && p.y > -0.15 && p.y < 4 && !(street && street.safeAt && !street.safeAt(p))) {
       lastSafe = { x: p.x, y: Math.max(0.05, p.y), z: p.z, yaw: player.yaw };
     }
     const wet = streetWaterAt(p, street);
-    const inHole = !inTunnel && onStreet && p.y < -0.15;
+    // 内河街区：岸顶以下也有能站的地方（台阶、浮码头、船），只有真的在水面上才算落水；坐着（坐船）永远不算
+    const river = !!(street && typeof street.waterAt === 'function');
+    const inHole = !inTunnel && onStreet && p.y < -0.15 && (!river || (!player.seat && !!wet && p.y < wet.surfaceY + 0.8));
     if (!inHole) {
       held = null;
       if (btn) btn.hidden = true;

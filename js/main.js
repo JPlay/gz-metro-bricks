@@ -319,7 +319,9 @@ export async function start() {
     if ((G.zone.kind === 'street' || G.zone.kind === 'hall') && !G.aboard && !(east && east.cur) && Audio.isAnnouncing()) Audio.cancelAnnouncements();
     const rlXm = inXm && cm.ride && cm.ride.train && G.aboard ? cm.ride : null;
     const rl = !inXm && metro.ride && metro.ride.train && G.aboard ? metro.ride : null;
-    if (inXm) hud.whereXm(cm.code, rlXm ? rlXm.line : (G.zone.P ? G.zone.P.line : (cm.net === 'fz' ? FZ_STATIONS : XM_STATIONS)[cm.code].lines[0]), rlXm && rlXm.phase === 'cruise' ? rlXm.next : null, cm.net);
+    const rv = inXm && cm.street && cm.street.riverHud ? cm.street.riverHud(player) : null;   // 福州内河街区：左上角不显示出来的地铁站
+    if (rv) hud.whereRiver(rv);
+    else if (inXm) hud.whereXm(cm.code, rlXm ? rlXm.line : (G.zone.P ? G.zone.P.line : (cm.net === 'fz' ? FZ_STATIONS : XM_STATIONS)[cm.code].lines[0]), rlXm && rlXm.phase === 'cruise' ? rlXm.next : null, cm.net);
     else { const rh = east && east.railHud(); if (rh) hud.whereRail(rh); else { const line = rl ? rl.line : (G.zone.kind === 'platform' ? G.zone.P.line : STATIONS[G.code].lines[0]); hud.where(G.code, line, rl && rl.phase === 'cruise' ? rl.next : null); } }
     discovery.update({ code: G.code, zone: G.zone, station: G.station, dt });
     // 脚步声
@@ -401,7 +403,8 @@ export async function start() {
     onNewTrain: t => t.shadowMeshes && t.shadowMeshes.forEach(m => R.addShadowCaster(m))
   });
   east.xmMetro = xmMetro; east.fzMetro = fzMetro;
-  seats.xmMetro = xmMetro; seats.fzMetro = fzMetro;   // 厦门 / 福州地铁车厢也走同一套「坐下 / 起身」
+  seats.xmMetro = xmMetro; seats.fzMetro = fzMetro;
+  seats.boat = () => (fzMetro.street && fzMetro.street.boat) || null;   // 福州内河游船的座位   // 厦门 / 福州地铁车厢也走同一套「坐下 / 起身」
   // 续玩：厦门地铁（要等 east / xmMetro 建好）。跟从国铁走进厦门北地铁一样：广州场景关掉，xmMetro 接管
   if (G.pendingXm) {
     const sv = G.pendingXm; G.pendingXm = null;

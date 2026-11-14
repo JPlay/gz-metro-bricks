@@ -43,7 +43,11 @@ Object.assign(FZ_EXITS, {
   fzgs: { n: 'A', x: 10, line: 2, road: '福马路', to: ['鼓山风景区'], toEn: ['Gushan Mountain Scenic Area'] },
   fzdl: { n: 'A', x: 10, line: 5, road: '', to: ['海峡奥体中心'], toEn: ['Straits Olympic Sports Center'] },
   fzdd: { n: 'C', x: 10, line: 1, road: '', to: ['上下杭'], toEn: ['Shangxiahang Historic District'] },
-  fzxm: { n: 'B', x: 10, line: 4, road: '', to: ['西湖公园', '福建博物院'], toEn: ['West Lake Park', 'Fujian Museum'] },
+  fzxm: { n: 'B', x: 10, line: 4, road: '', to: ['西湖公园', '福建博物院'], toEn: ['West Lake Park', 'Fujian Museum'],
+    // 内河 1A：C 口出来是杨桥路白马河边（西水关码头，游船 A 线）；出口号示意（verified:false），街区见 js/world/fzRiver.js
+    more: [{ n: 'C', x: -14, line: 4, road: '杨桥路', to: ['白马河', '西水关码头'], toEn: ['Baima River', 'Xishuiguan Pier'], attr: 'fzriver', verified: false }] },
+  // 西洋 A：东西河边（黎明湖码头，游船 A 线）；出口号示意（verified:false）
+  fzxiy: { n: 'A', x: 10, line: 2, road: '', to: ['东西河', '黎明湖码头'], toEn: ['Dongxi River', 'Liming Lake Pier'], attr: 'fzriver', verified: false },
 });
 // 福州火车南站（fzfzn）不在这里：它的站厅就是国铁出站层，出口通道 A / B / F / D2 在 FzsStation 里（FZS_EXITS），不走街区
 
@@ -54,7 +58,8 @@ export const FZ_EXIT_TABLE = {
   fzdjk: [['C', '杨桥东路、三坊七巷（南后街北口，约400米）']],
   fznmd: [['G1', '于山风景区（白塔）、五一广场'], ['A1', '三坊七巷南口（约600米）'], ['B', '乌山风景区']],
   fzdd: [['C', '上下杭（约850米）']],
-  fzxm: [['B', '西湖公园（约800米）、福建博物院']],
+  fzxm: [['B', '西湖公园（约800米）、福建博物院'], ['C', '杨桥路、白马河、西水关码头（内河游船）']],
+  fzxiy: [['A', '东西河、黎明湖码头（内河游船）']],
   fzst: [['A', '上藤路万春巷路口东侧'], ['B', '烟台山（约600米）'], ['C', '六一南路、汇达广场']],
   fzgs: [['A', '鼓山风景区（福马路东侧）'], ['B', '鼓山路口、鼓山公交总站'], ['C', '福马路东侧、省革命历史纪念馆'], ['D', '福马路东侧、廨院公交总站']],
   fzdl: [['A', '海峡奥体中心'], ['B', '海峡奥体中心'], ['C', '海峡奥体中心']],

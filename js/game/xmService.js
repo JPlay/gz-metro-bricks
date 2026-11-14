@@ -256,8 +256,16 @@ export class XmMetro {
     this.ctx.events.emit(this.S.ev, { street: true, code: this.code });
   }
   backFromStreet() {
-    const pl = this.ctx.player, ex = this.streetEx || this.N.EXITS[this.code];
+    const pl = this.ctx.player, ex = this.streetEx || this.N.EXITS[this.code], to = this.street.backTo;
     this.street.dispose(); this.street = null;
+    // 福州内河：一个街区两个出口亭（西门 C / 西洋 A）—— 从另一个亭子走进去 = 进另一个站
+    if (to && to.code !== this.code) {
+      this.buildStation(to.code);
+      const ex2 = exitList(this.N.EXITS[to.code]).find(e => e.n === to.n) || this.N.EXITS[to.code];
+      this.streetEx = null; pl.spawn(this.N.O.x + ex2.x, 0.05, -34.4, 0);
+      this.ctx.events.emit(this.S.ev, { street: false, code: this.code });
+      return;
+    }
     this.station.kit.root.setEnabled(true);
     pl.spawn(this.N.O.x + ex.x, 0.05, -34.4, 0);
     this.ctx.events.emit(this.S.ev, { street: false, code: this.code });
