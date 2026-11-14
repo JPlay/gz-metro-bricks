@@ -400,10 +400,10 @@ async def under_walk(pg, D, uid, tag):
 # 2B：船速逐帧记录 → 最大加 / 减速度（m/s²，按游戏帧长）+ 相邻帧速度差
 ACCW = """(() => { window.__acc = { aMax: 0, dMax: 0, dvMax: 0, n: 0, stepOver: -9, stepMax: 0 }; let lv = null, lp = null;
   __game.scene.onAfterRenderObservable.add(() => { const S = __game.fzMetro.street; if (!S || !S.boat) { lv = null; return; } const i = S.boat.info(), A = window.__acc;
-    const dt = Math.min(0.25, __game.scene.getEngine().getDeltaTime() / 1000); if (lv !== null && dt > 0.004 && i.phase === 'go') { const dv = i.v - lv; A.n++;
+    const dt = S.boat.dtLast || 0, vr = S.boat.v; if (lv !== null && dt > 0.004 && i.phase === 'go') { const dv = vr - lv; A.n++;
       if (dv / dt > A.aMax) A.aMax = +(dv / dt).toFixed(3); if (-dv / dt > A.dMax) A.dMax = +(-dv / dt).toFixed(3); if (Math.abs(dv) > A.dvMax) A.dvMax = +Math.abs(dv).toFixed(3); }
-    const q = S.boat.node.getAbsolutePosition(); if (lp !== null && lv !== null && dt > 0.004 && i.phase === 'go') { const d = Math.hypot(q.x - lp[0], q.z - lp[1]); if (d > A.stepMax) A.stepMax = +d.toFixed(3); const o = d - Math.max(i.v, lv) * dt; if (o > A.stepOver) A.stepOver = +o.toFixed(3); }
-    lp = [q.x, q.z]; lv = i.v; }); return true; })()"""
+    const q = S.boat.node.getAbsolutePosition(); if (lp !== null && lv !== null && dt > 0.004 && i.phase === 'go') { const d = Math.hypot(q.x - lp[0], q.z - lp[1]); if (d > A.stepMax) A.stepMax = +d.toFixed(3); const o = d - Math.max(vr, lv) * dt; if (o > A.stepOver) A.stepOver = +o.toFixed(3); }
+    lp = [q.x, q.z]; lv = vr; }); return true; })()"""
 async def run_2b(pg):
     await pg.evaluate('window.__fzNavRes = 0.35')
     ex, si = await station_to_exit(pg, 'fzsb', "x.attr === 'fzriver'", 'fzsb')
