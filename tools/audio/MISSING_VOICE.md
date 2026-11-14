@@ -1,6 +1,6 @@
 # 缺失的报站语音片段
 
-由 `node tools/audio/export_jobs.mjs` 生成。全网共需 2694 条片段，已有 MP3 2312 条，缺 382 条（普通话 4 / 粤语 0 / 英语 4）。
+由 `node tools/audio/export_jobs.mjs` 生成。全网共需 2706 条片段，已有 MP3 2332 条，缺 374 条（普通话 0 / 粤语 0 / 英语 0）。
 缺失片段在游戏里自动用 Web Speech 朗读（zh-CN → zh-HK（若有）→ en-US（若有），语速 0.95），并照常显示字幕。
 
 生成方法：设置环境变量 DASHSCOPE_API_KEY 后运行 `python3 tools/audio/generate_voice.py`（会读取 voice-jobs.json，只生成缺的）。
@@ -381,11 +381,3 @@
 | voice.fz.arrive.fzwl.fzh | fzh | 列车即将到达文岭站，请小心列车与站台之间的空隙。 |
 | voice.fz.welcome.fzwl.fzh | fzh | 欢迎光临文岭站。请排队候车，先下后上。 |
 | voice.fz.doorsClosing.fzh | fzh | 车门即将关闭，请注意安全。 |
-| voice.fz.boat.depart.smc.zh | zh | 欢迎乘坐内河游船A线，本船开往市民服务中心码头。 |
-| voice.fz.boat.depart.smc.en | en | Welcome aboard Inland River Boat Line A. This boat is bound for Civic Center Pier. |
-| voice.fz.boat.next.smc.zh | zh | 下一站，市民服务中心码头。 |
-| voice.fz.boat.next.smc.en | en | The next stop is Civic Center Pier. |
-| voice.fz.boat.arrive.lmh.zh | zh | 黎明湖码头到了。上岸请小心脚下。 |
-| voice.fz.boat.arrive.lmh.en | en | We have arrived at Liming Lake Pier. Please mind your step. |
-| voice.fz.boat.arrive.smc.end.zh | zh | 市民服务中心码头到了，这里是本线终点。请带好随身物品，小心上岸。 |
-| voice.fz.boat.arrive.smc.end.en | en | We have arrived at Civic Center Pier, the end of this line. Please take your belongings and mind your step. |

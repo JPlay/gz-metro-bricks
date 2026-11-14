@@ -15702,6 +15702,78 @@
   "file": "voice/fz-boat-arrive-smc-end-en.mp3"
  },
  {
+  "id": "voice.fz.boat.c.depart.shw.zh",
+  "lang": "zh",
+  "text": "欢迎乘坐内河游船C线，本船开往上海西码头。",
+  "file": "voice/fz-boat-c-depart-shw-zh.mp3"
+ },
+ {
+  "id": "voice.fz.boat.c.depart.shw.en",
+  "lang": "en",
+  "text": "Welcome aboard Inland River Boat Line C. This boat is bound for Shanghai West Pier.",
+  "file": "voice/fz-boat-c-depart-shw-en.mp3"
+ },
+ {
+  "id": "voice.fz.boat.next.shw.zh",
+  "lang": "zh",
+  "text": "下一站，上海西码头。",
+  "file": "voice/fz-boat-next-shw-zh.mp3"
+ },
+ {
+  "id": "voice.fz.boat.next.shw.en",
+  "lang": "en",
+  "text": "The next stop is Shanghai West Pier.",
+  "file": "voice/fz-boat-next-shw-en.mp3"
+ },
+ {
+  "id": "voice.fz.boat.arrive.xsgc.end.zh",
+  "lang": "zh",
+  "text": "西水关码头到了，这里是本线终点。请带好随身物品，小心上岸。",
+  "file": "voice/fz-boat-arrive-xsgc-end-zh.mp3"
+ },
+ {
+  "id": "voice.fz.boat.arrive.xsgc.end.en",
+  "lang": "en",
+  "text": "We have arrived at Xishuiguan Pier, the end of this line. Please take your belongings and mind your step.",
+  "file": "voice/fz-boat-arrive-xsgc-end-en.mp3"
+ },
+ {
+  "id": "voice.fz.boat.c.depart.xsgc.zh",
+  "lang": "zh",
+  "text": "欢迎乘坐内河游船C线，本船开往西水关码头。",
+  "file": "voice/fz-boat-c-depart-xsgc-zh.mp3"
+ },
+ {
+  "id": "voice.fz.boat.c.depart.xsgc.en",
+  "lang": "en",
+  "text": "Welcome aboard Inland River Boat Line C. This boat is bound for Xishuiguan Pier.",
+  "file": "voice/fz-boat-c-depart-xsgc-en.mp3"
+ },
+ {
+  "id": "voice.fz.boat.arrive.shw.end.zh",
+  "lang": "zh",
+  "text": "上海西码头到了，这里是本线终点。请带好随身物品，小心上岸。",
+  "file": "voice/fz-boat-arrive-shw-end-zh.mp3"
+ },
+ {
+  "id": "voice.fz.boat.arrive.shw.end.en",
+  "lang": "en",
+  "text": "We have arrived at Shanghai West Pier, the end of this line. Please take your belongings and mind your step.",
+  "file": "voice/fz-boat-arrive-shw-end-en.mp3"
+ },
+ {
+  "id": "voice.fz.boat.xfer.shw.zh",
+  "lang": "zh",
+  "text": "换乘地铁宁化站，请从 A 口出站。",
+  "file": "voice/fz-boat-xfer-shw-zh.mp3"
+ },
+ {
+  "id": "voice.fz.boat.xfer.shw.en",
+  "lang": "en",
+  "text": "For Metro Ninghua Station, please use Exit A.",
+  "file": "voice/fz-boat-xfer-shw-en.mp3"
+ },
+ {
   "id": "voice.fz.boat.b.depart.gmg.zh",
   "lang": "zh",
   "text": "欢迎乘坐内河游船B线，本船开往光明港码头。",
