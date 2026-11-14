@@ -19,6 +19,8 @@ import { Bubbles } from './ui/bubbles.js';
 import { TvmPanel } from './ui/tvm.js';
 import { mats } from './core/mats.js';
 import { Render } from './core/render.js';
+import { Gfx } from './core/gfx.js';
+import { installDemoPanel } from './ui/demoPanel.js';
 import { STATIONS, LINES, nextStation } from './data/lines.js';
 import { networkSVG, xmNetworkSVG, fzNetworkSVG, panZoom } from './ui/netmap.js';
 import { ATTRACTIONS, attractionExit } from './data/attractions.js';
@@ -58,6 +60,8 @@ export async function start() {
   const M = mats(scene);
   const cam = new B.FreeCamera('cam', new B.Vector3(0, 2, -52), scene); cam.minZ = 0.25; cam.maxZ = 420; // 近裁剪面：第三人称 0.25（深度精度 ≈ 距离² / 近裁剪面，比 0.08 好 3 倍），第一人称 / 镜头贴近时在 Player.updateCamera 里降到 0.1 cam.fov = 0.92; cam.inputs.clear();
   const R = new Render(engine, scene, cam);
+  // 画质升级 Demo（原版 ↔ 10× 零开销升级，运行时切换）：见 js/core/gfx.js
+  const gfx = new Gfx({ engine, scene, R, M }); gfx.apply();
   mark('render');
   progress(0.55, '正在铺轨道…');
   await paint();
@@ -81,7 +85,7 @@ export async function start() {
 
   const G = { code: null, station: null, zone: { kind: 'street' }, welcomed: false, tier: CONFIG.fixedQuality ?? 1, fps: 60, auto: null, inTunnel: false, lastStep: 0 };
   const metro = new Metro(scene, {
-    player, Audio, events, buildStation: code => buildStation(code), onTunnel: v => { G.inTunnel = v; scene.fogMode = v ? B.Scene.FOGMODE_LINEAR : B.Scene.FOGMODE_NONE; },
+    player, Audio, events, buildStation: code => buildStation(code), onTunnel: v => { G.inTunnel = v; R.setTunnel(v); },
     get zone() { return G.zone; },
     extTrain: () => !!(east && east.ride)   // 动车在开：列车声由 js/game/east.js 控制
   });
@@ -107,6 +111,7 @@ export async function start() {
     st.ticketPolicy = tickets;
     G.station = st; G.code = code; G.gzCode = code; G.welcomed = false;
     metro.attach(st);
+    gfx.onStation(st);
     return st;
   }
   mark('trains'); progress(0.62, '正在搭站台…'); await paint();
@@ -195,7 +200,7 @@ export async function start() {
   ['pointerdown', 'touchend', 'click', 'keydown'].forEach(ev => document.addEventListener(ev, unlock, { capture: true, passive: true }));
 
   // —— 画质
-  const applyQuality = () => { R.setTier(G.tier, CONFIG.qualityLevels); };
+  const applyQuality = () => { R.setTier(G.tier, CONFIG.qualityLevels); gfx.applyMats(); };
   applyQuality();
   mark('quality');
   let fpsAcc = 0, fpsN = 0, fpsT = 0, lowCount = 0;
@@ -208,6 +213,7 @@ export async function start() {
     // dtMax===0：冻结模拟（e2e 固定 dt 测镜头时 scene.render 仍会触发本回调）
     if (G.dtMax === 0) return;
     const dt = Math.min(G.dtMax ?? 0.05, engine.getDeltaTime() / 1000);
+    gfx.update();
     // 自动驾驶（测试用）
     if (G.auto) {
       const a = G.auto, t = a.pts[a.i], p = player.position, dx = t[0] - p.x, dz = t[1] - p.z, d = Math.hypot(dx, dz);
@@ -390,13 +396,13 @@ export async function start() {
   east = new EastCtl({ scene, M, player, hud, seats, Audio, events, getStation: () => G.station });
   xmMetro = new XmMetro(scene, {
     player, Audio, events,
-    onTunnel: v => { G.inTunnel = v; scene.fogMode = v ? B.Scene.FOGMODE_LINEAR : B.Scene.FOGMODE_NONE; },
+    onTunnel: v => { G.inTunnel = v; R.setTunnel(v); },
     getRailway: () => east && east.xmn,
     onNewTrain: t => t.shadowMeshes && t.shadowMeshes.forEach(m => R.addShadowCaster(m))
   });
   fzMetro = new FzMetro(scene, {
     player, Audio, events,
-    onTunnel: v => { G.inTunnel = v; scene.fogMode = v ? B.Scene.FOGMODE_LINEAR : B.Scene.FOGMODE_NONE; },
+    onTunnel: v => { G.inTunnel = v; R.setTunnel(v); },
     getRailway: () => east && east.fzs,
     onNewTrain: t => t.shadowMeshes && t.shadowMeshes.forEach(m => R.addShadowCaster(m))
   });
@@ -423,6 +429,19 @@ export async function start() {
   { const hd = mapEl.querySelector('header'), b = document.createElement('button'); b.className = 'restart'; b.textContent = '回到起点'; b.setAttribute('aria-label', '回到起点');
     hd.insertBefore(b, hd.querySelector('.x'));
     pressable(b, () => { G.noSave = true; clearSave(); location.reload(); }); }
+  // 画质 Demo 面板 + 一键传送（只在广州地铁范围内：地面 / 站厅；在车上或外地先提示）
+  const gfxGo = async v => {
+    if (curMetro() || (east && east.cur) || G.aboard || G.inTunnel) { hud.toast('先回到广州的地面或站厅再传送哦', 2200); return false; }
+    if (G.mapOpen) closeMap();
+    if (G.code !== v.code) { hud.toast('正在前往' + (v.code === 'jnt' ? '纪念堂…' : '公园前…'), 1500); await new Promise(r => setTimeout(r, 30)); buildStation(v.code); }
+    if (player.view !== v.view) toggleView();
+    player.spawn(v.x, v.y, v.z, v.yaw); player.pitch = v.pitch ?? 0.08;
+    return true;
+  };
+  const demoPanel = installDemoPanel({ gfx, go: gfxGo });
+  window.__gfx = { gfx, go: id => gfxGo(require_view(id)), panel: demoPanel, get stats() { return gfx.stats; }, get state() { return gfx.state; },
+    bake: () => Object.fromEntries(Object.entries(gfx.shadowTex).map(([k, e]) => [k, { ms: e.ms, tris: e.tris, px: e.px, ext: e.ext, meshes: e.meshes }])) };
+  function require_view(id) { return (demoPanel && window.__gfxViews || []).find(v => v.id === id); }
   window.__game = {
     state: () => ({
       code: G.code, zone: G.zone.kind, pos: [player.position.x, player.position.y, player.position.z].map(v => +v.toFixed(2)), yaw: +player.yaw.toFixed(3), pitch: +player.pitch.toFixed(3),

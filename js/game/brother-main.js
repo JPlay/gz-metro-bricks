@@ -52,7 +52,7 @@ export function installBrother(deps) {
   api.buddy = (x, y, z, yaw = 0, mode = 'idle') => {
     if (buddy) { buddy.p.dispose(); buddy = null; }
     if (x === null || x === undefined) return null;
-    const kind = player.charKind === 'mingming' ? 'xingxing' : 'mingming', p = makePerson(kind, scene, M.paint, 'buddy');
+    const kind = player.charKind === 'mingming' ? 'xingxing' : 'mingming', p = makePerson(kind, scene, M.paintHero || M.paint, 'buddy');
     p.mesh.position.set(x, y, z); p.mesh.rotation.y = yaw; R.addShadowCaster && R.addShadowCaster(p.mesh);
     buddy = { p, mode }; return kind;
   };
