@@ -227,6 +227,7 @@ XHB = {'x': -322.0, 'z': 96.0}
 KIOSK['fzxm_B'] = {'code': 'fzxm', 'key': 'fzxm_B', 'n': 'B', 'x': XHB['x'], 'z': XHB['z'], 'park': True}
 XHPARK = box(-346, XHB['z'] - 10, -296, 172)
 ROADS.append({'id': 'xhpark', 'poly': XHPARK, 'plaza': True, 'park': True})
+GAPS.append(box(-322.6, 155.0, -313.4, 163.5))   # 观湖亭木栈桥落岸处：岸墙留口（栈桥两边自己有栏杆；口两侧各 ~1.5 m 无栏杆，湖边可下水）
 # 南后街南口（澳门桥北头）：一小段街 + 三坊七巷牌坊
 am = [b for b in BR if b['name'] == '澳门桥'][0]
 sd = 1 if am['n'][1] > 0 else -1; nx_, nz_ = am['n'][0] * sd, am['n'][1] * sd

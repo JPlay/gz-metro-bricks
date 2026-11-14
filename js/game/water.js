@@ -5,7 +5,7 @@
 import { pressable, hudHit } from './input.js';
 import { FZ_ATTR_HOLES } from '../world/fzAttr.js';
 
-const FZ_SURFACE = { fzdd: -2.6, fzxm: -0.45 };
+const FZ_SURFACE = { fzdd: -2.6 };
 
 function inBox(lx, lz, box) {
   const [x0, x1, z0, z1] = box;

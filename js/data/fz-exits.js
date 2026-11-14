@@ -43,7 +43,7 @@ Object.assign(FZ_EXITS, {
   fzgs: { n: 'A', x: 10, line: 2, road: '福马路', to: ['鼓山风景区'], toEn: ['Gushan Mountain Scenic Area'] },
   fzdl: { n: 'A', x: 10, line: 5, road: '', to: ['海峡奥体中心'], toEn: ['Straits Olympic Sports Center'] },
   fzdd: { n: 'C', x: 10, line: 1, road: '', to: ['上下杭'], toEn: ['Shangxiahang Historic District'] },
-  fzxm: { n: 'B', x: 10, line: 4, road: '', to: ['西湖公园', '福建博物院'], toEn: ['West Lake Park', 'Fujian Museum'],
+  fzxm: { n: 'B', x: 10, line: 4, road: '', to: ['西湖公园', '福建博物院'], toEn: ['West Lake Park', 'Fujian Museum'], attr: 'fzriver',   // 2A：西湖公园并进内河场景（B 口亭在公园牌楼南面）
     // 内河 1A：C 口出来是杨桥路白马河边（西水关码头，游船 A 线）；出口号示意（verified:false），街区见 js/world/fzRiver.js
     more: [{ n: 'C', x: -14, line: 4, road: '杨桥路', to: ['白马河', '西水关码头'], toEn: ['Baima River', 'Xishuiguan Pier'], attr: 'fzriver', verified: false }] },
   // 西洋 A：东西河边（黎明湖码头，游船 A 线）；出口号示意（verified:false）

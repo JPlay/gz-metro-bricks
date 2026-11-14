@@ -17,6 +17,7 @@ import { FZR, WY, RIVERS, BRIDGES, PIERS, KIOSKS, isWater, isLand, isDry, shoreF
 import { FzBoat } from '../game/fzBoat.js';
 import { Haze, RIVER_HAZE } from '../game/haze.js';
 import { FZ_EXITS } from '../data/fz-exits.js';
+import { xihuPark } from './fzAttr.js';
 import { FZ_LINES } from '../data/fz-lines.js';
 
 const B = window.BABYLON;
@@ -38,6 +39,24 @@ export class FzRiverStreet extends XmStreet {
     this.cellFns = new Map(); this.key = this.net === 'a' ? 'fzriver' : 'fzriver-' + this.net;
   }
   kiosk() {}   // 两个亭子在 river() 末尾画（全局几何，不进远近格子）
+  /** 2A：西门 B → 西湖公园（原老街区并进来）：牌楼 / 草地 / 沿湖步道 / 观湖亭栈桥 / 远处柳堤和开化寺。
+   *  fzAttr.xihuPark 用局部坐标（原点 = 西门 B 亭）写的：这里给它一层平移代理（几何 xf.ox/oz + 碰撞 + 贴图）。 */
+  xihuPark() {
+    const K = KIOSKS.fzxm_B, ox = K.x, oz = K.z, real = this.kit, A = this.atlas, touched = new Set();
+    const g = n => { const G = real.g(n); if (!touched.has(G)) { touched.add(G); G.xf = { cx: 0, cz: 0, s: 1, sy: 1, ox, oz }; } return G; };
+    const pk = { g, get solid() { return g('paint'); }, M: real.M, root: real.root,
+      col: (x, y, z, ...r) => real.col(x + ox, y, z + oz, ...r), colSlab: (x0, x1, y0, y1, z0, z1, ...r) => real.colSlab(x0 + ox, x1 + ox, y0, y1, z0 + oz, z1 + oz, ...r) };
+    const pa = { draw: (...a) => A.draw(...a), quad: (x, y, z, ...r) => A.quad(x + ox, y, z + oz, ...r) };
+    // 湖岸线：lakeShore 段里落在公园这一带的，取该 x 处最南的 z（局部）
+    const segs = FZR.lakeShore.filter(([x0, z0, x1, z1]) => Math.max(z0, z1) > oz + 20 && Math.min(z0, z1) < oz + 140 && Math.max(x0, x1) > ox - 30 && Math.min(x0, x1) < ox + 30);
+    const lakeX1 = Math.max(...segs.map(([x0, , x1]) => Math.max(x0, x1))) - ox;
+    const shore = x => { const X = x + ox; let zb = Infinity;
+      for (const [x0, z0, x1, z1] of segs) { if ((X - x0) * (X - x1) > 0 || x0 === x1) continue; zb = Math.min(zb, z0 + (z1 - z0) * (X - x0) / (x1 - x0)); }
+      return zb === Infinity ? 76 : zb - oz; };
+    const r = xihuPark({ kit: pk, atlas: pa }, { WY: LOCK ? WY + LOCK.rise : WY, shore, x0: -24, x1: 26, z1: 76, lakeX1, bwX: 4, cz: 149, cx1: 80 });
+    for (const G of touched) G.xf = null;
+    this.decks = r.decks.map(([x0, x1, z0, z1]) => [x0 + ox, x1 + ox, z0 + oz, z1 + oz]);
+  }
   /** W → 世界 */
   wx(x) { return x + this.kit.root.position.x; }
   wz(z) { return z + this.kit.root.position.z; }
@@ -47,7 +66,7 @@ export class FzRiverStreet extends XmStreet {
   river() {
     const k = this.kit;
     this.facades();
-    this.walls(); this.bridges(); this.piers(); this.stepsDown(); this.roads(); this.houses(); this.trees(); this.promenade(); if (FZR.sfqx) this.sanfang(); if (FZR.lakeBox) this.backdrops(); if (LOCK) this.lockStatic();
+    this.walls(); this.bridges(); this.piers(); this.stepsDown(); this.roads(); this.houses(); this.trees(); this.promenade(); if (FZR.sfqx) this.sanfang(); if (FZR.lakeBox) this.backdrops(); if (LOCK) this.lockStatic(); if (KIOSKS.fzxm_B) this.xihuPark();
     k.group('g0');   // 上面直接画的东西（桥、码头、台阶、马路、牌坊…）常开：单独封一组，别被并进第一个细节格子
     // 近处细节：每格一个组（finish 时每组一个节点，tick 里按距离开关）
     this.cellKeys = [];
@@ -509,6 +528,7 @@ export class FzRiverStreet extends XmStreet {
     const w = this.toW(p);
     if (!isWater(w.x, w.z) && !inChamber(w.x, w.z)) return null;
     if (this.boat && this.boat.contains(w.x, w.z)) return null;
+    if (this.decks && p.y > -0.6 && this.decks.some(([x0, x1, z0, z1]) => w.x >= x0 && w.x <= x1 && w.z >= z0 && w.z <= z1)) return null;   // 观湖亭栈桥 / 平台上
     const s = shoreFor(w.x, w.z); if (!s) return null;
     return { key: this.key, surfaceY: levelAt(w.x, w.z), shore: { x: this.wx(s.x), y: 0.05, z: this.wz(s.z), yaw: s.yaw } };
   }
