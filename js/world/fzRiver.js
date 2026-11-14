@@ -457,7 +457,7 @@ export class FzRiverStreet extends XmStreet {
     for (const q of PIERS.filter(q => q.shared && q.deck)) {
       const top = levelAt(q.berth[0], q.berth[1]) + 0.45, G = P, Pp = q.deck.p, I = q.deck.i, base = G.p.length / 3, wood = hex('#9C7A55');
       for (let j = 0; j < Pp.length; j += 2) G.push(Pp[j], top, Pp[j + 1], 0, 1, 0, wood);
-      for (let j = 0; j < I.length; j += 3) G.i.push(base + I[j], base + I[j + 2], base + I[j + 1]);
+      for (let j = 0; j < I.length; j += 3) G.i.push(base + I[j], base + I[j + 1], base + I[j + 2]);   // 同岸地三角网的绕向（gen.py ccw_up）：朝上
       // 浮箱侧面（深色）：沿栈道外轮廓一圈
       const R = q.deckRing, n = R.length / 2;
       for (let j = 0; j < n; j++) { const ax = R[2 * j], az = R[2 * j + 1], bx = R[(2 * j + 2) % R.length], bz = R[(2 * j + 3) % R.length]; P.quad([ax, top - 0.01, az], [bx, top - 0.01, bz], [bx, top - 0.48, bz], [ax, top - 0.48, az], hex('#3E4549')); P.quad([bx, top - 0.01, bz], [ax, top - 0.01, az], [ax, top - 0.48, az], [bx, top - 0.48, bz], hex('#3E4549')); }
