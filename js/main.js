@@ -399,7 +399,7 @@ export async function start() {
   fzMetro = new FzMetro(scene, {
     player, Audio, events,
     onTunnel: v => { G.inTunnel = v; scene.fogMode = v ? B.Scene.FOGMODE_LINEAR : B.Scene.FOGMODE_NONE; },
-    getRailway: () => east && east.fzs,
+    getRailway: () => east && (east.fzs || (east.rails && east.rails.fz.plat(true))),
     onNewTrain: t => t.shadowMeshes && t.shadowMeshes.forEach(m => R.addShadowCaster(m))
   });
   east.xmMetro = xmMetro; east.fzMetro = fzMetro;

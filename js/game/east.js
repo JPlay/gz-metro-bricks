@@ -429,11 +429,31 @@ export class EastCtl {
     this.hud.toast('到站：' + CITIES[R.dest].stn, 2400);
     this.events.emit('emu', { phase: 'arrive', dest: R.dest }); this.events.emit('ride', { phase: 'arriveRail', to: R.dest });
   }
+  /** 只坐地铁到福州南 / 厦门北时，国铁站房可能还没建、cur 也还没有。接上以后走上换乘楼梯才能进出国铁出站层和广场。 */
+  hookRailMetro() {
+    for (const [side, r] of Object.entries(this.rails)) {
+      const Mt = r.metro();
+      if (!Mt || Mt.code !== r.rail || !Mt.station) continue;
+      this.side = side;
+      if (side === 'xm' && !this.xmn) this.xmn = new XmnPlatform(this.scene);
+      const plat = side === 'fz' ? r.plat(true) : r.plat();
+      if (plat && plat.mode !== 'solo') plat.show('solo');
+      if (plat && plat.station) {
+        plat.station.setEnabled(true);
+        if (plat.station.onArea) plat.station.onArea('metro');
+        if (plat.solo && plat.solo.root) plat.solo.root.setEnabled(false);
+      }
+      this.cur = { st: this.getStation(), loc: r.mloc, area: 'metro' };
+      return true;
+    }
+    return false;
+  }
   update(dtWall = 0.016) {
     const st = this.getStation(), pl = this.player, p = pl.position;
     if (this.ride) this.tick(dtWall);
     if (this.doorOpenT > 0 && this.interior) { this.doorOpenT -= dtWall; if (this.doorOpenT < 1.25 && !this._openSfx) { this._openSfx = true; this.Audio.sfx('doorOpen'); } this.interior.setDoor(Math.max(0, this.doorOpenT / 1.25)); if (this.doorOpenT <= 0) this._openSfx = false; }
     if (this.fastBtn) { const show = !!(this.ride && this.ride.t > 4 && this.cur && this.cur.loc === 'car'); if (this.fastBtn.hidden === show) this.fastBtn.hidden = !show; }
+    if (!this.cur) this.hookRailMetro();
     if (!this.cur) {
       if (this.interior && this.interior.active) this.interior.setEnabled(false);
       if (!st || !st.gze || pl.seat || p.y < -1 || p.y > 2 || p.x > 400) return null;
@@ -467,8 +487,9 @@ export class EastCtl {
           Mt.exitToRailway(pl, true); this.cur.loc = r.loc; this.cur.area = 'passage';
           this.hud.toast(r.stn[0] + ' · 换乘地铁通道', 1800);
         }
-        // 楼梯 / 换乘通道西段（x < -60）才需要国铁站房（站厅地面、楼梯上半段）；站台上关掉省 draw
-        if (Mt && Mt.code === r.rail && plat && plat.station) { const on = lx < -60; if (plat.station.root.isEnabled() !== on) plat.station.setEnabled(on); }
+        // 人在换乘站地铁：国铁出站层 / 出口楼梯 / 广场必须开着（福州南地铁没有街区出口）。
+        // 不要按 lx < -60 关掉整座站房，否则从地铁到达再往东广场走会走进空洞。
+        if (Mt && Mt.code === r.rail && plat && plat.station && !plat.station.root.isEnabled()) plat.station.setEnabled(true);
         // 人已经坐上地铁离开换乘站：关掉国铁站台，但保留 side 方便回程
         if (Mt && Mt.code && Mt.code !== r.rail && plat) plat.show(null);
       }
