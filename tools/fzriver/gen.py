@@ -914,7 +914,9 @@ for side in (-1, 1): tree_run('at', side, AT_A_LEN + RNG_D.uniform(1, 6), AT_END
 for t_ in TREES[_nT3:]: t_.append(1)
 for ds_ in (-7.5, 7.5):   # 古榕：石牌两边，粗一号
   (_gx, _gz), _, _gn = at_s('at', _zs + ds_, _ns * (HW['at'] + 1.7))
-  if not any(math.dist((_gx, _gz), (t_[0], t_[1])) < 6 for t_ in TREES[_nT3:]): TREES.append([round(_gx, 2), round(_gz, 2), round(-_gn[0] * _ns, 3), round(-_gn[1] * _ns, 3), 1.3, 'zzf', 1])
+  nb_ = [t_ for t_ in TREES[_nT3:] if math.dist((_gx, _gz), (t_[0], t_[1])) < 6]
+  if nb_: nb_[0][4] = 1.3; nb_[0][5] = 'zzf'   # 旁边本来就有一棵（2D 新种的）：换成古榕
+  else: TREES.append([round(_gx, 2), round(_gz, 2), round(-_gn[0] * _ns, 3), round(-_gn[1] * _ns, 3), 1.3, 'zzf', 1])
 # 南后街步道（牌坊 → 南后街南头）两边一排榕树（树冠朝步道）+ 步道两边各两座白墙黛瓦民居（四面贴立面，只看）
 for sv in (-1, 1):
   a_ = 15.0
