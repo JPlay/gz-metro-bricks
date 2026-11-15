@@ -24,11 +24,11 @@ E2D = any(x.startswith('d_') for x in STAGES)   # 2D 安泰河东段 + 东街口
 BUDGET = {'draws': 50, 'tris': 90000}
 # 3C 夜景：FZQS='&t=night' 整套在夜里跑（同一预算 ≤ 90k / 50）；默认 '&t=day'（固定白天，不随跑测试时的本地时间变）
 QS = os.environ.get('FZQS', '&t=day'); NIGHT = 't=night' in QS
-NSTATE = """(async () => { const { Render } = await import('/js/core/render.js'); const g = __game, s = g.scene, S = g.fzMetro.street, Rn = Render.active, M = s.getMaterialByName('glow'), sea = s.getMaterialByName('paint@sea'),
+NSTATE = """(async () => { const { Render } = await import('/js/core/render.js'); const g = __game, s = g.scene, S = g.fzMetro.street, Rn = Render.active, M = s.getMaterialByName('glow'), sea = s.getMaterialByName('paint@sea'), /* 河网没建过时 paint@sea 还不存在：拿它的克隆源 paint 的白天值作基准（bucketMat 克隆出来就是这个值） */
   L = s.getMeshByName('fzNightLights'), sky = s.getMeshByName('sky');
   return { info: S ? S.info().night : null, street: !!S, render: !!(Rn && Rn.night), fog: [s.fogMode, s.fogStart, s.fogEnd, +s.fogColor.r.toFixed(4), +s.fogColor.g.toFixed(4), +s.fogColor.b.toFixed(4)],
     clear: [s.clearColor.r, s.clearColor.g, s.clearColor.b].map(v => +v.toFixed(4)), sky: sky && sky.material.emissiveTexture ? sky.material.emissiveTexture.name || sky.material.emissiveTexture.url : null,
-    glow: M ? [M.emissiveColor.r, M.emissiveColor.g, M.emissiveColor.b] : null, sea: sea ? [sea.emissiveColor.r, sea.emissiveColor.g, sea.emissiveColor.b] : null,
+    glow: M ? [M.emissiveColor.r, M.emissiveColor.g, M.emissiveColor.b] : null, sea: (W => W ? [W.emissiveColor.r, W.emissiveColor.g, W.emissiveColor.b, W.environmentIntensity] : null)(sea || s.getMaterialByName('paint')),
     lights: L ? (L.isEnabled() ? 'on' : 'off') : 'none', shadow: Rn ? Rn.sun.shadowEnabled : null, lightsTris: L ? L.getTotalIndices() / 3 : 0 }; })()"""
 NB = {}
 async def night_check(pg, tag):
