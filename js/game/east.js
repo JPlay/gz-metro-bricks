@@ -439,7 +439,8 @@ export class EastCtl {
       const plat = side === 'fz' ? r.plat(true) : r.plat();
       if (plat && plat.mode !== 'solo') plat.show('solo');
       if (plat && plat.station) {
-        plat.station.setEnabled(true);
+        const need = this.player.position.y > -10 || (this.player.position.x - r.O.x) < -60;
+        plat.station.setEnabled(need);
         if (plat.station.onArea) plat.station.onArea('metro');
         if (plat.solo && plat.solo.root) plat.solo.root.setEnabled(false);
       }
@@ -487,9 +488,12 @@ export class EastCtl {
           Mt.exitToRailway(pl, true); this.cur.loc = r.loc; this.cur.area = 'passage';
           this.hud.toast(r.stn[0] + ' · 换乘地铁通道', 1800);
         }
-        // 人在换乘站地铁：国铁出站层 / 出口楼梯 / 广场必须开着（福州南地铁没有街区出口）。
-        // 不要按 lx < -60 关掉整座站房，否则从地铁到达再往东广场走会走进空洞。
-        if (Mt && Mt.code === r.rail && plat && plat.station && !plat.station.root.isEnabled()) plat.station.setEnabled(true);
+        // 人在换乘站地铁：靠近西段楼梯或已经上到出站层 / 广场时打开国铁站房（有地面，不会走进空洞）；
+        // 还在站台深处时关掉，避免地铁站台 + 整座站房一起画，超出 iPad 预算。
+        if (Mt && Mt.code === r.rail && plat && plat.station) {
+          const need = p.y > -10 || lx < -60;
+          if (plat.station.root.isEnabled() !== need) plat.station.setEnabled(need);
+        }
         // 人已经坐上地铁离开换乘站：关掉国铁站台，但保留 side 方便回程
         if (Mt && Mt.code && Mt.code !== r.rail && plat) plat.show(null);
       }
