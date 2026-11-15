@@ -172,8 +172,8 @@ async def ride(pg, D, leg, target, shots=False, bshots=None):
     await pg.evaluate('window.__clr.min = 99; window.__clr.per = {}')
     CR = D['clrRepC'] if b0.get('rid') == 'C' else D['clrRep']   # 2C：C 线桥的里程按 C 线
     sbm5 = (CR.get('bm5') or {}).get('s') if b0.get('rid') != 'C' else None; took = set(); perfs = []
-    t0 = time.time(); g0 = await pg.evaluate('window.__gt'); a0 = await pg.evaluate('window.__acc ? window.__acc.goT : 0'); done = False
-    while time.time() - t0 < 2400:
+    t0 = time.monotonic(); g0 = await pg.evaluate('window.__gt'); a0 = await pg.evaluate('window.__acc ? window.__acc.goT : 0'); done = False
+    while time.monotonic() - t0 < 2400:
         b = await boat(pg)
         if b['stats']['arrives'] > arr0 and b['phase'] == 'dock': done = True; break
         if await pg.evaluate('window.__gt') - g0 > 700: break
@@ -197,7 +197,7 @@ async def ride(pg, D, leg, target, shots=False, bshots=None):
         await asyncio.sleep(0.25 if bshots else 0.5)
     b = await boat(pg); j = await jget(pg); c = await pg.evaluate('window.__clr')
     gs = round(await pg.evaluate('window.__gt') - g0, 1); goT = await pg.evaluate('window.__acc ? window.__acc.goT : null')
-    R['legs'].append({'leg': leg, 'from': b0['at'], 'to': b['at'], 'dir': b['dir'], 'stats': b['stats'], 'jump': j['max'], 'clr': c, 'secs': round(time.time() - t0), 'gameSecs': gs, 'goSecs': round(goT - a0, 1) if goT is not None else None, 'log': b['log']})
+    R['legs'].append({'leg': leg, 'from': b0['at'], 'to': b['at'], 'dir': b['dir'], 'stats': b['stats'], 'jump': j['max'], 'clr': c, 'secs': round(time.monotonic() - t0), 'gameSecs': gs, 'goSecs': round(goT - a0, 1) if goT is not None else None, 'log': b['log']})
     ok(f'{leg}:arrived:{target}', done and b['at'] == target, b)
     ok(f'{leg}:smooth', j['max'] < TELEPORT and b['stats']['maxStep'] < (1.45 if E1B or E2B or E2C else 1.0) and b['stats']['maxYawStep'] < 0.12, {'jump': j['max'], 'stats': b['stats']})
     ok(f'{leg}:canopyClearance', c['min'] >= D['clr'] - 0.02, c)
@@ -919,10 +919,10 @@ async def main():
         await shot(pg, f'pier_sign_xishuiguan_base_{k}')
       await pg.evaluate("__game.toggleView()")
       if await board(pg, D, 'xsg', 'shotleg'):
-        sbm5 = D['clrRep']['bm5']['s']; took = set(); t0 = time.time(); b0 = await boat(pg)
+        sbm5 = D['clrRep']['bm5']['s']; took = set(); t0 = time.monotonic(); b0 = await boat(pg)
         # 船从西水关往黎明湖（s 增大）；船中心在桥前 9 / 5 / 2 m、桥下各拍一张，第一人称（拱在正前方 / 头顶）+ 第三人称
         marks = [(9, 'ahead9'), (5, 'ahead5'), (2, 'ahead2'), (-1, 'under')]
-        while time.time() - t0 < 600 and len(took) < len(marks):
+        while time.monotonic() - t0 < 600 and len(took) < len(marks):
           bb = await boat(pg); d = sbm5 - bb['s']
           for m, name in marks:
             if name not in took and d <= m:
