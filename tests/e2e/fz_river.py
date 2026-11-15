@@ -695,7 +695,8 @@ D2INFO = """(async () => { const M = await import('/js/data/fz-river.js'); const
   const P = (s, lat) => { const a = L.at(s, lat); return [a.x, a.z]; };
   const north = []; for (let s = D.atALen + 6; s < L.len - 4; s += 40) north.push(P(s, n * 9));
   return { d2: D, gate: F.sfqx, len: L.len, n, north, south: [P(L.len - 6, -n * 9), P(D.atALen + 30, -n * 9)], mEnd: P(L.len - 3, n * 9), mEndS: P(L.len - 3, -n * 9),
-    jm: M.BRIDGES.find(b => b.id === D.jm), mouthView: P(L.len - 16, 0), kiosk: M.KIOSKS.fzdjk }; })()"""
+    jm: M.BRIDGES.find(b => b.id === D.jm), mouthView: P(L.len - 16, 0), kiosk: M.KIOSKS.fzdjk,
+    zzfView: P(D.zzf.s, -n * 9), zzfNear: P(D.zzf.s + 4, L.project(...D.zzf.sign).lat), zzfFronts: P(D.zzf.s + 60, -n * 9), zzfFrontsT: P(D.zzf.s + 60, n * 14) }; })()"""
 async def plain(pg, pts, label):
     """直线真走（不用 A*）：每段走到才算；返回 (走到, 最大单帧位移)"""
     await jreset(pg); r = await legs(pg, pts, True, 8.0); j = await jget(pg); s = await st(pg)
@@ -746,13 +747,24 @@ async def run_2d(pg):
         # 牌坊 → 安泰河东段北岸（朱紫坊）→ 津门桥来回 → 琼东河口（矮墙 + 远景水面）
         okg = await go(pg, *(await WP(*lk(-6))), '→ 三坊七巷南口牌坊外')
         ok('d_east:reach gate river side', okg)
-        Z = I['d2']['zzf']; f = Z['f']; sg = Z['sign']
-        zv = await WP(sg[0] + f[0] * 4.5, sg[1] + f[1] * 4.5)
-        okz = await go(pg, *zv, '→ 朱紫坊石牌'); ok('d_east:walk to 朱紫坊 sign', okz and await near(pg, *zv, 1.2))
-        R['perf']['d2:zzf'] = await sample(pg, 'd2:zzf')
+        Z = I['d2']['zzf']; sg = Z['sign']
+        zo = await WP(*I['zzfView']); okv = await go(pg, *zo, '→ 朱紫坊对岸（看石牌正面）'); ok('d_east:walk to the south bank across from 朱紫坊', okv and await near(pg, *zo, 1.5))
         if OUT:
-            await look(pg, *(await WP(*sg)), 0.12); await shot(pg, 'd2_zhuzifang_stone_sign_front')
+            await pg.evaluate("if (__game.player.view !== 'first') __game.toggleView()")
+            await look(pg, *(await WP(*sg)), 0.02); await shot(pg, 'd2_zhuzifang_stone_sign_front')
+            await go(pg, *(await WP(*I['zzfFronts'])), '→ 朱紫坊沿河立面对岸'); await look(pg, *(await WP(*I['zzfFrontsT'])), 0.06); await shot(pg, 'd2_zhuzifang_north_bank_fronts_closed_doors')
+            await pg.evaluate("if (__game.player.view !== 'third') __game.toggleView()")
+        R['perf']['d2:zzf'] = await sample(pg, 'd2:zzf')
+        zv = await WP(*I['zzfNear']); okz = await go(pg, *zv, '→ 朱紫坊石牌旁（北岸）'); ok('d_east:walk to 朱紫坊 sign (north bank)', okz and await near(pg, *zv, 1.5))
+        if OUT: await look(pg, *(await WP(*sg)), 0.1); await shot(pg, 'd2_zhuzifang_sign_from_north_bank')
         jm = I['jm']
+        if OUT:
+            await pg.evaluate("if (__game.player.view !== 'first') __game.toggleView()")
+            for tag, sv in (('w', -1), ('e', 1)):
+                vp = await pg.evaluate(f"(async () => {{ const M = await import('/js/data/fz-river.js'); const a = M.RIVERS.at.line.at({jm['s']} + {sv} * 24, {I['n']} * 7.6); return [a.x, a.z]; }})()")
+                if await go(pg, *(await WP(*vp)), f'→ 津门桥 front {tag}'):
+                    await look(pg, *(await WP(jm['x'], jm['z'])), -0.02); await shot(pg, f'd2_jinmen_bridge_front_{tag}')
+            await pg.evaluate("if (__game.player.view !== 'third') __game.toggleView()")
         await bridges_stage(pg, D, [jm['id']], perf_at=(jm['id'],), shots={jm['id']: 'd2_jinmen_bridge_on_deck'})
         await hud_shore_red(pg, 'd_east:jinmen')
         e1 = await WP(*I['mEnd']); oke = await go(pg, *e1, '→ 琼东河口（北岸尽头）')
