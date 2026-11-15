@@ -598,7 +598,10 @@ async def run_2c(pg):
             if OUT:   # 上海西码头往下游看：工业路桥（桥下步道）
                 await pg.evaluate("if (__game.player.view!=='first') __game.toggleView()"); await look_s(pg, P['s'] + 40, 0, 0.0); await shot(pg, 'boat_at_shw_looking_gongye_bm14'); await pg.evaluate("__game.toggleView()")
             await ride(pg, D, 'cleg1', 'xsgc', bshots=BS if OUT else None)
-            caps = await pg.evaluate('window.__caps.slice(-12)')
+            for _ in range(16):   # 到站广播在靠稳那一帧之后才出：低帧率（2–3 fps）下多等几秒
+                caps = await pg.evaluate('window.__caps.slice(-12)')
+                if any(c[0] == 'voice.fz.boat.arrive.xsgc.end.zh' for c in caps): break
+                await asyncio.sleep(0.5)
             ok('cleg1:announce depart C线 开往西水关 + arrive 西水关 终点', any(c[0] == 'voice.fz.boat.c.depart.xsgc.zh' for c in caps) and any(c[0] == 'voice.fz.boat.arrive.xsgc.end.zh' for c in caps), caps)
             hud = await pg.evaluate("(() => { const h = __game.fzMetro.street.riverHud(__game.player); return h; })()")
             col = await pg.evaluate("getComputedStyle(document.getElementById('where')).getPropertyValue('--line').trim()")
