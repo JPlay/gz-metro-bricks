@@ -7,7 +7,7 @@
  *   报站只有普通话 + 英语（小美：游船广播不播福州话）。
  */
 import { Kit } from '../world/kit.js';
-import { hex } from '../core/geo.js';
+import { hex, Geo } from '../core/geo.js';
 import { WY, BOAT, STOPS, ROUTE, ROUTE_ID, routePose, boatStep, levelAtS, LOCK, LOCK_STATE, BOAT_DWELL, BOAT_STAY, withRoute } from '../data/fz-river.js';
 export { BOAT_DWELL };
 import { say } from '../audio/announcements.js';
@@ -79,7 +79,7 @@ export class FzBoat {
       const lz = e * (L + 0.1);
       P.box(0, RU - 0.155, lz, 0.018, 0.17, 0.018, dark, 0, 0, 0, 1, NO);                       // 绳：横梁底 RU-0.08 → 灯笼顶盖
       P.box(0, RU - 0.245, lz, 0.1, 0.03, 0.1, hex('#C9A13B'), 0, 0, 0, 1, NO);                  // 顶盖
-      P.ellipsoid(0, RU - 0.37, lz, 0.2, 0.24, 0.2, hex('#D7262E'), 1);                          // 灯笼
+      const v0 = P.p.length / 3; P.ellipsoid(0, RU - 0.37, lz, 0.2, 0.24, 0.2, hex('#D7262E'), 1); (this.lanternV || (this.lanternV = [])).push([v0, P.p.length / 3]);   // 灯笼（3C：记下顶点范围，夜里点亮）
       P.box(0, RU - 0.51, lz, 0.025, 0.06, 0.025, hex('#C9A13B'), 0, 0, 0, 1, NO);               // 底穗
     }
     // 碰撞：甲板 + 舷墙（中门留空）+ 两头 + 停靠时伸出去的跳板
@@ -179,5 +179,28 @@ export class FzBoat {
     this.place(dt);
   }
   info() { return { rid: this.rid, holdTerm: !!this.holdTerm, phase: this.phase, i: this.i, at: STOPS[this.i].id, target: STOPS[this.target].id, s: +this.s.toFixed(2), v: +this.v.toFixed(2), dir: this.dir, seatsFree: this.seats.filter(s => s.free).length, stats: { ...this.stats, maxStep: +this.stats.maxStep.toFixed(3), maxYawStep: +this.stats.maxYawStep.toFixed(4) }, log: this.log.slice(-12), lock: LOCK ? { st: this.lk ? this.lk.st : null, gU: +LOCK_STATE.gU.toFixed(2), gD: +LOCK_STATE.gD.toFixed(2), lvl: +LOCK_STATE.lvl.toFixed(3), y0: +this.y0.toFixed(3) } : null, x: +this.node.position.x.toFixed(2), z: +this.node.position.z.toFixed(2) }; }
-  dispose() { this.kit.dispose(); this.node.dispose(); }
+  /** 3C 夜景：篷檐一圈暖光带 + 船头灯笼微亮，都并进船自己的漆面网格（夜里追加光带顶点、换一份带自发光贴图的材质克隆）——不加绘制。
+   *  白天：原样换回白天的顶点数据和共用漆面材质（同一份数组，白天像素 / 面数不变）。 */
+  setNight(on) {
+    on = !!on; if (on === !!this.nightOn) return; this.nightOn = on;
+    const m = this.kit.byBucket && this.kit.byBucket.paint; if (!m) return;
+    if (!this._nd) {
+      const K = B.VertexBuffer, day = { pos: m.getVerticesData(K.PositionKind), nrm: m.getVerticesData(K.NormalKind), col: m.getVerticesData(K.ColorKind), uv: m.getVerticesData(K.UVKind), idx: m.getIndices(), mat: m.material };
+      const g = new Geo(), W = BOAT.canopyHalfW, L = BOAT.canopyHalfLen, y = BOAT.roofUnder - 0.1, c = hex('#FFE2B8');
+      for (const sx of [-1, 1]) g.box(sx * (W + 0.025), y, 0, 0.02, 0.05, 2 * L + 0.32, c, 0, 0, 0, 1, NO);
+      for (const e of [-1, 1]) g.box(0, y, e * (L + 0.18), 2 * W + 0.06, 0.05, 0.02, c, 0, 0, 0, 1, NO);
+      const nv = day.pos.length / 3, uv = new Array(nv * 2 + g.p.length / 3 * 2);
+      for (let i = 0; i < nv; i++) { uv[i * 2] = 0.125; uv[i * 2 + 1] = 0.5; }
+      for (const [a, b] of this.lanternV || []) for (let i = a; i < b; i++) uv[i * 2] = 0.625;
+      for (let i = nv; i < nv + g.p.length / 3; i++) { uv[i * 2] = 0.875; uv[i * 2 + 1] = 0.5; }
+      const tex = new B.DynamicTexture('fzBoatNightTex' + this.rid, { width: 8, height: 2 }, this.scene, false, B.Texture.NEAREST_SAMPLINGMODE), cx = tex.getContext();
+      cx.fillStyle = '#000'; cx.fillRect(0, 0, 8, 2); cx.fillStyle = '#9A3A26'; cx.fillRect(4, 0, 2, 2); cx.fillStyle = '#FFC27A'; cx.fillRect(6, 0, 2, 2); tex.update(false);
+      const mat = day.mat.clone('fzBoatNight' + this.rid); mat.emissiveTexture = tex; mat.emissiveColor = new B.Color3(1, 1, 1);
+      this._nd = { day, mat, night: { pos: [...day.pos, ...g.p], nrm: [...day.nrm, ...g.n], col: [...day.col, ...g.c.map((v, i) => (i % 4 === 3 ? v : Math.pow(v, 2.2)))], uv, idx: [...day.idx, ...g.i.map(v => v + nv)] } };
+    }
+    const K = B.VertexBuffer, d = on ? this._nd.night : this._nd.day;
+    m.setVerticesData(K.PositionKind, d.pos, false); m.setVerticesData(K.NormalKind, d.nrm, false); m.setVerticesData(K.ColorKind, d.col, false); m.setVerticesData(K.UVKind, on ? d.uv : this._nd.day.uv, false); m.setIndices(d.idx);
+    m.material = on ? this._nd.mat : this._nd.day.mat; m.refreshBoundingInfo();
+  }
+  dispose() { if (this._nd) { this.setNight(false); this._nd.mat.emissiveTexture.dispose(); this._nd.mat.dispose(); this._nd = null; } this.kit.dispose(); this.node.dispose(); }
 }

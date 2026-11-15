@@ -13,6 +13,7 @@ const lerp = (a, b, t) => a + (b - a) * t;
 export class Render {
   constructor(engine, scene, cam) {
     this.engine = engine; this.scene = scene; this.cam = cam; this.tier = -1; this.indoor = 0; this.indoorTarget = 0; this.probes = [];
+    Render.active = this; this.night = null;   // 3C：街区（福州内河）通过 Render.active.setNight 切夜景；null = 白天（原代码路径）
     scene.clearColor = new B.Color4(0.62, 0.78, 0.92, 1);
     const env = this.env = B.CubeTexture.CreateFromPrefilteredData('vendor/env/environmentSpecular.env', scene);
     env.name = 'env'; scene.environmentTexture = env; scene.environmentIntensity = 1.0;
@@ -55,6 +56,31 @@ export class Render {
     if (f > 0.5) this.preloadIndoor();
     const want = f > 0.5 && this.envIn ? this.envIn : this.env; if (s.environmentTexture !== want) s.environmentTexture = want;
     this.sky.setEnabled(f < 0.98);
+    if (this.night) this.applyNight(1 - f);
+  }
+  /** 3C 夜景：在白天的户外 / 室内插值之上，按户外权重 w 再插到夜里的灯光（没有点光源 / 聚光灯） */
+  applyNight(w) {
+    const N = this.night, h = this.hemi, sun = this.sun, C = (a) => new B.Color3(a[0], a[1], a[2]);
+    h.intensity = lerp(h.intensity, N.hemi, w); h.diffuse = B.Color3.Lerp(h.diffuse, C(N.hemiColor), w); h.groundColor = B.Color3.Lerp(h.groundColor, C(N.hemiGround), w);
+    sun.intensity = lerp(sun.intensity, N.moon, w); sun.diffuse = B.Color3.Lerp(sun.diffuse, C(N.moonColor), w);
+    const d = B.Vector3.Lerp(sun.direction.clone(), new B.Vector3(N.moonDir[0], N.moonDir[1], N.moonDir[2]).normalize(), w).normalize(); sun.direction.copyFrom(d);
+    this.scene.environmentIntensity = lerp(this.scene.environmentIntensity, N.env, w);
+  }
+  /** 3C：cfg = js/game/night.js NIGHT.render 切夜景；null = 回白天（天空贴图、clearColor、阴影、灯光全部原样还原） */
+  setNight(cfg) {
+    const s = this.scene, sm = this.sky.material;
+    if (cfg && !this.night) {
+      this._day = { clear: s.clearColor.clone(), skyTex: sm.emissiveTexture };
+      if (!this._nightSky || this._nightSkyUrl !== cfg.sky) {
+        const t = this._nightSky = new B.Texture(cfg.sky, s, false, false, B.Texture.TRILINEAR_SAMPLINGMODE); t.coordinatesMode = B.Texture.FIXED_EQUIRECTANGULAR_MODE; t.level = 1.0; this._nightSkyUrl = cfg.sky;
+      }
+      sm.emissiveTexture = this._nightSky; s.clearColor = new B.Color4(cfg.clear[0], cfg.clear[1], cfg.clear[2], 1);
+    } else if (!cfg && this.night) {
+      const D = this._day; sm.emissiveTexture = D.skyTex; s.clearColor = D.clear; this._day = null;
+    }
+    this.night = cfg || null;
+    this.applyZone(this.indoor);
+    const v = !!this.wantShadows && !this.noSunShadow && !this.night; if (this.sun.shadowEnabled !== v) this.sun.shadowEnabled = v;
   }
   /** 室内影棚环境贴图：首屏之后空闲时再加载（不占加载时间） */
   preloadIndoor() {
@@ -71,12 +97,12 @@ export class Render {
   }
   addShadowCaster(m) { this.sg.addShadowCaster(m, false); }
   /** 地下车站里关掉太阳阴影（地下没有太阳；人物脚下有圆形影子），省掉阴影贴图那一遍的绘制 */
-  setSunShadow(on) { this.noSunShadow = !on; const v = !!this.wantShadows && on; if (this.sun.shadowEnabled !== v) this.sun.shadowEnabled = v; }
+  setSunShadow(on) { this.noSunShadow = !on; const v = !!this.wantShadows && on && !this.night; if (this.sun.shadowEnabled !== v) this.sun.shadowEnabled = v; }
   setTier(t, quality) {
     if (t === this.tier) return; this.tier = t;
     const q = quality[t], dpr = window.devicePixelRatio || 1, s = this.scene;
     this.engine.setHardwareScalingLevel(1 / Math.min(dpr, q.scale));
-    this.wantShadows = !!q.shadows; this.sun.shadowEnabled = this.wantShadows && !this.noSunShadow;
+    this.wantShadows = !!q.shadows; this.sun.shadowEnabled = this.wantShadows && !this.noSunShadow && !this.night;
     setNormalMaps(!!q.normals);
     // 后期
     if (q.post && !this.pipeline) {
