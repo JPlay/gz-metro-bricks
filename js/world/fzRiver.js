@@ -872,7 +872,9 @@ export class FzRiverStreet extends XmStreet {
     const k = this.kit, ex = [FZ_EXITS[K.code], ...(FZ_EXITS[K.code].more || [])].find(e => e.n === K.n) || FZ_EXITS[K.code];
     const lc = (FZ_LINES[ex.line] || { color: '#C8102E' }).color, P = k.solid, M = k.metal, ox = K.x, oz = K.z, [bz, be] = this.N.brand;
     const sl = (G, x0, x1, y0, y1, z0, z1, c, o) => G.slab(x0 + ox, x1 + ox, y0, y1, z0 + oz, z1 + oz, c, o);
-    sl(P, -2.6, 2.6, 0, 0.06, -6.4, 0.4, hex('#B9B5AD'), NO);
+    // 2D：东街口 C 亭内地单独铺 2C 花岗岩石板（#ABA497 + granite，同南后街 / 水部步道）。共用预制体其它亭仍用原来的漆面，避免改到已验收的出口亭。
+    if (K.code === 'fzdjk') sl(k.g('granite'), -2.6, 2.6, 0, 0.06, -6.4, 0.4, hex('#ABA497'), NO);
+    else sl(P, -2.6, 2.6, 0, 0.06, -6.4, 0.4, hex('#B9B5AD'), NO);
     for (let i = 0; i < 10; i++) { const z = -2.8 - i * 0.36, y = -0.18 - i * 0.24; sl(P, -1.8, 1.8, y - 0.08, y, z - 0.36, z, hex(i % 2 ? '#C9C5BD' : '#BDB9B1'), NO); }
     sl(P, -1.9, 1.9, -3, -2.9, -6.4, -2.6, hex('#1B1E22'), NO);
     for (const sx of [-1, 1]) { sl(k.glass, sx * 2.5 - 0.02, sx * 2.5 + 0.02, 0.06, 2.9, -6.3, -0.2, hex('#D6EEF8')); k.colSlab(sx * 2.5 - 0.1 + ox, sx * 2.5 + 0.1 + ox, 0, 3, -6.4 + oz, 0.2 + oz); sl(M, sx * 2.5 - 0.08, sx * 2.5 + 0.08, 0, 3.1, 0.1, 0.3, hex('#5C646C'), NO); sl(M, sx * 2.5 - 0.08, sx * 2.5 + 0.08, 0, 3.1, -6.4, -6.2, hex('#5C646C'), NO); }

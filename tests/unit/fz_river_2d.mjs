@@ -65,6 +65,10 @@ ok('perf: east houses / tree trunks go to 80 m detail cells (d2e keeps walls / s
 ok('perf: fzdjk kiosk is its own group d2k, on only within 140 m (not batched into rest)', /k\.group\('d2k'\)/.test(src) && /Math\.hypot\(p\.x - K\.x, p\.z - K\.z\) < 140/.test(src));
 ok('perf: 琼东河口 visible wall is in d2Static, not always-on g0', /w\[4\] === 5/.test(src) && /矮挡墙可见几何/.test(src) && /不进常开 g0/.test(src));
 ok('东街口 kiosk label resolves (FZ_STATIONS_ZH fzdjk = 东街口)', /fzdjk: '东街口'/.test(src));
+ok('东街口 C 亭内地单独用 2C 花岗岩（#ABA497），其它亭仍是共用预制体的漆面 #B9B5AD', (() => {
+  const fn = src.slice(src.indexOf('  kioskAt(K) {'), src.indexOf('  /* ---------- 每帧 ---------- */'));
+  return /K\.code === 'fzdjk'/.test(fn) && /k\.g\('granite'\)/.test(fn) && /#ABA497/.test(fn) && /else sl\(P, -2\.6, 2\.6, 0, 0\.06, -6\.4, 0\.4, hex\('#B9B5AD'\)/.test(fn);
+})());
 { // 东段沿岸一路是岸地（北岸、南岸各走一遍：安泰桥东 → 口门前 3 m，横向 hw + 3）
   let bad = []; for (const sd of [-1, 1]) for (let s = D2.atALen + 2; s < L.len - 3; s += 2) { const a = L.at(s, sd * (6 + 3)); if (!R.isLand(a.x, a.z)) bad.push([sd, +s.toFixed(0)]); }
   ok('both banks of the east section walkable end to end (except bridge abutments)', bad.filter(([sd, s]) => Math.abs(s - jm.s) > jm.w / 2 + 1).length === 0, bad.slice(0, 6)); }
