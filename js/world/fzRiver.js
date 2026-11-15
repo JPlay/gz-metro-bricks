@@ -907,7 +907,7 @@ export class FzRiverStreet extends XmStreet {
   lodNow(force) {
     const pl = this.pl, gn = this.kit.groupNodes; if (!gn) return;
     const p = pl ? this.toW(pl.position) : { x: this.K.x, z: this.K.z };
-    const corrP = this.inCorr(p, -9), NL = this.nightLod ? NIGHT.lod : null;   // 3C：夜里雾更近，远处的组更早关（白天 NL = null → 原来的距离）   // 南后街走廊（连出口亭前小广场 = 南后街北口）：外面的 gN / d2e / 细节格子都关（两边老宅 + 远处楼块挡着）
+    const corrP = this.inCorr(p, -9), NL = this.nightLod ? NIGHT.lod : null; if (NL && this.night) this.night.cull(p);   // 3C：夜里雾更近，远处的组更早关（白天 NL = null → 原来的距离）   // 南后街走廊（连出口亭前小广场 = 南后街北口）：外面的 gN / d2e / 细节格子都关（两边老宅 + 远处楼块挡着）
     for (const key of this.cellKeys) {
       const [i, j] = key.split(',').map(Number), cx = (i + 0.5) * CELL, cz = (j + 0.5) * CELL, d = Math.hypot(p.x - cx, p.z - cz) - CELL * 0.7 + (NL ? NEAR - NL.near : 0);   // 夜里：距离加上差值 = 阈值收到 NL.near
       const on = d < NEAR && !corrP, node = gn['c:' + key]; if (node && (force || node.isEnabled(false) !== on)) node.setEnabled(on);

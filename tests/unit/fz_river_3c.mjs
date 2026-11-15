@@ -66,6 +66,10 @@ for (const net of ['a', 'e']) {
   nt.set(true);
   ok(`[${net}] night on: render night, night fog 70→240 horizon colour, glow warm, water blue-green, atlas swapped, night LOD, boats lit`, Render.active.night === NI.render && scene.fogMode === FOGMODE_LINEAR && scene.fogEnd === NI.haze.end && glow.emissiveColor.b < 0.7 && water.emissiveColor.g > 0 && S.atlas.mat.emissiveTexture !== 'DAYTEX' && S.nightLod === true && boatN.at(-1) === true && nt.mesh && nt.mesh.isEnabled(false));
   ok(`[${net}] night lights: one mesh, lamps + bridges + stairs/piers present`, made.mesh === m0 + 1 && nt.counts.lamp > 20 && nt.counts.bridge > 5 && nt.counts.pier > 0, nt.counts);
+  { const Q = nt._qc, all = nt.counts.tris, p = { x: Q[0], z: Q[1] }; nt.cull(p); const I = nt.mesh.getIndices(), keep = new Set(); for (let k = 0; k < I.length; k += 6) keep.add(Math.floor(I[k] / 4));
+    const inR = q => Math.hypot(Q[3 * q] - p.x, Q[3 * q + 1] - p.z) - Q[3 * q + 2] < NI.lightR, n = Q.length / 3; let good = true; for (let q = 0; q < n; q++) if (keep.has(q) !== inR(q)) good = false;
+    const t1 = nt.counts.drawn; nt.cull({ x: p.x + 3, z: p.z }); const same = nt.counts.drawn === t1; nt._ck = null; nt.cull({ x: 1e6, z: 1e6 });
+    ok(`[${net}] night lights culled to ${NI.lightR} m around the player (index swap, same mesh; < 16 m move = no rebuild)`, NI.lightR >= 90 && good && t1 > 0 && t1 < all && same && nt.counts.drawn === 0 && made.mesh === m0 + 1, { all, t1 }); nt._ck = null; nt.cull(p); }
   nt.set(true); ok(`[${net}] set(true) twice: no extra mesh`, made.mesh === m0 + 1);
   nt.set(false);
   ok(`[${net}] back to day: everything exactly as before (fog / haze / glow / water / atlas / LOD / render)`, snap() === day && !nt.mesh.isEnabled(false) && boatN.at(-1) === false, [snap(), day]);

@@ -26,7 +26,7 @@ export class FzNight {
   constructor(S) { this.S = S; this.on = false; this.mesh = null; this.atlasTex = null; this.saved = null; }
   /** on = true 夜 / false 白天（还原）。重复调用无副作用 */
   set(on, leaving = false) {
-    on = !!on; if (on === this.on) return; this.on = on;
+    on = !!on; if (on === this.on) return; this.on = on; this._ck = null;
     const S = this.S, s = S.scene, M = S.kit.M;
     if (on) {
       const water = bucketMat(s, M, 'paint@sea');
@@ -82,14 +82,22 @@ export class FzNight {
     t.update(true);
     return t;
   }
+  /** 夜灯按距离裁：只画离人 NIGHT.lightR 以内的灯片（一个网格，换索引，不加 draw）。lodNow 夜里调；人挪过 16 m 才重算 */
+  cull(p) {
+    if (!this.mesh || !this._qc) return;
+    const k = Math.round(p.x / 16) + ',' + Math.round(p.z / 16); if (k === this._ck) return; this._ck = k;
+    const Q = this._qc, A = this._I, R = NIGHT.lightR, out = [];
+    for (let q = 0, n = Q.length / 3; q < n; q++) if (Math.hypot(Q[3 * q] - p.x, Q[3 * q + 1] - p.z) - Q[3 * q + 2] < R) for (let j = 0; j < 6; j++) out.push(A[6 * q + j]);
+    this.mesh.setIndices(out, this.mesh.getTotalVertices(), false); this.counts.drawn = out.length / 3;
+  }
   /* ---------- ⑤ 夜灯网格 ---------- */
   lights() {
     if (this.mesh) return this.mesh;
-    const S = this.S, P = [], Cl = [], U = [], I = [];
+    const S = this.S, P = [], Cl = [], U = [], I = [], QC = [];
     const quad = (cx, cy, cz, u, v, rg, col) => {   // u / v = 半边向量；贴图 v=1 在 +v 那头
       const b = P.length / 3, u0 = rg * 0.25 + 0.004, u1 = rg * 0.25 + 0.246;
       for (const [a, e] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) { P.push(cx + u[0] * a + v[0] * e, cy + u[1] * a + v[1] * e, cz + u[2] * a + v[2] * e); Cl.push(col[0], col[1], col[2], 1); }
-      U.push(u0, 0.02, u1, 0.02, u1, 0.98, u0, 0.98); I.push(b, b + 1, b + 2, b, b + 2, b + 3);
+      U.push(u0, 0.02, u1, 0.02, u1, 0.98, u0, 0.98); I.push(b, b + 1, b + 2, b, b + 2, b + 3); QC.push(cx, cz, Math.hypot(u[0], u[2]) + Math.hypot(v[0], v[2]));
     };
     const flat = (cx, cy, cz, ax, az, hu, hv, rg, col) => quad(cx, cy, cz, [az * hu, 0, -ax * hu], [ax * hv, 0, az * hv], rg, col);   // 水平：v 沿 (ax, az)
     const halo = (x, y, z, r, col) => { quad(x, y, z, [r, 0, 0], [0, r, 0], RG.halo, col); quad(x, y, z, [0, 0, r], [0, r, 0], RG.halo, col); };
@@ -152,7 +160,7 @@ export class FzNight {
     mat.emissiveTexture = lightTex(S.scene); mat.alphaMode = B.Engine.ALPHA_ADD; mat.alpha = 0.999; mat.backFaceCulling = false; mat.disableDepthWrite = true; mat.zOffset = -2; mat.fogEnabled = false;
     m.material = mat; m.parent = S.kit.root; m.isPickable = false; m.hasVertexAlpha = false; m.alphaIndex = 30; m.applyFog = false;
     m.computeWorldMatrix(true); m.freezeWorldMatrix(); m.doNotSyncBoundingInfo = true;
-    this.counts = { ...n, tris: I.length / 3 };
+    this.counts = { ...n, tris: I.length / 3 }; this._I = I; this._qc = QC; this._ck = null;
     return m;
   }
 }

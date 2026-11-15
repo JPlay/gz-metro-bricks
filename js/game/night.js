@@ -23,6 +23,7 @@ export const NIGHT = {
   haze: { start: 70, end: 240, color: h2('#4A5068'), maxZ: null },
   // 夜里各组的开关距离（白天值见 fzRiver.js lodNow）：雾尽头 240 m 以外整组关（看不见）；近处细节格子 125 → 90 m
   lod: { near: 90, gN: 250, c2: 250, c2d: 90, d2e: 250, c2mj: 260 },
+  lightR: 110,   // 夜灯片只画 110 m 以内（夜雾 70→240 m；灯片不吃雾，再远也只是几个小亮点）：船上 / 西片最重点省下 ~1.5k 面
   // 暖光 #FFC27A；光晕小、不过曝成白
   warm: '#FFC27A', glow: [1.0, 0.8, 0.56],
   // 水：深蓝绿不是黑（paint@sea 加一点自发光，线性空间；夜里环境反射压到 waterEnv，不再反出白天天色的亮青）
