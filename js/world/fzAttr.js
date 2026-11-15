@@ -42,7 +42,7 @@ export function banyan(P, x, z, s = 1, kind = 0, y0 = 0) {
   for (let i = 0; i < 6; i++) { const a = i / 6 * TAU + 0.3, r = (2.4 + (i % 3)) * s; P.tube([x + Math.cos(a) * r, 4.8 * s, z + Math.sin(a) * r], [x + Math.cos(a) * r, 0.4 * s + (i % 2) * 1.4 * s, z + Math.sin(a) * r], 0.12 * s, hex('#7A6A56'), 3); }
 }
 /** 马鞍墙（封火墙）：白墙，顶上一道黑瓦压顶，轮廓两头高、中间一个小起拱 —— 墙沿 x（a=0）或 z 方向，从 (x0,z0) 长 L */
-function saddleWall(S, x0, z0, L, h0, amp, alongZ, n = 14) {
+function saddleWall(S, x0, z0, L, h0, amp, alongZ, n = 14, lo = false) {
   const k = S.kit, W = k.g('paint@wall'), T = k.solid, white = hex('#F3F1EA'), cap = hex('#2E3238');
   const yAt = u => h0 + amp * (0.5 * (Math.cos(u * TAU) * 0.5 + 0.5) ** 1.4 + 0.62 * Math.exp(-(((u - 0.5) / 0.12) ** 2)) + 0.4 * (Math.exp(-((u / 0.07) ** 2)) + Math.exp(-(((1 - u) / 0.07) ** 2))));   // 两头高高翘起、中间一个拱：马鞍形
   const P = (d, y, off = 0) => alongZ ? [x0 + off, y, z0 + d] : [x0 + d, y, z0 + off];
@@ -50,7 +50,9 @@ function saddleWall(S, x0, z0, L, h0, amp, alongZ, n = 14) {
   for (let i = 0; i <= n; i++) { const u = i / n; top.push(P(u * L, yAt(u))); }
   for (let i = 0; i < n; i++) { const a = i / n * L, b = (i + 1) / n * L, ya = yAt(i / n), yb = yAt((i + 1) / n);
     for (const off of [-0.25, 0.25]) q2(W, P(a, 0, off), P(b, 0, off), P(b, yb, off), P(a, ya, off), white); }
-  T.path(top.map(p => [p[0], p[1] + 0.12, p[2]]), 0.62, cap, 4);
+  if (lo) for (let i = 0; i < n; i++) { const a = top[i], c = top[i + 1], o = alongZ ? [0.31, 0, 0] : [0, 0, 0.31], U = (p, s_, dy) => [p[0] + o[0] * s_, p[1] + dy, p[2] + o[2] * s_];   // 远处 LOD：压顶只用三条面（不用管子 + 关节球）
+    q2(T, U(a, -1, 0), U(c, -1, 0), U(c, -1, 0.24), U(a, -1, 0.24), cap); q2(T, U(c, 1, 0), U(a, 1, 0), U(a, 1, 0.24), U(c, 1, 0.24), cap); q2(T, U(a, -1, 0.24), U(c, -1, 0.24), U(c, 1, 0.24), U(a, 1, 0.24), cap); }
+  else T.path(top.map(p => [p[0], p[1] + 0.12, p[2]]), 0.62, cap, 4);
   if (alongZ) k.colSlab(x0 - 0.3, x0 + 0.3, 0, h0, z0, z0 + L); else k.colSlab(x0, x0 + L, 0, h0, z0 - 0.3, z0 + 0.3);
 }
 
@@ -102,7 +104,7 @@ export function sanfang(S, o = {}) {
     A.quad(xf - side * 0.06, 4.1, zc, 4, 0.7, ry, uvC['s' + shop] || (uvC['s' + shop] = A.draw(4, 0.7, textPaint([shop], { bg: '#2E1F14', fg: '#E9C46A' }), 60)));
     for (const dz of [-4, 4]) { if (lo) P.box(xf - side * 1.5, 2.85, zc + dz, 0.95, 1.1, 0.95, hex('#D7262E'), 0, 0, 0, 1, NO); else P.ellipsoid(xf - side * 1.5, 2.85, zc + dz, 0.55, 0.62, 0.55, hex('#D7262E'), 1); }
     // 户与户之间：马鞍墙（垂直街面，高出屋顶）
-    saddleWall(S, side < 0 ? xb : xf - side * 0.3, z0, Math.abs(xb - xf) + 0.3, 6.2, 4.6 + (i % 3) * 0.6, false, lo ? 5 : 18);
+    saddleWall(S, side < 0 ? xb : xf - side * 0.3, z0, Math.abs(xb - xf) + 0.3, 6.2, 4.6 + (i % 3) * 0.6, false, lo ? 5 : 18, lo);
     if (E && (z === 26 || z + 13 >= 182) && o.endFace) {   // 2D：第一户 / 最后一户临空的山墙（朝广场 / 朝南头步道）贴民居立面 + 马鞍墙封头
       const ze = z === 26 ? z0 + 0.27 : z1 - 0.27, rz = z === 26 ? 0 : Math.PI;
       A.quad((xf + xb) / 2, 3.1, ze + (z === 26 ? -0.03 : 0.03), Math.abs(xb - xf) - 0.4, 6.2, rz, o.endFace);

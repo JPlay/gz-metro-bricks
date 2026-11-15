@@ -717,8 +717,8 @@ async def run_2d(pg):
         await look(pg, *(await WP(N['X0'] + 9.5, N['Z0'] + 6.6)), 0.12); await shot(pg, 'd2_junction_street_name_signs')
     if 'd_walk' in STAGES:
         # 东街口 C → 杨桥东路口 → 南后街（北口 → 南口）→ 石板步道 → 三坊七巷南口牌坊 → 牌坊外（安泰河边）；再原路走回出口亭进站、出站
-        pz = await WP(N['X0'] - 6, N['Z0'] - 8); okp = await go(pg, *pz, '出口亭 → 杨桥东路口（南后街北口）')
-        ok('d_walk:kiosk → 南后街北口 plaza (A*)', okp and await near(pg, *pz, 1.2) and (await jget(pg))['max'] < TELEPORT)
+        pz = await WP(N['X0'] - 6, N['Z0'] - 8); await jreset(pg); okp = await go(pg, *pz, '出口亭 → 杨桥东路口（南后街北口）'); jp = (await jget(pg))['max']
+        ok('d_walk:kiosk → 南后街北口 plaza (A*)', okp and await near(pg, *pz, 1.2) and jp < TELEPORT, [okp, (await st(pg))['pos'], pz, jp])
         there = [[N['X0'], N['Z0'] - 16]] + [[N['X0'], N['Z0'] - z] for z in (40, 80, 120, 160, 188)] + [lk(31), lk(20), lk(10), lk(2.5)]
         there = [await WP(*p) for p in there]
         g1, j1, s1 = await plain(pg, there, '东街口 C → 南后街 → 牌坊')

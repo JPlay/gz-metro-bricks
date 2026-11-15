@@ -856,7 +856,7 @@ export class FzRiverStreet extends XmStreet {
     }
     if (FZR.d2 && gn.d2s) {   // 2D 南后街：离走廊外框（局部 |x| < 24、z -12..200）< 120 m 才画；人在街里（局部 z < 192）用 hi，否则 lo
       const N = FZR.d2.nhj, lx = N.X0 - p.x, lz = N.Z0 - p.z, near = Math.hypot(Math.max(0, Math.abs(lx) - 24), Math.max(0, -12 - lz, lz - 200)) < 120;
-      const hi = near && Math.abs(lx) < 30 && lz > -16 && lz < 192;
+      const hi = near && this.inCorr(p, -9);   // 和 corrP 同一个范围（街里 + 北口小广场）：hi 开着的时候外面的组都关着
       if (force || gn.d2s.isEnabled(false) !== hi) gn.d2s.setEnabled(hi);
       if (gn.d2sLo && (force || gn.d2sLo.isEnabled(false) !== (near && !hi))) gn.d2sLo.setEnabled(near && !hi);
       const e = !corrP && Math.hypot(Math.max(0, 60 - p.x, p.x - 480), Math.max(0, -300 - p.z, p.z + 20)) < 430;
