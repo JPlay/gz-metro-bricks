@@ -60,7 +60,10 @@ ok('2D skirt painted grass (no pure-white ground) in the east section + 南后�
 ok('2D benches use the cast-iron side frames (no black box end-on)', /id === 'at' && FZR\.d2 && s > FZR\.d2\.atALen/.test(src));
 ok('HUD shore stays red (A line colour) everywhere in net a', R.hudLine('A', null).color === '#B3261E');
 ok('perf: lo street drops far-row saddle walls / lanterns, filler and the ±160 m road (bbox stays street-wide)', /far = LO && z \+ 13 <= 143/.test(attr) && /if \(!far\) saddleWall/.test(attr) && /if \(!LO\) S\.filler/.test(attr) && /if \(!lo\) \{\s*\/\/ 路缘石/.test(src));
-ok('perf: the 4 link banyans (nhjw) go to g0, not a detail cell', /if \(kind === 'nhjw'\) this\.banyanNear/.test(src) && F.trees.filter(t => t[5] === 'nhjw').length === 4);
+ok('perf: the 4 link banyans (nhjw) + 4 roadside houses go to group d2b (tight bbox, not g0 / gN0)', /k\.group\('d2b'\)/.test(src) && /Math\.hypot\(p\.x \+ 78, p\.z \+ 175\) < 100/.test(src) && F.trees.filter(t => t[5] === 'nhjw').length === 4);
+ok('perf: east houses / tree trunks go to 80 m detail cells (d2e keeps walls / sign / mouth, no 400 m house bbox)', /if \(inD2E\(h\.x, h\.z\)\) this\.det\(h\.x, h\.z/.test(src) && /if \(inD2E\(x, z\)\) this\.treeBlobAt/.test(src) && /if \(this\._d2epass && inD2E\(h\.x, h\.z\)\) return/.test(src));
+ok('perf: fzdjk kiosk is its own group d2k, on only within 140 m (not batched into rest)', /k\.group\('d2k'\)/.test(src) && /Math\.hypot\(p\.x - K\.x, p\.z - K\.z\) < 140/.test(src));
+ok('perf: 琼东河口 visible wall is in d2Static, not always-on g0', /w\[4\] === 5/.test(src) && /矮挡墙可见几何/.test(src) && /不进常开 g0/.test(src));
 ok('东街口 kiosk label resolves (FZ_STATIONS_ZH fzdjk = 东街口)', /fzdjk: '东街口'/.test(src));
 { // 东段沿岸一路是岸地（北岸、南岸各走一遍：安泰桥东 → 口门前 3 m，横向 hw + 3）
   let bad = []; for (const sd of [-1, 1]) for (let s = D2.atALen + 2; s < L.len - 3; s += 2) { const a = L.at(s, sd * (6 + 3)); if (!R.isLand(a.x, a.z)) bad.push([sd, +s.toFixed(0)]); }

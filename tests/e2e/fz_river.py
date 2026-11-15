@@ -70,6 +70,16 @@ async def shot(pg, name):
     if await safe_shot(pg, path=p, type='jpeg', quality=70): R['shots'].append(p); log('shot', p)
 async def sample(pg, label):
     d = await perf(pg, 3, 0.3); R['perf'][label] = d; return d
+async def sample4(pg, label):
+    # 任意机位：四个正交朝向的峰值（和冒烟同一套），避免只采样「看向目标」的那一个角度漏掉超预算方向
+    yaw0 = await pg.evaluate('__game.player.yaw')
+    rows = []
+    for k in range(4):
+        await pg.evaluate(f'__game.player.yaw = {k} * Math.PI / 2; __game.player.pitch = 0.08')
+        rows.append(await perf(pg, 3, 0.3))
+    await pg.evaluate(f'__game.player.yaw = {yaw0}')
+    d = {**max(rows, key=lambda r: r['tris']), 'draws': max(r['draws'] for r in rows), 'tris': max(r['tris'] for r in rows)}
+    R['perf'][label] = d; return d
 async def mod(pg):
     return await pg.evaluate("""(async () => { const M = await import('/js/data/fz-river.js'); return { bridges: M.BRIDGES, piers: M.PIERS, steps: M.FZR.steps, unders: [...(M.FZR.unders || []), ...(M.FZR.undersC || [])], c2: M.FZR.c2 || null, routes: Object.fromEntries(Object.entries(M.ROUTES).map(([r, c]) => [r, c.stops.map(s => ({ id: s.id, s: s.s }))])), clrRepC: M.ROUTES.C ? M.withRoute('C', () => M.clearanceReport(0.5).per) : {}, sbwWalk: M.FZR.sbwWalk, kiosks: M.KIOSKS, stops: M.STOPS.map(s => ({ id: s.id, s: s.s })), clr: M.CLEAR_MIN, wy: M.WY, clrRep: M.clearanceReport(0.5).per }; })()""")
 def pf(p, a, b): return [p['x'] + p['t'][0] * a - p['n'][0] * b, p['z'] + p['t'][1] * a - p['n'][1] * b]   # 码头 / 水埠头局部坐标 → W
@@ -759,7 +769,7 @@ async def run_2d(pg):
             await look(pg, *(await WP(*sg)), 0.02); await shot(pg, 'd2_zhuzifang_stone_sign_front')
             await go(pg, *(await WP(*I['zzfFronts'])), '→ 朱紫坊沿河立面对岸'); await look(pg, *(await WP(*I['zzfFrontsT'])), 0.06); await shot(pg, 'd2_zhuzifang_north_bank_fronts_closed_doors')
             await pg.evaluate("if (__game.player.view !== 'third') __game.toggleView()")
-        R['perf']['d2:zzf'] = await sample(pg, 'd2:zzf')
+        R['perf']['d2:zzf'] = await sample(pg, 'd2:zzf'); await sample4(pg, 'd2:zzf_4yaw')
         zv = await WP(*I['zzfNear']); okz = await go(pg, *zv, '→ 朱紫坊石牌旁（北岸）'); ok('d_east:walk to 朱紫坊 sign (north bank)', okz and await near(pg, *zv, 1.5))
         if OUT: await look(pg, *(await WP(*sg)), 0.1); await shot(pg, 'd2_zhuzifang_sign_from_north_bank')
         jm = I['jm']
@@ -776,6 +786,7 @@ async def run_2d(pg):
                     await look(pg, *(await WP(jm['x'], jm['z'])), -0.02); await shot(pg, f'd2_jinmen_bridge_front_{tag}')
             await pg.evaluate("if (__game.player.view !== 'third') __game.toggleView()")
         await bridges_stage(pg, D, [jm['id']], perf_at=(jm['id'],), shots={jm['id']: 'd2_jinmen_bridge_on_deck'})
+        await sample4(pg, 'd2:jinmen_4yaw')
         await hud_shore_red(pg, 'd_east:jinmen')
         e1 = await WP(*I['mEnd']); oke = await go(pg, *e1, '→ 琼东河口（北岸尽头）')
         ok('d_east:walk to the 琼东河 mouth (north bank end)', oke and await near(pg, *e1, 1.5))
