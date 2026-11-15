@@ -1,4 +1,4 @@
-# 掉进福州上下杭星安河：不要被送回地铁站台；「回到岸上」必须真能点到（#hud pointer-events）。
+# 掉进福州上下杭三捷河（2D 改名，原来写成星安河）：不要被送回地铁站台；「回到岸上」必须真能点到（#hud pointer-events）。
 # 用法：python tests/e2e/water_hud.py [base-url]
 import asyncio, json, sys, os
 sys.path.insert(0, os.path.dirname(__file__))
@@ -35,7 +35,7 @@ async def main():
         # 先站在岸上（河在 z 44..56），记 lastSafe
         await pg.evaluate(f"__game.player.spawn({FS}, 0.05, 40, 0)")
         await asyncio.sleep(0.5)
-        # 掉进星安河（三通桥旁，水面挖空）
+        # 掉进三捷河（三通桥旁，水面挖空）
         await pg.evaluate(f"__game.player.spawn({FS}, -1.0, 50, 0)")
         await asyncio.sleep(1.4)
         s = await st(pg)
