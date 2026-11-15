@@ -67,10 +67,13 @@ export class XmMetro {
     if (rail) {
       if (code === this.N.rail) {
         rail.show('solo');
-        // 国铁站房只在人走在楼梯 / 换乘通道西段时打开（east.js 每帧按位置切）；solo（动车外观、远景）关掉省 draw
-        const pp = this.ctx.player && this.ctx.player.position, near = !!pp && (pp.x - this.N.O.x) < -60 && pp.y > XM_PY - 1 && pp.y < -5 && Math.abs(pp.z + 80) < 14;
-        if (rail.station) rail.station.setEnabled(!!near);
-        // 福州南：在地铁这边只开不含地面站房的那份几何（FzsStation.onArea('metro')）；厦门北站房没有 onArea
+        // 福州南地铁没有街区出口，出站必须走上国铁出站层 / 东广场。站房一定要建出来。
+        // 但在地铁站台上不必整座开着（会超 iPad 的 50 draws / 90k tris）；只关候车室和车厢外观，
+        // 并且仅当人靠近西段换乘楼梯（lx < -60）或已经上到出站层 / 广场（y > -10）时才打开站房。
+        // 不要只用 lx < -60：到了东广场 lx 又大于 -60，会把地面关掉，人走进空洞。
+        const pp = this.ctx.player && this.ctx.player.position;
+        const need = !!pp && (pp.y > -10 || (pp.x - this.N.O.x) < -60);
+        if (rail.station) rail.station.setEnabled(need);
         if (rail.station && rail.station.onArea) rail.station.onArea('metro');
         if (rail.solo && rail.solo.root) rail.solo.root.setEnabled(false);
       } else { rail.show(null); }

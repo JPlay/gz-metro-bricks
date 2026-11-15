@@ -59,6 +59,8 @@ export class Kit {
     return m;
   }
   colSlab(x0, x1, y0, y1, z0, z1, opts) { return this.col((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2, Math.abs(x1 - x0), Math.abs(y1 - y0), Math.abs(z1 - z0), opts); }
+  /** 关掉/打开本套 kit 里所有隐形碰撞。根节点 setEnabled(false) 在部分环境（如 iPad）上，冻结的碰撞盒仍可能挡住人。 */
+  setCollidersEnabled(v) { for (const m of this.colliders) if (m && !m.isDisposed()) m.checkCollisions = !!v; }
   /** 实心方块 + 碰撞（bucket 默认 paint） */
   block(x0, x1, y0, y1, z0, z1, col, collide = true, bucket = 'paint', o) {
     this.g(bucket).slab(x0, x1, y0, y1, z0, z1, typeof col === 'string' ? hex(col) : col, o);
@@ -85,13 +87,16 @@ export class Kit {
   /**
    * 楼梯：沿 x 轴（axis='x'）或 z 轴，从 (a, ya) 到 (b, yb)，宽度方向范围 [w0,w1]。
    * 视觉：花岗岩踏步 + 深色防滑条（踏步前缘）+ 不锈钢扶手；碰撞：一块倾斜薄板 + 两侧扶手墙。
+   * flushEnd：dy>0 时可见踏步从 ya 之上一级铺到 yb（默认最后一级停在 yb 下面一级，两段楼梯对接会空出约 16cm）。
+   * 只改可见踏步和防滑条，斜碰撞板仍按 (a,ya)–(b,yb) 铺，不变。
    */
-  stairs(axis, a, ya, b, yb, w0, w1, baseY, col, { rails = true, steps = true, nosing = '#3A3F45', visual = null, railWall = false } = {}) {
+  stairs(axis, a, ya, b, yb, w0, w1, baseY, col, { rails = true, steps = true, nosing = '#3A3F45', visual = null, railWall = false, flushEnd = false } = {}) {
     if (visual) steps = false;
     const L = Math.abs(b - a), dy = yb - ya, n = Math.max(2, Math.round(Math.abs(dy) / 0.16)), dir = Math.sign(b - a);
     const c = typeof col === 'string' ? hex(col) : col, F = this.g('floor'), P = this.g('paint'), nc = hex(nosing);
     for (let k = 0; k < (steps ? n : 0); k++) {
-      const s0 = a + dir * L * k / n, s1 = a + dir * L * (k + 1) / n, top = ya + dy * (k + (dy < 0 ? 1 : 0)) / n;
+      const s0 = a + dir * L * k / n, s1 = a + dir * L * (k + 1) / n;
+      const top = (flushEnd && dy > 0) ? ya + dy * (k + 1) / n : ya + dy * (k + (dy < 0 ? 1 : 0)) / n;
       const lo = Math.min(top, baseY), hi = Math.max(top, baseY);
       if (axis === 'x') F.slab(s0, s1, lo, hi, w0, w1, c, { ao: false }); else F.slab(w0, w1, lo, hi, s0, s1, c, { ao: false });
       // 防滑条：在踏步的“前缘”（低的一侧）

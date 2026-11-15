@@ -863,8 +863,8 @@ export class XmStation {
     const k = this.kit, y = XM_PY, Pv = k.solid, G = k.glow, P = this.platforms[0], th = this.th;
     const z0 = P.zc - 3, z1 = P.zc + 3, xa = -XM_HALL_X, xs = -93, xt = -101.195, yt = -9.195, cy = -9.7;
     const WALL = hex('#E9E4DA'), STONE = hex('#E4DDD0'), L1 = hex(this.N.LINES[1].color);
-    // 楼梯下半段（踏步高 0.1585 / 宽 0.341，和上半段一样）
-    k.stairs('x', xs, y, xt, yt, z0, z1, y, '#D6D1C7', { nosing: '#4A3A32' });
+    // 楼梯下半段（踏步高 0.1585 / 宽 0.341，和上半段一样）。flushEnd 让可见踏步铺到 yt，和国铁上半段在接头对齐；斜碰撞板不变。
+    k.stairs('x', xs, y, xt, yt, z0, z1, y, '#D6D1C7', { nosing: '#4A3A32', flushEnd: true });
     for (const [a0, a1] of [[z0 - 0.3, z0], [z1, z1 + 0.3]]) { Pv.slab(xt, xs, y, -6.8, a0, a1, WALL, { ao: false }); k.colSlab(xt, xs, y, -6.8, a0, a1); }
     Pv.slab(xs - 0.3, xs, cy, -6.8, z0, z1, WALL, { ao: false });   // 楼梯口上方的墙头（通道顶 → 站厅地面）
     for (const z of [z0 + 0.02, z1 - 0.02]) G.slab(xt, xs, -7.4, -7.32, z - 0.02, z + 0.02, hex('#FFF4DE'), { ao: false });

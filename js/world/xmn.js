@@ -144,8 +144,11 @@ export class XmnPlatform {
   /** 'solo'：独立场景（在 O）；'car'：车厢外的站台（ox = 车厢里看到的位置偏移） */
   show(mode, ox = 0) {
     const r = this.kit.root;
-    if (!mode) { r.setEnabled(false); this.mode = null; if (this.station) this.station.setEnabled(false); return; }
-    r.setEnabled(true); this.solo.root.setEnabled(mode === 'solo');
+    if (!mode) {
+      r.setEnabled(false); this.kit.setCollidersEnabled(false); if (this.solo && this.solo.root) this.solo.root.setEnabled(false);
+      this.mode = null; if (this.station) this.station.setEnabled(false); return;
+    }
+    r.setEnabled(true); this.kit.setCollidersEnabled(true); this.solo.root.setEnabled(mode === 'solo');
     // 站房（出站层 / 换乘通道 / 南广场）：厦门自己的一块区域，第一次下车才建，只在独立场景里打开
     if (mode === 'solo' && !this.station) this.station = this.cfg.station(this.scene);
     if (this.station) this.station.setEnabled(mode === 'solo');
