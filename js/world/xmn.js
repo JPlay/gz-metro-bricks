@@ -13,7 +13,7 @@ import { hex } from '../core/geo.js';
 import { FoodAtlas } from '../game/food-art.js';
 import { GZE, EMU, buildEmuTrain } from './gze.js';
 import { FONT, FONT_EN } from './kit.js';
-import { XmnStation, noProbe, arrow } from './xmnStation.js';
+import { XmnStation, noProbe } from './xmnStation.js';
 
 export const XO = { x: 3000, z: 0 };
 export const XMN = { xw: -70, xe: 60, back: -116, edge: GZE.edge, tz: GZE.tz, hole: [-25.2, -11.2, -124.4, -119.6], HY: -6.5 };
@@ -28,18 +28,6 @@ function buildStairHole(k) {
   // 洞口四壁（站台板底到出站层吊顶之间）
   for (const z of [h2 - 0.02, h3 + 0.02]) k.solid.slab(h0, h1, -1.95, -1.25, z - 0.02, z + 0.02, hex('#ECE8E0'), { ao: false });
 }
-/** 铁路站台出站吊牌：黄底黑字「出站口 Exit」+ 向下箭头（指向脚下楼梯井） */
-function paintExitDown(c, pw, ph) {
-  c.fillStyle = '#F2C230'; c.fillRect(0, 0, pw, ph);
-  c.strokeStyle = '#1B2530'; c.lineWidth = Math.max(6, ph * 0.07); c.strokeRect(c.lineWidth / 2, c.lineWidth / 2, pw - c.lineWidth, ph - c.lineWidth);
-  const s = ph * 0.62, pad = ph * 0.12;
-  arrow(c, pad, (ph - s) / 2, s, 'd', '#1B2530');
-  arrow(c, pw - pad - s, (ph - s) / 2, s, 'd', '#1B2530');
-  c.fillStyle = '#1B2530'; c.textAlign = 'center'; c.textBaseline = 'middle';
-  c.font = `800 ${ph * 0.4}px ${FONT}`; c.fillText('出站口', pw / 2, ph * 0.38);
-  c.font = `700 ${ph * 0.2}px ${FONT_EN}`; c.fillText('Exit', pw / 2, ph * 0.72);
-}
-
 const C = {
   plat: hex('#CFCBC4'), edge: hex('#F1F0EC'), bed: hex('#8E8A83'), sleeper: hex('#A19C92'), rail: hex('#6D7175'),
   roof: hex('#1F5F8B'), roofTop: hex('#E9ECEE'), col: hex('#F4F5F3'), brick: hex('#B5452F'), stone: hex('#E9E4DA'), sea: hex('#2C7DB0'),
@@ -114,16 +102,6 @@ export class XmnPlatform {
       atlas.quad(x, 3.4, zc + (a ? -0.05 : 0.05), 3.6, 1.0, a, pu);
       for (const sx of [-1, 1]) M.tube([x + sx * 1.3, 3.9, zc], [x + sx * 1.3, RY, zc], 0.03, hex('#9AA1A8'), 6);
     }
-    // 出站吊牌（黄底黑字，挂在楼梯井上方、站名牌之上）：从股道一侧和站台两端都能远远看见，箭头指向脚下楼梯。不做地面导向标线。
-    {
-      const [hx0, hx1, hz0, hz1] = XMN.hole, ex = (hx0 + hx1) / 2, ez = (hz0 + hz1) / 2;
-      const ew = 5.2, ed = 3.2, eh = 1.32, ey = 5.15;
-      const euvZ = atlas.draw(ew, eh, paintExitDown, 90), euvX = atlas.draw(ed, eh, paintExitDown, 90);
-      for (const a of [0, Math.PI]) atlas.quad(ex, ey, ez + (a ? -0.08 : 0.08), ew, eh, a, euvZ);           // 面向两侧股道（下车往站房看）
-      for (const a of [Math.PI / 2, -Math.PI / 2]) atlas.quad(ex + Math.sin(a) * 0.08, ey, ez, ed, eh, a, euvX); // 面向站台两端
-      P.slab(ex - ew / 2 - 0.08, ex + ew / 2 + 0.08, ey + eh / 2, ey + eh / 2 + 0.1, ez - ed / 2 - 0.08, ez + ed / 2 + 0.08, hex('#2A2E32'), { ao: false });
-      for (const sx of [-1, 1]) for (const sz of [-1, 1]) M.tube([ex + sx * ew * 0.32, ey + eh / 2, ez + sz * ed * 0.32], [ex + sx * ew * 0.32, RY, ez + sz * ed * 0.32], 0.035, hex('#9AA1A8'), 6);
-    }
     // 候车椅（站台两头，蓝色）
     for (const x of [xw + 25, xw + 97].filter(x => x < xe - 4)) { M.slab(x - 2, x + 2, 0.36, 0.42, zc - 0.25, zc + 0.25, hex('#8D949B'), { ao: false }); for (let i = 0; i < 6; i++) P.rbox(x - 1.7 + i * 0.68, 0.42, zc, 0.5, 0.06, 0.46, C.sea, 0.03, 0, { ao: false }); }
     // 对面（远离站房）一侧：挡墙 + 海蓝色栏杆
@@ -166,8 +144,11 @@ export class XmnPlatform {
   /** 'solo'：独立场景（在 O）；'car'：车厢外的站台（ox = 车厢里看到的位置偏移） */
   show(mode, ox = 0) {
     const r = this.kit.root;
-    if (!mode) { r.setEnabled(false); this.mode = null; if (this.station) this.station.setEnabled(false); return; }
-    r.setEnabled(true); this.solo.root.setEnabled(mode === 'solo');
+    if (!mode) {
+      r.setEnabled(false); this.kit.setCollidersEnabled(false); if (this.solo && this.solo.root) this.solo.root.setEnabled(false);
+      this.mode = null; if (this.station) this.station.setEnabled(false); return;
+    }
+    r.setEnabled(true); this.kit.setCollidersEnabled(true); this.solo.root.setEnabled(mode === 'solo');
     // 站房（出站层 / 换乘通道 / 南广场）：厦门自己的一块区域，第一次下车才建，只在独立场景里打开
     if (mode === 'solo' && !this.station) this.station = this.cfg.station(this.scene);
     if (this.station) this.station.setEnabled(mode === 'solo');

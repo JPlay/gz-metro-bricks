@@ -118,7 +118,7 @@ export class XmnStation {
     k.finish(true); at.finish(k.root, 'xmnStSigns'); noProbe(k.root);
     this.root = k.root;
   }
-  setEnabled(v) { this.root.setEnabled(v); }
+  setEnabled(v) { this.root.setEnabled(v); this.kit.setCollidersEnabled(v); }
   /** 吊牌：牌面 + 深色边框 + 两根吊杆（top = 吊顶 y）；two = 背面也画（背面可以是另一块） */
   hang(x, y, z, w, h, a, paint, top = HC, back) {
     const k = this.kit, at = this.atlas, nx = Math.sin(a), nz = Math.cos(a), uv = at.draw(w, h, paint);

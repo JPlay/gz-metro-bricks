@@ -115,7 +115,7 @@ export class FzsStation {
     k.finish(true, 'wait'); at.finish(k.root, 'fzsStSigns'); noProbe(k.root);
     this.root = k.root; this.onArea(null);
   }
-  setEnabled(v) { this.root.setEnabled(v); }
+  setEnabled(v) { this.root.setEnabled(v); this.kit.setCollidersEnabled(v); }
   /** 换区域时（js/game/east.js）开关人群网格：候车室旅客只在候车室里画，广场旅客 / 出租车只在广场上画 —— 站台上看不到，省面数 */
   onArea(a) {
     const b = this.kit.byBucket;

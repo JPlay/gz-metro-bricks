@@ -59,6 +59,8 @@ export class Kit {
     return m;
   }
   colSlab(x0, x1, y0, y1, z0, z1, opts) { return this.col((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2, Math.abs(x1 - x0), Math.abs(y1 - y0), Math.abs(z1 - z0), opts); }
+  /** 关掉/打开本套 kit 里所有隐形碰撞。根节点 setEnabled(false) 在部分环境（如 iPad）上，冻结的碰撞盒仍可能挡住人。 */
+  setCollidersEnabled(v) { for (const m of this.colliders) if (m && !m.isDisposed()) m.checkCollisions = !!v; }
   /** 实心方块 + 碰撞（bucket 默认 paint） */
   block(x0, x1, y0, y1, z0, z1, col, collide = true, bucket = 'paint', o) {
     this.g(bucket).slab(x0, x1, y0, y1, z0, z1, typeof col === 'string' ? hex(col) : col, o);
