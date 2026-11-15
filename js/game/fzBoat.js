@@ -8,7 +8,7 @@
  */
 import { Kit } from '../world/kit.js';
 import { hex } from '../core/geo.js';
-import { WY, BOAT, STOPS, ROUTE, routePose, boatStep, levelAtS, LOCK, LOCK_STATE, BOAT_DWELL, BOAT_STAY } from '../data/fz-river.js';
+import { WY, BOAT, STOPS, ROUTE, ROUTE_ID, routePose, boatStep, levelAtS, LOCK, LOCK_STATE, BOAT_DWELL, BOAT_STAY, withRoute } from '../data/fz-river.js';
 export { BOAT_DWELL };
 import { say } from '../audio/announcements.js';
 import { fzBoatDepartSegs, fzBoatArriveSegs, fzBoatLockSegs } from '../data/phrases.js';
@@ -17,9 +17,14 @@ const B = window.BABYLON;
 const NO = { ao: false };
 
 export class FzBoat {
-  constructor(S, variant = 'red') {
-    this.S = S; this.scene = S.scene; this.variant = variant;
-    this.node = new B.TransformNode('fzBoat', this.scene); this.node.parent = S.kit.root;
+  /** rid = 船线 id（2C：a 网有 A、C 两条船线，各一条船）；船的每个入口都在自己的船线上跑（withRoute 换活绑定 ROUTE / STOPS / LOCK） */
+  constructor(S, variant = 'red', rid = ROUTE_ID) {
+    this.S = S; this.scene = S.scene; this.variant = variant; this.rid = rid;
+    for (const m of ['update', 'info', 'pose', 'setPlank', 'depart', 'arrive']) { const f = this[m].bind(this); this[m] = (...a) => withRoute(this.rid, () => f(...a)); }
+    withRoute(rid, () => this.init(S));
+  }
+  init(S) {
+    this.node = new B.TransformNode('fzBoat' + (this.rid === 'A' ? '' : this.rid), this.scene); this.node.parent = S.kit.root;
     this.kit = new Kit(this.scene, 'fzBoatKit', this.node);
     this.build();
     this.kit.finish(false);
@@ -27,7 +32,8 @@ export class FzBoat {
     // 起始：停在离出来的出口亭最近的码头
     // 1A：西洋 A 出来停黎明湖（终点）、西门 C 出来停西水关；1B：停在出口亭登记的码头（K.pier）
     const kp = S.K.pier ? STOPS.findIndex(st => st.id === S.K.pier) : -1;
-    const start = kp >= 0 ? kp : S.K.code === 'fzxiy' ? STOPS.length - 1 : 1;
+    // 2C：C 线（两站）不在出口亭登记码头的线上时停在西水关（第 0 站）
+    const start = kp >= 0 ? kp : this.rid === 'C' ? 0 : S.K.code === 'fzxiy' ? STOPS.length - 1 : 1;
     this.i = start; this.s = STOPS[start].s; this.v = 0; this.dir = start === STOPS.length - 1 ? -1 : 1; this.phase = 'dock'; this.target = start; this.dwell = 0; this.t = 0;
     this.lk = null; this.lkEv = null; this.y0 = levelAtS(this.s); this.faceK = this.dir; this.log = []; this.stats = { departs: 0, arrives: 0, calls: 0, maxStep: 0, maxYawStep: 0 };
     this.place(0);
@@ -172,6 +178,6 @@ export class FzBoat {
     if (LOCK && this.phase === 'dock') boatStep(this, dt);   // 停靠时闸门也自己关上
     this.place(dt);
   }
-  info() { return { holdTerm: !!this.holdTerm, phase: this.phase, i: this.i, at: STOPS[this.i].id, target: STOPS[this.target].id, s: +this.s.toFixed(2), v: +this.v.toFixed(2), dir: this.dir, seatsFree: this.seats.filter(s => s.free).length, stats: { ...this.stats, maxStep: +this.stats.maxStep.toFixed(3), maxYawStep: +this.stats.maxYawStep.toFixed(4) }, log: this.log.slice(-12), lock: LOCK ? { st: this.lk ? this.lk.st : null, gU: +LOCK_STATE.gU.toFixed(2), gD: +LOCK_STATE.gD.toFixed(2), lvl: +LOCK_STATE.lvl.toFixed(3), y0: +this.y0.toFixed(3) } : null, x: +this.node.position.x.toFixed(2), z: +this.node.position.z.toFixed(2) }; }
+  info() { return { rid: this.rid, holdTerm: !!this.holdTerm, phase: this.phase, i: this.i, at: STOPS[this.i].id, target: STOPS[this.target].id, s: +this.s.toFixed(2), v: +this.v.toFixed(2), dir: this.dir, seatsFree: this.seats.filter(s => s.free).length, stats: { ...this.stats, maxStep: +this.stats.maxStep.toFixed(3), maxYawStep: +this.stats.maxYawStep.toFixed(4) }, log: this.log.slice(-12), lock: LOCK ? { st: this.lk ? this.lk.st : null, gU: +LOCK_STATE.gU.toFixed(2), gD: +LOCK_STATE.gD.toFixed(2), lvl: +LOCK_STATE.lvl.toFixed(3), y0: +this.y0.toFixed(3) } : null, x: +this.node.position.x.toFixed(2), z: +this.node.position.z.toFixed(2) }; }
   dispose() { this.kit.dispose(); this.node.dispose(); }
 }

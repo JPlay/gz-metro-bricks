@@ -194,20 +194,22 @@ export function fzBoatDepartSegs(term, next, line = 'A') {
   const T = BOAT_P[term], N = BOAT_P[next];
   // A 线沿用 1A 的 id（depart.<码头>）；B 线 id 带线名（b.depart.<码头>），以后线路多了也不撞
   return [...bseg((line === 'A' ? '' : line.toLowerCase() + '.') + 'depart.' + term, `欢迎乘坐内河游船${line}线，本船开往${T.zh}。`, `Welcome aboard Inland River Boat Line ${line}. This boat is bound for ${T.en}.`),
-    ...bseg('next.' + next, `下一站，${N.zh}。`, `The next stop is ${N.en}.`)];
+    ...bseg('next.' + (N.shared || next), `下一站，${N.zh}。`, `The next stop is ${N.en}.`)];   // 2C：西水关 C 线泊位（xsgc）和 A 线同一座码头，“下一站”用同一条录音
 }
 /** 到站：终点站多一句“带好随身物品” */
 export function fzBoatArriveSegs(id, terminal) {
   const P = BOAT_P[id];
-  return terminal ? bseg('arrive.' + id + '.end', `${P.zh}到了，这里是本线终点。请带好随身物品，小心上岸。`, `We have arrived at ${P.en}, the end of this line. Please take your belongings and mind your step.`)
+  // 2C：上海西码头（C 线终点）到站后多一句换乘提示（小美 2C ②：换乘地铁宁化站，请从 A 口出站）
+  const xfer = terminal && P.xfer ? bseg('xfer.' + id, P.xfer.zh, P.xfer.en) : [];
+  return terminal ? [...bseg('arrive.' + id + '.end', `${P.zh}到了，这里是本线终点。请带好随身物品，小心上岸。`, `We have arrived at ${P.en}, the end of this line. Please take your belongings and mind your step.`), ...xfer]
     : bseg('arrive.' + id, `${P.zh}到了。上岸请小心脚下。`, `We have arrived at ${P.en}. Please mind your step.`);
 }
 /** 过西湖船闸（2A，小美：只播普通话 + 英语） */
 export function fzBoatLockSegs() { return bseg('lock.xihu', '船只正在通过西湖船闸，请坐稳。', 'The boat is passing through the West Lake lock. Please stay seated.'); }
 export function fzBoatJobs() {
   const out = [...fzBoatLockSegs()];
-  for (const F of [FZR, FZR_E]) {
-    const line = F.route.id, ids = F.route.stops.map(s => s.id), first = ids[0], last = ids[ids.length - 1];
+  for (const R of [FZR.route, ...(FZR.routes || []), FZR_E.route, ...(FZR_E.routes || [])]) {   // 2C：一片河网多条船线（a 网 A + C）
+    const line = R.id, ids = R.stops.map(s => s.id), first = ids[0], last = ids[ids.length - 1];
     ids.forEach((id, i) => {
       if (i < ids.length - 1) out.push(...fzBoatDepartSegs(last, ids[i + 1], line));
       if (i > 0) out.push(...fzBoatDepartSegs(first, ids[i - 1], line));
