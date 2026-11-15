@@ -4,3 +4,4 @@ node_modules/
 .playwright-cli/
 .claude/
 _dev*.html
+tools/textures/hdr/

@@ -167,11 +167,11 @@ export class Train {
       // 坐着的乘客：可动的小人（坐着看手机 / 东张西望 / 两人聊天；玩家坐到旁边会转头点点头），每节车 2 个，中间那节多 1 个
       // 髋关节对齐座面（座面顶 0.48）：y 是脚底基准，坐姿时髋关节在 y + hip×scale
       for (let q = 0; q < 2; q++) { const sd = q ? 1 : -1, px = cx + (q ? 3 : -3.1), L = randomLook({ phone: q === 0 }), hip = (L.kid ? 0.6 : 0.86) * L.scale; taken.push({ x: px, sd });
-        const pp = new Person(this.scene, this.kit.M.paint, L, { name: 'pax', parent: this.root }); pp.mesh.position.set(px, 0.55 - hip, sd * 1.2); pp.mesh.rotation.y = sd > 0 ? Math.PI : 0;
+        const pp = new Person(this.scene, this.kit.M.paintHero || this.kit.M.paint, L, { name: 'pax', parent: this.root }); pp.mesh.position.set(px, 0.55 - hip, sd * 1.2); pp.mesh.rotation.y = sd > 0 ? Math.PI : 0;
         pp.mode = q === 0 ? 'sitPhone' : 'sit'; pp.animate(0.016); this.pax.push({ p: pp, x: px, sd, seated: true }); }
       // 中间那节：+z 侧坐着的那位旁边再坐一位，两人转头聊天
       if (ci === 1) { const a = this.pax[this.pax.length - 1], L = randomLook({ bag: 'shoulder' }), hip = (L.kid ? 0.6 : 0.86) * L.scale, px = a.x + 0.56;
-        const pp = new Person(this.scene, this.kit.M.paint, L, { name: 'pax', parent: this.root }); pp.mesh.position.set(px, 0.55 - hip, 1.2); pp.mesh.rotation.y = Math.PI;
+        const pp = new Person(this.scene, this.kit.M.paintHero || this.kit.M.paint, L, { name: 'pax', parent: this.root }); pp.mesh.position.set(px, 0.55 - hip, 1.2); pp.mesh.rotation.y = Math.PI;
         pp.mode = a.p.mode = 'sitChat'; pp.chatYaw = 0.75; a.p.chatYaw = -0.75; pp.t += 1.3; pp.animate(0.016); taken.push({ x: px, sd: 1 }); this.pax.push({ p: pp, x: px, sd: 1, seated: true }); }
     }
     // 空座位：和坐着的乘客（肩宽约 0.5m）重叠的座位算有人

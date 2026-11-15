@@ -369,7 +369,7 @@ export class HotelInterior {
     });
   }
   staff() {
-    const p = this.clerk = new Person(this.scene, this.M.paint, randomLook({ fem: true, top: '#3A231B', bottom: '#2B2F33' }), { parent: this.kit.root });
+    const p = this.clerk = new Person(this.scene, this.M.paintHero || this.M.paint, randomLook({ fem: true, top: '#3A231B', bottom: '#2B2F33' }), { parent: this.kit.root });
     p.mesh.position.set(X(-1.6), 0, 4.6); p.mesh.rotation.y = Math.PI; p.animate(0.016);
   }
   /* ———————— 状态 ———————— */

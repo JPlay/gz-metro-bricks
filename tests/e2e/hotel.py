@@ -78,7 +78,8 @@ async def main():
     await pose(pg,HX-3.6,4.55,4.25,-math.pi/2,0.1,'third',0.8)
     await wait(pg,"__game.state().act && __game.state().act.id=='sit'",6)   # 等“坐下”按钮出来再按（低帧率下要几帧）
     s=await st(pg); R['actBed']=s['act']; await pg.evaluate('__game.act()'); await wait(pg,"__game.state().seat.seated",5)
-    await asyncio.sleep(0.6); R['seatBed']=(await st(pg))['seat']; R['lieBtn']=(await H(pg))['lieBtn']
+    await wait(pg,"__game.state().hotel.lieBtn",5)   # 躺下按钮在下一帧 update 里才显示（软件渲染 1 fps 时 0.6 s 不够）
+    R['seatBed']=(await st(pg))['seat']; R['lieBtn']=(await H(pg))['lieBtn']
     await pg.evaluate("__game.hotel.toggleLie()"); await asyncio.sleep(0.8); R['lying']=(await H(pg))['lying']
     await look(pg,-2.5,0.62); await shot(pg,'x2-lying',1.0)
     await pg.evaluate("__game.hotel.toggleLie()"); await asyncio.sleep(0.4); R['satUp']=not (await H(pg))['lying']

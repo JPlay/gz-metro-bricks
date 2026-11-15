@@ -5,6 +5,7 @@
  *   ceiling 铝扣板  wall 搪瓷钢板  metal 拉丝不锈钢  concrete 混凝土  brick 红砖  qz 青砖（陈家祠）  granite 粗面花岗岩（五羊像，无高光）  asphalt 沥青  grass 草地  facade 楼房立面
  *   glass 玻璃  glow 自发光（灯带、屏幕）  halo 灯带光晕（叠加）  shade 贴地柔和暗影（烘焙 AO）
  */
+import { ensureGfx, ensureWater } from './gfxUpgradePlugin.js';
 const B = window.BABYLON;
 let M = null;
 // 贴图对应的真实尺寸（米）
@@ -46,6 +47,14 @@ export function mats(scene) {
     }
   }
   M.solid = M.paint; // 兼容旧名字
+  // 画质升级 Demo：静态桶材质挂着色器插件（原版模式下 define 全关 = 与原版着色器一致）
+  for (const k of Object.keys(PBR)) ensureGfx(M[k]);
+  // 人物（玩家 / 路人 / 乘客）单独一份漆面材质：不加建筑用的微纹理 / 法线，保持干净的玩具感（mesh 本来就各自绘制，不多绘制调用）
+  M.paintHero = pbr('paintHero', scene, PBR.paint);
+  // 演示水池（公园前站口广场的喷泉池，见 station.js）：真菲涅耳 PBR + 双层滚动水波法线（GfxWaterPlugin）；只在升级模式开
+  const water = M.water = pbr('waterDemo', scene, { rough: 0.06, metal: 0, env: 1.0 });
+  water.albedoColor = new B.Color3(0.035, 0.11, 0.13); water.metallicF0Factor = 0.5; water.useRadianceOcclusion = false; water.maxSimultaneousLights = 2;
+  ensureWater(water);
   const glass = M.glass = new B.PBRMaterial('glass', scene);
   glass.albedoColor = new B.Color3(0.72, 0.84, 0.9); glass.metallic = 0; glass.roughness = 0.06; glass.alpha = 0.18; glass.environmentIntensity = 0.5;
   glass.useRadianceOverAlpha = true; glass.useSpecularOverAlpha = true; glass.backFaceCulling = false; glass.environmentIntensity = 1.0; glass.maxSimultaneousLights = 2;

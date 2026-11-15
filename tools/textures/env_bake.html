@@ -1,0 +1,32 @@
+<!doctype html><meta charset="utf-8"><title>env bake</title>
+<!-- 把 vendor/env/*.hdr（真浮点 RGBE 全景）预滤波并导出 Babylon .env：tools/textures/make_env.py 用 Playwright 打开本页 -->
+<canvas id="c" width="256" height="256"></canvas>
+<script src="../../vendor/babylonjs/9.28.0/babylon.js"></script>
+<script>
+const engine = new BABYLON.Engine(document.getElementById('c'), false, { preserveDrawingBuffer: true });
+const scene = new BABYLON.Scene(engine);
+new BABYLON.FreeCamera('c', new BABYLON.Vector3(0, 0, 0), scene);
+engine.runRenderLoop(() => scene.render());
+function b64(buf) { let s = ''; const u = new Uint8Array(buf); for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(s); }
+window.bake = (url) => new Promise((res, rej) => {
+  const t = new BABYLON.HDRCubeTexture(url, scene, 256, false, true, false, true,
+    async () => { try { const buf = await BABYLON.EnvironmentTextureTools.CreateEnvTextureAsync(t, { imageType: 'image/png' }); res(b64(buf)); } catch (e) { rej(String(e && e.stack || e)); } },
+    (m, e) => rej('hdr load ' + m + ' ' + e));
+});
+// 验证：用 CreateFromPrefilteredData 读回 .env，取 6 个面的最亮像素方向（确认太阳方向、峰值亮度）
+window.probe = (url) => new Promise((res, rej) => {
+  const t = BABYLON.CubeTexture.CreateFromPrefilteredData(url, scene);
+  t.onLoadObservable.addOnce(async () => {
+    try {
+      const out = { faces: [] };
+      for (let f = 0; f < 6; f++) {
+        const px = await t.readPixels(f, 0); let best = -1, bi = 0, sum = 0; const n = px.length / 4;
+        for (let i = 0; i < n; i++) { const v = px[i * 4] + px[i * 4 + 1] + px[i * 4 + 2]; sum += v; if (v > best) { best = v; bi = i; } }
+        const sz = Math.sqrt(n); out.faces.push({ f, max: best / 3, mean: sum / n / 3, at: [bi % sz, Math.floor(bi / sz)], size: sz, type: px.constructor.name });
+      }
+      out.sh = t.sphericalPolynomial ? { x: t.sphericalPolynomial.x.asArray ? t.sphericalPolynomial.x.asArray() : null } : null;
+      res(out);
+    } catch (e) { rej(String(e)); }
+  });
+});
+</script>

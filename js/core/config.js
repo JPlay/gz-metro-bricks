@@ -20,6 +20,8 @@ export const CONFIG = {
   // 广播片段缺失时的替代方式：'webspeech' 用浏览器朗读（移植自旧版 index.html 的 announce），'caption' 只显示字幕
   VOICE_FALLBACK: 'webspeech',
   debug: params.has('debug'),
+  // 画质：默认升级画质；?mode=orig 看原版（对比 / 排查用），见 js/core/gfx.js
+  gfxOrig: params.get('mode') === 'orig',
   // ?start=<车站code>&line=<1|2> 从某站站台开始（测试用）；默认在公园前站口外的街上
   start: params.get('start') || null,
   startLine: +(params.get('line') || 1),

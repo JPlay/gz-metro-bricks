@@ -7,6 +7,7 @@
  *   档位 3：0.8x、同上但不用反射探针（只用环境贴图）
  */
 import { mats, setNormalMaps, tex } from './mats.js';
+import { CONFIG } from './config.js';
 const B = window.BABYLON;
 const lerp = (a, b, t) => a + (b - a) * t;
 
@@ -14,8 +15,8 @@ export class Render {
   constructor(engine, scene, cam) {
     this.engine = engine; this.scene = scene; this.cam = cam; this.tier = -1; this.indoor = 0; this.indoorTarget = 0; this.probes = [];
     scene.clearColor = new B.Color4(0.62, 0.78, 0.92, 1);
-    const env = this.env = B.CubeTexture.CreateFromPrefilteredData('vendor/env/environmentSpecular.env', scene);
-    env.name = 'env'; scene.environmentTexture = env; scene.environmentIntensity = 1.0;
+    // 原版环境贴图：升级画质（默认）用 env_day 代替，只有 ?mode=orig / ?no-env 才下载
+    this._env = null; this.envPending = !CONFIG.gfxOrig; if (CONFIG.gfxOrig) scene.environmentTexture = this.env; scene.environmentIntensity = 1.0;
     // 室内影棚环境延迟到第一次进站再加载，缩短首屏
     this.envIn = null; this._envInUrl = 'vendor/env/studio.env';
     const ip = scene.imageProcessingConfiguration;
@@ -35,29 +36,74 @@ export class Render {
     const sky = this.sky = B.MeshBuilder.CreateSphere('sky', { diameter: 800, segments: 16, sideOrientation: B.Mesh.BACKSIDE }, scene);
     const sm = new B.StandardMaterial('skyMat', scene); sm.disableLighting = true; sm.backFaceCulling = false; sm.fogEnabled = false;
     // 天空贴图上边 = 天顶、中线 = 地平线；FIXED_EQUIRECTANGULAR 下要 invertY=false 才是正的（否则云跑到地平线以下、看到的只有下半张的浅色）
-    const st = new B.Texture('assets/tex/sky.jpg', scene, false, false, B.Texture.TRILINEAR_SAMPLINGMODE); st.coordinatesMode = B.Texture.FIXED_EQUIRECTANGULAR_MODE; sm.emissiveTexture = st; sm.diffuseColor = new B.Color3(0, 0, 0); sm.specularColor = new B.Color3(0, 0, 0);
-    sm.emissiveColor = new B.Color3(0, 0, 0); st.level = 1.0; // emissiveColor 与贴图相加，必须为黑
+    sm.diffuseColor = new B.Color3(0, 0, 0); sm.specularColor = new B.Color3(0, 0, 0);
+    sm.emissiveColor = new B.Color3(0, 0, 0); // emissiveColor 与贴图相加，必须为黑
     sky.material = sm; sky.infiniteDistance = true; sky.isPickable = false; sky.applyFog = false;
     sky.renderingGroupId = 0;
     this.pipeline = null;
+    this.skyTex = {}; this.skyMat = sm; if (CONFIG.gfxOrig) this.setSky('assets/tex/sky.jpg');   // 升级画质由 gfx.js 设 sky_day
+    // 画质升级 Demo（js/core/gfx.js）可以覆盖的部分：灯光预设 look、户外 / 站内环境贴图、户外薄雾、关后期
+    this.look = null; this.envOutO = null; this.envInO = null; this.envInGet = null; this.haze = null; this.tunnel = false; this.noPost = false;
     this.applyZone(0, true);
   }
   /** indoor: 0 = 户外，1 = 地下站内 */
   applyZone(f, snap) {
-    const s = this.scene, h = this.hemi, sun = this.sun;
-    h.intensity = lerp(0.65, 0.95, f);
-    h.diffuse = B.Color3.Lerp(new B.Color3(0.95, 0.97, 1.0), new B.Color3(1.0, 0.98, 0.94), f);
-    h.groundColor = B.Color3.Lerp(new B.Color3(0.55, 0.55, 0.5), new B.Color3(0.62, 0.62, 0.64), f);
-    sun.intensity = lerp(2.4, 0.9, f);
-    sun.diffuse = B.Color3.Lerp(new B.Color3(1.0, 0.95, 0.86), new B.Color3(1.0, 0.99, 0.96), f);
-    const d = B.Vector3.Lerp(new B.Vector3(-0.42, -1, 0.55), new B.Vector3(-0.08, -1, 0.06), f).normalize(); sun.direction.copyFrom(d);
-    s.environmentIntensity = lerp(1.0, 0.9, f);
+    const s = this.scene, h = this.hemi, sun = this.sun, L = this.look;
+    if (!L) {
+      h.intensity = lerp(0.65, 0.95, f);
+      h.diffuse = B.Color3.Lerp(new B.Color3(0.95, 0.97, 1.0), new B.Color3(1.0, 0.98, 0.94), f);
+      h.groundColor = B.Color3.Lerp(new B.Color3(0.55, 0.55, 0.5), new B.Color3(0.62, 0.62, 0.64), f);
+      sun.intensity = lerp(2.4, 0.9, f);
+      sun.diffuse = B.Color3.Lerp(new B.Color3(1.0, 0.95, 0.86), new B.Color3(1.0, 0.99, 0.96), f);
+      const d = B.Vector3.Lerp(new B.Vector3(-0.42, -1, 0.55), new B.Vector3(-0.08, -1, 0.06), f).normalize(); sun.direction.copyFrom(d);
+      s.environmentIntensity = lerp(1.0, 0.9, f);
+    } else {
+      h.intensity = lerp(L.hemiI[0], L.hemiI[1], f);
+      h.diffuse = B.Color3.Lerp(L.hemiD[0], L.hemiD[1], f); h.groundColor = B.Color3.Lerp(L.hemiG[0], L.hemiG[1], f);
+      sun.intensity = lerp(L.sunI[0], L.sunI[1], f); sun.diffuse = B.Color3.Lerp(L.sunD[0], L.sunD[1], f);
+      const d = B.Vector3.Lerp(L.sunDir, new B.Vector3(-0.08, -1, 0.06).normalize(), f).normalize(); sun.direction.copyFrom(d);
+      s.environmentIntensity = lerp(L.envI[0], L.envI[1], f);
+    }
     if (f > 0.5) this.preloadIndoor();
-    const want = f > 0.5 && this.envIn ? this.envIn : this.env; if (s.environmentTexture !== want) s.environmentTexture = want;
+    // 启动时（gfx.js 还没接管）升级画质不先下载原版环境贴图
+    const eOut = this.envOutO || (this.envPending ? null : this.env), eIn = this.envInO || this.envIn;
+    const want = f > 0.5 && eIn ? eIn : eOut; if (want && s.environmentTexture !== want) s.environmentTexture = want;
     this.sky.setEnabled(f < 0.98);
+    this.updateFog();
+  }
+  get env() { if (!this._env) { this._env = B.CubeTexture.CreateFromPrefilteredData('vendor/env/environmentSpecular.env', this.scene); this._env.name = 'env'; } return this._env; }
+  /** 天空贴图切换（原版 sky.jpg / 升级 sky_day / sky_dusk；缓存，切换瞬时） */
+  setSky(url) {
+    let t = this.skyTex[url];
+    if (!t) { t = this.skyTex[url] = new B.Texture(url, this.scene, false, false, B.Texture.TRILINEAR_SAMPLINGMODE); t.coordinatesMode = B.Texture.FIXED_EQUIRECTANGULAR_MODE; t.level = 1.0; }
+    if (this.skyMat.emissiveTexture !== t) this.skyMat.emissiveTexture = t;
+  }
+  /** 隧道雾（原版）/ 户外薄雾（升级 Demo）/ 无雾 */
+  setTunnel(v) { this.tunnel = !!v; this.updateFog(); }
+  updateFog() {
+    const s = this.scene;
+    if (this.tunnel) { s.fogMode = B.Scene.FOGMODE_LINEAR; s.fogColor.set(0.08, 0.09, 0.11); s.fogStart = 25; s.fogEnd = 85; return; }
+    if (this.haze && this.indoor < 0.5) { const H = this.haze; s.fogMode = B.Scene.FOGMODE_LINEAR; s.fogColor.copyFrom(H.color); s.fogStart = H.start; s.fogEnd = H.end; return; }
+    s.fogMode = B.Scene.FOGMODE_NONE;
+  }
+  /** 关掉后期管线（画布原生 MSAA 抗锯齿；色调映射 / 暗角由材质完成）；关时按当前档位恢复 */
+  setNoPost(v) { v = !!v; if (v === this.noPost) return; this.noPost = v; if (this._q) this.applyPost(this._q); }
+  applyPost(q) {
+    const s = this.scene, post = q.post && !this.noPost;
+    if (post && !this.pipeline) {
+      const p = this.pipeline = new B.DefaultRenderingPipeline('pp', true, s, [this.cam]);
+      p.imageProcessingEnabled = true;
+      p.bloomEnabled = true; p.bloomThreshold = 0.82; p.bloomWeight = 0.28; p.bloomKernel = 48; p.bloomScale = 0.5;
+      p.fxaaEnabled = true;
+    }
+    if (this.pipeline) {
+      if (!post) { this.pipeline.dispose(); this.pipeline = null; }
+      else { this.pipeline.samples = q.msaa || 1; this.pipeline.fxaaEnabled = !(q.msaa > 1); this.pipeline.bloomEnabled = !!q.bloom; this.pipeline.bloomWeight = q.bloom || 0; this.pipeline.bloomKernel = q.bloomKernel || 32; }
+    }
   }
   /** 室内影棚环境贴图：首屏之后空闲时再加载（不占加载时间） */
   preloadIndoor() {
+    if (this.envInGet) { if (!this.envInO) this.envInGet(); return; }   // 升级画质：站内用 env_indoor（第一次进站内才下载）
     if (this.envIn) return;
     this.envIn = B.CubeTexture.CreateFromPrefilteredData(this._envInUrl, this.scene); this.envIn.name = 'envIn';
   }
@@ -78,17 +124,8 @@ export class Render {
     this.engine.setHardwareScalingLevel(1 / Math.min(dpr, q.scale));
     this.wantShadows = !!q.shadows; this.sun.shadowEnabled = this.wantShadows && !this.noSunShadow;
     setNormalMaps(!!q.normals);
-    // 后期
-    if (q.post && !this.pipeline) {
-      const p = this.pipeline = new B.DefaultRenderingPipeline('pp', true, s, [this.cam]);
-      p.imageProcessingEnabled = true;
-      p.bloomEnabled = true; p.bloomThreshold = 0.82; p.bloomWeight = 0.28; p.bloomKernel = 48; p.bloomScale = 0.5;
-      p.fxaaEnabled = true;
-    }
-    if (this.pipeline) {
-      if (!q.post) { this.pipeline.dispose(); this.pipeline = null; }
-      else { this.pipeline.samples = q.msaa || 1; this.pipeline.fxaaEnabled = !(q.msaa > 1); this.pipeline.bloomEnabled = !!q.bloom; this.pipeline.bloomWeight = q.bloom || 0; this.pipeline.bloomKernel = q.bloomKernel || 32; }
-    }
+    // 后期（画质 Demo 的「锐利原生抗锯齿」会整个关掉，见 setNoPost）
+    this._q = q; this.applyPost(q); void s;
     // 后期关闭时，色调映射 / 暗角由材质直接完成（Babylon 自动切换）
     this.useProbes = !!q.probes;
     this.refreshProbes();
