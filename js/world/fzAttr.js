@@ -2,7 +2,7 @@
  * 福州地铁景点街区（第二批，1 / 4 号线）。坐标约定同 xmAttr.js：出口亭在原点，玩家出亭往 +z 走；亭子后面（z -22..-8）是马路。
  *   东街口 C  → 三坊七巷：南后街北口（“三坊七巷”石牌坊）→ 南后街，两边白墙黛瓦、一道道起伏的马鞍墙（封火墙）、木板店面、红灯笼
  *   南门兜 G1 → 于山 / 白塔：五一广场 → 于山（满山榕树）脚下的白塔（七层八角、白墙灰檐）+ 定光寺屋顶
- *   达道 C   → 上下杭：老街两边 2–3 层青砖 / 灰白墙老商行（木板店面、招牌、灯笼）→ 星安河（下沉河道）+ 三通桥（石拱桥）
+ *   达道 C   → 上下杭：老街两边 2–3 层青砖 / 灰白墙老商行（木板店面、招牌、灯笼）→ 三捷河（下沉河道）+ 三通桥（石拱桥）+ 三捷河码头（2D）
  *   西门 B   → 西湖公园：牌楼式大门 → 湖岸垂柳 → 木栈桥 → 立在水上的观湖亭；远处柳堤 + 白石拱桥、湖心岛开化寺
  * 第三批（2 / 5 / 6 号线）：
  *   上藤 B   → 烟台山：上山石板路，两边红砖 / 米黄近代洋楼（两层券廊）→ 灰色花岗岩石厝教堂 + 方塔尖顶钟楼；山上榕树
@@ -15,7 +15,7 @@
  */
 import { Geo, hex } from '../core/geo.js';
 import * as D from './decor.js';
-import { textPaint, facadePaint, FONT } from './xmStreet.js';
+import { textPaint, facadePaint, FONT, FONT_EN } from './xmStreet.js';
 import { q2, roof, figure, ring, ringCol, animMesh } from './xmAttr.js';
 import { lowPerson } from './xmSM.js';
 
@@ -55,13 +55,15 @@ function saddleWall(S, x0, z0, L, h0, amp, alongZ, n = 14) {
 }
 
 /* ============== 东街口 C 口：三坊七巷（南后街北口） ============== */
-function sanfang(S) {
-  const k = S.kit, P = k.solid, A = S.atlas, GR = k.g('granite');
-  front(S, '杨桥东路');
+/** o.embed（2D）：整块嵌进内河场景（fzRiver.nhjStreet 给一层转 180° 的代理）——不画街口马路 / 远处楼（内河自己画），
+ *  南后街尽头那道横跨的马鞍墙不画（南后街往南接步道到三坊七巷南口牌坊），石板街铺到 z 196；两头院落临空的山墙贴民居立面（不留白墙） */
+export function sanfang(S, o = {}) {
+  const k = S.kit, P = k.solid, A = S.atlas, GR = k.g('granite'), E = !!o.embed;
+  if (!E) front(S, '杨桥东路');
   // 口部小广场 + 南后街石板路（x -7..7，往 +z）
   GR.slab(-24, 24, 0.005, 0.03, 2, 20, hex('#C9C3B6'), NO);
-  GR.slab(-7, 7, 0.005, 0.03, 20, 190, hex('#A9A397'), NO);
-  for (let z = 22; z < 188; z += 3) GR.slab(-6.6, 6.6, 0.031, 0.035, z, z + 0.12, hex('#8E887C'), NO);
+  GR.slab(-7, 7, 0.005, 0.03, 20, E ? 196 : 190, hex('#A9A397'), NO);
+  for (let z = 22; z < (E ? 194 : 188); z += 3) GR.slab(-6.6, 6.6, 0.031, 0.035, z, z + 0.12, hex('#8E887C'), NO);
   // 石牌坊（四柱三间，中间写“三坊七巷”，背面“南后街”）
   { const z = 22, gy = 8.4;
     for (const x of [-7.4, -3.2, 3.2, 7.4]) { GR.slab(x - 0.45, x + 0.45, 0, x * x > 20 ? 6.2 : gy, z - 0.45, z + 0.45, hex('#B9B2A4'), NO); GR.slab(x - 0.8, x + 0.8, 0, 0.6, z - 0.8, z + 0.8, hex('#A39C8E'), NO); k.colSlab(x - 0.5, x + 0.5, 0, 8, z - 0.5, z + 0.5); }
@@ -95,13 +97,50 @@ function sanfang(S) {
     for (const dz of [-4, 4]) { P.ellipsoid(xf - side * 1.5, 2.85, zc + dz, 0.55, 0.62, 0.55, hex('#D7262E'), 1); }
     // 户与户之间：马鞍墙（垂直街面，高出屋顶）
     saddleWall(S, side < 0 ? xb : xf - side * 0.3, z0, Math.abs(xb - xf) + 0.3, 6.2, 4.6 + (i % 3) * 0.6, false, 18);
+    if (E && (z === 26 || z + 13 >= 182) && o.endFace) {   // 2D：第一户 / 最后一户临空的山墙（朝广场 / 朝南头步道）贴民居立面 + 马鞍墙封头
+      const ze = z === 26 ? z0 + 0.27 : z1 - 0.27, rz = z === 26 ? 0 : Math.PI;
+      A.quad((xf + xb) / 2, 3.1, ze + (z === 26 ? -0.03 : 0.03), Math.abs(xb - xf) - 0.4, 6.2, rz, o.endFace);
+      if (z + 13 >= 182) saddleWall(S, side < 0 ? xb : xf - side * 0.3, z1, Math.abs(xb - xf) + 0.3, 6.2, 4.4 + (i % 3) * 0.6, false, 18);
+    }
   }
   // 远处一道横跨的马鞍墙“天际线”（视线尽头）
-  saddleWall(S, -26, 186, 52, 6.5, 4.5, false, 16);
+  if (!E) saddleWall(S, -26, 186, 52, 6.5, 4.5, false, 16);
   // 游客
   [[-3, 30, 0], [2.5, 36, Math.PI], [-1, 48, 0.2], [3.5, 58, Math.PI], [-4, 70, 0], [1, 84, Math.PI], [-2.5, 100, 0], [4, 116, Math.PI], [-15, 10, 1], [16, 6, -1],
    [1.5, 27, Math.PI], [-4.5, 34, 0.3], [4.6, 41, -2.9], [0, 44, 0], [-3.4, 53, Math.PI], [2, 63, 0.2], [-0.5, 76, Math.PI], [3.8, 92, 0], [-4.2, 108, Math.PI], [1.2, 128, 0], [-2, 146, Math.PI], [3, 160, 0]].forEach(([x, z, r], j) => lowPerson(P, x, 0, z, r, j * 5 + 2, j === 3));
   S.filler([[-60, 40, 40, 30, 22, '#D2CABE'], [60, 40, 40, 30, 26, '#C9C2B6'], [-60, 110, 40, 60, 9, '#E9E5DC'], [60, 110, 40, 60, 9, '#E9E5DC'], [-110, -40, 40, 14, 30, '#CFC7BA'], [110, -40, 40, 14, 24, '#D8D0C3']]);
+}
+/** 1A 内河样式的木牌（深灰石座 + 木色牌面，上中文、下英文；不画箭头、不画线路）：2D 三捷河河名牌 / 三捷河码头牌。ry = 牌面朝向（0 = 朝 -z） */
+function woodBoard(S, x, z, ry, zh, en) {
+  const k = S.kit, A = S.atlas, c = Math.cos(ry), s = Math.sin(ry);
+  k.g('granite').box(x, 0.35, z, 1.9, 0.7, 0.5, hex('#4D4F52'), ry, 0, 0, 1, NO);
+  k.solid.box(x, 1.55, z, 1.75, 1.7, 0.12, hex('#8B6844'), ry, 0, 0, 1, NO);
+  k.col(x, 0.9, z, 1.9, 1.8, 0.5, { ry });
+  const uv = A.draw(1.65, 1.6, (cv, pw, ph) => {
+    cv.fillStyle = '#A27A50'; cv.fillRect(0, 0, pw, ph);
+    for (let i = 0; i < 9; i++) { cv.fillStyle = `rgba(70,40,20,${0.05 + (i % 3) * 0.03})`; cv.fillRect(0, ph * i / 9 + 2, pw, 2); }
+    cv.strokeStyle = '#5E4128'; cv.lineWidth = ph * 0.025; cv.strokeRect(ph * 0.03, ph * 0.03, pw - ph * 0.06, ph - ph * 0.06);
+    cv.fillStyle = '#2B1A0E'; cv.textAlign = 'center'; cv.textBaseline = 'middle';
+    const fit = (txt, w8, size, font, y) => { cv.font = `${w8} ${size}px ${font}`; const m = cv.measureText(txt).width; if (m > pw * 0.86) cv.font = `${w8} ${size * pw * 0.86 / m}px ${font}`; cv.fillText(txt, pw / 2, y); };
+    fit(zh, 800, ph * 0.26, FONT, ph * 0.4);
+    fit(en, 600, ph * 0.1, FONT_EN, ph * 0.66);
+  }, 150);
+  A.quad(x - s * 0.07, 1.55, z - c * 0.07, 1.65, 1.6, -ry, uv);
+  A.quad(x + s * 0.07, 1.55, z + c * 0.07, 1.65, 1.6, Math.PI - ry, uv);
+}
+/** 2D 三捷河码头的展示船（小美 2D ④）：木船 + 竹篷，缆绳系在岸上的系船桩上；不能上、没有提示。bow = 船头朝 +x(1) / -x(-1)；pile = 系船桩 [x, y, z] */
+function mooredBoat(S, x, y, z, bow, pile, i) {
+  const P = S.kit.solid, wood = hex(['#7A5236', '#6E4A30', '#835A3B'][i % 3]), dark = hex('#4A3424');
+  P.box(x, y + 0.22, z, 4.8, 0.44, 1.6, wood, 0, 0, 0, 1, NO);   // 船身
+  for (const e of [-1, 1]) P.box(x + e * 2.75, y + 0.3, z, 0.9, 0.36, 1.0, wood, e * 0.0, 0, e * -0.18, 1, NO);   // 两头收尖、略翘
+  P.box(x, y + 0.45, z, 4.6, 0.04, 1.3, hex('#9C7A55'), 0, 0, 0, 1, NO);   // 船板
+  for (const e of [-1, 1]) P.box(x, y + 0.5, z + e * 0.78, 5.2, 0.1, 0.08, dark, 0, 0, 0, 1, NO);   // 船舷
+  P.cyl(x - bow * 0.4, y + 0.5, z, 1.45, 2.0, hex('#3E3A32'), 10, 0, 0, Math.PI / 2);   // 竹篷（半截露出船面 = 拱篷）
+  const cl = [x + bow * 2.6, y + 0.62, z];   // 船头缆桩
+  P.cyl(cl[0], cl[1] - 0.06, cl[2], 0.12, 0.16, hex('#2B2F33'), 6);
+  P.cyl(pile[0], pile[1] + 0.15, pile[2], 0.2, 0.3, hex('#2B2F33'), 8);   // 岸上系船桩
+  const m = [(cl[0] + pile[0]) / 2, Math.min(cl[1], pile[1]) - 0.35, (cl[2] + pile[2]) / 2];
+  P.path([cl, m, [pile[0], pile[1] + 0.22, pile[2]]], 0.035, hex('#C9B48A'), 4);   // 缆绳（下垂一点）
 }
 
 /* ============== 南门兜 G1 口：于山风景区（白塔）· 五一广场 ============== */
@@ -154,7 +193,7 @@ function yushan(S) {
   S.filler([[-120, 30, 40, 40, 30, '#CFC7BA'], [120, 30, 40, 40, 26, '#D8D0C3'], [-100, -40, 40, 14, 34, '#C9C2B6'], [100, -40, 40, 14, 28, '#D2CABE']]);
 }
 
-/* ============== 达道 C 口：上下杭（星安河 + 三通桥） ============== */
+/* ============== 达道 C 口：上下杭（三捷河 + 三通桥 + 三捷河码头） ============== */
 /** 老商行立面（贴图）：上面几层 青砖 / 灰白墙 + 木格窗，底层整排木板店面 */
 function shopPaint(floors, wall, brick) {
   return (c, pw, ph) => {
@@ -199,7 +238,7 @@ function shangxiahang(S) {
     if (z1 > 40) A.quad((xf + xb) / 2, h / 2, z1 + 0.03, Math.abs(xb - xf), h, Math.PI, fac(fl, br));   // 临河山墙也有门窗（站在河边回头看不是一面白墙）
   };
   for (const side of [-1, 1]) for (let z = 4, i = 0; z < 41; z += 12.5, i++) house(side * 6, side * 20, z, z + 12.5, side, 2 + ((i + (side > 0 ? 1 : 0)) % 2), (i + (side > 0 ? 0 : 1)) % 2 === 0);
-  // 星安河：东西向小河（z 44..56），地面挖开、水面低 1.8 米；两岸条石驳岸 + 矮石栏（碰撞墙 1.2 米高，看不见）
+  // 三捷河（2D 改名：原来写成星安河是我们写错的；小美 2D ⑤）：东西向小河（z 44..56），地面挖开、水面低 1.8 米；两岸条石驳岸 + 矮石栏（碰撞墙 1.2 米高，看不见）
   const R0 = 44, R1 = 56, WY = -2.6;
   WA.slab(-160, 160, WY - 0.05, WY, R0, R1, hex('#2F6670'), NO);
   k.colSlab(-160, 160, WY, WY + 0.08, R0, R1);   // 水面托一层，掉下去站在水面上
@@ -232,7 +271,16 @@ function shangxiahang(S) {
   // 逛街的人（街上 + 河边 + 桥上）+ 一条小船
   [[-2, 8, 0], [3, 12, Math.PI], [-3.5, 17, 0.3], [1, 21, Math.PI], [4, 25, 3.0], [-1.5, 28, 0], [2.5, 33, Math.PI], [-4, 36, 0.2], [0.5, 39, 0], [3.5, 41, Math.PI],
    [-12, 42.4, 1.6], [14, 42.6, -1.6], [-24, 42.5, 1.5], [1.5, 50, 0], [-1.5, 47, Math.PI], [1, 53, Math.PI], [-20, 57.6, -1.5], [22, 57.8, 1.5]].forEach(([x, z, r], j) => lowPerson(P, x, 0, z, r, j * 3 + 2, j % 5 === 3));
-  P.box(-26, WY + 0.25, 50, 6, 0.5, 1.8, hex('#7A5236'), 0, 0, 0, 1, NO); figure(P, -27.5, 50, '#3E8EDE', 1.4, WY + 0.4);
+  // 2D：三捷河河名牌（1A 木牌 + 石座，上中文下英文）+ 三捷河码头（东岸边石阶下到水边平台；展示船缆绳系着，不能上船、没有提示；码头牌只写名字）
+  woodBoard(S, -17.5, R0 - 0.95, 0, '三捷河', 'Sanjie River');
+  woodBoard(S, 16, R0 - 0.95, 0, '三捷河码头', 'Sanjie River Pier');
+  { const y0 = WY - 0.4, top = 0, low = WY + 0.3, a0 = 12.5, a1 = 20.5, n = 12, d = 1.5, zW = R0 + 0.4;   // 石阶贴岸墙往东下到 low（岸上石栏照常拦着：只看）
+    for (let i = 0; i < n; i++) { const xa = a0 + (a1 - a0) * i / n, xb = a0 + (a1 - a0) * (i + 1) / n, yy = top + (low - top) * (i + 0.5) / n; GR.slab(xa, xb + 0.01, y0, yy, zW, zW + d, hex(i % 2 ? '#A39C8E' : '#9A9385'), NO); }
+    GR.slab(a1, 44, y0, low, zW, zW + d, hex('#8E887C'), NO);   // 水边平台
+    for (let x = a1 + 2; x < 44; x += 3.2) GR.slab(x, x + 0.05, low - 0.25, low + 0.002, zW + d - 0.02, zW + d + 0.01, hex('#6E685C'), NO);
+    [[25.5, 1], [32.5, 1], [39.5, 1]].forEach(([bx, bow], i) => mooredBoat(S, bx, WY - 0.12, zW + d + 1.0, bow, [bx + bow * 3.4, low, zW + d - 0.35], i)); }
+  mooredBoat(S, -26, WY - 0.12, R1 - 1.4, -1, [-29.6, 0, R1 + 0.3], 3);   // 原来河中间那条小船：也靠到对岸系上缆绳
+  figure(P, -25.0, R1 - 1.4, '#3E8EDE', 1.4, WY + 0.32);
   S.filler([[-60, 20, 30, 34, 14, '#D2CABE'], [60, 20, 30, 34, 16, '#C9C2B6'], [-100, -40, 40, 14, 26, '#CFC7BA'], [100, -40, 40, 14, 30, '#D8D0C3']]);
 }
 

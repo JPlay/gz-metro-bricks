@@ -269,7 +269,7 @@ export class Geo {
       if (m) { B.Vector3.TransformCoordinatesFromFloatsToRef(g.p[k], g.p[k + 1], g.p[k + 2], m, tmpV); B.Vector3.TransformNormalFromFloatsToRef(g.n[k], g.n[k + 1], g.n[k + 2], m, tmpN); }
       else { tmpV.set(g.p[k], g.p[k + 1], g.p[k + 2]); tmpN.set(g.n[k], g.n[k + 1], g.n[k + 2]); }
       const base = this.p.length / 3; void base;
-      const X = this.xf; if (X) { tmpV.x = X.cx + (tmpV.x - X.cx) * X.s + (X.ox || 0); tmpV.y *= X.sy; tmpV.z = X.cz + (tmpV.z - X.cz) * X.s + (X.oz || 0); }   // 合进来的也跟着平移 / 缩放（法线只平移不变）
+      const X = this.xf; if (X) { tmpV.x = X.cx + (tmpV.x - X.cx) * X.s + (X.ox || 0); tmpV.y *= X.sy; tmpV.z = X.cz + (tmpV.z - X.cz) * X.s + (X.oz || 0); if (X.s < 0) { tmpN.x = -tmpN.x; tmpN.z = -tmpN.z; } }   // 合进来的也跟着平移 / 缩放（法线只平移不变）；s < 0 = 水平转 180°（2D 南后街嵌进内河），法线 x / z 跟着反向
       this.p.push(tmpV.x, tmpV.y, tmpV.z); this.n.push(tmpN.x, tmpN.y, tmpN.z);
       this.u.push(g.u[j * 2], g.u[j * 2 + 1]); if (this.b) this.b.push(g.b ? g.b[j] : this.bone);
     }

@@ -114,11 +114,15 @@ ok('under-walk headroom ≥ 2.0 m and leaves the boat lane', U.every(u => R.FLAT
   ok('main route A / lock / lake / sfqx / sbwPark identical', ['route', 'lock', 'lake', 'lakeBox', 'sfqx', 'sbwPark', 'lakeFar', 'lakeShore'].every(k => J(M[k]) === J(F[k])));
   const Nraw = JSON.parse(fs.readFileSync(new URL('../../js/data/fz-river-data.js', import.meta.url), 'utf8').replace(/^[^]*?export const FZR = /, '').replace(/;\s*$/, ''));   // 未经 cutPierGaps 切过的原始岸墙
   const goneW = has(Nraw.wall, M.wall);
-  ok(`main bank walls unchanged except the old 白马河 end cap (${goneW.length} removed)`, goneW.length <= 1 && goneW.every(w => w[4] === 2 && w[1] < -540), goneW);
+  // 2D：安泰河接东段，旧安泰河尽头封口 + 接缝处相邻两段岸墙（并段）跟着换 —— 只允许在 2D 接缝处（x 30..70, z -205..-175）
+  const inD2J = (x, z) => x > 30 && x < 70 && z > -205 && z < -175;
+  const goneC = goneW.filter(w => !inD2J((w[0] + w[2]) / 2, (w[1] + w[3]) / 2));
+  ok(`main bank walls unchanged except the old 白马河 end cap (${goneC.length} removed; 2D junction ${goneW.length - goneC.length})`, goneC.length <= 1 && goneC.every(w => w[4] === 2 && w[1] < -540), goneW);
   const cellZ = k => (+k.split(',')[1] + 1) * F.cell;
   const chL = Object.keys(M.land).filter(k => J(M.land[k]) !== J(F.land[k])), chW = Object.keys(M.water).filter(k => J(M.water[k]) !== J(F.water[k]));
-  ok(`main land / water cells unchanged outside 2C (changed only at the 2C junction: land ${chL.join(' ')}, water ${chW.join(' ')})`, [...chL, ...chW].every(k => cellZ(k) <= -540), [chL, chW]);
-  ok('白马河 centreline: main points kept as prefix', J(F.rivers.bm.p.slice(0, M.rivers.bm.p.length)) === J(M.rivers.bm.p) && J(F.rivers.dx) === J(M.rivers.dx) && J(F.rivers.at) === J(M.rivers.at)); }
+  const inD2c = k => { const [i, j] = k.split(',').map(Number); return F.d2 && (i * F.cell + F.cell > 30 && j * F.cell < -100 && j * F.cell + F.cell > -260 || (i * F.cell < -10 && i * F.cell + F.cell > -160 && j * F.cell + F.cell > -200 && j * F.cell < 75)); };   // 2D：安泰河东段 / 南后街走廊的格子
+  ok(`main land / water cells unchanged outside 2C (changed only at the 2C junction: land ${chL.join(' ')}, water ${chW.join(' ')})`, [...chL, ...chW].every(k => cellZ(k) <= -540 || inD2c(k)), [chL, chW]);
+  ok('白马河 centreline: main points kept as prefix', J(F.rivers.bm.p.slice(0, M.rivers.bm.p.length)) === J(M.rivers.bm.p) && J(F.rivers.dx) === J(M.rivers.dx) && J(F.rivers.at.p.slice(0, M.rivers.at.p.length)) === J(M.rivers.at.p)); }
 // ④ 左上角「河」牌：岸上永远红（a 网 A 线色，同 1A–2B），只有坐 / 站在 C 线船上才绿
 ok('HUD shore colour: hudLine(A, null) red; on C boat green; on A boat red; b net shore blue-grey',
   R.hudLine('A', null).color === '#B3261E' && R.hudLine('A', 'C').color === '#2F7D4A' && R.hudLine('A', 'A').color === '#B3261E' && R.hudLine('B', null).color === '#2E5E8C' && R.hudLine('A', null).line === 'A');
@@ -132,7 +136,7 @@ ok('HUD shore colour: hudLine(A, null) red; on C boat green; on A boat red; b ne
   ok('彬德水闸 r2: stone piers + gates + hoist house, no metal bucket, no blue-ish / pure-white colours', !/k\.metal/.test(body) && /启闭房/.test(body) && /colSluice/.test(body) && !blue.length && !white.length, { blue, white });
   const hb = src.slice(src.indexOf('  houseBodies() {'), src.indexOf('  /* ---------- 榕树'));
   ok('2C houses: façade on all four sides (no blank side walls)', /h\.back \|\| \(FZR\.c2 && h\.z < FZR\.c2\.z0\)/.test(hb));
-  ok('2C skirt outside the walkable area painted grass (no pure-white ground)', /z < c2z\) \? GRASS/.test(src));
+  ok('2C skirt outside the walkable area painted grass (no pure-white ground)', /z < c2z( \|\| inD2\(x, z\))?\) \? GRASS/.test(src));
   const L = R.RIVERS.bm.line, b18 = R.BRIDGES.find(b => b.id === 'bm18'), near = F.trees.filter(t => { let best = 1e9, bs = 0; for (let s = b18.s - 40; s <= b18.s + 30; s += 0.5) { const a = L.at(s, 0), d = Math.hypot(a.x - t[0], a.z - t[1]); if (d < best) { best = d; bs = s; } } const a = L.at(bs, 13.5); return Math.hypot(a.x - t[0], a.z - t[1]) < 5.4 && ((bs > b18.s - 25 && bs < b18.s - 2) || (bs > b18.s + 2 && bs < b18.s + 15)); });
   ok('彬德桥: no banyan on the west bank right up/downstream (front-on shots not blocked)', !near.length, near);
   ok('彬德水闸 viewpoint: upstream of the sluice, on land, beyond the pier line', R.isLand(...c2.sluice.view) && ((c2.sluice.view[0] - c2.sluice.x) * c2.sluice.t[0] + (c2.sluice.view[1] - c2.sluice.z) * c2.sluice.t[1]) < -6); }
