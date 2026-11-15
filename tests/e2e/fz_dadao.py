@@ -53,27 +53,30 @@ async def main():
     # 老街 → 三捷河边（三通桥南头）
     await walk(pg, [[0, 14], [0, 30], [0, 41.5]], '出口 → 老街 → 三捷河边')
     R['perf']['river'] = await sample(pg, 'river')
+    FP = "if (__game.player.view !== 'first') __game.toggleView()"; TP = "if (__game.player.view !== 'third') __game.toggleView()"
+    if OUT: await pg.evaluate(FP)   # 截图都用第一人称（第三人称时角色 / 相机贴墙会挡住牌子）
     if OUT:
         await look(pg, -17.5, 43.05, 0.05); await shot(pg, 'dadao_river_name_board_from_street_end')
         await look(pg, 16, 43.05, 0.05); await shot(pg, 'dadao_pier_board_from_street_end')
         await look(pg, 0, 50, 0.1); await shot(pg, 'dadao_santong_bridge_front')
     # 上三通桥 → 对岸
-    await walk(pg, [[0, 50], [0, 57.1]], '三通桥 → 对岸')
+    await walk(pg, [[0, 50], [0, 57.6]], '三通桥 → 对岸')
     if OUT:
         await look(pg, 0, 44, 0.0); await shot(pg, 'dadao_from_far_bank_back_to_street')
-    await walk(pg, [[-17.5, 57.1]], '对岸 → 河名牌正对面')
+    await walk(pg, [[-17.5, 57.6]], '对岸 → 河名牌正对面')
     if OUT: await look(pg, -17.5, 43.05, -0.02); await shot(pg, 'dadao_river_name_board_front_sanjie')
-    await walk(pg, [[0, 57.1], [16, 57.1]], '对岸 → 码头牌正对面')
+    await walk(pg, [[0, 57.6], [16, 57.6]], '对岸 → 码头牌正对面')
     R['perf']['pier'] = await sample(pg, 'pier')
     pr = await pg.evaluate(PROMPT); ok('boats:no tap-to-board prompt near the moored boats', not pr, pr)
     if OUT:
         await look(pg, 16, 43.05, -0.02); await shot(pg, 'dadao_pier_board_front_sanjie_pier')
-        await look(pg, 32.5, 46.2, -0.18); await shot(pg, 'dadao_moored_boats_ropes')
-    await walk(pg, [[30, 57.1]], '对岸 → 展示船正对面')
+        await look(pg, 32.5, 46.2, 0.22); await shot(pg, 'dadao_moored_boats_ropes')
+    await walk(pg, [[30, 57.6]], '对岸 → 展示船正对面')
     pr = await pg.evaluate(PROMPT); ok('boats:no prompt right across the boats', not pr, pr)
-    if OUT: await look(pg, 32.5, 46.2, -0.25); await shot(pg, 'dadao_moored_boats_close')
+    if OUT: await look(pg, 32.5, 46.2, 0.32); await shot(pg, 'dadao_moored_boats_close')
+    if OUT: await pg.evaluate(TP)
     # 回出口亭进站
-    await walk(pg, [[0, 57.1], [0, 50], [0, 41.5], [0, 14]], '对岸 → 三通桥 → 老街')
+    await walk(pg, [[0, 57.6], [0, 50], [0, 41.5], [0, 14]], '对岸 → 三通桥 → 老街')
     await jreset(pg); await auto(pg, [[FS, 4], [FS, -4]], True); await asyncio.sleep(0.5)
     s = await st(pg); ok('fzdd:walkBackIntoStation', not await pg.evaluate('!!__game.fzMetro.street') and abs(s['pos'][0] - FO - exx) < 2.5 and s['pos'][2] < -33, s['pos'])
     R['perfWorst'] = max(R['perf'].items(), key=lambda kv: kv[1]['tris']) if R['perf'] else None

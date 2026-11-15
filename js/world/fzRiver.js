@@ -709,7 +709,7 @@ export class FzRiverStreet extends XmStreet {
   }
   /* ---------- 榕树：主干与主树冠进静态合批常开（不增 draw call，远景不悬空）；分杈 / 气根 / 副冠只开附近 ---------- */
   trees() {
-    for (const [x, z, fx, fz, s, kind, up] of FZR.trees) if (kind !== 'lake') this.det(x, z, () => this.banyanNear(x, z, fx, fz, s, up));
+    for (const [x, z, fx, fz, s, kind, up] of FZR.trees) if (kind === 'nhjw') this.banyanNear(x, z, fx, fz, s, up); else if (kind !== 'lake') this.det(x, z, () => this.banyanNear(x, z, fx, fz, s, up));   // 2D 步道（南后街 ⇄ 牌坊）那 4 棵榕树直接进常开的 g0：放进细节格子会把格子的包围盒拉到牌坊口，河边往西看整格都裁不掉（+3k 面）
   }
   // up = 1：2B 新种的树（东段 / 水部步道）主干直立，树冠略朝 f 偏 —— 不再斜着横过人行道（小美 2B ④）；气根只垂到 2.6 m 以上
   banyanNear(x, z, fx, fz, s, up) {
@@ -804,13 +804,15 @@ export class FzRiverStreet extends XmStreet {
     // 杨桥东路南侧人行道（局部 z -8..2）+ 路缘石 + 人行道护栏（深灰钢，护栏外就是马路）+ 杨桥东路（只看）
     const GR = real.g('granite'), Mt = real.metal, zc = Z0 + 8;
     GR.slab(X0 - 24, X0 + 24, 0.005, 0.03, Z0 - 2, zc, hex('#C9C3B6'), NO);
-    for (let x = X0 - 23; x < X0 + 24; x += 2) GR.slab(x, x + 0.06, 0.031, 0.035, Z0 - 1.8, zc - 0.2, hex('#ADA698'), NO);
-    GR.slab(X0 - 60, X0 + 60, 0.0, 0.15, zc, zc + 0.3, hex('#9A9385'), NO);
-    real.g('asphalt').slab(X0 - 160, X0 + 160, 0.004, 0.012, zc + 0.3, zc + 14.6, hex('#7E8084'), NO);
-    real.solid.slab(X0 - 160, X0 + 160, 0.012, 0.016, zc + 7.38, zc + 7.52, hex('#F2C230'), NO);
-    GR.slab(X0 - 160, X0 + 160, 0.0, 0.15, zc + 14.6, zc + 18, hex('#B9B5AD'), NO);
+    if (!lo) for (let x = X0 - 23; x < X0 + 24; x += 2) GR.slab(x, x + 0.06, 0.031, 0.035, Z0 - 1.8, zc - 0.2, hex('#ADA698'), NO);
+    if (!lo) {   // 路缘石 + 杨桥东路（±160 m 长）只在 hi 里画：lo 组的包围盒要收在街区宽度内，河边往东 / 往西看时整组能被视锥裁掉
+      GR.slab(X0 - 60, X0 + 60, 0.0, 0.15, zc, zc + 0.3, hex('#9A9385'), NO);
+      real.g('asphalt').slab(X0 - 160, X0 + 160, 0.004, 0.012, zc + 0.3, zc + 14.6, hex('#7E8084'), NO);
+      real.solid.slab(X0 - 160, X0 + 160, 0.012, 0.016, zc + 7.38, zc + 7.52, hex('#F2C230'), NO);
+      GR.slab(X0 - 160, X0 + 160, 0.0, 0.15, zc + 14.6, zc + 18, hex('#B9B5AD'), NO);
+    }
     Mt.slab(X0 - 24, X0 + 24, 0.92, 0.98, zc - 0.12, zc - 0.06, hex('#4A5560'), NO); Mt.slab(X0 - 24, X0 + 24, 0.18, 0.24, zc - 0.12, zc - 0.06, hex('#4A5560'), NO);
-    for (let x = X0 - 24; x <= X0 + 24.01; x += 2) Mt.slab(x - 0.03, x + 0.03, 0, 0.98, zc - 0.12, zc - 0.06, hex('#4A5560'), NO);
+    if (!lo) for (let x = X0 - 24; x <= X0 + 24.01; x += 2) Mt.slab(x - 0.03, x + 0.03, 0, 0.98, zc - 0.12, zc - 0.06, hex('#4A5560'), NO);   // lo：护栏立柱省掉（远处只看得到两道横杆）
     // 路口：只放真实路名牌（蓝底白字），不画地面引导
     this.roadSignW(X0 + 9.5, Z0 + 6.6, '杨桥东路', Math.PI / 2);   // 同一根杆：上面杨桥东路（顺马路），下面南后街（顺南后街）
     this.roadSignW(X0 + 9.5, Z0 + 6.6, '南后街', 0, 2.3, false);

@@ -86,7 +86,7 @@ export function sanfang(S, o = {}) {
   const uvC = {};
   let i = 0;
   for (let z = 26; z < 182; z += 13, i++) for (const side of [-1, 1]) {
-    const xf = side * 7, xb = side * 22, z0 = z, z1 = z + 13, zc = (z0 + z1) / 2, ry = side < 0 ? Math.PI / 2 : -Math.PI / 2, lo = LO, last = z + 13 >= 182;   // 最南一排（接步道）：lo 也保留曲屋顶 + 圆灯笼（近处看得到），马鞍墙用简化版
+    const xf = side * 7, xb = side * 22, z0 = z, z1 = z + 13, zc = (z0 + z1) / 2, ry = side < 0 ? Math.PI / 2 : -Math.PI / 2, lo = LO, last = z + 13 >= 182, far = LO && z + 13 <= 143;   // far：lo 里离步道 ≥ 40 m 的几排（只从牌坊口远远看得到）再省掉马鞍墙和灯笼   // 最南一排（接步道）：lo 也保留曲屋顶 + 圆灯笼（近处看得到），马鞍墙用简化版
     // 白墙院落体块（低）+ 临街两层木构店面
     P.slab(Math.min(xf, xb), Math.max(xf, xb), 0, 6.2, z0 + 0.3, z1 - 0.3, hex('#F1EEE6'), NO); k.colSlab(Math.min(xf, xb), Math.max(xf, xb), 0, 6.2, z0, z1);
     (lo && !last ? roofLo : roof)(P, side * 14.5, zc, 15, 12.4, 6.2, 2.6, hex('#3A3F45'), { ovh: 0.3, swallow: false, curl: 0.2, alongZ: true });
@@ -102,9 +102,9 @@ export function sanfang(S, o = {}) {
     P.box(xf - side * 0.9, 3.35, zc, 2.0, 0.18, 12.8, hex('#3A3F45'), 0, 0, side * 0.32, 1, NO);
     const shop = SHOP[(i * 2 + (side > 0 ? 1 : 0)) % SHOP.length];
     A.quad(xf - side * 0.06, 4.1, zc, 4, 0.7, ry, uvC['s' + shop] || (uvC['s' + shop] = A.draw(4, 0.7, textPaint([shop], { bg: '#2E1F14', fg: '#E9C46A' }), 60)));
-    for (const dz of [-4, 4]) { if (lo && !last) P.box(xf - side * 1.5, 2.85, zc + dz, 0.95, 1.1, 0.95, hex('#D7262E'), 0, 0, 0, 1, NO); else P.ellipsoid(xf - side * 1.5, 2.85, zc + dz, 0.55, 0.62, 0.55, hex('#D7262E'), 1); }
+    if (!far) for (const dz of [-4, 4]) { if (lo && !last) P.box(xf - side * 1.5, 2.85, zc + dz, 0.95, 1.1, 0.95, hex('#D7262E'), 0, 0, 0, 1, NO); else P.ellipsoid(xf - side * 1.5, 2.85, zc + dz, 0.55, 0.62, 0.55, hex('#D7262E'), 1); }
     // 户与户之间：马鞍墙（垂直街面，高出屋顶）
-    saddleWall(S, side < 0 ? xb : xf - side * 0.3, z0, Math.abs(xb - xf) + 0.3, 6.2, 4.6 + (i % 3) * 0.6, false, lo ? 5 : 18, lo);
+    if (!far) saddleWall(S, side < 0 ? xb : xf - side * 0.3, z0, Math.abs(xb - xf) + 0.3, 6.2, 4.6 + (i % 3) * 0.6, false, lo ? 5 : 18, lo);
     if (E && (z === 26 || z + 13 >= 182) && o.endFace) {   // 2D：第一户 / 最后一户临空的山墙（朝广场 / 朝南头步道）贴民居立面 + 马鞍墙封头
       const ze = z === 26 ? z0 + 0.27 : z1 - 0.27, rz = z === 26 ? 0 : Math.PI;
       A.quad((xf + xb) / 2, 3.1, ze + (z === 26 ? -0.03 : 0.03), Math.abs(xb - xf) - 0.4, 6.2, rz, o.endFace);
@@ -116,7 +116,7 @@ export function sanfang(S, o = {}) {
   // 游客
   [[-3, 30, 0], [2.5, 36, Math.PI], [-1, 48, 0.2], [3.5, 58, Math.PI], [-4, 70, 0], [1, 84, Math.PI], [-2.5, 100, 0], [4, 116, Math.PI], [-15, 10, 1], [16, 6, -1],
    [1.5, 27, Math.PI], [-4.5, 34, 0.3], [4.6, 41, -2.9], [0, 44, 0], [-3.4, 53, Math.PI], [2, 63, 0.2], [-0.5, 76, Math.PI], [3.8, 92, 0], [-4.2, 108, Math.PI], [1.2, 128, 0], [-2, 146, Math.PI], [3, 160, 0]].forEach(([x, z, r], j) => { if (LO || (E && j % 2 && j !== 3)) return; lowPerson(P, x, 0, z, r, j * 5 + 2, j === 3); });   // 2D 嵌进河网：游客减半（性能）
-  S.filler([[-60, 40, 40, 30, 22, '#D2CABE'], [60, 40, 40, 30, 26, '#C9C2B6'], [-60, 110, 40, 60, 9, '#E9E5DC'], [60, 110, 40, 60, 9, '#E9E5DC'], [-110, -40, 40, 14, 30, '#CFC7BA'], [110, -40, 40, 14, 24, '#D8D0C3']]);
+  if (!LO) S.filler([[-60, 40, 40, 30, 22, '#D2CABE'], [60, 40, 40, 30, 26, '#C9C2B6'], [-60, 110, 40, 60, 9, '#E9E5DC'], [60, 110, 40, 60, 9, '#E9E5DC'], [-110, -40, 40, 14, 30, '#CFC7BA'], [110, -40, 40, 14, 24, '#D8D0C3']]);
 }
 /** 1A 内河样式的木牌（深灰石座 + 木色牌面，上中文、下英文；不画箭头、不画线路）：2D 三捷河河名牌 / 三捷河码头牌。ry = 牌面朝向（0 = 朝 -z） */
 function woodBoard(S, x, z, ry, zh, en) {
