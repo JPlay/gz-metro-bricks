@@ -24,12 +24,14 @@ ok('walkable land all the way kiosk → plaza → 南后街 → step path → �
 const lkw = F.roads.find(r => r.id === 'nhjw');
 ok('step path 牌坊 → 南后街: walk road with stone rails both sides (granite + green strips, no ground markings)', lkw && lkw.walk && lkw.rails.length === 2 && lkw.d2);
 ok('banyans along the step path (both sides, upright)', F.trees.filter(t => t[5] === 'nhjw' && t[6] === 1).length >= 4);
-{ const body = src.slice(src.indexOf('  nhjStreet() {'), src.indexOf('  /** 西湖一角的远景'));
+{ const body = src.slice(src.indexOf('  nhjStreet(lo = false) {'), src.indexOf('  /** 西湖一角的远景'));
   ok('junction: only real street-name signs (杨桥东路 + 南后街), no arrows / maps / ground guides', /roadSignW\([^)]*'杨桥东路'/.test(body) && /roadSignW\([^)]*'南后街'/.test(body) && !/箭头|arrow|地图/.test(body.replace(/不画地面引导/g, '')));
   ok('embedded block: fzAttr.sanfang through a 180° proxy (xf s = -1, quads ry + π, colliders mirrored)', /s: -1/.test(body) && /ry \+ R/.test(body) && /X0 - x1, X0 - x0/.test(body) && /embed: true/.test(body)); }
 ok('gate backdrop (white wall + collider) removed when 2D present', /if \(!FZR\.d2\) \{ const bx = S\.x \+ dx \* 6/.test(src));
 ok('sanfang embed: no front road, no skyline wall at the far end, end gables get façades', /if \(!E\) front\(S/.test(attr) && /if \(!E\) saddleWall\(S, -26, 186/.test(attr) && /o\.endFace/.test(attr));
 ok('Geo.merge normals follow a 180° xf (s < 0)', /if \(X\.s < 0\) \{ tmpN\.x = -tmpN\.x; tmpN\.z = -tmpN\.z; \}/.test(fs.readFileSync(new URL('../../js/core/geo.js', import.meta.url), 'utf8')));
+ok('perf: 南后街 hi / lo LOD groups (d2s / d2sLo), lo pass registers no colliders and reuses the atlas draws', /k\.group\('d2s'\); this\.nhjStreet\(true\); k\.group\('d2sLo'\)/.test(src) && /real0\.col = \(\) => \{\}; real0\.colSlab = \(\) => \{\}/.test(src) && /this\._d2draws\[n\+\+\]/.test(src) && /function roofLo/.test(attr));
+ok('perf: east section in its own group d2e; corridor mode turns off gN / cells / d2e', /k\.group\('d2e'\)/.test(src) && /d < 430 && !corrP/.test(src) && /d < NEAR && !corrP/.test(src));
 // ③ 朱紫坊：北岸沿河立面 + 石牌 + 古榕；门一律关着
 const zz = F.houses.filter(h => h.zzf);
 ok(`朱紫坊 north-bank fronts (${zz.length} houses, 白墙黛瓦, facing the river)`, zz.length >= 6 && zz.every(h => h.kind === 'mh' && h.d2 && h.f[1] < 0));

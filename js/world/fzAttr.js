@@ -57,8 +57,14 @@ function saddleWall(S, x0, z0, L, h0, amp, alongZ, n = 14) {
 /* ============== 东街口 C 口：三坊七巷（南后街北口） ============== */
 /** o.embed（2D）：整块嵌进内河场景（fzRiver.nhjStreet 给一层转 180° 的代理）——不画街口马路 / 远处楼（内河自己画），
  *  南后街尽头那道横跨的马鞍墙不画（南后街往南接步道到三坊七巷南口牌坊），石板街铺到 z 196；两头院落临空的山墙贴民居立面（不留白墙） */
+/** 远景简化屋顶（2D 南后街的远处 LOD）：两坡 + 两山尖，檐口 / 屋脊位置同 roof（不起翘、没有脊筒） */
+function roofLo(B, cx, cz, w, d, y0, h, col, { ovh = 0.8, alongZ = false, curl = 0.5 } = {}) {
+  const L = (alongZ ? d : w) / 2 + ovh, Wd = (alongZ ? w : d) / 2 + ovh, P = (u, y, v) => alongZ ? [cx + v, y, cz + u] : [cx + u, y, cz + v], ye = y0 + curl * 0.35, yr = y0 + h;
+  q2(B, P(-L, ye, -Wd), P(L, ye, -Wd), P(L * 0.9, yr, 0), P(-L * 0.9, yr, 0), col); q2(B, P(L, ye, Wd), P(-L, ye, Wd), P(-L * 0.9, yr, 0), P(L * 0.9, yr, 0), col);
+  q2(B, P(L, ye, -Wd), P(L, ye, Wd), P(L * 0.9, yr, 0), P(L * 0.9, yr, 0), col); q2(B, P(-L, ye, Wd), P(-L, ye, -Wd), P(-L * 0.9, yr, 0), P(-L * 0.9, yr, 0), col);
+}
 export function sanfang(S, o = {}) {
-  const k = S.kit, P = k.solid, A = S.atlas, GR = k.g('granite'), E = !!o.embed;
+  const k = S.kit, P = k.solid, A = S.atlas, GR = k.g('granite'), E = !!o.embed, LO = !!o.lo;   // o.lo（2D 远处 LOD）：简化屋顶 / 方灯笼 / 矮马鞍墙、没有游客；最南一排（接步道，近处看得到）照常
   if (!E) front(S, '杨桥东路');
   // 口部小广场 + 南后街石板路（x -7..7，往 +z）
   GR.slab(-24, 24, 0.005, 0.03, 2, 20, hex('#C9C3B6'), NO);
@@ -69,7 +75,7 @@ export function sanfang(S, o = {}) {
     for (const x of [-7.4, -3.2, 3.2, 7.4]) { GR.slab(x - 0.45, x + 0.45, 0, x * x > 20 ? 6.2 : gy, z - 0.45, z + 0.45, hex('#B9B2A4'), NO); GR.slab(x - 0.8, x + 0.8, 0, 0.6, z - 0.8, z + 0.8, hex('#A39C8E'), NO); k.colSlab(x - 0.5, x + 0.5, 0, 8, z - 0.5, z + 0.5); }
     GR.slab(-3.6, 3.6, gy - 1.9, gy - 0.3, z - 0.35, z + 0.35, hex('#B9B2A4'), NO);
     for (const [a, b] of [[-7.8, -2.8], [2.8, 7.8]]) GR.slab(a, b, 5.0, 6.0, z - 0.35, z + 0.35, hex('#B9B2A4'), NO);
-    roof(P, 0, z, 8.2, 1.4, gy, 1.5, hex('#3A3F45'), { ovh: 0.5, curl: 0.4 }); roof(P, -5.3, z, 5, 1.2, 6.1, 1.1, hex('#3A3F45'), { ovh: 0.4, curl: 0.3 }); roof(P, 5.3, z, 5, 1.2, 6.1, 1.1, hex('#3A3F45'), { ovh: 0.4, curl: 0.3 });
+    const rf = LO ? roofLo : roof; rf(P, 0, z, 8.2, 1.4, gy, 1.5, hex('#3A3F45'), { ovh: 0.5, curl: 0.4 }); rf(P, -5.3, z, 5, 1.2, 6.1, 1.1, hex('#3A3F45'), { ovh: 0.4, curl: 0.3 }); rf(P, 5.3, z, 5, 1.2, 6.1, 1.1, hex('#3A3F45'), { ovh: 0.4, curl: 0.3 });
     const uvF = A.draw(6.4, 1.5, textPaint(['三坊七巷'], { bg: '#2E3238', fg: '#E9C46A' }), 60), uvB = A.draw(6.4, 1.5, textPaint(['南后街'], { bg: '#2E3238', fg: '#E9C46A' }), 60);
     A.quad(0, gy - 1.1, z - 0.37, 6.4, 1.5, 0, uvF); A.quad(0, gy - 1.1, z + 0.37, 6.4, 1.5, Math.PI, uvB); }
   stone(S, 12, 12, 5.6, 1.6, '三坊七巷', 'Three Lanes and Seven Alleys', { bg: '#7E786C' });
@@ -78,10 +84,10 @@ export function sanfang(S, o = {}) {
   const uvC = {};
   let i = 0;
   for (let z = 26; z < 182; z += 13, i++) for (const side of [-1, 1]) {
-    const xf = side * 7, xb = side * 22, z0 = z, z1 = z + 13, zc = (z0 + z1) / 2, ry = side < 0 ? Math.PI / 2 : -Math.PI / 2;
+    const xf = side * 7, xb = side * 22, z0 = z, z1 = z + 13, zc = (z0 + z1) / 2, ry = side < 0 ? Math.PI / 2 : -Math.PI / 2, lo = LO && z + 13 < 182;
     // 白墙院落体块（低）+ 临街两层木构店面
     P.slab(Math.min(xf, xb), Math.max(xf, xb), 0, 6.2, z0 + 0.3, z1 - 0.3, hex('#F1EEE6'), NO); k.colSlab(Math.min(xf, xb), Math.max(xf, xb), 0, 6.2, z0, z1);
-    roof(P, side * 14.5, zc, 15, 12.4, 6.2, 2.6, hex('#3A3F45'), { ovh: 0.3, swallow: false, curl: 0.2, alongZ: true });
+    (lo ? roofLo : roof)(P, side * 14.5, zc, 15, 12.4, 6.2, 2.6, hex('#3A3F45'), { ovh: 0.3, swallow: false, curl: 0.2, alongZ: true });
     const key = 'f' + (i + side + 9) % 3;
     A.quad(xf - side * 0.03, 2.9, zc, 12, 5.6, ry, uvC[key] || (uvC[key] = A.draw(12, 5.6, (c, pw, ph) => {
       c.fillStyle = '#5A3A26'; c.fillRect(0, 0, pw, ph); const n = 6;
@@ -94,9 +100,9 @@ export function sanfang(S, o = {}) {
     P.box(xf - side * 0.9, 3.35, zc, 2.0, 0.18, 12.8, hex('#3A3F45'), 0, 0, side * 0.32, 1, NO);
     const shop = SHOP[(i * 2 + (side > 0 ? 1 : 0)) % SHOP.length];
     A.quad(xf - side * 0.06, 4.1, zc, 4, 0.7, ry, uvC['s' + shop] || (uvC['s' + shop] = A.draw(4, 0.7, textPaint([shop], { bg: '#2E1F14', fg: '#E9C46A' }), 60)));
-    for (const dz of [-4, 4]) { P.ellipsoid(xf - side * 1.5, 2.85, zc + dz, 0.55, 0.62, 0.55, hex('#D7262E'), 1); }
+    for (const dz of [-4, 4]) { if (lo) P.box(xf - side * 1.5, 2.85, zc + dz, 0.95, 1.1, 0.95, hex('#D7262E'), 0, 0, 0, 1, NO); else P.ellipsoid(xf - side * 1.5, 2.85, zc + dz, 0.55, 0.62, 0.55, hex('#D7262E'), 1); }
     // 户与户之间：马鞍墙（垂直街面，高出屋顶）
-    saddleWall(S, side < 0 ? xb : xf - side * 0.3, z0, Math.abs(xb - xf) + 0.3, 6.2, 4.6 + (i % 3) * 0.6, false, 18);
+    saddleWall(S, side < 0 ? xb : xf - side * 0.3, z0, Math.abs(xb - xf) + 0.3, 6.2, 4.6 + (i % 3) * 0.6, false, lo ? 5 : 18);
     if (E && (z === 26 || z + 13 >= 182) && o.endFace) {   // 2D：第一户 / 最后一户临空的山墙（朝广场 / 朝南头步道）贴民居立面 + 马鞍墙封头
       const ze = z === 26 ? z0 + 0.27 : z1 - 0.27, rz = z === 26 ? 0 : Math.PI;
       A.quad((xf + xb) / 2, 3.1, ze + (z === 26 ? -0.03 : 0.03), Math.abs(xb - xf) - 0.4, 6.2, rz, o.endFace);
@@ -107,7 +113,7 @@ export function sanfang(S, o = {}) {
   if (!E) saddleWall(S, -26, 186, 52, 6.5, 4.5, false, 16);
   // 游客
   [[-3, 30, 0], [2.5, 36, Math.PI], [-1, 48, 0.2], [3.5, 58, Math.PI], [-4, 70, 0], [1, 84, Math.PI], [-2.5, 100, 0], [4, 116, Math.PI], [-15, 10, 1], [16, 6, -1],
-   [1.5, 27, Math.PI], [-4.5, 34, 0.3], [4.6, 41, -2.9], [0, 44, 0], [-3.4, 53, Math.PI], [2, 63, 0.2], [-0.5, 76, Math.PI], [3.8, 92, 0], [-4.2, 108, Math.PI], [1.2, 128, 0], [-2, 146, Math.PI], [3, 160, 0]].forEach(([x, z, r], j) => { if (E && j % 2 && j !== 3) return; lowPerson(P, x, 0, z, r, j * 5 + 2, j === 3); });   // 2D 嵌进河网：游客减半（性能）
+   [1.5, 27, Math.PI], [-4.5, 34, 0.3], [4.6, 41, -2.9], [0, 44, 0], [-3.4, 53, Math.PI], [2, 63, 0.2], [-0.5, 76, Math.PI], [3.8, 92, 0], [-4.2, 108, Math.PI], [1.2, 128, 0], [-2, 146, Math.PI], [3, 160, 0]].forEach(([x, z, r], j) => { if (LO || (E && j % 2 && j !== 3)) return; lowPerson(P, x, 0, z, r, j * 5 + 2, j === 3); });   // 2D 嵌进河网：游客减半（性能）
   S.filler([[-60, 40, 40, 30, 22, '#D2CABE'], [60, 40, 40, 30, 26, '#C9C2B6'], [-60, 110, 40, 60, 9, '#E9E5DC'], [60, 110, 40, 60, 9, '#E9E5DC'], [-110, -40, 40, 14, 30, '#CFC7BA'], [110, -40, 40, 14, 24, '#D8D0C3']]);
 }
 /** 1A 内河样式的木牌（深灰石座 + 木色牌面，上中文、下英文；不画箭头、不画线路）：2D 三捷河河名牌 / 三捷河码头牌。ry = 牌面朝向（0 = 朝 -z） */

@@ -110,7 +110,7 @@ export class FzRiverStreet extends XmStreet {
       this._c2band = -1; this.minjiang(); this.c2Sluice(); k.group('c2mj'); this._c2pass = false;
     }
     // 2D：东街口 C 南后街（fzAttr.sanfang 转 180° 嵌进来）单独一组 d2s，离走廊远了整组关
-    if (FZR.d2) { this.nhjStreet(); k.group('d2s'); }
+    if (FZR.d2) { this.nhjStreet(); k.group('d2s'); this.nhjStreet(true); k.group('d2sLo'); }   // 2D 南后街：近处 hi（走进街里）/ 远处 lo（牌坊外、步道上、河边）
     if (FZR.c2) { for (let i = 0; i < ZS.length; i++) { this._nPass = i; this.wallFaces(); this.bridgeBodies(); this.houseBodies(); this.treeBlobs(); k.group('gN' + i); } this._nPass = -1; }
     if (FZR.d2) { this._d2epass = true; this.wallFaces(); this.bridgeBodies(); this.houseBodies(); this.treeBlobs(); this.d2Static(); k.group('d2e'); this._d2epass = false; }
     // 以下是常开的全局几何（rest 组）
@@ -783,7 +783,14 @@ export class FzRiverStreet extends XmStreet {
   }
   /** 2D：东街口 C → 三坊七巷（南后街）。fzAttr.sanfang 用局部坐标（亭子在原点、南后街往 +z）：转 180° 嵌进来（局部 (x, z) → W (X0 - x, Z0 - z)），
    *  南后街一路往南（W -z）接一段石板步道到河网的三坊七巷南口牌坊（小美 2D ②）。亭子在局部 (12, -1)（kioskAt 画，亭口朝 W +z = 杨桥东路） */
-  nhjStreet() {
+  nhjStreet(lo = false) {
+    // lo（远处 LOD，组 d2sLo）：同一套街再画一遍简化版；碰撞体不重复登记，贴图按 hi 那遍的顺序复用（不多占图集）
+    const real0 = this.kit, A0 = this.atlas, col0 = real0.col, colSlab0 = real0.colSlab, draw0 = A0.draw;
+    if (!lo) { this._d2draws = []; A0.draw = (...a) => { const uv = draw0.apply(A0, a); this._d2draws.push([a[0], a[1], uv]); return uv; }; }
+    else { let n = 0; real0.col = () => {}; real0.colSlab = () => {}; A0.draw = (...a) => { const r = this._d2draws[n++]; return r && r[0] === a[0] && r[1] === a[1] ? r[2] : draw0.apply(A0, a); }; }
+    try { this.nhjStreet_(lo); } finally { real0.col = col0; real0.colSlab = colSlab0; A0.draw = draw0; }
+  }
+  nhjStreet_(lo) {
     const N = FZR.d2.nhj, X0 = N.X0, Z0 = N.Z0, real = this.kit, A = this.atlas, touched = new Set(), R = Math.PI;
     const g = n => { const G = real.g(n); if (!touched.has(G)) { touched.add(G); G.xf = { cx: 0, cz: 0, s: -1, sy: 1, ox: X0, oz: Z0 }; } return G; };
     const pk = { g, get solid() { return g('paint'); }, M: real.M, root: real.root,
@@ -791,7 +798,7 @@ export class FzRiverStreet extends XmStreet {
       colSlab: (x0, x1, y0, y1, z0, z1, o) => real.colSlab(X0 - x1, X0 - x0, y0, y1, Z0 - z1, Z0 - z0, o) };
     const pa = { draw: (...a) => A.draw(...a), quad: (x, y, z, w, h, ry, uv) => A.quad(X0 - x, y, Z0 - z, w, h, ry + R, uv) };
     const fill = [];
-    sanfangStreet({ kit: pk, atlas: pa, filler: list => fill.push(...list) }, { embed: true, endFace: this.fac.mhS });
+    sanfangStreet({ kit: pk, atlas: pa, filler: list => fill.push(...list) }, { embed: true, endFace: this.fac.mhS, lo });
     for (const G of touched) G.xf = null;
     this.filler(fill.map(([x, z, w, d, h, c]) => [X0 - x, Z0 - z, w, d, h, c]));   // 街区原来的远处楼（局部坐标 → W）
     // 杨桥东路南侧人行道（局部 z -8..2）+ 路缘石 + 人行道护栏（深灰钢，护栏外就是马路）+ 杨桥东路（只看）
@@ -842,21 +849,23 @@ export class FzRiverStreet extends XmStreet {
   lodNow(force) {
     const pl = this.pl, gn = this.kit.groupNodes; if (!gn) return;
     const p = pl ? this.toW(pl.position) : { x: this.K.x, z: this.K.z };
-    const corr = this.inCorr(p), corrP = corr || this.inCorr(p, -9);   // corrP：连出口亭前小广场（南后街北口）也算
+    const corrP = this.inCorr(p, -9);   // 南后街走廊（连出口亭前小广场 = 南后街北口）：外面的 gN / d2e / 细节格子都关（两边老宅 + 远处楼块挡着）
     for (const key of this.cellKeys) {
       const [i, j] = key.split(',').map(Number), cx = (i + 0.5) * CELL, cz = (j + 0.5) * CELL, d = Math.hypot(p.x - cx, p.z - cz) - CELL * 0.7;
       const on = d < NEAR && !corrP, node = gn['c:' + key]; if (node && (force || node.isEnabled(false) !== on)) node.setEnabled(on);
     }
-    if (FZR.d2 && gn.d2s) {   // 2D 南后街：离走廊（局部 x ±80、z -40..200 的外框）< 260 m 才开
-      const N = FZR.d2.nhj, dx = Math.max(0, Math.abs(p.x - N.X0) - 80), dz = Math.max(0, (N.Z0 - 200) - p.z, p.z - (N.Z0 + 40)), on = Math.hypot(dx, dz) < 260;
-      if (force || gn.d2s.isEnabled(false) !== on) gn.d2s.setEnabled(on);
+    if (FZR.d2 && gn.d2s) {   // 2D 南后街：离走廊外框（局部 |x| < 24、z -12..200）< 120 m 才画；人在街里（局部 z < 192）用 hi，否则 lo
+      const N = FZR.d2.nhj, lx = N.X0 - p.x, lz = N.Z0 - p.z, near = Math.hypot(Math.max(0, Math.abs(lx) - 24), Math.max(0, -12 - lz, lz - 200)) < 120;
+      const hi = near && Math.abs(lx) < 30 && lz > -16 && lz < 192;
+      if (force || gn.d2s.isEnabled(false) !== hi) gn.d2s.setEnabled(hi);
+      if (gn.d2sLo && (force || gn.d2sLo.isEnabled(false) !== (near && !hi))) gn.d2sLo.setEnabled(near && !hi);
       const e = !corrP && Math.hypot(Math.max(0, 60 - p.x, p.x - 480), Math.max(0, -300 - p.z, p.z + 20)) < 430;
       if (gn.d2e && (force || gn.d2e.isEnabled(false) !== e)) gn.d2e.setEnabled(e);
     }
     if (this.c2Bands) {
       const z0 = FZR.c2.z0, set = (node, on) => { if (node && (force || node.isEnabled(false) !== on)) node.setEnabled(on); };
       for (let i = 0; i < this.c2Bands; i++) { const zt = z0 - i * C2B, zb = zt - C2B, d = p.z > zt ? p.z - zt : p.z < zb ? zb - p.z : 0; set(gn['c2:' + i], d < 330); }
-      set(gn.c2mj, p.z < FZR.c2.sluice.z + 450); ZS.forEach((z0_, i) => { const z1_ = i + 1 < ZS.length ? ZS[i + 1] : 1e9, d = p.z < z0_ ? z0_ - p.z : p.z > z1_ ? p.z - z1_ : 0; set(gn['gN' + i], d < 430 && !corr); });
+      set(gn.c2mj, p.z < FZR.c2.sluice.z + 450); ZS.forEach((z0_, i) => { const z1_ = i + 1 < ZS.length ? ZS[i + 1] : 1e9, d = p.z < z0_ ? z0_ - p.z : p.z > z1_ ? p.z - z1_ : 0; set(gn['gN' + i], d < 430 && !corrP); });
       for (const i of this.c2Detail) { const zt = z0 - i * C2D, zb = zt - C2D, d = p.z > zt ? p.z - zt : p.z < zb ? zb - p.z : 0; set(gn['c2d:' + i], d < 110); }
     }
   }
