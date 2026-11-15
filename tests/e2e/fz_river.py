@@ -766,7 +766,12 @@ async def run_2d(pg):
         if OUT:
             await pg.evaluate("if (__game.player.view !== 'first') __game.toggleView()")
             for tag, sv in (('w', -1), ('e', 1)):
-                vp = await pg.evaluate(f"(async () => {{ const M = await import('/js/data/fz-river.js'); const a = M.RIVERS.at.line.at({jm['s']} + {sv} * 24, {I['n']} * 7.6); return [a.x, a.z]; }})()")
+                # 视线上不能有树干（树离视线 < 2.2 m 就换个距离）
+                vp = await pg.evaluate(f"""(async () => {{ const M = await import('/js/data/fz-river.js'); const L = M.RIVERS.at.line, bx = {jm['x']}, bz = {jm['z']};
+                  const segD = (px, pz, ax, az, cx, cz) => {{ const dx = cx - ax, dz = cz - az, t = Math.max(0, Math.min(1, ((px - ax) * dx + (pz - az) * dz) / (dx * dx + dz * dz))); return Math.hypot(px - ax - t * dx, pz - az - t * dz); }};
+                  for (const d of [18, 22, 26, 30, 34, 16, 38]) for (const lat of [7.6, 8.4]) {{ const a = L.at({jm['s']} + {sv} * d, {I['n']} * lat);
+                    if (!M.FZR.trees.some(t => segD(t[0], t[1], a.x, a.z, bx, bz) < 2.2) && M.isLand(a.x, a.z)) return [a.x, a.z]; }}
+                  const a = L.at({jm['s']} + {sv} * 24, {I['n']} * 7.6); return [a.x, a.z]; }})()""")
                 if await go(pg, *(await WP(*vp)), f'→ 津门桥 front {tag}'):
                     await look(pg, *(await WP(jm['x'], jm['z'])), -0.02); await shot(pg, f'd2_jinmen_bridge_front_{tag}')
             await pg.evaluate("if (__game.player.view !== 'third') __game.toggleView()")
