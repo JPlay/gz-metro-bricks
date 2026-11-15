@@ -86,10 +86,10 @@ export function sanfang(S, o = {}) {
   const uvC = {};
   let i = 0;
   for (let z = 26; z < 182; z += 13, i++) for (const side of [-1, 1]) {
-    const xf = side * 7, xb = side * 22, z0 = z, z1 = z + 13, zc = (z0 + z1) / 2, ry = side < 0 ? Math.PI / 2 : -Math.PI / 2, lo = LO && z + 13 < 182;
+    const xf = side * 7, xb = side * 22, z0 = z, z1 = z + 13, zc = (z0 + z1) / 2, ry = side < 0 ? Math.PI / 2 : -Math.PI / 2, lo = LO, last = z + 13 >= 182;   // 最南一排（接步道）：lo 也保留曲屋顶 + 圆灯笼（近处看得到），马鞍墙用简化版
     // 白墙院落体块（低）+ 临街两层木构店面
     P.slab(Math.min(xf, xb), Math.max(xf, xb), 0, 6.2, z0 + 0.3, z1 - 0.3, hex('#F1EEE6'), NO); k.colSlab(Math.min(xf, xb), Math.max(xf, xb), 0, 6.2, z0, z1);
-    (lo ? roofLo : roof)(P, side * 14.5, zc, 15, 12.4, 6.2, 2.6, hex('#3A3F45'), { ovh: 0.3, swallow: false, curl: 0.2, alongZ: true });
+    (lo && !last ? roofLo : roof)(P, side * 14.5, zc, 15, 12.4, 6.2, 2.6, hex('#3A3F45'), { ovh: 0.3, swallow: false, curl: 0.2, alongZ: true });
     const key = 'f' + (i + side + 9) % 3;
     A.quad(xf - side * 0.03, 2.9, zc, 12, 5.6, ry, uvC[key] || (uvC[key] = A.draw(12, 5.6, (c, pw, ph) => {
       c.fillStyle = '#5A3A26'; c.fillRect(0, 0, pw, ph); const n = 6;
@@ -102,13 +102,13 @@ export function sanfang(S, o = {}) {
     P.box(xf - side * 0.9, 3.35, zc, 2.0, 0.18, 12.8, hex('#3A3F45'), 0, 0, side * 0.32, 1, NO);
     const shop = SHOP[(i * 2 + (side > 0 ? 1 : 0)) % SHOP.length];
     A.quad(xf - side * 0.06, 4.1, zc, 4, 0.7, ry, uvC['s' + shop] || (uvC['s' + shop] = A.draw(4, 0.7, textPaint([shop], { bg: '#2E1F14', fg: '#E9C46A' }), 60)));
-    for (const dz of [-4, 4]) { if (lo) P.box(xf - side * 1.5, 2.85, zc + dz, 0.95, 1.1, 0.95, hex('#D7262E'), 0, 0, 0, 1, NO); else P.ellipsoid(xf - side * 1.5, 2.85, zc + dz, 0.55, 0.62, 0.55, hex('#D7262E'), 1); }
+    for (const dz of [-4, 4]) { if (lo && !last) P.box(xf - side * 1.5, 2.85, zc + dz, 0.95, 1.1, 0.95, hex('#D7262E'), 0, 0, 0, 1, NO); else P.ellipsoid(xf - side * 1.5, 2.85, zc + dz, 0.55, 0.62, 0.55, hex('#D7262E'), 1); }
     // 户与户之间：马鞍墙（垂直街面，高出屋顶）
     saddleWall(S, side < 0 ? xb : xf - side * 0.3, z0, Math.abs(xb - xf) + 0.3, 6.2, 4.6 + (i % 3) * 0.6, false, lo ? 5 : 18, lo);
     if (E && (z === 26 || z + 13 >= 182) && o.endFace) {   // 2D：第一户 / 最后一户临空的山墙（朝广场 / 朝南头步道）贴民居立面 + 马鞍墙封头
       const ze = z === 26 ? z0 + 0.27 : z1 - 0.27, rz = z === 26 ? 0 : Math.PI;
       A.quad((xf + xb) / 2, 3.1, ze + (z === 26 ? -0.03 : 0.03), Math.abs(xb - xf) - 0.4, 6.2, rz, o.endFace);
-      if (z + 13 >= 182) saddleWall(S, side < 0 ? xb : xf - side * 0.3, z1, Math.abs(xb - xf) + 0.3, 6.2, 4.4 + (i % 3) * 0.6, false, 18);
+      if (z + 13 >= 182) saddleWall(S, side < 0 ? xb : xf - side * 0.3, z1, Math.abs(xb - xf) + 0.3, 6.2, 4.4 + (i % 3) * 0.6, false, lo ? 10 : 18, lo);
     }
   }
   // 远处一道横跨的马鞍墙“天际线”（视线尽头）

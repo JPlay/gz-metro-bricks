@@ -728,8 +728,13 @@ async def run_2d(pg):
         g2, j2, s2 = await plain(pg, through, '穿过牌坊 → 安泰河')
         ok('d_walk:through the 牌坊 to the river side', g2 and j2 < TELEPORT, [s2['pos'], j2])
         R['perf']['d2:gate'] = await sample(pg, 'd2:gate')
-        if OUT:
-            await look(pg, *(await WP(*lk(10))), 0.1); await shot(pg, 'd2_gate_front_from_river')
+        await look(pg, *(await WP(*lk(10))), 0.1); R['perf']['d2:gate_view'] = await sample(pg, 'd2:gate_view')
+        if OUT: await shot(pg, 'd2_gate_front_from_river')
+        for k_, a_ in (('east', 0.0), ('west', math.pi)):   # 牌坊外河边：顺河往东（东段）/ 往西各测一次
+            await pg.evaluate(f"__game.player.yaw = Math.atan2({I['north'][1][0] - I['north'][0][0]}, {I['north'][1][1] - I['north'][0][1]}) + {a_}; __game.player.pitch = 0.05"); await asyncio.sleep(0.8)
+            R['perf']['d2:gate_' + k_] = await sample(pg, 'd2:gate_' + k_)
+        await plain(pg, [await WP(*lk(16))], '牌坊 → 步道中段'); await look(pg, *(await WP(N['X0'], N['Z0'] - 120)), 0.03); R['perf']['d2:link'] = await sample(pg, 'd2:link')
+        if OUT: await shot(pg, 'd2_link_walk_toward_nanhoujie')
         back = [await WP(*lk(2.5))] + list(reversed(there[:-1])) + [pz]
         g3, j3, s3 = await plain(pg, back, '牌坊 → 南后街 → 东街口 C')
         ok('d_walk:back 牌坊 → 南后街 → kiosk (round trip)', g3 and j3 < TELEPORT, [s3['pos'], j3])
