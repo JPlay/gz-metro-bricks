@@ -143,6 +143,8 @@ export class FzRiverStreet extends XmStreet {
     this.lodT = 0; this.lodNow(true);
     // 3C：夜景（设备本地时间 19:00–06:00 / ?t=night|day 覆盖）；白天什么都不建
     this.night = new FzNight(this); this.nightT = 0; this.night.set(nightWanted(location.search));
+    // 主循环里 Fuzhou 的 street.update 在 player.updateCamera 之前：快转头时这一拍观察器跑在镜头写完之后，朝向过约 10° / 位置跳变就当帧换索引
+    this._tileObs = this.scene.onBeforeRenderObservable.add(() => this.refreshTilesIfTurned());
   }
   get boat() {
     const bs = this.boats ? Object.values(this.boats) : []; if (!bs.length) return null; const pl = this.pl;
@@ -930,6 +932,14 @@ export class FzRiverStreet extends XmStreet {
     }
     if (this.tileCull) this.tileCull.update(this.scene.activeCamera, { px: this.wx(p.x), pz: this.wz(p.z), detR: (NL ? NL.near : NEAR) + CELL * 0.7, detOn: !corrP });
   }
+  refreshTilesIfTurned() {
+    const tc = this.tileCull, cam = this.scene && this.scene.activeCamera; if (!tc || !cam) return;
+    const pl = this.pl, p = pl ? this.toW(pl.position) : { x: this.K.x, z: this.K.z };
+    const px = this.wx(p.x), pz = this.wz(p.z);
+    if (!tc.shouldRefresh(cam, px, pz)) return;
+    const corrP = this.inCorr(p, -9), NL = this.nightLod ? NIGHT.lod : null;
+    tc.update(cam, { px, pz, detR: (NL ? NL.near : NEAR) + CELL * 0.7, detOn: !corrP, force: true });
+  }
   tick(dt) {
     // 船按真实时间走（上限 0.25 s/帧，每帧最多挪 0.9 m；人坐在船上跟着走，不会“跳”）；街区其余逻辑仍用 0.1 s 上限
     if (this.boats) { const dt_ = Math.min(0.25, this.scene.getEngine().getDeltaTime() / 1000); for (const b of Object.values(this.boats)) b.update(dt_, this.pl); }
@@ -969,7 +979,7 @@ export class FzRiverStreet extends XmStreet {
     return { boat: true, docked, line, color, next: { id: P.id, zh: P.zh, en: P.en } };
   }
   info() { return { ...super.info(), fellThrough: this.fellThrough || 0, net: this.net, route: ROUTE.id, river: true, night: !!(this.night && this.night.on), kiosk: this.K.code, boat: this.boat ? this.boat.info() : null, boats: this.boats ? Object.fromEntries(Object.entries(this.boats).map(([r, b]) => [r, b.info()])) : null, cellsOn: this.kit.groupNodes && this.kit.groupNodes.det && this.kit.groupNodes.det.isEnabled(false) ? (this.cellKeys ? this.cellKeys.length : 0) : 0, cells: this.cellKeys ? this.cellKeys.length : 0 }; }
-  dispose() { if (this.haze) { this.haze.restore(); this.haze = null; } if (this.night) { this.night.dispose(); this.night = null; } if (this.boats) for (const b of Object.values(this.boats)) b.dispose(); this.boats = null; super.dispose(); }
+  dispose() { if (this.haze) { this.haze.restore(); this.haze = null; } if (this._tileObs) { this.scene.onBeforeRenderObservable.remove(this._tileObs); this._tileObs = null; } if (this.night) { this.night.dispose(); this.night = null; } if (this.boats) for (const b of Object.values(this.boats)) b.dispose(); this.boats = null; super.dispose(); }
 }
 const FZ_STATIONS_ZH = c => ({ fzdjk: '东街口', fzxm: '西门', fzxiy: '西洋', fzsb: '水部', fzdm: '斗门', fzdmn: '东门', fzgmg: '光明港', fznh: '宁化' })[c] || '';
 export { FzRiverStreet as default };

@@ -9,6 +9,16 @@ const PAD = 24;          // 视锥外包一圈，转头时不会闪掉刚进画�
 const NEAR_KEEP = 28;    // 脚下附近的块一律保留（桥面 / 脚下地面）
 const SPAN_MIN = 80;     // 包围盒 xz 跨度不到一格的不必拆
 const TRIS_MIN = 80;
+export const TURN = 10 * Math.PI / 180;   // 朝向相对上次换索引转过约 10°：这一帧就重算，不等 0.25 s（快转头远处楼会空一截）
+export const JUMP = 12;                   // 传送 / 大跳：同样当帧重算
+export function angDiff(a, b) { let d = a - b; d -= Math.PI * 2 * Math.round(d / (Math.PI * 2)); return Math.abs(d); }
+export function viewNeedsRefresh(view, cam, px, pz) {
+  if (!cam) return false;
+  if (!view) return true;
+  if (Math.hypot(angDiff(cam.rotation.y, view.yaw), angDiff(cam.rotation.x, view.pitch)) > TURN) return true;
+  if (Math.hypot(px - view.x, pz - view.z) > JUMP) return true;
+  return false;
+}
 
 const B = () => window.BABYLON;
 function boxHitsFrustum(min, max, planes) {
@@ -70,21 +80,24 @@ export function installTileCull(street) {
   }
   return {
     list,
+    _view: null,
+    shouldRefresh(cam, px, pz) { return viewNeedsRefresh(this._view, cam, px, pz); },
     update(cam, opts = {}) {
       if (!cam || !list.length) return;
       const pos = cam.position, yaw = cam.rotation ? cam.rotation.y : 0;
       const px = opts.px != null ? opts.px : pos.x, pz = opts.pz != null ? opts.pz : pos.z;
-      const detR = opts.detR, detOn = opts.detOn !== false;
+      const detR = opts.detR, detOn = opts.detOn !== false, force = !!opts.force;
       const kPos = Math.round(pos.x / 8) + ',' + Math.round(pos.z / 8) + ',' + Math.round(yaw / 0.12) + ',' + (detR || 0) + ',' + (detOn ? 1 : 0);
       cam.getViewMatrix(true);
       const scene = cam.getScene && cam.getScene();
       if (scene) scene.setTransformMatrix(cam.getViewMatrix(true), cam.getProjectionMatrix(true));
       const planes = B().Frustum.GetPlanes(scene && scene.getTransformMatrix() || cam.getTransformationMatrix());
+      this._view = { yaw, pitch: cam.rotation.x, x: px, z: pz };
       for (const item of list) {
         const m = item.mesh;
         const parentOn = !m.parent || m.parent.isEnabled();
         if (!parentOn) { item.key = null; continue; }
-        if (item.key === kPos) continue;
+        if (!force && item.key === kPos) continue;
         item.key = kPos;
         const out = [];
         if (!(item.det && !detOn)) {
