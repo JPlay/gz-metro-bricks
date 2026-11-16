@@ -22,6 +22,27 @@ E2B = any(x.startswith('b_') for x in STAGES)
 E2C = any(x.startswith('c_') for x in STAGES)
 E2D = any(x.startswith('d_') for x in STAGES)   # 2D 安泰河东段 + 东街口 C 南后街 ⇄ 三坊七巷南口牌坊 + 津门桥 + 朱紫坊 + 琼东河口（d_walk / d_east）；d_dadao = 上下杭三捷河（达道 C 景点街）   # 2C 白马河下段（宁化 A、上海西码头、C 线、工业路 / 江滨西大道桥下步道、彬德水闸）   # 2B 东西河东段（水部 C、市民服务中心码头、桥下步道）   # 1B 东线（晋安河 + 光明港，B 线）
 BUDGET = {'draws': 50, 'tris': 90000}
+# 3C 夜景：FZQS='&t=night' 整套在夜里跑（同一预算 ≤ 90k / 50）；默认 '&t=day'（固定白天，不随跑测试时的本地时间变）
+QS = os.environ.get('FZQS', '&t=day'); NIGHT = 't=night' in QS
+NSTATE = """(async () => { const { Render } = await import('/js/core/render.js'); const g = __game, s = g.scene, S = g.fzMetro.street, Rn = Render.active, M = s.getMaterialByName('glow'), sea = s.getMaterialByName('paint@sea'), /* 河网没建过时 paint@sea 还不存在：拿它的克隆源 paint 的白天值作基准（bucketMat 克隆出来就是这个值） */
+  L = s.getMeshByName('fzNightLights'), sky = s.getMeshByName('sky');
+  return { info: S ? S.info().night : null, street: !!S, render: !!(Rn && Rn.night), fog: [s.fogMode, s.fogStart, s.fogEnd, +s.fogColor.r.toFixed(4), +s.fogColor.g.toFixed(4), +s.fogColor.b.toFixed(4)],
+    clear: [s.clearColor.r, s.clearColor.g, s.clearColor.b].map(v => +v.toFixed(4)), sky: sky && sky.material.emissiveTexture ? sky.material.emissiveTexture.name || sky.material.emissiveTexture.url : null,
+    glow: M ? [M.emissiveColor.r, M.emissiveColor.g, M.emissiveColor.b] : null, sea: (W => W ? [W.emissiveColor.r, W.emissiveColor.g, W.emissiveColor.b, W.environmentIntensity] : null)(sea || s.getMaterialByName('paint')),
+    lights: L ? (L.isEnabled() ? 'on' : 'off') : 'none', shadow: Rn ? Rn.sun.shadowEnabled : null, lightsTris: L ? L.getTotalIndices() / 3 : 0 }; })()"""
+NB = {}
+async def night_check(pg, tag):
+    n = await pg.evaluate(NSTATE); R.setdefault('night', {})[tag] = n
+    if NIGHT: ok(f'night:{tag}:on', n['info'] is True and n['render'] and n['fog'][2] == 220 and n['lights'] == 'on' and n['shadow'] is False and 'sky_night' in (n['sky'] or ''), n)
+    else: ok(f'day:{tag}:no night (nothing built)', n['info'] is False and not n['render'] and n['lights'] == 'none' and 'sky_night' not in (n['sky'] or ''), n)
+    return n
+async def night_base(pg):
+    NB['s'] = await pg.evaluate(NSTATE); return NB['s']
+async def restore_check(pg, tag):
+    """离开河网（进了车站）：灯光 / 雾 / clearColor / 天空 / glow / 水面全部回到进河网之前，夜灯网格已释放"""
+    n = await pg.evaluate(NSTATE); b = NB.get('s'); R.setdefault('night', {})['leave:' + tag] = n
+    keys = ('render', 'fog', 'clear', 'sky', 'glow', 'sea')
+    ok(f'leave:{tag}:day restored exactly', b is not None and not n['street'] and n['lights'] == 'none' and all(n[k] == b[k] for k in keys), [{k: n[k] for k in keys}, {k: b[k] for k in keys} if b else None])
 NAV = open(os.path.join(os.path.dirname(__file__), 'fz_river_nav.js')).read()
 R = {'checks': {}, 'bridges': {}, 'steps': {}, 'legs': [], 'perf': {}, 'shots': [], 'walk': []}
 def ok(k, v, info=None):
@@ -151,8 +172,8 @@ async def ride(pg, D, leg, target, shots=False, bshots=None):
     await pg.evaluate('window.__clr.min = 99; window.__clr.per = {}')
     CR = D['clrRepC'] if b0.get('rid') == 'C' else D['clrRep']   # 2C：C 线桥的里程按 C 线
     sbm5 = (CR.get('bm5') or {}).get('s') if b0.get('rid') != 'C' else None; took = set(); perfs = []
-    t0 = time.time(); g0 = await pg.evaluate('window.__gt'); a0 = await pg.evaluate('window.__acc ? window.__acc.goT : 0'); done = False
-    while time.time() - t0 < 2400:
+    t0 = time.monotonic(); g0 = await pg.evaluate('window.__gt'); a0 = await pg.evaluate('window.__acc ? window.__acc.goT : 0'); done = False
+    while time.monotonic() - t0 < 2400:
         b = await boat(pg)
         if b['stats']['arrives'] > arr0 and b['phase'] == 'dock': done = True; break
         if await pg.evaluate('window.__gt') - g0 > 700: break
@@ -176,7 +197,7 @@ async def ride(pg, D, leg, target, shots=False, bshots=None):
         await asyncio.sleep(0.25 if bshots else 0.5)
     b = await boat(pg); j = await jget(pg); c = await pg.evaluate('window.__clr')
     gs = round(await pg.evaluate('window.__gt') - g0, 1); goT = await pg.evaluate('window.__acc ? window.__acc.goT : null')
-    R['legs'].append({'leg': leg, 'from': b0['at'], 'to': b['at'], 'dir': b['dir'], 'stats': b['stats'], 'jump': j['max'], 'clr': c, 'secs': round(time.time() - t0), 'gameSecs': gs, 'goSecs': round(goT - a0, 1) if goT is not None else None, 'log': b['log']})
+    R['legs'].append({'leg': leg, 'from': b0['at'], 'to': b['at'], 'dir': b['dir'], 'stats': b['stats'], 'jump': j['max'], 'clr': c, 'secs': round(time.monotonic() - t0), 'gameSecs': gs, 'goSecs': round(goT - a0, 1) if goT is not None else None, 'log': b['log']})
     ok(f'{leg}:arrived:{target}', done and b['at'] == target, b)
     ok(f'{leg}:smooth', j['max'] < TELEPORT and b['stats']['maxStep'] < (1.45 if E1B or E2B or E2C else 1.0) and b['stats']['maxYawStep'] < 0.12, {'jump': j['max'], 'stats': b['stats']})
     ok(f'{leg}:canopyClearance', c['min'] >= D['clr'] - 0.02, c)
@@ -275,8 +296,9 @@ async def station_to_exit(pg, code, exit_pred, kiosk_code):
     zm = info['zm']; await pg.evaluate(f"__game.player.spawn({FO}+2, -12.95, {zm}, -Math.PI/2)"); await asyncio.sleep(1)
     await auto(pg, [[FO - 3, zm], [FO - 12, zm]], True); await auto(pg, [[FO - 21.5, zm]], True); await auto(pg, [[FO - 22, -6], [FO - 15, -12]], True)
     s = await st(pg); ok(f'{code}:concourse', s['zone'] == 'concourse', s['zone'])
-    exx = ex['x']; await auto(pg, [[FO + exx, -16]], True); await auto(pg, [[FO + exx, -20], [FO + exx, -36]], True)
+    exx = ex['x']; await night_base(pg); await auto(pg, [[FO + exx, -16]], True); await auto(pg, [[FO + exx, -20], [FO + exx, -36]], True)
     if not await pg.evaluate('!!__game.fzMetro.street'): s = await st(pg); await auto(pg, [[FO + exx, s['pos'][2] - 6], [FO + exx, -36]], True)
+    await wait(pg, '!!__game.fzMetro.street', 8); await asyncio.sleep(0.5); await night_check(pg, code + ':enter')
     si = await street_info(pg); ok(f'{code}:{ex["n"]}:riverStreet', si and si.get('river') and si.get('kiosk') == kiosk_code and si.get('atlasOverflow') == 0, si)
     return ex, si
 
@@ -284,8 +306,9 @@ async def out_and_back(pg, D, code, n, net):
     """码头 → 走进出口亭进站 → 再从同一个口出来回河边（车站出口 ↔ 河）"""
     await jreset(pg)
     okk, s, m = await enter_kiosk(pg, D, code); ok(f'{code}:{n}:walkIntoStation', okk, [s['pos'], m])
+    await asyncio.sleep(0.5); await restore_check(pg, f'{code}:{n}')
     await auto(pg, [[FO + 10, -30]], False); await auto(pg, [[FO + 10, -36]], False)
-    await wait(pg, '!!__game.fzMetro.street', 8)
+    await wait(pg, '!!__game.fzMetro.street', 8); await asyncio.sleep(0.5); await night_check(pg, f'{code}:{n}:backOut')
     si = await street_info(pg); ok(f'{code}:{n}:backOutToRiver', si and si.get('kiosk') == code and si.get('river') and si.get('net') == net, si)
     D2 = await mod(pg); await nav(pg)
     if OUT: await shot(pg, f'kiosk_{code}_{n}')
@@ -801,7 +824,7 @@ async def main():
   if OUT: os.makedirs(OUT, exist_ok=True)
   T0 = time.time()
   async with async_playwright() as p:
-    b, pg, logs = await open_game(p, BASE + '?q=1')
+    b, pg, logs = await open_game(p, BASE + '?q=1' + QS)
     await pg.evaluate(GCLOCK); await pg.evaluate(JUMP); await pg.evaluate('__game.setDtMax(0.25)'); await asyncio.sleep(1)
     await pg.evaluate("""(() => { const g=__game; g.east.ensure(); g.east.side='fz'; g.east.cur={st:g.station, loc:'fzmetro', area:'metro'}; g.station.kit.root.setEnabled(false); g.fzMetro.enterFromRailway(g.player); })()""")
     await asyncio.sleep(1.5)
@@ -896,10 +919,10 @@ async def main():
         await shot(pg, f'pier_sign_xishuiguan_base_{k}')
       await pg.evaluate("__game.toggleView()")
       if await board(pg, D, 'xsg', 'shotleg'):
-        sbm5 = D['clrRep']['bm5']['s']; took = set(); t0 = time.time(); b0 = await boat(pg)
+        sbm5 = D['clrRep']['bm5']['s']; took = set(); t0 = time.monotonic(); b0 = await boat(pg)
         # 船从西水关往黎明湖（s 增大）；船中心在桥前 9 / 5 / 2 m、桥下各拍一张，第一人称（拱在正前方 / 头顶）+ 第三人称
         marks = [(9, 'ahead9'), (5, 'ahead5'), (2, 'ahead2'), (-1, 'under')]
-        while time.time() - t0 < 600 and len(took) < len(marks):
+        while time.monotonic() - t0 < 600 and len(took) < len(marks):
           bb = await boat(pg); d = sbm5 - bb['s']
           for m, name in marks:
             if name not in took and d <= m:

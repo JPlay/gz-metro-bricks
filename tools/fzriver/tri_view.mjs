@@ -12,6 +12,8 @@ const root = process.argv[2], P = JSON.parse(process.argv[3]);
 const S = await import(root + '/js/game/fzService.js');
 const eng = new BABYLON.NullEngine({ renderWidth: 1112, renderHeight: 834 }); const scene = new BABYLON.Scene(eng);
 const st = S.FZ_SVC.street(scene, 'fzdjk', { n: 'C', x: 10, line: 1, road: 'r', to: ['a'], toEn: ['a'], attr: 'fzriver' });
+// 3C：NIGHT=1 数夜景（夜灯网格 + 夜里的组开关距离）；默认白天（after() 按本机时间可能已经开了夜景，这里强制回白天）
+if (st.night) st.night.set(process.env.NIGHT === '1');
 const gn = st.kit.groupNodes; const out = {};
 const cam = new BABYLON.UniversalCamera('c', new BABYLON.Vector3(0, 0, 0), scene); cam.fov = +(process.env.FOV || 0.8); cam.minZ = 0.1; cam.maxZ = 2000; scene.activeCamera = cam;
 const grpOf = m => { let a = m; while (a) { for (const [g, n] of Object.entries(gn)) if (n === a) return g; a = a.parent; } return 'free'; };
