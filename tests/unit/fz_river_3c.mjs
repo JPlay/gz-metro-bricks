@@ -33,7 +33,7 @@ ok('water deep blue-green, not black (emissive g, b > r > 0)', NI.water[0] > 0 &
 ok('sparse windows: ~30% lit (deterministic)', NI.atlas.lit === 0.3 && (() => { let l = 0, t = 0; for (let r = 0; r < 60; r++) for (let w = 0; w < 30; w++) { t++; l += N.windowLit(r, w); } return Math.abs(l / t - 0.3) < 0.04; })() && N.windowLit(3, 4) === N.windowLit(3, 4));
 ok('facadeWindows = facadePaint layout (floors × bays, ground floor skipped when ground)', N.facadeWindows(5, 5).length === 25 && N.facadeWindows(5, 5, true).length === 20 && near(N.facadeWindows(4, 5)[0], [0.04, 0.8, 0.12, 0.145], 1e-9));
 // ③ 夜里的预算：雾更近、远处组更早关（只收不放），细节格子 125 → 90
-ok('night fog nearer than 1B day haze (end 240 < 350) and cutoffs never exceed day', NI.haze.end <= 240 && NI.haze.end < RIVER_HAZE.e.end && NI.lod.near < 125 && NI.lod.gN <= 430 && NI.lod.c2 <= 330 && NI.lod.c2d <= 110 && NI.lod.d2e <= 430 && NI.lod.c2mj <= 450);
+ok('night fog nearer than 1B day haze (end 220 < 350) and cutoffs never exceed day', NI.haze.end <= 220 && NI.haze.end < RIVER_HAZE.e.end && NI.lod.near < 125 && NI.lod.gN <= 430 && NI.lod.c2 <= 330 && NI.lod.c2d <= 110 && NI.lod.d2e <= 430 && NI.lod.c2mj <= 450);
 ok('far groups cut only beyond fog end (fully fogged → no visible pop)', NI.lod.gN >= NI.haze.end && NI.lod.c2 >= NI.haze.end && NI.lod.d2e >= NI.haze.end);
 // ④ 源码约束：无点光源 / 聚光灯 / 阴影；白天走原代码路径；夜景东西只在夜里建
 const src = f => fs.readFileSync(new URL('../../' + f, import.meta.url), 'utf8');
@@ -65,7 +65,7 @@ for (const net of ['a', 'e']) {
   const nt = new FzNight(S); nt.set(false);
   ok(`[${net}] set(false) by day builds nothing, changes nothing`, snap() === day && made.mesh === m0 && calls.length === 0);
   nt.set(true);
-  ok(`[${net}] night on: render night, night fog 70→240 horizon colour, glow warm, water blue-green, atlas swapped, night LOD, boats lit`, Render.active.night === NI.render && scene.fogMode === FOGMODE_LINEAR && scene.fogEnd === NI.haze.end && glow.emissiveColor.b < 0.7 && water.emissiveColor.g > 0 && S.atlas.mat.emissiveTexture !== 'DAYTEX' && S.nightLod === true && boatN.at(-1) === true && nt.mesh && nt.mesh.isEnabled(false));
+  ok(`[${net}] night on: render night, night fog 60→220 horizon colour, glow warm, water blue-green, atlas swapped, night LOD, boats lit`, Render.active.night === NI.render && scene.fogMode === FOGMODE_LINEAR && scene.fogEnd === NI.haze.end && glow.emissiveColor.b < 0.7 && water.emissiveColor.g > 0 && S.atlas.mat.emissiveTexture !== 'DAYTEX' && S.nightLod === true && boatN.at(-1) === true && nt.mesh && nt.mesh.isEnabled(false));
   ok(`[${net}] night albedo tint (小美 night2 ①②): vertex-colour-only mats darkened per NIGHT.tint (paint / paint@wall grey-blue / paint@sea darkest); textured + transparent untouched; glow thawed + refrozen`, near(paint.albedoColor.asArray(), NI.tint.paint, 1e-6) && near(wallM.albedoColor.asArray(), NI.tint['paint@wall'], 1e-6) && near(water.albedoColor.asArray(), NI.tint['paint@sea'], 1e-6) && stone.albedoColor.r === 1 && glassM.albedoColor.r === 0.72 && glow.isFrozen && glow.thaws === 1 && near(glow.emissiveColor.asArray(), NI.glow, 1e-6));
   ok(`[${net}] tint keeps order: water darker than paint, wall lighter (moonlit grey-blue, b > r)`, NI.tint['paint@sea'].every((v, i) => v < NI.tint.paint[i]) && NI.tint['paint@wall'].every((v, i) => v > NI.tint.paint[i]) && NI.tint['paint@wall'][2] > NI.tint['paint@wall'][0]);
   ok(`[${net}] night lights: one mesh, lamps + bridges + stairs/piers present`, made.mesh === m0 + 1 && nt.counts.lamp > 20 && nt.counts.bridge > 5 && nt.counts.pier > 0, nt.counts);

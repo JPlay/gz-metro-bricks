@@ -33,7 +33,7 @@ NSTATE = """(async () => { const { Render } = await import('/js/core/render.js')
 NB = {}
 async def night_check(pg, tag):
     n = await pg.evaluate(NSTATE); R.setdefault('night', {})[tag] = n
-    if NIGHT: ok(f'night:{tag}:on', n['info'] is True and n['render'] and n['fog'][2] == 240 and n['lights'] == 'on' and n['shadow'] is False and 'sky_night' in (n['sky'] or ''), n)
+    if NIGHT: ok(f'night:{tag}:on', n['info'] is True and n['render'] and n['fog'][2] == 220 and n['lights'] == 'on' and n['shadow'] is False and 'sky_night' in (n['sky'] or ''), n)
     else: ok(f'day:{tag}:no night (nothing built)', n['info'] is False and not n['render'] and n['lights'] == 'none' and 'sky_night' not in (n['sky'] or ''), n)
     return n
 async def night_base(pg):
