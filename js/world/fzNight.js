@@ -32,7 +32,7 @@ export class FzNight {
     const S = this.S, s = S.scene, M = S.kit.M;
     if (on) {
       const water = bucketMat(s, M, 'paint@sea');
-      this.saved = { glow: M.glow.emissiveColor.clone(), water: water.emissiveColor.clone(), waterEnv: water.environmentIntensity, atlas: S.atlas.mat ? S.atlas.mat.emissiveTexture : null,
+      this.saved = { glow: M.glow.emissiveColor.clone(), water: water.emissiveColor.clone(), waterEnv: water.environmentIntensity, waterDirect: water.directIntensity, atlas: S.atlas.mat ? S.atlas.mat.emissiveTexture : null,
         tint: this.tintMats().map(t => [t, t.albedoColor.clone()]) };
       if (Render.active) Render.active.setNight(NIGHT.render);
       if (S.haze) S.haze.restore();
@@ -41,7 +41,7 @@ export class FzNight {
       // 纯顶点色材质（paint / paint@wall / paint@sea …，没有反照率贴图）夜里按 NIGHT.tint 乘暗偏蓝：顶点色按线性值直接进 PBR，白天调得很亮（白墙 #F3F1EA ≈ 1.0、水 #2F6670），
       // 只压灯光时它们和带 sRGB 贴图的石板 / 铺装（白天就暗一档）差得越来越明显 → 夜里白墙 / 地坪几乎纯白、水面亮青（小美 night2 意见 ①②）。带贴图的材质不动
       for (const [t] of this.saved.tint) { const k = this.tintOf(t); t.albedoColor = new B.Color3(k[0], k[1], k[2]); }
-      water.emissiveColor = new B.Color3(...NIGHT.water); if (water.environmentIntensity !== undefined) water.environmentIntensity = NIGHT.waterEnv;
+      water.emissiveColor = new B.Color3(...NIGHT.water); if (water.environmentIntensity !== undefined) water.environmentIntensity = NIGHT.waterEnv; if (water.directIntensity !== undefined) water.directIntensity = NIGHT.waterDirect;   // 低月光在水面上的高光也压一压（水比岸上铺装暗一档）
       if (S.atlas.mat) S.atlas.mat.emissiveTexture = this.nightAtlas();
       this.lights().setEnabled(true);
     } else {
@@ -50,7 +50,7 @@ export class FzNight {
       if (S.haze) S.haze.restore();
       // 回白天：换回 1B 的白天水汽（没有就不开雾）；离开河网（leaving）时 fzRiver.dispose 已经把雾还原到进河网之前，不再开
       S.haze = !leaving && RIVER_HAZE[S.net] ? new Haze(s, s.activeCamera, RIVER_HAZE[S.net]) : null; if (S.haze) S.haze.apply();
-      if (v) { thawed(M.glow, g => { g.emissiveColor = v.glow; }); for (const [t, c] of v.tint || []) t.albedoColor = c; water.emissiveColor = v.water; if (v.waterEnv !== undefined) water.environmentIntensity = v.waterEnv; if (S.atlas.mat && v.atlas) S.atlas.mat.emissiveTexture = v.atlas; }
+      if (v) { thawed(M.glow, g => { g.emissiveColor = v.glow; }); for (const [t, c] of v.tint || []) t.albedoColor = c; water.emissiveColor = v.water; if (v.waterEnv !== undefined) water.environmentIntensity = v.waterEnv; if (v.waterDirect !== undefined) water.directIntensity = v.waterDirect; if (S.atlas.mat && v.atlas) S.atlas.mat.emissiveTexture = v.atlas; }
       if (this.mesh) this.mesh.setEnabled(false);
       this.saved = null;
     }
