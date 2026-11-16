@@ -31,7 +31,7 @@ ok('gate backdrop (white wall + collider) removed when 2D present', /if \(!FZR\.
 ok('sanfang embed: no front road, no skyline wall at the far end, end gables get façades', /if \(!E\) front\(S/.test(attr) && /if \(!E\) saddleWall\(S, -26, 186/.test(attr) && /o\.endFace/.test(attr));
 ok('Geo.merge normals follow a 180° xf (s < 0)', /if \(X\.s < 0\) \{ tmpN\.x = -tmpN\.x; tmpN\.z = -tmpN\.z; \}/.test(fs.readFileSync(new URL('../../js/core/geo.js', import.meta.url), 'utf8')));
 ok('perf: 南后街 hi / lo LOD groups (d2s / d2sLo), lo pass registers no colliders and reuses the atlas draws', /k\.group\('d2s'\); this\.nhjStreet\(true\); k\.group\('d2sLo'\)/.test(src) && /real0\.col = \(\) => \{\}; real0\.colSlab = \(\) => \{\}/.test(src) && /this\._d2draws\[n\+\+\]/.test(src) && /function roofLo/.test(attr));
-ok('perf: east section in its own group d2e; corridor mode turns off gN / cells / d2e', /k\.group\('d2e'\)/.test(src) && /d < 430 && !corrP/.test(src) && /d < NEAR && !corrP/.test(src));
+ok('perf: east section in its own group d2e; corridor mode turns off gN / det / d2e', /k\.group\('d2e'\)/.test(src) && /d < 430 && !corrP/.test(src) && /k\.group\('det'\)/.test(src) && /detOn: !corrP/.test(src) && /if \(gn\.det\)/.test(src));
 // ③ 朱紫坊：北岸沿河立面 + 石牌 + 古榕；门一律关着
 const zz = F.houses.filter(h => h.zzf);
 ok(`朱紫坊 north-bank fronts (${zz.length} houses, 白墙黛瓦, facing the river)`, zz.length >= 6 && zz.every(h => h.kind === 'mh' && h.d2 && h.f[1] < 0));

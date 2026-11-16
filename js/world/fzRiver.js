@@ -16,6 +16,7 @@ import * as D from './decor.js';
 import { FZR, WY, RIVERS, BRIDGES, PIERS, KIOSKS, isWater, isLand, isDry, shoreFor, soffitAt, deckAt, humpRise, pierNext, ROUTE, STOPS, nextStop, useNet, netOfKiosk, levelAt, inChamber, LOCK, LOCK_STATE, ROUTES, routesOfPier, hudLine } from '../data/fz-river.js';
 import { FzBoat } from '../game/fzBoat.js';
 import { Haze, RIVER_HAZE } from '../game/haze.js';
+import { installTileCull } from './tileCull.js';
 import { FZ_EXITS } from '../data/fz-exits.js';
 import { xihuPark, sanfang as sanfangStreet } from './fzAttr.js';
 import { FZ_LINES } from '../data/fz-lines.js';
@@ -102,15 +103,16 @@ export class FzRiverStreet extends XmStreet {
       if (this._nhjH) { this._nhjHdraw = true; for (const [h, i] of this._nhjH) this.houseBody(h, i); this._nhjHdraw = false; this._nhjH = null; }
       k.group('d2b');
     }   // 步道榕树 + 两侧 4 栋单独成组（紧包围盒），牌坊口往西看能裁掉
-    // 近处细节：每格一个组（finish 时每组一个节点，tick 里按距离开关）
+    // 近处细节：非 2C 段全部合进 det 一组（同材质合并，少十来次绘制），lodNow 里用 tileCull 按视锥 + 距离裁
     this.cellKeys = [];
     // 2C 的细节格子：同一行（80 m）横向并成一组 c2d:i（少一半以上绘制调用），离玩家这一行 < 110 m 才开
     const c2cells = {};
     for (const [key, fns] of this.cellFns) {
       const cz = (Number(key.split(',')[1]) + 0.5) * CELL;
       if (inC2(cz)) { const b = c2DBand(cz); (c2cells[b] || (c2cells[b] = [])).push(fns); continue; }
-      fns.forEach(f => f()); k.group('c:' + key); this.cellKeys.push(key);
+      fns.forEach(f => f()); this.cellKeys.push(key);
     }
+    k.group('det');
     this.c2Detail = Object.keys(c2cells).map(Number);
     for (const b of this.c2Detail) { c2cells[b].forEach(fns => fns.forEach(f => f())); k.group('c2d:' + b); }
     // 2C：白马河下段的常开几何（墙面 / 桥身 / 房子 / 树 / 闽江远景）单独一组（c2），按玩家远近整组开关
@@ -137,6 +139,7 @@ export class FzRiverStreet extends XmStreet {
     // 2C：一条船线一条船（a 网：A 线 + C 线，同一款船、红篷）；this.boat = 当前和玩家相关的那条（坐着的 > 站在上面的 > 出口亭那条线的）
     this.boats = {}; for (const [rid, c] of Object.entries(ROUTES)) this.boats[rid] = new FzBoat(this, c.route.canopy || 'red', rid);
     this.homeRid = Object.keys(ROUTES).find(r => this.K.pier && ROUTES[r].stops.some(s => s.id === this.K.pier)) || ROUTE.id || 'A';
+    this.tileCull = installTileCull(this);   // 常开大网格按视锥换索引（不加 draw）
     this.lodT = 0; this.lodNow(true);
     // 3C：夜景（设备本地时间 19:00–06:00 / ?t=night|day 覆盖）；白天什么都不建
     this.night = new FzNight(this); this.nightT = 0; this.night.set(nightWanted(location.search));
@@ -908,10 +911,7 @@ export class FzRiverStreet extends XmStreet {
     const pl = this.pl, gn = this.kit.groupNodes; if (!gn) return;
     const p = pl ? this.toW(pl.position) : { x: this.K.x, z: this.K.z };
     const corrP = this.inCorr(p, -9), NL = this.nightLod ? NIGHT.lod : null; if (NL && this.night) this.night.cull(p);   // 3C：夜里雾更近，远处的组更早关（白天 NL = null → 原来的距离）   // 南后街走廊（连出口亭前小广场 = 南后街北口）：外面的 gN / d2e / 细节格子都关（两边老宅 + 远处楼块挡着）
-    for (const key of this.cellKeys) {
-      const [i, j] = key.split(',').map(Number), cx = (i + 0.5) * CELL, cz = (j + 0.5) * CELL, d = Math.hypot(p.x - cx, p.z - cz) - CELL * 0.7 + (NL ? NEAR - NL.near : 0);   // 夜里：距离加上差值 = 阈值收到 NL.near
-      const on = d < NEAR && !corrP, node = gn['c:' + key]; if (node && (force || node.isEnabled(false) !== on)) node.setEnabled(on);
-    }
+    if (gn.det) { const on = !corrP; if (force || gn.det.isEnabled(false) !== on) gn.det.setEnabled(on); }
     if (FZR.d2 && gn.d2s) {   // 2D 南后街：离走廊外框（局部 |x| < 24、z -12..200）< 120 m 才画；人在街里（局部 z < 192）用 hi，否则 lo
       const N = FZR.d2.nhj, lx = N.X0 - p.x, lz = N.Z0 - p.z, near = Math.hypot(Math.max(0, Math.abs(lx) - 24), Math.max(0, -12 - lz, lz - 200)) < 120;
       const hi = near && this.inCorr(p, -9);   // 和 corrP 同一个范围（街里 + 北口小广场）：hi 开着的时候外面的组都关着
@@ -928,6 +928,7 @@ export class FzRiverStreet extends XmStreet {
       set(gn.c2mj, p.z < FZR.c2.sluice.z + (NL ? NL.c2mj : 450)); ZS.forEach((z0_, i) => { const z1_ = i + 1 < ZS.length ? ZS[i + 1] : 1e9, d = (p.z < z0_ ? z0_ - p.z : p.z > z1_ ? p.z - z1_ : 0) + (NL ? 430 - NL.gN : 0); set(gn['gN' + i], d < 430 && !corrP); });
       for (const i of this.c2Detail) { const zt = z0 - i * C2D, zb = zt - C2D, d = p.z > zt ? p.z - zt : p.z < zb ? zb - p.z : 0; set(gn['c2d:' + i], d < (NL ? NL.c2d : 110)); }
     }
+    if (this.tileCull) this.tileCull.update(this.scene.activeCamera, { px: this.wx(p.x), pz: this.wz(p.z), detR: (NL ? NL.near : NEAR) + CELL * 0.7, detOn: !corrP });
   }
   tick(dt) {
     // 船按真实时间走（上限 0.25 s/帧，每帧最多挪 0.9 m；人坐在船上跟着走，不会“跳”）；街区其余逻辑仍用 0.1 s 上限
@@ -967,7 +968,7 @@ export class FzRiverStreet extends XmStreet {
     const docked = b.phase === 'dock', j = docked ? b.i : b.target, P = ROUTES[b.rid].stops[j].pier;
     return { boat: true, docked, line, color, next: { id: P.id, zh: P.zh, en: P.en } };
   }
-  info() { return { ...super.info(), fellThrough: this.fellThrough || 0, net: this.net, route: ROUTE.id, river: true, night: !!(this.night && this.night.on), kiosk: this.K.code, boat: this.boat ? this.boat.info() : null, boats: this.boats ? Object.fromEntries(Object.entries(this.boats).map(([r, b]) => [r, b.info()])) : null, cellsOn: this.cellKeys ? this.cellKeys.filter(k => this.kit.groupNodes['c:' + k].isEnabled(false)).length : 0, cells: this.cellKeys ? this.cellKeys.length : 0 }; }
+  info() { return { ...super.info(), fellThrough: this.fellThrough || 0, net: this.net, route: ROUTE.id, river: true, night: !!(this.night && this.night.on), kiosk: this.K.code, boat: this.boat ? this.boat.info() : null, boats: this.boats ? Object.fromEntries(Object.entries(this.boats).map(([r, b]) => [r, b.info()])) : null, cellsOn: this.kit.groupNodes && this.kit.groupNodes.det && this.kit.groupNodes.det.isEnabled(false) ? (this.cellKeys ? this.cellKeys.length : 0) : 0, cells: this.cellKeys ? this.cellKeys.length : 0 }; }
   dispose() { if (this.haze) { this.haze.restore(); this.haze = null; } if (this.night) { this.night.dispose(); this.night = null; } if (this.boats) for (const b of Object.values(this.boats)) b.dispose(); this.boats = null; super.dispose(); }
 }
 const FZ_STATIONS_ZH = c => ({ fzdjk: '东街口', fzxm: '西门', fzxiy: '西洋', fzsb: '水部', fzdm: '斗门', fzdmn: '东门', fzgmg: '光明港', fznh: '宁化' })[c] || '';

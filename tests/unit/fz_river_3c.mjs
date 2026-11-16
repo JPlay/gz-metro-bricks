@@ -45,7 +45,7 @@ ok('night lights = exactly one mesh (1 draw), built lazily inside set(true)', (f
 ok('window glow is texture-only (night atlas = DynamicTexture swap, no meshes in nightAtlas)', /nightAtlas\(\) \{[\s\S]*?new B\.DynamicTexture[\s\S]*?return t;\n  \}/.test(fzN) && !/nightAtlas\(\) \{[\s\S]*?new B\.Mesh[\s\S]*?return t;\n  \}/.test(fzN));
 ok('boat canopy strip merged into the boat paint mesh (setNight swaps vertex data + material clone, no new mesh)', /setNight\(on\) \{[\s\S]*?byBucket\.paint[\s\S]*?setVerticesData[\s\S]*?m\.material = on \?/.test(boat) && !/setNight\(on\) \{[\s\S]*?new B\.Mesh[\s\S]*?\n  dispose\(\)/.test(boat));
 ok('fzRiver: night decided in after() from URL + local time, re-checked every 30 s, disposed on leave', /this\.night = new FzNight\(this\);[^\n]*this\.night\.set\(nightWanted\(location\.search\)\)/.test(riv) && /this\.nightT = 30; this\.night\.set\(nightWanted/.test(riv) && /if \(this\.night\) \{ this\.night\.dispose\(\); this\.night = null; \}/.test(riv));
-ok('fzRiver lodNow: night shifts distances only when nightLod (day → original thresholds)', /NL = this\.nightLod \? NIGHT\.lod : null/.test(riv) && /\+ \(NL \? NEAR - NL\.near : 0\)/.test(riv) && /\+ \(NL \? 430 - NL\.gN : 0\)/.test(riv));
+ok('fzRiver lodNow: night shifts distances only when nightLod (day → original thresholds)', /NL = this\.nightLod \? NIGHT\.lod : null/.test(riv) && /detR: \(NL \? NL\.near : NEAR\) \+ CELL \* 0\.7/.test(riv) && /\+ \(NL \? 430 - NL\.gN : 0\)/.test(riv));
 ok('no dependency on PR #30 dusk assets', ![fzN, nj, rnd, riv].some(s => /dusk|黄昏/i.test(s)));
 // ⑤ 进夜景 / 回白天 / 离开河网：原样还原（替身场景，跑真 FzNight）
 for (const net of ['a', 'e']) {
