@@ -593,6 +593,8 @@ if A3:
   _out = LineString([at_s('gm', gmp['s'] + 8.6 + (GMGD_S - 4.8 - gmp['s'] - 8.6) * i / 30, _sdg * (HW['gm'] - 2.44))[0] for i in range(31)])
   gmgD['rail'] = [[round(x, 2), round(z, 2)] for x, z in _out.simplify(0.05).coords]
   print('3A gmgD deck area', round(_deck.area, 1))
+  _gs_ = int(round([st['s'] for st in STOPS if st['id'] == 'gmg'][0])); _bh = [i for i in range(max(2, _gs_ - 60), min(len(RP) - 2, _gs_ + 8)) if hull_poly(RP, i).buffer(0.15).intersects(_deck)]
+  assert not _bh, ('B boat hull hits the D deck', _bh[:5])
   STOPS_D = []
   for p in PIERS3:
     s_ = LineString(RPD).project(Point(*p['berth'])); q = LineString(RPD).interpolate(s_)
