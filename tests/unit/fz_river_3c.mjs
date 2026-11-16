@@ -52,19 +52,22 @@ for (const net of ['a', 'e']) {
   R.useNet(net);
   const calls = [];
   Render.active = { night: null, setNight(c) { this.night = c; calls.push(c ? 'night' : 'day'); } };
-  const water = { emissiveColor: new C3(0, 0, 0) }, glow = { emissiveColor: new C3(1, 1, 1) };
+  const water = { name: 'paint@sea', emissiveColor: new C3(0, 0, 0), albedoColor: new C3(1, 1, 1) }, glow = { emissiveColor: new C3(1, 1, 1), isFrozen: true, thaws: 0, unfreeze() { this.isFrozen = false; this.thaws++; }, freeze() { this.isFrozen = true; } };
+  const paint = { name: 'paint', albedoColor: new C3(1, 1, 1), clone: () => water }, wallM = { name: 'paint@wall', albedoColor: new C3(1, 1, 1) }, stone = { name: 'granite', albedoColor: new C3(1, 1, 1), albedoTexture: {} }, glassM = { name: 'glass', albedoColor: new C3(0.72, 0.84, 0.9), alpha: 0.18 };
   const scene = SC; SC.fogMode = FOGMODE_NONE; SC.fogStart = 0; SC.fogEnd = 1000; SC.fogColor = new C3(0.2, 0.2, 0.3); SC.activeCamera = { maxZ: 420 };
-  const M = { glow, paint: { clone: () => water }, colored: { 'bucket:paint@sea': water }, normals: [] };
+  const M = { glow, paint, colored: { 'bucket:paint@sea': water }, normals: [] };
   let lods = 0; const boatN = [];
-  const S = { scene, net, kit: { M, root: new BJ.TransformNode('root', SC) }, atlas: { S: 2048, mat: { emissiveTexture: 'DAYTEX' }, tex: { getContext: () => ctx, level: 0.95 } }, atlasRegs: [{ uv: { u0: 0, u1: 0.1, v0: 0.9, v1: 1 }, tag: 'scene', win: N.facadeWindows(4, 5) }, { uv: { u0: 0.2, u1: 0.3, v0: 0.9, v1: 1 }, tag: 'sign' }],
+  const S = { scene, net, kit: { M, root: new BJ.TransformNode('root', SC), meshes: [paint, wallM, stone, glassM, water].map(material => ({ material })) }, atlas: { S: 2048, mat: { emissiveTexture: 'DAYTEX' }, tex: { getContext: () => ctx, level: 0.95 } }, atlasRegs: [{ uv: { u0: 0, u1: 0.1, v0: 0.9, v1: 1 }, tag: 'scene', win: N.facadeWindows(4, 5) }, { uv: { u0: 0.2, u1: 0.3, v0: 0.9, v1: 1 }, tag: 'sign' }],
     pierFrame: p => ({ P: (a, b) => [p.x + p.t[0] * a - p.n[0] * b, p.z + p.t[1] * a - p.n[1] * b] }), lodNow() { lods++; }, boats: { A: { setNight(v) { boatN.push(v); } } } };
   if (RIVER_HAZE[net]) { S.haze = new Haze(scene, scene.activeCamera, RIVER_HAZE[net]); S.haze.apply(); }
-  const snap = () => JSON.stringify({ fog: [scene.fogMode, scene.fogStart, scene.fogEnd, scene.fogColor.asArray()], maxZ: scene.activeCamera.maxZ, glow: glow.emissiveColor, water: water.emissiveColor, atlas: S.atlas.mat.emissiveTexture, lod: !!S.nightLod, haze: S.haze ? S.haze.cfg : null, rn: Render.active.night });
+  const snap = () => JSON.stringify({ fog: [scene.fogMode, scene.fogStart, scene.fogEnd, scene.fogColor.asArray()], maxZ: scene.activeCamera.maxZ, glow: glow.emissiveColor, water: water.emissiveColor, atlas: S.atlas.mat.emissiveTexture, lod: !!S.nightLod, haze: S.haze ? S.haze.cfg : null, rn: Render.active.night, alb: [paint, wallM, stone, glassM, water].map(m => m.albedoColor.asArray()), frozen: glow.isFrozen });
   const day = snap(), m0 = made.mesh;
   const nt = new FzNight(S); nt.set(false);
   ok(`[${net}] set(false) by day builds nothing, changes nothing`, snap() === day && made.mesh === m0 && calls.length === 0);
   nt.set(true);
   ok(`[${net}] night on: render night, night fog 70→240 horizon colour, glow warm, water blue-green, atlas swapped, night LOD, boats lit`, Render.active.night === NI.render && scene.fogMode === FOGMODE_LINEAR && scene.fogEnd === NI.haze.end && glow.emissiveColor.b < 0.7 && water.emissiveColor.g > 0 && S.atlas.mat.emissiveTexture !== 'DAYTEX' && S.nightLod === true && boatN.at(-1) === true && nt.mesh && nt.mesh.isEnabled(false));
+  ok(`[${net}] night albedo tint (小美 night2 ①②): vertex-colour-only mats darkened per NIGHT.tint (paint / paint@wall grey-blue / paint@sea darkest); textured + transparent untouched; glow thawed + refrozen`, near(paint.albedoColor.asArray(), NI.tint.paint, 1e-6) && near(wallM.albedoColor.asArray(), NI.tint['paint@wall'], 1e-6) && near(water.albedoColor.asArray(), NI.tint['paint@sea'], 1e-6) && stone.albedoColor.r === 1 && glassM.albedoColor.r === 0.72 && glow.isFrozen && glow.thaws === 1 && near(glow.emissiveColor.asArray(), NI.glow, 1e-6));
+  ok(`[${net}] tint keeps order: water darker than paint, wall lighter (moonlit grey-blue, b > r)`, NI.tint['paint@sea'].every((v, i) => v < NI.tint.paint[i]) && NI.tint['paint@wall'].every((v, i) => v > NI.tint.paint[i]) && NI.tint['paint@wall'][2] > NI.tint['paint@wall'][0]);
   ok(`[${net}] night lights: one mesh, lamps + bridges + stairs/piers present`, made.mesh === m0 + 1 && nt.counts.lamp > 20 && nt.counts.bridge > 5 && nt.counts.pier > 0, nt.counts);
   { const Q = nt._qc, all = nt.counts.tris, p = { x: Q[0], z: Q[1] }; nt.cull(p); const I = nt.mesh.getIndices(), keep = new Set(); for (let k = 0; k < I.length; k += 6) keep.add(Math.floor(I[k] / 4));
     const inR = q => Math.hypot(Q[3 * q] - p.x, Q[3 * q + 1] - p.z) - Q[3 * q + 2] < NI.lightR, n = Q.length / 3; let good = true; for (let q = 0; q < n; q++) if (keep.has(q) !== inR(q)) good = false;

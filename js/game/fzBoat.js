@@ -187,8 +187,8 @@ export class FzBoat {
     if (!this._nd) {
       const K = B.VertexBuffer, day = { pos: m.getVerticesData(K.PositionKind), nrm: m.getVerticesData(K.NormalKind), col: m.getVerticesData(K.ColorKind), uv: m.getVerticesData(K.UVKind), idx: m.getIndices(), mat: m.material };
       const g = new Geo(), W = BOAT.canopyHalfW, L = BOAT.canopyHalfLen, y = BOAT.roofUnder - 0.1, c = hex('#FFE2B8');
-      for (const sx of [-1, 1]) g.box(sx * (W + 0.025), y, 0, 0.02, 0.05, 2 * L + 0.32, c, 0, 0, 0, 1, NO);
-      for (const e of [-1, 1]) g.box(0, y, e * (L + 0.18), 2 * W + 0.06, 0.05, 0.02, c, 0, 0, 0, 1, NO);
+      for (const sx of [-1, 1]) g.box(sx * (W + 0.04), y, 0, 0.05, 0.1, 2 * L + 0.36, c, 0, 0, 0, 1, NO);   // 3C 返工：5 cm → 10 cm 高、外凸 6 cm（小美：截图里看不出船篷灯带）
+      for (const e of [-1, 1]) g.box(0, y, e * (L + 0.2), 2 * W + 0.13, 0.1, 0.05, c, 0, 0, 0, 1, NO);
       const nv = day.pos.length / 3, uv = new Array(nv * 2 + g.p.length / 3 * 2);
       for (let i = 0; i < nv; i++) { uv[i * 2] = 0.125; uv[i * 2 + 1] = 0.5; }
       for (const [a, b] of this.lanternV || []) for (let i = a; i < b; i++) uv[i * 2] = 0.625;

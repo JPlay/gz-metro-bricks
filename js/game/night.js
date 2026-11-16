@@ -18,7 +18,8 @@ export const NIGHT = {
   // 屏幕上的目标色是 zenith / horizon；天空贴图（tools/fzriver/sky_night.py）按渲染管线预补偿成 skyTex，雾色 / clearColor 用贴图的地平线色（同一条管线出来才和天边对得上）
   zenith: '#1B2440', horizon: '#2E3A5C', skyTex: { zenith: '#34364A', horizon: '#4A5068' }, clear: h2('#4A5068'),
   // 灯光（Render.setNight）：月光冷白蓝、很弱；天光压低偏蓝，步道 / 台阶 / 码头边 / 栏杆靠它保持可读
-  render: { hemi: 0.22, hemiColor: [0.62, 0.7, 0.95], hemiGround: [0.2, 0.22, 0.3], moon: 0.16, moonColor: [0.74, 0.83, 1.0], moonDir: [0.3, -1, -0.5], env: 0.12, sky: 'assets/tex/sky_night.jpg', clear: h2('#4A5068') },
+  //   3C 返工（小美 night2 ②）：月亮放低（仰角 ~27°）+ 天光地面色提亮 → 立面（白墙）比地坪多吃一点光：墙成月光灰蓝、地坪和石板一样暗
+  render: { hemi: 0.22, hemiColor: [0.62, 0.7, 0.95], hemiGround: [0.45, 0.5, 0.68], moon: 0.22, moonColor: [0.74, 0.83, 1.0], moonDir: [-0.7, -0.45, 0.55], env: 0.12, sky: 'assets/tex/sky_night.jpg', clear: h2('#4A5068') },
   // 夜雾（两个网都用）：近处一点不灰，240 m 完全融进地平线色 —— 远处的组可以更早整组关掉（雾不省绘制，关组才省）
   haze: { start: 70, end: 240, color: h2('#4A5068'), maxZ: null },
   // 夜里各组的开关距离（白天值见 fzRiver.js lodNow）：雾尽头 240 m 以外整组关（看不见）；近处细节格子 125 → 90 m
@@ -27,7 +28,11 @@ export const NIGHT = {
   // 暖光 #FFC27A；光晕小、不过曝成白
   warm: '#FFC27A', glow: [1.0, 0.8, 0.56],
   // 水：深蓝绿不是黑（paint@sea 加一点自发光，线性空间；夜里环境反射压到 waterEnv，不再反出白天天色的亮青）
-  water: [0.008, 0.03, 0.034], waterEnv: 0.35,
+  water: [0.004, 0.014, 0.02], waterEnv: 0.05,
+  // 夜里纯顶点色材质（没有反照率贴图）的反照率乘子（白天全是 1；fzNight.tintMats 选材质、回白天原样还原）：
+  //   paint：地坪 / 路面 / 杂项压到和旁边石板一样暗、略偏冷；paint@wall（马鞍墙 / 粉墙）留成月光下的灰蓝，比石板亮一档还认得出墙；
+  //   paint@sea（水）深蓝绿，比岸上铺装暗一档（亮的只剩灯下的暖色倒影条）
+  tint: { paint: [0.3, 0.3, 0.36], 'paint@wall': [0.66, 0.73, 0.92], 'paint@sea': [0.16, 0.12, 0.12] },
   // 图集：白天贴图拷一份，非标牌区域乘暗偏蓝；标牌区域基本保持亮度（出口牌 / 码头牌 / 河名牌可读）；立面窗约 30% 亮暖光
   atlas: { scene: '#3A4462', sign: '#D2CEC6', lit: 0.3 },
 };

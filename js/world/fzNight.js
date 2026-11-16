@@ -21,6 +21,8 @@ const WARM = hex3(NIGHT.warm), LANTERN = hex3('#FF8A4A');
 const sc = (c, k) => [c[0] * k, c[1] * k, c[2] * k];
 // 加色贴图的四个区域（u 方向各 1/4）：光晕（径向）/ 地面光圈（更软的径向）/ 倒影条（沿 v 从亮到暗、横向高斯、带碎波纹）/ 光带（横向高斯，沿 u 常亮）
 const RG = { halo: 0, pool: 1, streak: 2, line: 3 };
+// 共用 glow 材质在 mats.js 里 freeze 了（冻住的材质改颜色不会重新上传 uniform）：先解冻、改、再冻回去
+const thawed = (m, f) => { const fr = !!m.isFrozen && typeof m.unfreeze === 'function'; if (fr) m.unfreeze(); f(m); if (fr) m.freeze(); };
 
 export class FzNight {
   constructor(S) { this.S = S; this.on = false; this.mesh = null; this.atlasTex = null; this.saved = null; }
@@ -30,11 +32,15 @@ export class FzNight {
     const S = this.S, s = S.scene, M = S.kit.M;
     if (on) {
       const water = bucketMat(s, M, 'paint@sea');
-      this.saved = { glow: M.glow.emissiveColor.clone(), water: water.emissiveColor.clone(), waterEnv: water.environmentIntensity, atlas: S.atlas.mat ? S.atlas.mat.emissiveTexture : null };
+      this.saved = { glow: M.glow.emissiveColor.clone(), water: water.emissiveColor.clone(), waterEnv: water.environmentIntensity, atlas: S.atlas.mat ? S.atlas.mat.emissiveTexture : null,
+        tint: this.tintMats().map(t => [t, t.albedoColor.clone()]) };
       if (Render.active) Render.active.setNight(NIGHT.render);
       if (S.haze) S.haze.restore();
       S.haze = new Haze(s, s.activeCamera, NIGHT.haze); S.haze.apply();
-      M.glow.emissiveColor = new B.Color3(...NIGHT.glow);
+      thawed(M.glow, g => { g.emissiveColor = new B.Color3(...NIGHT.glow); });
+      // 纯顶点色材质（paint / paint@wall / paint@sea …，没有反照率贴图）夜里按 NIGHT.tint 乘暗偏蓝：顶点色按线性值直接进 PBR，白天调得很亮（白墙 #F3F1EA ≈ 1.0、水 #2F6670），
+      // 只压灯光时它们和带 sRGB 贴图的石板 / 铺装（白天就暗一档）差得越来越明显 → 夜里白墙 / 地坪几乎纯白、水面亮青（小美 night2 意见 ①②）。带贴图的材质不动
+      for (const [t] of this.saved.tint) { const k = this.tintOf(t); t.albedoColor = new B.Color3(k[0], k[1], k[2]); }
       water.emissiveColor = new B.Color3(...NIGHT.water); if (water.environmentIntensity !== undefined) water.environmentIntensity = NIGHT.waterEnv;
       if (S.atlas.mat) S.atlas.mat.emissiveTexture = this.nightAtlas();
       this.lights().setEnabled(true);
@@ -44,7 +50,7 @@ export class FzNight {
       if (S.haze) S.haze.restore();
       // 回白天：换回 1B 的白天水汽（没有就不开雾）；离开河网（leaving）时 fzRiver.dispose 已经把雾还原到进河网之前，不再开
       S.haze = !leaving && RIVER_HAZE[S.net] ? new Haze(s, s.activeCamera, RIVER_HAZE[S.net]) : null; if (S.haze) S.haze.apply();
-      if (v) { M.glow.emissiveColor = v.glow; water.emissiveColor = v.water; if (v.waterEnv !== undefined) water.environmentIntensity = v.waterEnv; if (S.atlas.mat && v.atlas) S.atlas.mat.emissiveTexture = v.atlas; }
+      if (v) { thawed(M.glow, g => { g.emissiveColor = v.glow; }); for (const [t, c] of v.tint || []) t.albedoColor = c; water.emissiveColor = v.water; if (v.waterEnv !== undefined) water.environmentIntensity = v.waterEnv; if (S.atlas.mat && v.atlas) S.atlas.mat.emissiveTexture = v.atlas; }
       if (this.mesh) this.mesh.setEnabled(false);
       this.saved = null;
     }
@@ -57,6 +63,13 @@ export class FzNight {
     if (this.mesh) { const m = this.mesh; if (m.material) { if (m.material.emissiveTexture) m.material.emissiveTexture.dispose(); m.material.dispose(); } m.dispose(); this.mesh = null; }
     if (this.atlasTex) { this.atlasTex.dispose(); this.atlasTex = null; }
   }
+  /** 夜里要乘暗的材质：河网街区网格用到的、没有反照率贴图的不透明 PBR（paint 及其 paint@* 克隆等），外加共用 paint / paint@sea（船 / 人物也用 paint） */
+  tintMats() {
+    const S = this.S, M = S.kit.M, set = new Set([M.paint, bucketMat(S.scene, M, 'paint@sea')]);
+    for (const m of S.kit.meshes || []) if (m.material) set.add(m.material);
+    return [...set].filter(t => t && t.albedoColor && !t.albedoTexture && !(t.alpha < 1) && !t.unlit);
+  }
+  tintOf(t) { const T = NIGHT.tint; return T[t.name] || T.paint; }
   /* ---------- ④ 夜里的图集贴图 ---------- */
   nightAtlas() {
     if (this.atlasTex) return this.atlasTex;
@@ -109,8 +122,8 @@ export class FzNight {
       const fx = -a.nx * side, fz = -a.nz * side, f = yawOf(fx, fz), dx = Math.sin(f), dz = Math.cos(f), hx = a.x + dx * 1.75, hz = a.z + dz * 1.75;
       halo(hx, 6.95, hz, 0.9, sc(WARM, 0.7));
       flat(hx - dx * 0.4, 0.045, hz - dz * 0.4, dx, dz, 3.8, 3.8, RG.pool, sc(WARM, 0.42));
-      const L = Math.min(6.5, r.hw * 0.9), p0 = r.line.at(s, side * (r.hw - 0.4)), p1 = r.line.at(s, side * (r.hw - 0.4 - L));
-      if (isWater(p0.x, p0.z) && isWater(p1.x, p1.z)) { const lv = levelAt(p0.x, p0.z), ax = (p0.x - p1.x) / L, az = (p0.z - p1.z) / L; flat((p0.x + p1.x) / 2, lv + 0.02, (p0.z + p1.z) / 2, ax, az, 0.32, L / 2, RG.streak, sc(WARM, 0.6)); }
+      const L = Math.min(7.5, r.hw * 0.95), p0 = r.line.at(s, side * (r.hw - 0.9)), p1 = r.line.at(s, side * (r.hw - 0.9 - L));   // 3C 返工：离岸墙 0.9 m 起（贴墙那段从岸上 / 桥上被岸墙挡住），宽 0.8 m
+      if (isWater(p0.x, p0.z) && isWater(p1.x, p1.z)) { const lv = levelAt(p0.x, p0.z), ax = (p0.x - p1.x) / L, az = (p0.z - p1.z) / L; flat((p0.x + p1.x) / 2, lv + 0.02, (p0.z + p1.z) / 2, ax, az, 0.8, L / 2, RG.streak, sc(WARM, 0.85)); }
       n.lamp++;
     }
     // 桥：栏板外侧一道暖光带（跟着拱桥桥面起伏）+ 水面上同色的淡倒影
@@ -122,10 +135,10 @@ export class FzNight {
       for (const su of [-1, 1]) {
         for (let i = 0; i < seg; i++) {
           const va = v0 + (v1 - v0) * i / seg, vb = v0 + (v1 - v0) * (i + 1) / seg, [xa, za] = Pt(su * (uo + 0.025), va), [xb, zb] = Pt(su * (uo + 0.025), vb), ya = top(va) - 0.07, yb = top(vb) - 0.07;
-          quad((xa + xb) / 2, (ya + yb) / 2, (za + zb) / 2, [(xb - xa) / 2, (yb - ya) / 2, (zb - za) / 2], [0, 0.04, 0], RG.line, sc(WARM, 0.75));
+          quad((xa + xb) / 2, (ya + yb) / 2, (za + zb) / 2, [(xb - xa) / 2, (yb - ya) / 2, (zb - za) / 2], [0, 0.075, 0], RG.line, sc(WARM, 0.95));
         }
         const hw = Math.max(0, (b.hw || 0) - 0.6), [cx, cz] = Pt(su * (uo + 1.0), 0);
-        if (hw > 1 && isWater(cx, cz)) flat(cx, levelAt(cx, cz) + 0.02, cz, t[0], t[1], hw, 0.7, RG.line, sc(WARM, 0.16));   // 贴图 v（高斯那一向）= t：离桥越远越淡；沿 n 铺满水面宽
+        if (hw > 1 && isWater(cx, cz)) flat(cx, levelAt(cx, cz) + 0.02, cz, t[0], t[1], hw, 1.1, RG.line, sc(WARM, 0.34));   // 贴图 v（高斯那一向）= t：离桥越远越淡；沿 n 铺满水面宽
       }
       n.bridge++;
     }
