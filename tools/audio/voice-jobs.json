@@ -15918,6 +15918,66 @@
   "file": "voice/fz-boat-arrive-gmg-end-en.mp3"
  },
  {
+  "id": "voice.fz.boat.d.depart.kq.zh",
+  "lang": "zh",
+  "text": "欢迎乘坐内河游船D线，本船开往魁岐停靠点。",
+  "file": "voice/fz-boat-d-depart-kq-zh.mp3"
+ },
+ {
+  "id": "voice.fz.boat.d.depart.kq.en",
+  "lang": "en",
+  "text": "Welcome aboard Inland River Boat Line D. This boat is bound for Kuiqi Stop.",
+  "file": "voice/fz-boat-d-depart-kq-en.mp3"
+ },
+ {
+  "id": "voice.fz.boat.next.kq.zh",
+  "lang": "zh",
+  "text": "下一站，魁岐停靠点。",
+  "file": "voice/fz-boat-next-kq-zh.mp3"
+ },
+ {
+  "id": "voice.fz.boat.next.kq.en",
+  "lang": "en",
+  "text": "The next stop is Kuiqi Stop.",
+  "file": "voice/fz-boat-next-kq-en.mp3"
+ },
+ {
+  "id": "voice.fz.boat.arrive.gmgD.end.zh",
+  "lang": "zh",
+  "text": "光明港码头到了，这里是本线终点。请带好随身物品，小心上岸。",
+  "file": "voice/fz-boat-arrive-gmgD-end-zh.mp3"
+ },
+ {
+  "id": "voice.fz.boat.arrive.gmgD.end.en",
+  "lang": "en",
+  "text": "We have arrived at Guangminggang Pier, the end of this line. Please take your belongings and mind your step.",
+  "file": "voice/fz-boat-arrive-gmgD-end-en.mp3"
+ },
+ {
+  "id": "voice.fz.boat.d.depart.gmgD.zh",
+  "lang": "zh",
+  "text": "欢迎乘坐内河游船D线，本船开往光明港码头。",
+  "file": "voice/fz-boat-d-depart-gmgD-zh.mp3"
+ },
+ {
+  "id": "voice.fz.boat.d.depart.gmgD.en",
+  "lang": "en",
+  "text": "Welcome aboard Inland River Boat Line D. This boat is bound for Guangminggang Pier.",
+  "file": "voice/fz-boat-d-depart-gmgD-en.mp3"
+ },
+ {
+  "id": "voice.fz.boat.arrive.kq.end.zh",
+  "lang": "zh",
+  "text": "魁岐停靠点到了，这里是本线终点。请带好随身物品，小心上岸。",
+  "file": "voice/fz-boat-arrive-kq-end-zh.mp3"
+ },
+ {
+  "id": "voice.fz.boat.arrive.kq.end.en",
+  "lang": "en",
+  "text": "We have arrived at Kuiqi Stop, the end of this line. Please take your belongings and mind your step.",
+  "file": "voice/fz-boat-arrive-kq-end-en.mp3"
+ },
+ {
   "id": "voice.xm.doorsClosing.zh",
   "lang": "zh",
   "text": "车门即将关闭，请注意安全，谨防被夹。",

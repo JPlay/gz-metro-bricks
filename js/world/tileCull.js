@@ -37,7 +37,7 @@ export function installTileCull(street) {
   if (street.atlas && street.atlas.mesh) meshes.push(street.atlas.mesh);
   for (const m of meshes) {
     if (!m || m.isDisposed && m.isDisposed() || !m.getTotalIndices || !m.getTotalIndices()) continue;
-    if (m.isVisible === false || (m.metadata && m.metadata.collider)) continue;
+    if (m.isVisible === false || (m.metadata && (m.metadata.collider || m.metadata.noTileCull))) continue;   // noTileCull：3A 白天组（g3day）
     const t = m.getTotalIndices() / 3; if (t < TRIS_MIN) continue;
     m.computeWorldMatrix(true);
     const bb = m.getBoundingInfo().boundingBox, minW = bb.minimumWorld, maxW = bb.maximumWorld;

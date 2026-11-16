@@ -19,7 +19,8 @@ ok('same water level as 1A', F.WY === -3);
 ok('land + water meshes present', Object.keys(F.land).length > 30 && Object.keys(F.water).length > 30);
 // 晋安河口接光明港：晋安河中线末点在光明港水面里
 { const L = R.RIVERS.ja.line, e = L.at(L.len); ok('晋安河 mouth joins 光明港 water', R.isWater(e.x, e.z) && R.RIVERS.gm.line.project(e.x, e.z).d < 3); }
-ok('13 bridges (OSM, twins merged; 温泉公园步行桥 + 文博路 dropped)', R.BRIDGES.length === 13, R.BRIDGES.map(b => b.name || b.id));
+const B1B = R.BRIDGES.filter(b => !b.a3);   // 3A 光明港东段的桥（福光南路）不算 1B
+ok('13 bridges (OSM, twins merged; 温泉公园步行桥 + 文博路 dropped)', B1B.length === 13, B1B.map(b => b.name || b.id));
 ok('dropped bridges recorded with reason', F.spacing.dropped.length === 2 && F.spacing.dropped.some(d => d.kind === 'foot') && F.spacing.dropped.some(d => d.name === '文博路') && F.spacing.dropped.every(d => d.why));
 const named = R.BRIDGES.filter(b => b.name).map(b => b.name);
 ok('named bridges 温泉公园路/六一北路/塔头路/国货东路/北光明港路/长乐南路/连江中路/前横南路', ['温泉公园路', '六一北路', '塔头路', '国货东路', '北光明港路', '长乐南路', '连江中路', '前横南路'].every(n => named.includes(n)), named);
@@ -42,7 +43,7 @@ ok('boat hull stays inside water along whole route', hullOut === 0, hullOut);
 const cr = R.clearanceReport(0.25);
 ok(`canopy never clips a bridge (min clearance ${cr.min.toFixed(3)} ≥ ${R.CLEAR_MIN})`, cr.ok && cr.min >= R.CLEAR_MIN, cr.per);
 { const on = R.BRIDGES.filter(b => { const pr = R.ROUTE.line.project(b.x, b.z); return pr.d < b.hw && pr.s > R.STOPS[0].s && pr.s < R.STOPS[R.STOPS.length - 1].s; }).map(b => b.id);
-  ok(`route passes under every bridge between 温泉公园 and 光明港 (${on.length}; 温泉公园路 is north of the first pier)`, on.length === R.BRIDGES.length - 1 && on.every(id => cr.per[id]), { on, crossed: Object.keys(cr.per) }); }
+  ok(`route passes under every bridge between 温泉公园 and 光明港 (${on.length}; 温泉公园路 is north of the first pier)`, on.length === B1B.length - 1 && on.every(id => cr.per[id]), { on, crossed: Object.keys(cr.per) }); }
 // 船不碰岸：船体外扩 0.3 m 的轮廓也全在水面（或浮码头）上
 let bankTouch = 0; for (let s = 0; s <= R.ROUTE.line.len; s += 0.5) for (const { x, z } of R.hullPts(s, -0.3)) if (!R.isWater(x, z) && !R.isDry(x, z)) { bankTouch++; break; }
 ok('bank clearance ≥ 0.3 m along whole route', bankTouch === 0, bankTouch);
@@ -174,7 +175,8 @@ ok('useNet(a) restores 1A', R.NET === 'a' && R.STOPS.map(s => s.id).join() === '
   ok('pier stair head: 1 m granite landing + outer rail, solid quay under the stair side, fall-through safety net back to shore', /colStairHead'/.test(fsrc) && /colStairHeadRail/.test(fsrc) && /colQuay/.test(fsrc) && /pl\.vy < -3 && p\.y < levelAt\(w\.x, w\.z\) - 1 && p\.y > -40\) \{ const sh = shoreFor/.test(fsrc));
   // 台阶口岸墙缺口：每个码头 a −10.2 … −8.3（|b| ≤ 1）里没有栏杆段（福新问渡原来整段是栏杆，台阶顶上不了岸）
   { const bad = [];
-    for (const P of R.PIERS) { const loc = (x, z) => { const dx = x - P.x, dz = z - P.z; return [dx * P.t[0] + dz * P.t[1], dx * P.n[0] + dz * P.n[1]]; };
+    for (const P of R.PIERS.filter(P => !P.shared)) { const loc = (x, z) =>   // 共用码头的第二个泊位（3A gmgD）没有自己的台阶
+      { const dx = x - P.x, dz = z - P.z; return [dx * P.t[0] + dz * P.t[1], dx * P.n[0] + dz * P.n[1]]; };
       for (const w of R.FZR.wall) { if (w[4] !== 0) continue; for (let k = 1; k < 20; k++) { const t = k / 20, [a, b] = loc(w[0] + (w[2] - w[0]) * t, w[1] + (w[3] - w[1]) * t); if (a > -10.15 && a < -8.35 && Math.abs(b) < 0.95) { bad.push(P.id); break; } } } }
     ok('every pier stair mouth (a −10.2…−8.3) is open in the bank railing', bad.length === 0, bad); }
   // 左上角牌：岸上「福州内河」、船上「B线 · 下一站码头」

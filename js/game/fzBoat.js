@@ -31,7 +31,7 @@ export class FzBoat {
     this.kit.meshes.forEach(m => { m.isPickable = false; m.receiveShadows = true; });
     // 起始：停在离出来的出口亭最近的码头
     // 1A：西洋 A 出来停黎明湖（终点）、西门 C 出来停西水关；1B：停在出口亭登记的码头（K.pier）
-    const kp = S.K.pier ? STOPS.findIndex(st => st.id === S.K.pier) : -1;
+    const kp = S.K.pier ? STOPS.findIndex(st => st.id === S.K.pier || (st.pier && st.pier.shared === S.K.pier)) : -1;   // 3A：D 线在光明港码头是共用泊位（gmgD），也算从这里出发
     // 2C：C 线（两站）不在出口亭登记码头的线上时停在西水关（第 0 站）
     const start = kp >= 0 ? kp : this.rid === 'C' ? 0 : S.K.code === 'fzxiy' ? STOPS.length - 1 : 1;
     this.i = start; this.s = STOPS[start].s; this.v = 0; this.dir = start === STOPS.length - 1 ? -1 : 1; this.phase = 'dock'; this.target = start; this.dwell = 0; this.t = 0;

@@ -12166,5 +12166,65 @@
     "style": "cosy",
     "model": "cosyvoice-v2",
     "voice": "longxiaobai_v2"
+  },
+  "voice.fz.boat.d.depart.kq.en": {
+    "fp": "1238a02df50cb25b68ce1941ce8d0ee5d1fa94549054ee3de044c88b147f7871",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.boat.d.depart.kq.zh": {
+    "fp": "77487e319ca56148d261fa2d2b6d4fe781baa5f8acfe73d9cfad921a749da711",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.boat.d.depart.gmgD.zh": {
+    "fp": "43c2e67cd59ee21d3d26e59a2c3930659411875f7f7d0a92544c447a710000d8",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.boat.d.depart.gmgD.en": {
+    "fp": "e43c3829dcc30cced3739770ecbaba1ec4cf86d533a106d2161113438746554a",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.boat.next.kq.en": {
+    "fp": "61fe59908cf13b4d70fcb17c0379f2522193822953c29f9d3cdb76436cf082b1",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.boat.next.kq.zh": {
+    "fp": "b5f02561f21ddf8fe4869222fe6a19b35116e34895963344b4bf09a3a7c8afbf",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.boat.arrive.kq.end.zh": {
+    "fp": "ab3e96c952547790c2206265aa1bc4d8fe158eb2e0d6cc1e6241b4abaec9d4fe",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.boat.arrive.kq.end.en": {
+    "fp": "ecb3af421140159ec9be1d38f6fb69169db29f76f79924c620a3c8d3b07f4dd3",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.boat.arrive.gmgD.end.en": {
+    "fp": "6e8030d44fa45d1332ba01dc723c0f66b808628a839cae38d640c7eb29320907",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
+  },
+  "voice.fz.boat.arrive.gmgD.end.zh": {
+    "fp": "9ec16566de820d7b977d56176b6d32cafdbd03758556ba2fd88f605454c3de52",
+    "style": "cosy",
+    "model": "cosyvoice-v2",
+    "voice": "longxiaobai_v2"
   }
 }
