@@ -1,7 +1,7 @@
 /*
  * 3C 福州内河夜景（PLAN-3 §4 / §8）：FzRiverStreet 进河网时按设备本地时间（19:00–06:00）或 ?t=night 打开，离开 / 回白天原样还原。
  *   ① 灯光：Render.setNight（天光压暗偏蓝 + 很弱的冷白蓝月光；没有点光源 / 聚光灯；阴影关）+ 夜空贴图 + clearColor
- *   ② 夜雾：两个网都用 70 → 240 m、雾色 = 地平线色；夜里远处的组更早整组关掉（fzRiver.js lodNow 用 NIGHT.lod）
+ *   ② 夜雾：两个网都用 60 → 220 m、雾色 = 地平线色；夜里远处的组更早整组关掉（fzRiver.js lodNow 用 NIGHT.lod）
  *   ③ 发光件：共用 glow 材质（路灯灯罩等）调成暖色；水面 paint@sea 加一点深蓝绿自发光（不是黑）
  *   ④ 图集：白天贴图拷一份 → 非标牌区域乘暗偏蓝、约 30% 的窗亮暖光（只换贴图，0 次绘制）；标牌区域基本保持亮度
  *   ⑤ 夜灯网格（一个网格 = 1 次绘制，加色、不写深度）：路灯小光晕 + 地面暖光圈 + 水面同色短倒影条；桥栏外侧暖光带 + 水面倒影；
@@ -187,7 +187,11 @@ function lightTex(scene) {
     let k = 0;
     if (rg === 0) { const r = Math.hypot(u, v); k = r >= 1 ? 0 : Math.pow(1 - r, 2.4) * 0.85 + (r < 0.18 ? (0.18 - r) / 0.18 * 0.5 : 0); }
     else if (rg === 1) { const r = Math.hypot(u, v); k = r >= 1 ? 0 : Math.pow(1 - r * r, 2) * 0.9; }
-    else if (rg === 2) { const g = Math.exp(-u * u * 6) * (1 - Math.abs(u)), ripple = 0.65 + 0.35 * Math.sin(vv * 40) * Math.sin(vv * 13 + 1.3); k = g * Math.pow(vv, 1.4) * ripple; }
+    else if (rg === 2) {   // 3C 返工（小美 night3 ②）：倒影 = 一节一节的短暖光条（6 节、节间留暗缝），靠岸那头最亮最宽，往河心变窄变暗；不是一整条淡光
+      const sg = vv * 6, f = sg - Math.floor(sg), bar = Math.min(1, Math.max(0, (f - 0.12) / 0.08)) * Math.min(1, Math.max(0, (0.72 - f) / 0.08));
+      const w = 0.3 + 0.5 * vv, g = Math.exp(-(u / w) * (u / w) * 2.2) * (1 - Math.abs(u));
+      k = bar * g * (0.3 + 0.7 * Math.pow(vv, 1.2));
+    }
     else { k = Math.exp(-v * v * 5) * (1 - v * v) * (Math.abs(u) > 0.94 ? (1 - Math.abs(u)) / 0.06 : 1); }
     const q = Math.max(0, Math.min(255, Math.round(k * 255))), o = (y * W + x) * 4; d[o] = d[o + 1] = d[o + 2] = q; d[o + 3] = 255;
   }
