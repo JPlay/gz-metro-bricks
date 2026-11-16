@@ -462,7 +462,7 @@ export class EastCtl {
       if (p.z < GZE.edge - 0.05) { const d = EMU.doors.find(d => Math.abs(p.x - d.x) < 0.55); if (d) this.enter(st, d); }
       return null;
     }
-    if (st !== this.cur.st) { this.interior.setEnabled(false); for (const r of Object.values(this.rails)) { const P = r.plat(); if (P) P.show(null); } this.closePicker(); this.ride = null; this.cur = null; return null; }
+    if (st !== this.cur.st) { if (this.interior) this.interior.setEnabled(false); for (const r of Object.values(this.rails)) { const P = r.plat(); if (P) P.show(null); } this.closePicker(); this.ride = null; this.cur = null; return null; }
     if (this.cur.loc === 'car') {
       // 坐下（车停着、门开着）→ 关门开车
       if (!pl.seat) { this.needStand = false; this.closePicker(); }
@@ -500,13 +500,18 @@ export class EastCtl {
     }
     return null;
   }
-  /** HUD 左上角：动车里 / 厦门北站台上显示车次和站名（不是地铁线路） */
+  /** HUD 左上角：动车里 / 国铁站房显示车次和站名（不是地铁线路） */
   railHud() {
     if (!this.cur) return null;
     const rl = this.railLoc();
     if (rl) { const A = rl.A[this.cur.area];
       return { badge: '国铁', zh: rl.stn[0] + (A ? ' · ' + A[0] : ''), en: rl.stn[1] + (A ? ' · ' + A[1] : ''), color: '#1F5F8B' }; }
-    const R = this.ride, trip = R ? R.trip : this.interior.trip;
+    // 纯地铁到达时 hookRailMetro 会把 cur.loc 设成 mloc（fzmetro / xmmetro），此时还没有动车 interior。
+    // 以前落到 this.interior.trip，每帧 pageerror（reading 'trip'），主循环后半截停掉，下楼会卡住。
+    // 返回 null，让主循环走地铁 HUD。
+    if (Object.values(this.rails).some(r => r.mloc === this.cur.loc)) return null;
+    const R = this.ride, trip = R ? R.trip : (this.interior && this.interior.trip);
+    if (!trip) return null;
     if (R && R.phase !== 'closing') return { badge: trip.train, zh: '复兴号 ' + EMU.car + ' 车', en: `${trip.fromEn} → ${trip.toEn}`, color: '#D3121A', next: { zh: trip.to, en: trip.toEn } };
     return { badge: trip.train, zh: CITIES[this.side].stn, en: CITIES[this.side].stnEn, color: '#D3121A' };
   }
