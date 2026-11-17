@@ -17,6 +17,7 @@ SPOTS = """(async () => { const M = await import('/js/data/fz-river.js'); const 
     ['d_boat_white_at_gmgD', ...at(gD.s + 13, hw + 2.2), ...at(gD.s, hw - 3.2), -0.32, 0.05],
     ['d_boat_white_from_opposite_bank', ...at(gD.s + 6, -(hw + 3)), ...gD.berth, -0.06, 0.05],
     ['d_deck_from_B_pontoon', ...pf(gmg, 7.0, 1.2), ...gD.berth, -0.1, WY + 0.5],
+    ['d_boat_bow_plate_closeup', ...at(gD.s - 7.2, hw - 1.0), ...at(gD.s - 4.0, hw - 3.0), -0.3, WY + 0.5],   // 小美：D 船近景（白篷 + 蓝绿垂边 + 船头「D」牌）
     ['seg_from_fuguang_bridge', b4.x, b4.z, ...at(b4.s + 80, 0), 0.0, 0.1],
     ['seg_fuguang_bridge_from_bank', ...at(b4.s - 45, hw + 4), b4.x, b4.z, 0.04, 0.05],
     ['seg_mid_promenade', ...at(A3.gmALen + 260, hw + 4), ...at(A3.gmALen + 340, 0), 0.02, 0.05],

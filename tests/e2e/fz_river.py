@@ -155,11 +155,17 @@ async def board(pg, D, pid, leg):
     s = await st(pg); ok(f'{leg}:downStairsToPontoon:{pid}', abs(s['pos'][1] - (D['wy'] + 0.45)) < 0.3 and r1, s['pos'])
     if leg == 'leg1': await shot(pg, 'pier_pontoon_' + pid)
     # 船不在这个码头就会被“叫”过来（站在浮码头上）
-    okb = await wait(pg, f"(() => {{ const b = __game.fzMetro.street.boat.info(); return b.phase == 'dock' && b.at == '{pid}'; }})()", 400, 1500)
-    ok(f'{leg}:boatAtPier:{pid}', okb, await boat(pg))
+    # 3A：等「这个码头那条线」的船。street.boat 不坐船时 = 出口亭那条线（光明港出来 = B），魁岐停靠点只有 D 线 → 看 boats.D（gleg2 以前误等 B 船 1500 s）
+    b0 = await boat(pg); rid = b0['rid'] if b0 else None; ids = lambda r: [x['id'] for x in D['routes'].get(r, [])]
+    BX = '__game.fzMetro.street.boat'
+    if rid and pid not in ids(rid):
+        rid = next((r for r in D['routes'] if pid in ids(r)), None)
+        if rid: BX = f'__game.fzMetro.street.boats.{rid}'
+    okb = await wait(pg, f"(() => {{ const b = {BX}.info(); return b.phase == 'dock' && b.at == '{pid}'; }})()", 400, 1500)
+    ok(f'{leg}:boatAtPier:{pid}', okb, await pg.evaluate(f'{BX}.info()'))
     door = await W(pg, *pf(P, 2.4, 2.4)); inb = await W(pg, *pf(P, 2.4, 3.9))
     await legs(pg, [door, inb], False)
-    aisle = await pg.evaluate("(() => { const ss = __game.fzMetro.street.boat.seats.filter(s => s.free); const a = ss.filter(s => Math.abs(Math.abs(s.lz) - 1.3) < 0.01); const p = __game.player.position; a.sort((x, y) => Math.hypot(x.wx - p.x, x.wz - p.z) - Math.hypot(y.wx - p.x, y.wz - p.z)); const s = a[0]; return [(s.wx + s.stand.x) / 2, (s.wz + s.stand.z) / 2]; })()")
+    aisle = await pg.evaluate("(() => { const ss = " + BX + ".seats.filter(s => s.free); const a = ss.filter(s => Math.abs(Math.abs(s.lz) - 1.3) < 0.01); const p = __game.player.position; a.sort((x, y) => Math.hypot(x.wx - p.x, x.wz - p.z) - Math.hypot(y.wx - p.x, y.wz - p.z)); const s = a[0]; return [(s.wx + s.stand.x) / 2, (s.wz + s.stand.z) / 2]; })()")
     await legs(pg, [aisle], False)
     sit = await wait(pg, "(__game.state().act||{}).id=='sit'", 20)
     if sit: await tap(pg, '#bAct')
@@ -593,7 +599,11 @@ async def in_block(pg, D):
 async def fall_and_back(pg, P, tag, a_off, b_off):
     """从浮码头一头走出去掉进水里 → 「回到岸上」：回到岸地（不是浮码头 / 台阶 / 站台）"""
     pont = await W(pg, *pf(P, 1.2, 1.5)); off = await W(pg, *pf(P, a_off, b_off))
-    await legs(pg, [await W(pg, *pf(P, -9.6, -0.9)), await W(pg, *pf(P, -9.4, 0.75)), await W(pg, *pf(P, -4.0, 0.75)), pont], False)
+    # 3A：gleg2 下了 D 船走栈道回来，人已经在浮码头上（水面 + 0.45）→ 直接走到浮码头这一头；
+    # 以前不管在哪都先直线去岸墙缺口，从浮码头斜穿台阶栏杆卡在台阶上，后面掉水那一步从台阶上走不出去（07:01 那次 dry / street）
+    s0 = await st(pg); wy = await pg.evaluate("(async () => (await import('/js/data/fz-river.js')).WY)()")
+    if abs(s0['pos'][1] - (wy + 0.45)) < 0.3: await legs(pg, [pont], False)
+    else: await legs(pg, [await W(pg, *pf(P, -9.6, -0.9)), await W(pg, *pf(P, -9.4, 0.75)), await W(pg, *pf(P, -4.0, 0.75)), pont], False)
     s1 = await st(pg); await legs(pg, [off], False); await asyncio.sleep(1.0)
     shown = await wait(pg, "(() => { const b = document.getElementById('bShore'); return !!b && !b.hidden; })()", 10)
     s_in = await st(pg)

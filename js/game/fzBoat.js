@@ -42,7 +42,7 @@ export class FzBoat {
   build() {
     const k = this.kit, P = k.solid, D = BOAT.deck, G = BOAT.gunwale, RU = BOAT.roofUnder;
     const wood = hex('#7A4E2D'), woodL = hex('#A57B4F'), dark = hex('#3B2A1E'), post = hex('#5A2E1E');
-    const canopy = hex(this.variant === 'white' ? '#F2EFE8' : '#C0392B'), trim = hex(this.variant === 'white' ? '#B3261E' : '#F4E6C8');
+    const canopy = hex(this.variant === 'white' ? '#F2EFE8' : '#C0392B'), trim = hex(this.variant === 'white' ? '#1F8A8A' : '#F4E6C8');   // 3A 小美：D 线白篷配蓝绿（teal）垂边，和 B 线红篷船一眼分开
     // 船体：中段 + 两头收窄（双头）
     P.box(0, (D - 0.3) / 2, 0, BOAT.beam, D + 0.3, 6.2, wood, 0, 0, 0, 1, NO);
     for (const e of [-1, 1]) { P.box(0, (D - 0.25) / 2 + 0.03, e * 3.45, BOAT.beam * 0.78, D + 0.2, 0.9, wood, 0, 0, 0, 1, NO); P.box(0, (D - 0.2) / 2 + 0.06, e * 3.92, BOAT.beam * 0.46, D + 0.1, 0.5, wood, 0, 0, 0, 1, NO); }
@@ -81,6 +81,15 @@ export class FzBoat {
       P.box(0, RU - 0.245, lz, 0.1, 0.03, 0.1, hex('#C9A13B'), 0, 0, 0, 1, NO);                  // 顶盖
       const v0 = P.p.length / 3; P.ellipsoid(0, RU - 0.37, lz, 0.2, 0.24, 0.2, hex('#D7262E'), 1); (this.lanternV || (this.lanternV = [])).push([v0, P.p.length / 3]);   // 灯笼（3C：记下顶点范围，夜里点亮）
       P.box(0, RU - 0.51, lz, 0.025, 0.06, 0.025, hex('#C9A13B'), 0, 0, 0, 1, NO);               // 底穗
+    }
+    // 3A 小美：D 线船两头挡板外侧各一块小「D」牌（蓝绿底白字，双头船两头都是船头）——并进同一张漆面网格，不加绘制
+    if (this.rid === 'D') {
+      const teal = hex('#1F8A8A'), ink = hex('#F7F5EE'), py = (D + G) / 2;
+      for (const e of [-1, 1]) {
+        const z0 = e * 4.012, z1 = e * 4.027, u = (uu, y, w, h) => P.box(-e * uu, py + y, z1, w, h, 0.012, ink, 0, 0, 0, 1, NO);   // 字面朝外：从船外看过去的右手 = 局部 −e·x
+        P.box(0, py, z0, 0.42, 0.36, 0.022, teal, 0, 0, 0, 1, NO);
+        u(-0.075, 0, 0.05, 0.26); u(-0.02, 0.105, 0.1, 0.05); u(-0.02, -0.105, 0.1, 0.05); u(0.085, 0, 0.05, 0.15); u(0.05, 0.075, 0.05, 0.06); u(0.05, -0.075, 0.05, 0.06);
+      }
     }
     // 碰撞：甲板 + 舷墙（中门留空）+ 两头 + 停靠时伸出去的跳板
     const c = (x, y, z, w, h, d, name) => k.col(x, y, z, w, h, d, { dynamic: true, name, parent: k.root });
