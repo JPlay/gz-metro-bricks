@@ -113,13 +113,15 @@ ok('kq stair mouth open in the bank railing', (() => { const loc = (x, z) => { c
 { const src = execSync('git show b54b446:js/data/fz-river-data-e.js', { maxBuffer: 1 << 26 }).toString();
   const O = JSON.parse(src.replace(/^[^]*?export const FZR_E = /, '').replace(/;\s*$/, ''));
   const pre = (a, b) => J(b.slice(0, a.length)) === J(a);
+  // 3B 在 3A 之后又接了晋安河北段 / 凤坂河（会动接口处的格子 / 岸墙，凤坂河口的两栋 1B 楼打 gone）：3A 自己的差分拿 3A 合入时的数据（main 6b44e7e）比；3B 的差分在 fz_river_3b.mjs
+  const F = R.FZR.b3 ? JSON.parse(execSync('git show 6b44e7e:js/data/fz-river-data-e.js', { maxBuffer: 1 << 26 }).toString().replace(/^[^]*?export const FZR_E = /, '').replace(/;\s*$/, '')) : R.FZR;
   ok('unchanged keys: id/K/Kgm/WY/cell/lakeFar/lakeShore/steps/kiosks/sfqx/spacing/route (B)', ['id', 'K', 'Kgm', 'WY', 'cell', 'lakeFar', 'lakeShore', 'steps', 'kiosks', 'sfqx', 'spacing', 'route'].every(k => J(O[k]) === J(F[k])));
   ok('晋安河 identical; 光明港 1B centreline is an exact prefix (only extended)', J(O.rivers.ja) === J(F.rivers.ja) && pre(O.rivers.gm.p, F.rivers.gm.p) && O.rivers.gm.hw === F.rivers.gm.hw && O.rivers.gm.band === F.rivers.gm.band);
   ok('1B houses / trees / piers / bridges / roads / dry unchanged (3A only appended)', ['houses', 'trees', 'piers', 'bridges', 'roads', 'dry'].every(k => pre(O[k], F[k])), ['houses', 'trees', 'piers', 'bridges', 'roads', 'dry'].filter(k => !pre(O[k], F[k])));
   const jx = A3.x0 - 30;   // 接缝：1B 光明港东头（x ≈ 1110）往西 30 m 以内
   for (const c of ['land', 'water']) { const ch = Object.keys(O[c]).filter(k => J(O[c][k]) !== J(F[c][k])), far = ch.filter(k => (Number(k.split(',')[0]) + 1) * F.cell < jx);
     ok(`${c} cells: old cells changed only at the junction (${ch.join(' ')})`, far.length === 0 && ch.length <= 4, ch); }
-  const NE = JSON.parse(fs.readFileSync(new URL('../../js/data/fz-river-data-e.js', import.meta.url), 'utf8').replace(/^[^]*?export const FZR_E = /, '').replace(/;\s*$/, ''));   // 生成的原始数据（运行时会在码头台阶口切岸墙，不能拿 R.FZR.wall 比）
+  const NE = R.FZR.b3 ? F : JSON.parse(fs.readFileSync(new URL('../../js/data/fz-river-data-e.js', import.meta.url), 'utf8').replace(/^[^]*?export const FZR_E = /, '').replace(/;\s*$/, ''));   // 生成的原始数据（运行时会在码头台阶口切岸墙，不能拿 R.FZR.wall 比）
   const NS = new Set(NE.wall.map(w => J(w))), lost = O.wall.filter(w => !NS.has(J(w)));
   ok(`walls: only ${lost.length} old segments replaced, all at the junction (old 光明港 end cap)`, lost.length <= 6 && lost.every(w => Math.min(w[0], w[2]) > jx), lost); }
 // ---- 3A 小美：D 船和 B 船分得开：白篷 + 蓝绿垂边 + 两头「D」牌（同一张漆面网格，不加 draw） ----

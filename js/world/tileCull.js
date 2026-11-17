@@ -87,7 +87,8 @@ export function installTileCull(street) {
       const pos = cam.position, yaw = cam.rotation ? cam.rotation.y : 0;
       const px = opts.px != null ? opts.px : pos.x, pz = opts.pz != null ? opts.pz : pos.z;
       const detR = opts.detR, detOn = opts.detOn !== false, force = !!opts.force;
-      const kPos = Math.round(pos.x / 8) + ',' + Math.round(pos.z / 8) + ',' + Math.round(yaw / 0.12) + ',' + (detR || 0) + ',' + (detOn ? 1 : 0);
+      const pitch = cam.rotation ? cam.rotation.x : 0;   // 3B（小美 11-17 快转检查）：抬头看天再低头，key 里没有俯仰 → 不重算，远处大三角地面块空 0.7 s
+      const kPos = Math.round(pos.x / 8) + ',' + Math.round(pos.z / 8) + ',' + Math.round(yaw / 0.12) + ',' + Math.round(pitch / 0.12) + ',' + (detR || 0) + ',' + (detOn ? 1 : 0);
       cam.getViewMatrix(true);
       const scene = cam.getScene && cam.getScene();
       if (scene) scene.setTransformMatrix(cam.getViewMatrix(true), cam.getProjectionMatrix(true));

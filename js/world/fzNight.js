@@ -126,6 +126,13 @@ export class FzNight {
       if (isWater(p0.x, p0.z) && isWater(p1.x, p1.z)) { const lv = levelAt(p0.x, p0.z), ax = (p0.x - p1.x) / L, az = (p0.z - p1.z) / L; flat((p0.x + p1.x) / 2, lv + 0.02, (p0.z + p1.z) / 2, ax, az, 0.8, L / 2, RG.streak, sc(WARM, 0.85)); }
       n.lamp++;
     }
+    // 3B：琴亭湖步道路灯（和 fzRiver.js lakeLamps 同一套位置）：灯头光晕 + 地面光圈 + 湖面一条短倒影
+    for (const [x, z, fx, fz] of (FZR.b3 && FZR.b3.lamps) || []) {
+      const hx = x + fx * 1.75, hz = z + fz * 1.75; halo(hx, 6.95, hz, 0.9, sc(WARM, 0.7)); flat(hx - fx * 0.4, 0.045, hz - fz * 0.4, fx, fz, 3.8, 3.8, RG.pool, sc(WARM, 0.42));
+      const L = 7.5, p0 = [x + fx * 6.1, z + fz * 6.1], p1 = [p0[0] + fx * L, p0[1] + fz * L];
+      if (isWater(p0[0], p0[1]) && isWater(p1[0], p1[1])) flat((p0[0] + p1[0]) / 2, levelAt(p0[0], p0[1]) + 0.02, (p0[1] + p1[1]) / 2, -fx, -fz, 0.8, L / 2, RG.streak, sc(WARM, 0.85));
+      n.lamp++;
+    }
     // 桥：栏板外侧一道暖光带（跟着拱桥桥面起伏）+ 水面上同色的淡倒影
     for (const b of BRIDGES) {
       if (b.kind === 'bingde' || b.kind === 'covered') continue;

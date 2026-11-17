@@ -133,7 +133,7 @@ async def main():
         await pg.evaluate('__game.setDtMax(0.25)'); await asyncio.sleep(1)
         await pg.evaluate("""(() => { const g=__game; g.east.ensure(); g.east.side='fz'; g.east.cur={st:g.station, loc:'fzmetro', area:'metro'}; g.station.kit.root.setEnabled(false); g.fzMetro.enterFromRailway(g.player); })()""")
         await asyncio.sleep(1.5)
-        await pg.evaluate("""(async () => { const E = await import('/js/data/fz-exits.js'); const X = E.FZ_EXITS['fzxm']; const ex = X.attr === 'fzriver' ? X : (X.more || []).find(e => e.attr === 'fzriver'); const m=__game.fzMetro; m.buildStation('fzxm'); m.goStreet(ex); })()""")
+        await pg.evaluate("""(async () => { const E = await import('/js/data/fz-exits.js'); const X = E.FZ_EXITS['""" + os.environ.get('FZKIOSK', 'fzxm') + """']; const ex = X.attr === 'fzriver' ? X : (X.more || []).find(e => e.attr === 'fzriver'); const m=__game.fzMetro; m.buildStation('""" + os.environ.get('FZKIOSK', 'fzxm') + """'); m.goStreet(ex); })()""")
         await asyncio.sleep(6)
         RES['scene'] = await pg.evaluate('(() => { const S=__game.fzMetro.street, sc=S.scene; return {night: !!(S.night&&S.night.on), fog: [sc.fogMode, sc.fogStart, sc.fogEnd], view: __game.player.view, fov: sc.activeCamera.fov}; })()')
         RES['hook'] = await pg.evaluate(HOOK); print('scene', RES['scene'], 'hook', json.dumps(RES['hook'])[:600], flush=True)
@@ -147,6 +147,16 @@ async def main():
               b.s = s0 + 30*dir; b.place(0); const p=b.pose(); b.node.computeWorldMatrix(true); const wp=b.node.getAbsolutePosition();
               __game.player.spawn(wp.x, wp.y+1.2, wp.z, Math.atan2(p.tx*dir, p.tz*dir)); __game.player.pitch=0.08; })()""",
         }
+        if os.environ.get('FZPOP') == 'qth':   # 3B（小美 11-17）：琴亭湖东岸（house 169 一次性灰三角那里）+ 琴亭 —— FZKIOSK=fzdm
+            LOCS = {
+              'qth_east_tri': """(() => { const S=__game.fzMetro.street, R=S.kit.root.position; __game.player.spawn(R.x+303.38, 0.05, R.z+1023.75, 0.7508); __game.player.pitch=0.16; })()""",
+              'qth_east_bank': """(async () => { const S=__game.fzMetro.street, R=S.kit.root.position; const M = await import('/js/data/fz-river.js'); const L = M.FZR.b3.lake, g = L.ring; let b = null;
+                  for (let i = 0; i < g.length; i += 2) { const d = Math.hypot(g[i] - 346, g[i + 1] - 1060); if (!b || d < b[2]) b = [g[i], g[i + 1], d]; }
+                  const dx = b[0] - L.c[0], dz = b[1] - L.c[1], l = Math.hypot(dx, dz), x = b[0] + dx / l * 4.5, z = b[1] + dz / l * 4.5;
+                  __game.player.spawn(R.x+x, 0.05, R.z+z, Math.atan2(L.c[0]-x, L.c[1]-z)); __game.player.pitch=0.08; })()""",
+              'qth_ting': """(async () => { const S=__game.fzMetro.street, R=S.kit.root.position; const M = await import('/js/data/fz-river.js'); const T = M.FZR.b3.ting, L = M.FZR.b3.lake;
+                  const x = T.x + T.f[0] * 7.5, z = T.z + T.f[1] * 7.5; __game.player.spawn(R.x+x, 0.05, R.z+z, Math.atan2(L.c[0]-x, L.c[1]-z)); __game.player.pitch=0.08; })()""",
+            }
         for loc, js in LOCS.items():
             try:
                 await pg.evaluate(js); await asyncio.sleep(2.5)
