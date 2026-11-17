@@ -433,7 +433,9 @@ if A3:
   (_gx, _gz), _gt, _gn = at_s('gm', GATE_S)
   KQ_SIDE = 1   # 魁岐停靠点 / 观景处都在右岸（南北向一段 = 西岸），和光明港码头同一侧
   GATE = {'s': GATE_S, 'x': round(_gx, 2), 'z': round(_gz, 2), 't': [round(_gt[0], 4), round(_gt[1], 4)], 'n': [round(_gn[0], 4), round(_gn[1], 4)], 'hw': HW['gm'], 'bays': 9,
-          'view': [round(v, 2) for v in at_s('gm', L3 - 3.0, KQ_SIDE * (HW['gm'] + 6.5))[0]], 'side': KQ_SIDE}
+          'view': [round(v, 2) for v in at_s('gm', GATE_S - 30.0, KQ_SIDE * (HW['gm'] + 3.0))[0]], 'side': KQ_SIDE,
+          # 小美 11-17：观景处原来在闸旁（L3 − 3），正对闸头石墩、看不见九孔 → 挪到闸上游 30 m 岸边步道，正面看全九孔；原位置只留作「看闽江」取景点（mjView）
+          'mjView': [round(v, 2) for v in at_s('gm', L3 - 3.0, KQ_SIDE * (HW['gm'] + 6.5))[0]]}
   # 不让人上闸：闸的整个占地（闸墩 a −2.4…2.2，横向两头各伸进岸上 1.2 m）一块看不见的高碰撞体 + 岸上闸头两侧矮铁栏（fzRiver.js a3Gate）
   _blk = [(-3.2, -(HW['gm'] + 1.2)), (3.0, -(HW['gm'] + 1.2)), (3.0, HW['gm'] + 1.2), (-3.2, HW['gm'] + 1.2)]
   GATE['block'] = [[round(GATE['x'] + _gt[0] * a + _gn[0] * b_, 2), round(GATE['z'] + _gt[1] * a + _gn[1] * b_, 2)] for a, b_ in _blk]
@@ -509,7 +511,7 @@ if A3:
     for a, b_ in zip(c_, c_[1:]):
       m_ = ((a[0] + b_[0]) / 2, (a[1] + b_[1]) / 2); u_ = (m_[0] - _mx) * _mt[0] + (m_[1] - _mz) * _mt[1]
       if math.dist(a, b_) > 0.3 and u_ > -1.0: MJ_RAIL.append([round(a[0], 2), round(a[1], 2), round(b_[0], 2), round(b_[1], 2)])
-  MJ = {'lv': MJ_LV, 'water': pack(tris_flat(mjPoly)), 'shore': MJ_SHORE, 'rail': MJ_RAIL, 'o': [round(_mx, 2), round(_mz, 2)], 't': [round(_mt[0], 4), round(_mt[1], 4)], 'n': [round(_mn[0], 4), round(_mn[1], 4)], 'far': [230, -430, 430]}
+  MJ = {'lv': MJ_LV, 'water': pack(tris_flat(mjPoly)), 'shore': MJ_SHORE, 'rail': MJ_RAIL, 'o': [round(_mx, 2), round(_mz, 2)], 't': [round(_mt[0], 4), round(_mt[1], 4)], 'n': [round(_mn[0], 4), round(_mn[1], 4)], 'far': [170, -430, 430]}   # 小美 11-17：对岸 230 → 170 m（河面雾 200 m 起：楼 / 地面 / 堤岸在雾前，不再像半透明白板）
   print('3A minjiang tris', len(MJ['water']['i']) // 3, 'shore', len(MJ_SHORE), 'rail', len(MJ_RAIL))
   # ---- 岸墙：旧的段在新水面边界上（两端 + 中点都在）就原样留着；新水面边界上没被旧段盖住的地方按 1B 同一套规则补（2 m 一段 → 并段）----
   gapU = unary_union(GAPS)
@@ -549,7 +551,7 @@ if A3:
   # ---- 房子 / 榕树（3A 段两岸；另一串随机数，追加在末尾；四面都贴立面，2C 教训）----
   R3 = random.Random(311)
   _nH, _nT = len(HOUSES), len(TREES)
-  _view = Point(*GATE['view'])
+  _view = Point(*GATE['mjView'])   # 房 / 树的避让仍按原观景处（挪观景处不重排房树）
   occ3 = unary_union([water.buffer(7.5)] + [r['poly'].buffer(0.5) for r in ROADS + ROADS3] + [b['foot'].buffer(3) for b in BR]
                      + [Polygon(GATE['block']).buffer(14), _view.buffer(16), Point(*kq['sign']).buffer(10), LineString([(kq['x'], kq['z']), tuple(kq['sign'])]).buffer(8)]
                      + [Polygon([(h['x'] + h['t'][0] * a + h['f'][0] * b_ * -1, h['z'] + h['t'][1] * a + h['f'][1] * b_ * -1) for a, b_ in [(-h['w'] / 2, -h['d'] / 2), (h['w'] / 2, -h['d'] / 2), (h['w'] / 2, h['d'] / 2), (-h['w'] / 2, h['d'] / 2)]]).buffer(0.6) for h in HOUSES])
@@ -573,6 +575,11 @@ if A3:
       if region.contains(P_) and not water.buffer(1.0).contains(P_) and not treeOcc3.contains(P_) and all(math.hypot(x - t_[0], z - t_[1]) > 6 for t_ in TREES[-40:]):
         TREES.append([round(x, 2), round(z, 2), round(-n[0] * side, 3), round(-n[1] * side, 3), round(R3.uniform(0.85, 1.15), 2), 'gm', 1])
       s_ += R3.uniform(15, 22)
+  # 小美 11-17：新观景处（闸上游 30 m）看九门闸的视线里不留榕树（岸边一排树离栏杆只有 1.7 m，正挡在闸前）——事后剔掉，不动随机序列
+  _vw = Point(*GATE['view']); _ends = [(GATE['x'] + _gn[0] * e * HW['gm'], GATE['z'] + _gn[1] * e * HW['gm']) for e in (-1, -0.5, 0, 0.5, 1)]
+  _cone = unary_union([LineString([GATE['view'], e_]) for e_ in _ends]).buffer(3.0).union(_vw.buffer(6))
+  _drop = [t_ for t_ in TREES[_nT:] if _cone.contains(Point(t_[0], t_[1]))]
+  TREES[_nT:] = [t_ for t_ in TREES[_nT:] if t_ not in _drop]; print('3A trees dropped for the lookout sight lines', len(_drop), [t_[:2] for t_ in _drop])
   print('3A houses', len(HOUSES) - _nH, 'trees', len(TREES) - _nT)
   # ---- D 线（白篷）：光明港码头 D 泊位 ⇄ 魁岐停靠点；双头船，终点停靠后掉头（座位朝向转过来）----
   def lat_d(s):

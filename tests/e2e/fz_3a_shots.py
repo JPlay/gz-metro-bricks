@@ -14,20 +14,20 @@ SPOTS = """(async () => { const M = await import('/js/data/fz-river.js'); const 
   return [
     ['sign_gmg_B_D_rows', ...pf(gmg, -9.6, -2.8), ...gmg.sign, 0.1, 0.05],
     ['gmg_B_and_D_berths', ...at(gD.s - 26, hw + 3.0), ...at((gmg.s + gD.s) / 2 + 2, hw - 3), -0.12, 0.05],
-    ['d_boat_white_at_gmgD', ...at(gD.s + 13, hw + 2.2), ...at(gD.s, hw - 3.2), -0.32, 0.05],
+    ['d_boat_white_at_gmgD', ...at(gD.s + 10, hw + 0.6), ...at(gD.s + 1, hw - 3.2), 0.32, 0.05],   // pitch 正 = 低头（原 −0.32 是抬头看树）
     ['d_boat_white_from_opposite_bank', ...at(gD.s + 6, -(hw + 3)), ...gD.berth, -0.06, 0.05],
     ['d_deck_from_B_pontoon', ...pf(gmg, 7.0, 1.2), ...gD.berth, -0.1, WY + 0.5],
-    ['d_boat_bow_plate_closeup', ...at(gD.s - 7.2, hw - 1.0), ...at(gD.s - 4.0, hw - 3.0), -0.3, WY + 0.5],   // 小美：D 船近景（白篷 + 蓝绿垂边 + 船头「D」牌）
+    ['d_boat_bow_plate_closeup', ...at(gD.s - 7.2, hw - 1.0), ...at(gD.s - 4.0, hw - 3.0), 0.3, WY + 0.5],   // 小美：D 船近景（白篷 + 蓝绿垂边 + 船头「D」牌）
     ['seg_from_fuguang_bridge', b4.x, b4.z, ...at(b4.s + 80, 0), 0.0, 0.1],
     ['seg_fuguang_bridge_from_bank', ...at(b4.s - 45, hw + 4), b4.x, b4.z, 0.04, 0.05],
     ['seg_mid_promenade', ...at(A3.gmALen + 260, hw + 4), ...at(A3.gmALen + 340, 0), 0.02, 0.05],
     ['seg_bend_east_bank', ...at(900, -(hw + 4)), ...at(970, 0), 0.02, 0.05],
     ['sign_kq', ...pf(kq, -9.6, -2.8), ...kq.sign, 0.1, 0.05],
     ['kq_stop_from_bank', ...at(kq.s - 22, hw + 3), ...kq.berth, -0.08, 0.05],
-    ['gate_front_west_bank', ...at(G.s - 45, hw + 3), G.x, G.z, 0.03, 0.05],
-    ['gate_front_east_bank', ...at(G.s - 38, -(hw + 3)), G.x, G.z, 0.03, 0.05],
+    ['gate_front_west_bank', ...at(G.s - 45, hw + 1.2), G.x, G.z, 0.03, 0.05],   // 小美 11-17：往河边挪开，别被榕树干挡
+    ['gate_front_east_bank', ...at(G.s - 48, -(hw + 2.0)), G.x, G.z, 0.03, 0.05],
     ['gate_from_lookout', ...G.view, G.x, G.z, 0.02, 0.05],
-    ['minjiang_from_lookout', ...G.view, ...mo, 0.0, 0.05],
+    ['minjiang_from_lookout', ...(G.mjView || G.view), ...mo, 0.0, 0.05],   // 观景处挪到闸上游后，看闽江仍在闸旁原位置
   ]; })()"""
 async def main():
   R = {'tag': TAG, 'spots': {}, 'shots': []}
@@ -44,7 +44,9 @@ async def main():
     print('street', json.dumps(R['street']), json.dumps(R['boats']), flush=True)
     if await pg.evaluate('__game.player.view') != 'first': await pg.evaluate('__game.toggleView()')   # 第一人称取景：人物不挡牌子 / 闸
     spots = await pg.evaluate(SPOTS)
+    ONLY = set(filter(None, os.environ.get('FZSPOTS', '').split(',')))   # 调机位用：只拍这几个
     for name, x, z, tx, tz, pitch, y in spots:
+      if ONLY and name not in ONLY: continue
       await pg.evaluate(f"(() => {{ const S=__game.fzMetro.street, R=S.kit.root.position; __game.player.spawn(R.x+({x}), {y}, R.z+({z}), Math.atan2(({tx})-({x}), ({tz})-({z}))); __game.player.pitch={pitch}; }})()")
       await asyncio.sleep(3.0); fn = f'{OUT}/{name}_{TAG}.jpg'
       if await safe_shot(pg, path=fn, type='jpeg', quality=72): R['shots'].append(fn)

@@ -44,6 +44,16 @@ const inD2 = (x, z) => !!FZR.d2 && ((x > 40 && x < 470 && z > -290 && z < -20) |
 const inD2E = (x, z) => !!FZR.d2 && x > 60 && x < 480 && z > -300 && z < -20;
 const C2D = 80, c2DBand = (z) => Math.max(0, Math.floor((FZR.c2.z0 - z) / C2D));   // 细节格子：横向并成一条（每 80 m 一组）
 
+/** 锥形树干侧面法线：径向 + 沿轴的锥度分量（tubeTaper 用矩阵直接变换法线，非均匀缩放后侧面法线几乎朝天） */
+function trunkNormals(G, v0, a, b, r0, r1) {
+  const dx = b[0] - a[0], dy = b[1] - a[1], dz = b[2] - a[2], L = Math.hypot(dx, dy, dz), ux = dx / L, uy = dy / L, uz = dz / L, k = (r0 - r1) / L;
+  for (let v = v0, n = G.p.length / 3; v < n; v++) {
+    const px = G.p[v * 3] - a[0], py = G.p[v * 3 + 1] - a[1], pz = G.p[v * 3 + 2] - a[2], t = px * ux + py * uy + pz * uz;
+    let rx = px - ux * t, ry = py - uy * t, rz = pz - uz * t; const rl = Math.hypot(rx, ry, rz); if (rl < 1e-4) continue;
+    rx = rx / rl + ux * k; ry = ry / rl + uy * k; rz = rz / rl + uz * k; const m = Math.hypot(rx, ry, rz);
+    G.n[v * 3] = rx / m; G.n[v * 3 + 1] = ry / m; G.n[v * 3 + 2] = rz / m;
+  }
+}
 export class FzRiverStreet extends XmStreet {
   constructor(scene, code, N, ex) { super(scene, code, { ...N, build: s => s.river() }, ex); }
   /** 不铺默认地面：整片河网自己的岸地；把根节点平移到当前出口亭 */
@@ -367,7 +377,8 @@ export class FzRiverStreet extends XmStreet {
       else if (!rise && b.kind !== 'sarch') {
         const [cx, cz] = F.P(0, 0), road = b.kind === 'road';
         GR.box(cx, -0.2, cz, w, 0.4, 2 * half, hex(road ? '#9C978C' : '#A39C8E'), F.ryN, 0, 0, 1, NO);
-        if (road) k.g('asphalt').box(cx, 0.008, cz, w - 1.6, 0.012, 2 * half, hex('#7E8084'), F.ryN, 0, 0, 1, NO);
+        if (road && FZR.a3 && (FZR.a3.bridges || []).includes(b.id)) this.a3Deck(b, F, w, half);   // 小美 11-17：3A 路桥桥面 = 深灰沥青 + 标线（原 asphalt 材质反天光，白天像一块深蓝的洞）
+        else if (road) k.g('asphalt').box(cx, 0.008, cz, w - 1.6, 0.012, 2 * half, hex('#7E8084'), F.ryN, 0, 0, 1, NO);
         // 桥墩：贴岸墙的两块（不进水道中间，船好过）
         const U = [...(FZR.unders || []), ...(FZR.undersC || [])].find(u => u.bridge === b.id);
         for (const sv of [-1, 1]) { if (U && sv === U.side) continue; const [px, pz] = F.P(0, sv * (hw - 0.35)); GR.box(px, (WY - 0.4 + -0.4) / 2, pz, w + 0.3, -0.4 - (WY - 0.4), 0.7, hex('#8E887C'), F.ryN, 0, 0, 1, NO); }
@@ -611,12 +622,25 @@ export class FzRiverStreet extends XmStreet {
     for (const [ax, az, bx, bz] of J.shore) { GR.quad([ax, 0.0, az], [bx, 0.0, bz], [bx, J.lv - 0.4, bz], [ax, J.lv - 0.4, az], hex(WALLC)); GR.quad([bx, 0.0, bz], [ax, 0.0, az], [ax, J.lv - 0.4, az], [bx, J.lv - 0.4, bz], hex(WALLC)); }
     for (const [ax, az, bx, bz] of J.rail) this.stoneRail(ax, az, bx, bz);
   }
+  /** 3A 路桥桥面：深灰沥青（granite 桶：粗颗粒、几乎不反天光）+ 白色分道虚线 / 边线 + 中间双黄线（kit.solid）——都并进已有网格，不加 draw */
+  a3Deck(b, F, w, half) {
+    const k = this.kit, GR = k.g('granite'), P = k.solid, W2 = (w - 1.6) / 2, L = 2 * half, [cx, cz] = F.P(0, 0), wh = hex('#E8E6DF'), ye = hex('#E2B53A');
+    GR.box(cx, 0.008, cz, 2 * W2, 0.012, L, hex('#4E5155'), F.ryN, 0, 0, 1, NO);
+    const ln = (u, v0, v1, c, wd = 0.15) => { const [x, z] = F.P(u, (v0 + v1) / 2); P.box(x, 0.018, z, wd, 0.006, v1 - v0, c, F.ryN, 0, 0, 1, NO); };
+    for (const e of [-1, 1]) { ln(e * 0.18, -half, half, ye, 0.14); ln(e * (W2 - 0.5), -half, half, wh, 0.18);   // 双黄中线 + 两边边线
+      for (let j = 1; j * 3.5 < W2 - 1.2; j++) for (let v = -half + 1.5; v + 3 <= half - 1; v += 9) ln(e * j * 3.5, v, v + 3, wh); }   // 分道白虚线（3 m 线 6 m 空）
+  }
   /** 3A 白天才画的一组（g3day）：光明港东段水面亮纹 + 闽江对岸一排树冠 / 低层楼（远景，固定序列取色） */
   a3Day() {
     const A3 = FZR.a3, J = A3.mj, k = this.kit, WA = k.g('paint@sea'), P = k.solid, r = RIVERS.gm;
     let j = 0; for (let s = A3.gmALen + 4; s < r.line.len - 6; s += 13) { const a = r.line.at(s, ((j++ * 37) % 11 - 5) / 6 * r.hw * 0.6); WA.box(a.x, WY + 0.004, a.z, 0.25, 0.004, 4.5, hex('#8FC0C8'), yawOf(a.tx, a.tz), 0, 0, 1, NO); }
     const [o0, o1] = J.o, [tx, tz] = J.t, [nx, nz] = J.n, [af, b0, b1] = J.far, Pt = (a, b) => [o0 + tx * a + nx * b, o1 + tz * a + nz * b], ry = yawOf(nx, nz);
-    const Gc = ['#3A7A3C', '#2F6B34', '#447F3A'], Wc = ['#D9D2C4', '#C9CED2', '#E3D9C6', '#BFC6C9'];
+    // 小美 11-17：对岸楼用偏蓝灰的远景色（原来米白色在雾里像半透明白板）；树冠和楼底下补一条对岸地面 + 堤岸（树不再像浮在江面上）——都在同一张 solid 网格里，不加 draw
+    const Gc = ['#3A7A3C', '#2F6B34', '#447F3A'], Wc = ['#7E8C99', '#8796A3', '#76858F', '#8F9AA5'];
+    { const bm = (b0 + b1) / 2, L = b1 - b0 + 16, [gx, gz] = Pt(af + 34, bm), [ex, ez] = Pt(af - 0.6, bm), y0 = J.lv - 0.4, y1 = 1.2;
+      P.box(gx, 0.5, gz, 70, 1.0, L, hex('#6E7A64'), ry, 0, 0, 1, NO);   // 对岸地面（树带 + 楼底，顶面 +1.0）
+      P.box(ex, (y0 + y1) / 2, ez, 1.6, y1 - y0, L, hex('#8A8578'), ry, 0, 0, 1, NO);   // 堤岸（石墙，比地面略高一点）
+      P.box(ex, y1 + 0.03, ez, 1.8, 0.06, L, hex('#A39C8E'), ry, 0, 0, 1, NO); }   // 堤顶压顶
     for (let b = b0 + 6, i = 0; b < b1; b += 13, i++) { const [x, z] = Pt(af + 5, b); P.ellipsoid(x, 4.5, z, 9, 4.2, 6, hex(Gc[i % 3]), 1);
       if (i % 2 === 0) { const h = 12 + (i * 7) % 15, [hx, hz] = Pt(af + 22, b + 4); P.box(hx, h / 2, hz, 16, h, 10, hex(Wc[i % 4]), ry, 0, 0, 1, NO); } }
   }
@@ -810,7 +834,9 @@ export class FzRiverStreet extends XmStreet {
     }
     const lean = up ? 0 : 1.6 * s;
     // 简模主干一直插进树冠底部（5.1 s，树冠底约 4.6 s），和树冠同在 kit.solid 静态合批（0 额外 draw call）
-    P.tubeTaper([x, 0, z], [x + fx * (lean + 0.8 * s), 5.1 * s, z + fz * (lean + 0.8 * s)], 1.0 * s, 0.45 * s, trunk, 5, false);
+    const tv0 = P.p.length / 3, ta = [x, 0, z], tb = [x + fx * (lean + 0.8 * s), 5.1 * s, z + fz * (lean + 0.8 * s)];
+    P.tubeTaper(ta, [x + fx * (lean + 0.8 * s), 5.1 * s, z + fz * (lean + 0.8 * s)], 1.0 * s, 0.45 * s, trunk, 5, false);
+    if (FZR.id === 'e') trunkNormals(P, tv0, ta, tb, 0.5 * s, 0.225 * s);   // 小美 11-17：光明港一带主干发粉白 → 按真实锥面重算法线（tubeTaper 的非均匀缩放把侧面法线掰成朝天，迎着太阳一片白），和其它河段一样是棕色
     P.ellipsoid(x + fx * (lean + 1.4 * s), 6.3 * s, z + fz * (lean + 1.4 * s), 9.5 * s, 3.4 * s, 8.5 * s, hex(G[i % 4]), 1, yawOf(fx, fz));
   }
   /* ---------- 步道：路灯 / 长椅 ---------- */

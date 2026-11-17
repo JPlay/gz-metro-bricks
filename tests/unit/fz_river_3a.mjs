@@ -85,7 +85,8 @@ ok('kq stair mouth open in the bank railing', (() => { const loc = (x, z) => { c
   // 闸头两岸：岸墙到口门（flag 4）为止，旁边都是栏杆（flag 0），没有缺口可下水 / 上闸
   const near = F.wall.filter(w => { const [a, b] = L((w[0] + w[2]) / 2, (w[1] + w[3]) / 2); return a > -25 && a < 6 && Math.abs(b) < G.hw + 3; });
   ok('bank walls next to the gate are rails (no gap) and the mouth is a 口门 cap (flag 4)', near.length > 2 && near.every(w => w[4] === 0 || w[4] === 4) && near.some(w => w[4] === 4), near.map(w => w[4]));
-  ok('viewpoint (lookout bench) on land, beside the gate, outside the block', R.isLand(...G.view) && !R.inPoly(G.view[0], G.view[1], blk.flat()) && Math.abs(L(...G.view)[0]) < 8);
+  { const [va, vb] = L(...G.view), ang = [-G.hw, G.hw].map(b => Math.atan2(b - vb, -va)), fov = Math.abs(ang[1] - ang[0]) * 180 / Math.PI;   // 小美 11-17：观景处在闸上游 20–40 m 岸边，正面看九孔（水平张角 ≤ 80°，一屏装得下）
+    ok(`viewpoint (lookout bench) on land, 20–40 m upstream of the gate facing all nine bays (a ${va.toFixed(1)}, span ${fov.toFixed(0)}°), outside the block; 闽江取景点 mjView beside the gate`, R.isLand(...G.view) && !R.inPoly(G.view[0], G.view[1], blk.flat()) && va <= -20 && va >= -40 && fov <= 80 && G.mjView && R.isLand(...G.mjView) && Math.abs(L(...G.mjView)[0]) < 8, { va, vb, fov }); }
   // 落水 → 回到岸上：闸边、闸上游掉下去都回到岸地（不在闸块里、不回站台）
   const tries = [[-6, 0], [-6, G.hw - 2], [-6, -(G.hw - 2)], [-30, 10], [-62, 15], [-200, 0]].map(([a, b]) => [G.x + G.t[0] * a + G.n[0] * b, G.z + G.t[1] * a + G.n[1] * b]);
   const res = tries.map(([x, z]) => { const s = R.shoreFor(x, z); return s && R.isLand(s.x, s.z) && !R.inPoly(s.x, s.z, blk.flat()) && !R.isDry(s.x, s.z) ? 1 : 0; });
@@ -107,7 +108,7 @@ ok('kq stair mouth open in the bank railing', (() => { const loc = (x, z) => { c
 // ---- 房子：3A 新楼四面贴立面、不挡码头牌 / 闸 ----
 { const H = F.houses.filter(h => h.a3);
   ok(`3A houses (${H.length}) all with façades on four sides (back: true)`, H.length >= 10 && H.every(h => h.back === true));
-  ok('3A houses keep clear of the gate block, lookout and kq sign', H.every(h => Math.hypot(h.x - A3.gate.view[0], h.z - A3.gate.view[1]) > 14 && Math.hypot(h.x - kq.sign[0], h.z - kq.sign[1]) > 10)); }
+  ok('3A houses keep clear of the gate block, lookout and kq sign', H.every(h => Math.hypot(h.x - A3.gate.mjView[0], h.z - A3.gate.mjView[1]) > 14 && Math.hypot(h.x - A3.gate.view[0], h.z - A3.gate.view[1]) > 14 && Math.hypot(h.x - kq.sign[0], h.z - kq.sign[1]) > 10)); }
 // ---- 数据差分：main b54b446 的 1B（e 网）已建部分不动 ----
 { const src = execSync('git show b54b446:js/data/fz-river-data-e.js', { maxBuffer: 1 << 26 }).toString();
   const O = JSON.parse(src.replace(/^[^]*?export const FZR_E = /, '').replace(/;\s*$/, ''));
@@ -124,5 +125,13 @@ ok('kq stair mouth open in the bank railing', (() => { const loc = (x, z) => { c
 // ---- 3A 小美：D 船和 B 船分得开：白篷 + 蓝绿垂边 + 两头「D」牌（同一张漆面网格，不加 draw） ----
 { const bsrc = fs.readFileSync(new URL('../../js/game/fzBoat.js', import.meta.url), 'utf8'), i0 = bsrc.indexOf('小「D」牌'), blk = bsrc.slice(i0, bsrc.indexOf('// 碰撞：', i0));
   ok('D boat: white canopy, teal trim (B keeps white + red trim), D plates on both ends merged into the boat paint mesh (no new mesh / texture)', bsrc.includes("trim = hex(this.rid === 'D' ? '#1F8A8A' : this.variant === 'white' ? '#B3261E'") && blk.includes('P.box(0, py, z0') && blk.includes('for (const e of [-1, 1])') && !/MeshBuilder|new B\.|DynamicTexture|Material/.test(blk), blk.length); }
+// ---- 小美 11-17 视觉 4 项：闽江对岸（170 m，雾前）地面 + 堤岸 + 蓝灰楼；3A 路桥沥青 + 标线；e 网树干法线；都在已有网格里（不加 draw） ----
+{ const a3d = fsrc.slice(fsrc.indexOf('  a3Day() {'), fsrc.indexOf('/** 水埠头')), dk = fsrc.slice(fsrc.indexOf('  a3Deck(b, F, w, half) {'), fsrc.indexOf('  /** 3A 白天才画的一组'));
+  ok('闽江 far bank at 170 m (inside the 200 m haze start): ground strip + embankment, bluish-grey buildings (no #D9D2C4 / #E3D9C6 whites), solid only', A3.mj.far[0] === 170 && /对岸地面/.test(a3d) && /堤岸/.test(a3d) && !/#D9D2C4|#E3D9C6/.test(a3d) && !/metal|atlas|MeshBuilder/.test(a3d));
+  ok('3A road bridges (福光南路): dark-grey deck on granite + white dashes / edge lines + double yellow on kit.solid, no asphalt bucket', A3.bridges.includes('gm4') && /GR\.box\(cx, 0\.008, cz, 2 \* W2, 0\.012, L, hex\('#4E5155'\)/.test(dk) && /E2B53A/.test(dk) && !/asphalt|metal|MeshBuilder/.test(dk));
+  ok('e-net banyan trunks: tapered-side normals recomputed (no sky-facing normals → brown, not pinkish white)', /if \(FZR\.id === 'e'\) trunkNormals\(P, tv0, ta, tb, 0\.5 \* s, 0\.225 \* s\)/.test(fsrc));
+  const segd = (p, a, b) => { const vx = b[0] - a[0], vz = b[1] - a[1], t = Math.max(0, Math.min(1, ((p[0] - a[0]) * vx + (p[1] - a[1]) * vz) / (vx * vx + vz * vz))); return Math.hypot(p[0] - a[0] - vx * t, p[1] - a[1] - vz * t); }, G = A3.gate;
+  const blk = F.trees.filter(t => [-1, 0, 1].some(e => segd([t[0], t[1]], G.view, [G.x + G.n[0] * e * G.hw, G.z + G.n[1] * e * G.hw]) < 2.5));
+  ok('no banyan in the lookout → gate sight lines (both ends + centre, 2.5 m)', !blk.length, blk.map(t => t.slice(0, 2))); }
 console.log(fails.length ? `\n${fails.length} FAILED: ${fails.join(', ')}` : '\nALL PASS');
 process.exit(fails.length ? 1 : 0);
