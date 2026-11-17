@@ -85,10 +85,12 @@ export class FzBoat {
     // 3A 小美：D 线船两头挡板外侧各一块小「D」牌（蓝绿底白字，双头船两头都是船头）——并进同一张漆面网格，不加绘制
     if (this.rid === 'D') {
       const teal = hex('#1F8A8A'), ink = hex('#F7F5EE'), py = (D + G) / 2;
+      this.plateV = []; this.plateInkV = [];
       for (const e of [-1, 1]) {
         const z0 = e * 4.012, z1 = e * 4.027, u = (uu, y, w, h) => P.box(-e * uu, py + y, z1, w, h, 0.012, ink, 0, 0, 0, 1, NO);   // 字面朝外：从船外看过去的右手 = 局部 −e·x
-        P.box(0, py, z0, 0.42, 0.36, 0.022, teal, 0, 0, 0, 1, NO);
+        const v0 = P.p.length / 3; P.box(0, py, z0, 0.42, 0.36, 0.022, teal, 0, 0, 0, 1, NO); const v1 = P.p.length / 3; this.plateV.push([v0, v1]);
         u(-0.075, 0, 0.05, 0.26); u(-0.02, 0.105, 0.1, 0.05); u(-0.02, -0.105, 0.1, 0.05); u(0.085, 0, 0.05, 0.15); u(0.05, 0.075, 0.05, 0.06); u(0.05, -0.075, 0.05, 0.06);
+        this.plateInkV.push([v1, P.p.length / 3]);   // 夜里「D」牌：底板微亮、白字亮（同一张夜间自发光小贴图的另两个像素，不加绘制）
       }
     }
     // 碰撞：甲板 + 舷墙（中门留空）+ 两头 + 停靠时伸出去的跳板
@@ -201,9 +203,11 @@ export class FzBoat {
       const nv = day.pos.length / 3, uv = new Array(nv * 2 + g.p.length / 3 * 2);
       for (let i = 0; i < nv; i++) { uv[i * 2] = 0.125; uv[i * 2 + 1] = 0.5; }
       for (const [a, b] of this.lanternV || []) for (let i = a; i < b; i++) uv[i * 2] = 0.625;
+      for (const [a, b] of this.plateV || []) for (let i = a; i < b; i++) uv[i * 2] = 0.3125;
+      for (const [a, b] of this.plateInkV || []) for (let i = a; i < b; i++) uv[i * 2] = 0.4375;
       for (let i = nv; i < nv + g.p.length / 3; i++) { uv[i * 2] = 0.875; uv[i * 2 + 1] = 0.5; }
       const tex = new B.DynamicTexture('fzBoatNightTex' + this.rid, { width: 8, height: 2 }, this.scene, false, B.Texture.NEAREST_SAMPLINGMODE), cx = tex.getContext();
-      cx.fillStyle = '#000'; cx.fillRect(0, 0, 8, 2); cx.fillStyle = '#9A3A26'; cx.fillRect(4, 0, 2, 2); cx.fillStyle = '#FFC27A'; cx.fillRect(6, 0, 2, 2); tex.update(false);
+      cx.fillStyle = '#000'; cx.fillRect(0, 0, 8, 2); cx.fillStyle = '#123C3D'; cx.fillRect(2, 0, 1, 2); cx.fillStyle = '#D8E6E2'; cx.fillRect(3, 0, 1, 2); cx.fillStyle = '#9A3A26'; cx.fillRect(4, 0, 2, 2); cx.fillStyle = '#FFC27A'; cx.fillRect(6, 0, 2, 2); tex.update(false);
       const mat = day.mat.clone('fzBoatNight' + this.rid); mat.emissiveTexture = tex; mat.emissiveColor = new B.Color3(1, 1, 1);
       this._nd = { day, mat, night: { pos: [...day.pos, ...g.p], nrm: [...day.nrm, ...g.n], col: [...day.col, ...g.c.map((v, i) => (i % 4 === 3 ? v : Math.pow(v, 2.2)))], uv, idx: [...day.idx, ...g.i.map(v => v + nv)] } };
     }
