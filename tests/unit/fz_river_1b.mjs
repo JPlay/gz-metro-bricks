@@ -13,13 +13,13 @@ R.useNet('e');
 ok('useNet(e) swaps live bindings', R.NET === 'e' && R.FZR.id === 'e' && R.ROUTE.id === 'B' && R.ROUTE.line.len !== lenA);
 const F = R.FZR;
 // ---- 数据 ----
-ok('two rivers ja/gm (晋安河 / 光明港)', Object.keys(R.RIVERS).join() === 'ja,gm' && R.RIVERS.ja.zh === '晋安河' && R.RIVERS.gm.zh === '光明港');
+ok('two rivers ja/gm (晋安河 / 光明港) first (3B 晋安河北段 jn / 凤坂河 fb appended after them)', Object.keys(R.RIVERS).join() === (F.b3 ? 'ja,gm,jn,fb' : 'ja,gm') && R.RIVERS.ja.zh === '晋安河' && R.RIVERS.gm.zh === '光明港');
 ok('compression 晋安河 1:4, 光明港 1:5 (小美)', F.K === 4 && F.Kgm === 5);
 ok('same water level as 1A', F.WY === -3);
 ok('land + water meshes present', Object.keys(F.land).length > 30 && Object.keys(F.water).length > 30);
 // 晋安河口接光明港：晋安河中线末点在光明港水面里
 { const L = R.RIVERS.ja.line, e = L.at(L.len); ok('晋安河 mouth joins 光明港 water', R.isWater(e.x, e.z) && R.RIVERS.gm.line.project(e.x, e.z).d < 3); }
-const B1B = R.BRIDGES.filter(b => !b.a3);   // 3A 光明港东段的桥（福光南路）不算 1B
+const B1B = R.BRIDGES.filter(b => !b.a3 && !b.b3);   // 3A 光明港东段的桥（福光南路）、3B 晋安河北段 / 凤坂河的桥不算 1B
 ok('13 bridges (OSM, twins merged; 温泉公园步行桥 + 文博路 dropped)', B1B.length === 13, B1B.map(b => b.name || b.id));
 ok('dropped bridges recorded with reason', F.spacing.dropped.length === 2 && F.spacing.dropped.some(d => d.kind === 'foot') && F.spacing.dropped.some(d => d.name === '文博路') && F.spacing.dropped.every(d => d.why));
 const named = R.BRIDGES.filter(b => b.name).map(b => b.name);

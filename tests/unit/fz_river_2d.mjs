@@ -56,7 +56,7 @@ ok('mouth: stone rails on the bank ends + far shore walls', M.rail.length >= 2 &
 ok('no night-lighting work in 2D (no emissive lantern / night mode added)', !/夜景|night/i.test(src.slice(src.indexOf('  d2Static() {'), src.indexOf('  /** 西湖一角的远景'))));
 // 验收 + 2C 教训
 ok('2D houses: façades on all four sides (side / back mhS texture)', /if \(h\.d2\) \{/.test(src) && /this\.fac\.mhS/.test(src) && F.houses.filter(h => h.d2).length >= 20);
-ok('2D skirt painted grass (no pure-white ground) in the east section + 南后街 corridor', /inD2\(x, z\)\) \? GRASS/.test(src));
+ok('2D skirt painted grass (no pure-white ground) in the east section + 南后街 corridor', /inD2\(x, z\)( \|\| inQ\(x, z\))?\) \? GRASS/.test(src));
 ok('2D benches use the cast-iron side frames (no black box end-on)', /id === 'at' && FZR\.d2 && s > FZR\.d2\.atALen/.test(src));
 ok('HUD shore stays red (A line colour) everywhere in net a', R.hudLine('A', null).color === '#B3261E');
 ok('perf: lo street drops far-row saddle walls / lanterns, filler and the ±160 m road (bbox stays street-wide)', /far = LO && z \+ 13 <= 143/.test(attr) && /if \(!far\) saddleWall/.test(attr) && /if \(!LO\) S\.filler/.test(attr) && /if \(!lo\) \{\s*\/\/ 路缘石/.test(src));
