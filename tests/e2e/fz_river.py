@@ -13,9 +13,9 @@ sys.path.insert(0, os.path.dirname(__file__))
 from common import *
 from journey import GCLOCK, auto, wait, log
 from perfhud import perf as _perf
-# 小美（11-17）：走路 / 坐船这些段用半尺寸视口（省渲染，无头 2–3 fps 快一点）；验收截图和性能采样点切回原尺寸（1112×834，和以前的数字可比）。
+# 小美（11-17）：走路 / 坐船这些段用半尺寸视口 640×400（省渲染，无头 2–3 fps 快一点）；验收截图和性能采样点切回原尺寸（1112×834，和以前的数字可比）。
 # FZHALF=0 关掉（全程原尺寸）。只改测试，不改产品代码。
-FULL_VP = {'width': 1112, 'height': 834}; HALF_VP = {'width': 556, 'height': 417}; HALF = os.environ.get('FZHALF', '1') != '0'; _VP = {'depth': 0}
+FULL_VP = {'width': 1112, 'height': 834}; HALF_VP = {'width': 640, 'height': 400}; HALF = os.environ.get('FZHALF', '1') != '0'; _VP = {'depth': 0}
 async def _vp(pg, size):
     await pg.set_viewport_size(size)
     await pg.evaluate("new Promise(r => { __game.engine.resize(); requestAnimationFrame(() => requestAnimationFrame(r)); })")
