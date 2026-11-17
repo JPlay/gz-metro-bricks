@@ -26,6 +26,7 @@ SPOTS = """(async () => { const M = await import('/js/data/fz-river.js'); const 
   const nearB = (r, s) => M.BRIDGES.some(b => b.river === r && Math.abs(b.s - s) < b.w / 2 + 6);   // 别站到桥头 / 桥墙后面
   const bank = (r, s0, lat, tgt) => { for (const k of [0, 1, -1, 2, -2, 3, -3, 4, -4, 5, -5, 6, -6, 7, -7, 8, -8]) { if (nearB(r, s0 + k * 4)) continue; const c = at(r, s0 + k * 4, lat), t = typeof tgt === 'function' ? tgt(s0 + k * 4) : tgt; if (clear(c, t)) return [...c, ...t]; } const c = at(r, s0, lat); return [...c, ...(typeof tgt === 'function' ? tgt(s0) : tgt)]; };
   const LP = B3.lamps.map(l => [[l[0] - l[2] * 1.5 - l[3] * 6, l[1] - l[3] * 1.5 + l[2] * 6], [l[0] + l[2] * 22, l[1] + l[3] * 22]]), lamp = LP.slice(Math.floor(LP.length / 2)).concat(LP).find(([c, t]) => clear(c, t)) || LP[0];
+  const Ting = B3.ting, tingCam = (() => { for (const d of [26, 22, 30, 34, 20]) for (const q of ring) { if (Math.abs(Math.hypot(q[0] - Ting.x, q[1] - Ting.z) - d) > 2) continue; const c = out(q, 3.0); if (M.isLand(c[0], c[1]) && !M.isWater(c[0], c[1]) && clear(c, [Ting.x, Ting.z])) return c; } return out(far, 3.0); })();
   const deckEdge = (b, dir) => { const e = RV[b.river].line.at(b.s + dir * (b.w / 2 - 1.2), 0); return [e.x, e.z, ...at(b.river, b.s + dir * 90, 0)]; };
   return [
     ['jn_from_wenquan_bridge', ...at('ja', ja1.s - (ja1.w / 2 - 1.2), 0), ...at('jn', J - 70, 0), 0.12, 0.1],   // 温泉公园路桥北沿往北看晋安河北段
@@ -38,7 +39,9 @@ SPOTS = """(async () => { const M = await import('/js/data/fz-river.js'); const 
     ['qth_lake_from_mouth', ...bank('jn', ms + 6, hj + 1.4, Lc), 0.02, 0.05],
     ['qth_lake_from_far_shore', ...out(far, 1.6), ...Lc, 0.02, 0.05],
     ['qth_lake_promenade_north', ...out(north, 1.6), ...out(west, 1.6), 0.03, 0.05],
-    ['qth_lake_lamp_bench', ...lamp[0], ...lamp[1], 0.16, 0.05],   // 灯 + 长椅 + 湖面同框（低头看到水）   // 灯 + 长椅 + 湖面同框
+    ['qth_lake_lamp_bench', ...lamp[0], ...lamp[1], 0.16, 0.05],
+    ['qth_ting_along_shore', ...tingCam, Ting.x, Ting.z, 0.06, 0.05],   // 小美 11-17：琴亭 + 草坡（沿湖岸 20–34 m 外看亭子）
+    ['qth_ting_from_lake_mouth', ...bank('jn', ms + 6, hj + 1.4, [Ting.x, Ting.z]), 0.02, 0.05],   // 湖口隔湖看远岸草坡 + 琴亭   // 灯 + 长椅 + 湖面同框（低头看到水）   // 灯 + 长椅 + 湖面同框
     ['fb_mouth_from_gm_south_bank', ...bank('gm', B3.fbMouth.gmS, hg + 1.4, at('fb', Fb - 60, 0)), 0.03, 0.05],
     ['fb_mouth_from_gm_north_promenade', ...bank('gm', B3.fbMouth.gmS + 34, -(hg + 1.4), at('fb', Fb - 12, 0)), 0.06, 0.05],   // 光明港北岸步道（凤坂河口东边）看河口
     ['fb_sign', fs.x + fs.f[0] * 6, fs.z + fs.f[1] * 6, fs.x, fs.z, 0.06, 0.05],
