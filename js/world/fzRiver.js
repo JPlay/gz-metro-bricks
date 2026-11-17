@@ -30,7 +30,7 @@ const GRANITE = '#9A9385', COPING = '#ABA496', WALLC = '#8A8476';
 const yawOf = (fx, fz) => Math.atan2(fx, fz);
 const lerp = (a, b, t) => a + (b - a) * t;
 /** 船线颜色（码头牌线路章 / 左上角站名牌）：A 红、B 蓝灰、C 绿（2C） */
-const LINE_COLOR = { A: '#B3261E', B: '#2E5E8C', C: '#2F7D4A' };
+const LINE_COLOR = { A: '#B3261E', B: '#2E5E8C', C: '#2F7D4A', D: '#7A4E9C' };   // 3A：D 线紫
 /** 2C 区域（白马河下段，W z < c2.z0）：常开几何单独一组，离得远（玩家 z > z0 + 400）整组关掉 —— 不加在 1A / 2B 的预算里 */
 const inC2 = (z) => !!FZR.c2 && z < FZR.c2.z0;
 // 2C 再按 z 切成 150 m 一段（每段一组，各自按玩家远近开关 + 视锥裁剪），闽江远景单独一组
@@ -44,6 +44,16 @@ const inD2 = (x, z) => !!FZR.d2 && ((x > 40 && x < 470 && z > -290 && z < -20) |
 const inD2E = (x, z) => !!FZR.d2 && x > 60 && x < 480 && z > -300 && z < -20;
 const C2D = 80, c2DBand = (z) => Math.max(0, Math.floor((FZR.c2.z0 - z) / C2D));   // 细节格子：横向并成一条（每 80 m 一组）
 
+/** 锥形树干侧面法线：径向 + 沿轴的锥度分量（tubeTaper 用矩阵直接变换法线，非均匀缩放后侧面法线几乎朝天） */
+function trunkNormals(G, v0, a, b, r0, r1) {
+  const dx = b[0] - a[0], dy = b[1] - a[1], dz = b[2] - a[2], L = Math.hypot(dx, dy, dz), ux = dx / L, uy = dy / L, uz = dz / L, k = (r0 - r1) / L;
+  for (let v = v0, n = G.p.length / 3; v < n; v++) {
+    const px = G.p[v * 3] - a[0], py = G.p[v * 3 + 1] - a[1], pz = G.p[v * 3 + 2] - a[2], t = px * ux + py * uy + pz * uz;
+    let rx = px - ux * t, ry = py - uy * t, rz = pz - uz * t; const rl = Math.hypot(rx, ry, rz); if (rl < 1e-4) continue;
+    rx = rx / rl + ux * k; ry = ry / rl + uy * k; rz = rz / rl + uz * k; const m = Math.hypot(rx, ry, rz);
+    G.n[v * 3] = rx / m; G.n[v * 3 + 1] = ry / m; G.n[v * 3 + 2] = rz / m;
+  }
+}
 export class FzRiverStreet extends XmStreet {
   constructor(scene, code, N, ex) { super(scene, code, { ...N, build: s => s.river() }, ex); }
   /** 不铺默认地面：整片河网自己的岸地；把根节点平移到当前出口亭 */
@@ -96,7 +106,7 @@ export class FzRiverStreet extends XmStreet {
   river() {
     const k = this.kit;
     this.facades();
-    this.walls(); this.bridges(); this.piers(); if (FZR.c2) this.c2Static(); this.stepsDown(); this.unders(); this.roads(); this.houses(); this.trees(); this.promenade(); if (FZR.sfqx) this.sanfang(); if (FZR.lakeBox) this.backdrops(); if (LOCK) this.lockStatic(); if (KIOSKS.fzxm_B) this.xihuPark();
+    this.walls(); this.bridges(); this.piers(); if (FZR.c2) this.c2Static(); else this.sharedDecks(); if (FZR.a3) this.a3Static(); this.stepsDown(); this.unders(); this.roads(); this.houses(); this.trees(); this.promenade(); if (FZR.sfqx) this.sanfang(); if (FZR.lakeBox) this.backdrops(); if (LOCK) this.lockStatic(); if (KIOSKS.fzxm_B) this.xihuPark();
     k.group('g0');   // 上面直接画的东西（桥、码头、台阶、马路、牌坊…）常开：单独封一组，别被并进第一个细节格子
     if (this._nhjw || this._nhjH) {
       if (this._nhjw) { for (const t of this._nhjw) this.banyanNear(...t); this._nhjw = null; }
@@ -115,6 +125,8 @@ export class FzRiverStreet extends XmStreet {
     k.group('det');
     this.c2Detail = Object.keys(c2cells).map(Number);
     for (const b of this.c2Detail) { c2cells[b].forEach(fns => fns.forEach(f => f())); k.group('c2d:' + b); }
+    // 3A：光明港东段水面亮纹 + 闸外闽江对岸（树 / 楼）单独一组 g3day：只白天、人在东段一带才开；夜里整组关（夜雾 60 → 220 m，对岸 230 m 外本来就全进雾里）—— 3A 一带夜里 draw 不超过白天（小美 3A ④）
+    if (FZR.a3) { this.a3Day(); k.group('g3day'); }
     // 2C：白马河下段的常开几何（墙面 / 桥身 / 房子 / 树 / 闽江远景）单独一组（c2），按玩家远近整组开关
     if (FZR.c2) {
       const nb = 1 + Math.max(...FZR.houses.map(h => h.z).concat(FZR.trees.map(t => t[1]), BRIDGES.filter(b => b.c2).map(b => b.z), FZR.wall.map(w => (w[1] + w[3]) / 2)).filter(inC2).map(c2Band));
@@ -139,6 +151,7 @@ export class FzRiverStreet extends XmStreet {
     // 2C：一条船线一条船（a 网：A 线 + C 线，同一款船、红篷）；this.boat = 当前和玩家相关的那条（坐着的 > 站在上面的 > 出口亭那条线的）
     this.boats = {}; for (const [rid, c] of Object.entries(ROUTES)) this.boats[rid] = new FzBoat(this, c.route.canopy || 'red', rid);
     this.homeRid = Object.keys(ROUTES).find(r => this.K.pier && ROUTES[r].stops.some(s => s.id === this.K.pier)) || ROUTE.id || 'A';
+    if (this.kit.groupNodes && this.kit.groupNodes.g3day) for (const m of this.kit.groupNodes.g3day.getChildMeshes()) { m.metadata = Object.assign({}, m.metadata, { noTileCull: true }); m.alwaysSelectAsActiveMesh = true; }   // 3A 白天组：开着就整组画（不按视锥换索引 / 不被视锥裁掉），白天 draw 数稳定，夜里 ≤ 白天
     this.tileCull = installTileCull(this);   // 常开大网格按视锥换索引（不加 draw）
     this.lodT = 0; this.lodNow(true);
     // 3C：夜景（设备本地时间 19:00–06:00 / ?t=night|day 覆盖）；白天什么都不建
@@ -187,9 +200,9 @@ export class FzRiverStreet extends XmStreet {
     // 水面上一点点亮纹（不规则短条），远看不死板
     // 2C：白马河加长了 —— 1A / 2B 那段的亮纹照旧（同一个计数器、同样的位置），2C 下段另起一个计数器接着画
     let i = 0; const ext = [];
-    for (const [id, r] of Object.entries(RIVERS)) { const end = id === 'bm' && FZR.c2 ? FZR.c2.bmALen : r.line.len; let s = 6;
+    for (const [id, r] of Object.entries(RIVERS)) { const end = id === 'bm' && FZR.c2 ? FZR.c2.bmALen : id === 'gm' && FZR.a3 ? FZR.a3.gmALen : r.line.len; let s = 6;
       for (; s < end - 6; s += 13) { const a = r.line.at(s, ((i++ * 37) % 11 - 5) / 6 * r.hw * 0.6); if (inChamber(a.x, a.z)) continue; WA.box(a.x, levelAt(a.x, a.z) + 0.004, a.z, 0.25, 0.004, 4.5, hex('#8FC0C8'), yawOf(a.tx, a.tz), 0, 0, 1, NO); }
-      if (end < r.line.len) ext.push([r, s]); }
+      if (end < r.line.len && !(id === 'gm' && FZR.a3)) ext.push([r, s]); }
     let j = 0; for (const [r, s0] of ext) for (let s = s0; s < r.line.len - 6; s += 13) { const a = r.line.at(s, ((j++ * 37) % 11 - 5) / 6 * r.hw * 0.6); WA.box(a.x, WY + 0.004, a.z, 0.25, 0.004, 4.5, hex('#8FC0C8'), yawOf(a.tx, a.tz), 0, 0, 1, NO); }
   }
   /* ---------- 2A 西湖船闸（小美：深灰钢人字闸门，顶上走道 + 栏杆，门缝两边红白警示条；闸室墙上水位刻度线；不写字、不画箭头）---------- */
@@ -364,7 +377,8 @@ export class FzRiverStreet extends XmStreet {
       else if (!rise && b.kind !== 'sarch') {
         const [cx, cz] = F.P(0, 0), road = b.kind === 'road';
         GR.box(cx, -0.2, cz, w, 0.4, 2 * half, hex(road ? '#9C978C' : '#A39C8E'), F.ryN, 0, 0, 1, NO);
-        if (road) k.g('asphalt').box(cx, 0.008, cz, w - 1.6, 0.012, 2 * half, hex('#7E8084'), F.ryN, 0, 0, 1, NO);
+        if (road && FZR.a3 && (FZR.a3.bridges || []).includes(b.id)) this.a3Deck(b, F, w, half);   // 小美 11-17：3A 路桥桥面 = 深灰沥青 + 标线（原 asphalt 材质反天光，白天像一块深蓝的洞）
+        else if (road) k.g('asphalt').box(cx, 0.008, cz, w - 1.6, 0.012, 2 * half, hex('#7E8084'), F.ryN, 0, 0, 1, NO);
         // 桥墩：贴岸墙的两块（不进水道中间，船好过）
         const U = [...(FZR.unders || []), ...(FZR.undersC || [])].find(u => u.bridge === b.id);
         for (const sv of [-1, 1]) { if (U && sv === U.side) continue; const [px, pz] = F.P(0, sv * (hw - 0.35)); GR.box(px, (WY - 0.4 + -0.4) / 2, pz, w + 0.3, -0.4 - (WY - 0.4), 0.7, hex('#8E887C'), F.ryN, 0, 0, 1, NO); }
@@ -486,6 +500,7 @@ export class FzRiverStreet extends XmStreet {
       cv.fillStyle = '#2B1A0E'; cv.textAlign = 'center'; cv.textBaseline = 'middle';
       // 字号按牌宽收：码头名再长也不出框
       const fit = (txt, w8, size, font, x, y, maxW) => { cv.font = `${w8} ${size}px ${font}`; const m = cv.measureText(txt).width; if (m > maxW) cv.font = `${w8} ${size * maxW / m}px ${font}`; cv.fillText(txt, x, y); };
+      if (p.stopOnly) { fit(p.zh, 800, ph * 0.22, FONT, pw / 2, ph * 0.42, pw * 0.86); fit(p.en, 600, ph * 0.1, FONT_EN, pw / 2, ph * 0.64, pw * 0.86); return; }   // 3A 魁岐停靠点：只写停靠点名（小美 3A ③：不写线路、下一站）
       fit(p.zh, 800, ph * 0.22, FONT, pw / 2, ph * 0.29, pw * 0.86);
       fit(p.en, 600, ph * 0.085, FONT_EN, pw / 2, ph * 0.48, pw * 0.86);
       cv.fillStyle = '#5E4128'; cv.fillRect(pw * 0.1, ph * 0.57, pw * 0.8, ph * 0.008);
@@ -506,8 +521,11 @@ export class FzRiverStreet extends XmStreet {
   }
   /* ---------- 2C：西水关 C 线栈道 + 泊位、彬德水闸、闸边观景处 ---------- */
   c2Static() {
-    const k = this.kit, P = k.solid, GR = k.g('granite'), M = k.metal, C2 = FZR.c2;
-    // 西水关 C 线：从 A 线浮码头下游端沿岸墙接出去的木栈道（和浮码头同高 = 船甲板），到 C 线泊位；外沿钢栏，泊位那段敞开（上下船）
+    this.sharedDecks();
+  }
+  /** 共用码头的第二条线泊位（2C 西水关 C 线 / 3A 光明港码头 D 线）：从浮码头下游端沿岸墙接出去的木栈道（和浮码头同高 = 船甲板），到泊位；外沿钢栏，泊位那段敞开（上下船） */
+  sharedDecks() {
+    const k = this.kit, P = k.solid, M = k.metal;
     for (const q of PIERS.filter(q => q.shared && q.deck)) {
       const top = levelAt(q.berth[0], q.berth[1]) + 0.45, G = P, Pp = q.deck.p, I = q.deck.i, base = G.p.length / 3, wood = hex('#9C7A55');
       for (let j = 0; j < Pp.length; j += 2) G.push(Pp[j], top, Pp[j + 1], 0, 1, 0, wood);
@@ -531,11 +549,11 @@ export class FzRiverStreet extends XmStreet {
     }
   }
   /** 2C：彬德水闸 + 观景处（和闽江远景同一组 c2mj：离得远整组关；碰撞体挂 root 不受影响） */
-  c2Sluice() {
-    const k = this.kit, P = k.solid, GR = k.g('granite'), C2 = FZR.c2;
+  c2Sluice(S = FZR.c2.sluice, NAME = '彬德水闸') {   // 3A 魁岐九门闸同一套（九孔）
+    const k = this.kit, P = k.solid, GR = k.g('granite');
     // 彬德水闸 r2（小美 2C ①：原来像深蓝脚手架 + 没贴图的白方块）：四座条石 / 混凝土闸墩（和驳岸同色的灰米色）+ 墩间三扇灰色平板闸门（上下游两面横肋）
     // + 墩顶一座横跨全闸的启闭房（米色墙、每孔两扇窗、灰瓦两坡顶、端墙上闸名）+ 闸门吊杆 + 下游低处一道条石工作桥（石栏）。不用 metal（远看发蓝）、不留纯白块
-    const S = C2.sluice, t = S.t, n = S.n, hw = S.hw, NB = S.bays, Pt = (a, b) => [S.x + t[0] * a + n[0] * b, S.z + t[1] * a + n[1] * b], ryT = yawOf(t[0], t[1]);
+    const t = S.t, n = S.n, hw = S.hw, NB = S.bays, Pt = (a, b) => [S.x + t[0] * a + n[0] * b, S.z + t[1] * a + n[1] * b], ryT = yawOf(t[0], t[1]);
     // a 沿水流（+ 往闽江）、b 横跨河；sa / sb = 沿 a / b 的尺寸
     const bx = (M, a, b, y, sa, sy, sb, col) => { const [x, z] = Pt(a, b); M.box(x, y, z, sb, sy, sa, hex(col), ryT, 0, 0, 1, NO); };
     const y0 = WY - 0.4, PT = 3.6, PW = 1.2, PA0 = -2.4, PA1 = 2.2, HB = 2 * hw / NB;
@@ -564,9 +582,9 @@ export class FzRiverStreet extends XmStreet {
         for (const sa of [-1, 1]) { const aa = HAm + sa * (HD / 2 + 0.03); bx(GR, aa, vm, H0 + 1.55, 0.05, 1.3, 1.5, FRAME); bx(P, aa + sa * 0.02, vm, H0 + 1.55, 0.04, 1.1, 1.3, WIN); bx(P, aa + sa * 0.04, vm, H0 + 1.55, 0.03, 1.1, 0.06, FRAME); bx(GR, aa + sa * 0.06, vm, H0 + 0.88, 0.14, 0.08, 1.7, CAP); } }
       for (const e of [-1, 1]) { const bb = e * (HL / 2 + 0.03);   // 两头端墙：一扇窗 + 闸名牌（灰石底、米黄字；不画箭头 / 地图）
         bx(GR, HAm, bb, H0 + 1.0, 1.0, 1.0, 0.05, FRAME); bx(P, HAm, bb + e * 0.02, H0 + 1.0, 0.85, 0.85, 0.04, WIN);
-        const [qx, qz] = Pt(HAm, bb + e * 0.03), uv = this.atlas.draw(2.0, 0.5, textPaint(['彬德水闸'], { bg: '#6E675B', fg: '#F2E2B0' }), 70);
+        const [qx, qz] = Pt(HAm, bb + e * 0.03), uv = this.atlas.draw(2.0, 0.5, textPaint([NAME], { bg: '#6E675B', fg: '#F2E2B0' }), 70);
         this.atlas.quad(qx, H0 + 2.2, qz, 2.0, 0.5, Math.atan2(n[0] * e, -n[1] * e), uv); }
-      { const [qx, qz] = Pt(HA0 - 0.04, 0), uv = this.atlas.draw(3.0, 0.6, textPaint(['彬德水闸'], { bg: '#6E675B', fg: '#F2E2B0' }), 80); this.atlas.quad(qx, H0 + 2.35, qz, 3.0, 0.6, Math.atan2(-t[0], t[1]), uv); } }   // 上游面正中
+      { const [qx, qz] = Pt(HA0 - 0.04, 0), uv = this.atlas.draw(3.0, 0.6, textPaint([NAME], { bg: '#6E675B', fg: '#F2E2B0' }), 80); this.atlas.quad(qx, H0 + 2.35, qz, 3.0, 0.6, Math.atan2(-t[0], t[1]), uv); } }   // 上游面正中
     // 下游工作桥：墩间条石板 + 石栏（和驳岸石栏同款）
     { const WA = PA1 - 0.8; bx(GR, WA, 0, -0.1, 1.4, 0.3, 2 * hw + PW, CAP);
       for (const sa of [-1, 1]) { bx(GR, WA + sa * 0.62, 0, 0.74, 0.16, 0.1, 2 * hw + PW, '#B5AE9F'); for (let v = -hw; v <= hw + 0.01; v += HB / 3) bx(GR, WA + sa * 0.62, v, 0.38, 0.2, 0.72, 0.2, '#A8A193'); } }
@@ -592,6 +610,39 @@ export class FzRiverStreet extends XmStreet {
     // 对岸：一排树冠 + 低层楼（远景，按固定序列取色，不随机）
     const [x0, zf, x1] = J.far, G = ['#3A7A3C', '#2F6B34', '#447F3A'], W = ['#D9D2C4', '#C9CED2', '#E3D9C6', '#BFC6C9'];
     for (let x = x0 + 6, i = 0; x < x1; x += 13, i++) { P.ellipsoid(x, 4.5, zf - 5, 9, 4.2, 6, hex(G[i % 3]), 1); if (i % 2 === 0) { const h = 12 + (i * 7) % 15; P.box(x + 4, h / 2, zf - 22, 16, h, 10, hex(W[i % 4]), 0, 0, 0, 1, NO); } }
+  }
+  /** 3A：魁岐九门闸（同彬德水闸：石闸墩 + 九扇灰闸门 + 启闭房，不用 metal、不留纯白块）+ 闸边观景处 + 闸外闽江江面 / 堤墙 / 石栏（常开，和 g0 同一批材质，不加 draw）
+   *  只能看、不能上：闸的整个占地一块看不见的高碰撞体（colGateBlock，人从岸上 / 水里都进不去）；闸两头岸上的石栏在 mj.rail */
+  a3Static() {
+    const A3 = FZR.a3, G = A3.gate, J = A3.mj, k = this.kit, WA = k.g('paint@sea'), GR = k.g('granite');
+    this.c2Sluice(G, '魁岐九门闸');
+    { const B_ = G.block, cx = B_.reduce((a, q) => a + q[0], 0) / 4, cz = B_.reduce((a, q) => a + q[1], 0) / 4, la = Math.hypot(B_[1][0] - B_[0][0], B_[1][1] - B_[0][1]), lb = Math.hypot(B_[2][0] - B_[1][0], B_[2][1] - B_[1][1]);
+      k.col(cx, 3, cz, lb, 16, la, { ry: yawOf(G.t[0], G.t[1]), name: 'colGateBlock' }); }
+    { const Pp = J.water.p, I = J.water.i, base = WA.p.length / 3, c = hex('#2F6670'); for (let j = 0; j < Pp.length; j += 2) WA.push(Pp[j], J.lv, Pp[j + 1], 0, 1, 0, c); for (let j = 0; j < I.length; j += 3) WA.i.push(base + I[j], base + I[j + 1], base + I[j + 2]); }   // 闽江江面：和内河同色（远景无接缝，同 2D 琼东河口）
+    for (const [ax, az, bx, bz] of J.shore) { GR.quad([ax, 0.0, az], [bx, 0.0, bz], [bx, J.lv - 0.4, bz], [ax, J.lv - 0.4, az], hex(WALLC)); GR.quad([bx, 0.0, bz], [ax, 0.0, az], [ax, J.lv - 0.4, az], [bx, J.lv - 0.4, bz], hex(WALLC)); }
+    for (const [ax, az, bx, bz] of J.rail) this.stoneRail(ax, az, bx, bz);
+  }
+  /** 3A 路桥桥面：深灰沥青（granite 桶：粗颗粒、几乎不反天光）+ 白色分道虚线 / 边线 + 中间双黄线（kit.solid）——都并进已有网格，不加 draw */
+  a3Deck(b, F, w, half) {
+    const k = this.kit, GR = k.g('granite'), P = k.solid, W2 = (w - 1.6) / 2, L = 2 * half, [cx, cz] = F.P(0, 0), wh = hex('#E8E6DF'), ye = hex('#E2B53A');
+    GR.box(cx, 0.008, cz, 2 * W2, 0.012, L, hex('#4E5155'), F.ryN, 0, 0, 1, NO);
+    const ln = (u, v0, v1, c, wd = 0.15) => { const [x, z] = F.P(u, (v0 + v1) / 2); P.box(x, 0.018, z, wd, 0.006, v1 - v0, c, F.ryN, 0, 0, 1, NO); };
+    for (const e of [-1, 1]) { ln(e * 0.18, -half, half, ye, 0.14); ln(e * (W2 - 0.5), -half, half, wh, 0.18);   // 双黄中线 + 两边边线
+      for (let j = 1; j * 3.5 < W2 - 1.2; j++) for (let v = -half + 1.5; v + 3 <= half - 1; v += 9) ln(e * j * 3.5, v, v + 3, wh); }   // 分道白虚线（3 m 线 6 m 空）
+  }
+  /** 3A 白天才画的一组（g3day）：光明港东段水面亮纹 + 闽江对岸一排树冠 / 低层楼（远景，固定序列取色） */
+  a3Day() {
+    const A3 = FZR.a3, J = A3.mj, k = this.kit, WA = k.g('paint@sea'), P = k.solid, r = RIVERS.gm;
+    let j = 0; for (let s = A3.gmALen + 4; s < r.line.len - 6; s += 13) { const a = r.line.at(s, ((j++ * 37) % 11 - 5) / 6 * r.hw * 0.6); WA.box(a.x, WY + 0.004, a.z, 0.25, 0.004, 4.5, hex('#8FC0C8'), yawOf(a.tx, a.tz), 0, 0, 1, NO); }
+    const [o0, o1] = J.o, [tx, tz] = J.t, [nx, nz] = J.n, [af, b0, b1] = J.far, Pt = (a, b) => [o0 + tx * a + nx * b, o1 + tz * a + nz * b], ry = yawOf(nx, nz);
+    // 小美 11-17：对岸楼用偏蓝灰的远景色（原来米白色在雾里像半透明白板）；树冠和楼底下补一条对岸地面 + 堤岸（树不再像浮在江面上）——都在同一张 solid 网格里，不加 draw
+    const Gc = ['#3A7A3C', '#2F6B34', '#447F3A'], Wc = ['#7E8C99', '#8796A3', '#76858F', '#8F9AA5'];
+    { const bm = (b0 + b1) / 2, L = b1 - b0 + 16, [gx, gz] = Pt(af + 34, bm), [ex, ez] = Pt(af - 0.6, bm), y0 = J.lv - 0.4, y1 = 1.2;
+      P.box(gx, 0.5, gz, 70, 1.0, L, hex('#6E7A64'), ry, 0, 0, 1, NO);   // 对岸地面（树带 + 楼底，顶面 +1.0）
+      P.box(ex, (y0 + y1) / 2, ez, 1.6, y1 - y0, L, hex('#8A8578'), ry, 0, 0, 1, NO);   // 堤岸（石墙，比地面略高一点）
+      P.box(ex, y1 + 0.03, ez, 1.8, 0.06, L, hex('#A39C8E'), ry, 0, 0, 1, NO); }   // 堤顶压顶
+    for (let b = b0 + 6, i = 0; b < b1; b += 13, i++) { const [x, z] = Pt(af + 5, b); P.ellipsoid(x, 4.5, z, 9, 4.2, 6, hex(Gc[i % 3]), 1);
+      if (i % 2 === 0) { const h = 12 + (i * 7) % 15, [hx, hz] = Pt(af + 22, b + 4); P.box(hx, h / 2, hz, 16, h, 10, hex(Wc[i % 4]), ry, 0, 0, 1, NO); } }
   }
   /** 水埠头：贴着岸墙下到水边的石阶（侧面敞开，可以故意走下水） */
   stepsDown() {
@@ -783,7 +834,9 @@ export class FzRiverStreet extends XmStreet {
     }
     const lean = up ? 0 : 1.6 * s;
     // 简模主干一直插进树冠底部（5.1 s，树冠底约 4.6 s），和树冠同在 kit.solid 静态合批（0 额外 draw call）
-    P.tubeTaper([x, 0, z], [x + fx * (lean + 0.8 * s), 5.1 * s, z + fz * (lean + 0.8 * s)], 1.0 * s, 0.45 * s, trunk, 5, false);
+    const tv0 = P.p.length / 3, ta = [x, 0, z], tb = [x + fx * (lean + 0.8 * s), 5.1 * s, z + fz * (lean + 0.8 * s)];
+    P.tubeTaper(ta, [x + fx * (lean + 0.8 * s), 5.1 * s, z + fz * (lean + 0.8 * s)], 1.0 * s, 0.45 * s, trunk, 5, false);
+    if (FZR.id === 'e') trunkNormals(P, tv0, ta, tb, 0.5 * s, 0.225 * s);   // 小美 11-17：光明港一带主干发粉白 → 按真实锥面重算法线（tubeTaper 的非均匀缩放把侧面法线掰成朝天，迎着太阳一片白），和其它河段一样是棕色
     P.ellipsoid(x + fx * (lean + 1.4 * s), 6.3 * s, z + fz * (lean + 1.4 * s), 9.5 * s, 3.4 * s, 8.5 * s, hex(G[i % 4]), 1, yawOf(fx, fz));
   }
   /* ---------- 步道：路灯 / 长椅 ---------- */
@@ -930,6 +983,7 @@ export class FzRiverStreet extends XmStreet {
       set(gn.c2mj, p.z < FZR.c2.sluice.z + (NL ? NL.c2mj : 450)); ZS.forEach((z0_, i) => { const z1_ = i + 1 < ZS.length ? ZS[i + 1] : 1e9, d = (p.z < z0_ ? z0_ - p.z : p.z > z1_ ? p.z - z1_ : 0) + (NL ? 430 - NL.gN : 0); set(gn['gN' + i], d < 430 && !corrP); });
       for (const i of this.c2Detail) { const zt = z0 - i * C2D, zb = zt - C2D, d = p.z > zt ? p.z - zt : p.z < zb ? zb - p.z : 0; set(gn['c2d:' + i], d < (NL ? NL.c2d : 110)); }
     }
+    if (gn.g3day) { const on = !this.nightLod && p.x > FZR.a3.x0 - 60; if (force || gn.g3day.isEnabled(false) !== on) gn.g3day.setEnabled(on); }   // 3A 白天组：只白天 + 人在光明港码头往东一带
     if (this.tileCull) this.tileCull.update(this.scene.activeCamera, { px: this.wx(p.x), pz: this.wz(p.z), detR: (NL ? NL.near : NEAR) + CELL * 0.7, detOn: !corrP });
   }
   refreshTilesIfTurned() {

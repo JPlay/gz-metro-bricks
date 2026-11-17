@@ -387,6 +387,245 @@ ZONES = {'cruise': 3.5, 'fast': [round(FAST0, 1), round(L, 1)], 'vFast': 5.5, 'v
 print('zones', ZONES)
 print('route len', round(L, 1), 'stops', STOPS, 'minR', minRat(LineString(RP))[0])
 
+
+# =====================================================================================================
+# 3A（PLAN-3 §3 / §8 小美定稿）：光明港东段（光明港码头 → 魁岐九门闸，1:5）+ 九门闸（只看不过船、人不能上）+ 闸外闽江远景 + D 线（白篷）光明港码头 ⇄ 魁岐停靠点
+#   1B 已验收的部分一律不动（同 2C 接白马河下段的做法）：上面算好的 1B 码头 / 桥 / 房子 / 树 / B 线逐个不变；岸地 / 水面格子几何没变的沿用旧三角网；
+#   岸墙只换掉旧光明港东头那道封口（和接缝两边并段）；房子 / 树追加在列表末尾（颜色按下标取，1B 的下标不动）。
+#   输入 gm_east_osm_m.json（tools/fzriver/osm_3a.py 从 OSM relation 11108281 竖切 / 横切取中线 + 魁岐坝 + 有名路桥）
+# =====================================================================================================
+A3 = os.environ.get('FZR_3A', '1') != '0'
+if A3:
+  E3 = json.load(open(os.path.join(HERE, 'gm_east_osm_m.json')))
+  gmA = CL['gm']; GM_A_LEN = gmA.length
+  _p0 = RG.interpolate(GM1); _real = [(_p0.x, _p0.y)] + [(x, z) for x, z, _ in E3['mid'] if x > _p0.x + 20 or z < -3200] + [tuple(E3['gate'])]
+  _rE = LineString(_real).simplify(float(os.environ.get('FZR_3A_SIMP', 14.0)))
+  _gE = scG(list(_rE.coords)); _e0 = gmA.coords[-1]; _t0 = tan('gm', GM_A_LEN)
+  _gE = [_e0, (_e0[0] + _t0[0] * 14, _e0[1] + _t0[1] * 14)] + [c for c in _gE if math.dist(c, _e0) > 30]
+  gmE = LineString(chaikin(_gE, 4)).simplify(0.12)
+  gmF = LineString(list(gmA.coords) + list(gmE.coords)[1:])
+  print('3A junction minR', minRat(LineString([c for c in gmF.coords if math.dist(c, _e0) < 60])))
+  print('3A gmE len', round(gmE.length, 1), 'pts', len(gmE.coords), 'minR', minRat(gmE), 'full gm len', round(gmF.length, 1), 'end', gmE.coords[-1])
+  CL['gm'] = gmF   # 从这里起 at_s('gm', …) 用全长（1B 段坐标是前缀，一点不动）
+  L3 = gmF.length
+  # ---- 已经算好的 1B 结果，留一份做差分 / 沿用 ----
+  water1B, region1B, land1B = water, region, land
+  LAND1B, WATER1B, WALL1B = LAND, WATER, WALL
+  # ---- 桥：OSM 有名字的路桥只有福光南路（双幅合一）；再往东（南北向一段）没核过桥，不放 ----
+  _nb0 = len(BR)
+  for nm, info in E3['bridges'].items():
+    if nm == '前横南路': continue   # 1B 已有（gm3）
+    _c = Point(*scG([tuple(min(info, key=lambda q: q['c'][0])['c'])])[0]); _s = gmF.project(_c)
+    assert _s > GM_A_LEN, (nm, _s)
+    _b = bridge('gm', _s, 30, 'road', nm, note=nm + '双幅合一（3A）'); _b['a3'] = 1
+  BR3 = BR[_nb0:]
+  for b in BR3: print('3A bridge', b['id'], b['name'], b['s'])
+  for b in BR3:
+    x, z, t, n, half, w = b['x'], b['z'], b['t'], b['n'], b['half'], b['w']
+    GAPS.append(Polygon([(x + t[0] * a + n[0] * c, z + t[1] * a + n[1] * c) for a, c in [(-w / 2 + 0.05, -half - 0.5), (w / 2 - 0.05, -half - 0.5), (w / 2 - 0.05, half + 0.5), (-w / 2 + 0.05, half + 0.5)]]))
+    b['foot'] = Polygon([(x + t[0] * a + n[0] * c, z + t[1] * a + n[1] * c) for a, c in [(-w / 2, -half), (w / 2, -half), (w / 2, half), (-w / 2, half)]])
+  ROADS3 = []
+  for b in BR3:
+    for sg in (-1, 1):
+      ROADS3.append({'id': b['id'] + ('e' if sg > 0 else 'w'), 'name': b['name'], 'poly': rect(b['x'], b['z'], b['n'][0] * sg, b['n'][1] * sg, b['hw'] + 2, b['hw'] + BAND['gm'] + 2, -b['w'] / 2, b['w'] / 2), 'dir': [b['n'][0] * sg, b['n'][1] * sg], 'w': b['w'], 'stub': True, 'a3': True})
+  # ---- 九门闸（闸墩 + 九孔灰闸门 + 启闭房，同 2C 彬德水闸做法；只看，不过船、人上不去）----
+  GATE_S = round(L3 - 4.5, 2)
+  (_gx, _gz), _gt, _gn = at_s('gm', GATE_S)
+  KQ_SIDE = 1   # 魁岐停靠点 / 观景处都在右岸（南北向一段 = 西岸），和光明港码头同一侧
+  GATE = {'s': GATE_S, 'x': round(_gx, 2), 'z': round(_gz, 2), 't': [round(_gt[0], 4), round(_gt[1], 4)], 'n': [round(_gn[0], 4), round(_gn[1], 4)], 'hw': HW['gm'], 'bays': 9,
+          'view': [round(v, 2) for v in at_s('gm', GATE_S - 30.0, KQ_SIDE * (HW['gm'] + 3.0))[0]], 'side': KQ_SIDE,
+          # 小美 11-17：观景处原来在闸旁（L3 − 3），正对闸头石墩、看不见九孔 → 挪到闸上游 30 m 岸边步道，正面看全九孔；原位置只留作「看闽江」取景点（mjView）
+          'mjView': [round(v, 2) for v in at_s('gm', L3 - 3.0, KQ_SIDE * (HW['gm'] + 6.5))[0]]}
+  # 不让人上闸：闸的整个占地（闸墩 a −2.4…2.2，横向两头各伸进岸上 1.2 m）一块看不见的高碰撞体 + 岸上闸头两侧矮铁栏（fzRiver.js a3Gate）
+  _blk = [(-3.2, -(HW['gm'] + 1.2)), (3.0, -(HW['gm'] + 1.2)), (3.0, HW['gm'] + 1.2), (-3.2, HW['gm'] + 1.2)]
+  GATE['block'] = [[round(GATE['x'] + _gt[0] * a + _gn[0] * b_, 2), round(GATE['z'] + _gt[1] * a + _gn[1] * b_, 2)] for a, b_ in _blk]
+  print('3A gate', GATE)
+  # ---- 魁岐停靠点（游戏增设：魁岐一带真实码头位置未核实）——闸上游，木牌只写停靠点名 ----
+  KQ_S = round(GATE_S - 62.0, 2)
+  kq = bank_pier('gm', KQ_S, KQ_SIDE, 'kq', '魁岐停靠点', 'Kuiqi Stop', '游戏增设（魁岐一带真实码头位置未核实）；牌子只写停靠点名，不写线路、下一站（小美 3A ③）')
+  kq['stopOnly'] = True
+  _st, _po, _be = pier_geo(kq); kq['berth'] = [round(_be[0], 2), round(_be[1], 2)]; DRY.extend([_st, _po])
+  GAPS.append(Polygon([(kq['x'] + kq['t'][0] * a + kq['n'][0] * b_, kq['z'] + kq['t'][1] * a + kq['n'][1] * b_) for a, b_ in [(-10.2, -1), (-8.3, -1), (-8.3, 1), (-10.2, 1)]]))
+  kq['sign'] = [round(kq['x'] + kq['t'][0] * -11.6 + kq['n'][0] * 1.6, 2), round(kq['z'] + kq['t'][1] * -11.6 + kq['n'][1] * 1.6, 2)]
+  for b in BR:
+    if b['river'] == 'gm': assert min(KQ_S + 8.4, b['s'] + b['w'] / 2) - max(KQ_S - 10.2, b['s'] - b['w'] / 2) <= -PIER_GAP_EDGE and abs(KQ_S + 2.4 - b['s']) >= PIER_GAP_CENTRE, ('kq vs bridge', b['id'])
+  # ---- 光明港码头 D 线泊位（共用 B 线台阶和木牌；B 线浮码头尾往下游接一段浮动栈道到 D 泊位，同 2C 西水关 C 线泊位）----
+  def bandG(s0, s1, b0, b1, sd, n_=24):
+    L_ = [at_s('gm', s0 + (s1 - s0) * i / n_, sd * (HW['gm'] - b0))[0] for i in range(n_ + 1)]
+    R_ = [at_s('gm', s0 + (s1 - s0) * i / n_, sd * (HW['gm'] - b1))[0] for i in range(n_ + 1)]
+    return Polygon(L_ + R_[::-1])
+  def hullAt(s, lat, L_=4.0, W_=1.2):
+    (x, z), t, n = at_s('gm', s, lat); return Polygon([(x + t[0] * u + n[0] * v, z + t[1] * u + n[1] * v) for u, v in [(-L_, -W_), (L_, -W_), (L_, W_), (-L_, W_)]])
+  def hull_poly(R_, i, L_=4.0, W_=1.2):
+    a, b = R_[max(0, i - 2)], R_[min(len(R_) - 1, i + 2)]; tx, tz = tdir(a, b); nx, nz = tz, -tx; x, z = R_[i]
+    return Polygon([(x + tx * u + nx * v, z + tz * u + nz * v) for u, v in [(-L_, -W_), (L_, -W_), (L_, W_), (-L_, W_)]])
+  _sdg = gmp['side']; _bdock = hull_poly(RP, int(round([st['s'] for st in STOPS if st['id'] == 'gmg'][0])))
+  _poB = pier_geo(gmp)[1]
+  GMGD_S = None
+  for _i in range(0, 300):
+    sd_ = gmp['s'] + 8.0 + _i * 0.1; hd = hullAt(sd_, _sdg * (HW['gm'] - 3.0))
+    if hd.buffer(0.6).intersects(_bdock) or hd.buffer(0.3).intersects(_poB) or math.dist(at_s('gm', sd_, _sdg * (HW['gm'] - 3.0))[0], gmp['berth']) < 12.2: continue   # 泊位间距 ≥ 12 m（船长 8 m + 间隙，同 2C）
+    GMGD_S = round(sd_, 2); break
+  assert GMGD_S and GMGD_S < GM_A_LEN - 6, ('no room for D berth at gmg', GMGD_S)
+  gmgD = bank_pier('gm', GMGD_S, _sdg, 'gmgD', gmp['zh'], gmp['en'], 'D 线泊位：和 B 线共用光明港码头的台阶、木牌（同 2C 西水关 C 线泊位）')
+  gmgD['shared'] = 'gmg'; gmgD['sign'] = list(gmp['sign'])
+  (_bx, _bz), _, _ = at_s('gm', GMGD_S, _sdg * (HW['gm'] - 3.0)); gmgD['berth'] = [round(_bx, 2), round(_bz, 2)]
+  print('3A gmgD', GMGD_S, 'ds', round(GMGD_S - gmp['s'], 2), 'kq', KQ_S)
+  PIERS3 = [gmgD, kq]
+  # ---- 水面 / 可走范围（只并上去，不重新 buffer 1B 的那块）----
+  chanE = unary_union([gmE.buffer(HW['gm'], cap_style='flat', join_style='round', quad_segs=6), Point(gmA.coords[-1]).buffer(HW['gm'], quad_segs=6)]).simplify(0.05)
+  regE = unary_union([gmE.buffer(HW['gm'] + BAND['gm'], cap_style='flat', quad_segs=6), Point(gmA.coords[-1]).buffer(HW['gm'] + BAND['gm'], quad_segs=6)] + [r['poly'] for r in ROADS3]).simplify(0.1)
+  region = region1B.union(regE).buffer(0)
+  if region.geom_type != 'Polygon': region = max(region.geoms, key=lambda g: g.area)
+  region = Polygon(region.exterior)
+  water = water1B.union(chanE.intersection(region.buffer(-0.05))).buffer(0)   # 1B 水面原样并上（不重新裁，岸线一点不动）
+  if water.geom_type != 'Polygon': water = max(water.geoms, key=lambda g: g.area)
+  land = region.difference(water).buffer(0)
+  for K_ in KIOSK.values(): land = land.difference(box(K_['x'] - 1.9, K_['z'] - 6.4, K_['x'] + 1.9, K_['z'] - 2.6)).buffer(0)
+  def _keep_old(new_, newPoly, oldPoly, old_):
+    n_ = 0
+    for k_ in list(new_):
+      if k_ not in old_: continue
+      i_, j_ = map(int, k_.split(',')); cb = box(i_ * CELL, j_ * CELL, (i_ + 1) * CELL, (j_ + 1) * CELL)
+      if newPoly.intersection(cb).symmetric_difference(oldPoly.intersection(cb)).area < 0.01: new_[k_] = old_[k_]; n_ += 1
+    return n_
+  LAND = {k_: pack(v) for k_, v in tris_by_cell(land).items()}; WATER = {k_: pack(v) for k_, v in tris_by_cell(water).items()}
+  print('3A cells kept from 1B: land', _keep_old(LAND, land, land1B, LAND1B), '/', len(LAND), 'water', _keep_old(WATER, water, water1B, WATER1B), '/', len(WATER))
+  # ---- 闽江远景（闸外；只看不走）：江面低 0.6 m、岸墙、闸两侧岸头观景石栏；对岸树 / 楼在 fzRiver.js（白天才画）----
+  (_mx, _mz), _mt, _mn = at_s('gm', L3)
+  MJ_LV = WY - 0.6
+  def Lc(a, b_): return (_mx + _mt[0] * a + _mn[0] * b_, _mz + _mt[1] * a + _mn[1] * b_)
+  mjPoly = Polygon([Lc(0, -430), Lc(0, 430), Lc(230, 430), Lc(230, -430)]).difference(region).buffer(0)
+  if mjPoly.geom_type != 'Polygon': mjPoly = max(mjPoly.geoms, key=lambda g: g.area)
+  MJ_SHORE = []
+  for (x0, z0), (x1, z1) in zip(list(mjPoly.exterior.coords), list(mjPoly.exterior.coords)[1:]):
+    if math.hypot(x1 - x0, z1 - z0) < 0.05: continue
+    m_ = Point((x0 + x1) / 2, (z0 + z1) / 2)
+    if water.buffer(0.3).contains(m_) or not region.buffer(0.3).contains(m_): continue
+    MJ_SHORE.append([round(x0, 2), round(z0, 2), round(x1, 2), round(z1, 2)])
+  _rl = region.exterior.intersection(Point(_mx, _mz).buffer(HW['gm'] + BAND['gm'] + 4)).difference(water.buffer(0.3))
+  MJ_RAIL = []
+  for g_ in (_rl.geoms if hasattr(_rl, 'geoms') else [_rl]):
+    if g_.geom_type != 'LineString': continue
+    c_ = list(g_.simplify(0.2).coords)
+    for a, b_ in zip(c_, c_[1:]):
+      m_ = ((a[0] + b_[0]) / 2, (a[1] + b_[1]) / 2); u_ = (m_[0] - _mx) * _mt[0] + (m_[1] - _mz) * _mt[1]
+      if math.dist(a, b_) > 0.3 and u_ > -1.0: MJ_RAIL.append([round(a[0], 2), round(a[1], 2), round(b_[0], 2), round(b_[1], 2)])
+  MJ = {'lv': MJ_LV, 'water': pack(tris_flat(mjPoly)), 'shore': MJ_SHORE, 'rail': MJ_RAIL, 'o': [round(_mx, 2), round(_mz, 2)], 't': [round(_mt[0], 4), round(_mt[1], 4)], 'n': [round(_mn[0], 4), round(_mn[1], 4)], 'far': [170, -430, 430]}   # 小美 11-17：对岸 230 → 170 m（河面雾 200 m 起：楼 / 地面 / 堤岸在雾前，不再像半透明白板）
+  print('3A minjiang tris', len(MJ['water']['i']) // 3, 'shore', len(MJ_SHORE), 'rail', len(MJ_RAIL))
+  # ---- 岸墙：旧的段在新水面边界上（两端 + 中点都在）就原样留着；新水面边界上没被旧段盖住的地方按 1B 同一套规则补（2 m 一段 → 并段）----
+  gapU = unary_union(GAPS)
+  _bnd = water.exterior; _on = lambda x, z: _bnd.distance(Point(x, z)) < 0.02
+  _wd = water.symmetric_difference(water1B).buffer(0); _wd = unary_union([g for g in getattr(_wd, 'geoms', [_wd]) if g.area > 0.5])   # 并集重排节点留下的 1e-6 级碎片不算
+  print('3A water changed area', round(_wd.area, 1), 'bounds', [round(v, 1) for v in _wd.bounds])
+  WALL_keep = [w for w in WALL1B if LineString([(w[0], w[1]), (w[2], w[3])]).distance(_wd) > 0.5]
+  _keepU = unary_union([LineString([(w[0], w[1]), (w[2], w[3])]) for w in WALL_keep]).buffer(0.3)
+  _endG = (_mx, _mz)
+  def kind3(a, b_):
+    mx_, mz_ = (a[0] + b_[0]) / 2, (a[1] + b_[1]) / 2
+    if math.hypot(mx_ - _endG[0], mz_ - _endG[1]) < HW['gm'] + 0.5:
+      dx_, dz_ = b_[0] - a[0], b_[1] - a[1]; l_ = math.hypot(dx_, dz_) or 1
+      if abs(dx_ / l_ * _mt[0] + dz_ / l_ * _mt[1]) < 0.3: return 4   # 4 = 口门（闸外就是闽江，不画暗洞；同 2C）
+    return None
+  W3 = []
+  for c_ in [list(r_.coords) for r_ in [water.exterior] + list(water.interiors)]:
+   for a, b_ in zip(c_, c_[1:]):
+    L_ = math.dist(a, b_); n_ = max(1, math.ceil(L_ / 2.0))
+    for i in range(n_):
+      p0 = (a[0] + (b_[0] - a[0]) * i / n_, a[1] + (b_[1] - a[1]) * i / n_); p1 = (a[0] + (b_[0] - a[0]) * (i + 1) / n_, a[1] + (b_[1] - a[1]) * (i + 1) / n_)
+      m_ = Point((p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2)
+      if _keepU.contains(m_): continue
+      kd = kind3(p0, p1)
+      W3.append([round(p0[0], 2), round(p0[1], 2), round(p1[0], 2), round(p1[1], 2), kd if kd else (1 if gapU.contains(m_) else 0)])
+  W3 = merge(W3)
+  for w in W3:
+    L_ = math.dist(w[:2], w[2:4]) or 1; dx_, dz_ = (w[2] - w[0]) / L_, (w[3] - w[1]) / L_; rx, rz = dz_, -dx_
+    mx_, mz_ = (w[0] + w[2]) / 2, (w[1] + w[3]) / 2
+    w.append(1 if water.contains(Point(mx_ + rx * 0.25, mz_ + rz * 0.25)) else -1)
+  WALL = WALL_keep + W3
+  print('3A walls: kept', len(WALL_keep), '/', len(WALL1B), 'new', len(W3), {f: sum(1 for w in W3 if w[4] == f) for f in range(5)})
+  BOUND = [[round(x, 2), round(z, 2)] for x, z in Polygon(region1B.exterior).simplify(0.3).union(regE.simplify(0.3)).buffer(0).exterior.coords]
+  mnx, mnz, mxx, mxz = region.bounds
+  skirt = box(mnx - 160, mnz - 160, mxx + 160, mxz + 160).difference(region).difference(mjPoly).buffer(0).simplify(1.0)
+  SKIRT = pack(tris_flat(skirt))
+  # ---- 房子 / 榕树（3A 段两岸；另一串随机数，追加在末尾；四面都贴立面，2C 教训）----
+  R3 = random.Random(311)
+  _nH, _nT = len(HOUSES), len(TREES)
+  _view = Point(*GATE['mjView'])   # 房 / 树的避让仍按原观景处（挪观景处不重排房树）
+  occ3 = unary_union([water.buffer(7.5)] + [r['poly'].buffer(0.5) for r in ROADS + ROADS3] + [b['foot'].buffer(3) for b in BR]
+                     + [Polygon(GATE['block']).buffer(14), _view.buffer(16), Point(*kq['sign']).buffer(10), LineString([(kq['x'], kq['z']), tuple(kq['sign'])]).buffer(8)]
+                     + [Polygon([(h['x'] + h['t'][0] * a + h['f'][0] * b_ * -1, h['z'] + h['t'][1] * a + h['f'][1] * b_ * -1) for a, b_ in [(-h['w'] / 2, -h['d'] / 2), (h['w'] / 2, -h['d'] / 2), (h['w'] / 2, h['d'] / 2), (-h['w'] / 2, h['d'] / 2)]]).buffer(0.6) for h in HOUSES])
+  for side in (-1, 1):
+    s_ = GM_A_LEN + 6.0
+    while s_ < L3 - 10:
+      w_ = R3.uniform(16, 24); d_ = R3.uniform(10, 13); h_ = R3.choice([15, 18, 21, 24])
+      off = HW['gm'] + BAND['gm'] - 1.0 - d_ / 2
+      (cx, cz), t, n = at_s('gm', s_ + w_ / 2, side * off); ry = math.atan2(t[0], t[1])
+      poly = Polygon([(cx + t[0] * a + n[0] * side * b_, cz + t[1] * a + n[1] * side * b_) for a, b_ in [(-w_ / 2, -d_ / 2), (w_ / 2, -d_ / 2), (w_ / 2, d_ / 2), (-w_ / 2, d_ / 2)]])
+      ok_ = region.buffer(-0.5).contains(poly) and not poly.intersects(occ3)
+      if ok_:
+        occ3 = occ3.union(poly.buffer(0.6))
+        HOUSES.append({'x': round(cx, 2), 'z': round(cz, 2), 'w': round(w_, 2), 'd': round(d_, 2), 't': [round(t[0], 4), round(t[1], 4)], 'f': [round(-n[0] * side, 4), round(-n[1] * side, 4)], 'river': 'gm', 'h': h_, 'kind': 'mod', 'ry': round(ry, 4), 'back': True, 'a3': True})
+      s_ += w_ + (R3.uniform(5, 10) if ok_ else 3.0)
+  treeOcc3 = unary_union([b['foot'].buffer(2.5) for b in BR] + [g.buffer(1.5) for g in GAPS] + [r['poly'] for r in ROADS3] + [p.buffer(1.0) for p in DRY] + [Polygon(GATE['block']).buffer(4), _view.buffer(5)])
+  for side in (-1, 1):
+    s_ = GM_A_LEN + R3.uniform(3, 8)
+    while s_ < L3 - 6:
+      (x, z), t, n = at_s('gm', s_, side * (HW['gm'] + 1.7)); P_ = Point(x, z)
+      if region.contains(P_) and not water.buffer(1.0).contains(P_) and not treeOcc3.contains(P_) and all(math.hypot(x - t_[0], z - t_[1]) > 6 for t_ in TREES[-40:]):
+        TREES.append([round(x, 2), round(z, 2), round(-n[0] * side, 3), round(-n[1] * side, 3), round(R3.uniform(0.85, 1.15), 2), 'gm', 1])
+      s_ += R3.uniform(15, 22)
+  # 小美 11-17：新观景处（闸上游 30 m）看九门闸的视线里不留榕树（岸边一排树离栏杆只有 1.7 m，正挡在闸前）——事后剔掉，不动随机序列
+  _vw = Point(*GATE['view']); _ends = [(GATE['x'] + _gn[0] * e * HW['gm'], GATE['z'] + _gn[1] * e * HW['gm']) for e in (-1, -0.5, 0, 0.5, 1)]
+  _cone = unary_union([LineString([GATE['view'], e_]) for e_ in _ends]).buffer(3.0).union(_vw.buffer(6))
+  _drop = [t_ for t_ in TREES[_nT:] if _cone.contains(Point(t_[0], t_[1]))]
+  TREES[_nT:] = [t_ for t_ in TREES[_nT:] if t_ not in _drop]; print('3A trees dropped for the lookout sight lines', len(_drop), [t_[:2] for t_ in _drop])
+  print('3A houses', len(HOUSES) - _nH, 'trees', len(TREES) - _nT)
+  # ---- D 线（白篷）：光明港码头 D 泊位 ⇄ 魁岐停靠点；双头船，终点停靠后掉头（座位朝向转过来）----
+  def lat_d(s):
+    sc_, sk = GMGD_S, KQ_S + 2.4
+    return _sdg * (HW['gm'] - 3.0) * (1 - ss(sc_ + 9, sc_ + 50, s)) + KQ_SIDE * (HW['gm'] - 4.3) * ss(sk - 47, sk - 17, s)
+  dLeg = path_for('gm', GMGD_S - 6, KQ_S + 2.4 + 6, lat_d, step=4.0)
+  rlD = LineString(chaikin(dLeg, 4)).simplify(0.03)
+  LD = rlD.length; RPD = []
+  for i in range(int(LD) + 1): q = rlD.interpolate(i); RPD.append([round(q.x, 2), round(q.y, 2)])
+  STOPS_D0 = LineString(RPD).project(Point(*gmgD['berth']))
+  _hullD = hullAt(GMGD_S, _sdg * (HW['gm'] - 3.0))
+  _sweep = unary_union([_hullD.buffer(0.35)] + [hull_poly(RPD, i).buffer(0.25) for i in range(max(0, int(STOPS_D0) - 12), int(STOPS_D0) + 14)])
+  _deck = bandG(gmp['s'] + 7.3, GMGD_S + 1.2, 0.0, 2.5, _sdg, 40).difference(_sweep).buffer(0)   # 栈道让开船进出泊位扫过的范围
+  if _deck.geom_type != 'Polygon': _deck = max(_deck.geoms, key=lambda g: g.area)
+  _deck = _deck.simplify(0.02); DRY.append(_deck)
+  gmgD['deckRing'] = [v for x, z in list(_deck.exterior.coords)[:-1] for v in (round(x, 2), round(z, 2))]
+  gmgD['deck'] = pack([ccw_up(c) for c in tri(_deck)])
+  _out = LineString([at_s('gm', gmp['s'] + 8.6 + (GMGD_S - 4.8 - gmp['s'] - 8.6) * i / 30, _sdg * (HW['gm'] - 2.44))[0] for i in range(31)])
+  gmgD['rail'] = [[round(x, 2), round(z, 2)] for x, z in _out.simplify(0.05).coords]
+  print('3A gmgD deck area', round(_deck.area, 1))
+  _gs_ = int(round([st['s'] for st in STOPS if st['id'] == 'gmg'][0])); _bh = [i for i in range(max(2, _gs_ - 60), min(len(RP) - 2, _gs_ + 8)) if hull_poly(RP, i).buffer(0.15).intersects(_deck)]
+  assert not _bh, ('B boat hull hits the D deck', _bh[:5])
+  STOPS_D = []
+  for p in PIERS3:
+    s_ = LineString(RPD).project(Point(*p['berth'])); q = LineString(RPD).interpolate(s_)
+    STOPS_D.append({'id': p['id'], 's': round(s_, 2), 'd': round(math.dist((q.x, q.y), p['berth']), 2)})
+  assert all(st['d'] < 0.05 for st in STOPS_D), STOPS_D
+  dryU = unary_union(DRY); navi3 = water.difference(dryU.buffer(0.08)); badD = []
+  for i in range(int(STOPS_D[0]['s']), int(STOPS_D[-1]['s']) + 1):
+    hp = hull_poly(RPD, i); nearB = min(math.dist(RPD[i], p['berth']) for p in PIERS3) < 14.5
+    if not (navi3.buffer(-0.1) if nearB else navi3.buffer(-0.3)).contains(hp): badD.append((i, RPD[i]))
+  print('3A D hull outside water at', len(badD), badD[:8])
+  assert not badD
+  _ddock = hull_poly(RPD, int(round(STOPS_D[0]['s'])))
+  _gs = int(round([st['s'] for st in STOPS if st['id'] == 'gmg'][0]))
+  assert not [i for i in range(2, _gs + 1) if hull_poly(RP, i).buffer(0.1).intersects(_ddock)], 'B route hits docked D boat'
+  assert not any(hull_poly(RPD, i).buffer(0.1).intersects(_bdock) for i in range(int(STOPS_D[0]['s']), len(RPD) - 2)), 'D route hits docked B boat'
+  _fz0 = LineString(RPD).project(Point(*at_s('gm', GMGD_S + 50)[0])); _fz1 = LineString(RPD).project(Point(*at_s('gm', KQ_S - 50)[0]))
+  ZONES_D = {'cruise': 3.5, 'fast': [round(_fz0, 1), round(_fz1, 1)], 'vFast': 5.5, 'vBridge': 3.5, 'vPier': 3.5, 'pierZone': 45}
+  ROUTE_D = {'id': 'D', 'canopy': 'white', 'color': '#7A4E9C', 'zones': ZONES_D, 'p': [v for xz in RPD for v in xz], 'stops': STOPS_D}
+  print('3A route D len', round(LD, 1), 'stops', STOPS_D, 'minR3m', minRat(LineString([rlD.interpolate(i * 3.0).coords[0] for i in range(int(LD // 3) + 1)]))[:3:2], 'zones', ZONES_D)
+  PIERS = PIERS + PIERS3
+  ROADS = ROADS + ROADS3
+  A3DATA = {'gmALen': round(GM_A_LEN, 2), 'x0': round(min(x for x, z in gmE.coords) - 2, 1), 'gate': GATE, 'mj': MJ, 'bridges': [b['id'] for b in BR3],
+            'note': '3A：光明港东段 1:5（OSM relation 11108281 竖切 / 横切取中线）；桥只放 OSM 有名的福光南路（东段南北向一段没核过桥）；魁岐九门闸取中间那组坝 way 780472906 / 780472912（未实地核实）'}
+
 def r2(v): return round(v, 2)
 DATA = {
   'id': 'e', 'K': K, 'Kgm': K_GM, 'WY': WY,
@@ -400,6 +639,7 @@ DATA = {
   'spacing': {'bridgeGap': BRIDGE_GAP, 'pierGapEdge': PIER_GAP_EDGE, 'pierGapCentre': PIER_GAP_CENTRE, 'dropped': DROPPED + VIEW_DROPPED, 'pierMoves': PIER_MOVES},
   'route': {'id': 'B', 'canopy': 'white', 'zones': ZONES, 'p': [v for xz in RP for v in xz], 'stops': STOPS},
 }
+if A3: DATA['routes'] = [ROUTE_D]; DATA['a3'] = A3DATA
 js = ('// 自动生成：tools/fzriver/gen_e.py（OSM 晋安河 1:4 + 光明港 1:5 → 游戏坐标；x 东、z 北，原点 = 东街口站 / 3）。不要手改。\n'
       'export const FZR_E = ' + json.dumps(DATA, ensure_ascii=False, separators=(',', ':')) + ';\n')
 open(OUT, 'w').write(js); print('wrote', OUT, len(js))

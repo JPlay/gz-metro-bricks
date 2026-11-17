@@ -130,7 +130,7 @@ ok('HUD shore colour: hudLine(A, null) red; on C boat green; on A boat red; b ne
   ok('riverHud: shore colour from the net home line, boat colour only when the player is on that boat (no b.rid colour on shore)', /hudLine\(home, on \? b\.rid : null\)/.test(body) && /Object\.keys\(ROUTES\)\[0\]/.test(body) && !/LINE_COLOR\[/.test(body)); }
 
 // 小美 2C r2 ①②③：彬德水闸改条石墩 + 灰闸门 + 墩顶启闭房（不用 metal、没有深蓝 / 纯白块）；2C 楼四面贴立面、外圈草地；彬德桥两侧取景段不种树
-{ const src = fs.readFileSync(new URL('../../js/world/fzRiver.js', import.meta.url), 'utf8'), body = src.slice(src.indexOf('  c2Sluice() {'), src.indexOf('  /** 2C 闽江远景'));
+{ const src = fs.readFileSync(new URL('../../js/world/fzRiver.js', import.meta.url), 'utf8'), body = src.slice(src.indexOf('  c2Sluice('), src.indexOf('  /** 2C 闽江远景'));
   const cols = [...body.matchAll(/'#([0-9A-Fa-f]{6})'/g)].map(m => m[1]), rgb = h => [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16));
   const blue = cols.filter(h => { const [r, g, b] = rgb(h); return b > r + 12 && b > g + 4; }), white = cols.filter(h => Math.min(...rgb(h)) > 225);
   ok('彬德水闸 r2: stone piers + gates + hoist house, no metal bucket, no blue-ish / pure-white colours', !/k\.metal/.test(body) && /启闭房/.test(body) && /colSluice/.test(body) && !blue.length && !white.length, { blue, white });
