@@ -13,7 +13,7 @@ import { XmStreet, textPaint, FONT, FONT_EN, facadePaint } from './xmStreet.js';
 import { hex, mix, Geo } from '../core/geo.js';
 import { bucketMat } from './kit.js';
 import * as D from './decor.js';
-import { FZR, WY, RIVERS, BRIDGES, PIERS, KIOSKS, isWater, isLand, isDry, shoreFor, soffitAt, deckAt, humpRise, pierNext, ROUTE, STOPS, nextStop, useNet, netOfKiosk, levelAt, inChamber, LOCK, LOCK_STATE, ROUTES, routesOfPier, hudLine } from '../data/fz-river.js';
+import { FZR, WY, RIVERS, BRIDGES, PIERS, KIOSKS, isWater, isLand, isDry, inPoly, shoreFor, soffitAt, deckAt, humpRise, pierNext, ROUTE, STOPS, nextStop, useNet, netOfKiosk, levelAt, inChamber, LOCK, LOCK_STATE, ROUTES, routesOfPier, hudLine } from '../data/fz-river.js';
 import { FzBoat } from '../game/fzBoat.js';
 import { Haze, RIVER_HAZE } from '../game/haze.js';
 import { installTileCull } from './tileCull.js';
@@ -127,6 +127,8 @@ export class FzRiverStreet extends XmStreet {
     for (const b of this.c2Detail) { c2cells[b].forEach(fns => fns.forEach(f => f())); k.group('c2d:' + b); }
     // 3A：光明港东段水面亮纹 + 闸外闽江对岸（树 / 楼）单独一组 g3day：只白天、人在东段一带才开；夜里整组关（夜雾 60 → 220 m，对岸 230 m 外本来就全进雾里）—— 3A 一带夜里 draw 不超过白天（小美 3A ④）
     if (FZR.a3) { this.a3Day(); k.group('g3day'); }
+    // 3B：晋安河北段 / 凤坂河 / 琴亭湖水面亮纹单独一组 g3bday：只白天、人在 3B 一带才开（夜里关掉腾出夜灯那一个 draw —— 3B 一带夜里 draw 不超过白天）
+    if (FZR.b3) { this.b3Day(); k.group('g3bday'); }
     // 2C：白马河下段的常开几何（墙面 / 桥身 / 房子 / 树 / 闽江远景）单独一组（c2），按玩家远近整组开关
     if (FZR.c2) {
       const nb = 1 + Math.max(...FZR.houses.map(h => h.z).concat(FZR.trees.map(t => t[1]), BRIDGES.filter(b => b.c2).map(b => b.z), FZR.wall.map(w => (w[1] + w[3]) / 2)).filter(inC2).map(c2Band));
@@ -151,6 +153,7 @@ export class FzRiverStreet extends XmStreet {
     // 2C：一条船线一条船（a 网：A 线 + C 线，同一款船、红篷）；this.boat = 当前和玩家相关的那条（坐着的 > 站在上面的 > 出口亭那条线的）
     this.boats = {}; for (const [rid, c] of Object.entries(ROUTES)) this.boats[rid] = new FzBoat(this, c.route.canopy || 'red', rid);
     this.homeRid = Object.keys(ROUTES).find(r => this.K.pier && ROUTES[r].stops.some(s => s.id === this.K.pier)) || ROUTE.id || 'A';
+    if (this.kit.groupNodes && this.kit.groupNodes.g3bday) for (const m of this.kit.groupNodes.g3bday.getChildMeshes()) { m.metadata = Object.assign({}, m.metadata, { noTileCull: true }); m.alwaysSelectAsActiveMesh = true; }   // 3B 白天组：开着就整组画（白天计数稳定）
     if (this.kit.groupNodes && this.kit.groupNodes.g3day) for (const m of this.kit.groupNodes.g3day.getChildMeshes()) { m.metadata = Object.assign({}, m.metadata, { noTileCull: true }); m.alwaysSelectAsActiveMesh = true; }   // 3A 白天组：开着就整组画（不按视锥换索引 / 不被视锥裁掉），白天 draw 数稳定，夜里 ≤ 白天
     this.tileCull = installTileCull(this);   // 常开大网格按视锥换索引（不加 draw）
     this.lodT = 0; this.lodNow(true);
@@ -201,7 +204,8 @@ export class FzRiverStreet extends XmStreet {
     // 水面上一点点亮纹（不规则短条），远看不死板
     // 2C：白马河加长了 —— 1A / 2B 那段的亮纹照旧（同一个计数器、同样的位置），2C 下段另起一个计数器接着画
     let i = 0; const ext = [];
-    for (const [id, r] of Object.entries(RIVERS)) { const end = id === 'bm' && FZR.c2 ? FZR.c2.bmALen : id === 'gm' && FZR.a3 ? FZR.a3.gmALen : r.line.len; let s = 6;
+    for (const [id, r] of Object.entries(RIVERS)) { if (FZR.b3 && (id === 'jn' || id === 'fb')) continue;   // 3B 两条河的亮纹在 g3bday（白天组）
+      const end = id === 'bm' && FZR.c2 ? FZR.c2.bmALen : id === 'gm' && FZR.a3 ? FZR.a3.gmALen : r.line.len; let s = 6;
       for (; s < end - 6; s += 13) { const a = r.line.at(s, ((i++ * 37) % 11 - 5) / 6 * r.hw * 0.6); if (inChamber(a.x, a.z)) continue; WA.box(a.x, levelAt(a.x, a.z) + 0.004, a.z, 0.25, 0.004, 4.5, hex('#8FC0C8'), yawOf(a.tx, a.tz), 0, 0, 1, NO); }
       if (end < r.line.len && !(id === 'gm' && FZR.a3)) ext.push([r, s]); }
     let j = 0; for (const [r, s0] of ext) for (let s = s0; s < r.line.len - 6; s += 13) { const a = r.line.at(s, ((j++ * 37) % 11 - 5) / 6 * r.hw * 0.6); WA.box(a.x, WY + 0.004, a.z, 0.25, 0.004, 4.5, hex('#8FC0C8'), yawOf(a.tx, a.tz), 0, 0, 1, NO); }
@@ -633,6 +637,13 @@ export class FzRiverStreet extends XmStreet {
     for (const e of [-1, 1]) { ln(e * 0.18, -half, half, ye, 0.14); ln(e * (W2 - 0.5), -half, half, wh, 0.18);   // 双黄中线 + 两边边线
       for (let j = 1; j * 3.5 < W2 - 1.2; j++) for (let v = -half + 1.5; v + 3 <= half - 1; v += 9) ln(e * j * 3.5, v, v + 3, wh); }   // 分道白虚线（3 m 线 6 m 空）
   }
+  /** 3B 白天才画的一组（g3bday）：晋安河北段 / 凤坂河 / 琴亭湖水面亮纹（同 1B 的短条） */
+  b3Day() {
+    const k = this.kit, WA = k.g('paint@sea'), C = hex('#8FC0C8');
+    let j = 0; for (const id of ['jn', 'fb']) { const r = RIVERS[id]; for (let s = 6; s < r.line.len - 6; s += 13) { const a = r.line.at(s, ((j++ * 37) % 11 - 5) / 6 * r.hw * 0.6); if (!isWater(a.x, a.z)) continue; WA.box(a.x, WY + 0.004, a.z, 0.25, 0.004, 4.5, C, yawOf(a.tx, a.tz), 0, 0, 1, NO); } }
+    const L = FZR.b3.lake, [cx, cz] = L.c; let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9; for (let i = 0; i < L.ring.length; i += 2) { x0 = Math.min(x0, L.ring[i]); x1 = Math.max(x1, L.ring[i]); z0 = Math.min(z0, L.ring[i + 1]); z1 = Math.max(z1, L.ring[i + 1]); }
+    for (let x = x0 + 6, a = 0; x < x1 - 6; x += 11) for (let z = z0 + 6; z < z1 - 6; z += 11, a++) { const ox = x + ((a * 37) % 7 - 3), oz = z + ((a * 53) % 7 - 3); if (!inPoly(ox, oz, L.ring) || !inPoly(ox + 4, oz, L.ring) || !inPoly(ox - 4, oz, L.ring)) continue; WA.box(ox, WY + 0.004, oz, 0.25, 0.004, 4.5, C, 0.6 + (a % 5) * 0.25, 0, 0, 1, NO); }
+  }
   /** 3A 白天才画的一组（g3day）：光明港东段水面亮纹 + 闽江对岸一排树冠 / 低层楼（远景，固定序列取色） */
   a3Day() {
     const A3 = FZR.a3, J = A3.mj, k = this.kit, WA = k.g('paint@sea'), P = k.solid, r = RIVERS.gm;
@@ -998,6 +1009,7 @@ export class FzRiverStreet extends XmStreet {
       set(gn.c2mj, p.z < FZR.c2.sluice.z + (NL ? NL.c2mj : 450)); ZS.forEach((z0_, i) => { const z1_ = i + 1 < ZS.length ? ZS[i + 1] : 1e9, d = (p.z < z0_ ? z0_ - p.z : p.z > z1_ ? p.z - z1_ : 0) + (NL ? 430 - NL.gN : 0); set(gn['gN' + i], d < 430 && !corrP); });
       for (const i of this.c2Detail) { const zt = z0 - i * C2D, zb = zt - C2D, d = p.z > zt ? p.z - zt : p.z < zb ? zb - p.z : 0; set(gn['c2d:' + i], d < (NL ? NL.c2d : 110)); }
     }
+    if (gn.g3bday) { const on = !this.nightLod && FZR.b3.zone.some(q => p.x > q[0] && p.x < q[2] && p.z > q[1] && p.z < q[3]); if (force || gn.g3bday.isEnabled(false) !== on) gn.g3bday.setEnabled(on); }   // 3B 白天组：只白天 + 人在 3B 一带
     if (gn.g3day) { const on = !this.nightLod && p.x > FZR.a3.x0 - 60; if (force || gn.g3day.isEnabled(false) !== on) gn.g3day.setEnabled(on); }   // 3A 白天组：只白天 + 人在光明港码头往东一带
     if (this.tileCull) this.tileCull.update(this.scene.activeCamera, { px: this.wx(p.x), pz: this.wz(p.z), detR: (NL ? NL.near : NEAR) + CELL * 0.7, detOn: !corrP });
   }

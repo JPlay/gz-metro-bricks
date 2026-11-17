@@ -825,7 +825,7 @@ if B3:
   _pk = lakeG.buffer(LB + 40).bounds
   B3DATA = {'jnLen': round(jn.length, 2), 'fbLen': round(fb.length, 2), 'bridges': [b['id'] for b in BR3B], 'signs': SIGNS3B, 'lamps': LAMPS3B,
             'lake': {'zh': '琴亭湖', 'en': 'Qinting Lake', 'c': [round(lakeG.centroid.x, 2), round(lakeG.centroid.y, 2)], 'mouthS': round(_sm, 2), 'band': LB, 'ring': [v for x, z in list(lakeG.exterior.coords)[:-1] for v in (round(x, 2), round(z, 2))]},
-            'park': [round(v, 1) for v in _pk], 'fbMouth': {'gmS': round(_sM, 2), 'moved': FB_MOUTH_MOVE, 'x': round(_Ag[0], 2), 'z': round(_Ag[1], 2)},
+            'park': [round(v, 1) for v in _pk], 'zone': [[round(v, 1) for v in g.buffer(140).bounds] for g in (jn.union(lakeG), fb)], 'fbMouth': {'gmS': round(_sM, 2), 'moved': FB_MOUTH_MOVE, 'x': round(_Ag[0], 2), 'z': round(_Ag[1], 2)},
             'gone': {'houses': GONE_H, 'trees': GONE_T},
             'note': '3B：晋安河北段 1:4（OSM way 209804035 + 湖口 4 段无名 river way）+ 琴亭湖（way 286203565，1:4 缩）+ 凤坂河 1:4（way 456904974，南口落在光明港中线上）；只走路，不开船线、不加码头 / 出口；桥只放 OSM 有名的路桥'}
 

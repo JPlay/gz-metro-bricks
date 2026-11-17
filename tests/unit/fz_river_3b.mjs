@@ -43,6 +43,11 @@ for (const id of ['jn', 'fb']) { const L = RV[id].line, c = F.rivers[id].p, pts 
   const lb = B3.lamps.filter(l => !R.isLand(l[0], l[1]) || !R.isLand(l[4], l[5])); ok(`lake lamps (${B3.lamps.length}) + benches on land`, !lb.length, lb.slice(0, 3));
   ok('lake lamps drawn in det cells (no new draw), night halo + ground pool + lake streak in fzNight', /lakeLamps\(\) \{\s*for \(const \[x, z, fx, fz, bx, bz\] of FZR\.b3\.lamps\) this\.det\(/.test(fsrc) && /FZR\.b3/.test(nsrc));
   ok('park skirt painted grass (inQ)', /inQ\(x, z\)/.test(fsrc)); }
+// 夜里 draw 不超过白天：3B 水面亮纹单独一组 g3bday，只白天 + 人在 3B 一带开，夜里关掉腾出夜灯那一个 draw
+{ const ld = fsrc.slice(fsrc.indexOf('  lodNow(force) {'), fsrc.indexOf('  refreshTilesIfTurned() {'));
+  ok('g3bday (jn / fb / lake glints): day-only group, off whenever nightLod, on only inside the two 3B zones', /if \(FZR\.b3\) \{ this\.b3Day\(\); k\.group\('g3bday'\); \}/.test(fsrc) && /gn\.g3bday\) \{ const on = !this\.nightLod && FZR\.b3\.zone\.some/.test(ld) && B3.zone.length === 2);
+  ok('g3bday skips tileCull / frustum culling (stable day count)', /g3bday\.getChildMeshes\(\)\) \{ m\.metadata = Object\.assign\(\{\}, m\.metadata, \{ noTileCull: true \}\); m\.alwaysSelectAsActiveMesh = true;/.test(fsrc));
+  ok('jn / fb glints not in the always-on water (rest) loop', /if \(FZR\.b3 && \(id === 'jn' \|\| id === 'fb'\)\) continue;/.test(fsrc)); }
 // 牌子
 { const s = B3.signs; ok('signs: 琴亭湖 / Qinting Lake + 凤坂河 / Fengban River, on land', s.map(q => q.lines.join('/')).join() === '琴亭湖/Qinting Lake,凤坂河/Fengban River' && s.every(q => R.isLand(q.x, q.z)));
   ok('signs drawn in b3Static before g0 group', fsrc.indexOf('if (FZR.b3) this.b3Static();') > 0 && fsrc.indexOf('if (FZR.b3) this.b3Static();') < fsrc.indexOf("k.group('g0')")); }
