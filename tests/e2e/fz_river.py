@@ -698,6 +698,16 @@ async def rpt(pg, rid, s_, lat):
     """3B：河 rid 中线 s、横向 lat（W 局部）→ 世界坐标"""
     q = await pg.evaluate(f"(async () => {{ const M = await import('/js/data/fz-river.js'); const a = M.RIVERS['{rid}'].line.at({s_}, {lat}); return [a.x, a.z]; }})()")
     return await W(pg, *q)
+CLEARJS = """(async () => { const M = await import('/js/data/fz-river.js'), F = M.FZR, RV = M.RIVERS, rid = '%s', s0 = %s, lat = %s, tgt = %s;
+  const TR = F.trees.filter(t => t[5] !== 'gone'), seg = (p, a, b) => { const dx = b[0] - a[0], dz = b[1] - a[1], L2 = dx * dx + dz * dz, u = Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dz) / L2)); return Math.hypot(p[0] - a[0] - u * dx, p[1] - a[1] - u * dz); };
+  const clear = (c, t) => { const d = Math.hypot(t[0] - c[0], t[1] - c[1]), ux = (t[0] - c[0]) / d, uz = (t[1] - c[1]) / d, e = [c[0] + ux * Math.min(30, d), c[1] + uz * Math.min(30, d)];
+    return !TR.some(q => { const qx = q[0] - c[0], qz = q[1] - c[1], r = Math.hypot(qx, qz), f = (qx * ux + qz * uz) / (r || 1); return (r < 16 && f > Math.cos(0.8)) || seg(q, c, e) < 1.8; }); };
+  const nearB = s => M.BRIDGES.some(b => b.river === rid && Math.abs(b.s - s) < b.w / 2 + 6);
+  for (const k of [0, 1, -1, 2, -2, 3, -3, 4, -4, 5, -5, 6, -6, 7, -7, 8, -8]) { const s = s0 + k * 4; if (s < 2 || s > RV[rid].line.len - 2 || nearB(s)) continue; const a = RV[rid].line.at(s, lat), c = [a.x, a.z]; if (M.isLand(a.x, a.z) && clear(c, tgt)) return c; }
+  const a = RV[rid].line.at(s0, lat); return [a.x, a.z]; })()"""
+async def clear_bank(pg, rid, s_, lat, tgt_local):
+    """3B 机位：岸边贴栏杆、16 m 内画面里没有树干（同 fz_3b_shots.py），返回世界坐标"""
+    return await W(pg, *(await pg.evaluate(CLEARJS % (rid, s_, lat, json.dumps(list(tgt_local))))))
 async def b3_fall(pg, rid, s_, tag):
     """3B 没有码头 / 台阶口（岸边全是栏杆）：直接放进河心水里 → 「回到岸上」→ 落在岸地上（不是水里 / 桥上）"""
     x, z = await rpt(pg, rid, s_, 0)
@@ -717,7 +727,8 @@ async def b3_rail(pg, rid, s_, lat, tag):
     a = await rpt(pg, rid, s_, lat); b = await rpt(pg, rid, s_, 0)
     await go(pg, *a, f'→ rail test {tag}'); await legs(pg, [b], False); await asyncio.sleep(0.6); s = await st(pg)
     return ok(f'h_rail:{tag}:bank railing keeps you on the promenade', s['pos'][1] > -0.3, s['pos'])
-async def b3_spot(pg, label, tgt, pitch=0.04, name=None):
+async def b3_spot(pg, label, tgt, pitch=0.04, name=None, cam=None):
+    if cam: okc = await go(pg, *cam, '→ 机位 ' + label); ok(f'h:walk to view spot {label}', okc and await near(pg, *cam, 1.5), (await st(pg))['pos'])
     if OUT and name:
         if await pg.evaluate("__game.player.view") != 'first': await pg.evaluate('__game.toggleView()')
         await look(pg, *tgt, pitch); await shot(pg, name)
@@ -733,10 +744,11 @@ async def run_3b(pg):
     R['perf']['h:kiosk:fzdm'] = await sample4(pg, 'h:kiosk:fzdm')
     # ---- 晋安河北段：斗门 C 口 → 温泉公园路桥北头 → 沿西岸往北（过华林路 / 北二环 / 农信路桥头）→ 琴亭湖口 ----
     p0 = await rpt(pg, 'jn', J - 40, hj + 2.5); okw = await go(pg, *p0, '斗门 C → 晋安河北段（温泉公园路桥北）'); ok('h:walk fzdm C → jn south end', okw and await near(pg, *p0, 1.5), (await st(pg))['pos'])
-    await b3_spot(pg, 'h:jn_south', await rpt(pg, 'jn', J - 140, 0), 0.03, 'h_jn_south_looking_north')
+    jt = await pg.evaluate(f"(async () => {{ const M = await import('/js/data/fz-river.js'); const a = M.RIVERS.jn.line.at({J} - 140, 0); return [a.x, a.z]; }})()")
+    await b3_spot(pg, 'h:jn_south', await W(pg, *jt), 0.03, 'h_jn_south_looking_north', cam=await clear_bank(pg, 'jn', J - 50, hj + 1.3, jt))
     for bid in ('jn3', 'jn2', 'jn1'):
-        b = BR[bid]; q = await rpt(pg, 'jn', b['s'] + b['w'] / 2 + 10, hj + 2.5)
-        okw = await go(pg, *q, f'→ {b["name"]} 桥头（南）'); ok(f'h:walk to {b["name"]} ({bid})', okw and await near(pg, *q, 1.5), (await st(pg))['pos'])
+        b = BR[bid]; q = await clear_bank(pg, 'jn', b['s'] + b['w'] / 2 + 28, hj + 1.3, (b['x'], b['z']))
+        okw = await go(pg, *q, f'→ {b["name"]} 桥南岸边'); ok(f'h:walk to {b["name"]} ({bid})', okw and await near(pg, *q, 1.5), (await st(pg))['pos'])
         await b3_spot(pg, f'h:{bid}:bank', await W(pg, b['x'], b['z']), 0.04, f'h_{bid}_bridge_from_bank')
     # 华林路桥（jn3）上过河、对岸往回看
     b = BR['jn3']; e1 = await W(pg, b['x'] + b['n'][0] * (b['half'] + 3), b['z'] + b['n'][1] * (b['half'] + 3)); e2 = await W(pg, b['x'] - b['n'][0] * (b['half'] + 3), b['z'] - b['n'][1] * (b['half'] + 3))
@@ -746,7 +758,7 @@ async def run_3b(pg):
     ms = B3['lake']['mouthS']; qm = await rpt(pg, 'jn', ms + 12, hj + 2.5); okw = await go(pg, *qm, '→ 琴亭湖口'); ok('h:walk to 琴亭湖 mouth', okw and await near(pg, *qm, 1.5), (await st(pg))['pos'])
     sg = [q for q in B3['signs'] if q['id'] == 'qth'][0]; sp = await W(pg, sg['x'] - sg['f'][0] * 5, sg['z'] - sg['f'][1] * 5); await go(pg, *sp, '→ 琴亭湖牌')
     await b3_spot(pg, 'h:qth_sign', await W(pg, sg['x'], sg['z']), 0.08, 'h_qth_sign')
-    await b3_spot(pg, 'h:qth_mouth', await W(pg, *B3['lake']['c']), 0.03, 'h_qth_lake_from_mouth')
+    await b3_spot(pg, 'h:qth_mouth', await W(pg, *B3['lake']['c']), 0.03, 'h_qth_lake_from_mouth', cam=await clear_bank(pg, 'jn', ms + 6, hj + 1.3, B3['lake']['c']))
     # 湖岸步道走一段（离湖口最远的那段湖岸），看湖
     rg = B3['lake']['ring']; pts = [(rg[i], rg[i + 1]) for i in range(0, len(rg), 2)]; c = B3['lake']['c']; m0 = await rpt(pg, 'jn', ms, 0)
     sx, sz = await W(pg, 0, 0); far = max(pts, key=lambda q: math.hypot(q[0] + sx - m0[0], q[1] + sz - m0[1])); dd = math.hypot(far[0] - c[0], far[1] - c[1])
@@ -769,18 +781,20 @@ async def run_3b(pg):
     sg = [q for q in B3['signs'] if q['id'] == 'fbh'][0]; sp = await W(pg, sg['x'] + sg['f'][0] * 5, sg['z'] + sg['f'][1] * 5); okw = await go(pg, *sp, '→ 凤坂河牌')
     ok('h:walk to 凤坂河 mouth sign', okw and await near(pg, *sp, 1.5), (await st(pg))['pos'])
     await b3_spot(pg, 'h:fb_sign', await W(pg, sg['x'], sg['z']), 0.08, 'h_fb_sign')
-    await b3_spot(pg, 'h:fb_mouth', await rpt(pg, 'fb', F_ - 80, 0), 0.03, 'h_fb_mouth_looking_north')
+    ft = await pg.evaluate(f"(async () => {{ const M = await import('/js/data/fz-river.js'); const a = M.RIVERS.fb.line.at({F_} - 90, 0); return [a.x, a.z]; }})()")
+    await b3_spot(pg, 'h:fb_mouth', await W(pg, *ft), 0.03, 'h_fb_mouth_looking_north', cam=await clear_bank(pg, 'fb', F_ - 22, -(hf + 1.3), ft))
     for bid in ('fb4', 'fb3', 'fb2', 'fb1'):
-        b = BR[bid]; q = await rpt(pg, 'fb', b['s'] + b['w'] / 2 + 10, hf + 2.5)
-        okw = await go(pg, *q, f'→ {b["name"]} 桥头（南）'); ok(f'h:walk to {b["name"]} ({bid})', okw and await near(pg, *q, 1.5), (await st(pg))['pos'])
+        b = BR[bid]; q = await clear_bank(pg, 'fb', b['s'] + b['w'] / 2 + 28, hf + 1.3, (b['x'], b['z']))
+        okw = await go(pg, *q, f'→ {b["name"]} 桥南岸边'); ok(f'h:walk to {b["name"]} ({bid})', okw and await near(pg, *q, 1.5), (await st(pg))['pos'])
         await b3_spot(pg, f'h:{bid}:bank', await W(pg, b['x'], b['z']), 0.04, f'h_{bid}_bridge_from_bank')
-    qn = await rpt(pg, 'fb', 30, hf + 2.5); okw = await go(pg, *qn, '→ 凤坂河北头'); ok('h:walk to 凤坂河 north end', okw and await near(pg, *qn, 1.5), (await st(pg))['pos'])
+    nt = await pg.evaluate("(async () => { const M = await import('/js/data/fz-river.js'); const a = M.RIVERS.fb.line.at(0, 0); return [a.x, a.z]; })()")
+    qn = await clear_bank(pg, 'fb', 34, hf + 1.3, nt); okw = await go(pg, *qn, '→ 凤坂河北头'); ok('h:walk to 凤坂河 north end', okw and await near(pg, *qn, 1.5), (await st(pg))['pos'])
     await b3_spot(pg, 'h:fb_north_end', await rpt(pg, 'fb', 0, 0), 0.1, 'h_fb_north_end_cap')
     b = BR['fb1']; e1 = await W(pg, b['x'] + b['n'][0] * (b['half'] + 3), b['z'] + b['n'][1] * (b['half'] + 3)); e2 = await W(pg, b['x'] - b['n'][0] * (b['half'] + 3), b['z'] - b['n'][1] * (b['half'] + 3))
     okc = await go(pg, *e1, '→ 福马路桥一头') and await legs(pg, [await W(pg, b['x'], b['z']), e2], True)
     ok('h:cross 福马路 bridge on foot', okc and await near(pg, *e2, 2.0) and (await st(pg))['pos'][1] > -0.3, (await st(pg))['pos'])
     R['perf']['h:fb1:deck'] = await sample4(pg, 'h:fb1:deck')
-    qb = await rpt(pg, 'fb', BR['fb5']['s'] - BR['fb5']['w'] / 2 - 12, -(hf + 2.5)); okw = await go(pg, *qb, '凤坂河西岸 → 远洋路桥北头'); ok('h:walk back down the 凤坂河 west bank', okw and await near(pg, *qb, 1.5), (await st(pg))['pos'])
+    qb = await clear_bank(pg, 'fb', BR['fb5']['s'] - BR['fb5']['w'] / 2 - 30, -(hf + 1.3), (BR['fb5']['x'], BR['fb5']['z'])); okw = await go(pg, *qb, '凤坂河西岸 → 远洋路桥北头'); ok('h:walk back down the 凤坂河 west bank', okw and await near(pg, *qb, 1.5), (await st(pg))['pos'])
     await b3_spot(pg, 'h:fb5:bank', await W(pg, BR['fb5']['x'], BR['fb5']['z']), 0.04, 'h_fb5_bridge_from_bank')
     await b3_rail(pg, 'fb', 260, -(hf + 2.5), 'fb')
     await b3_fall(pg, 'fb', 300, 'fb')
