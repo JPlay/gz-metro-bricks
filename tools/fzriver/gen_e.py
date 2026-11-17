@@ -759,10 +759,31 @@ if B3:
   (_sx, _sz), _st, _sn = at_s('fb', fb.length - HW['gm'] - 12.0, _fe * (HW['fb'] + 4.0))
   SIGNS3B = [{'id': 'qth', 'x': round(_lx, 2), 'z': round(_lz, 2), 'f': [round(_lt[0], 4), round(_lt[1], 4)], 'lines': ['琴亭湖', 'Qinting Lake']},
              {'id': 'fbh', 'x': round(_sx, 2), 'z': round(_sz, 2), 'f': [round(_st[0], 4), round(_st[1], 4)], 'lines': ['凤坂河', 'Fengban River']}]
+  # ---- 琴亭湖（小美 11-17）：离湖口最远那一侧岸墙改草坡（墙 flag 3：只留不可见碰撞，不画石栏 / 墙面），坡顶岸上一座琴亭（有匾）----
+  _M = at_s('jn', _sm)[0]; _C = lakeG.centroid; _ul = math.hypot(_C.x - _M[0], _C.y - _M[1]); _ux, _uz = (_C.x - _M[0]) / _ul, (_C.y - _M[1]) / _ul
+  SLOPE3B = []
+  for w in W3B:
+    if w[4] != 0: continue
+    m_ = Point((w[0] + w[2]) / 2, (w[1] + w[3]) / 2)
+    if lakeG.exterior.distance(m_) > 0.6 or m_.distance(Point(_M)) < 40: continue
+    vx, vz = m_.x - _C.x, m_.y - _C.y; vl = math.hypot(vx, vz) or 1
+    if (vx * _ux + vz * _uz) / vl < math.cos(math.radians(70)): continue
+    w[4] = 3; SLOPE3B.append(w[:4] + [w[5]])
+  _best = None
+  for w in sorted(SLOPE3B, key=lambda w: -(((w[0] + w[2]) / 2 - _C.x) * _ux + ((w[1] + w[3]) / 2 - _C.y) * _uz)):
+    L_ = math.dist(w[:2], w[2:4]) or 1; dx_, dz_ = (w[2] - w[0]) / L_, (w[3] - w[1]) / L_; nx_, nz_ = -w[4] * dz_, w[4] * dx_   # 朝岸上
+    for off in (11.5, 12.5, 10.5):
+      cx, cz = (w[0] + w[2]) / 2 + nx_ * off, (w[1] + w[3]) / 2 + nz_ * off
+      if land.buffer(-0.5).contains(Point(cx, cz).buffer(4.6)) and not water.buffer(3.0).intersects(Point(cx, cz).buffer(4.6)): _best = (cx, cz, -nx_, -nz_); break
+    if _best: break
+  assert _best, 'no room for 琴亭'
+  TING3B = {'x': round(_best[0], 2), 'z': round(_best[1], 2), 'f': [round(_best[2], 4), round(_best[3], 4)], 'zh': '琴亭', 'en': 'Qinting Pavilion'}
+  print('3B lake slope walls', len(SLOPE3B), 'len', round(sum(math.dist(w[:2], w[2:4]) for w in SLOPE3B), 1), 'ting', TING3B)
+  _tingP = Point(TING3B['x'], TING3B['z']).buffer(7.0)
   # ---- 房子（晋安河北段 / 凤坂河两岸，另一串随机数，四面贴立面）+ 琴亭湖外一圈楼（湖边步道外，远景，看得见、走不到）----
   R3B = random.Random(321)
   occB = unary_union([water.buffer(7.5)] + [r['poly'].buffer(0.5) for r in ROADS + ROADS3B] + [b['foot'].buffer(3) for b in BR] + [lakeG.buffer(LB + 1.0)]
-                     + [Point(s_['x'], s_['z']).buffer(7) for s_ in SIGNS3B] + [_hpoly(h).buffer(0.6) for h in HOUSES if not h.get('gone')]
+                     + [Point(s_['x'], s_['z']).buffer(7) for s_ in SIGNS3B] + [_tingP] + [_hpoly(h).buffer(0.6) for h in HOUSES if not h.get('gone')]
                      + [LineString([(K_['x'], K_['z']), (K_['x'], K_['z'] + 28)]).buffer(9) for K_ in KIOSK.values()])
   for k_ in ('jn', 'fb'):
     g_ = CL[k_]; hw_ = HW[k_]; bd_ = BAND[k_]
@@ -796,7 +817,7 @@ if B3:
   print('3B houses', _nHr - _nH0, 'lake backdrop', len(HOUSES) - _nHr)
   # ---- 树：两岸榕树（同 1B / 3A：岸墙后 1.7 m，15–22 m 一棵，主干直立）；湖边一圈柳（kind lake，同 2A 西湖）----
   treeOccB = unary_union([b['foot'].buffer(2.5) for b in BR] + [g.buffer(1.5) for g in GAPS] + [r['poly'] for r in ROADS + ROADS3B] + [p.buffer(1.0) for p in DRY]
-                         + [Point(s_['x'], s_['z']).buffer(4.0) for s_ in SIGNS3B] + [lakeG.buffer(LB * 0.5)])
+                         + [Point(s_['x'], s_['z']).buffer(4.0) for s_ in SIGNS3B] + [_tingP, lakeG.buffer(LB * 0.5)])
   for k_ in ('jn', 'fb'):
     g_ = CL[k_]; hw_ = HW[k_]
     for side in (-1, 1):
@@ -809,7 +830,7 @@ if B3:
   _lr = lakeG.buffer(2.2, quad_segs=4).exterior; _d = R3B.uniform(2, 6)
   while _d < _lr.length:
     q = _lr.interpolate(_d); nr = lakeG.exterior.interpolate(lakeG.exterior.project(q)); fx_, fz_ = tdir((q.x, q.y), (nr.x, nr.y))
-    if land.contains(q) and not water.buffer(1.0).contains(q) and not treeOccB.difference(lakeG.buffer(LB * 0.5)).contains(q):
+    if land.contains(q) and not water.buffer(1.0).contains(q) and not treeOccB.difference(lakeG.buffer(LB * 0.5)).contains(q) and not _tingP.contains(q):
       TREES.append([round(q.x, 2), round(q.y, 2), round(fx_, 3), round(fz_, 3), round(R3B.uniform(0.85, 1.15), 2), 'lake'])
     _d += R3B.uniform(12, 17)
   print('3B trees', len(TREES) - _nT0)
@@ -817,7 +838,7 @@ if B3:
   LAMPS3B = []; _r52 = lakeG.buffer(5.2, quad_segs=4).exterior; _r42 = lakeG.buffer(4.2, quad_segs=4).exterior
   for i in range(int(_r52.length // 34)):
     q = _r52.interpolate(17 + i * 34); nr = lakeG.exterior.interpolate(lakeG.exterior.project(q)); fx_, fz_ = tdir((q.x, q.y), (nr.x, nr.y))
-    if not land.buffer(-0.6).contains(q) or water.buffer(2.0).difference(lakeG.buffer(0.5)).contains(q): continue
+    if not land.buffer(-0.6).contains(q) or water.buffer(2.0).difference(lakeG.buffer(0.5)).contains(q) or _tingP.buffer(2.0).contains(q): continue
     bq = _r42.interpolate(_r42.project(q) + 9)
     LAMPS3B.append([round(q.x, 2), round(q.y, 2), round(fx_, 4), round(fz_, 4), round(bq.x, 2), round(bq.y, 2)])
   print('3B lake lamps', len(LAMPS3B))
@@ -826,7 +847,8 @@ if B3:
   B3DATA = {'jnLen': round(jn.length, 2), 'fbLen': round(fb.length, 2), 'bridges': [b['id'] for b in BR3B], 'signs': SIGNS3B, 'lamps': LAMPS3B,
             'lake': {'zh': '琴亭湖', 'en': 'Qinting Lake', 'c': [round(lakeG.centroid.x, 2), round(lakeG.centroid.y, 2)], 'mouthS': round(_sm, 2), 'band': LB, 'ring': [v for x, z in list(lakeG.exterior.coords)[:-1] for v in (round(x, 2), round(z, 2))]},
             'park': [round(v, 1) for v in _pk], 'zone': [[round(v, 1) for v in g.buffer(140).bounds] for g in (jn.union(lakeG), fb)], 'fbMouth': {'gmS': round(_sM, 2), 'moved': FB_MOUTH_MOVE, 'x': round(_Ag[0], 2), 'z': round(_Ag[1], 2)},
-            'gone': {'houses': GONE_H, 'trees': GONE_T},
+            'gone': {'houses': GONE_H, 'trees': GONE_T}, 'slope': SLOPE3B, 'ting': TING3B,
+            'grey': {'bridges': [_gm3['id']], 'roads': [r['id'] for r in ROADS if r.get('name') == '前横南路' and r.get('stub')]},
             'note': '3B：晋安河北段 1:4（OSM way 209804035 + 湖口 4 段无名 river way）+ 琴亭湖（way 286203565，1:4 缩）+ 凤坂河 1:4（way 456904974，南口落在光明港中线上）；只走路，不开船线、不加码头 / 出口；桥只放 OSM 有名的路桥'}
 
 def r2(v): return round(v, 2)

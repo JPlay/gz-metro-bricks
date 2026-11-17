@@ -32,14 +32,26 @@ for (const id of ['jn', 'fb']) { const L = RV[id].line, c = F.rivers[id].p, pts 
   const gaps = []; for (const r of ['jn', 'fb']) { const bs = b3.filter(b => b.river === r).sort((a, c) => a.s - c.s); for (let i = 1; i < bs.length; i++) gaps.push(bs[i].s - bs[i].w / 2 - (bs[i - 1].s + bs[i - 1].w / 2)); }
   ok(`deck gaps between neighbouring bridges ≥ 10 m (min ${Math.min(...gaps).toFixed(1)})`, Math.min(...gaps) >= 10, gaps);
   const f5 = b3.find(b => b.id === 'fb5'); ok('远洋路 deck edge ≥ 8 m from the 光明港 bank', RV.fb.line.len - (f5.s + f5.w / 2) >= 8 + F.rivers.gm.hw - F.rivers.gm.hw, RV.fb.line.len - (f5.s + f5.w / 2));
-  ok('3B road decks: same dark-grey a3Deck (no asphalt bucket)', /\|\| b\.b3\)\) this\.a3Deck\(b, F, w, half\)/.test(fsrc));
-  const st = fsrc.slice(fsrc.indexOf('if (r.b3) {'), fsrc.indexOf('if (r.b3) {') + 900);
+  ok('3B road decks: same dark-grey a3Deck (no asphalt bucket)', /\|\| b\.b3 \|\| \(FZR\.b3 && FZR\.b3\.grey && FZR\.b3\.grey\.bridges\.includes\(b\.id\)\)\)\) this\.a3Deck\(b, F, w, half\)/.test(fsrc));
+  // 小美 11-17 ①：凤坂河口牌后面那段 1B 前横南路（gm3 桥面 + 两头 stub）也换成深灰沥青
+  ok('fb_sign: 前横南路 gm3 deck + its stubs listed as grey (dark granite, not the navy asphalt bucket)', F.b3.grey && F.b3.grey.bridges.join() === 'gm3' && F.b3.grey.roads.length === 2 && F.b3.grey.roads.every(id => { const r = F.roads.find(q => q.id === id); return r && r.name === '前横南路' && r.stub; }), F.b3.grey);
+  const st = fsrc.slice(fsrc.indexOf('if (r.b3 ||'), fsrc.indexOf('if (r.b3 ||') + 1100);
   ok('3B road stubs: dark granite #4E5155 + double yellow + white edges', /#4E5155/.test(st) && /E2B53A/.test(st) && !/asphalt/.test(st));
   ok('every 3B bridge has road stubs on both ends', b3.every(b => F.roads.filter(r => r.b3 && r.stub && r.name === b.name).length >= 2), b3.map(b => [b.name, F.roads.filter(r => r.b3 && r.name === b.name).length])); }
 // 琴亭湖
 { const L = B3.lake, c = L.c; ok('琴亭湖 / Qinting Lake: centre is water, ring ≥ 40 pts', L.zh === '琴亭湖' && L.en === 'Qinting Lake' && R.isWater(c[0], c[1]) && L.ring.length >= 80);
   const bad = []; for (let i = 0; i < L.ring.length; i += 8) { const x = L.ring[i], z = L.ring[i + 1], dx = x - c[0], dz = z - c[1], d = Math.hypot(dx, dz); if (!R.isLand(x + dx / d * 4, z + dz / d * 4) && !R.isWater(x + dx / d * 4, z + dz / d * 4)) bad.push([x, z]); }
   ok('lake ring: 4 m outside is a walkable bank (or another channel)', !bad.length, bad.slice(0, 4));
+  // 小美 11-17 ③：远岸一段石岸改草坡（墙 flag 3 = 不可见碰撞，没有石栏 / 墙面）+ 岸上琴亭
+  const SL = B3.slope || [], slen = SL.reduce((a, w) => a + Math.hypot(w[2] - w[0], w[3] - w[1]), 0), key = w => w.slice(0, 4).join();
+  const wk = new Map(F.wall.map(w => [key(w), w]));
+  ok(`lake grass slope: ${SL.length} ring walls (${slen.toFixed(0)} m) are flag 3 (invisible collider, no rail / face), away from the jn mouth`, SL.length >= 8 && slen >= 60 && SL.every(w => wk.get(key(w)) && wk.get(key(w))[4] === 3), SL.length);
+  ok('slope: water on the sg side, land on the other (grass strip on land)', SL.every(([ax, az, bx, bz, sg]) => { const L = Math.hypot(bx - ax, bz - az), mx = (ax + bx) / 2, mz = (az + bz) / 2, rx = (bz - az) / L * sg, rz = -(bx - ax) / L * sg; return R.isWater(mx + rx * 2, mz + rz * 2) && R.isLand(mx - rx * 2, mz - rz * 2); }));
+  const T = B3.ting; ok('琴亭 / Qinting Pavilion on land by the slope, faces the lake, clear of lamps / trees', T && T.zh === '琴亭' && T.en === 'Qinting Pavilion' && [[-4.2, -4.2], [4.2, -4.2], [4.2, 4.2], [-4.2, 4.2]].every(([u, v]) => R.isLand(T.x + T.f[1] * u + T.f[0] * v, T.z - T.f[0] * u + T.f[1] * v)) && R.isWater(T.x + T.f[0] * 20, T.z + T.f[1] * 20)
+     && B3.lamps.every(l => Math.hypot(l[0] - T.x, l[1] - T.z) > 7) && F.trees.every(t => t[5] === 'gone' || Math.hypot(t[0] - T.x, t[1] - T.z) > 6.5), T);
+  ok('slope + 琴亭 drawn in existing buckets (kit.solid / granite / atlas; no new group / mesh / light)', /b3Slope\(\) \{\s*const P = this\.kit\.solid/.test(fsrc) && /b3Ting\(\) \{[\s\S]{0,400}const k = this\.kit, P = k\.solid, GR = k\.g\('granite'\), A = this\.atlas/.test(fsrc) && !/b3Ting[\s\S]{0,3000}(PointLight|ShadowGenerator|new B\.Mesh)/.test(fsrc.slice(fsrc.indexOf('b3Ting() {'), fsrc.indexOf('b3Ting() {') + 3000)));
+  // 小美 11-17 ②：两段 3B 范围里可走范围外的一圈 = 岸地同款铺地（pave + PAVEC），不留近白平面
+  ok('fb north end / 3B zones: outer skirt drawn as bank pave (PAVEC), not SKIRTC', /add\(PV, \[\{ p: P, i: Ib \}\], -0\.01, PAVEC\)/.test(fsrc) && /inBZ = \(x, z\) => !!bz && bz\.some/.test(fsrc));
   const lb = B3.lamps.filter(l => !R.isLand(l[0], l[1]) || !R.isLand(l[4], l[5])); ok(`lake lamps (${B3.lamps.length}) + benches on land`, !lb.length, lb.slice(0, 3));
   ok('lake lamps drawn in det cells (no new draw), night halo + ground pool + lake streak in fzNight', /lakeLamps\(\) \{\s*for \(const \[x, z, fx, fz, bx, bz\] of FZR\.b3\.lamps\) this\.det\(/.test(fsrc) && /FZR\.b3/.test(nsrc));
   ok('park skirt painted grass (inQ)', /inQ\(x, z\)/.test(fsrc)); }
