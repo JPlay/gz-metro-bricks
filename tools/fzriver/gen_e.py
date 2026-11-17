@@ -647,7 +647,7 @@ if B3:
   _rJ = [tuple(q) for q in E3B['jnUp']] + list(substring(RJ, 0, JA0).coords)[1:]
   _gJ = [c for c in scJ(_rJ) if math.dist(c, _ja0) > 30] + [(_ja0[0] - _tj[0] * 14, _ja0[1] - _tj[1] * 14), _ja0]
   _t0 = tdir(_gJ[1], _gJ[0]); _gJ = [(_gJ[0][0] + _t0[0] * 8, _gJ[0][1] + _t0[1] * 8)] + _gJ   # 起点伸进湖里 8 m（湖口不留缝）
-  jn = LineString(chaikin(list(LineString(_gJ).simplify(0.8).coords), 3)).simplify(0.12)
+  jn = LineString(chaikin(list(LineString(_gJ).simplify(2.5).coords), 4)).simplify(0.12)
   assert math.dist(jn.coords[-1], _ja0) < 1e-6
   CL['jn'] = jn
   lakeG = Polygon(scJ(E3B['lake'])).buffer(0).simplify(0.3)
