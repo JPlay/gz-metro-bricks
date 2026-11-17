@@ -123,6 +123,6 @@ ok('kq stair mouth open in the bank railing', (() => { const loc = (x, z) => { c
   ok(`walls: only ${lost.length} old segments replaced, all at the junction (old 光明港 end cap)`, lost.length <= 6 && lost.every(w => Math.min(w[0], w[2]) > jx), lost); }
 // ---- 3A 小美：D 船和 B 船分得开：白篷 + 蓝绿垂边 + 两头「D」牌（同一张漆面网格，不加 draw） ----
 { const bsrc = fs.readFileSync(new URL('../../js/game/fzBoat.js', import.meta.url), 'utf8'), i0 = bsrc.indexOf('小「D」牌'), blk = bsrc.slice(i0, bsrc.indexOf('// 碰撞：', i0));
-  ok('D boat: white canopy, teal trim (not red), D plates on both ends merged into the boat paint mesh (no new mesh / texture)', bsrc.includes("variant === 'white' ? '#1F8A8A'") && !bsrc.includes("variant === 'white' ? '#B3261E'") && blk.includes('P.box(0, py, z0') && blk.includes('for (const e of [-1, 1])') && !/MeshBuilder|new B\.|DynamicTexture|Material/.test(blk), blk.length); }
+  ok('D boat: white canopy, teal trim (B keeps white + red trim), D plates on both ends merged into the boat paint mesh (no new mesh / texture)', bsrc.includes("trim = hex(this.rid === 'D' ? '#1F8A8A' : this.variant === 'white' ? '#B3261E'") && blk.includes('P.box(0, py, z0') && blk.includes('for (const e of [-1, 1])') && !/MeshBuilder|new B\.|DynamicTexture|Material/.test(blk), blk.length); }
 console.log(fails.length ? `\n${fails.length} FAILED: ${fails.join(', ')}` : '\nALL PASS');
 process.exit(fails.length ? 1 : 0);

@@ -42,7 +42,7 @@ export class FzBoat {
   build() {
     const k = this.kit, P = k.solid, D = BOAT.deck, G = BOAT.gunwale, RU = BOAT.roofUnder;
     const wood = hex('#7A4E2D'), woodL = hex('#A57B4F'), dark = hex('#3B2A1E'), post = hex('#5A2E1E');
-    const canopy = hex(this.variant === 'white' ? '#F2EFE8' : '#C0392B'), trim = hex(this.variant === 'white' ? '#1F8A8A' : '#F4E6C8');   // 3A 小美：D 线白篷配蓝绿（teal）垂边，和 B 线红篷船一眼分开
+    const canopy = hex(this.variant === 'white' ? '#F2EFE8' : '#C0392B'), trim = hex(this.rid === 'D' ? '#1F8A8A' : this.variant === 'white' ? '#B3261E' : '#F4E6C8');   // 3A 小美：D 线白篷配蓝绿（teal）垂边，和 B 线（白篷红边）一眼分开
     // 船体：中段 + 两头收窄（双头）
     P.box(0, (D - 0.3) / 2, 0, BOAT.beam, D + 0.3, 6.2, wood, 0, 0, 0, 1, NO);
     for (const e of [-1, 1]) { P.box(0, (D - 0.25) / 2 + 0.03, e * 3.45, BOAT.beam * 0.78, D + 0.2, 0.9, wood, 0, 0, 0, 1, NO); P.box(0, (D - 0.2) / 2 + 0.06, e * 3.92, BOAT.beam * 0.46, D + 0.1, 0.5, wood, 0, 0, 0, 1, NO); }
