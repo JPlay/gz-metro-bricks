@@ -12,7 +12,24 @@ import asyncio, sys, json, os, time, math
 sys.path.insert(0, os.path.dirname(__file__))
 from common import *
 from journey import GCLOCK, auto, wait, log
-from perfhud import perf
+from perfhud import perf as _perf
+# 小美（11-17）：走路 / 坐船这些段用半尺寸视口（省渲染，无头 2–3 fps 快一点）；验收截图和性能采样点切回原尺寸（1112×834，和以前的数字可比）。
+# FZHALF=0 关掉（全程原尺寸）。只改测试，不改产品代码。
+FULL_VP = {'width': 1112, 'height': 834}; HALF_VP = {'width': 556, 'height': 417}; HALF = os.environ.get('FZHALF', '1') != '0'; _VP = {'depth': 0}
+async def _vp(pg, size):
+    await pg.set_viewport_size(size)
+    await pg.evaluate("new Promise(r => { __game.engine.resize(); requestAnimationFrame(() => requestAnimationFrame(r)); })")
+class FullVP:
+    """async with FullVP(pg): 里面截图 / 采样按原尺寸；可嵌套，最外层出来才切回半尺寸"""
+    def __init__(self, pg): self.pg = pg
+    async def __aenter__(self):
+        _VP['depth'] += 1
+        if HALF and _VP['depth'] == 1: await _vp(self.pg, FULL_VP); await asyncio.sleep(0.4)
+    async def __aexit__(self, *a):
+        _VP['depth'] -= 1
+        if HALF and _VP['depth'] == 0: await _vp(self.pg, HALF_VP)
+async def perf(pg, *a, **k):
+    async with FullVP(pg): return await _perf(pg, *a, **k)
 BASE = sys.argv[1] if len(sys.argv) > 1 else 'http://localhost:8123/'
 OUT = (sys.argv[2].rstrip('/') + '/') if len(sys.argv) > 2 and sys.argv[2] != '-' else None
 STAGES = set((sys.argv[3] if len(sys.argv) > 3 else 'bridges,steps,boat').split(','))
@@ -89,16 +106,18 @@ async def near(pg, x, z, r=1.0):
 async def shot(pg, name):
     if not OUT: return
     p = OUT + name + '.jpg'
-    if await safe_shot(pg, path=p, type='jpeg', quality=70): R['shots'].append(p); log('shot', p)
+    async with FullVP(pg):
+        if await safe_shot(pg, path=p, type='jpeg', quality=70): R['shots'].append(p); log('shot', p)
 async def sample(pg, label):
     d = await perf(pg, 3, 0.3); R['perf'][label] = d; return d
 async def sample4(pg, label):
     # 任意机位：四个正交朝向的峰值（和冒烟同一套），避免只采样「看向目标」的那一个角度漏掉超预算方向
     yaw0 = await pg.evaluate('__game.player.yaw')
     rows = []
-    for k in range(4):
-        await pg.evaluate(f'__game.player.yaw = {k} * Math.PI / 2; __game.player.pitch = 0.08')
-        rows.append(await perf(pg, 3, 0.3))
+    async with FullVP(pg):
+        for k in range(4):
+            await pg.evaluate(f'__game.player.yaw = {k} * Math.PI / 2; __game.player.pitch = 0.08')
+            rows.append(await perf(pg, 3, 0.3))
     await pg.evaluate(f'__game.player.yaw = {yaw0}')
     d = {**max(rows, key=lambda r: r['tris']), 'draws': max(r['draws'] for r in rows), 'tris': max(r['tris'] for r in rows)}
     R['perf'][label] = d; return d
@@ -947,6 +966,7 @@ async def main():
   async with async_playwright() as p:
     b, pg, logs = await open_game(p, BASE + '?q=1' + QS)
     await pg.evaluate(GCLOCK); await pg.evaluate(JUMP); await pg.evaluate('__game.setDtMax(0.25)'); await asyncio.sleep(1)
+    if HALF: await _vp(pg, HALF_VP); log('viewport: walking / riding at', HALF_VP, '; shots + perf at', FULL_VP)
     await pg.evaluate("""(() => { const g=__game; g.east.ensure(); g.east.side='fz'; g.east.cur={st:g.station, loc:'fzmetro', area:'metro'}; g.station.kit.root.setEnabled(false); g.fzMetro.enterFromRailway(g.player); })()""")
     await asyncio.sleep(1.5)
     if E1B or E2B or E2C or E2D or E3A:
