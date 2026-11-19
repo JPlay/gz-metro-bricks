@@ -13,9 +13,11 @@ SPOTS = """(async () => { const M = await import('/js/data/fz-river.js'); const 
   const tip = [Y.c[0] + Y.d[0] * (Y.len * 0.7), Y.c[1] + Y.d[1] * (Y.len * 0.7)];
   const Pt = (a, b) => [G.x + G.t[0] * a + G.n[0] * b, G.z + G.t[1] * a + G.n[1] * b];
   const front = Pt(-25, 0), frontS = Pt(-25, -5), frontN = Pt(-25, 8);   // 六一中路桥面、离闸 25 m 正对，三孔可数
-  const westCam = Pt(14, -8), westCamN = Pt(14, 10), westLook = Pt(34, 0), westMid = Pt(16, 0);   // 站到闸西（闸身背后）看远水两岸+楼合拢，不被闸梁挡
-  const yzCam = [Y.c[0] - Y.d[0] * 5, Y.c[1] - Y.d[1] * 5];   // 光明港河口入口、往南看两岸内转
-  const yzAlong = [Y.c[0] + Y.d[0] * 5 - Y.d[1] * (Y.hw + 4.5), Y.c[1] + Y.d[1] * 5 + Y.d[0] * (Y.hw + 4.5)];
+  // 闸西 xg 水面在 a4.xg 网格、不在 isWater/isLand：人会掉穿。03 主镜头在水面上方悬停；岸上备用站在闸西约 8 m 的南/北岸（a=8 才有地）。
+  const westCam = Pt(16, 0), westCamS = Pt(8, -22), westCamN = Pt(8, 22), westLook = Pt(34, 0), westLookS = Pt(28, 10), westLookN = Pt(28, -10);
+  // 04：站在光明港南岸、河口东侧陆地，往南看两岸内转（不要站到河心里，否则「回到岸上」）。
+  const yzCam = [Y.c[0] - Y.d[1] * 14, Y.c[1] + Y.d[0] * 14];
+  const yzAlong = [Y.c[0] + Y.d[0] * 2 - Y.d[1] * (-14), Y.c[1] + Y.d[1] * 2 + Y.d[0] * (-14)];
   const G9 = F.a3.gate;
   return [
     ['gate_from_lookout', ...front, G.x, G.z, 0.05, 0.35],
@@ -23,11 +25,11 @@ SPOTS = """(async () => { const M = await import('/js/data/fz-river.js'); const 
     ['gate_front_north_bank', ...frontN, G.x, G.z, 0.05, 0.35],
     ['sign_xingang', sg.x - sg.n[0] * 5.5, sg.z - sg.n[1] * 5.5, sg.x, sg.z, 0.12, 0.05],
     ['liuyi_bridge_from_south', b.x - b.n[0] * (b.half + 4), b.z - b.n[1] * (b.half + 4), b.x, b.z, 0.04, 0.05],
-    ['liuyi_deck_looking_west', ...westMid, ...westLook, 0.08, 1.4],
-    ['xingang_west_far_water', ...westCam, ...westLook, 0.06, 1.2],
-    ['xingang_west_from_north', ...westCamN, ...westLook, 0.06, 1.2],
-    ['yz_mouth', ...yzCam, ...tip, 0.08, 0.05],
-    ['yz_mouth_along', ...yzAlong, ...tip, 0.06, 0.05],
+    ['liuyi_deck_looking_west', ...westCamS, ...westLookS, 0.08, 0.05, 0],
+    ['xingang_west_far_water', ...westCam, ...westLook, 0.10, 1.6, 1],
+    ['xingang_west_from_north', ...westCamN, ...westLookN, 0.08, 0.05, 0],
+    ['yz_mouth', ...yzCam, ...tip, 0.10, 0.05, 0],
+    ['yz_mouth_along', ...yzAlong, ...tip, 0.08, 0.05, 0],
     ['yz_sign', yz.x - yz.f[0] * 5, yz.z - yz.f[1] * 5, yz.x, yz.z, 0.1, 0.05],
     ['join_from_east', ...(() => { const a = gm.at(30, hw + 3); return [a.x, a.z]; })(), ...at(8, 0), 0.02, 0.05],
     ['jiumen_from_lookout', ...G9.view, G9.x, G9.z, 0.02, 0.05],
@@ -48,9 +50,15 @@ async def main():
     if await pg.evaluate('__game.player.view') != 'first': await pg.evaluate('__game.toggleView()')
     spots = await pg.evaluate(SPOTS)
     ONLY = set(filter(None, os.environ.get('FZSPOTS', '').split(',')))
-    for name, x, z, tx, tz, pitch, y in spots:
+    for spot in spots:
+      hover = int(spot[7]) if len(spot) > 7 else 0
+      name, x, z, tx, tz, pitch, y = spot[:7]
       if ONLY and name not in ONLY: continue
-      await pg.evaluate(f"(() => {{ const S=__game.fzMetro.street, R=S.kit.root.position; __game.player.spawn(R.x+({x}), {y}, R.z+({z}), Math.atan2(({tx})-({x}), ({tz})-({z}))); __game.player.pitch={pitch}; }})()")
+      await pg.evaluate("(() => { const S=__game.fzMetro.street, R=S.kit.root.position, pl=__game.player;"
+                        + " if (window.__fzHold) { clearInterval(window.__fzHold); window.__fzHold=null; }"
+                        + f" pl.spawn(R.x+({x}), {y}, R.z+({z}), Math.atan2(({tx})-({x}), ({tz})-({z}))); pl.pitch={pitch};"
+                        + (f" window.__fzHold = setInterval(() => {{ pl.position.x=R.x+({x}); pl.position.y={y}; pl.position.z=R.z+({z}); pl.vy=0; pl.grounded=true; const b=document.getElementById('bShore'); if (b) b.hidden=true; }}, 16);" if hover else "")
+                        + " })()")
       await asyncio.sleep(3.0); fn = f'{OUT}/{name}_{TAG}.jpg'
       if await safe_shot(pg, path=fn, type='jpeg', quality=72): R['shots'].append(fn)
       view = await perf(pg, 3, 0.3); yaw0 = await pg.evaluate('__game.player.yaw'); rows = []
@@ -62,6 +70,7 @@ async def main():
       print('perf', name, 'view', view['draws'], view['tris'], 'yaws', [(r['draws'], r['tris']) for r in rows], 'g4day', g4, 'pos', pos, flush=True)
     R['errors'] = [l for l in errs(logs) if l[0] in ('error', 'pageerror')][:8]
     print('ERRORS', R['errors'])
+    await pg.evaluate("if (window.__fzHold) { clearInterval(window.__fzHold); window.__fzHold=null; }")
     await b.close()
   json.dump(R, open(f'{OUT}/perf_{TAG}.json', 'w'), ensure_ascii=False, indent=1, default=str)
   print('SHOTS4A DONE', TAG, flush=True)

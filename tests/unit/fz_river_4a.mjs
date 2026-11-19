@@ -58,6 +58,7 @@ ok('walk only: routes B + D unchanged, no new piers / kiosks', Object.keys(R.ROU
 ok('night lights auto-generated from RIVERS / BRIDGES (gw / 六一中路 covered)', /RIVERS/.test(nsrc) && /BRIDGES/.test(nsrc));
 ok('night: skip bridge water reflection next to a sluice (the orange tube in the 新港闸 forebay)', /nearSluice/.test(nsrc) && /g\.hw \|\| 20/.test(nsrc));
 ok('night: sluice light strips sit on pier caps + eaves (c2 / a3 / a4), not in the bays', /FZR\.a4 && FZR\.a4\.gate/.test(nsrc) && /PT \+ 0\.30/.test(nsrc) && /启闭房/.test(nsrc));
+ok('night: eave/pier flat hu,hv not swapped (hv is half-length along ax,az)', /tS\[0\], tS\[1\], 0\.10, 2\.2/.test(nsrc) && /nS\[0\], nS\[1\], 0\.08, HL \/ 2/.test(nsrc));
 // 落水回岸
 { const bad = []; const L = RV.gw.line; for (let s = 3; s < L.len - 3; s += 6) for (const l of [-4, 0, 4]) { const p = L.at(s, l); if (!R.isWater(p.x, p.z)) continue; const c = R.shoreFor(p.x, p.z); if (!c || !R.isLand(c.x, c.z)) bad.push([s, l, p.x, p.z]); }
   ok('fall in on gw → shoreFor lands on the bank (not back to the platform)', !bad.length, bad.slice(0, 5)); }
