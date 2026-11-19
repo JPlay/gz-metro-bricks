@@ -160,7 +160,7 @@ export class FzNight {
         // 贴图 v（高斯那一向）= t：离桥越远越淡；沿 n 铺满水面宽。贴着闸的桥（新港闸西沿就是六一中路）不要把倒影铺进闸前水面，否则正看闸时像河道中间掉了一根橙管
         const nearSluice = [FZR.c2 && FZR.c2.sluice, FZR.a3 && FZR.a3.gate, FZR.a4 && FZR.a4.gate, FZR.a5 && FZR.a5.gate].some(g => g && Math.hypot(cx - g.x, cz - g.z) < (g.hw || 20) + 10);
         if (hw > 1 && isWater(cx, cz) && !nearSluice) {
-          const isYz = FZR.a5 && (FZR.a5.bridges || []).includes(b.id);
+          const Z = FZR.a5 && FZR.a5.zone, isYz = FZR.a5 && ((FZR.a5.bridges || []).includes(b.id) || (Z && cx > Z[0] && cx < Z[2] && cz > Z[1] && cz < Z[3]));
           if (isYz) {   // 5：倒影留下，但改细、改暗、断开，不要一整根原木（老药洲街 / 瀛洲桥 / 河口夜图）
             const nSeg = 5, span = hw * 0.82, gap = 0.55, segL = (2 * span - (nSeg - 1) * gap) / nSeg;
             for (let k = 0; k < nSeg; k++) {
