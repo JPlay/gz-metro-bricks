@@ -175,11 +175,11 @@ async def main():
                   const x=C.x, z=C.z, tx=C.look[0], tz=C.look[2];
                   __game.player.spawn(R.x+x, C.y||0.05, R.z+z, Math.atan2(tx-x, tz-z)); __game.player.pitch=0.08; })()""",
               'beierhuan': """(async () => { const S=__game.fzMetro.street, R=S.kit.root.position; const M = await import('/js/data/fz-river.js'); const b = M.BRIDGES.find(q => q.name==='北二环' && q.river==='hq');
-                  const x=b.x+b.t[0]*-(b.w/2+22)+b.n[0]*-14, z=b.z+b.t[1]*-(b.w/2+22)+b.n[1]*-14;
+                  const x=b.x+b.t[0]*-(b.w/2+20)+b.n[0]*9, z=b.z+b.t[1]*-(b.w/2+20)+b.n[1]*9;
                   __game.player.spawn(R.x+x, 1.8, R.z+z, Math.atan2(b.x-x, b.z-z)); __game.player.pitch=0.08; })()""",
               'beilang': """(async () => { const S=__game.fzMetro.street, R=S.kit.root.position; const M = await import('/js/data/fz-river.js'); const b = M.BRIDGES.find(q => q.name==='北浪路' && q.river==='hq');
-                  const x=b.x+b.t[0]*-(b.w/2+22)+b.n[0]*-13, z=b.z+b.t[1]*-(b.w/2+22)+b.n[1]*-13;
-                  __game.player.spawn(R.x+x, 2.4, R.z+z, Math.atan2(b.x-x, b.z-z)); __game.player.pitch=0.08; })()""",
+                  const x=b.x+b.t[0]*-(b.w/2+24)+b.n[0]*8, z=b.z+b.t[1]*-(b.w/2+24)+b.n[1]*8;
+                  __game.player.spawn(R.x+x, 2.6, R.z+z, Math.atan2(b.x-x, b.z-z)); __game.player.pitch=0.08; })()""",
               'beierhuan_under': """(async () => { const S=__game.fzMetro.street, R=S.kit.root.position; const M = await import('/js/data/fz-river.js'); const U=(M.FZR.a6.under||[])[0];
                   const x=U.x, z=U.z, tx=U.x+U.t[0]*20, tz=U.z+U.t[1]*20;
                   __game.player.spawn(R.x+x, 0.05, R.z+z, Math.atan2(tx-x, tz-z)); __game.player.pitch=-0.14; })()""",

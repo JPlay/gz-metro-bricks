@@ -57,6 +57,13 @@ console.log(`INFO hq ${RV.hq.line.len.toFixed(1)} m, gate (${A6.gate.x}, ${A6.ga
   }
   ok('both are road bridges drawn with a3Deck (not raw asphalt)', bs.every(b => b.kind === 'road') && /FZR\.a6 && \(FZR\.a6\.bridges/.test(fsrc) && /b\.tall/.test(fsrc));
   ok('北二环 deck is raised (deckY≥3, rampL≥12) so the bank walkway can pass under', bs[0].deckY >= 3 && bs[0].rampL >= 12 && bs[0].half >= A6.hw1 + 3.5, { deckY: bs[0].deckY, rampL: bs[0].rampL, half: bs[0].half });
+  ok('tall ramps use colFlyRamp (not colDeck) so 2D nav treats the slope as a blocker',
+    /colFlyRamp/.test(fsrc) && /colRampWall/.test(fsrc) && !/ramp\(b, sv \* half, sv \* \(half \+ rampL\), dY, 0, -w \/ 2, w \/ 2, 0\.3, 'colDeck'\)/.test(fsrc));
+  { const b = bs[0], off = b.half + (b.rampL || 0) + 3, lat = b.w / 2 + 3;
+    const pts = [];
+    for (const sg of [-1, 1]) for (const st of [-1, 1]) pts.push([b.x + b.t[0] * st * lat + b.n[0] * sg * off, b.z + b.t[1] * st * lat + b.n[1] * sg * off]);
+    const bad = pts.filter(([x, z]) => !R.isLand(x, z) || R.isWater(x, z));
+    ok('around-path / ramp-end land is clear (houses do not block 绕行廊)', bad.length === 0, { pts, bad }); }
   { const U = (A6.under || [])[0], b = bs[0];
     const dv = U && ((U.x - b.x) * b.n[0] + (U.z - b.z) * b.n[1]);
     const du = U && ((U.x - b.x) * b.t[0] + (U.z - b.z) * b.t[1]);

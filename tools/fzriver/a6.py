@@ -188,8 +188,15 @@ def build_hq(g):
   BR6 = g['BR'][nB0:]
   for b in BR6:
     x, z, t, n, half, w = b['x'], b['z'], b['t'], b['n'], b['half'], b['w']
-    g['GAPS'].append(Polygon([(x + t[0] * a + n[0] * c, z + t[1] * a + n[1] * c) for a, c in [(-w / 2 + 0.05, -half - 0.5), (w / 2 - 0.05, -half - 0.5), (w / 2 - 0.05, half + 0.5), (-w / 2 + 0.05, half + 0.5)]]))
-    b['foot'] = Polygon([(x + t[0] * a + n[0] * c, z + t[1] * a + n[1] * c) for a, c in [(-w / 2, -half), (w / 2, -half), (w / 2, half), (-w / 2, half)]])
+    def corners(au, cv):
+      return [(x + t[0] * a + n[0] * c, z + t[1] * a + n[1] * c) for a, c in [(-au, -cv), (au, -cv), (au, cv), (-au, cv)]]
+    # 栏杆缺口只切桥面跨度，不沿河加长（岸边开口会掉水）
+    g['GAPS'].append(Polygon(corners(w / 2 - 0.05, half + 0.5)))
+    if b.get('tall') and (b.get('rampL') or 0):
+      # 匝道 + 绕行廊 + 桥头落脚清房屋/树，让 e2e 能绕到坡底再上桥
+      b['foot'] = Polygon(corners(w / 2 + 6.0, half + b['rampL'] + 4.0))
+    else:
+      b['foot'] = Polygon(corners(w / 2, half))
   ROADS6 = []
   for b in BR6:
     for sg in (-1, 1):

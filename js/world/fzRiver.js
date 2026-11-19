@@ -384,8 +384,18 @@ export class FzRiverStreet extends XmStreet {
         const pH = dY ? (b.barrier || 2.2) : 1.2;
         for (const su of [-1, 1]) { const [px, pz] = F.P(su * (w / 2 - 0.15), 0); k.col(px, dY + pH / 2, pz, 0.3, pH, 2 * half - 0.2, { ry: F.ryN, name: 'colParapet' }); }
         if (dY && rampL) for (const sv of [-1, 1]) {
-          this.ramp(b, sv * half, sv * (half + rampL), dY, 0, -w / 2, w / 2, 0.3, 'colDeck');
+          // colFlyRamp：不要叫 colDeck，否则 2D 导航把斜板投影当桥面，会从桥底下直线钻进去
+          this.ramp(b, sv * half, sv * (half + rampL), dY, 0, -w / 2, w / 2, 0.3, 'colFlyRamp');
           for (const su of [-1, 1]) this.ramp(b, sv * half, sv * (half + rampL), dY + pH * 0.7, pH * 0.7, su * (w / 2 - 0.3), su * (w / 2), 0.4, 'colParapet');
+          for (const su of [-1, 1]) {   // 侧墙：堵住从侧面钻进匝道底的缝，避免掉进梁下空档
+            const N = 4;
+            for (let i = 0; i < N; i++) {
+              const fa = i / N, fb = (i + 1) / N, va = sv * (half + rampL * fa), vb = sv * (half + rampL * fb), h = dY * (1 - fa);
+              if (h < 0.4) continue;
+              const [wx, wz] = F.P(su * (w / 2 + 0.12), (va + vb) / 2);
+              k.col(wx, h / 2, wz, 0.28, h, Math.abs(vb - va) + 0.04, { ry: F.ryN, name: 'colRampWall' });
+            }
+          }
         }
       } else {
         const N = 6;
@@ -429,6 +439,14 @@ export class FzRiverStreet extends XmStreet {
             const L = Math.hypot(rampL, dY), ang = Math.atan2(0 - dY, v1 - v0);
             GR.box(rx, dY / 2, rz, w, 0.36, L, hex('#9C978C'), F.ryN, -ang, 0, 1, NO);
             k.g('granite').box(rx, dY / 2 + 0.2, rz, w - 1.6, 0.08, L, hex('#4E5155'), F.ryN, -ang, 0, 1, NO);
+            for (const su of [-1, 1]) {   // 匝道侧墙（挡土，跟碰撞一致）
+              for (let i = 0; i < 4; i++) {
+                const fa = i / 4, fb = (i + 1) / 4, va = sv * (half + rampL * fa), vb = sv * (half + rampL * fb), h = dY * (1 - fa);
+                if (h < 0.35) continue;
+                const [wx, wz] = F.P(su * (w / 2 + 0.12), (va + vb) / 2);
+                GR.box(wx, h / 2, wz, 0.28, h, Math.abs(vb - va) + 0.04, hex('#8A8476'), F.ryN, 0, 0, 1, NO);
+              }
+            }
           }
         }
         if (b.kind === 'covered') this.pavilion(b);

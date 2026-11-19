@@ -25,9 +25,9 @@ SPOTS = """(async () => { const M = await import('/js/data/fz-river.js'); const 
   out.push(
     ['chayuan_from_lookout', ...G.view, ...(G.look || [G.x + G.n[0] * (G.houseSide || 1) * 3.2, G.z + G.n[1] * (G.houseSide || 1) * 3.2]), 0.08, 0.05, 0],
     ['chayuan_front', ...(() => { const p = [G.x + G.t[0] * -20 + G.n[0] * (G.side || -1) * 9, G.z + G.t[1] * -20 + G.n[1] * (G.side || -1) * 9]; return p; })(), G.x + G.n[0] * (G.houseSide || 1) * 3.0, G.z + G.n[1] * (G.houseSide || 1) * 3.0, 0.10, 2.4, 1],
-    ['sign_chayuan', ...signCam, ...signLook, 0.08, 0.05, 0],
-    ['beierhuan_from_bank', ...bSide(b2, -1, 22, 14), b2.x, b2.z, 0.08, 1.8, 1],
-    ['beilang_from_bank', ...bSide(b1, -1, 22, 13), b1.x, b1.z, 0.08, 2.4, 1],
+    ['sign_chayuan', ...(() => { const w = A6.sign, st = (A6.signs || []).find(s => s.id === 'cyh') || w; const mx = (w.x + st.x) / 2, mz = (w.z + st.z) / 2, nx = w.n[0], nz = w.n[1]; return [mx + nx * 5.8, mz + nz * 5.8, mx, mz]; })(), 0.10, 0.05, 0],
+    ['beierhuan_from_bank', ...bSide(b2, -1, 20, -9), b2.x, b2.z, 0.08, 1.8, 1],
+    ['beilang_from_bank', ...bSide(b1, 1, 24, 8), b1.x, b1.z, 0.08, 2.6, 1],
     ['beierhuan_under', U.x, U.z, U.x + U.t[0] * 20, U.z + U.t[1] * 20, -0.14, 0.05, 0],
     ['banks_street', ...(() => { const s = Math.max(40, (b2.s + b1.s) / 2), p = hq.at(s, -(hw + 3.8)), q = hq.at(Math.min(hq.len - 8, s + 36), 0); return [p.x, p.z, q.x, q.z]; })(), 0.08, 0.05, 0],
   );

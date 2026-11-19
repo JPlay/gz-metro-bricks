@@ -1157,11 +1157,29 @@ async def run_6a(pg):
 
     async def cross(b, from_side, label):
         off = b['half'] + 3 + ((b.get('rampL') or 0) if (b.get('tall') or b.get('deckY')) else 0)
-        a = await W(pg, b['x'] + b['n'][0] * from_side * off, b['z'] + b['n'][1] * from_side * off)
+        def xz(tu, nv):
+            return (b['x'] + b['t'][0] * tu + b['n'][0] * nv, b['z'] + b['t'][1] * tu + b['n'][1] * nv)
         mid = await W(pg, b['x'], b['z'])
-        dest = await W(pg, b['x'] - b['n'][0] * from_side * off, b['z'] - b['n'][1] * from_side * off)
-        okc = await go(pg, *a, f'→ {b["name"]} 桥头') and await legs(pg, [mid, dest], True)
-        ok(f'k:cross {b["name"]} {label}', okc and await near(pg, *dest, 2.5) and (await st(pg))['pos'][1] > -0.3, (await st(pg))['pos'])
+        dest = await W(pg, *xz(0, -from_side * off))
+        if (b.get('tall') or 0) and (b.get('rampL') or 0):
+            # 抬高匝道：先绕到坡底再沿中线上桥。colFlyRamp 让 A* 把斜板当障碍，不会从桥底下穿。
+            pos, origin = (await st(pg))['pos'], await W(pg, b['x'], b['z'])
+            cur_t = (pos[0] - origin[0]) * b['t'][0] + (pos[2] - origin[1]) * b['t'][1]
+            travel = 1 if 'west' in label else -1
+            side_in = math.copysign(b['w'] / 2 + 3.0, cur_t if abs(cur_t) > 1 else -travel)
+            around = await W(pg, *xz(side_in, from_side * off))
+            start = await W(pg, *xz(0, from_side * off))
+            okc = (await go(pg, *around, f'→ {b["name"]} 绕行')
+                   and await go(pg, *start, f'→ {b["name"]} 桥头')
+                   and await legs(pg, [mid, dest], True))
+            arrived = okc and await near(pg, *dest, 2.5) and (await st(pg))['pos'][1] > -0.3
+            if arrived:
+                await go(pg, *await W(pg, *xz(travel * (b['w'] / 2 + 3.0), -from_side * off)), f'→ {b["name"]} 绕出')
+        else:
+            a = await W(pg, *xz(0, from_side * off))
+            okc = await go(pg, *a, f'→ {b["name"]} 桥头') and await legs(pg, [mid, dest], True)
+            arrived = okc and await near(pg, *dest, 2.5) and (await st(pg))['pos'][1] > -0.3
+        ok(f'k:cross {b["name"]} {label}', arrived, (await st(pg))['pos'])
         return dest
 
     p = await bank(28, SOUTH)
