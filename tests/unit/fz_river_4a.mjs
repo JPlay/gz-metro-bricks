@@ -57,8 +57,10 @@ console.log(`INFO gw ${RV.gw.line.len.toFixed(1)} m, gate (${A4.gate.x}, ${A4.ga
 ok('walk only: routes B + D unchanged, no new piers / kiosks', Object.keys(R.ROUTES).join() === 'B,D' && !R.PIERS.some(p => p.a4) && !Object.values(R.KIOSKS).some(k => k.a4));
 ok('night lights auto-generated from RIVERS / BRIDGES (gw / 六一中路 covered)', /RIVERS/.test(nsrc) && /BRIDGES/.test(nsrc));
 ok('night: skip bridge water reflection next to a sluice (the orange tube in the 新港闸 forebay)', /nearSluice/.test(nsrc) && /g\.hw \|\| 20/.test(nsrc));
-ok('night: sluice light strips sit on pier caps + eaves (c2 / a3 / a4), not in the bays', /FZR\.a4 && FZR\.a4\.gate/.test(nsrc) && /PT \+ 0\.30/.test(nsrc) && /启闭房/.test(nsrc));
-ok('night: eave/pier flat hu,hv not swapped (hv is half-length along ax,az)', /tS\[0\], tS\[1\], 0\.10, 2\.2/.test(nsrc) && /nS\[0\], nS\[1\], 0\.08, HL \/ 2/.test(nsrc));
+ok('night: sluice light strips sit on pier caps + eaves (c2 / a3 / a4), not in the bays', /FZR\.a4 && FZR\.a4\.gate/.test(nsrc) && /PT \+ 0\.32/.test(nsrc) && /启闭房/.test(nsrc));
+ok('night: eave strip ~3x thicker, outside the cornice, still along n (hv = HL/2, not swapped)', /HA0 - 0\.22, HA1 \+ 0\.22/.test(nsrc) && /nS\[0\], nS\[1\], 0\.24, HL \/ 2/.test(nsrc) && /sc\(WARM, 1\.05\)/.test(nsrc));
+ok('night: short pier-top segments on both faces (row of dots from the front), along n, not a long flow-wise bar', /PA0 - 0\.12, PA1 \+ 0\.12/.test(nsrc) && /nS\[0\], nS\[1\], 0\.16, 0\.50/.test(nsrc) && !/tS\[0\], tS\[1\], 0\.10, 2\.2/.test(nsrc));
+ok('night: sluice lights still in the single existing lights() mesh (no extra Mesh / PointLight)', (nsrc.match(/new B\.Mesh\(/g) || []).length === 1 && !/PointLight|ShadowGenerator/.test(nsrc.slice(nsrc.indexOf('启闭房'))));
 ok('g2day (bm glints near 彬德): day-only group on a-net, off whenever nightLod, on when z < c2.z0+80', /if \(FZR\.c2\) \{ this\.c2Day\(\); k\.group\('g2day'\); \}/.test(fsrc) && /gn\.g2day\) \{ const on = !this\.nightLod && p\.z < FZR\.c2\.z0 \+ 80/.test(fsrc));
 ok('g2day skips tileCull (stable day count)', /g2day\.getChildMeshes\(\)/.test(fsrc) && /noTileCull: true/.test(fsrc));
 

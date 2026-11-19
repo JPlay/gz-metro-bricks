@@ -157,9 +157,12 @@ export class FzNight {
       const tS = S.t, nS = S.n, hw = S.hw, NB = S.bays, PW = 1.2, PT = 3.6;
       const Pt = (a, b) => [S.x + tS[0] * a + nS[0] * b, S.z + tS[1] * a + nS[1] * b];
       const PB = (() => { const o = [-hw]; if (S.bayW && S.bayW.length === NB) { const sm = S.bayW.reduce((a, b) => a + b, 0), inner = 2 * hw - NB * PW, sc = inner / sm; let v = -hw; for (let i = 0; i < NB; i++) { v += PW + S.bayW[i] * sc; o.push(v); } } else { for (let i = 1; i <= NB; i++) o.push(-hw + (2 * hw / NB) * i); } return o; })();
-      for (const v of PB) { const [x, z] = Pt(0.0, v); flat(x, PT + 0.30, z, tS[0], tS[1], 0.10, 2.2, RG.line, sc(WARM, 0.85)); }   // 墩帽顶沿水流方向；flat 的 hv 才是沿 (ax,az) 的半长
-      { const H0 = PT + 0.24, HH = 2.8, HL = 2 * hw + PW + 0.2;
-        for (const aa of [-1.6, 2.0]) { const [x, z] = Pt(aa, 0); flat(x, H0 + HH - 0.04, z, nS[0], nS[1], 0.08, HL / 2, RG.line, sc(WARM, 0.7)); } }   // 启闭房上下游檐下；hu=半宽、hv=沿 n 的半长，避免正视时 40 m 长条朝镜头伸进天空
+      // 墩帽顶：上下游各一段沿墩宽的短带（约 1 m），正视时是一排亮点。不要再沿水流拉长条（正视几乎看成一条线/看不见）。
+      const PA0 = -2.4, PA1 = 2.2;
+      for (const v of PB) for (const aa of [PA0 - 0.12, PA1 + 0.12]) { const [x, z] = Pt(aa, v); flat(x, PT + 0.32, z, nS[0], nS[1], 0.16, 0.50, RG.line, sc(WARM, 1.15)); }
+      { const H0 = PT + 0.24, HH = 2.8, HL = 2 * hw + PW + 0.2, HA0 = -1.6, HA1 = 2.0;
+        // 檐带移到檐口外侧（墙在 ±1.6/2.0，檐口只探出约 0.1 m），加厚约 3 倍、略提亮；仍用 RG.line，避免晕成一团
+        for (const aa of [HA0 - 0.22, HA1 + 0.22]) { const [x, z] = Pt(aa, 0); flat(x, H0 + HH + 0.00, z, nS[0], nS[1], 0.24, HL / 2, RG.line, sc(WARM, 1.05)); } }
     }
     // 台阶：每级踏步边沿一道暗暖光线（stairAlong 建的时候登记）
     for (const st of (S._stairs ? S._stairs.values() : [])) {
