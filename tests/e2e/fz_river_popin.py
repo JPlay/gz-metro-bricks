@@ -155,14 +155,15 @@ async def main():
                   if (window.__fzHold) { clearInterval(window.__fzHold); window.__fzHold=null; }
                   __game.player.spawn(R.x+x, 0.35, R.z+z, Math.atan2(G.x-x, G.z-z)); __game.player.pitch=0.05; })()""",
               'xg_west': """(async () => { const S=__game.fzMetro.street, R=S.kit.root.position; const M = await import('/js/data/fz-river.js'); const G = M.FZR.a4.gate;
-                  const x = G.x + G.t[0]*16, z = G.z + G.t[1]*16, tx = G.x + G.t[0]*34, tz = G.z + G.t[1]*34;
+                  const x = G.x + G.t[0]*9, z = G.z + G.t[1]*9, tx = G.x + G.t[0]*30, tz = G.z + G.t[1]*30;
                   if (window.__fzHold) { clearInterval(window.__fzHold); window.__fzHold=null; }
-                  const pl=__game.player; pl.spawn(R.x+x, 1.6, R.z+z, Math.atan2(tx-x, tz-z)); pl.pitch=0.10;
-                  window.__fzHold = setInterval(() => { pl.position.x=R.x+x; pl.position.y=1.6; pl.position.z=R.z+z; pl.vy=0; pl.grounded=true; const b=document.getElementById('bShore'); if (b) b.hidden=true; }, 16); })()""",
+                  const pl=__game.player; pl.spawn(R.x+x, 1.8, R.z+z, Math.atan2(tx-x, tz-z)); pl.pitch=0.22;
+                  window.__fzHold = setInterval(() => { pl.position.x=R.x+x; pl.position.y=1.8; pl.position.z=R.z+z; pl.vy=0; pl.grounded=true; const b=document.getElementById('bShore'); if (b) b.hidden=true; }, 16); })()""",
               'yz_mouth': """(async () => { const S=__game.fzMetro.street, R=S.kit.root.position; const M = await import('/js/data/fz-river.js'); const Y = M.FZR.a4.yz;
-                  const x = Y.c[0] - Y.d[1]*14, z = Y.c[1] + Y.d[0]*14, tx = Y.c[0] + Y.d[0]*(Y.len*0.7), tz = Y.c[1] + Y.d[1]*(Y.len*0.7);
+                  const x = Y.c[0] - Y.d[0]*8, z = Y.c[1] - Y.d[1]*8, tx = Y.c[0] + Y.d[0]*(Y.len*0.7), tz = Y.c[1] + Y.d[1]*(Y.len*0.7);
                   if (window.__fzHold) { clearInterval(window.__fzHold); window.__fzHold=null; }
-                  __game.player.spawn(R.x+x, 0.05, R.z+z, Math.atan2(tx-x, tz-z)); __game.player.pitch=0.10; })()""",
+                  const pl=__game.player; pl.spawn(R.x+x, 1.4, R.z+z, Math.atan2(tx-x, tz-z)); pl.pitch=0.12;
+                  window.__fzHold = setInterval(() => { pl.position.x=R.x+x; pl.position.y=1.4; pl.position.z=R.z+z; pl.vy=0; pl.grounded=true; const b=document.getElementById('bShore'); if (b) b.hidden=true; }, 16); })()""",
               'jiumen_lookout': """(async () => { const S=__game.fzMetro.street, R=S.kit.root.position; const M = await import('/js/data/fz-river.js'); const G = M.FZR.a3.gate;
                   __game.player.spawn(R.x+G.view[0], 0.05, R.z+G.view[1], Math.atan2(G.x-G.view[0], G.z-G.view[1])); __game.player.pitch=0.04; })()""",
             }

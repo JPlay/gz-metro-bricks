@@ -14,9 +14,10 @@ SPOTS = """(async () => { const M = await import('/js/data/fz-river.js'); const 
   const Pt = (a, b) => [G.x + G.t[0] * a + G.n[0] * b, G.z + G.t[1] * a + G.n[1] * b];
   const front = Pt(-25, 0), frontS = Pt(-25, -5), frontN = Pt(-25, 8);   // 六一中路桥面、离闸 25 m 正对，三孔可数
   // 闸西 xg 水面在 a4.xg 网格、不在 isWater/isLand：人会掉穿。03 主镜头在水面上方悬停；岸上备用站在闸西约 8 m 的南/北岸（a=8 才有地）。
-  const westCam = Pt(16, 0), westCamS = Pt(8, -22), westCamN = Pt(8, 22), westLook = Pt(34, 0), westLookS = Pt(28, 10), westLookN = Pt(28, -10);
-  // 04：站在光明港南岸、河口东侧陆地，往南看两岸内转（不要站到河心里，否则「回到岸上」）。
-  const yzCam = [Y.c[0] - Y.d[1] * 14, Y.c[1] + Y.d[0] * 14];
+  // 03 主镜头：贴着闸西面在水面上方悬停（再往西就贴上远岸墙），略低头看水面+两岸+远楼。岸上备用 a=8 南/北岸。
+  const westCam = Pt(9, 0), westCamS = Pt(8, -22), westCamN = Pt(8, 22), westLook = Pt(30, 0), westLookS = Pt(28, 10), westLookN = Pt(28, -10);
+  // 04 主镜头：光明港水面上、河口北 8 m 悬停，往南看两岸内转合拢；yz_mouth_along 留西岸陆地备用。
+  const yzCam = [Y.c[0] - Y.d[0] * 8, Y.c[1] - Y.d[1] * 8];
   const yzAlong = [Y.c[0] + Y.d[0] * 2 - Y.d[1] * (-14), Y.c[1] + Y.d[1] * 2 + Y.d[0] * (-14)];
   const G9 = F.a3.gate;
   return [
@@ -26,9 +27,9 @@ SPOTS = """(async () => { const M = await import('/js/data/fz-river.js'); const 
     ['sign_xingang', sg.x - sg.n[0] * 5.5, sg.z - sg.n[1] * 5.5, sg.x, sg.z, 0.12, 0.05],
     ['liuyi_bridge_from_south', b.x - b.n[0] * (b.half + 4), b.z - b.n[1] * (b.half + 4), b.x, b.z, 0.04, 0.05],
     ['liuyi_deck_looking_west', ...westCamS, ...westLookS, 0.08, 0.05, 0],
-    ['xingang_west_far_water', ...westCam, ...westLook, 0.10, 1.6, 1],
+    ['xingang_west_far_water', ...westCam, ...westLook, 0.22, 1.8, 1],
     ['xingang_west_from_north', ...westCamN, ...westLookN, 0.08, 0.05, 0],
-    ['yz_mouth', ...yzCam, ...tip, 0.10, 0.05, 0],
+    ['yz_mouth', ...yzCam, ...tip, 0.12, 1.4, 1],
     ['yz_mouth_along', ...yzAlong, ...tip, 0.08, 0.05, 0],
     ['yz_sign', yz.x - yz.f[0] * 5, yz.z - yz.f[1] * 5, yz.x, yz.z, 0.1, 0.05],
     ['join_from_east', ...(() => { const a = gm.at(30, hw + 3); return [a.x, a.z]; })(), ...at(8, 0), 0.02, 0.05],
