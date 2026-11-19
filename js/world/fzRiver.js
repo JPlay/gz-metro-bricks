@@ -502,7 +502,9 @@ export class FzRiverStreet extends XmStreet {
   pierSign(p) {
     const k = this.kit, A = this.atlas, [x, z] = p.sign, fx = -p.n[0], fz = -p.n[1];   // 牌面朝河（站在步道上读）
     const ry = yawOf(fx, fz), c = Math.cos(ry), s = Math.sin(ry);
-    k.g('granite').box(x, 0.35, z, 1.9, 0.7, 0.5, hex('#4D4F52'), ry, 0, 0, 1, NO);   // 深灰石座
+    // 深灰石台（座 + 一圈石帽），不要发黑的方块；stopOnly（新港闸 / 魁岐）尤其要看得出是石头
+    k.g('granite').box(x, 0.32, z, 2.0, 0.64, 0.62, hex('#6A7076'), ry, 0, 0, 1, NO);
+    k.g('granite').box(x, 0.66, z, 2.16, 0.08, 0.78, hex('#8A9096'), ry, 0, 0, 1, NO);
     k.solid.box(x, 1.55, z, 1.75, 1.7, 0.12, hex('#8B6844'), ry, 0, 0, 1, NO);        // 木牌
     k.col(x, 0.9, z, 1.9, 1.8, 0.5, { ry, name: 'colSign' });
     // 2C：一座码头几条船线（西水关：A 线 + C 线，C 线泊位 xsgc 共用这块牌）→ 每条线一行：线路章 + 下一站
@@ -607,7 +609,12 @@ export class FzRiverStreet extends XmStreet {
     { const WA = PA1 - 0.8; bx(GR, WA, 0, -0.1, 1.4, 0.3, 2 * hw + PW, CAP);
       for (const sa of [-1, 1]) { bx(GR, WA + sa * 0.62, 0, 0.74, 0.16, 0.1, 2 * hw + PW, '#B5AE9F'); for (let v = -hw; v <= hw + 0.01; v += HB / 3) bx(GR, WA + sa * 0.62, v, 0.38, 0.2, 0.72, 0.2, '#A8A193'); } }
     // 闸边观景处（江滨西大道下穿上来往南几步）：花岗岩铺地 + 一张长椅，朝闽江
-    { const [x, z] = S.view; GR.box(x, 0.015, z, 3.2, 0.03, 3.2, hex('#ABA497'), ryT, 0, 0, 1, NO); D.bench(this.kit, x - n[0] * 1.0, 0, z - n[1] * 1.0, yawOf(t[0], t[1]), true); }
+    { const [x, z] = S.view; GR.box(x, 0.015, z, 3.2, 0.03, 3.2, hex('#ABA497'), ryT, 0, 0, 1, NO);
+      let bx = x - n[0] * 1.0, bz = z - n[1] * 1.0;
+      if (FZR.a4 && S === FZR.a4.gate && FZR.a4.sign) {   // 新港闸：长椅从木牌正面挪开约 2 m，免得挡住牌
+        const sg = FZR.a4.sign; bx = sg.x - n[0] * 3.2 + t[0] * 2.0; bz = sg.z - n[1] * 3.2 + t[1] * 2.0;
+      }
+      D.bench(this.kit, bx, 0, bz, yawOf(t[0], t[1]), true); }
   }
   /** 2C 闽江远景（口门外，只看不走）：江面（比内河低 0.6 m）+ 北岸堤墙 + 堤顶石栏、三县洲大桥剪影、对岸一排树和楼 */
   minjiang() {

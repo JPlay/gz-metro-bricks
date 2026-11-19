@@ -26,6 +26,9 @@ console.log(`INFO gw ${RV.gw.line.len.toFixed(1)} m, gate (${A4.gate.x}, ${A4.ga
   ok('新港闸: 3 bays, bayW 南 2 窄 + 北 1 宽, same c2Sluice + 浅灰石材 as 九门闸', G.bays === 3 && G.bayW.join() === '10,10,20' && G.hw === F.rivers.gm.hw && /this\.c2Sluice\(G, '新港闸'\)/.test(fsrc) && /const PIER = '#A39C8E'/.test(fsrc) && /S\.bayW/.test(fsrc));
   ok('gate: n points north (south_first), people cannot walk onto it (colGateBlock)', G.n[1] > 0 && G.block.length === 4 && /colGateBlock/.test(fsrc));
   ok('sign: 新港闸 / Xingang Sluice, wood board (stopOnly, no line / next stop)', A4.sign.zh === '新港闸' && A4.sign.en === 'Xingang Sluice' && A4.sign.stopOnly === true && /A4\.sign/.test(fsrc));
+  ok('sign plinth is dark-grey stone (not a black cube)', /hex\('#6A7076'\)/.test(fsrc) && /hex\('#8A9096'\)/.test(fsrc) && !/hex\('#4D4F52'\)/.test(fsrc));
+  { const sg = A4.sign, G = A4.gate, bx = sg.x - G.n[0] * 3.2 + G.t[0] * 2.0, bz = sg.z - G.n[1] * 3.2 + G.t[1] * 2.0;
+    ok('bench is ≥ 3.5 m from the 新港闸 sign and on land', Math.hypot(sg.x - bx, sg.z - bz) >= 3.5 && R.isLand(bx, bz) && !R.isWater(bx, bz) && /sg\.x - n\[0\] \* 3\.2/.test(fsrc), { dist: Math.hypot(sg.x - bx, sg.z - bz), bx, bz }); }
   const mid = G.block.reduce((a, q) => [a[0] + q[0] / 4, a[1] + q[1] / 4], [0, 0]);
   ok('gate sits at the west end of gw, front view is east of the gate looking west', Math.hypot(mid[0] - G.x, mid[1] - G.z) < 5 && (G.view[0] - G.x) * G.t[0] + (G.view[1] - G.z) * G.t[1] < 0); }
 // 六一中路桥
@@ -53,6 +56,8 @@ console.log(`INFO gw ${RV.gw.line.len.toFixed(1)} m, gate (${A4.gate.x}, ${A4.ga
 // 只走路：航线 / 码头 / 出口不动
 ok('walk only: routes B + D unchanged, no new piers / kiosks', Object.keys(R.ROUTES).join() === 'B,D' && !R.PIERS.some(p => p.a4) && !Object.values(R.KIOSKS).some(k => k.a4));
 ok('night lights auto-generated from RIVERS / BRIDGES (gw / 六一中路 covered)', /RIVERS/.test(nsrc) && /BRIDGES/.test(nsrc));
+ok('night: skip bridge water reflection next to a sluice (the orange tube in the 新港闸 forebay)', /nearSluice/.test(nsrc) && /g\.hw \|\| 20/.test(nsrc));
+ok('night: sluice light strips sit on pier caps + eaves (c2 / a3 / a4), not in the bays', /FZR\.a4 && FZR\.a4\.gate/.test(nsrc) && /PT \+ 0\.30/.test(nsrc) && /启闭房/.test(nsrc));
 // 落水回岸
 { const bad = []; const L = RV.gw.line; for (let s = 3; s < L.len - 3; s += 6) for (const l of [-4, 0, 4]) { const p = L.at(s, l); if (!R.isWater(p.x, p.z)) continue; const c = R.shoreFor(p.x, p.z); if (!c || !R.isLand(c.x, c.z)) bad.push([s, l, p.x, p.z]); }
   ok('fall in on gw → shoreFor lands on the bank (not back to the platform)', !bad.length, bad.slice(0, 5)); }
