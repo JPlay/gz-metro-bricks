@@ -123,7 +123,11 @@ export class FzNight {
       halo(hx, 6.95, hz, 0.9, sc(WARM, 0.7));
       flat(hx - dx * 0.4, 0.045, hz - dz * 0.4, dx, dz, 3.8, 3.8, RG.pool, sc(WARM, 0.42));
       const L = Math.min(7.5, r.hw * 0.95), p0 = r.line.at(s, side * (r.hw - 0.9)), p1 = r.line.at(s, side * (r.hw - 0.9 - L));   // 3C 返工：离岸墙 0.9 m 起（贴墙那段从岸上 / 桥上被岸墙挡住），宽 0.8 m
-      if (isWater(p0.x, p0.z) && isWater(p1.x, p1.z)) { const lv = levelAt(p0.x, p0.z), ax = (p0.x - p1.x) / L, az = (p0.z - p1.z) / L; flat((p0.x + p1.x) / 2, lv + 0.02, (p0.z + p1.z) / 2, ax, az, 0.8, L / 2, RG.streak, sc(WARM, 0.85)); }
+      if (isWater(p0.x, p0.z) && isWater(p1.x, p1.z)) { const lv = levelAt(p0.x, p0.z), ax = (p0.x - p1.x) / L, az = (p0.z - p1.z) / L;
+        if (r === RIVERS.hq) {   // 6A：倒影细、暗、断开，不要一根原木
+          const nSeg = 5, span = L * 0.92, gap = 0.45, segL = (span - (nSeg - 1) * gap) / nSeg, mx = (p0.x + p1.x) / 2, mz = (p0.z + p1.z) / 2;
+          for (let k = 0; k < nSeg; k++) { const d = -span / 2 + k * (segL + gap) + segL / 2; flat(mx + ax * d, lv + 0.02, mz + az * d, ax, az, 0.36, segL / 2, RG.streak, sc(WARM, 0.16)); }
+        } else flat((p0.x + p1.x) / 2, lv + 0.02, (p0.z + p1.z) / 2, ax, az, 0.8, L / 2, RG.streak, sc(WARM, 0.85)); }
       n.lamp++;
     }
     // 3B：琴亭湖步道路灯（和 fzRiver.js lakeLamps 同一套位置）：灯头光晕 + 地面光圈 + 湖面一条短倒影
@@ -146,8 +150,17 @@ export class FzNight {
         }
         const hw = Math.max(0, (b.hw || 0) - 0.6), [cx, cz] = Pt(su * (uo + 1.0), 0);
         // 贴图 v（高斯那一向）= t：离桥越远越淡；沿 n 铺满水面宽。贴着闸的桥（新港闸西沿就是六一中路）不要把倒影铺进闸前水面，否则正看闸时像河道中间掉了一根橙管
-        const nearSluice = [FZR.c2 && FZR.c2.sluice, FZR.a3 && FZR.a3.gate, FZR.a4 && FZR.a4.gate].some(g => g && Math.hypot(cx - g.x, cz - g.z) < (g.hw || 20) + 10);
-        if (hw > 1 && isWater(cx, cz) && !nearSluice) flat(cx, levelAt(cx, cz) + 0.02, cz, t[0], t[1], hw, 1.1, RG.line, sc(WARM, 0.34));
+        const nearSluice = [FZR.c2 && FZR.c2.sluice, FZR.a3 && FZR.a3.gate, FZR.a4 && FZR.a4.gate, FZR.a6 && FZR.a6.gate].some(g => g && Math.hypot(cx - g.x, cz - g.z) < (g.hw || 20) + 10);
+        if (hw > 1 && isWater(cx, cz) && !nearSluice) {
+          const Z = FZR.a6 && FZR.a6.zone, isHq = FZR.a6 && ((FZR.a6.bridges || []).includes(b.id) || (Z && cx > Z[0] && cx < Z[2] && cz > Z[1] && cz < Z[3]));
+          if (isHq) {   // 6A：倒影细、暗、断开（北二环 / 北浪路 / 河口），不要一整根原木
+            const nSeg = 5, span = hw * 0.82, gap = 0.55, segL = (2 * span - (nSeg - 1) * gap) / nSeg;
+            for (let k = 0; k < nSeg; k++) {
+              const vv = -span + k * (segL + gap) + segL / 2, [x, z] = Pt(su * (uo + 1.0), vv);
+              if (isWater(x, z)) flat(x, levelAt(x, z) + 0.02, z, t[0], t[1], segL / 2, 0.36, RG.streak, sc(WARM, 0.16));
+            }
+          } else flat(cx, levelAt(cx, cz) + 0.02, cz, t[0], t[1], hw, 1.1, RG.line, sc(WARM, 0.34));
+        }
       }
       n.bridge++;
     }
@@ -163,6 +176,23 @@ export class FzNight {
       { const H0 = PT + 0.24, HH = 2.8, HL = 2 * hw + PW + 0.2, HA0 = -1.6, HA1 = 2.0;
         // 檐带移到檐口外侧（墙在 ±1.6/2.0，檐口只探出约 0.1 m），加厚约 3 倍、略提亮；仍用 RG.line，避免晕成一团
         for (const aa of [HA0 - 0.22, HA1 + 0.22]) { const [x, z] = Pt(aa, 0); flat(x, H0 + HH + 0.00, z, nS[0], nS[1], 0.24, HL / 2, RG.line, sc(WARM, 1.05)); } }
+    }
+    // 6A 茶园水闸：泵房檐下短灯带 + 堰端压顶，不加孔跨水面倒影；并进已有 fzNightLights
+    if (FZR.a6 && FZR.a6.gate) {
+      const S = FZR.a6.gate, tS = S.t, nS = S.n, H = S.house;
+      const Pt = (a, b) => [S.x + tS[0] * a + nS[0] * b, S.z + tS[1] * a + nS[1] * b];
+      for (const sv of [-1, 1]) { const [x, z] = Pt(0.2, sv * (S.hw - 0.45)); flat(x, 0.85, z, nS[0], nS[1], 0.16, 0.45, RG.line, sc(WARM, 0.7)); }
+      if (H) {
+        const fx = H.n[0], fz = H.n[1];
+        flat(H.x, H.h + 1.15, H.z, H.t[0], H.t[1], H.w / 2 - 0.2, 0.12, RG.line, sc(WARM, 0.8));
+        flat(H.x - fx * 0.3, 0.045, H.z - fz * 0.3, fx, fz, 2.2, 2.2, RG.pool, sc(WARM, 0.28));
+      }
+    }
+    // 6A 北二环桥下步道：沿桥宽贴梁底两道暖光带，夜里桥下不要一片漆黑（不加点光源）
+    for (const U of (FZR.a6 && FZR.a6.under) || []) {
+      const t = U.t, [x, z] = [U.x, U.z];
+      flat(x, -0.32, z, t[0], t[1], U.w / 2 - 0.6, 0.18, RG.line, sc(WARM, 0.85));
+      flat(x, 0.04, z, t[0], t[1], 1.6, 1.6, RG.pool, sc(WARM, 0.32));
     }
     // 台阶：每级踏步边沿一道暗暖光线（stairAlong 建的时候登记）
     for (const st of (S._stairs ? S._stairs.values() : [])) {

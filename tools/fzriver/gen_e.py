@@ -860,6 +860,7 @@ if B3:
 #   只拆掉 1B 光明港西头那道封口，并把新水面 / 岸地并上去。岸墙只换掉西头封口附近。
 # =====================================================================================================
 A4 = B3 and os.environ.get('FZR_4A', '1') != '0'
+A6 = A4 and os.environ.get('FZR_6A', '1') != '0'
 if A4:
   water3B, region3B, land3B = water, region, land
   LAND3B, WATER3B, WALL3B, BOUND3B = LAND, WATER, WALL, BOUND
@@ -1125,6 +1126,10 @@ if A4:
             'note': '4A：光明港西段 1:5（已有中线里程 1203–1442 接在 gm 西头，另开 gw 不改已建 s）；六一中路双幅合一；新港闸 3 孔（南 2 北 1）只能看不过船；闸西新港河短水面封闭远景；瀛洲河口驳岸内转合拢'}
   print('4A far houses slots', len(_far), 'xg rail', len(XG_RAIL))
 
+if A6:
+  import a6
+  a6.build_hq(globals())
+
 def r2(v): return round(v, 2)
 DATA = {
   'id': 'e', 'K': K, 'Kgm': K_GM, 'WY': WY,
@@ -1141,6 +1146,7 @@ DATA = {
 if A3: DATA['routes'] = [ROUTE_D]; DATA['a3'] = A3DATA
 if B3: DATA['b3'] = B3DATA
 if A4: DATA['a4'] = A4DATA
+if A6: DATA['a6'] = A6DATA
 js = ('// 自动生成：tools/fzriver/gen_e.py（OSM 晋安河 1:4 + 光明港 1:5 → 游戏坐标；x 东、z 北，原点 = 东街口站 / 3）。不要手改。\n'
       'export const FZR_E = ' + json.dumps(DATA, ensure_ascii=False, separators=(',', ':')) + ';\n')
 open(OUT, 'w').write(js); print('wrote', OUT, len(js))

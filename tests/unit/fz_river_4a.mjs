@@ -8,7 +8,7 @@ R.useNet('e');
 const F = R.FZR, A4 = F.a4, J = JSON.stringify, RV = R.RIVERS;
 const fsrc = fs.readFileSync(new URL('../../js/world/fzRiver.js', import.meta.url), 'utf8'), nsrc = fs.readFileSync(new URL('../../js/world/fzNight.js', import.meta.url), 'utf8');
 ok('4A data present (a4: gwLen / gate / xg / sign)', A4 && A4.gwLen > 40 && A4.gwLen < 80 && A4.gate && A4.xg && A4.sign);
-ok('rivers include gw after ja,gm,jn,fb', Object.keys(RV).join() === 'ja,gm,jn,fb,gw' && RV.gw.zh === '光明港' && F.rivers.gw.hw === F.rivers.gm.hw);
+ok('rivers include gw after ja,gm,jn,fb', Object.keys(RV).join().startsWith('ja,gm,jn,fb,gw') && RV.gw.zh === '光明港' && F.rivers.gw.hw === F.rivers.gm.hw);
 console.log(`INFO gw ${RV.gw.line.len.toFixed(1)} m, gate (${A4.gate.x}, ${A4.gate.z}), yz moved ${A4.yz.moved}`);
 // 接缝：gw 起点 = 已建 gm 西头，切向连续（gw 往西，和 gm 起点切向相反）
 { const gw = F.rivers.gw.p, gm = F.rivers.gm.p, s0 = RV.gw.line.at(0), g0 = RV.gm.line.at(0);
@@ -74,11 +74,14 @@ ok('g2day skips tileCull (stable day count)', /g2day\.getChildMeshes\(\)/.test(f
   ok('unchanged: id/K/Kgm/WY/cell/lakeFar/lakeShore/steps/kiosks/sfqx/spacing/route/routes/a3/b3/piers', ['id', 'K', 'Kgm', 'WY', 'cell', 'lakeFar', 'lakeShore', 'steps', 'kiosks', 'sfqx', 'spacing', 'route', 'routes', 'a3', 'b3', 'piers'].every(k => J(O[k]) === J(NE[k])), ['id', 'K', 'Kgm', 'WY', 'cell', 'lakeFar', 'lakeShore', 'steps', 'kiosks', 'sfqx', 'spacing', 'route', 'routes', 'a3', 'b3', 'piers'].filter(k => J(O[k]) !== J(NE[k])));
   ok('ja / gm / jn / fb rivers identical (gw is new)', J(O.rivers.ja) === J(NE.rivers.ja) && J(O.rivers.gm) === J(NE.rivers.gm) && J(O.rivers.jn) === J(NE.rivers.jn) && J(O.rivers.fb) === J(NE.rivers.fb) && !O.rivers.gw && NE.rivers.gw);
   ok('bridges / roads / dry: old entries an exact prefix (4A appended 六一中路)', ['bridges', 'roads', 'dry'].every(k => pre(O[k], NE[k])));
+  const A6 = F.a6 || {};
   const hc = O.houses.map((h, i) => J(h) !== J(NE.houses[i]) ? i : -1).filter(i => i >= 0);
-  ok(`old houses unchanged except new 4A gone flags (${(A4.gone.houses || []).join(',') || 'none'})`, !hc.length || (J(hc) === J(A4.gone.houses || []) && hc.every(i => NE.houses[i].gone === '4A')), hc);
+  const g4 = new Set(A4.gone.houses || []), g6 = new Set(A6.gone && A6.gone.houses || []);
+  ok(`old houses unchanged except 4A / 6A gone flags`, !hc.length || hc.every(i => (g4.has(i) && NE.houses[i].gone === '4A') || (g6.has(i) && NE.houses[i].gone === '6A')), hc);
   const tc = O.trees.map((t, i) => J(t) !== J(NE.trees[i]) ? i : -1).filter(i => i >= 0);
-  ok(`old trees unchanged (${tc.join(',') || 'none'})`, !tc.length || (J(tc) === J(A4.gone.trees || []) && tc.every(i => NE.trees[i][5] === 'gone')), tc);
-  const near = (k) => { const [cx, cz] = k.split(',').map(Number), x = (cx + 0.5) * NE.cell, z = (cz + 0.5) * NE.cell; return RV.gw.line.project(x, z).d < NE.cell * 0.75 + 40 || Math.hypot(x - A4.gate.x, z - A4.gate.z) < 80 || Math.hypot(x - A4.yz.c[0], z - A4.yz.c[1]) < 50; };
+  const t4 = new Set(A4.gone.trees || []), t6 = new Set(A6.gone && A6.gone.trees || []);
+  ok(`old trees unchanged except 4A / 6A gone flags`, !tc.length || tc.every(i => (t4.has(i) || t6.has(i)) && NE.trees[i][5] === 'gone'), tc);
+  const near = (k) => { const [cx, cz] = k.split(',').map(Number), x = (cx + 0.5) * NE.cell, z = (cz + 0.5) * NE.cell; const in6 = A6.zone && x > A6.zone[0] - 40 && x < A6.zone[2] + 40 && z > A6.zone[1] - 40 && z < A6.zone[3] + 40; return in6 || RV.gw.line.project(x, z).d < NE.cell * 0.75 + 40 || Math.hypot(x - A4.gate.x, z - A4.gate.z) < 80 || Math.hypot(x - A4.yz.c[0], z - A4.yz.c[1]) < 50; };
   const area = c => { let t = 0; for (let i = 0; i < c.i.length; i += 3) { const [a, b, d] = [c.i[i], c.i[i + 1], c.i[i + 2]].map(k => [c.p[2 * k], c.p[2 * k + 1]]); t += Math.abs((b[0] - a[0]) * (d[1] - a[1]) - (d[0] - a[0]) * (b[1] - a[1])) / 2; } return t; };
   for (const c of ['land', 'water']) { const ch = Object.keys(O[c]).filter(k => J(O[c][k]) !== J(NE[c][k])), far = ch.filter(k => !near(k)), big = far.filter(k => !NE[c][k] || Math.abs(area(O[c][k]) - area(NE[c][k])) > 0.5);
     console.log(`INFO ${c} cells changed ${ch.join(' ')}; away from 4A only re-triangulated (|Δarea| ≤ 0.5 m²): ${far.join(' ') || '-'}`);
