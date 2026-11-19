@@ -282,20 +282,28 @@ def place_fill(g):
   GAPS, DRY, GATE5 = g['GAPS'], g['DRY'], g['GATE5']
   chanY, xgPoly = g['chanY'], g['xgPoly']
   R5 = random.Random(519)
-  # 木牌：观景处旁
+  # 木牌 / 石牌错开（4A 教训：不要叠在同一点），长椅离开两块牌的正面和英文
   sx, sz = GATE5['view']
   t, n = GATE5['t'], GATE5['n']
-  # 牌面朝闸（从观景处看闸也能读牌）
+  sd = GATE5['side']
+  # 木牌：观景处上游、略靠岸，牌面朝闸
   SIGN5 = {'id': 'js', 'zh': '江四水闸', 'en': 'Jiangsi Sluice',
-           'x': round(sx + t[0] * -1.0 + n[0] * GATE5['side'] * 1.8, 2),
-           'z': round(sz + t[1] * -1.0 + n[1] * GATE5['side'] * 1.8, 2),
+           'x': round(sx + t[0] * -2.4 + n[0] * sd * 2.0, 2),
+           'z': round(sz + t[1] * -2.4 + n[1] * sd * 2.0, 2),
            'n': [round(-t[0], 4), round(-t[1], 4)], 'stopOnly': True}
-  SIGNS5 = [{'id': 'jsh', 'x': SIGN5['x'], 'z': SIGN5['z'],
-             'f': [round(-t[0], 4), round(-t[1], 4)], 'lines': ['江四水闸', 'Jiangsi Sluice']}]
+  # 石牌：观景处下游、与木牌错开，牌面同样朝闸（两面都有字）
+  SIGNS5 = [{'id': 'jsh',
+             'x': round(sx + t[0] * 3.8 + n[0] * sd * 2.2, 2),
+             'z': round(sz + t[1] * 3.8 + n[1] * sd * 2.2, 2),
+             'f': [round(t[0], 4), round(t[1], 4)], 'lines': ['江四水闸', 'Jiangsi Sluice']}]
+  # 长椅：更上游、沿步道，在两块牌背后一侧，距两牌 ≥ 3.5 m，不挡石牌英文
+  BENCH5 = [round(sx + t[0] * -6.2 + n[0] * sd * 0.6, 2),
+            round(sz + t[1] * -6.2 + n[1] * sd * 0.6, 2)]
   # 占位
   occ = unary_union([b['foot'].buffer(4) for b in BR] + [q.buffer(1.5) for q in GAPS] + [r['poly'] for r in ROADS + ROADS5]
                     + [p.buffer(1.0) for p in DRY] + [Polygon(GATE5['block']).buffer(10),
                        Point(*GATE5['view']).buffer(8), Point(SIGN5['x'], SIGN5['z']).buffer(6),
+                       Point(SIGNS5[0]['x'], SIGNS5[0]['z']).buffer(5), Point(BENCH5[0], BENCH5[1]).buffer(3),
                        Point(GATE5['house']['x'], GATE5['house']['z']).buffer(8),
                        g.get('xgPoly', Point(0, 0)).buffer(2), chanY.buffer(1.2)])
   nH0 = len(HOUSES)
@@ -322,7 +330,9 @@ def place_fill(g):
 
   treeOcc = unary_union([b['foot'].buffer(2.5) for b in BR] + [q.buffer(1.5) for q in GAPS] + [r['poly'] for r in ROADS + ROADS5]
                         + [p.buffer(1.0) for p in DRY] + [Polygon(GATE5['block']).buffer(5), Point(*GATE5['view']).buffer(5),
-                           Point(SIGN5['x'], SIGN5['z']).buffer(4)])
+                           Point(SIGN5['x'], SIGN5['z']).buffer(4),
+                           Point(SIGNS5[0]['x'], SIGNS5[0]['z']).buffer(4),
+                           Point(BENCH5[0], BENCH5[1]).buffer(3)])
   nT0 = len(TREES)
   s = 20.0
   while s < yz.length - 12:
@@ -365,7 +375,7 @@ def place_fill(g):
   A5DATA = {
     'yzLen': round(yz.length, 2), 'hw0': HW0, 'hw1': HW1, 'blend': WIDTH_END, 'pathBlend': BLEND_END, 'hold': HOLD,
     'off': g['YZ_OFF'],
-    'gate': GATE5, 'mj': g['MJ5'], 'sign': SIGN5, 'signs': SIGNS5,
+    'gate': GATE5, 'mj': g['MJ5'], 'sign': SIGN5, 'signs': SIGNS5, 'bench': BENCH5,
     'bridges': [b['id'] for b in BR5],
     'far': g['FAR5'],
     'gone': {'houses': GONE5_H, 'trees': GONE5_T},

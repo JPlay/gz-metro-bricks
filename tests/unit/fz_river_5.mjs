@@ -49,6 +49,14 @@ console.log(`INFO yz ${RV.yz.line.len.toFixed(1)} m, gate (${A5.gate.x}, ${A5.ga
   ok('江四水闸: 2 bays, has a side pump house, not a full-span 启闭房', G.bays === 2 && H && H.w <= 10 && H.h <= 7 && /a5Sluice/.test(fsrc) && !/this\.c2Sluice\(G, '江四/.test(fsrc) && !/启闭房/.test(fsrc.slice(fsrc.indexOf('a5Sluice'), fsrc.indexOf('a5Day'))));
   ok('gate block keeps people off the weir (colGateBlock)', G.block.length === 4 && /colGateBlock/.test(fsrc));
   ok('sign: 江四水闸 / Jiangsi Sluice, wood board (stopOnly)', A5.sign.zh === '江四水闸' && A5.sign.en === 'Jiangsi Sluice' && A5.sign.stopOnly === true);
+  { const st = (A5.signs || [])[0], bn = A5.bench, dWS = st && Math.hypot(A5.sign.x - st.x, A5.sign.z - st.z);
+    ok('wood and stone signs are separated (≥ 4 m, not stacked)', st && dWS >= 4, { dWS, wx: A5.sign.x, wz: A5.sign.z, sx: st && st.x, sz: st && st.z });
+    const dW = bn && Math.hypot(bn[0] - A5.sign.x, bn[1] - A5.sign.z), dS = bn && st && Math.hypot(bn[0] - st.x, bn[1] - st.z);
+    const fx = st && st.f[0], fz = st && st.f[1], vx = bn && st && bn[0] - st.x, vz = bn && st && bn[1] - st.z;
+    const along = fx != null ? vx * fx + vz * fz : 0, across = fx != null ? vx * (-fz) + vz * fx : 0;
+    const inFront = along > 0 && along < 3.2 && Math.abs(across) < 2.2;
+    ok('bench is ≥ 3.5 m from both signs, on land, and not in front of the stone sign English', bn && dW >= 3.5 && dS >= 3.5 && R.isLand(bn[0], bn[1]) && !R.isWater(bn[0], bn[1]) && !inFront, { dW, dS, bn, inFront, along, across, land: bn && R.isLand(bn[0], bn[1]) });
+  }
   const mid = Lmid(G);
   function Lmid(G) { return G.block.reduce((a, q) => [a[0] + q[0] / 4, a[1] + q[1] / 4], [0, 0]); }
   ok('front view is upstream of the weir (looking toward 闽江)', (G.view[0] - G.x) * G.t[0] + (G.view[1] - G.z) * G.t[1] < 0);
@@ -61,16 +69,21 @@ console.log(`INFO yz ${RV.yz.line.len.toFixed(1)} m, gate (${A5.gate.x}, ${A5.ga
   const [o0, o1] = J.o, [tx, tz] = J.t, [nx, nz] = J.n;
   const cx = o0 + tx * (af * 0.4), cz = o1 + tz * (af * 0.4);
   ok('闽江 surface is not walkable (isWater false in the far basin)', !R.isWater(cx, cz));
-  ok('a5Day draws a far-bank ground strip + embankment + skyline (bluish-grey, no warm whites)', /a5Day\(\)/.test(fsrc) && /对岸地面/.test(fsrc) && /#7E8C99/.test(fsrc.slice(fsrc.indexOf('a5Day'))) && !/#D9D2C4|#E3D9C6/.test(fsrc.slice(fsrc.indexOf('a5Day'), fsrc.indexOf('a5Day') + 1800)));
+  { const st = fsrc.slice(fsrc.indexOf('  a5Static() {'), fsrc.indexOf('  a5Sluice('));
+    const dy = fsrc.slice(fsrc.indexOf('  a5Day() {'), fsrc.indexOf('  b3Static() {'));
+    ok('a5Static draws far-bank ground + skyline (always-on night silhouette, bluish-grey, no warm whites)', /对岸地面/.test(st) && /#7E8C99/.test(st) && !/#D9D2C4|#E3D9C6/.test(st));
+    ok('a5Day keeps only yz glints + far-bank tree crowns (day-only, balances night ≤ day)', /a5Day\(\)/.test(fsrc) && /ellipsoid/.test(dy) && !/对岸地面/.test(dy));
+  }
 }
 
 // 夜里 draw ≤ 昼：g5day 只白天；灯带并进已有网格
 { const ld = fsrc.slice(fsrc.indexOf('  lodNow(force) {'), fsrc.indexOf('  refreshTilesIfTurned() {'));
-  ok('g5day (yz glints + 闽江 skyline): day-only group, off whenever nightLod', /if \(FZR\.a5\) \{ this\.a5Day\(\); k\.group\('g5day'\); \}/.test(fsrc) && /gn\.g5day\) \{ const Z = FZR\.a5\.zone, on = !this\.nightLod/.test(ld));
+  ok('g5day (yz glints + 闽江 tree crowns): day-only group, off whenever nightLod', /if \(FZR\.a5\) \{ this\.a5Day\(\); k\.group\('g5day'\); \}/.test(fsrc) && /gn\.g5day\) \{ const Z = FZR\.a5\.zone, on = !this\.nightLod/.test(ld));
   ok('g5day skips tileCull (stable day count)', /g5day\.getChildMeshes\(\)/.test(fsrc) && /noTileCull: true/.test(fsrc));
   ok('yz glints not in the always-on water loop', /FZR\.a5 && id === 'yz'/.test(fsrc));
-  ok('no PointLight / ShadowGenerator in a5Static / a5Day / a5Sluice', !/a5Static[\s\S]{0,2500}(PointLight|ShadowGenerator)/.test(fsrc) && !/a5Day[\s\S]{0,2500}(PointLight|ShadowGenerator)/.test(fsrc) && !/a5Sluice[\s\S]{0,3500}(PointLight|ShadowGenerator)/.test(fsrc));
+  ok('no PointLight / ShadowGenerator in a5Static / a5Day / a5Sluice', !/a5Static[\s\S]{0,4500}(PointLight|ShadowGenerator)/.test(fsrc) && !/a5Day[\s\S]{0,2500}(PointLight|ShadowGenerator)/.test(fsrc) && !/a5Sluice[\s\S]{0,3500}(PointLight|ShadowGenerator)/.test(fsrc));
   ok('night: 江四 strips merged into the existing lights() mesh (gable eave + weir pads as a row of dots)', /FZR\.a5 && FZR\.a5\.gate/.test(nsrc) && /H\.w \/ 2 - 0\.22/.test(nsrc) && /0\.24, H\.d \/ 2/.test(nsrc) && /sc\(WARM, 1\.05\)/.test(nsrc) && /0\.18, 0\.55/.test(nsrc));
+  ok('night: 闽江 far-bank windows / streetlights merged into lights() with inflated cull radius 140', /FZR\.a5 && FZR\.a5\.far/.test(nsrc) && /FAR_R = 140/.test(nsrc) && /#FFD39A/.test(nsrc) && /i % 3 === 0/.test(nsrc) && /i % 4 === 0/.test(nsrc));
   ok('night: still a single lights mesh, no extra Mesh / PointLight', (nsrc.match(/new B\.Mesh\(/g) || []).length === 1 && !/PointLight|ShadowGenerator/.test(nsrc));
   ok('night: skip bridge water reflection next to 江四 too', /FZR\.a5 && FZR\.a5\.gate/.test(nsrc.slice(nsrc.indexOf('nearSluice'), nsrc.indexOf('nearSluice') + 280)));
 }

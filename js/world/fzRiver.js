@@ -699,6 +699,20 @@ export class FzRiverStreet extends XmStreet {
     for (const [ax, az, bx, bz] of J.rail) this.stoneRail(ax, az, bx, bz);
     if (A5.sign) this.pierSign({ ...A5.sign, sign: [A5.sign.x, A5.sign.z] });
     for (const S of A5.signs || []) this.stoneSign(S.x, S.z, S.f[0], S.f[1], 3.6, 1.5, S.lines);
+    // 对岸地面 + 堤岸 + 天际线体块：常开。夜里仍是大江对岸剪影（树冠和亮纹放 g5day，用来压夜面数）
+    { const P = k.solid, [o0, o1] = J.o, [tx, tz] = J.t, [nx, nz] = J.n, [af, b0, b1] = J.far, Pt = (a, b) => [o0 + tx * a + nx * b, o1 + tz * a + nz * b], ry = yawOf(nx, nz);
+      const Wc = ['#7E8C99', '#8796A3', '#76858F', '#8F9AA5', '#6F7C86'];
+      { const bm = (b0 + b1) / 2, L = b1 - b0 + 20, [gx, gz] = Pt(af + 40, bm), [ex, ez] = Pt(af - 0.6, bm), y0 = J.lv - 0.4, y1 = 1.2;
+        P.box(gx, 0.5, gz, 80, 1.0, L, hex('#6E7A64'), ry, 0, 0, 1, NO);   // 对岸地面（要够宽，天际线坐在地上；夜里也在）
+        P.box(ex, (y0 + y1) / 2, ez, 1.8, y1 - y0, L, hex('#8A8578'), ry, 0, 0, 1, NO);
+        P.box(ex, y1 + 0.03, ez, 2.0, 0.06, L, hex('#A39C8E'), ry, 0, 0, 1, NO); }
+      const far = A5.far || [];
+      for (let i = 0; i < far.length; i++) {
+        const [x, z, fx, fz] = far[i], rx = -fz, rz = fx, h = 14 + (i * 11) % 22, w = 12 + (i * 5) % 8, d = 10;
+        const cx = x - fx * (d / 2 + 0.6), cz = z - fz * (d / 2 + 0.6);
+        P.box(cx, h / 2, cz, w, h, d, hex(Wc[i % 5]), yawOf(rx, rz), 0, 0, 1, NO);
+      }
+    }
   }
   /** 江四水闸：矮石堰 + 两扇钢闸 + 岸边一座小泵房（不是横跨全河的启闭房）。浅灰石材家族同九门 / 新港。 */
   a5Sluice(S) {
@@ -736,25 +750,15 @@ export class FzRiverStreet extends XmStreet {
       this.atlas.quad(qx - fx * 0.04, 4.15, qz - fz * 0.04, 2.2, 0.5, Math.atan2(-fx, fz), uv);
       k.col(H.x, H.h / 2, H.z, H.d, H.h, H.w, { ry, name: 'colPump' }); }
     { const [x, z] = S.view; GR.box(x, 0.015, z, 3.2, 0.03, 3.2, hex('#ABA497'), ryT, 0, 0, 1, NO);
-      const sg = FZR.a5.sign, bx_ = sg.x - n[0] * S.side * 0.4 + t[0] * 2.2, bz = sg.z - n[1] * S.side * 0.4 + t[1] * 2.2;
-      D.bench(this.kit, bx_, 0, bz, yawOf(t[0], t[1]), true); }
+      const bn = FZR.a5.bench; if (bn) D.bench(this.kit, bn[0], 0, bn[1], yawOf(t[0], t[1]), true); }
   }
-  /** 5 白天才画（g5day）：瀛洲河水面亮纹 + 闽江对岸地面 / 堤岸 / 树冠 / 高低楼天际线（偏蓝灰，不是又一条内河对岸） */
+  /** 5 白天才画（g5day）：瀛洲河水面亮纹 + 闽江对岸树冠。天际线体块在 a5Static 常开，夜里仍是剪影；树冠只白天，用来压夜面数。 */
   a5Day() {
-    const A5 = FZR.a5, J = A5.mj, k = this.kit, WA = k.g('paint@sea'), P = k.solid, r = RIVERS.yz;
+    const A5 = FZR.a5, k = this.kit, WA = k.g('paint@sea'), P = k.solid, r = RIVERS.yz;
     if (r) { let j = 0; for (let s = 4; s < r.line.len - 4; s += 11) { const a = r.line.at(s, ((j++ * 37) % 11 - 5) / 6 * r.hw * 0.55); if (typeof isWater === 'function' && !isWater(a.x, a.z)) continue; WA.box(a.x, WY + 0.004, a.z, 0.25, 0.004, 4.0, hex('#8FC0C8'), yawOf(a.tx, a.tz), 0, 0, 1, NO); } }
-    const [o0, o1] = J.o, [tx, tz] = J.t, [nx, nz] = J.n, [af, b0, b1] = J.far, Pt = (a, b) => [o0 + tx * a + nx * b, o1 + tz * a + nz * b], ry = yawOf(nx, nz);
-    const Gc = ['#3A7A3C', '#2F6B34', '#447F3A'], Wc = ['#7E8C99', '#8796A3', '#76858F', '#8F9AA5', '#6F7C86'];
-    { const bm = (b0 + b1) / 2, L = b1 - b0 + 20, [gx, gz] = Pt(af + 40, bm), [ex, ez] = Pt(af - 0.6, bm), y0 = J.lv - 0.4, y1 = 1.2;
-      P.box(gx, 0.5, gz, 80, 1.0, L, hex('#6E7A64'), ry, 0, 0, 1, NO);   // 对岸地面（要够宽，天际线坐在地上）
-      P.box(ex, (y0 + y1) / 2, ez, 1.8, y1 - y0, L, hex('#8A8578'), ry, 0, 0, 1, NO);
-      P.box(ex, y1 + 0.03, ez, 2.0, 0.06, L, hex('#A39C8E'), ry, 0, 0, 1, NO); }
-    // 高低错落的远岸楼，读得出是大河对岸天际线
-    const far = A5.far || [];
+    const Gc = ['#3A7A3C', '#2F6B34', '#447F3A'], far = A5.far || [];
     for (let i = 0; i < far.length; i++) {
-      const [x, z, fx, fz] = far[i], rx = -fz, rz = fx, h = 14 + (i * 11) % 22, w = 12 + (i * 5) % 8, d = 10;
-      const cx = x - fx * (d / 2 + 0.6), cz = z - fz * (d / 2 + 0.6), ryB = yawOf(rx, rz);
-      P.box(cx, h / 2, cz, w, h, d, hex(Wc[i % 5]), ryB, 0, 0, 1, NO);
+      const [x, z, fx, fz] = far[i];
       P.ellipsoid(x + fx * 2.2, 5.0, z + fz * 2.2, 8, 4.4, 6, hex(Gc[i % 3]), 1);
     }
   }

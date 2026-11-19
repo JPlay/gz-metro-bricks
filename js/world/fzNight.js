@@ -178,6 +178,28 @@ export class FzNight {
         flat(ux, H.h + 0.10, uz, fx, fz, 0.24, H.d / 2 + 0.12, RG.line, sc(WARM, 1.05));
       }
     }
+    // 5 闽江对岸：夜里仍要读得出是大江。剪影体块在 a5Static 常开；这里并进同一张 lights 网格，疏落地加窗和少量路灯。
+    // 对岸约 180 m，NIGHT.lightR=110，把这些片的裁剪半径抬到 140，观景处 / 闸前能看见，不改全局 lightR。
+    if (FZR.a5 && FZR.a5.far) {
+      const WIN = hex3('#FFD39A'), FAR_R = 140;
+      const farQ = (cx, cy, cz, u, v, rg, col) => { quad(cx, cy, cz, u, v, rg, col); QC[QC.length - 1] = FAR_R; };
+      for (let i = 0; i < FZR.a5.far.length; i++) {
+        const [x, z, fx, fz] = FZR.a5.far[i], rx = -fz, rz = fx;
+        const h = 14 + (i * 11) % 22, w = 12 + (i * 5) % 8, d = 10;
+        const cx = x - fx * (d / 2 + 0.6), cz = z - fz * (d / 2 + 0.6);
+        const fxw = cx + fx * (d / 2 + 0.05), fzw = cz + fz * (d / 2 + 0.05);
+        if (i % 3 === 0) {
+          for (const [u, yk] of [[-w * 0.22, 0.32], [w * 0.18, 0.55], [-w * 0.08, 0.72]]) {
+            const yy = h * yk; if (yy < 2.2 || yy > h - 1.2) continue;
+            farQ(fxw + rx * u, yy, fzw + rz * u, [rx * 0.4, 0, rz * 0.4], [0, 0.38, 0], RG.line, sc(WIN, 0.9));
+          }
+        }
+        if (i % 4 === 0) {
+          halo(x + fx * 2.0, 5.2, z + fz * 2.0, 0.7, sc(WARM, 0.55));
+          QC[QC.length - 1] = FAR_R; QC[QC.length - 4] = FAR_R;
+        }
+      }
+    }
     // 台阶：每级踏步边沿一道暗暖光线（stairAlong 建的时候登记）
     for (const st of (S._stairs ? S._stairs.values() : [])) {
       const { F, a0, a1, b0, b1, y0, y1, steps } = st, ta = [F.P(1, 0)[0] - F.P(0, 0)[0], F.P(1, 0)[1] - F.P(0, 0)[1]];
