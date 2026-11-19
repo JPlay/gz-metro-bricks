@@ -168,6 +168,25 @@ async def main():
                   __game.player.spawn(R.x+G.view[0], 0.05, R.z+G.view[1], Math.atan2(G.x-G.view[0], G.z-G.view[1])); __game.player.pitch=0.04; })()""",
             }
 
+
+        if os.environ.get('FZPOP') == 'hq':   # 6A：东口 + 北二环 / 北浪路 / 桥下 + 茶园闸；FZKIOSK=fzdm
+            LOCS = {
+              'mouth_east': """(async () => { const S=__game.fzMetro.street, R=S.kit.root.position; const M = await import('/js/data/fz-river.js'); const C = M.FZR.a6.camMouth;
+                  const x=C.x, z=C.z, tx=C.look[0], tz=C.look[2];
+                  __game.player.spawn(R.x+x, C.y||0.05, R.z+z, Math.atan2(tx-x, tz-z)); __game.player.pitch=0.08; })()""",
+              'beierhuan': """(async () => { const S=__game.fzMetro.street, R=S.kit.root.position; const M = await import('/js/data/fz-river.js'); const b = M.BRIDGES.find(q => q.name==='北二环' && q.river==='hq');
+                  const x=b.x+b.t[0]*-(b.w/2+14)+b.n[0]*-8, z=b.z+b.t[1]*-(b.w/2+14)+b.n[1]*-8;
+                  __game.player.spawn(R.x+x, 2.2, R.z+z, Math.atan2(b.x-x, b.z-z)); __game.player.pitch=0.12; })()""",
+              'beilang': """(async () => { const S=__game.fzMetro.street, R=S.kit.root.position; const M = await import('/js/data/fz-river.js'); const b = M.BRIDGES.find(q => q.name==='北浪路' && q.river==='hq');
+                  const x=b.x+b.t[0]*-(b.w/2+10)+b.n[0]*6, z=b.z+b.t[1]*-(b.w/2+10)+b.n[1]*6;
+                  __game.player.spawn(R.x+x, 1.6, R.z+z, Math.atan2(b.x-x, b.z-z)); __game.player.pitch=0.10; })()""",
+              'beierhuan_under': """(async () => { const S=__game.fzMetro.street, R=S.kit.root.position; const M = await import('/js/data/fz-river.js'); const U=(M.FZR.a6.under||[])[0];
+                  const x=U.x, z=U.z, tx=U.x+U.t[0]*4, tz=U.z+U.t[1]*4;
+                  __game.player.spawn(R.x+x, 0.05, R.z+z, Math.atan2(tx-x, tz-z)); __game.player.pitch=0.20; })()""",
+              'chayuan_lookout': """(async () => { const S=__game.fzMetro.street, R=S.kit.root.position; const M = await import('/js/data/fz-river.js'); const G=M.FZR.a6.gate;
+                  __game.player.spawn(R.x+G.view[0], 0.05, R.z+G.view[1], Math.atan2(G.x-G.view[0], G.z-G.view[1])); __game.player.pitch=0.04; })()""",
+            }
+
         if os.environ.get('FZPOP') == 'jiumen':   # 九门闸观景处；FZKIOSK=fzgmg
             LOCS = {
               'jiumen_lookout': """(async () => { const S=__game.fzMetro.street, R=S.kit.root.position; const M = await import('/js/data/fz-river.js'); const G = M.FZR.a3.gate;
