@@ -1136,7 +1136,7 @@ async def run_6a(pg):
     A = await pg.evaluate("""(async () => { const M = await import('/js/data/fz-river.js'); const F = M.FZR, a6 = F.a6, hq = M.RIVERS.hq, hw = F.rivers.hq.hw, jn = M.RIVERS.jn;
       const bs = (a6.bridges || []).map(id => M.BRIDGES.find(q => q.id === id));
       return { hw, len: hq.line.len, jnS: a6.jnS, jnHw: F.rivers.jn.hw, gate: a6.gate, sign: a6.sign, signs: a6.signs, cam: a6.camMouth, under: a6.under,
-        bridges: bs.map(b => b && { id: b.id, s: b.s, x: b.x, z: b.z, n: b.n, t: b.t, w: b.w, half: b.half, name: b.name, kind: b.kind, tall: b.tall }),
+        bridges: bs.map(b => b && { id: b.id, s: b.s, x: b.x, z: b.z, n: b.n, t: b.t, w: b.w, half: b.half, name: b.name, kind: b.kind, tall: b.tall, deckY: b.deckY, rampL: b.rampL }),
         loop: a6.loop }; })()""")
     hw, G, brs = A['hw'], A['gate'], A['bridges']
     R['perf']['k:kiosk:fzdm'] = await sample4(pg, 'k:kiosk:fzdm')
@@ -1156,9 +1156,10 @@ async def run_6a(pg):
         return await rpt(pg, 'hq', s, side * off)
 
     async def cross(b, from_side, label):
-        a = await W(pg, b['x'] + b['n'][0] * from_side * (b['half'] + 3), b['z'] + b['n'][1] * from_side * (b['half'] + 3))
+        off = b['half'] + 3 + ((b.get('rampL') or 0) if (b.get('tall') or b.get('deckY')) else 0)
+        a = await W(pg, b['x'] + b['n'][0] * from_side * off, b['z'] + b['n'][1] * from_side * off)
         mid = await W(pg, b['x'], b['z'])
-        dest = await W(pg, b['x'] - b['n'][0] * from_side * (b['half'] + 3), b['z'] - b['n'][1] * from_side * (b['half'] + 3))
+        dest = await W(pg, b['x'] - b['n'][0] * from_side * off, b['z'] - b['n'][1] * from_side * off)
         okc = await go(pg, *a, f'→ {b["name"]} 桥头') and await legs(pg, [mid, dest], True)
         ok(f'k:cross {b["name"]} {label}', okc and await near(pg, *dest, 2.5) and (await st(pg))['pos'][1] > -0.3, (await st(pg))['pos'])
         return dest

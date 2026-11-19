@@ -182,6 +182,9 @@ def build_hq(g):
     if tall:
       b['tall'] = 1
       b['barrier'] = 2.2
+      b['deckY'] = 3.2
+      b['rampL'] = 14.0
+      b['half'] = HW1 + 4.0   # 岸上留出桥下步道净宽；梁底在 deckY-1.3
   BR6 = g['BR'][nB0:]
   for b in BR6:
     x, z, t, n, half, w = b['x'], b['z'], b['t'], b['n'], b['half'], b['w']
@@ -190,12 +193,14 @@ def build_hq(g):
   ROADS6 = []
   for b in BR6:
     for sg in (-1, 1):
+      start = (b['half'] + b.get('rampL', 0)) if b.get('tall') else (b['hw'] + 2)
       reach = b['hw'] + BAND_HQ + 2
+      if reach <= start + 1: continue
       ROADS6.append({'id': b['id'] + ('e' if sg > 0 else 'w'), 'name': b['name'],
-                     'poly': rect(b['x'], b['z'], b['n'][0] * sg, b['n'][1] * sg, b['hw'] + 2, reach, -b['w'] / 2, b['w'] / 2),
+                     'poly': rect(b['x'], b['z'], b['n'][0] * sg, b['n'][1] * sg, start, reach, -b['w'] / 2, b['w'] / 2),
                      'dir': [b['n'][0] * sg, b['n'][1] * sg], 'w': b['w'], 'stub': True, 'a6': True})
   for b in BR6:
-    print('6A bridge', b['id'], b['name'], 's', round(b['s'], 1), 'w', b['w'], 'tall', b.get('tall'), 'at', (b['x'], b['z']))
+    print('6A bridge', b['id'], b['name'], 's', round(b['s'], 1), 'w', b['w'], 'tall', b.get('tall'), 'deckY', b.get('deckY'), 'half', b['half'], 'at', (b['x'], b['z']))
   g['BR6'] = BR6
   g['ROADS'] = g['ROADS'] + ROADS6
   g['ROADS6'] = ROADS6
@@ -219,11 +224,12 @@ def build_hq(g):
   }
   _blk = [(-1.8, -HW1 - 1.4), (2.6, -HW1 - 1.4), (2.6, HW1 + 1.4), (-1.8, HW1 + 1.4)]
   GATE6['block'] = [[round(gx + gt[0] * a + gn[0] * b, 2), round(gz + gt[1] * a + gn[1] * b, 2)] for a, b in _blk]
-  hx = gx + gt[0] * -2.0 + gn[0] * sgH * (HW1 + 5.0)
-  hz = gz + gt[1] * -2.0 + gn[1] * sgH * (HW1 + 5.0)
+  hx = gx + gt[0] * -1.2 + gn[0] * sgH * (HW1 + 4.2)
+  hz = gz + gt[1] * -1.2 + gn[1] * sgH * (HW1 + 4.2)
   GATE6['house'] = {'x': round(hx, 2), 'z': round(hz, 2), 'w': 6.4, 'd': 5.2, 'h': 4.4,
                     't': [round(gt[0], 4), round(gt[1], 4)], 'n': [round(gn[0] * sgH, 4), round(gn[1] * sgH, 4)],
                     'roof': 'barrel'}
+  GATE6['look'] = [round(gx + gn[0] * sgH * 3.2, 2), round(gz + gn[1] * sgH * 3.2, 2)]
   g['GATE6'] = GATE6
   print('6A gate 茶园水闸', GATE6['x'], GATE6['z'], 't', GATE6['t'], 'houseSide', sgH, 'view', GATE6['view'])
 
@@ -261,7 +267,7 @@ def build_hq(g):
         return [round(x, 2), round(z, 2)]
     (x, z), _, _ = at_s('hq', s, sg * (HW1 + off0 + 2.0))
     return [round(x, 2), round(z, 2)]
-  viewP = _on_bank(max(8.0, GATE_S - 8.0), sgV, 3.6)
+  viewP = _on_bank(max(8.0, GATE_S - 16.0), sgV, 7.5)
   GATE6['view'] = viewP
   print('6A gate view snapped', viewP, 'land', land.contains(Point(*viewP)), 'water', water.contains(Point(*viewP)))
 
@@ -447,18 +453,24 @@ def build_hq(g):
   # 北二环桥下步道灯带定位（两岸，沿中线，在桥影下）
   b2 = next(b for b in BR6 if b['name'] == '北二环')
   under = []
+  dY = b2.get('deckY', 3.2)
   for sg in (-1, 1):
+    # 站在桥影下的河岸步道（沿 t 走进 30 m 桥宽，沿 n 在 hw+2.2，梁下不是桥面）
+    u = -(b2['w'] / 2) + 3.5
+    v = sg * (HW1 + 2.2)
     under.append({'bridge': b2['id'], 'side': sg,
-                  'x': round(b2['x'] + b2['n'][0] * sg * (HW1 + 2.2), 2),
-                  'z': round(b2['z'] + b2['n'][1] * sg * (HW1 + 2.2), 2),
-                  't': b2['t'], 'n': b2['n'], 'w': b2['w']})
+                  'x': round(b2['x'] + b2['t'][0] * u + b2['n'][0] * v, 2),
+                  'z': round(b2['z'] + b2['t'][1] * u + b2['n'][1] * v, 2),
+                  't': b2['t'], 'n': b2['n'], 'w': b2['w'],
+                  'deckY': dY, 'soffit': round(dY - 1.3, 2)})
 
   loops = []
   for b in BR6:
+    off = b['half'] + 3 + (b.get('rampL') or 0)
     for sg in (-1, 1):
       loops.append({'bridge': b['id'], 'name': b['name'], 'side': sg,
-                    'x': round(b['x'] + b['n'][0] * sg * (b['half'] + 3), 2),
-                    'z': round(b['z'] + b['n'][1] * sg * (b['half'] + 3), 2)})
+                    'x': round(b['x'] + b['n'][0] * sg * off, 2),
+                    'z': round(b['z'] + b['n'][1] * sg * off, 2)})
 
   # 同机位：站在晋安河东岸（-n，对西岸汇入口），朝西看东口
   (ex, ez), et, en = at_s('jn', JN_S, -(g['HW']['jn'] + 2.8))

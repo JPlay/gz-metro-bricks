@@ -379,8 +379,14 @@ export class FzRiverStreet extends XmStreet {
       if (!!b.c2 !== !!this._c2pass || (this._c2pass && c2Band(b.z) !== this._c2band)) continue;
       const F = this.bridgeFrame(b), half = b.half, w = b.w, rise = humpRise(b);
       if (!rise) {
-        const [cx, cz] = F.P(0, 0); k.col(cx, -0.2, cz, w, 0.4, 2 * half, { ry: F.ryN, name: 'colDeck' });
-        for (const su of [-1, 1]) { const [px, pz] = F.P(su * (w / 2 - 0.15), 0); k.col(px, 0.6, pz, 0.3, 1.2, 2 * half - 0.2, { ry: F.ryN, name: 'colParapet' }); }
+        const [cx, cz] = F.P(0, 0), dY = (b.tall && b.deckY) ? b.deckY : 0, rampL = b.rampL || 0;
+        k.col(cx, dY - 0.2, cz, w, 0.4, 2 * half, { ry: F.ryN, name: 'colDeck' });
+        const pH = dY ? (b.barrier || 2.2) : 1.2;
+        for (const su of [-1, 1]) { const [px, pz] = F.P(su * (w / 2 - 0.15), 0); k.col(px, dY + pH / 2, pz, 0.3, pH, 2 * half - 0.2, { ry: F.ryN, name: 'colParapet' }); }
+        if (dY && rampL) for (const sv of [-1, 1]) {
+          this.ramp(b, sv * half, sv * (half + rampL), dY, 0, -w / 2, w / 2, 0.3, 'colDeck');
+          for (const su of [-1, 1]) this.ramp(b, sv * half, sv * (half + rampL), dY + pH * 0.7, pH * 0.7, su * (w / 2 - 0.3), su * (w / 2), 0.4, 'colParapet');
+        }
       } else {
         const N = 6;
         for (let i = 0; i < N; i++) { const v0 = -half + 2 * half * i / N, v1 = -half + 2 * half * (i + 1) / N; this.ramp(b, v0, v1, deckAt(b, v0), deckAt(b, v1), -w / 2, w / 2, 0.3, 'colDeck');
@@ -394,26 +400,36 @@ export class FzRiverStreet extends XmStreet {
       if (this._d2eBr) { if (b !== this._d2eBr) continue; }
       else if (!!b.c2 !== !!this._c2pass || (this._c2pass ? c2Band(b.z) !== this._c2band : this._d2epass ? !inD2E(b.x, b.z) : (this._nPass !== undefined && (inD2E(b.x, b.z) || zStrip(b.z) !== this._nPass)))) continue;
       if (this._d2epass && inD2E(b.x, b.z)) continue;   // 已进细节格子
-      const F = this.bridgeFrame(b), half = b.half, w = b.w, rise = humpRise(b), hw = b.hw;
+      const F = this.bridgeFrame(b), half = b.half, w = b.w, rise = humpRise(b), hw = b.hw, dY = (b.tall && b.deckY) ? b.deckY : 0;
       if (b.kind === 'bingde') this.bingde(b);
       else if (!rise && b.kind !== 'sarch') {
         const [cx, cz] = F.P(0, 0), road = b.kind === 'road';
-        GR.box(cx, -0.2, cz, w, 0.4, 2 * half, hex(road ? '#9C978C' : '#A39C8E'), F.ryN, 0, 0, 1, NO);
+        GR.box(cx, dY - 0.2, cz, w, 0.4, 2 * half, hex(road ? '#9C978C' : '#A39C8E'), F.ryN, 0, 0, 1, NO);
         if (road && ((FZR.a3 && (FZR.a3.bridges || []).includes(b.id)) || (FZR.a4 && (FZR.a4.bridges || []).includes(b.id)) || (FZR.a6 && (FZR.a6.bridges || []).includes(b.id)) || b.a4 || b.a6 || b.b3 || (FZR.b3 && FZR.b3.grey && FZR.b3.grey.bridges.includes(b.id)))) this.a3Deck(b, F, w, half);   // 3B 路桥同款（小美 3A：不用 asphalt 桶）   // 小美 11-17：3A 路桥桥面 = 深灰沥青 + 标线（原 asphalt 材质反天光，白天像一块深蓝的洞）
         else if (road) k.g('asphalt').box(cx, 0.008, cz, w - 1.6, 0.012, 2 * half, hex('#7E8084'), F.ryN, 0, 0, 1, NO);
         // 桥墩：贴岸墙的两块（不进水道中间，船好过）
         const U = [...(FZR.unders || []), ...(FZR.undersC || [])].find(u => u.bridge === b.id);
-        for (const sv of [-1, 1]) { if (U && sv === U.side) continue; const [px, pz] = F.P(0, sv * (hw - 0.35)); GR.box(px, (WY - 0.4 + -0.4) / 2, pz, w + 0.3, -0.4 - (WY - 0.4), 0.7, hex('#8E887C'), F.ryN, 0, 0, 1, NO); }
+        const pierTop = dY > 0 ? dY - 0.4 : -0.4;
+        for (const sv of [-1, 1]) { if (U && sv === U.side) continue; const [px, pz] = F.P(0, sv * (hw - 0.35)); GR.box(px, (WY - 0.4 + pierTop) / 2, pz, w + 0.3, pierTop - (WY - 0.4), 0.7, hex('#8E887C'), F.ryN, 0, 0, 1, NO); }
         for (const su of [-1, 1]) {
           const [px, pz] = F.P(su * (w / 2 - 0.15), 0);
           if (b.kind === 'foot') { k.metal.box(px, 1.0, pz, 0.06, 0.06, 2 * half - 0.2, hex('#4A5560'), F.ryN, 0, 0, 1, NO); for (let v = -half + 0.2; v <= half - 0.1; v += 1.6) { const [qx, qz] = F.P(su * (w / 2 - 0.15), v); k.metal.box(qx, 0.5, qz, 0.05, 1.0, 0.05, hex('#4A5560'), 0, 0, 0, 1, NO); } }
           else if (b.kind === 'covered') { P.box(px, 0.45, pz, 0.12, 0.9, 2 * half - 0.2, hex('#8B3A2B'), F.ryN, 0, 0, 1, NO); }
-          else if (b.tall) { const H = b.barrier || 2.2; GR.box(px, H / 2, pz, 0.36, H, 2 * half - 0.2, hex('#A8A193'), F.ryN, 0, 0, 1, NO); }   // 6A 北二环：高声屏障，比北浪路 1 m 栏板明显更高
+          else if (b.tall) { const H = b.barrier || 2.2; GR.box(px, dY + H / 2, pz, 0.36, H, 2 * half - 0.2, hex('#A8A193'), F.ryN, 0, 0, 1, NO); }   // 6A 北二环：抬高桥面 + 高声屏障，比北浪路 1 m 栏板明显更高
           else GR.box(px, 0.5, pz, 0.3, 1.0, 2 * half - 0.2, hex('#B1AA9C'), F.ryN, 0, 0, 1, NO);
         }
-        if (b.tall) {   // 更深的主梁 + 中央分隔带，桥下净空看起来比北浪路更厚更高
-          GR.box(cx, -0.85, cz, w, 0.9, 2 * half, hex('#8A8476'), F.ryN, 0, 0, 1, NO);
-          GR.box(cx, 1.05, cz, 0.5, 2.1, 2 * half - 0.4, hex('#9C978C'), F.ryN, 0, 0, 1, NO);
+        if (b.tall) {   // 更深的主梁 + 中央分隔带；抬高后梁底在 deckY-1.3，岸上能从桥下走过
+          GR.box(cx, dY - 0.85, cz, w, 0.9, 2 * half, hex('#8A8476'), F.ryN, 0, 0, 1, NO);
+          GR.box(cx, dY + 1.05, cz, 0.5, 2.1, 2 * half - 0.4, hex('#9C978C'), F.ryN, 0, 0, 1, NO);
+        }
+        if (dY && (b.rampL || 0) > 0) {   // 两头坡道（沥青贴在斜板上）
+          const rampL = b.rampL;
+          for (const sv of [-1, 1]) {
+            const v0 = sv * half, v1 = sv * (half + rampL), [rx, rz] = F.P(0, (v0 + v1) / 2);
+            const L = Math.hypot(rampL, dY), ang = Math.atan2(0 - dY, v1 - v0);
+            GR.box(rx, dY / 2, rz, w, 0.36, L, hex('#9C978C'), F.ryN, -ang, 0, 1, NO);
+            k.g('granite').box(rx, dY / 2 + 0.2, rz, w - 1.6, 0.08, L, hex('#4E5155'), F.ryN, -ang, 0, 1, NO);
+          }
         }
         if (b.kind === 'covered') this.pavilion(b);
       } else {
@@ -432,7 +448,7 @@ export class FzRiverStreet extends XmStreet {
       // 桥名牌（只有有名字的古桥 / 路桥挂古名；无名小桥不挂 —— 小美 ⑧）
       if (b.plate) {
         const uv = A.draw(1.8, 0.45, textPaint([b.plate], { bg: '#6E675B', fg: '#F2E2B0' }), 70);
-        for (const su of [-1, 1]) { const [qx, qz] = F.P(su * (w / 2 + 0.02), 0); A.quad(qx, deckAt(b, 0) + 0.45, qz, 1.8, 0.45, Math.atan2(b.t[0] * su, -b.t[1] * su), uv); }
+        for (const su of [-1, 1]) { const [qx, qz] = F.P(su * (w / 2 + 0.02), 0); A.quad(qx, (b.deckY || 0) + deckAt(b, 0) + 0.45, qz, 1.8, 0.45, Math.atan2(b.t[0] * su, -b.t[1] * su), uv); }
       }
     }
   }
@@ -725,9 +741,9 @@ export class FzRiverStreet extends XmStreet {
   }
   /** 3A 路桥桥面：深灰沥青（granite 桶：粗颗粒、几乎不反天光）+ 白色分道虚线 / 边线 + 中间双黄线（kit.solid）——都并进已有网格，不加 draw */
   a3Deck(b, F, w, half) {
-    const k = this.kit, GR = k.g('granite'), P = k.solid, W2 = (w - 1.6) / 2, L = 2 * half, [cx, cz] = F.P(0, 0), wh = hex('#E8E6DF'), ye = hex('#E2B53A');
-    GR.box(cx, 0.008, cz, 2 * W2, 0.012, L, hex('#4E5155'), F.ryN, 0, 0, 1, NO);
-    const ln = (u, v0, v1, c, wd = 0.15) => { const [x, z] = F.P(u, (v0 + v1) / 2); P.box(x, 0.018, z, wd, 0.006, v1 - v0, c, F.ryN, 0, 0, 1, NO); };
+    const k = this.kit, GR = k.g('granite'), P = k.solid, W2 = (w - 1.6) / 2, L = 2 * half, [cx, cz] = F.P(0, 0), wh = hex('#E8E6DF'), ye = hex('#E2B53A'), y0 = b.deckY || 0;
+    GR.box(cx, y0 + 0.008, cz, 2 * W2, 0.012, L, hex('#4E5155'), F.ryN, 0, 0, 1, NO);
+    const ln = (u, v0, v1, c, wd = 0.15) => { const [x, z] = F.P(u, (v0 + v1) / 2); P.box(x, y0 + 0.018, z, wd, 0.006, v1 - v0, c, F.ryN, 0, 0, 1, NO); };
     for (const e of [-1, 1]) { ln(e * 0.18, -half, half, ye, 0.14); ln(e * (W2 - 0.5), -half, half, wh, 0.18);   // 双黄中线 + 两边边线
       for (let j = 1; j * 3.5 < W2 - 1.2; j++) for (let v = -half + 1.5; v + 3 <= half - 1; v += 9) ln(e * j * 3.5, v, v + 3, wh); }   // 分道白虚线（3 m 线 6 m 空）
   }
@@ -764,22 +780,24 @@ export class FzRiverStreet extends XmStreet {
     GR.box(cx, top + 0.08, cz, thick + 0.2, 0.16, 2 * hw - 1.4, hex(CAP), ryT, 0, 0, 1, NO);
     // 碰撞：整座堰过人不过
     const mid = S.block.reduce((a, q) => [a[0] + q[0] / 4, a[1] + q[1] / 4], [0, 0]);
-    k.col(mid[0], 1.2, mid[1], 4.8, 2.8, 2 * hw + 2.6, { ry: ryT, name: 'colGateBlock' });
+    const yBot = WY - 0.2, yTop = 1.6;
+    k.col(mid[0], (yBot + yTop) / 2, mid[1], 5.2, yTop - yBot, 2 * hw + 3.2, { ry: ryT, name: 'colGateBlock' });
     // 筒顶泵房（岸上，圆拱顶，不是两坡黛瓦，也不是长条启闭房）
     const H = S.house, hy = H.h / 2;
     P.box(H.x, hy, H.z, H.w, H.h, H.d, hex(CONC), ryT, 0, 0, 1, NO);
     P.box(H.x, 0.25, H.z, H.w + 0.2, 0.5, H.d + 0.2, hex(BASE), ryT, 0, 0, 1, NO);
-    // barrel roof：沿 t 方向的半圆拱（几块盒子近似）
-    const rise = 1.3;
+    // barrel roof：沿 t 方向的半圆拱（几块盒子近似），深灰金属顶，和两岸黛瓦分开
+    const rise = 1.55;
     for (const sd of [-1, 1]) {
       const [rx, rz] = [H.x + t[0] * sd * H.w * 0.22, H.z + t[1] * sd * H.w * 0.22];
-      P.box(rx, H.h + rise * 0.45, rz, H.w * 0.55, rise * 0.7, H.d + 0.15, hex('#8E8C86'), ryT, sd * 0.45, 0, 1, NO);
+      P.box(rx, H.h + rise * 0.45, rz, H.w * 0.58, rise * 0.75, H.d + 0.2, hex('#6A6E72'), ryT, sd * 0.48, 0, 1, NO);
     }
-    P.box(H.x, H.h + rise * 0.85, H.z, 0.5, 0.35, H.d + 0.1, hex('#7A7872'), ryT, 0, 0, 1, NO);
+    P.box(H.x, H.h + rise * 0.88, H.z, 0.55, 0.38, H.d + 0.15, hex('#5A5E62'), ryT, 0, 0, 1, NO);
     // 两根螺杆泵筒（立在泵房靠水一侧，茶园独有）
     for (const se of [-1, 1]) {
-      const [qx, qz] = [H.x + n[0] * S.houseSide * (-H.d / 2 - 0.8) + t[0] * se * 1.5, H.z + n[1] * S.houseSide * (-H.d / 2 - 0.8) + t[1] * se * 1.5];
-      P.cyl(qx, 1.6, qz, 0.55, 3.2, hex('#9AA0A6'), 8, 0, 0);
+      const [qx, qz] = [H.x + n[0] * S.houseSide * (-H.d / 2 - 0.9) + t[0] * se * 1.55, H.z + n[1] * S.houseSide * (-H.d / 2 - 0.9) + t[1] * se * 1.55];
+      P.cyl(qx, 1.85, qz, 0.62, 3.7, hex('#8A9096'), 8, 0, 0);
+      P.cyl(qx, 3.85, qz, 0.22, 0.5, hex('#4A5056'), 8, 0, 0);
     }
     k.col(H.x, hy, H.z, H.w, H.h, H.d, { ry: ryT, name: 'colPumpHouse' });
   }

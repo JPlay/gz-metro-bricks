@@ -141,7 +141,7 @@ export class FzNight {
     for (const b of BRIDGES) {
       if (b.kind === 'bingde' || b.kind === 'covered') continue;
       const rise = humpRise(b), flatB = !rise && b.kind !== 'sarch', uo = flatB ? b.w / 2 : b.w / 2 - 0.03, t = b.t, nn = b.n;
-      const top = v => flatB ? 1.0 : deckAt(b, v) + 0.84, Pt = (u, v) => [b.x + t[0] * u + nn[0] * v, b.z + t[1] * u + nn[1] * v];
+      const top = v => flatB ? ((b.deckY || 0) + (b.tall ? (b.barrier || 2.2) * 0.7 : 1.0)) : deckAt(b, v) + 0.84, Pt = (u, v) => [b.x + t[0] * u + nn[0] * v, b.z + t[1] * u + nn[1] * v];
       const seg = flatB ? 1 : 10, v0 = -b.half + 0.25, v1 = b.half - 0.25;
       for (const su of [-1, 1]) {
         for (let i = 0; i < seg; i++) {
@@ -190,9 +190,10 @@ export class FzNight {
     }
     // 6A 北二环桥下步道：沿桥宽贴梁底两道暖光带，夜里桥下不要一片漆黑（不加点光源）
     for (const U of (FZR.a6 && FZR.a6.under) || []) {
-      const t = U.t, [x, z] = [U.x, U.z];
-      flat(x, -0.32, z, t[0], t[1], U.w / 2 - 0.6, 0.18, RG.line, sc(WARM, 0.85));
-      flat(x, 0.04, z, t[0], t[1], 1.6, 1.6, RG.pool, sc(WARM, 0.32));
+      const t = U.t, [x, z] = [U.x, U.z], sof = (U.soffit != null) ? U.soffit : ((U.deckY || 3.2) - 1.3);
+      flat(x, sof + 0.04, z, t[0], t[1], U.w / 2 - 1.2, 0.2, RG.line, sc(WARM, 0.9));
+      flat(x + t[0] * 8, sof + 0.04, z + t[1] * 8, t[0], t[1], 6.0, 0.2, RG.line, sc(WARM, 0.85));
+      flat(x, 0.045, z, t[0], t[1], 1.8, 1.8, RG.pool, sc(WARM, 0.36));
     }
     // 台阶：每级踏步边沿一道暗暖光线（stairAlong 建的时候登记）
     for (const st of (S._stairs ? S._stairs.values() : [])) {
