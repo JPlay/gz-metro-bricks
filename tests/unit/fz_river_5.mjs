@@ -70,7 +70,7 @@ console.log(`INFO yz ${RV.yz.line.len.toFixed(1)} m, gate (${A5.gate.x}, ${A5.ga
   ok('g5day skips tileCull (stable day count)', /g5day\.getChildMeshes\(\)/.test(fsrc) && /noTileCull: true/.test(fsrc));
   ok('yz glints not in the always-on water loop', /FZR\.a5 && id === 'yz'/.test(fsrc));
   ok('no PointLight / ShadowGenerator in a5Static / a5Day / a5Sluice', !/a5Static[\s\S]{0,2500}(PointLight|ShadowGenerator)/.test(fsrc) && !/a5Day[\s\S]{0,2500}(PointLight|ShadowGenerator)/.test(fsrc) && !/a5Sluice[\s\S]{0,3500}(PointLight|ShadowGenerator)/.test(fsrc));
-  ok('night: 江四 strips merged into the existing lights() mesh (eave outboard + thick, weir pads as a row of dots)', /FZR\.a5 && FZR\.a5\.gate/.test(nsrc) && /H\.d \/ 2 \+ 0\.22/.test(nsrc) && /0\.24, H\.w \/ 2/.test(nsrc) && /sc\(WARM, 1\.05\)/.test(nsrc) && /0\.16, 0\.50/.test(nsrc));
+  ok('night: 江四 strips merged into the existing lights() mesh (gable eave + weir pads as a row of dots)', /FZR\.a5 && FZR\.a5\.gate/.test(nsrc) && /H\.w \/ 2 - 0\.22/.test(nsrc) && /0\.24, H\.d \/ 2/.test(nsrc) && /sc\(WARM, 1\.05\)/.test(nsrc) && /0\.18, 0\.55/.test(nsrc));
   ok('night: still a single lights mesh, no extra Mesh / PointLight', (nsrc.match(/new B\.Mesh\(/g) || []).length === 1 && !/PointLight|ShadowGenerator/.test(nsrc));
   ok('night: skip bridge water reflection next to 江四 too', /FZR\.a5 && FZR\.a5\.gate/.test(nsrc.slice(nsrc.indexOf('nearSluice'), nsrc.indexOf('nearSluice') + 280)));
 }

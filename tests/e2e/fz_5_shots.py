@@ -10,9 +10,10 @@ QS = os.environ.get('FZQS', '&t=day'); TAG = 'night' if 't=night' in QS else 'da
 SPOTS = """(async () => { const M = await import('/js/data/fz-river.js'); const F = M.FZR, A5 = F.a5, A4 = F.a4, G = A5.gate, Y = A4.yz, yz = M.RIVERS.yz.line, hw = F.rivers.yz.hw;
   const Pt = (a, b) => [G.x + G.t[0] * a + G.n[0] * b, G.z + G.t[1] * a + G.n[1] * b];
   const Hs = G.houseSide || 1;
-  // 正面：上游 22 m，略偏向泵房，悬停看清两孔堰 + 侧泵房 + 后面闽江
-  const front = Pt(-22, Hs * 5), frontLook = Pt(2, Hs * 2);
-  const mjCam = Pt(-8, Hs * (hw + 4)), mjLook = Pt(90, 0);
+  // 正面：上游 20 m，略偏向泵房并抬高，看清两孔钢闸 + 侧泵房 + 后面闽江（不要贴进堰墙里）
+  const front = Pt(-20, Hs * 6), frontLook = Pt(4, Hs * 1);
+  // 闽江：跨过堰顶、在江面上空悬停，往对岸看宽水面 + 天际线（不要从堰墙里拍）
+  const mjCam = Pt(14, Hs * 4), mjLook = Pt(120, 0);
   // 04 同机位：光明港水面上、河口北 8 m 悬停，往南看
   const yzCam = [Y.c[0] - Y.d[0] * 8, Y.c[1] - Y.d[1] * 8];
   const tip = [Y.c[0] + Y.d[0] * (Y.len * 0.7), Y.c[1] + Y.d[1] * (Y.len * 0.7)];
@@ -21,16 +22,17 @@ SPOTS = """(async () => { const M = await import('/js/data/fz-river.js'); const 
   const jmFront = G9.view;
   const br = (name) => M.BRIDGES.find(q => q.name === name && q.river === 'yz');
   const b1 = br('老药洲街'), b2 = br('瀛洲桥'), b3 = br('台江路');
-  const bCam = (b, sg) => [b.x + b.n[0] * sg * (b.half + 8), b.z + b.n[1] * sg * (b.half + 8)];
+  const bCam = (b, sg) => [b.x + b.n[0] * sg * (b.half + 6) + b.t[0] * -(b.w / 2 + 10), b.z + b.n[1] * sg * (b.half + 6) + b.t[1] * -(b.w / 2 + 10)];
+  const bLook = (b) => [b.x, b.z];
   return [
-    ['jiangsi_front', ...front, ...frontLook, 0.06, 1.7, 1],
+    ['jiangsi_front', ...front, ...frontLook, 0.08, 2.2, 1],
     ['jiangsi_from_lookout', ...G.view, G.x, G.z, 0.04, 0.05, 0],
-    ['minjiang_from_lookout', ...mjCam, ...mjLook, 0.08, 1.5, 1],
+    ['minjiang_from_lookout', ...mjCam, ...mjLook, 0.10, 4.2, 1],
     ['sign_jiangsi', A5.sign.x - A5.sign.n[0] * 5.5, A5.sign.z - A5.sign.n[1] * 5.5, A5.sign.x, A5.sign.z, 0.12, 0.05, 0],
     ['yz_mouth', ...yzCam, ...tip, 0.12, 1.4, 1],
-    ['bridge_laoyaozhou', ...bCam(b1, -1), b1.x, b1.z, 0.05, 0.05, 0],
-    ['bridge_yingzhou', ...bCam(b2, 1), b2.x, b2.z, 0.05, 0.05, 0],
-    ['bridge_taijiang', ...bCam(b3, -1), b3.x, b3.z, 0.05, 0.05, 0],
+    ['bridge_laoyaozhou', ...bCam(b1, -1), ...bLook(b1), 0.08, 0.05, 0],
+    ['bridge_yingzhou', ...bCam(b2, 1), ...bLook(b2), 0.08, 0.05, 0],
+    ['bridge_taijiang', ...bCam(b3, -1), ...bLook(b3), 0.08, 0.05, 0],
     ['xingang_front', ...xgFront, Gx.x, Gx.z, 0.05, 1.6, 1],
     ['jiumen_front', ...jmFront, G9.x, G9.z, 0.05, 0.05, 0],
   ]; })()"""

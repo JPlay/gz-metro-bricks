@@ -169,14 +169,13 @@ export class FzNight {
       const S5 = FZR.a5.gate, tS = S5.t, nS = S5.n, hw = S5.hw, H = S5.house;
       const Pt = (a, b) => [S5.x + tS[0] * a + nS[0] * b, S5.z + tS[1] * a + nS[1] * b];
       const WT = 1.55, PW = 1.0, PB = [-hw, -PW / 2, hw], PA0 = -1.4, PA1 = 2.4;
-      for (const v of PB) for (const aa of [PA0 - 0.12, PA1 + 0.12]) { const [x, z] = Pt(aa, v); flat(x, WT + 1.08 + 0.32, z, nS[0], nS[1], 0.16, 0.50, RG.line, sc(WARM, 1.15)); }
+      // 墩帽顶短带：沿 n，正视 / 斜视都是一排亮点（不要沿水流拉长条）
+      for (const v of PB) for (const aa of [PA0 - 0.12, PA1 + 0.12]) { const [x, z] = Pt(aa, v); flat(x, WT + 0.10 + 0.32, z, nS[0], nS[1], 0.18, 0.55, RG.line, sc(WARM, 1.15)); }
       if (H) {
         const fx = H.n[0], fz = H.n[1], rx = H.t[0], rz = H.t[1];
-        // 泵房朝河檐口外侧（沿房宽 = 沿 t），加厚 hu=0.24，亮度 1.05，不藏在檐下
-        const ex = H.x - fx * (H.d / 2 + 0.22), ez = H.z - fz * (H.d / 2 + 0.22);
-        flat(ex, H.h + 0.12, ez, rx, rz, 0.24, H.w / 2 + 0.15, RG.line, sc(WARM, 1.05));
-        const ex2 = H.x + fx * (H.d / 2 + 0.22), ez2 = H.z + fz * (H.d / 2 + 0.22);
-        flat(ex2, H.h + 0.12, ez2, rx, rz, 0.24, H.w / 2 + 0.15, RG.line, sc(WARM, 1.05));
+        // 只在朝汇入口 / 正面的山墙檐口做加厚灯带（沿房深 = 沿 n），正视能看见一条横带。不要沿 t 拉朝河檐（正视是一条插进天空的橙线）。
+        const ux = H.x + rx * (-H.w / 2 - 0.22), uz = H.z + rz * (-H.w / 2 - 0.22);
+        flat(ux, H.h + 0.10, uz, fx, fz, 0.24, H.d / 2 + 0.12, RG.line, sc(WARM, 1.05));
       }
     }
     // 台阶：每级踏步边沿一道暗暖光线（stairAlong 建的时候登记）

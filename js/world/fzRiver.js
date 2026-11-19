@@ -705,46 +705,39 @@ export class FzRiverStreet extends XmStreet {
     const k = this.kit, P = k.solid, GR = k.g('granite');
     const t = S.t, n = S.n, hw = S.hw, Pt = (a, b) => [S.x + t[0] * a + n[0] * b, S.z + t[1] * a + n[1] * b], ryT = yawOf(t[0], t[1]);
     const bx = (M, a, b, y, sa, sy, sb, col) => { const [x, z] = Pt(a, b); M.box(x, y, z, sb, sy, sa, hex(col), ryT, 0, 0, 1, NO); };
-    const y0 = WY - 0.4, WT = 1.55, PW = 1.0, PA0 = -1.4, PA1 = 2.4, NB = 2;
+    const y0 = WY - 0.4, WT = 1.55, PW = 1.0, PA0 = -1.4, PA1 = 2.4, NB = 2, SIL = 0.55;
     const PIER = '#A39C8E', CAP = '#B5AE9F', GATE = '#6A6E6C', RIBC = '#545856', BASE = '#9A9385';
     const PB = [-hw, -PW / 2, hw];   // 两岸墩 + 中墩（两孔）
-    // 矮堰身（整跨一条，顶比岸略高，没有 3.6 m 墩顶启闭房）
-    bx(GR, (PA0 + PA1) / 2, 0, (y0 + WT) / 2, PA1 - PA0, WT - y0, 2 * hw + 2.4, PIER);
-    bx(GR, (PA0 + PA1) / 2, 0, WT + 0.08, PA1 - PA0 + 0.15, 0.16, 2 * hw + 2.6, CAP);   // 堰顶压石
-    for (const v of PB) {   // 三座短墩从堰顶再升高一点，正视能数出两孔
-      bx(GR, (PA0 + PA1) / 2, v, WT + 0.55, PA1 - PA0 - 0.2, 0.9, PW, PIER);
-      bx(GR, (PA0 + PA1) / 2, v, WT + 1.08, PA1 - PA0 + 0.15, 0.16, PW + 0.25, CAP);
-      const [x, z] = Pt((PA0 + PA1) / 2, v); k.col(x, (y0 + WT + 0.7) / 2, z, PW + 0.2, WT + 0.9 - y0, PA1 - PA0, { ry: ryT, name: 'colSluice' });
+    // 低堰坎（只垫底，不把两孔填实，正面要看见钢闸和后面的闽江）
+    bx(GR, (PA0 + PA1) / 2, 0, (y0 + SIL) / 2, PA1 - PA0, SIL - y0, 2 * hw + 2.4, PIER);
+    for (const v of PB) {
+      bx(GR, (PA0 + PA1) / 2, v, (y0 + WT) / 2, PA1 - PA0, WT - y0, PW, PIER);
+      bx(GR, (PA0 + PA1) / 2, v, WT + 0.10, PA1 - PA0 + 0.15, 0.16, PW + 0.25, CAP);
+      const [x, z] = Pt((PA0 + PA1) / 2, v); k.col(x, (y0 + WT) / 2, z, PW + 0.2, WT - y0, PA1 - PA0, { ry: ryT, name: 'colSluice' });
     }
-    // 两扇钢闸（关着），顶略低于堰顶压石，横肋清晰
     for (let i = 0; i < NB; i++) {
-      const v0 = PB[i] + PW / 2, v1 = PB[i + 1] - PW / 2, vm = (v0 + v1) / 2, W = v1 - v0, gt = WT - 0.12;
-      bx(GR, 0.2, vm, (y0 + gt) / 2, 0.28, gt - y0, W, GATE);
-      for (let y = WY + 0.3; y < gt - 0.08; y += 0.45) for (const sa of [-1, 1]) bx(GR, 0.2 + sa * 0.16, vm, y, 0.05, 0.07, W - 0.12, RIBC);
-      bx(GR, 0.2, vm, gt + 0.04, 0.34, 0.08, W, '#5C605E');
+      const v0 = PB[i] + PW / 2, v1 = PB[i + 1] - PW / 2, vm = (v0 + v1) / 2, W = v1 - v0, gt = WT - 0.18;
+      bx(GR, 0.15, vm, (y0 + gt) / 2, 0.28, gt - y0, W, GATE);
+      for (let y = WY + 0.3; y < gt - 0.08; y += 0.45) for (const sa of [-1, 1]) bx(GR, 0.15 + sa * 0.16, vm, y, 0.05, 0.07, W - 0.12, RIBC);
+      bx(GR, 0.15, vm, gt + 0.04, 0.34, 0.08, W, '#5C605E');
     }
-    // 侧泵房：岸上小房子，两坡顶，浅灰墙，比堰高一截，从正面一眼能分开
-    { const H = S.house, fx = H.n[0], fz = H.n[1], rx = H.t[0], rz = H.t[1], ry = yawOf(rx, rz);
+    // 侧泵房：岸上小房子，两坡顶（脊沿河、坡朝岸），浅灰墙
+    { const H = S.house, fx = H.n[0], fz = H.n[1], rx = H.t[0], rz = H.t[1], ry = yawOf(rx, rz), ryN = yawOf(fx, fz);
       const WALL = '#C8C2B6', ROOF = '#5E6266', WIN = '#5A6164', FRAME = '#8E887C';
       P.box(H.x, H.h / 2, H.z, H.d, H.h, H.w, hex(WALL), ry, 0, 0, 1, NO);
       GR.box(H.x, 0.28, H.z, H.d + 0.2, 0.56, H.w + 0.2, hex(BASE), ry, 0, 0, 1, NO);
       const rise = 1.15, slope = Math.atan2(rise, H.d / 2);
-      for (const sd of [-1, 1]) { const hx = H.x + fx * sd * (H.d / 4), hz = H.z + fz * sd * (H.d / 4); P.box(hx, H.h + 0.08 + rise / 2, hz, Math.hypot(H.d / 2, rise) + 0.3, 0.14, H.w + 0.45, hex(ROOF), ry, sd * slope, 0, 1, NO); }
-      P.box(H.x, H.h + 0.1 + rise, H.z, 0.28, 0.18, H.w + 0.5, hex('#4A4E52'), ry, 0, 0, 1, NO);
-      // 朝河一面：门 + 两扇窗 + 闸名
-      const face = 1; // +t 略偏下游也能从正面看见；门开在朝堰/河的一侧（−n 已含在 house.n 朝外）
-      const out = 1; // along house.n (outward from river? house.n is toward bank)
-      // 朝河 = −house.n
+      for (const sd of [-1, 1]) { const hx = H.x + fx * sd * (H.d / 4), hz = H.z + fz * sd * (H.d / 4); P.box(hx, H.h + 0.08 + rise / 2, hz, H.w + 0.5, 0.14, Math.hypot(H.d / 2, rise) + 0.35, hex(ROOF), ryN, sd * slope, 0, 1, NO); }
+      P.box(H.x, H.h + 0.10 + rise, H.z, 0.28, 0.18, H.w + 0.4, hex('#4A4E52'), ry, 0, 0, 1, NO);
       const qx = H.x - fx * (H.d / 2 + 0.03), qz = H.z - fz * (H.d / 2 + 0.03);
       for (const u of [-2.2, 2.2]) { const wx = qx + rx * u, wz = qz + rz * u; P.box(wx, 2.35, wz, 0.05, 1.15, 1.2, hex(FRAME), ry, 0, 0, 1, NO); P.box(wx - fx * 0.03, 2.35, wz - fz * 0.03, 0.04, 0.95, 1.0, hex(WIN), ry, 0, 0, 1, NO); }
-      P.box(qx, 1.15, qz, 0.06, 2.0, 1.15, hex(FRAME), ry, 0, 0, 1, NO);   // 门
+      P.box(qx, 1.15, qz, 0.06, 2.0, 1.15, hex(FRAME), ry, 0, 0, 1, NO);
       const uv = this.atlas.draw(2.2, 0.5, textPaint(['江四水闸'], { bg: '#6E675B', fg: '#F2E2B0' }), 70);
       this.atlas.quad(qx - fx * 0.04, 4.15, qz - fz * 0.04, 2.2, 0.5, Math.atan2(-fx, fz), uv);
       k.col(H.x, H.h / 2, H.z, H.d, H.h, H.w, { ry, name: 'colPump' }); }
-    // 观景处铺地 + 长椅（离开木牌）
     { const [x, z] = S.view; GR.box(x, 0.015, z, 3.2, 0.03, 3.2, hex('#ABA497'), ryT, 0, 0, 1, NO);
-      const sg = FZR.a5.sign, bx = sg.x - n[0] * S.side * 0.4 + t[0] * 2.2, bz = sg.z - n[1] * S.side * 0.4 + t[1] * 2.2;
-      D.bench(this.kit, bx, 0, bz, yawOf(t[0], t[1]), true); }
+      const sg = FZR.a5.sign, bx_ = sg.x - n[0] * S.side * 0.4 + t[0] * 2.2, bz = sg.z - n[1] * S.side * 0.4 + t[1] * 2.2;
+      D.bench(this.kit, bx_, 0, bz, yawOf(t[0], t[1]), true); }
   }
   /** 5 白天才画（g5day）：瀛洲河水面亮纹 + 闽江对岸地面 / 堤岸 / 树冠 / 高低楼天际线（偏蓝灰，不是又一条内河对岸） */
   a5Day() {
