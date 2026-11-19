@@ -147,6 +147,19 @@ async def main():
               b.s = s0 + 30*dir; b.place(0); const p=b.pose(); b.node.computeWorldMatrix(true); const wp=b.node.getAbsolutePosition();
               __game.player.spawn(wp.x, wp.y+1.2, wp.z, Math.atan2(p.tx*dir, p.tz*dir)); __game.player.pitch=0.08; })()""",
         }
+
+        if os.environ.get('FZPOP') == 'xg':   # 4A：新港闸正面 + 闸西远水 + 瀛洲河口；FZKIOSK=fzgmg
+            LOCS = {
+              'xg_lookout': """(async () => { const S=__game.fzMetro.street, R=S.kit.root.position; const M = await import('/js/data/fz-river.js'); const G = M.FZR.a4.gate;
+                  __game.player.spawn(R.x+G.view[0], 0.05, R.z+G.view[1], Math.atan2(G.x-G.view[0], G.z-G.view[1])); __game.player.pitch=0.04; })()""",
+              'xg_west': """(async () => { const S=__game.fzMetro.street, R=S.kit.root.position; const M = await import('/js/data/fz-river.js'); const G = M.FZR.a4.gate;
+                  const tx = G.x + G.t[0]*28, tz = G.z + G.t[1]*28;
+                  __game.player.spawn(R.x+G.view[0], 0.05, R.z+G.view[1], Math.atan2(tx-G.view[0], tz-G.view[1])); __game.player.pitch=0.0; })()""",
+              'yz_mouth': """(async () => { const S=__game.fzMetro.street, R=S.kit.root.position; const M = await import('/js/data/fz-river.js'); const Y = M.FZR.a4.yz;
+                  const x = Y.c[0] - Y.d[0]*8 + Y.d[1]*4, z = Y.c[1] - Y.d[1]*8 - Y.d[0]*4, tx = Y.c[0] + Y.d[0]*(Y.len*0.7), tz = Y.c[1] + Y.d[1]*(Y.len*0.7);
+                  __game.player.spawn(R.x+x, 0.05, R.z+z, Math.atan2(tx-x, tz-z)); __game.player.pitch=0.04; })()""",
+            }
+
         if os.environ.get('FZPOP') == 'qth':   # 3B（小美 11-17）：琴亭湖东岸（house 169 一次性灰三角那里）+ 琴亭 —— FZKIOSK=fzdm
             LOCS = {
               'qth_east_tri': """(() => { const S=__game.fzMetro.street, R=S.kit.root.position; __game.player.spawn(R.x+303.38, 0.05, R.z+1023.75, 0.7508); __game.player.pitch=0.16; })()""",
