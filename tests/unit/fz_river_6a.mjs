@@ -91,7 +91,7 @@ console.log(`INFO hq ${RV.hq.line.len.toFixed(1)} m, gate (${A6.gate.x}, ${A6.ga
 // 茶园水闸：单孔、筒顶泵房、只看不过、浅灰、不用 c2Sluice / 九门 / 新港 / 江四那一套
 { const G = A6.gate, H = G.house;
   ok('茶园水闸: 1 bay, barrel-roof side pump house, not a full-span 启闭房', G.bays === 1 && G.style === 'cy' && H && H.roof === 'barrel' && H.w <= 8 && H.h <= 5.5 && /a6Sluice/.test(fsrc) && !/this\.c2Sluice\(G, '茶园/.test(fsrc));
-  ok('gate block keeps people off the weir (colGateBlock extends down to WY)', G.block.length === 4 && /colGateBlock/.test(fsrc) && /yBot = WY/.test(fsrc));
+  ok('gate block keeps people off the weir (colGateBlock covers the full block, including below water)', G.block.length === 4 && /colGateBlock/.test(fsrc) && /a6Sluice[\s\S]*k\.col\([^;]+, 16, la, \{ ry: ryT, name: 'colGateBlock' \}/.test(fsrc));
   ok('sign: 茶园水闸 / Chayuan Sluice, wood board (stopOnly)', A6.sign.zh === '茶园水闸' && A6.sign.en === 'Chayuan Sluice' && A6.sign.stopOnly === true);
   { const st = (A6.signs || []).find(s => s.id === 'cyh'), bn = A6.bench, dWS = st && Math.hypot(A6.sign.x - st.x, A6.sign.z - st.z);
     ok('wood and stone signs are separated (≥ 4 m, not stacked)', st && dWS >= 4, { dWS });

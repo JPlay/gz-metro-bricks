@@ -796,10 +796,10 @@ export class FzRiverStreet extends XmStreet {
     const [cx, cz] = Pt(0, 0);
     GR.box(cx, (y0 + top) / 2, cz, thick, top - y0, 2 * hw - 1.6, hex(BASE), ryT, 0, 0, 1, NO);
     GR.box(cx, top + 0.08, cz, thick + 0.2, 0.16, 2 * hw - 1.4, hex(CAP), ryT, 0, 0, 1, NO);
-    // 碰撞：整座堰过人不过
-    const mid = S.block.reduce((a, q) => [a[0] + q[0] / 4, a[1] + q[1] / 4], [0, 0]);
-    const yBot = WY - 0.2, yTop = 1.6;
-    k.col(mid[0], (yBot + yTop) / 2, mid[1], 5.2, yTop - yBot, 2 * hw + 3.2, { ry: ryT, name: 'colGateBlock' });
+    // 碰撞：整座占地一块高盒子（同 3A/4A 轴线：宽沿 n、深沿 t），从水下到空中都进不去
+    const B_ = S.block, cx = B_.reduce((a, q) => a + q[0], 0) / 4, cz = B_.reduce((a, q) => a + q[1], 0) / 4;
+    const la = Math.hypot(B_[1][0] - B_[0][0], B_[1][1] - B_[0][1]), lb = Math.hypot(B_[2][0] - B_[1][0], B_[2][1] - B_[1][1]);
+    k.col(cx, 3, cz, lb, 16, la, { ry: ryT, name: 'colGateBlock' });
     // 筒顶泵房（岸上，圆拱顶，不是两坡黛瓦，也不是长条启闭房）
     const H = S.house, hy = H.h / 2;
     P.box(H.x, hy, H.z, H.w, H.h, H.d, hex(CONC), ryT, 0, 0, 1, NO);
