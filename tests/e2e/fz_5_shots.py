@@ -36,6 +36,8 @@ SPOTS = """(async () => { const M = await import('/js/data/fz-river.js'); const 
     ['bridge_laoyaozhou', ...bSide(b1, -1, 18, 4), ...bLook(b1), 0.14, 2.2, 1],
     ['bridge_yingzhou', ...bSide(b2, 1, 10, 5), ...bLook(b2), 0.14, 2.0, 1],
     ['bridge_taijiang', ...bSide(b3, 1, 16, 2), ...bLook(b3), 0.14, 2.2, 1],
+    // 两岸老街：老药洲街上游，东岸步道上沿河往南看，两岸排屋和树都在画面里
+    ['banks_street', ...(() => { const s = Math.max(48, b1.s - 40), p = yz.at(s, hw - 1.6), q = yz.at(Math.min(yz.len - 8, s + 40), 0); return [p.x, p.z, q.x, q.z]; })(), 0.10, 2.6, 1],
     ['xingang_front', ...xgFront, Gx.x, Gx.z, 0.05, 1.6, 1],
     ['jiumen_front', ...jmFront, G9.x, G9.z, 0.05, 0.05, 0],
   ]; })()"""

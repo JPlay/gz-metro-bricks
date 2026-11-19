@@ -7,7 +7,7 @@ from shapely.ops import unary_union
 HOLD, BLEND_END = 16.0, 32.0
 WIDTH_END = 18.0
 HW0, HW1 = 6.5, 9.0
-BAND_YZ = 16.0
+BAND_YZ = 24.0
 # 闽江：对岸约 180 m（大河，不是内河）；沿江 ±400 m；水面比内河略低
 MJ_FAR, MJ_HALF, MJ_OUT = 180.0, 400.0, 220.0
 MJ_GAP = 12.0   # 堰到闽江近岸的堤距
@@ -164,7 +164,7 @@ def build_yz(g):
   for real_s, w, kind, name, note in specs:
     gp = game_of(real_s)
     s = yz.project(Point(*gp))
-    b = bridge('yz', s, w, kind, name, note=note)
+    b = bridge('yz', s, w, kind, name, plate=('瀛洲桥' if name == '瀛洲桥' else None), note=note)
     b['a5'] = 1
   BR5 = g['BR'][nB0:]
   for b in BR5:
@@ -300,33 +300,56 @@ def place_fill(g):
   BENCH5 = [round(sx + t[0] * -6.2 + n[0] * sd * 0.6, 2),
             round(sz + t[1] * -6.2 + n[1] * sd * 0.6, 2)]
   # 占位
-  occ = unary_union([b['foot'].buffer(4) for b in BR] + [q.buffer(1.5) for q in GAPS] + [r['poly'] for r in ROADS + ROADS5]
+  def _hpoly0(h):
+    return Polygon([(h['x'] + h['t'][0] * a + h['f'][0] * b * -1, h['z'] + h['t'][1] * a + h['f'][1] * b * -1)
+                    for a, b in [(-h['w'] / 2, -h['d'] / 2), (h['w'] / 2, -h['d'] / 2), (h['w'] / 2, h['d'] / 2), (-h['w'] / 2, h['d'] / 2)]])
+  occ = unary_union([b['foot'].buffer(2.0) for b in BR5] + [q.buffer(1.0) for q in GAPS] + [r['poly'].buffer(0.4) for r in ROADS5]
                     + [p.buffer(1.0) for p in DRY] + [Polygon(GATE5['block']).buffer(10),
                        Point(*GATE5['view']).buffer(8), Point(SIGN5['x'], SIGN5['z']).buffer(6),
                        Point(SIGNS5[0]['x'], SIGNS5[0]['z']).buffer(5), Point(BENCH5[0], BENCH5[1]).buffer(3),
                        Point(GATE5['house']['x'], GATE5['house']['z']).buffer(8),
-                       g.get('xgPoly', Point(0, 0)).buffer(2), chanY.buffer(1.2)])
+                       g.get('xgPoly', Point(0, 0)).buffer(2), chanY.buffer(1.0)]
+                    + [_hpoly0(h).buffer(0.4) for h in HOUSES if not h.get('gone')])
   nH0 = len(HOUSES)
-  s = 22.0
-  while s < yz.length - 18:
-    if any(abs(b['s'] - s) < b['w'] / 2 + 10 for b in BR5):
-      s += 4; continue
+  def _try_house(s, side, off_extra, w_, d_, h_, lod=None):
+    nonlocal occ
+    off = HW1 + off_extra + d_ / 2
+    (cx, cz), tdir, nn = at_s('yz', min(yz.length - 2, s + w_ / 2), side * off)
+    poly = Polygon([(cx + tdir[0] * a + nn[0] * side * b, cz + tdir[1] * a + nn[1] * side * b)
+                    for a, b in [(-w_ / 2, -d_ / 2), (w_ / 2, -d_ / 2), (w_ / 2, d_ / 2), (-w_ / 2, d_ / 2)]])
+    if not region.buffer(-0.05).contains(poly) or poly.intersects(occ) or poly.intersects(water.buffer(0.8)):
+      return False
+    occ = occ.union(poly.buffer(0.25))
+    rec = {'x': round(cx, 2), 'z': round(cz, 2), 'w': round(w_, 2), 'd': round(d_, 2),
+           't': [round(tdir[0], 4), round(tdir[1], 4)], 'f': [round(-nn[0] * side, 4), round(-nn[1] * side, 4)],
+           'river': 'yz', 'h': h_, 'kind': 'old', 'ry': round(math.atan2(tdir[0], tdir[1]), 4),
+           'back': True, 'a5': True}
+    if lod: rec['lod'] = lod
+    HOUSES.append(rec)
+    return True
+  # 前排：沿两岸老街连排（密度接近台江 / 榕城古街），紧挨步道内侧
+  s = 16.0
+  while s < yz.length - 12:
+    if any(abs(b['s'] - s) < b['w'] / 2 + 2.4 for b in BR5):
+      s += 2; continue
     placed = False
+    w_ = R5.uniform(6.6, 10.2); d_ = R5.uniform(6.0, 8.0); h_ = R5.choice([5.4, 6.0, 6.6, 7.2, 6.2, 7.8])
     for side in (-1, 1):
-      w_ = R5.uniform(9, 14); d_ = R5.uniform(7, 10); h_ = R5.choice([12, 15, 18, 15])
-      off = HW1 + 7.5 + d_ / 2
-      (cx, cz), tdir, nn = at_s('yz', min(yz.length - 2, s + w_ / 2), side * off)
-      poly = Polygon([(cx + tdir[0] * a + nn[0] * side * b, cz + tdir[1] * a + nn[1] * side * b)
-                      for a, b in [(-w_ / 2, -d_ / 2), (w_ / 2, -d_ / 2), (w_ / 2, d_ / 2), (-w_ / 2, d_ / 2)]])
-      if region.buffer(-0.25).contains(poly) and not poly.intersects(occ) and not poly.intersects(water.buffer(0.8)):
-        occ = occ.union(poly.buffer(0.5))
-        HOUSES.append({'x': round(cx, 2), 'z': round(cz, 2), 'w': round(w_, 2), 'd': round(d_, 2),
-                       't': [round(tdir[0], 4), round(tdir[1], 4)], 'f': [round(-nn[0] * side, 4), round(-nn[1] * side, 4)],
-                       'river': 'yz', 'h': h_, 'kind': 'mod', 'ry': round(math.atan2(tdir[0], tdir[1]), 4),
-                       'back': True, 'a5': True})
+      if _try_house(s, side, 3.8, w_, d_, h_) or _try_house(s, side, 3.8, 6.2, 5.6, h_):
         placed = True
-    s += (w_ + R5.uniform(3, 6)) if placed else 3.5
-  print('5 houses', len(HOUSES) - nH0)
+    s += (w_ + R5.uniform(0.4, 1.6)) if placed else 2.0
+  nH1 = len(HOUSES)
+  # 后排：低面数，填原先发白的空地；仍落在加宽后的岸带里
+  s = 18.0
+  while s < yz.length - 14:
+    if any(abs(b['s'] - s) < b['w'] / 2 + 2.0 for b in BR5):
+      s += 3; continue
+    w_ = R5.uniform(8.0, 12.0); d_ = R5.uniform(6.0, 8.0); h_ = R5.choice([6.0, 7.0, 8.0, 9.0, 7.5])
+    for side in (-1, 1):
+      if not (_try_house(s, side, 13.0, w_, d_, h_, lod='lo') or _try_house(s, side, 13.0, 7.0, 5.8, h_, lod='lo')):
+        pass
+    s += w_ + R5.uniform(1.2, 2.8)
+  print('5 houses', len(HOUSES) - nH0, 'front', nH1 - nH0, 'back', len(HOUSES) - nH1)
 
   treeOcc = unary_union([b['foot'].buffer(2.5) for b in BR] + [q.buffer(1.5) for q in GAPS] + [r['poly'] for r in ROADS + ROADS5]
                         + [p.buffer(1.0) for p in DRY] + [Polygon(GATE5['block']).buffer(5), Point(*GATE5['view']).buffer(5),
@@ -334,17 +357,17 @@ def place_fill(g):
                            Point(SIGNS5[0]['x'], SIGNS5[0]['z']).buffer(4),
                            Point(BENCH5[0], BENCH5[1]).buffer(3)])
   nT0 = len(TREES)
-  s = 20.0
-  while s < yz.length - 12:
-    if any(abs(b['s'] - s) < b['w'] / 2 + 6 for b in BR5):
-      s += 4; continue
+  s = 16.0
+  while s < yz.length - 10:
+    if any(abs(b['s'] - s) < b['w'] / 2 + 4 for b in BR5):
+      s += 3; continue
     for side in (-1, 1):
-      (x, z), tdir, nn = at_s('yz', s, side * (HW1 + 1.8))
+      (x, z), tdir, nn = at_s('yz', s, side * (HW1 + 1.7))
       P_ = Point(x, z)
-      if region.contains(P_) and not water.buffer(0.8).contains(P_) and not treeOcc.contains(P_) and all(math.hypot(x - t[0], z - t[1]) > 5 for t in TREES if t[5] != 'gone'):
+      if region.contains(P_) and not water.buffer(0.8).contains(P_) and not treeOcc.contains(P_) and all(math.hypot(x - t[0], z - t[1]) > 4.2 for t in TREES if t[5] != 'gone'):
         TREES.append([round(x, 2), round(z, 2), round(-nn[0] * side, 3), round(-nn[1] * side, 3), round(R5.uniform(0.85, 1.15), 2), 'yz', 1])
-        treeOcc = treeOcc.union(P_.buffer(4))
-    s += R5.uniform(9, 14)
+        treeOcc = treeOcc.union(P_.buffer(3.2))
+    s += R5.uniform(5.2, 7.6)
   print('5 trees', len(TREES) - nT0)
 
   # 被新河道占到的旧楼 / 树（4A gone 不扩大；这里打 '5'）
@@ -371,11 +394,22 @@ def place_fill(g):
                     'x': round(b['x'] + b['n'][0] * sg * (b['half'] + 3), 2),
                     'z': round(b['z'] + b['n'][1] * sg * (b['half'] + 3), 2)})
 
+  # 瀛洲桥两端各两根路灯（桥面四角，灯臂朝桥面内侧）
+  yz2 = next(b for b in BR5 if b['name'] == '瀛洲桥')
+  LAMPS5 = []
+  for sv in (-1, 1):
+    for su in (-1, 1):
+      u, v = su * (yz2['w'] / 2 - 0.45), sv * (yz2['half'] - 0.4)
+      x = yz2['x'] + yz2['t'][0] * u + yz2['n'][0] * v
+      z = yz2['z'] + yz2['t'][1] * u + yz2['n'][1] * v
+      LAMPS5.append([round(x, 2), round(z, 2), round(-yz2['t'][0] * su, 4), round(-yz2['t'][1] * su, 4)])
+
   bbox = list(chanY.buffer(BAND_YZ + 40).bounds)  # minx,miny,maxx,maxy — lod 用
   A5DATA = {
     'yzLen': round(yz.length, 2), 'hw0': HW0, 'hw1': HW1, 'blend': WIDTH_END, 'pathBlend': BLEND_END, 'hold': HOLD,
     'off': g['YZ_OFF'],
     'gate': GATE5, 'mj': g['MJ5'], 'sign': SIGN5, 'signs': SIGNS5, 'bench': BENCH5,
+    'lamps': LAMPS5,
     'bridges': [b['id'] for b in BR5],
     'far': g['FAR5'],
     'gone': {'houses': GONE5_H, 'trees': GONE5_T},

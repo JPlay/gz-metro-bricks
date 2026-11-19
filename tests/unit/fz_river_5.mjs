@@ -98,5 +98,24 @@ ok('walk only: routes B + D unchanged, no new piers / kiosks / boat', Object.key
 // 圈：三座桥两端都在 A5.loop 里
 ok('e2e loop anchors: each of the three bridges has both ends', (A5.loop || []).length === 6 && ['老药洲街', '瀛洲桥', '台江路'].every(n => A5.loop.filter(q => q.name === n).length === 2));
 
+// HOLD 22:23：两岸老街密度、瀛洲桥造型、夜里水面橙条不要整根
+{ const hs = F.houses.filter(h => h.a5 && !h.gone);
+  const a = hs.filter(h => h.f[0] * hs[0].f[0] + h.f[1] * hs[0].f[1] > 0);
+  const b = hs.filter(h => h.f[0] * hs[0].f[0] + h.f[1] * hs[0].f[1] <= 0);
+  ok('both yz banks lined with old-street houses (not a couple of modern towers on empty ground)', hs.length >= 24 && a.length >= 10 && b.length >= 10 && hs.every(h => h.kind !== 'mod'), { n: hs.length, a: a.length, b: b.length, kinds: [...new Set(hs.map(h => h.kind))] });
+}
+{ const ts = F.trees.filter(t => t[5] === 'yz');
+  ok('yz trees along both banks, denser than a few lonely banyans', ts.length >= 28, ts.length);
+}
+{ const b2 = R.BRIDGES.find(q => q.name === '瀛洲桥' && q.river === 'yz');
+  ok('瀛洲桥 is still foot (not a road slab) and has a name plate', b2 && b2.kind === 'foot' && b2.plate === '瀛洲桥');
+  ok('瀛洲桥 draw: block-stone deck + stone balustrade + posts + two lamps at each end (yzFoot)', /yzFoot\(b\)/.test(fsrc) && /块石桥面/.test(fsrc) && /石栏/.test(fsrc) && /望柱/.test(fsrc) && /D\.lamp/.test(fsrc) && (A5.lamps || []).length === 4);
+  ok('瀛洲桥 approaches use 榕城古街 granite paving', /r\.a5 && r\.name === '瀛洲桥'/.test(fsrc) && /#ABA497/.test(fsrc));
+}
+ok('a5 zone skirt uses bank paving colour (PAVEC), never a whitish empty field', /inAZ/.test(fsrc) && /az && inAZ/.test(fsrc) && /PAVEC/.test(fsrc));
+ok('night: yz bridge water reflections are thin, dim, broken segments (not one solid log)', /isYz/.test(nsrc) && /nSeg = 5/.test(nsrc) && /sc\(WARM, 0\.16\)/.test(nsrc) && /RG\.streak/.test(nsrc));
+ok('night: yz bank lamp reflections are thin, dim, broken segments', /yzStreak/.test(nsrc) && /nSeg = 3/.test(nsrc) && /sc\(WARM, 0\.18\)/.test(nsrc));
+ok('night: 瀛洲桥 end lamps merged into the existing lights() mesh', /FZR\.a5 && FZR\.a5\.lamps/.test(nsrc) && /halo\(hx, 6\.95/.test(nsrc));
+
 console.log(fails.length ? `\n${fails.length} FAILED: ${fails.join(', ')}` : '\nALL PASS');
 process.exit(fails.length ? 1 : 0);

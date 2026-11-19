@@ -199,10 +199,12 @@ export class FzRiverStreet extends XmStreet {
       const c2z = FZR.c2 ? FZR.c2.z0 : -1e9;   // 2C（白马河下段）可走范围外的一圈也画草地（小美 2C ②：宁化 A 口出来左手一大片纯白地）
       const qp = FZR.b3 && FZR.b3.park, inQ = (x, z) => !!qp && x > qp[0] && x < qp[2] && z > qp[1] && z < qp[3];   // 3B：琴亭湖公园一圈外面也是草地
       const bz = FZR.b3 && FZR.b3.zone, inBZ = (x, z) => !!bz && bz.some(r => x > r[0] && x < r[2] && z > r[1] && z < r[3]) && !inQ(x, z);
+      const az = FZR.a5 && FZR.a5.zone, inAZ = (x, z) => !!az && x > az[0] && x < az[2] && z > az[1] && z < az[3];
       let skirt = FZR.skirt;
-      if (bz) {   // 3B（小美 11-17）：晋安河北段 / 凤坂河一带可走范围外的一圈 = 岸地同款铺地（pave 桶 + PAVEC），不再一大块近白的平面
+      if (bz || az) {   // 3B / 5：可走范围外一圈用岸地同款铺地（pave 桶 + PAVEC），不要发白的空地
         const P = FZR.skirt.p, I = FZR.skirt.i, Ia = [], Ib = [];
-        for (let j = 0; j < I.length; j += 3) { const hit = [I[j], I[j + 1], I[j + 2]].some(q => inBZ(P[q * 2], P[q * 2 + 1])) || inBZ((P[I[j] * 2] + P[I[j + 1] * 2] + P[I[j + 2] * 2]) / 3, (P[I[j] * 2 + 1] + P[I[j + 1] * 2 + 1] + P[I[j + 2] * 2 + 1]) / 3); (hit ? Ib : Ia).push(I[j], I[j + 1], I[j + 2]); }
+        const hitP = (x, z) => (bz && inBZ(x, z)) || (az && inAZ(x, z));
+        for (let j = 0; j < I.length; j += 3) { const hit = [I[j], I[j + 1], I[j + 2]].some(q => hitP(P[q * 2], P[q * 2 + 1])) || hitP((P[I[j] * 2] + P[I[j + 1] * 2] + P[I[j + 2] * 2]) / 3, (P[I[j] * 2 + 1] + P[I[j + 1] * 2 + 1] + P[I[j + 2] * 2 + 1]) / 3); (hit ? Ib : Ia).push(I[j], I[j + 1], I[j + 2]); }
         skirt = { p: P, i: Ia }; add(PV, [{ p: P, i: Ib }], -0.01, PAVEC);
       }
       add(k.solid, [skirt], -0.01, (KIOSKS.fzxm_B || pk || FZR.c2 || qp) ? ((x, z) => ((KIOSKS.fzxm_B && x > -620 && x < -190 && z > 60 && z < 600) || inPk(x, z) || z < c2z || inD2(x, z) || inQ(x, z)) ? GRASS : SKIRTC) : SKIRTC); }
@@ -395,6 +397,7 @@ export class FzRiverStreet extends XmStreet {
       if (this._d2epass && inD2E(b.x, b.z)) continue;   // 已进细节格子
       const F = this.bridgeFrame(b), half = b.half, w = b.w, rise = humpRise(b), hw = b.hw;
       if (b.kind === 'bingde') this.bingde(b);
+      else if (b.a5 && b.kind === 'foot') this.yzFoot(b);
       else if (!rise && b.kind !== 'sarch') {
         const [cx, cz] = F.P(0, 0), road = b.kind === 'road';
         GR.box(cx, -0.2, cz, w, 0.4, 2 * half, hex(road ? '#9C978C' : '#A39C8E'), F.ryN, 0, 0, 1, NO);
@@ -429,6 +432,27 @@ export class FzRiverStreet extends XmStreet {
         for (const su of [-1, 1]) { const [qx, qz] = F.P(su * (w / 2 + 0.02), 0); A.quad(qx, deckAt(b, 0) + 0.45, qz, 1.8, 0.45, Math.atan2(b.t[0] * su, -b.t[1] * su), uv); }
       }
     }
+  }
+  /** 5 瀛洲桥：榕城古街步行桥。块石桥面、石栏+望柱，两端各两根路灯；和老药洲街 / 台江路沥青板桥一眼可分。并进 granite / solid / glow，不加 draw */
+  yzFoot(b) {
+    const k = this.kit, GR = k.g('granite'), F = this.bridgeFrame(b), half = b.half, w = b.w, hw = b.hw, NV = 16, NU = 5, TH = 0.28;
+    const stones = ['#ABA497', '#A39C8E', '#9A9385', '#B0A898'];
+    for (let i = 0; i < NV; i++) {
+      const v0 = -half + 2 * half * i / NV, v1 = -half + 2 * half * (i + 1) / NV, vm = (v0 + v1) / 2;
+      const yTop = 0.02, yBot = Math.abs(vm) < hw ? yTop - TH : WY - 0.4;
+      for (let j = 0; j < NU; j++) {
+        const u0 = -w / 2 + w * j / NU, u1 = -w / 2 + w * (j + 1) / NU, um = (u0 + u1) / 2, [cx, cz] = F.P(um, vm);
+        GR.box(cx, (yTop + yBot) / 2, cz, u1 - u0 - 0.04, yTop - yBot, v1 - v0 - 0.03, hex(stones[(i + j) % 4]), F.ryN, 0, 0, 1, NO);
+      }
+      for (const su of [-1, 1]) { const [qx, qz] = F.P(su * (w / 2 - 0.14), vm); GR.box(qx, 0.55, qz, 0.22, 0.90, v1 - v0 + 0.02, hex('#B5AE9F'), F.ryN, 0, 0, 1, NO); }
+    }
+    for (const su of [-1, 1]) for (let v = -half + 0.15; v <= half - 0.1; v += 2.1) {
+      const [qx, qz] = F.P(su * (w / 2 - 0.14), v);
+      GR.box(qx, 0.55, qz, 0.30, 1.10, 0.30, hex('#A39C8E'), 0, 0, 0, 1, NO);
+      GR.box(qx, 1.14, qz, 0.36, 0.12, 0.36, hex('#B9B2A2'), 0, 0, 0, 1, NO);
+    }
+    for (const sv of [-1, 1]) { const [px, pz] = F.P(0, sv * (hw - 0.35)); GR.box(px, (WY - 0.4 + -0.4) / 2, pz, w + 0.3, -0.4 - (WY - 0.4), 0.7, hex('#8E887C'), F.ryN, 0, 0, 1, NO); }
+    for (const [x, z, fx, fz] of (FZR.a5 && FZR.a5.lamps) || []) D.lamp(k, x, 0, z, yawOf(fx, fz));
   }
   /** 2C 彬德桥（古石桥，步行）：条石桥面略拱起、两座船形分水石墩（三孔）、两头石阶纹、低石栏 + 望柱；有桥名牌（在 bridgeBodies 末尾） */
   bingde(b) {
@@ -871,7 +895,7 @@ export class FzRiverStreet extends XmStreet {
       if (r.plaza) continue;
       const p = r.poly, cx = (p[0] + p[2] + p[4] + p[6]) / 4, cz = (p[1] + p[3] + p[5] + p[7]) / 4, L = Math.hypot(p[2] - p[0], p[3] - p[1]), W = Math.hypot(p[6] - p[0], p[7] - p[1]), ry = yawOf(r.dir[0], r.dir[1]);
       if (!this.c2ok(cz)) continue;
-      if (r.id === 'nhj') { k.g('granite').box(cx, 0.012, cz, W, 0.02, L, hex('#ABA497'), ry, 0, 0, 1, NO); continue; }
+      if (r.id === 'nhj' || (r.a5 && r.name === '瀛洲桥')) { k.g('granite').box(cx, 0.012, cz, W, 0.02, L, hex('#ABA497'), ry, 0, 0, 1, NO); continue; }
       if (r.walk) {   // 2B 水部步道：中间花岗岩石板，两边绿化带（榕树），石栏；不画任何地面指引
         const sw = r.w - 4.4; k.g('granite').box(cx, 0.012, cz, sw, 0.02, L, hex('#ABA497'), ry, 0, 0, 1, NO);
         for (const sv of [-1, 1]) k.solid.box(cx + r.dir[1] * sv * (sw / 2 + 1.1), 0.01, cz - r.dir[0] * sv * (sw / 2 + 1.1), 2.2, 0.02, L, hex('#6F8F4E'), ry, 0, 0, 1, NO);
@@ -907,16 +931,16 @@ export class FzRiverStreet extends XmStreet {
       cv.fillStyle = 'rgba(0,0,0,0.08)'; cv.fillRect(0, 0, pw, ph * 0.06);
     };
     this.sceneTag([[0.14, 0.3, 0.14, 0.22], [0.72, 0.3, 0.14, 0.22]], 4); this.fac.mh = A.draw(10, 6, mh, 26);
-    if (FZR.d2) {
-      // 2D：白墙黛瓦民居的侧墙 / 后墙（2C 教训：不留没贴图的纯白墙）——白灰墙 + 青石勒脚 + 一扇小格窗 + 雨渍
-      this.sceneTag([[0.44, 0.3, 0.12, 0.18]], 4); this.fac.mhS = A.draw(10, 6, (cv, pw, ph) => {
+    // 侧墙 / 后墙贴图：2D 和 5 瀛洲河老街都要用（e 网没有 d2，不能再包在 if (FZR.d2) 里）
+    this.sceneTag([[0.44, 0.3, 0.12, 0.18]], 4); this.fac.mhS = A.draw(10, 6, (cv, pw, ph) => {
         cv.fillStyle = '#ECE7DC'; cv.fillRect(0, 0, pw, ph);
         for (let i = 0; i < 7; i++) { cv.fillStyle = `rgba(90,85,75,${0.04 + (i % 3) * 0.02})`; cv.fillRect(pw * (0.06 + i * 0.14), ph * 0.06, pw * 0.05, ph * (0.25 + (i % 3) * 0.12)); }   // 雨渍
         cv.fillStyle = '#5E6266'; cv.fillRect(0, ph * 0.86, pw, ph * 0.14);
         cv.fillStyle = '#3B2A20'; cv.fillRect(pw * 0.44, ph * 0.3, pw * 0.12, ph * 0.18); cv.strokeStyle = '#8A6A44'; cv.lineWidth = 2;
         for (let i = 1; i < 4; i++) { cv.beginPath(); cv.moveTo(pw * (0.44 + 0.03 * i), ph * 0.3); cv.lineTo(pw * (0.44 + 0.03 * i), ph * 0.48); cv.stroke(); }
         cv.fillStyle = 'rgba(0,0,0,0.08)'; cv.fillRect(0, 0, pw, ph * 0.06);
-      }, 26);
+    }, 26);
+    if (FZR.d2) {
       // 2D 朱紫坊沿河立面（小美 2D ③）：门一律是关着的双扇木门（门缝 + 门环 + 石门槛），窗是关着的木格窗
       this.sceneTag([[0.12, 0.28, 0.14, 0.24], [0.74, 0.28, 0.14, 0.24]], 5); this.fac.zzf = A.draw(10, 6, (cv, pw, ph) => {
         cv.fillStyle = '#F0EBE1'; cv.fillRect(0, 0, pw, ph);
@@ -955,6 +979,14 @@ export class FzRiverStreet extends XmStreet {
   houseBody(h, i) {
     const k = this.kit, P = k.solid, A = this.atlas, cols = ['#D9D2C4', '#C9CED2', '#E3D9C6', '#BFC6C9'];
       const ry = yawOf(h.f[0], h.f[1]), fx = h.f[0], fz = h.f[1], tx = fz, tz = -fx;
+      if (h.lod === 'lo') {
+        P.box(h.x, h.h / 2, h.z, h.w, h.h, h.d, hex('#D6D0C4'), ry, 0, 0, 1, NO);
+        P.box(h.x, 0.25, h.z, h.w + 0.04, 0.5, h.d + 0.04, hex('#6B6F73'), ry, 0, 0, 1, NO);
+        const rise = 1.2, slope = Math.atan2(rise, h.d / 2);
+        for (const sd of [-1, 1]) P.box(h.x + fx * sd * h.d / 4, h.h + rise / 2, h.z + fz * h.d / 4 * sd, h.w - 0.3, 0.12, Math.hypot(h.d / 2, rise) + 0.3, hex('#33373C'), ry, sd * slope, 0, 1, NO);
+        if (this.fac.mh) A.quad(h.x + fx * (h.d / 2 + 0.03), h.h / 2, h.z + fz * (h.d / 2 + 0.03), h.w, h.h, Math.atan2(fx, -fz), this.fac.mh);
+        return;
+      }
       if (h.kind === 'mod') {
         P.box(h.x, h.h / 2, h.z, h.w, h.h, h.d, hex(cols[i % 4]), ry, 0, 0, 1, NO);
         P.box(h.x, h.h + 0.25, h.z, h.w + 0.3, 0.5, h.d + 0.3, hex('#E9E5DD'), ry, 0, 0, 1, NO);
@@ -977,7 +1009,7 @@ export class FzRiverStreet extends XmStreet {
           for (const [dd, hh] of [[h.d * 0.5, rise + 0.9], [h.d * 0.24, rise + 1.5]]) { P.box(ex, h.h + hh / 2, ez, 0.4, hh, dd * 2, hex('#F3F1EA'), ry, 0, 0, 1, NO); P.box(ex, h.h + hh + 0.08, ez, 0.62, 0.16, dd * 2 + 0.3, hex('#2E3238'), ry, 0, 0, 1, NO); }
         }
         A.quad(h.x + fx * (h.d / 2 + 0.03), h.h / 2, h.z + fz * (h.d / 2 + 0.03), h.w, h.h, Math.atan2(fx, -fz), h.zzf ? this.fac.zzf : this.fac.mh);
-        if (h.d2) {   // 2D：侧墙 / 后墙也贴立面（不留纯白墙）
+        if (h.d2 || h.a5) {   // 2D / 5：侧墙 / 后墙也贴立面（不留纯白墙）
           A.quad(h.x - fx * (h.d / 2 + 0.03), h.h / 2, h.z - fz * (h.d / 2 + 0.03), h.w, h.h, Math.atan2(-fx, fz), this.fac.mhS);
           for (const se of [-1, 1]) A.quad(h.x + tx * se * (h.w / 2 + 0.03), h.h / 2, h.z + tz * se * (h.w / 2 + 0.03), h.d, h.h, Math.atan2(tx * se, -tz * se), this.fac.mhS);
         }
