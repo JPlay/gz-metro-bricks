@@ -410,7 +410,21 @@ export class FzRiverStreet extends XmStreet {
           const [px, pz] = F.P(su * (w / 2 - 0.15), 0);
           if (b.kind === 'foot') { k.metal.box(px, 1.0, pz, 0.06, 0.06, 2 * half - 0.2, hex('#4A5560'), F.ryN, 0, 0, 1, NO); for (let v = -half + 0.2; v <= half - 0.1; v += 1.6) { const [qx, qz] = F.P(su * (w / 2 - 0.15), v); k.metal.box(qx, 0.5, qz, 0.05, 1.0, 0.05, hex('#4A5560'), 0, 0, 0, 1, NO); } }
           else if (b.kind === 'covered') { P.box(px, 0.45, pz, 0.12, 0.9, 2 * half - 0.2, hex('#8B3A2B'), F.ryN, 0, 0, 1, NO); }
-          else GR.box(px, 0.5, pz, 0.3, 1.0, 2 * half - 0.2, hex('#B1AA9C'), F.ryN, 0, 0, 1, NO);
+          else {
+            GR.box(px, 0.5, pz, 0.3, 1.0, 2 * half - 0.2, hex('#B1AA9C'), F.ryN, 0, 0, 1, NO);
+            // 5 河口近景：镜头贴着六一中路东栏外棱掠射。granite（env=0.12，F0=0）在掠射角 Schlick 仍会拉出天光，
+            // 夜里暖天光变成贴墙一道橙条，白天同位置一条青边。不是水面倒影、不是标线、也不是铺地 z-fighting。
+            // 只在 gw1 东栏外棱加一条无环境光石色压条；西栏和朝路一侧、granite 材质都不动，4A 从光明港岸 / 桥面看几乎不变。
+            if (b.id === 'gw1' && su === -1) {
+              // 12 cm 截面、中心在外棱 y=1，上下各探出 6 cm 包住棱（只坐在顶面上会剩一道缝）。
+              // 单独 paint@matt（env=0、F0=0、粗糙 1）：普通 paint 桶 env=0.75，压条自己还会掠射出暖边。
+              // 新桶并进常开 rest 组，+1 draw；夜里 tintMats 按 paint 乘暗。
+              const matt = bucketMat(this.scene, k.M, 'paint@matt');
+              matt.environmentIntensity = 0; matt.metallicF0Factor = 0; matt.roughness = 1;
+              const [ex, ez] = F.P(su * (w / 2), 0);
+              k.g('paint@matt').box(ex, 1.0, ez, 0.12, 0.12, 2 * half - 0.2, hex('#8E887C'), F.ryN, 0, 0, 1, NO);
+            }
+          }
         }
         if (b.kind === 'covered') this.pavilion(b);
       } else {
