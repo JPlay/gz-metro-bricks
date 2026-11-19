@@ -22,22 +22,20 @@ SPOTS = """(async () => { const M = await import('/js/data/fz-river.js'); const 
   const jmFront = G9.view;
   const br = (name) => M.BRIDGES.find(q => q.name === name && q.river === 'yz');
   const b1 = br('老药洲街'), b2 = br('瀛洲桥'), b3 = br('台江路');
-  const bCam = (b, sg) => [b.x + b.n[0] * sg * (b.half + 6) + b.t[0] * -(b.w / 2 + 10), b.z + b.n[1] * sg * (b.half + 6) + b.t[1] * -(b.w / 2 + 10)];
+  const bSide = (b, sg) => [b.x + b.t[0] * -(b.w / 2 + 18) + b.n[0] * sg * 4, b.z + b.t[1] * -(b.w / 2 + 18) + b.n[1] * sg * 4];
   const bLook = (b) => [b.x, b.z];
-  // 老药洲街：水面上方 3/4 侧视，桥是主体（不要站在步道长椅上正对桥头）
-  const lyCam = [b1.x + b1.t[0] * -(b1.w / 2 + 18) + b1.n[0] * -4, b1.z + b1.t[1] * -(b1.w / 2 + 18) + b1.n[1] * -4];
-  // 观景处：从再靠岸一点同时看见木牌、石牌和长椅（已错开）
-  const signCam = [G.view[0] + G.n[0] * G.side * 7.0, G.view[1] + G.n[1] * G.side * 7.0];
-  const signLook = [(A5.sign.x + A5.signs[0].x) / 2, (A5.sign.z + A5.signs[0].z) / 2];
+  // 观景处：再退开一点并略向上游，一帧里同时看见木牌、石牌和长椅
+  const signCam = [G.view[0] + G.t[0] * -2.2 + G.n[0] * G.side * 9.8, G.view[1] + G.t[1] * -2.2 + G.n[1] * G.side * 9.8];
+  const signLook = [G.view[0] + G.t[0] * 0.4, G.view[1] + G.t[1] * 0.4];
   return [
     ['jiangsi_front', ...front, ...frontLook, 0.08, 2.2, 1],
     ['jiangsi_from_lookout', ...G.view, G.x, G.z, 0.04, 0.05, 0],
     ['minjiang_from_lookout', ...mjCam, ...mjLook, 0.10, 4.2, 1],
-    ['sign_jiangsi', ...signCam, ...signLook, 0.10, 0.05, 0],
+    ['sign_jiangsi', ...signCam, ...signLook, 0.08, 0.05, 0],
     ['yz_mouth', ...yzCam, ...tip, 0.12, 1.4, 1],
-    ['bridge_laoyaozhou', ...lyCam, ...bLook(b1), 0.14, 2.2, 1],
-    ['bridge_yingzhou', ...bCam(b2, 1), ...bLook(b2), 0.08, 0.05, 0],
-    ['bridge_taijiang', ...bCam(b3, -1), ...bLook(b3), 0.08, 0.05, 0],
+    ['bridge_laoyaozhou', ...bSide(b1, -1), ...bLook(b1), 0.14, 2.2, 1],
+    ['bridge_yingzhou', ...bSide(b2, 1), ...bLook(b2), 0.14, 2.0, 1],
+    ['bridge_taijiang', ...bSide(b3, -1), ...bLook(b3), 0.14, 2.2, 1],
     ['xingang_front', ...xgFront, Gx.x, Gx.z, 0.05, 1.6, 1],
     ['jiumen_front', ...jmFront, G9.x, G9.z, 0.05, 0.05, 0],
   ]; })()"""

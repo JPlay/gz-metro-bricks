@@ -181,13 +181,15 @@ async def main():
                   const pl=__game.player; pl.spawn(R.x+x, 2.2, R.z+z, Math.atan2(b.x-x, b.z-z)); pl.pitch=0.14;
                   window.__fzHold = setInterval(() => { pl.position.x=R.x+x; pl.position.y=2.2; pl.position.z=R.z+z; pl.vy=0; pl.grounded=true; const bShore=document.getElementById('bShore'); if (bShore) bShore.hidden=true; }, 16); })()""",
               'bridge_yingzhou': """(async () => { const S=__game.fzMetro.street, R=S.kit.root.position; const M = await import('/js/data/fz-river.js'); const b = M.BRIDGES.find(q => q.name==='瀛洲桥' && q.river==='yz');
-                  const x = b.x + b.n[0]*1*(b.half+6) + b.t[0]*-(b.w/2+10), z = b.z + b.n[1]*1*(b.half+6) + b.t[1]*-(b.w/2+10);
+                  const x = b.x + b.t[0]*-(b.w/2+18) + b.n[0]*4, z = b.z + b.t[1]*-(b.w/2+18) + b.n[1]*4;
                   if (window.__fzHold) { clearInterval(window.__fzHold); window.__fzHold=null; }
-                  __game.player.spawn(R.x+x, 0.05, R.z+z, Math.atan2(b.x-x, b.z-z)); __game.player.pitch=0.08; })()""",
+                  const pl=__game.player; pl.spawn(R.x+x, 2.0, R.z+z, Math.atan2(b.x-x, b.z-z)); pl.pitch=0.14;
+                  window.__fzHold = setInterval(() => { pl.position.x=R.x+x; pl.position.y=2.0; pl.position.z=R.z+z; pl.vy=0; pl.grounded=true; const bShore=document.getElementById('bShore'); if (bShore) bShore.hidden=true; }, 16); })()""",
               'bridge_taijiang': """(async () => { const S=__game.fzMetro.street, R=S.kit.root.position; const M = await import('/js/data/fz-river.js'); const b = M.BRIDGES.find(q => q.name==='台江路' && q.river==='yz');
-                  const x = b.x + b.n[0]*-1*(b.half+6) + b.t[0]*-(b.w/2+10), z = b.z + b.n[1]*-1*(b.half+6) + b.t[1]*-(b.w/2+10);
+                  const x = b.x + b.t[0]*-(b.w/2+18) + b.n[0]*-4, z = b.z + b.t[1]*-(b.w/2+18) + b.n[1]*-4;
                   if (window.__fzHold) { clearInterval(window.__fzHold); window.__fzHold=null; }
-                  __game.player.spawn(R.x+x, 0.05, R.z+z, Math.atan2(b.x-x, b.z-z)); __game.player.pitch=0.08; })()""",
+                  const pl=__game.player; pl.spawn(R.x+x, 2.2, R.z+z, Math.atan2(b.x-x, b.z-z)); pl.pitch=0.14;
+                  window.__fzHold = setInterval(() => { pl.position.x=R.x+x; pl.position.y=2.2; pl.position.z=R.z+z; pl.vy=0; pl.grounded=true; const bShore=document.getElementById('bShore'); if (bShore) bShore.hidden=true; }, 16); })()""",
               'jiangsi_front': """(async () => { const S=__game.fzMetro.street, R=S.kit.root.position; const M = await import('/js/data/fz-river.js'); const G = M.FZR.a5.gate, Hs = G.houseSide || 1;
                   const x = G.x + G.t[0]*-20 + G.n[0]*Hs*6, z = G.z + G.t[1]*-20 + G.n[1]*Hs*6, tx = G.x + G.t[0]*4 + G.n[0]*Hs*1, tz = G.z + G.t[1]*4 + G.n[1]*Hs*1;
                   if (window.__fzHold) { clearInterval(window.__fzHold); window.__fzHold=null; }

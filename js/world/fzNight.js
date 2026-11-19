@@ -187,15 +187,16 @@ export class FzNight {
         const [x, z, fx, fz] = FZR.a5.far[i], rx = -fz, rz = fx;
         const h = 14 + (i * 11) % 22, w = 12 + (i * 5) % 8, d = 10;
         const cx = x - fx * (d / 2 + 0.6), cz = z - fz * (d / 2 + 0.6);
-        const fxw = cx + fx * (d / 2 + 0.05), fzw = cz + fz * (d / 2 + 0.05);
+        const fxw = cx + fx * (d / 2 + 0.08), fzw = cz + fz * (d / 2 + 0.08);
+        // 对岸 180 m，窗要做成整层灯带才看得出，不能是几像素的小点
         if (i % 3 === 0) {
-          for (const [u, yk] of [[-w * 0.22, 0.32], [w * 0.18, 0.55], [-w * 0.08, 0.72]]) {
-            const yy = h * yk; if (yy < 2.2 || yy > h - 1.2) continue;
-            farQ(fxw + rx * u, yy, fzw + rz * u, [rx * 0.4, 0, rz * 0.4], [0, 0.38, 0], RG.line, sc(WIN, 0.9));
+          for (const yk of [0.35, 0.62]) {
+            const yy = h * yk; if (yy < 3.0 || yy > h - 1.6) continue;
+            farQ(fxw, yy, fzw, [rx * w * 0.32, 0, rz * w * 0.32], [0, 1.1, 0], RG.line, sc(WIN, 1.35));
           }
         }
         if (i % 4 === 0) {
-          halo(x + fx * 2.0, 5.2, z + fz * 2.0, 0.7, sc(WARM, 0.55));
+          halo(x + fx * 2.0, 6.4, z + fz * 2.0, 3.6, sc(WARM, 0.95));
           QC[QC.length - 1] = FAR_R; QC[QC.length - 4] = FAR_R;
         }
       }
