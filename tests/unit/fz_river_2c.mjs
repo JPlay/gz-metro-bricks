@@ -31,7 +31,7 @@ ok('pierNext(xsg) on A = 西湖 / 黎明湖; pierNext(xsgc, C) = 上海西; pier
 ok('routesOfPier: xsg → A, xsgc → C, shw → C', R.routesOfPier('xsg').join() === 'A' && R.routesOfPier('xsgc').join() === 'C' && R.routesOfPier('shw').join() === 'C');
 { const fsrc = fs.readFileSync(new URL('../../js/world/fzRiver.js', import.meta.url), 'utf8'), body = fsrc.slice(fsrc.indexOf('  pierSign(p) {'), fsrc.indexOf('  /* ---------- 2C：西水关'));
   ok('pier sign: grey stone base + wood board, zh + en name, one row per line (line badge + next stop), shared C berth folded into the 西水关 sign, no arrows / map',
-    /深灰石座/.test(body) && /木牌/.test(body) && /fit\(p\.zh/.test(body) && /fit\(p\.en/.test(body) && /q\.shared === p\.id/.test(body) && /routesOfPier\(id\)/.test(body) && /rid \+ '线'/.test(body) && !/arrow|moveTo|lineTo/.test(body));
+    /深灰石台/.test(body) && /#6A7076/.test(body) && /木牌/.test(body) && /fit\(p\.zh/.test(body) && /fit\(p\.en/.test(body) && /q\.shared === p\.id/.test(body) && /routesOfPier\(id\)/.test(body) && /rid \+ '线'/.test(body) && !/arrow|moveTo|lineTo/.test(body));
   ok('C line colour green on badge / HUD', /C: '#2F7D4A'/.test(fsrc) && /LINE_COLOR\[rid\]/.test(body)); }
 // ② 终点：上海西码头 / Shanghai West Pier；到站多一句换乘
 ok('terminal pier 「上海西码头」 / "Shanghai West Pier" (west bank)', shw.zh === '上海西码头' && shw.en === 'Shanghai West Pier' && shw.side === 1);

@@ -131,6 +131,8 @@ export class FzRiverStreet extends XmStreet {
     if (FZR.a4) { this.a4Day(); k.group('g4day'); }
     // 3B：晋安河北段 / 凤坂河 / 琴亭湖水面亮纹单独一组 g3bday：只白天、人在 3B 一带才开（夜里关掉腾出夜灯那一个 draw —— 3B 一带夜里 draw 不超过白天）
     if (FZR.b3) { this.b3Day(); k.group('g3bday'); }
+    // 2C：白马河下段水面亮纹单独一组 g2day：只白天、人在 2C / 彬德一带才开；夜里整组关，腾出夜灯那一个 draw（4A 给三座水闸加檐下/墩帽灯带后，彬德观景处夜 21 > 昼 20）
+    if (FZR.c2) { this.c2Day(); k.group('g2day'); }
     // 2C：白马河下段的常开几何（墙面 / 桥身 / 房子 / 树 / 闽江远景）单独一组（c2），按玩家远近整组开关
     if (FZR.c2) {
       const nb = 1 + Math.max(...FZR.houses.map(h => h.z).concat(FZR.trees.map(t => t[1]), BRIDGES.filter(b => b.c2).map(b => b.z), FZR.wall.map(w => (w[1] + w[3]) / 2)).filter(inC2).map(c2Band));
@@ -158,6 +160,7 @@ export class FzRiverStreet extends XmStreet {
     if (this.kit.groupNodes && this.kit.groupNodes.g3bday) for (const m of this.kit.groupNodes.g3bday.getChildMeshes()) { m.metadata = Object.assign({}, m.metadata, { noTileCull: true }); m.alwaysSelectAsActiveMesh = true; }   // 3B 白天组：开着就整组画（白天计数稳定）
     if (this.kit.groupNodes && this.kit.groupNodes.g3day) for (const m of this.kit.groupNodes.g3day.getChildMeshes()) { m.metadata = Object.assign({}, m.metadata, { noTileCull: true }); m.alwaysSelectAsActiveMesh = true; }   // 3A 白天组：开着就整组画（不按视锥换索引 / 不被视锥裁掉），白天 draw 数稳定，夜里 ≤ 白天
     if (this.kit.groupNodes && this.kit.groupNodes.g4day) for (const m of this.kit.groupNodes.g4day.getChildMeshes()) { m.metadata = Object.assign({}, m.metadata, { noTileCull: true }); m.alwaysSelectAsActiveMesh = true; }
+    if (this.kit.groupNodes && this.kit.groupNodes.g2day) for (const m of this.kit.groupNodes.g2day.getChildMeshes()) { m.metadata = Object.assign({}, m.metadata, { noTileCull: true }); m.alwaysSelectAsActiveMesh = true; }
     this.tileCull = installTileCull(this);   // 常开大网格按视锥换索引（不加 draw）
     this.lodT = 0; this.lodNow(true);
     // 3C：夜景（设备本地时间 19:00–06:00 / ?t=night|day 覆盖）；白天什么都不建
@@ -719,7 +722,14 @@ export class FzRiverStreet extends XmStreet {
     for (const e of [-1, 1]) { ln(e * 0.18, -half, half, ye, 0.14); ln(e * (W2 - 0.5), -half, half, wh, 0.18);   // 双黄中线 + 两边边线
       for (let j = 1; j * 3.5 < W2 - 1.2; j++) for (let v = -half + 1.5; v + 3 <= half - 1; v += 9) ln(e * j * 3.5, v, v + 3, wh); }   // 分道白虚线（3 m 线 6 m 空）
   }
-  /** 3B 白天才画的一组（g3bday）：晋安河北段 / 凤坂河 / 琴亭湖水面亮纹（同 1B 的短条） */
+  /** 2C 白天才画的一组（g2day）：白马河下段水面亮纹（同 3B / 4A 的短条）。夜里关掉，夜 draw ≤ 昼 */
+  c2Day() {
+    const k = this.kit, WA = k.g('paint@sea'), C = hex('#8FC0C8'), r = RIVERS.bm;
+    if (!r) return;
+    let j = 0; const s0 = Math.max(6, (FZR.c2.bmALen || 0) + 4);
+    for (let s = s0; s < r.line.len - 6; s += 13) { const a = r.line.at(s, ((j++ * 37) % 11 - 5) / 6 * r.hw * 0.6); if (!isWater(a.x, a.z)) continue; WA.box(a.x, WY + 0.004, a.z, 0.25, 0.004, 4.5, C, yawOf(a.tx, a.tz), 0, 0, 1, NO); }
+  }
+    /** 3B 白天才画的一组（g3bday）：晋安河北段 / 凤坂河 / 琴亭湖水面亮纹（同 1B 的短条） */
   b3Day() {
     const k = this.kit, WA = k.g('paint@sea'), C = hex('#8FC0C8');
     let j = 0; for (const id of ['jn', 'fb']) { const r = RIVERS[id]; for (let s = 6; s < r.line.len - 6; s += 13) { const a = r.line.at(s, ((j++ * 37) % 11 - 5) / 6 * r.hw * 0.6); if (!isWater(a.x, a.z)) continue; WA.box(a.x, WY + 0.004, a.z, 0.25, 0.004, 4.5, C, yawOf(a.tx, a.tz), 0, 0, 1, NO); } }
@@ -1094,6 +1104,7 @@ export class FzRiverStreet extends XmStreet {
     if (gn.g3bday) { const on = !this.nightLod && FZR.b3.zone.some(q => p.x > q[0] && p.x < q[2] && p.z > q[1] && p.z < q[3]); if (force || gn.g3bday.isEnabled(false) !== on) gn.g3bday.setEnabled(on); }   // 3B 白天组：只白天 + 人在 3B 一带
     if (gn.g3day) { const on = !this.nightLod && p.x > FZR.a3.x0 - 60; if (force || gn.g3day.isEnabled(false) !== on) gn.g3day.setEnabled(on); }   // 3A 白天组：只白天 + 人在光明港码头往东一带
     if (gn.g4day) { const on = !this.nightLod && p.x < FZR.a4.x0 + 80 && p.z < -640; if (force || gn.g4day.isEnabled(false) !== on) gn.g4day.setEnabled(on); }   // 4A 白天组：只白天 + 人在河口以西一带
+    if (gn.g2day) { const on = !this.nightLod && p.z < FZR.c2.z0 + 80; if (force || gn.g2day.isEnabled(false) !== on) gn.g2day.setEnabled(on); }   // 2C 白天组：只白天 + 人在白马河下段 / 彬德一带
     if (this.tileCull) this.tileCull.update(this.scene.activeCamera, { px: this.wx(p.x), pz: this.wz(p.z), detR: (NL ? NL.near : NEAR) + CELL * 0.7, detOn: !corrP });
   }
   refreshTilesIfTurned() {
