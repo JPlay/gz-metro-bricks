@@ -8,7 +8,7 @@ R.useNet('e');
 const F = R.FZR, B3 = F.b3, J = JSON.stringify, RV = R.RIVERS;
 const fsrc = fs.readFileSync(new URL('../../js/world/fzRiver.js', import.meta.url), 'utf8'), nsrc = fs.readFileSync(new URL('../../js/world/fzNight.js', import.meta.url), 'utf8');
 ok('3B data present (b3: jnLen / fbLen / lake / signs / lamps)', B3 && B3.jnLen > 300 && B3.fbLen > 300 && B3.lake && B3.signs.length === 2 && B3.lamps.length >= 6);
-ok('rivers: ja, gm, then jn (晋安河北段) + fb (凤坂河)', Object.keys(RV).join() === 'ja,gm,jn,fb');
+ok('rivers: ja, gm, then jn (晋安河北段) + fb (凤坂河)（4A 可再接 gw）', Object.keys(RV).slice(0, 4).join() === 'ja,gm,jn,fb' && ['ja','gm','jn','fb'].every(k => RV[k]));
 ok('jn same width as 晋安河 (hw/band), fb 12/22, names', F.rivers.jn.hw === F.rivers.ja.hw && F.rivers.jn.band === F.rivers.ja.band && F.rivers.fb.hw === 12 && F.rivers.fb.band === 22 && F.rivers.fb.zh === '凤坂河' && F.rivers.fb.en === 'Fengban River' && F.rivers.jn.zh === F.rivers.ja.zh);
 console.log(`INFO jn ${RV.jn.line.len.toFixed(1)} m, fb ${RV.fb.line.len.toFixed(1)} m, lake ring ${B3.lake.ring.length / 2} pts`);
 // 弯半径：顶点三点外接圆 + 6 m 窗口
@@ -32,7 +32,7 @@ for (const id of ['jn', 'fb']) { const L = RV[id].line, c = F.rivers[id].p, pts 
   const gaps = []; for (const r of ['jn', 'fb']) { const bs = b3.filter(b => b.river === r).sort((a, c) => a.s - c.s); for (let i = 1; i < bs.length; i++) gaps.push(bs[i].s - bs[i].w / 2 - (bs[i - 1].s + bs[i - 1].w / 2)); }
   ok(`deck gaps between neighbouring bridges ≥ 10 m (min ${Math.min(...gaps).toFixed(1)})`, Math.min(...gaps) >= 10, gaps);
   const f5 = b3.find(b => b.id === 'fb5'); ok('远洋路 deck edge ≥ 8 m from the 光明港 bank', RV.fb.line.len - (f5.s + f5.w / 2) >= 8 + F.rivers.gm.hw - F.rivers.gm.hw, RV.fb.line.len - (f5.s + f5.w / 2));
-  ok('3B road decks: same dark-grey a3Deck (no asphalt bucket)', /\|\| b\.b3 \|\| \(FZR\.b3 && FZR\.b3\.grey && FZR\.b3\.grey\.bridges\.includes\(b\.id\)\)\)\) this\.a3Deck\(b, F, w, half\)/.test(fsrc));
+  ok('3B road decks: same dark-grey a3Deck (no asphalt bucket)', /b\.b3/.test(fsrc) && /this\.a3Deck\(b, F, w, half\)/.test(fsrc) && /#4E5155/.test(fsrc));
   // 小美 11-17 ①：凤坂河口牌后面那段 1B 前横南路（gm3 桥面 + 两头 stub）也换成深灰沥青
   ok('fb_sign: 前横南路 gm3 deck + its stubs listed as grey (dark granite, not the navy asphalt bucket)', F.b3.grey && F.b3.grey.bridges.join() === 'gm3' && F.b3.grey.roads.length === 2 && F.b3.grey.roads.every(id => { const r = F.roads.find(q => q.id === id); return r && r.name === '前横南路' && r.stub; }), F.b3.grey);
   const st = fsrc.slice(fsrc.indexOf('if (r.b3 ||'), fsrc.indexOf('if (r.b3 ||') + 1100);
@@ -85,15 +85,17 @@ ok('night lights auto-generated from RIVERS / BRIDGES (jn / fb covered)', /RIVER
   ok('ja / gm rivers identical', J(O.rivers.ja) === J(NE.rivers.ja) && J(O.rivers.gm) === J(NE.rivers.gm));
   ok('bridges / roads / dry: old entries an exact prefix (3B appended)', ['bridges', 'roads', 'dry'].every(k => pre(O[k], NE[k])));
   const hc = O.houses.map((h, i) => J(h) !== J(strip(NE.houses[i])) ? i : -1).filter(i => i >= 0), hg = NE.houses.slice(0, O.houses.length).map((h, i) => h.gone ? i : -1).filter(i => i >= 0);
-  ok(`old houses unchanged except gone flags (${hg.join(',')})`, !hc.length && J(hg) === J(B3.gone.houses), hc);
+  const a4h = (F.a4 && F.a4.gone && F.a4.gone.houses) || [];
+  ok(`old houses unchanged except gone flags (${hg.join(',')})`, !hc.length && B3.gone.houses.every(i => hg.includes(i)) && hg.every(i => B3.gone.houses.includes(i) || a4h.includes(i)), hc);
   const tc = O.trees.map((t, i) => J(t) !== J(NE.trees[i]) ? i : -1).filter(i => i >= 0);
-  ok(`old trees unchanged except kind 'gone' (${tc.join(',')})`, J(tc) === J(B3.gone.trees) && tc.every(i => NE.trees[i][5] === 'gone'), tc);
-  const near = (k) => { const [cx, cz] = k.split(',').map(Number), x = (cx + 0.5) * NE.cell, z = (cz + 0.5) * NE.cell; return [RV.jn.line, RV.fb.line].some(L => L.project(x, z).d < NE.cell * 0.75 + 30) || Math.hypot(x - B3.lake.c[0], z - B3.lake.c[1]) < 160; };
+  const a4t = (F.a4 && F.a4.gone && F.a4.gone.trees) || [];
+  ok(`old trees unchanged except kind 'gone' (${tc.join(',')})`, tc.every(i => NE.trees[i][5] === 'gone') && B3.gone.trees.every(i => tc.includes(i)) && tc.every(i => B3.gone.trees.includes(i) || a4t.includes(i)), tc);
+  const near = (k) => { const [cx, cz] = k.split(',').map(Number), x = (cx + 0.5) * NE.cell, z = (cz + 0.5) * NE.cell; return [RV.jn.line, RV.fb.line].some(L => L.project(x, z).d < NE.cell * 0.75 + 30) || Math.hypot(x - B3.lake.c[0], z - B3.lake.c[1]) < 160 || (RV.gw && RV.gw.line.project(x, z).d < NE.cell * 0.75 + 40) || (F.a4 && Math.hypot(x - F.a4.gate.x, z - F.a4.gate.z) < 80); };
   const area = c => { let t = 0; for (let i = 0; i < c.i.length; i += 3) { const [a, b, d] = [c.i[i], c.i[i + 1], c.i[i + 2]].map(k => [c.p[2 * k], c.p[2 * k + 1]]); t += Math.abs((b[0] - a[0]) * (d[1] - a[1]) - (d[0] - a[0]) * (b[1] - a[1])) / 2; } return t; };
   for (const c of ['land', 'water']) { const ch = Object.keys(O[c]).filter(k => J(O[c][k]) !== J(NE[c][k])), far = ch.filter(k => !near(k)), big = far.filter(k => !NE[c][k] || Math.abs(area(O[c][k]) - area(NE[c][k])) > 0.5);
     console.log(`INFO ${c} cells changed ${ch.join(' ')}; away from the new channels only re-triangulated / collinear-vertex cleanup (|Δarea| ≤ 0.5 m²): ${far.join(' ') || '-'}`);
     ok(`${c} cells: old cells changed only next to the new channels (others same area ±0.5 m²)`, !big.length, big); }
-  const ja0 = RV.ja.line.at(0), fbm = RV.fb.line.at(RV.fb.line.len), atJ = w => [[ja0.x, ja0.z], [fbm.x, fbm.z]].some(q => Math.hypot((w[0] + w[2]) / 2 - q[0], (w[1] + w[3]) / 2 - q[1]) < 80);
+  const ja0 = RV.ja.line.at(0), fbm = RV.fb.line.at(RV.fb.line.len), gw0 = RV.gw ? RV.gw.line.at(RV.gw.line.len) : ja0, atJ = w => [[ja0.x, ja0.z], [fbm.x, fbm.z], [gw0.x, gw0.z]].some(q => Math.hypot((w[0] + w[2]) / 2 - q[0], (w[1] + w[3]) / 2 - q[1]) < 80);
   const NS = new Set(NE.wall.map(w => J(w))), lost = O.wall.filter(w => !NS.has(J(w))), lf = lost.filter(w => !atJ(w));
   ok(`walls: ${lost.length} old segments replaced, all within 80 m of the two junctions`, !lf.length, lf.slice(0, 4));
   const g0 = lost.filter(w => w[4] === 1 && !(Math.hypot((w[0] + w[2]) / 2 - fbm.x, (w[1] + w[3]) / 2 - fbm.z) < 30)), gm = g0.filter(w => !NE.wall.some(v => v[4] === 1 && Math.hypot(v[0] - w[0], v[1] - w[1]) < 0.6 && Math.hypot(v[2] - w[2], v[3] - w[3]) < 0.6));

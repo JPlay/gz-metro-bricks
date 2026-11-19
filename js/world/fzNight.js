@@ -145,9 +145,24 @@ export class FzNight {
           quad((xa + xb) / 2, (ya + yb) / 2, (za + zb) / 2, [(xb - xa) / 2, (yb - ya) / 2, (zb - za) / 2], [0, 0.075, 0], RG.line, sc(WARM, 0.95));
         }
         const hw = Math.max(0, (b.hw || 0) - 0.6), [cx, cz] = Pt(su * (uo + 1.0), 0);
-        if (hw > 1 && isWater(cx, cz)) flat(cx, levelAt(cx, cz) + 0.02, cz, t[0], t[1], hw, 1.1, RG.line, sc(WARM, 0.34));   // 贴图 v（高斯那一向）= t：离桥越远越淡；沿 n 铺满水面宽
+        // 贴图 v（高斯那一向）= t：离桥越远越淡；沿 n 铺满水面宽。贴着闸的桥（新港闸西沿就是六一中路）不要把倒影铺进闸前水面，否则正看闸时像河道中间掉了一根橙管
+        const nearSluice = [FZR.c2 && FZR.c2.sluice, FZR.a3 && FZR.a3.gate, FZR.a4 && FZR.a4.gate].some(g => g && Math.hypot(cx - g.x, cz - g.z) < (g.hw || 20) + 10);
+        if (hw > 1 && isWater(cx, cz) && !nearSluice) flat(cx, levelAt(cx, cz) + 0.02, cz, t[0], t[1], hw, 1.1, RG.line, sc(WARM, 0.34));
       }
       n.bridge++;
+    }
+    // 水闸（彬德 / 九门闸 / 新港闸同一套 c2Sluice）：灯带在墩帽顶和启闭房檐下，和九门闸一样只加色、不加点光源。不要把灯带铺进孔跨水面。
+    for (const S of [FZR.c2 && FZR.c2.sluice, FZR.a3 && FZR.a3.gate, FZR.a4 && FZR.a4.gate]) {
+      if (!S) continue;
+      const tS = S.t, nS = S.n, hw = S.hw, NB = S.bays, PW = 1.2, PT = 3.6;
+      const Pt = (a, b) => [S.x + tS[0] * a + nS[0] * b, S.z + tS[1] * a + nS[1] * b];
+      const PB = (() => { const o = [-hw]; if (S.bayW && S.bayW.length === NB) { const sm = S.bayW.reduce((a, b) => a + b, 0), inner = 2 * hw - NB * PW, sc = inner / sm; let v = -hw; for (let i = 0; i < NB; i++) { v += PW + S.bayW[i] * sc; o.push(v); } } else { for (let i = 1; i <= NB; i++) o.push(-hw + (2 * hw / NB) * i); } return o; })();
+      // 墩帽顶：上下游各一段沿墩宽的短带（约 1 m），正视时是一排亮点。不要再沿水流拉长条（正视几乎看成一条线/看不见）。
+      const PA0 = -2.4, PA1 = 2.2;
+      for (const v of PB) for (const aa of [PA0 - 0.12, PA1 + 0.12]) { const [x, z] = Pt(aa, v); flat(x, PT + 0.32, z, nS[0], nS[1], 0.16, 0.50, RG.line, sc(WARM, 1.15)); }
+      { const H0 = PT + 0.24, HH = 2.8, HL = 2 * hw + PW + 0.2, HA0 = -1.6, HA1 = 2.0;
+        // 檐带移到檐口外侧（墙在 ±1.6/2.0，檐口只探出约 0.1 m），加厚约 3 倍、略提亮；仍用 RG.line，避免晕成一团
+        for (const aa of [HA0 - 0.22, HA1 + 0.22]) { const [x, z] = Pt(aa, 0); flat(x, H0 + HH + 0.00, z, nS[0], nS[1], 0.24, HL / 2, RG.line, sc(WARM, 1.05)); } }
     }
     // 台阶：每级踏步边沿一道暗暖光线（stairAlong 建的时候登记）
     for (const st of (S._stairs ? S._stairs.values() : [])) {
