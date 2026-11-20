@@ -1000,7 +1000,7 @@ export class FzRiverStreet extends XmStreet {
     // 西头合拢：一道挡住出界的碰撞（河停在铁路桥南）
     const L = RIVERS.hq && RIVERS.hq.line;
     if (L) { const e = L.at(L.len), te = { x: e.tx, z: e.tz }, n = { x: te.z, z: -te.x };
-      k.col(e.x + te.x * ((A.cap || 10) + 0.4), 1.2, e.z + te.z * ((A.cap || 10) + 0.4), 14, 8, 0.7, { ry: yawOf(n.x, n.z), name: 'colCap' }); }
+      k.col(e.x + te.x * ((A.cap || 10) + 0.4), 1.2, e.z + te.z * ((A.cap || 10) + 0.4), 0.8, 8, 56, { ry: yawOf(n.x, n.z), name: 'colCap' }); }
     this.a6bRails();
   }
   /** 昌福线 / 合福高铁：各用独立 paint 桶合成 1 个网格 = 1 个 draw。要有梁、方形墩、接触网杆剪影。人上不去铁轨。 */
