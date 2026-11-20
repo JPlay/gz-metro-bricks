@@ -127,10 +127,10 @@ export class FzNight {
       const hqStreak = r === RIVERS.hq;
       const L = Math.min(yzStreak ? 3.4 : 7.5, r.hw * 0.95), p1 = r.line.at(s, side * (r.hw - 0.9 - L));   // 3C 返工：离岸墙 0.9 m 起（贴墙那段从岸上 / 桥上被岸墙挡住），宽 0.8 m
       if (isWater(p0.x, p0.z) && isWater(p1.x, p1.z)) {
-        if (hqStreak) {   // 6A：倒影细、暗、断开，不要一根原木
+        if (hqStreak) {   // 6A：倒影仍分段断开（不是一根原木）；加厚略提亮（参照 4A 058067c 檐带），从河面上看得见
           const lv = levelAt(p0.x, p0.z), ax = (p0.x - p1.x) / L, az = (p0.z - p1.z) / L;
           const nSeg = 5, span = L * 0.92, gap = 0.45, segL = (span - (nSeg - 1) * gap) / nSeg, mx = (p0.x + p1.x) / 2, mz = (p0.z + p1.z) / 2;
-          for (let k = 0; k < nSeg; k++) { const d = -span / 2 + k * (segL + gap) + segL / 2; flat(mx + ax * d, lv + 0.02, mz + az * d, ax, az, 0.36, segL / 2, RG.streak, sc(WARM, 0.16)); }
+          for (let k = 0; k < nSeg; k++) { const d = -span / 2 + k * (segL + gap) + segL / 2; flat(mx + ax * d, lv + 0.025, mz + az * d, ax, az, 0.62, segL / 2, RG.streak, sc(WARM, 0.48)); }
         } else if (yzStreak) {   // 5：沿驳岸的倒影改细、改暗、分成短段，避免河口夜图像一根原木（汇入口可能算在 gw/gm 上）
           const nSeg = 3, gap = 0.7, segL = (L - (nSeg - 1) * gap) / nSeg;
           for (let k = 0; k < nSeg; k++) {
@@ -167,11 +167,11 @@ export class FzNight {
         if (hw > 1 && isWater(cx, cz) && !nearSluice) {
           const Z6 = FZR.a6 && FZR.a6.zone, isHq = FZR.a6 && ((FZR.a6.bridges || []).includes(b.id) || (Z6 && cx > Z6[0] && cx < Z6[2] && cz > Z6[1] && cz < Z6[3]));
           const Z5 = FZR.a5 && FZR.a5.zone, isYz = FZR.a5 && ((FZR.a5.bridges || []).includes(b.id) || (Z5 && cx > Z5[0] && cx < Z5[2] && cz > Z5[1] && cz < Z5[3]));
-          if (isHq || isYz) {   // 6A / 5：倒影细、暗、断开，不要一整根原木（北二环 / 北浪路 / 河口；老药洲街 / 瀛洲桥 / 河口夜图）
+          if (isHq || isYz) {   // 6A / 5：倒影分段断开，不要一整根原木。6A 加厚略提亮（仍细、暗、断）；⑤ 保持原亮度
             const nSeg = 5, span = hw * 0.82, gap = 0.55, segL = (2 * span - (nSeg - 1) * gap) / nSeg;
             for (let k = 0; k < nSeg; k++) {
               const vv = -span + k * (segL + gap) + segL / 2, [x, z] = Pt(su * (uo + 1.0), vv);
-              if (isWater(x, z)) flat(x, levelAt(x, z) + 0.02, z, t[0], t[1], segL / 2, 0.36, RG.streak, sc(WARM, 0.16));
+              if (isWater(x, z)) flat(x, levelAt(x, z) + (isHq ? 0.025 : 0.02), z, t[0], t[1], segL / 2, isHq ? 0.62 : 0.36, RG.streak, isHq ? sc(WARM, 0.48) : sc(WARM, 0.16));
             }
           } else flat(cx, levelAt(cx, cz) + 0.02, cz, t[0], t[1], hw, 1.1, RG.line, sc(WARM, 0.34));
         }

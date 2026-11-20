@@ -888,11 +888,14 @@ export class FzRiverStreet extends XmStreet {
     if (A6.sign) this.pierSign({ ...A6.sign, sign: [A6.sign.x, A6.sign.z] });
     for (const S of A6.signs || []) this.stoneSign(S.x, S.z, S.f[0], S.f[1], 3.6, 1.5, S.lines);
     if (A6.bench) { const [x, z] = A6.bench; this.kit.g('granite').box(x, 0.22, z, 1.4, 0.44, 0.45, hex('#8A8476'), 0, 0, 0, 1, NO); k.col(x, 0.22, z, 1.4, 0.44, 0.45, { name: 'colBench' }); }
-    // 西头合拢后的远景楼（偏蓝灰，夜里仍是剪影，不加暖白）
+    // 西头合拢后的远景楼（偏蓝灰剪影，不加暖白）：每栋坐在地面垫 + 深色台基上，有压顶，避免像悬空灰盒子
     const Wc = ['#7E8C99', '#8796A3', '#76858F', '#8F9AA5'];
     (A6.far || []).forEach((q, i) => {
-      const [x, z, fx, fz] = q, ry = yawOf(fx, fz), h = 8 + (i * 5) % 10;
-      P.box(x, h / 2, z, 10, h, 7, hex(Wc[i % 4]), ry, 0, 0, 1, NO);
+      const [x, z, fx, fz] = q, ry = yawOf(fx, fz), h = 8 + (i * 5) % 10, w = 10 + (i % 3) * 1.5, d = 7 + (i % 2) * 1.5;
+      P.box(x, 0.4, z, w + 10, 0.8, d + 10, hex('#6E7A64'), ry, 0, 0, 1, NO);          // 地面垫，和 4A 西头合拢地面同色
+      P.box(x, 0.5, z, w + 0.9, 1.0, d + 0.9, hex('#4A545C'), ry, 0, 0, 1, NO);       // 深色台基
+      P.box(x, 1.0 + h / 2, z, w, h, d, hex(Wc[i % 4]), ry, 0, 0, 1, NO);
+      P.box(x, 1.0 + h + 0.22, z, w + 0.45, 0.44, d + 0.45, hex('#3E484F'), ry, 0, 0, 1, NO);  // 压顶
     });
   }
   a6Sluice(S) {

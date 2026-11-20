@@ -86,6 +86,7 @@ console.log(`INFO hq ${RV.hq.line.len.toFixed(1)} m, gate (${A6.gate.x}, ${A6.ga
   const px = past.x + te.x * (A6.cap + 4), pz = past.z + te.z * (A6.cap + 4);
   ok('west cap: no walkable water past the closed end', !R.isWater(px, pz), { px, pz, end: [past.x, past.z], cap: A6.cap });
   ok('west cap has far backdrop slots (no sky gap)', (A6.far || []).length >= 3);
+  ok('west far buildings sit on a ground pad with a dark plinth (not a floating grey box)', /A6\.far[\s\S]*#6E7A64/.test(fsrc) && /深色台基/.test(fsrc) && /地面垫/.test(fsrc));
 }
 
 // 茶园水闸：单孔、筒顶泵房、只看不过、浅灰、不用 c2Sluice / 九门 / 新港 / 江四那一套
@@ -128,7 +129,7 @@ console.log(`INFO hq ${RV.hq.line.len.toFixed(1)} m, gate (${A6.gate.x}, ${A6.ga
 // 夜里：细碎倒影从一开始就有；桥下灯带并进 fzNightLights；无点光/阴影；g6day 只白天
 { const ld = fsrc.slice(fsrc.indexOf('  lodNow(force) {'), fsrc.indexOf('  refreshTilesIfTurned() {'));
   ok('g6day is day-only (off when nightLod)', /gn\.g6day/.test(ld) && /!this\.nightLod/.test(ld) && /g6day/.test(fsrc));
-  ok('night reflections on hq are thin / dim / broken (nSeg + sc(WARM, 0.16)) from the start', /isHq/.test(nsrc) && /nSeg = 5/.test(nsrc) && /sc\(WARM, 0\.16\)/.test(nsrc));
+  ok('night reflections on hq are thin / dim / broken but visible (nSeg=5, sc(WARM, 0.48), not a solid 0.85 log)', /isHq/.test(nsrc) && /nSeg = 5/.test(nsrc) && /sc\(WARM, 0\.48\)/.test(nsrc) && /hqStreak[\s\S]{0,500}0\.62/.test(nsrc));
   ok('北二环 underpass strips merge into fzNightLights (no PointLight / ShadowGenerator)',
     /a6\.under/.test(nsrc) && /fzNightLights/.test(nsrc) && !/new B\.PointLight/.test(nsrc) && !/ShadowGenerator/.test(nsrc) && !/new BABYLON\.PointLight/.test(fsrc + nsrc));
   ok('茶园水闸 night strips are in the same fzNightLights mesh, not a new group', /a6\.gate/.test(nsrc) && !/k\.group\('g6night'\)/.test(fsrc));
