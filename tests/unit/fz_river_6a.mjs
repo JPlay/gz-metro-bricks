@@ -8,7 +8,7 @@ const F = R.FZR, A6 = F.a6, A4 = F.a4, RV = R.RIVERS;
 const fsrc = fs.readFileSync(new URL('../../js/world/fzRiver.js', import.meta.url), 'utf8');
 const nsrc = fs.readFileSync(new URL('../../js/world/fzNight.js', import.meta.url), 'utf8');
 ok('6A data present (a6: hqLen / gate / 2 bridges / camMouth)', !!(A6 && A6.hqLen > 200 && A6.hqLen < 320 && A6.gate && A6.sign && (A6.bridges || []).length === 2 && A6.camMouth));
-ok('rivers include hq after gw', Object.keys(RV).join() === 'ja,gm,jn,fb,gw,hq' && RV.hq.zh === '湖前河' && F.rivers.hq.hw === 5);
+ok('rivers include hq after gw', Object.keys(RV).includes('hq') && Object.keys(RV).indexOf('hq') > Object.keys(RV).indexOf('gw') && RV.hq.zh === '湖前河' && F.rivers.hq.hw === 5);
 console.log(`INFO hq ${RV.hq.line.len.toFixed(1)} m, gate (${A6.gate.x}, ${A6.gate.z}), blend ${A6.blend}, hw ${A6.hw0}→${A6.hw1}, jnS ${A6.jnS}`);
 
 // 汇入口：接在已建晋安河北段 s=466.2，头 12 m 沿西岸法向，半宽 13→5
@@ -100,7 +100,8 @@ console.log(`INFO hq ${RV.hq.line.len.toFixed(1)} m, gate (${A6.gate.x}, ${A6.ga
   }
   ok('light-grey stone family (PIER / CAP / BASE as 九门闸) but distinct silhouette (barrel roof + screw pumps, 1 bay)',
     /a6Sluice[\s\S]*const PIER = '#A39C8E'/.test(fsrc) && /a6Sluice[\s\S]*(barrel roof|筒顶)/.test(fsrc) && /螺杆泵/.test(fsrc) && G.bays === 1);
-  ok('a6Sluice is not c2Sluice / a5Sluice / 九门 / 新港 / 江四 copy', !/a5Sluice/.test(fsrc) && /筒顶泵房/.test(fsrc));
+  const a6fn = fsrc.slice(fsrc.indexOf('  a6Sluice('), fsrc.indexOf('  a6Day('));
+  ok('a6Sluice is not c2Sluice / a5Sluice / 九门 / 新港 / 江四 copy', /a6Sluice/.test(a6fn) && !/a5Sluice/.test(a6fn) && !/c2Sluice/.test(a6fn) && /筒顶泵房/.test(fsrc));
 }
 
 // 两岸旧街：kind=old，不是现代方楼
@@ -130,7 +131,7 @@ console.log(`INFO hq ${RV.hq.line.len.toFixed(1)} m, gate (${A6.gate.x}, ${A6.ga
 }
 
 // PAVEC 岸地裙边
-ok('6A zone skirt uses PAVEC (inAZ, same paving colour as the banks)', /inAZ/.test(fsrc) && /PAVEC/.test(fsrc) && Array.isArray(A6.zone) && A6.zone.length === 4);
+ok('6A zone skirt uses PAVEC (inA6Z, same paving colour as the banks)', /inA6Z/.test(fsrc) && /PAVEC/.test(fsrc) && Array.isArray(A6.zone) && A6.zone.length === 4);
 
 if (fails.length) { console.log('FAILED', fails.join(', ')); process.exit(1); }
 console.log('all 6A unit tests passed');

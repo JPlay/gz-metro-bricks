@@ -39,11 +39,12 @@ console.log(`INFO gw ${RV.gw.line.len.toFixed(1)} m, gate (${A4.gate.x}, ${A4.ga
 { const X = A4.xg, c = X.water;
   ok('新港河 far water: higher than 光明港 (≈1 m), same colour family, has shore walls', X.lv > F.WY && X.shore.length >= 8 && c && c.p.length >= 6);
   const cx = X.o[0] + X.t[0] * 22, cz = X.o[1] + X.t[1] * 22;
-  ok('far water is not walkable (isWater false in the basin; skirt dug out)', !R.isWater(cx, cz) && A4.far.length >= 12);
+  ok('far water is not walkable (isWater false in the basin; skirt dug out)', !R.isWater(cx, cz) && A4.far.length >= (F.a5 ? 8 : 12), { far: A4.far.length });
   ok('a4Day draws a packed ring of houses + tree crowns around the basin (no sky gap)', /a4Day\(\)/.test(fsrc) && /A4\.far/.test(fsrc) && /P\.box\(cx, h \/ 2, cz/.test(fsrc)); }
 // 瀛洲河口：可走水面往南伸，圆头合拢
 { const Y = A4.yz, p0 = Y.c, mid = [Y.c[0] + Y.d[0] * (Y.len * 0.55), Y.c[1] + Y.d[1] * (Y.len * 0.55)], p1 = [Y.c[0] + Y.d[0] * (Y.len - Y.hw * 0.4), Y.c[1] + Y.d[1] * (Y.len - Y.hw * 0.4)], tip = [Y.c[0] + Y.d[0] * (Y.len + 2), Y.c[1] + Y.d[1] * (Y.len + 2)];
-  ok('瀛洲河 mouth: a stem of water leaving the south bank, closed at the rounded tip', Y.hw >= 6 && Y.len >= 16 && R.isWater(p0[0] + Y.d[0] * 2, p0[1] + Y.d[1] * 2) && R.isWater(mid[0], mid[1]) && R.isWater(p1[0], p1[1]) && R.isLand(...tip));
+  const tipOk = F.a5 ? R.isWater(...tip) : R.isLand(...tip);
+  ok('瀛洲河 mouth: a stem of water leaving the south bank' + (F.a5 ? ' (5 continues south, tip is still water)' : ', closed at the rounded tip'), Y.hw >= 6 && Y.len >= 16 && R.isWater(p0[0] + Y.d[0] * 2, p0[1] + Y.d[1] * 2) && R.isWater(mid[0], mid[1]) && R.isWater(p1[0], p1[1]) && tipOk);
   const left = [mid[0] - Y.d[1] * (Y.hw + 3.5), mid[1] + Y.d[0] * (Y.hw + 3.5)], right = [mid[0] + Y.d[1] * (Y.hw + 3.5), mid[1] - Y.d[0] * (Y.hw + 3.5)];
   ok('mouth banks exist on both sides (revetments turn in, not just a gap in the bank)', R.isLand(...left) && R.isLand(...right), { left, right, mid });
   ok('瀛洲河 / Yingzhou River stone sign on land', A4.signs.some(s => s.lines.join('/') === '瀛洲河/Yingzhou River' && R.isLand(s.x, s.z))); }
@@ -76,12 +77,13 @@ ok('g2day skips tileCull (stable day count)', /g2day\.getChildMeshes\(\)/.test(f
   ok('bridges / roads / dry: old entries an exact prefix (4A appended 六一中路)', ['bridges', 'roads', 'dry'].every(k => pre(O[k], NE[k])));
   const A6 = F.a6 || {};
   const hc = O.houses.map((h, i) => J(h) !== J(NE.houses[i]) ? i : -1).filter(i => i >= 0);
-  const g4 = new Set(A4.gone.houses || []), g6 = new Set(A6.gone && A6.gone.houses || []);
-  ok(`old houses unchanged except 4A / 6A gone flags`, !hc.length || hc.every(i => (g4.has(i) && NE.houses[i].gone === '4A') || (g6.has(i) && NE.houses[i].gone === '6A')), hc);
+  const A5 = F.a5 || {};
+  const g4 = new Set(A4.gone.houses || []), g5 = new Set(A5.gone && A5.gone.houses || []), g6 = new Set(A6.gone && A6.gone.houses || []);
+  ok(`old houses unchanged except 4A / 5 / 6A gone flags`, !hc.length || hc.every(i => (g4.has(i) && NE.houses[i].gone === '4A') || (g5.has(i) && NE.houses[i].gone === '5') || (g6.has(i) && NE.houses[i].gone === '6A')), hc);
   const tc = O.trees.map((t, i) => J(t) !== J(NE.trees[i]) ? i : -1).filter(i => i >= 0);
-  const t4 = new Set(A4.gone.trees || []), t6 = new Set(A6.gone && A6.gone.trees || []);
-  ok(`old trees unchanged except 4A / 6A gone flags`, !tc.length || tc.every(i => (t4.has(i) || t6.has(i)) && NE.trees[i][5] === 'gone'), tc);
-  const near = (k) => { const [cx, cz] = k.split(',').map(Number), x = (cx + 0.5) * NE.cell, z = (cz + 0.5) * NE.cell; const in6 = A6.zone && x > A6.zone[0] - 40 && x < A6.zone[2] + 40 && z > A6.zone[1] - 40 && z < A6.zone[3] + 40; return in6 || RV.gw.line.project(x, z).d < NE.cell * 0.75 + 40 || Math.hypot(x - A4.gate.x, z - A4.gate.z) < 80 || Math.hypot(x - A4.yz.c[0], z - A4.yz.c[1]) < 50; };
+  const t4 = new Set(A4.gone.trees || []), t5 = new Set(A5.gone && A5.gone.trees || []), t6 = new Set(A6.gone && A6.gone.trees || []);
+  ok(`old trees unchanged except 4A / 5 / 6A gone flags`, !tc.length || tc.every(i => (t4.has(i) || t5.has(i) || t6.has(i)) && NE.trees[i][5] === 'gone'), tc);
+  const near = (k) => { const [cx, cz] = k.split(',').map(Number), x = (cx + 0.5) * NE.cell, z = (cz + 0.5) * NE.cell; const in6 = A6.zone && x > A6.zone[0] - 40 && x < A6.zone[2] + 40 && z > A6.zone[1] - 40 && z < A6.zone[3] + 40; return in6 || RV.gw.line.project(x, z).d < NE.cell * 0.75 + 40 || Math.hypot(x - A4.gate.x, z - A4.gate.z) < 80 || Math.hypot(x - A4.yz.c[0], z - A4.yz.c[1]) < 50 || (RV.yz && RV.yz.line.project(x, z).d < NE.cell * 0.75 + 50) || (F.a5 && Math.hypot(x - F.a5.gate.x, z - F.a5.gate.z) < 220); };
   const area = c => { let t = 0; for (let i = 0; i < c.i.length; i += 3) { const [a, b, d] = [c.i[i], c.i[i + 1], c.i[i + 2]].map(k => [c.p[2 * k], c.p[2 * k + 1]]); t += Math.abs((b[0] - a[0]) * (d[1] - a[1]) - (d[0] - a[0]) * (b[1] - a[1])) / 2; } return t; };
   for (const c of ['land', 'water']) { const ch = Object.keys(O[c]).filter(k => J(O[c][k]) !== J(NE[c][k])), far = ch.filter(k => !near(k)), big = far.filter(k => !NE[c][k] || Math.abs(area(O[c][k]) - area(NE[c][k])) > 0.5);
     console.log(`INFO ${c} cells changed ${ch.join(' ')}; away from 4A only re-triangulated (|Δarea| ≤ 0.5 m²): ${far.join(' ') || '-'}`);
