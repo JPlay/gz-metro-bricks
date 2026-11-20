@@ -80,12 +80,19 @@ console.log(`INFO hq ${RV.hq.line.len.toFixed(1)} m, gate (${A6.gate.x}, ${A6.ga
   ok('both banks walkable (land in hw+2..6.5, except at bridge boxes)', bad.length <= 2, bad.slice(0, 8));
 }
 
-// 西头合拢：北浪路以西封闭，没有天空缝
+// 西头合拢：6A 单独时北浪路以西封闭；6B 打开合拢后河继续向西，合拢改到铁路桥南（见 fz_river_6b）
 { const L = RV.hq.line, end = L.at(L.len), te = { x: end.tx, z: end.tz };
   const past = L.at(L.len); // at() clamps; step along tangent
   const px = past.x + te.x * (A6.cap + 4), pz = past.z + te.z * (A6.cap + 4);
-  ok('west cap: no walkable water past the closed end', !R.isWater(px, pz), { px, pz, end: [past.x, past.z], cap: A6.cap });
-  ok('west cap has far backdrop slots (no sky gap)', (A6.far || []).length >= 3);
+  if (F.a6b) {
+    const beilang = R.BRIDGES.find(q => q.name === '北浪路' && q.river === 'hq');
+    const west = beilang && L.at(Math.min(L.len, beilang.s + 30));
+    ok('6B opened the 6A west cap: hq is longer than 6A hqLen and water continues west of 北浪路', !!(F.a6b && L.len > A6.hqLen + 100 && beilang && west && R.isWater(west.x, west.z)), { len: L.len, hqLen: A6.hqLen, west: west && [west.x, west.z] });
+    ok('6A far backdrop slots cleared after opening the cap', (A6.far || []).length === 0);
+  } else {
+    ok('west cap: no walkable water past the closed end', !R.isWater(px, pz), { px, pz, end: [past.x, past.z], cap: A6.cap });
+    ok('west cap has far backdrop slots (no sky gap)', (A6.far || []).length >= 3);
+  }
   ok('west far buildings sit on a ground pad with a dark plinth (not a floating grey box)', /A6\.far[\s\S]*#6E7A64/.test(fsrc) && /深色台基/.test(fsrc) && /地面垫/.test(fsrc));
 }
 

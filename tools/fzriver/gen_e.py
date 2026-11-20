@@ -862,6 +862,7 @@ if B3:
 A4 = B3 and os.environ.get('FZR_4A', '1') != '0'
 A5 = A4 and os.environ.get('FZR_5', '1') != '0'
 A6 = A4 and os.environ.get('FZR_6A', '1') != '0'
+A6B = A6 and os.environ.get('FZR_6B', '1') != '0'
 if A4:
   water3B, region3B, land3B = water, region, land
   LAND3B, WATER3B, WALL3B, BOUND3B = LAND, WATER, WALL, BOUND
@@ -1157,6 +1158,9 @@ if A4:
 if A6:
   import a6
   a6.build_hq(globals())
+if A6B:
+  import a6b
+  a6b.build_west(globals())
 
 def r2(v): return round(v, 2)
 DATA = {
@@ -1164,7 +1168,7 @@ DATA = {
   'rivers': {k: {'zh': NAME[k][0], 'en': NAME[k][1], 'hw': HW[k], 'band': BAND[k], 'p': [v for x, z in CL[k].coords for v in (r2(x), r2(z))]} for k in CL},
   'land': LAND, 'water': WATER, 'cell': CELL, 'skirt': SKIRT, 'lakeFar': {'p': [], 'i': []}, 'lakeShore': [],
   'wall': WALL, 'bound': BOUND,
-  'bridges': [{k_: v for k_, v in b.items() if k_ != 'foot'} for b in BR],
+  'bridges': [{k_: v for k_, v in b.items() if k_ not in ('foot', 'block')} for b in BR],
   'piers': PIERS, 'steps': STEPS, 'dry': [[v for x, z in list(p.exterior.coords)[:-1] for v in (r2(x), r2(z))] for p in DRY],
   'kiosks': KIOSK, 'roads': [{**{k_: v for k_, v in r.items() if k_ != 'poly'}, 'poly': [v for x, z in list(r['poly'].exterior.coords)[:-1] for v in (r2(x), r2(z))]} for r in ROADS],
   'sfqx': None, 'houses': HOUSES, 'trees': TREES,
@@ -1176,6 +1180,7 @@ if B3: DATA['b3'] = B3DATA
 if A4: DATA['a4'] = A4DATA
 if A5: DATA['a5'] = A5DATA
 if A6: DATA['a6'] = A6DATA
+if A6B: DATA['a6b'] = A6BDATA
 js = ('// 自动生成：tools/fzriver/gen_e.py（OSM 晋安河 1:4 + 光明港 1:5 → 游戏坐标；x 东、z 北，原点 = 东街口站 / 3）。不要手改。\n'
       'export const FZR_E = ' + json.dumps(DATA, ensure_ascii=False, separators=(',', ':')) + ';\n')
 open(OUT, 'w').write(js); print('wrote', OUT, len(js))
