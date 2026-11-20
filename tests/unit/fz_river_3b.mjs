@@ -64,7 +64,7 @@ for (const id of ['jn', 'fb']) { const L = RV[id].line, c = F.rivers[id].p, pts 
 { const s = B3.signs; ok('signs: 琴亭湖 / Qinting Lake + 凤坂河 / Fengban River, on land', s.map(q => q.lines.join('/')).join() === '琴亭湖/Qinting Lake,凤坂河/Fengban River' && s.every(q => R.isLand(q.x, q.z)));
   ok('signs drawn in b3Static before g0 group', fsrc.indexOf('if (FZR.b3) this.b3Static();') > 0 && fsrc.indexOf('if (FZR.b3) this.b3Static();') < fsrc.indexOf("k.group('g0')")); }
 // 房子 / 树
-{ const H = F.houses.filter(h => h.b3), wet = H.filter(h => R.isWater(h.x, h.z));
+{ const H = F.houses.filter(h => h.b3 && !h.gone), wet = H.filter(h => R.isWater(h.x, h.z));
   ok(`3B houses (${H.length}) façades on four sides, none in water`, H.length >= 10 && H.every(h => h.back === true) && !wet.length, wet.length);
   const T = F.trees.filter(t => t[5] === 'lake' || ((t[5] === 'jn' || t[5] === 'fb'))), tw = T.filter(t => R.isWater(t[0], t[1]));
   ok(`3B trees (${T.length}) none in water; lake trees are willows ('lake')`, T.length >= 20 && !tw.length, tw.slice(0, 3));

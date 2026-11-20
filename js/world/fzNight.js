@@ -124,9 +124,14 @@ export class FzNight {
       flat(hx - dx * 0.4, 0.045, hz - dz * 0.4, dx, dz, 3.8, 3.8, RG.pool, sc(WARM, 0.42));
       const Z = FZR.a5 && FZR.a5.zone, p0 = r.line.at(s, side * (r.hw - 0.9));
       const yzStreak = r.id === 'yz' || (Z && p0.x > Z[0] && p0.x < Z[2] && p0.z > Z[1] && p0.z < Z[3]);
+      const hqStreak = r === RIVERS.hq;
       const L = Math.min(yzStreak ? 3.4 : 7.5, r.hw * 0.95), p1 = r.line.at(s, side * (r.hw - 0.9 - L));   // 3C 返工：离岸墙 0.9 m 起（贴墙那段从岸上 / 桥上被岸墙挡住），宽 0.8 m
       if (isWater(p0.x, p0.z) && isWater(p1.x, p1.z)) {
-        if (yzStreak) {   // 5：沿驳岸的倒影改细、改暗、分成短段，避免河口夜图像一根原木（汇入口可能算在 gw/gm 上）
+        if (hqStreak) {   // 6A：倒影仍分段断开（不是一根原木）；加厚略提亮（参照 4A 058067c 檐带），从河面上看得见
+          const lv = levelAt(p0.x, p0.z), ax = (p0.x - p1.x) / L, az = (p0.z - p1.z) / L;
+          const nSeg = 5, span = L * 0.92, gap = 0.45, segL = (span - (nSeg - 1) * gap) / nSeg, mx = (p0.x + p1.x) / 2, mz = (p0.z + p1.z) / 2;
+          for (let k = 0; k < nSeg; k++) { const d = -span / 2 + k * (segL + gap) + segL / 2; flat(mx + ax * d, lv + 0.025, mz + az * d, ax, az, 0.62, segL / 2, RG.streak, sc(WARM, 0.48)); }
+        } else if (yzStreak) {   // 5：沿驳岸的倒影改细、改暗、分成短段，避免河口夜图像一根原木（汇入口可能算在 gw/gm 上）
           const nSeg = 3, gap = 0.7, segL = (L - (nSeg - 1) * gap) / nSeg;
           for (let k = 0; k < nSeg; k++) {
             const a = k * (segL + gap), b = a + segL, qa = r.line.at(s, side * (r.hw - 0.9 - a)), qb = r.line.at(s, side * (r.hw - 0.9 - b));
@@ -149,7 +154,7 @@ export class FzNight {
     for (const b of BRIDGES) {
       if (b.kind === 'bingde' || b.kind === 'covered') continue;
       const rise = humpRise(b), flatB = !rise && b.kind !== 'sarch', uo = flatB ? b.w / 2 : b.w / 2 - 0.03, t = b.t, nn = b.n;
-      const top = v => flatB ? 1.0 : deckAt(b, v) + 0.84, Pt = (u, v) => [b.x + t[0] * u + nn[0] * v, b.z + t[1] * u + nn[1] * v];
+      const top = v => flatB ? ((b.deckY || 0) + (b.tall ? (b.barrier || 2.2) * 0.7 : 1.0)) : deckAt(b, v) + 0.84, Pt = (u, v) => [b.x + t[0] * u + nn[0] * v, b.z + t[1] * u + nn[1] * v];
       const seg = flatB ? 1 : 10, v0 = -b.half + 0.25, v1 = b.half - 0.25;
       for (const su of [-1, 1]) {
         for (let i = 0; i < seg; i++) {
@@ -158,14 +163,15 @@ export class FzNight {
         }
         const hw = Math.max(0, (b.hw || 0) - 0.6), [cx, cz] = Pt(su * (uo + 1.0), 0);
         // 贴图 v（高斯那一向）= t：离桥越远越淡；沿 n 铺满水面宽。贴着闸的桥（新港闸西沿就是六一中路）不要把倒影铺进闸前水面，否则正看闸时像河道中间掉了一根橙管
-        const nearSluice = [FZR.c2 && FZR.c2.sluice, FZR.a3 && FZR.a3.gate, FZR.a4 && FZR.a4.gate, FZR.a5 && FZR.a5.gate].some(g => g && Math.hypot(cx - g.x, cz - g.z) < (g.hw || 20) + 10);
+        const nearSluice = [FZR.c2 && FZR.c2.sluice, FZR.a3 && FZR.a3.gate, FZR.a4 && FZR.a4.gate, FZR.a5 && FZR.a5.gate, FZR.a6 && FZR.a6.gate].some(g => g && Math.hypot(cx - g.x, cz - g.z) < (g.hw || 20) + 10);
         if (hw > 1 && isWater(cx, cz) && !nearSluice) {
-          const Z = FZR.a5 && FZR.a5.zone, isYz = FZR.a5 && ((FZR.a5.bridges || []).includes(b.id) || (Z && cx > Z[0] && cx < Z[2] && cz > Z[1] && cz < Z[3]));
-          if (isYz) {   // 5：倒影留下，但改细、改暗、断开，不要一整根原木（老药洲街 / 瀛洲桥 / 河口夜图）
+          const Z6 = FZR.a6 && FZR.a6.zone, isHq = FZR.a6 && ((FZR.a6.bridges || []).includes(b.id) || (Z6 && cx > Z6[0] && cx < Z6[2] && cz > Z6[1] && cz < Z6[3]));
+          const Z5 = FZR.a5 && FZR.a5.zone, isYz = FZR.a5 && ((FZR.a5.bridges || []).includes(b.id) || (Z5 && cx > Z5[0] && cx < Z5[2] && cz > Z5[1] && cz < Z5[3]));
+          if (isHq || isYz) {   // 6A / 5：倒影分段断开，不要一整根原木。6A 加厚略提亮（仍细、暗、断）；⑤ 保持原亮度
             const nSeg = 5, span = hw * 0.82, gap = 0.55, segL = (2 * span - (nSeg - 1) * gap) / nSeg;
             for (let k = 0; k < nSeg; k++) {
               const vv = -span + k * (segL + gap) + segL / 2, [x, z] = Pt(su * (uo + 1.0), vv);
-              if (isWater(x, z)) flat(x, levelAt(x, z) + 0.02, z, t[0], t[1], segL / 2, 0.36, RG.streak, sc(WARM, 0.16));
+              if (isWater(x, z)) flat(x, levelAt(x, z) + (isHq ? 0.025 : 0.02), z, t[0], t[1], segL / 2, isHq ? 0.62 : 0.36, RG.streak, isHq ? sc(WARM, 0.48) : sc(WARM, 0.16));
             }
           } else flat(cx, levelAt(cx, cz) + 0.02, cz, t[0], t[1], hw, 1.1, RG.line, sc(WARM, 0.34));
         }
@@ -184,6 +190,24 @@ export class FzNight {
       { const H0 = PT + 0.24, HH = 2.8, HL = 2 * hw + PW + 0.2, HA0 = -1.6, HA1 = 2.0;
         // 檐带移到檐口外侧（墙在 ±1.6/2.0，檐口只探出约 0.1 m），加厚约 3 倍、略提亮；仍用 RG.line，避免晕成一团
         for (const aa of [HA0 - 0.22, HA1 + 0.22]) { const [x, z] = Pt(aa, 0); flat(x, H0 + HH + 0.00, z, nS[0], nS[1], 0.24, HL / 2, RG.line, sc(WARM, 1.05)); } }
+    }
+    // 6A 茶园水闸：泵房檐下短灯带 + 堰端压顶，不加孔跨水面倒影；并进已有 fzNightLights
+    if (FZR.a6 && FZR.a6.gate) {
+      const S = FZR.a6.gate, tS = S.t, nS = S.n, H = S.house;
+      const Pt = (a, b) => [S.x + tS[0] * a + nS[0] * b, S.z + tS[1] * a + nS[1] * b];
+      for (const sv of [-1, 1]) { const [x, z] = Pt(0.2, sv * (S.hw - 0.45)); flat(x, 0.85, z, nS[0], nS[1], 0.16, 0.45, RG.line, sc(WARM, 0.7)); }
+      if (H) {
+        const fx = H.n[0], fz = H.n[1];
+        flat(H.x, H.h + 1.15, H.z, H.t[0], H.t[1], H.w / 2 - 0.2, 0.12, RG.line, sc(WARM, 0.8));
+        flat(H.x - fx * 0.3, 0.045, H.z - fz * 0.3, fx, fz, 2.2, 2.2, RG.pool, sc(WARM, 0.28));
+      }
+    }
+    // 6A 北二环桥下步道：沿桥宽贴梁底两道暖光带，夜里桥下不要一片漆黑（不加点光源）
+    for (const U of (FZR.a6 && FZR.a6.under) || []) {
+      const t = U.t, [x, z] = [U.x, U.z], sof = (U.soffit != null) ? U.soffit : ((U.deckY || 3.2) - 1.3);
+      flat(x, sof + 0.04, z, t[0], t[1], U.w / 2 - 1.2, 0.2, RG.line, sc(WARM, 0.9));
+      flat(x + t[0] * 8, sof + 0.04, z + t[1] * 8, t[0], t[1], 6.0, 0.2, RG.line, sc(WARM, 0.85));
+      flat(x, 0.045, z, t[0], t[1], 1.8, 1.8, RG.pool, sc(WARM, 0.36));
     }
     // 5 江四水闸：并进同一张 lights 网格。堰顶短带（正视一排亮点）+ 泵房檐口外侧加厚灯带（4A 教训：要够厚、够亮、别藏在檐下）
     if (FZR.a5 && FZR.a5.gate) {

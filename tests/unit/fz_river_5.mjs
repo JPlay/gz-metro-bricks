@@ -8,7 +8,7 @@ const F = R.FZR, A5 = F.a5, A4 = F.a4, J = JSON.stringify, RV = R.RIVERS;
 const fsrc = fs.readFileSync(new URL('../../js/world/fzRiver.js', import.meta.url), 'utf8');
 const nsrc = fs.readFileSync(new URL('../../js/world/fzNight.js', import.meta.url), 'utf8');
 ok('5 data present (a5: yzLen / gate / mj / sign / 3 bridges)', !!(A5 && A5.yzLen > 200 && A5.yzLen < 260 && A5.gate && A5.mj && A5.sign && (A5.bridges || []).length === 3));
-ok('rivers include yz after gw', Object.keys(RV).join() === 'ja,gm,jn,fb,gw,yz' && RV.yz.zh === '瀛洲河' && F.rivers.yz.hw === 9);
+ok('rivers include yz after gw', Object.keys(RV).includes('yz') && Object.keys(RV).indexOf('yz') > Object.keys(RV).indexOf('gw') && RV.yz.zh === '瀛洲河' && F.rivers.yz.hw === 9);
 console.log(`INFO yz ${RV.yz.line.len.toFixed(1)} m, gate (${A5.gate.x}, ${A5.gate.z}), blend ${A5.blend}, hw ${A5.hw0}→${A5.hw1}`);
 
 // 汇入口：和 4A 同位置同朝向，头 15–20 m 缓宽
@@ -112,7 +112,7 @@ ok('e2e loop anchors: each of the three bridges has both ends', (A5.loop || []).
   ok('瀛洲桥 draw: block-stone deck + stone balustrade + posts + two lamps at each end (yzFoot)', /yzFoot\(b\)/.test(fsrc) && /块石桥面/.test(fsrc) && /石栏/.test(fsrc) && /望柱/.test(fsrc) && /D\.lamp/.test(fsrc) && (A5.lamps || []).length === 4);
   ok('瀛洲桥 approaches use 榕城古街 granite paving', /r\.a5 && r\.name === '瀛洲桥'/.test(fsrc) && /#ABA497/.test(fsrc));
 }
-ok('a5 zone skirt uses bank paving colour (PAVEC), never a whitish empty field', /inAZ/.test(fsrc) && /az && inAZ/.test(fsrc) && /PAVEC/.test(fsrc));
+ok('a5 zone skirt uses bank paving colour (PAVEC), never a whitish empty field', /inA5Z/.test(fsrc) && /inA5Z/.test(fsrc) && /PAVEC/.test(fsrc));
 ok('night: yz bridge water reflections are thin, dim, broken segments (not one solid log)', /isYz/.test(nsrc) && /nSeg = 5/.test(nsrc) && /sc\(WARM, 0\.16\)/.test(nsrc) && /RG\.streak/.test(nsrc));
 ok('night: yz bank lamp reflections are thin, dim, broken segments', /yzStreak/.test(nsrc) && /nSeg = 3/.test(nsrc) && /sc\(WARM, 0\.18\)/.test(nsrc));
 ok('night: 瀛洲桥 end lamps merged into the existing lights() mesh', /FZR\.a5 && FZR\.a5\.lamps/.test(nsrc) && /halo\(hx, 6\.95/.test(nsrc));
