@@ -545,11 +545,10 @@ def build_west(g):
   b_hj = next(b for b in BRB if b.get('style') == 'hujing')
   b_dj = next(b for b in BRB if b.get('style') == 'dajing')
   b_jc = next(b for b in BRB if b.get('style') == 'jiangcuo')
-  mid_s = (b_hj['s'] + b_dj['s'] + b_jc['s']) / 3
-  # 东岸高处、和目标同一 s，正对河看（不再沿房排斜看）。y=28 越过屋顶。
-  camTriple = cam_at(mid_s, +(HW1 + 48.0), 28.0, mid_s, 0.0, 0.44,
+  # 大井路北、河面上 15 m 朝南沿河看：近处大井、再湖景、再江厝，远处福飞路更宽。
+  camTriple = cam_at(b_dj['s'] + 22.0, 3.0, 15.0, b_jc['s'] - 18.0, 0.0, 0.14,
                      '湖景路 / 大井路 / 江厝路同机位并排，跨度栏杆高低可分，都比福飞路窄')
-  camTriple['look'][1] = 1.8
+  camTriple['look'][1] = 1.4
 
   bbox = list(unary_union([chanH.buffer(BAND_HQ + 40)] + list(g.get('PADS_B') or [])).bounds)
   A6BDATA = {

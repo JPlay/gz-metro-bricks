@@ -19,7 +19,7 @@ SPOTS = """(async () => { const M = await import('/js/data/fz-river.js'); const 
     ['fufei', C.fufei.x, C.fufei.z, C.fufei.look[0], C.fufei.look[2], C.fufei.pitch || 0.12, C.fufei.y || 3.2, 1],
     ['fufei_side', ...(() => { const p = side(ff, -(ff.w / 2 + 12), 1.5); const q = side(ff, -(ff.w / 2 - 0.5), 0); return [...p, ...q]; })(), 0.02, 0.85, 1],
     ['rail', C.rail.x, C.rail.z, C.rail.look[0], C.rail.look[2], C.rail.pitch || 0.16, C.rail.y || 2.2, 1],
-    ['triple', C.triple.x, C.triple.z, C.triple.look[0], C.triple.look[2], C.triple.pitch || 0.28, C.triple.y || 8.5, 1],
+    ['triple', ...(() => { const hq = M.RIVERS.hq.line, p = hq.at(dj.s + 22, 3), q = hq.at(jc.s - 18, 0); return [p.x, p.z, q.x, q.z]; })(), 0.14, 15, 1],
     ['hujing_from_bank', ...(() => { const p = side(hj, -(hj.w / 2 + 14), 8); return [...p, hj.x, hj.z]; })(), 0.10, 1.8, 1],
     ['dajing_from_bank', ...(() => { const p = side(dj, -(dj.w / 2 + 20), 8); return [...p, dj.x, dj.z]; })(), 0.10, 1.8, 1],
     ['jiangcuo_from_bank', ...(() => { const p = side(jc, -(jc.w / 2 + 16), 8); return [...p, jc.x, jc.z]; })(), 0.08, 1.6, 1],
