@@ -179,18 +179,33 @@ def build_west(g):
   for b in BRB:
     for sg in (-1, 1):
       start = (b['half'] + b.get('rampL', 0)) if b.get('tall') else (b['hw'] + 2)
-      reach = b['hw'] + BAND_HQ + 2
+      # 福飞路 42 m 宽，两端路要伸出街坊，避免路东露出白地
+      reach = 72.0 if b.get('style') == 'fufei' else (b['hw'] + BAND_HQ + 2)
       if reach <= start + 1: continue
       ROADS_B.append({'id': b['id'] + ('e' if sg > 0 else 'w'), 'name': b['name'] or b['id'],
                       'poly': rect(b['x'], b['z'], b['n'][0] * sg, b['n'][1] * sg, start, reach, -b['w'] / 2, b['w'] / 2),
                       'dir': [b['n'][0] * sg, b['n'][1] * sg], 'w': b['w'], 'stub': True, 'a6b': True})
+  # 福飞路两侧街坊铺地（沿路两侧各留出建房带；沿河在桥宽以外再铺一块）
+  PADS = []
+  for b in BRB:
+    if b.get('style') != 'fufei':
+      continue
+    lot, reach = 30.0, 72.0
+    for sg in (-1, 1):
+      for us in (-1, 1):
+        a0, a1 = us * (b['w'] / 2 + 0.4), us * (b['w'] / 2 + lot)
+        PADS.append(rect(b['x'], b['z'], b['n'][0] * sg, b['n'][1] * sg, b['half'] + 1.0, reach, min(a0, a1), max(a0, a1)))
+        # 沿河、桥宽以外的岸地（镜头东侧那块白地）
+        b0, b1 = sg * (HW1 + 2.0), sg * (HW1 + 22.0)
+        PADS.append(rect(b['x'], b['z'], b['t'][0] * us, b['t'][1] * us, b['w'] / 2 + 0.5, b['w'] / 2 + 36.0, min(b0, b1), max(b0, b1)))
   g['BRB'] = BRB
   g['ROADS'] = g['ROADS'] + ROADS_B
   g['ROADS_B'] = ROADS_B
+  g['PADS_B'] = PADS
 
   # ---- 水面 / 可走范围：去掉旧合拢舌，并上西段，新西头封闭 ----
   regH = unary_union([ext(hq).buffer(HW1 + BAND_HQ, cap_style='flat', quad_segs=6),
-                      chanH.buffer(BAND_HQ, quad_segs=6)] + [r['poly'] for r in ROADS_B]).simplify(0.1)
+                      chanH.buffer(BAND_HQ, quad_segs=6)] + [r['poly'] for r in ROADS_B] + PADS).simplify(0.1)
   region = unary_union([region6, regH]).buffer(0)
   if region.geom_type != 'Polygon': region = max(region.geoms, key=lambda q: q.area)
   region = Polygon(region.exterior)
@@ -331,6 +346,69 @@ def build_west(g):
     s += R6.uniform(5.2, 7.6)
   print('6B trees', len(TREES) - nT0)
 
+  # 福飞路两端 + 路东：旧街房子和榕树，铺地已并进 region
+  bff = next(b for b in BRB if b.get('style') == 'fufei')
+  nH2, nT2 = len(HOUSES), len(TREES)
+  def _ff_house(cx, cz, tdir, face, w_, d_, h_, lod=None):
+    nonlocal occ
+    poly = Polygon([(cx + tdir[0] * a + face[0] * b, cz + tdir[1] * a + face[1] * b)
+                    for a, b in [(-w_ / 2, -d_ / 2), (w_ / 2, -d_ / 2), (w_ / 2, d_ / 2), (-w_ / 2, d_ / 2)]])
+    if (not region.buffer(-0.05).contains(poly) or poly.intersects(occ)
+        or poly.intersects(water.buffer(0.8)) or not land.buffer(-0.05).contains(poly)):
+      return False
+    occ = occ.union(poly.buffer(0.25))
+    rec = {'x': round(cx, 2), 'z': round(cz, 2), 'w': round(w_, 2), 'd': round(d_, 2),
+           't': [round(tdir[0], 4), round(tdir[1], 4)], 'f': [round(face[0], 4), round(face[1], 4)],
+           'river': 'hq', 'h': h_, 'kind': 'old', 'ry': round(math.atan2(tdir[0], tdir[1]), 4),
+           'back': True, 'a6b': True, 'fufeiSt': True}
+    if lod: rec['lod'] = lod
+    HOUSES.append(rec)
+    return True
+  # 沿路两侧（两端引路）
+  for sg in (-1, 1):
+    tdir = [bff['n'][0] * sg, bff['n'][1] * sg]
+    v = bff['half'] + (bff.get('rampL') or 8) + 5.0
+    while v < 68.0:
+      placed = False
+      w_ = R6.uniform(7.0, 10.4); d_ = R6.uniform(6.2, 8.0); h_ = R6.choice([5.6, 6.2, 6.8, 7.4, 8.0])
+      for us in (-1, 1):
+        face = [-us * bff['t'][0], -us * bff['t'][1]]
+        u = us * (bff['w'] / 2 + 3.4 + d_ / 2)
+        cx = bff['x'] + bff['t'][0] * u + bff['n'][0] * sg * v
+        cz = bff['z'] + bff['t'][1] * u + bff['n'][1] * sg * v
+        if _ff_house(cx, cz, tdir, face, w_, d_, h_) or _ff_house(cx, cz, tdir, face, 6.4, 5.8, h_):
+          placed = True
+      v += (w_ + R6.uniform(0.5, 1.4)) if placed else 2.4
+  # 沿河、桥宽以外的岸上（路东那一块）
+  for us in (-1, 1):
+    tdir = [bff['t'][0] * us, bff['t'][1] * us]
+    u = bff['w'] / 2 + 5.0
+    while u < bff['w'] / 2 + 34.0:
+      w_ = R6.uniform(6.8, 10.0); d_ = R6.uniform(6.0, 7.6); h_ = R6.choice([5.4, 6.0, 6.6, 7.2])
+      for sg in (-1, 1):
+        face = [-sg * bff['n'][0], -sg * bff['n'][1]]
+        off = HW1 + 3.6 + d_ / 2
+        cx = bff['x'] + bff['t'][0] * us * (u + w_ / 2) + bff['n'][0] * sg * off
+        cz = bff['z'] + bff['t'][1] * us * (u + w_ / 2) + bff['n'][1] * sg * off
+        _ff_house(cx, cz, tdir, face, w_, d_, h_)
+      u += w_ + R6.uniform(0.5, 1.6)
+  # 沿路人行道外和街坊里的榕树
+  for sg in (-1, 1):
+    v = bff['half'] + 4.0
+    while v < 68.0:
+      for us in (-1, 1):
+        for du in (bff['w'] / 2 + 1.8, bff['w'] / 2 + 16.0):
+          x = bff['x'] + bff['t'][0] * us * du + bff['n'][0] * sg * v
+          z = bff['z'] + bff['t'][1] * us * du + bff['n'][1] * sg * v
+          P_ = Point(x, z)
+          if (region.contains(P_) and land.contains(P_) and not water.buffer(0.8).contains(P_)
+              and not treeOcc.contains(P_) and all(math.hypot(x - q[0], z - q[1]) > 4.0 for q in TREES if q[5] != 'gone')):
+            nnx, nnz = -us * bff['t'][0], -us * bff['t'][1]
+            TREES.append([round(x, 2), round(z, 2), round(nnx, 3), round(nnz, 3), round(R6.uniform(0.85, 1.15), 2), 'hq', 1])
+            treeOcc = treeOcc.union(P_.buffer(3.0))
+      v += R6.uniform(6.0, 8.5)
+  print('6B 福飞路街坊 houses', len(HOUSES) - nH2, 'trees', len(TREES) - nT2, 'total houses', len(HOUSES) - nH0)
+
   # 被新河道占到的旧楼 / 树（不含 6A / 6B 自己的）
   _corr = unary_union([water.difference(water6).buffer(6.0).intersection(chanH.buffer(22)),
                        LineString([hq.interpolate(min(hq.length, max(old_len, s))).coords[0]
@@ -452,19 +530,20 @@ def build_west(g):
 
   # 1. 北浪路以西接缝：站在旧合拢处略南的岸上，朝西看打开后的河
   camSeam = cam_at(old_len - 8.0, -(HW1 + 6.5), 2.4, old_len + 28.0, 0.0, 0.10, '北浪路以西接缝，合拢已打开，河继续走')
-  # 2. 福飞路 3/4 侧视：能看见梁、墩、人行道，比北二环宽
-  camFufei = cam_at(bff['s'] - 4.0, -(bff['half'] + 16.0), 3.2, bff['s'], 0.0, 0.12, '福飞路明桥侧视：梁墩、人行道、宽于北二环')
-  # 3. 西头铁路走廊：站在合拢南侧河岸，朝北看两道剪影
-  camRail = cam_at(hq.length - 8.0, -(HW1 + 8.0), 2.2, hq.length + 2.0, 18.0, 0.16, '西头铁路走廊：河停在桥南，昌福/合福两道剪影')
-  # 4. 湖景 / 大井 / 江厝 同机位并排
+  # 2. 福飞路 3/4 侧视：再退远一点、抬高，避开岸上房子，看见梁、墩、人行道
+  camFufei = cam_at(bff['s'] - 2.0, -(bff['half'] + 22.0), 4.2, bff['s'], 0.0, 0.16, '福飞路明桥侧视：梁墩、人行道、宽于北二环')
+  # 3. 西头铁路走廊：河面上悬停朝北看（两岸房子贴岸，站岸上会撞墙），河停在桥南
+  camRail = cam_at(hq.length - 6.0, 0.0, 3.5, hq.length, 0.0, 0.22, '西头铁路走廊：河停在桥南，昌福/合福两道剪影')
+  camRail['look'][1] = 7.2
+  # 4. 湖景 / 大井 / 江厝 同机位并排：抬到屋面上空往下看，避免西岸房背挡住河
   b_hj = next(b for b in BRB if b.get('style') == 'hujing')
   b_dj = next(b for b in BRB if b.get('style') == 'dajing')
   b_jc = next(b for b in BRB if b.get('style') == 'jiangcuo')
   mid_s = (b_dj['s'] + b_jc['s']) / 2
-  camTriple = cam_at(mid_s, -(HW1 + 42.0), 8.5, mid_s, 0.0, 0.28,
+  camTriple = cam_at(b_jc['s'] - 8.0, -(HW1 + 55.0), 24.0, mid_s, 0.0, 0.45,
                      '湖景路 / 大井路 / 江厝路同机位并排，跨度栏杆高低可分，都比福飞路窄')
 
-  bbox = list(chanH.buffer(BAND_HQ + 40).bounds)
+  bbox = list(unary_union([chanH.buffer(BAND_HQ + 40)] + list(g.get('PADS_B') or [])).bounds)
   A6BDATA = {
     'hqLen': round(hq.length, 2), 'oldLen': round(old_len, 2), 'westLen': round(hq.length - old_len, 2),
     'hw1': HW1, 'cap': CAP, 'off': [round(OFF[0], 4), round(OFF[1], 4)],

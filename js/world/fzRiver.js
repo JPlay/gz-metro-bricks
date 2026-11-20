@@ -1041,14 +1041,23 @@ export class FzRiverStreet extends XmStreet {
       const [sx, sz] = F.P(su * (inner + walk / 2), 0);
       GR.box(sx, dY + 0.02, sz, walk - 0.15, 0.04, 2 * half, hex('#CFC9BD'), F.ryN, 0, 0, 1, NO);
     }
-    // 可见主梁（3 根纵梁）+ 方形墩
+    // 可见主梁（沿跨径的外侧梁，侧视从河面上必须看得见）+ 中间 3 根纵梁
+    for (const su of [-1, 1]) {
+      const [bx, bz] = F.P(su * (w / 2 - 0.5), 0);
+      GR.box(bx, dY - 1.05, bz, 1.15, 1.55, 2 * half + 0.3, hex('#6B665C'), F.ryN, 0, 0, 1, NO);
+    }
     for (const u of [-inner * 0.7, 0, inner * 0.7]) {
       const [bx, bz] = F.P(u, 0);
-      GR.box(bx, dY - 0.7, bz, 0.7, 0.9, 2 * half - 0.4, hex('#7A746A'), F.ryN, 0, 0, 1, NO);
+      GR.box(bx, dY - 0.85, bz, 0.8, 1.15, 2 * half - 0.2, hex('#7A746A'), F.ryN, 0, 0, 1, NO);
     }
-    for (const sv of [-0.45, 0.45]) {
-      const [px, pz] = F.P(0, sv * hw);
-      GR.box(px, (WY - 0.2 + dY - 0.55) / 2, pz, Math.min(w * 0.55, 16), (dY - 0.55) - (WY - 0.2), 1.3, hex('#8A8476'), F.ryN, 0, 0, 1, NO);
+    // 方形墩：两岸各一排、沿桥宽 3 个，立在水线旁，带墩帽
+    for (const sv of [-1, 1]) {
+      for (const u of [-inner * 0.7, 0, inner * 0.7]) {
+        const [px, pz] = F.P(u, sv * (hw - 0.15));
+        const y0 = WY - 0.15, y1 = dY - 0.55;
+        GR.box(px, (y0 + y1) / 2, pz, 1.9, y1 - y0, 1.7, hex('#8A8476'), F.ryN, 0, 0, 1, NO);
+        GR.box(px, dY - 0.42, pz, 2.5, 0.3, 2.1, hex('#9A9488'), F.ryN, 0, 0, 1, NO);
+      }
     }
     // 外侧栏杆 + 人行道内侧隔离
     for (const su of [-1, 1]) {
