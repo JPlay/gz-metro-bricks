@@ -24,12 +24,24 @@ SPOTS = """(async () => { const M = await import('/js/data/fz-river.js'); const 
   const signLook = [G.view[0] + G.t[0] * -3.2, G.view[1] + G.t[1] * -3.2];
   out.push(
     ['chayuan_from_lookout', ...G.view, ...(G.look || [G.x + G.n[0] * (G.houseSide || 1) * 3.2, G.z + G.n[1] * (G.houseSide || 1) * 3.2]), 0.08, 0.05, 0],
-    ['chayuan_front', ...(() => { const p = [G.x + G.t[0] * -20 + G.n[0] * (G.side || -1) * 9, G.z + G.t[1] * -20 + G.n[1] * (G.side || -1) * 9]; return p; })(), G.x + G.n[0] * (G.houseSide || 1) * 3.0, G.z + G.n[1] * (G.houseSide || 1) * 3.0, 0.10, 2.4, 1],
+    ['chayuan_front', ...(() => {
+      // 河道南侧（观景岸）升高：越过堰体看对岸筒顶泵房，LOS 无楼遮挡
+      const H = G.house;
+      const p = [G.x + G.t[0] * -12, G.z + G.t[1] * -12];
+      const lk = [(G.x + H.x) / 2, (G.z + H.z) / 2];
+      return [...p, ...lk];
+    })(), 0.16, 3.2, 1],
     ['sign_chayuan', ...(() => { const w = A6.sign, st = (A6.signs || []).find(s => s.id === 'cyh') || w; const mx = (w.x + st.x) / 2, mz = (w.z + st.z) / 2, nx = w.n[0], nz = w.n[1]; return [mx + nx * 5.8, mz + nz * 5.8, mx, mz]; })(), 0.10, 0.05, 0],
     ['beierhuan_from_bank', ...bSide(b2, -1, 20, -9), b2.x, b2.z, 0.08, 1.8, 1],
     ['beilang_from_bank', ...bSide(b1, 1, 24, 8), b1.x, b1.z, 0.08, 2.6, 1],
+    ['beierhuan_side', ...(() => {
+      // 岸上斜侧：t=-28 n=-8，距梁面约 13 m，不进楼、不贴树，看见梁厚和桥墩
+      const p = [b2.x + b2.t[0] * -28 + b2.n[0] * -8, b2.z + b2.t[1] * -28 + b2.n[1] * -8];
+      return [...p, b2.x, b2.z];
+    })(), 0.10, 2.3, 1],
+    ['beilang_side', ...(() => { const back = 10, p = [b1.x + b1.t[0] * -(b1.w / 2 + back), b1.z + b1.t[1] * -(b1.w / 2 + back)], lk = [b1.x + b1.t[0] * -(b1.w / 2 - 1.5), b1.z + b1.t[1] * -(b1.w / 2 - 1.5)]; return [...p, ...lk]; })(), 0.06, 1.4, 1],
     ['beierhuan_under', U.x, U.z, U.x + U.t[0] * 20, U.z + U.t[1] * 20, -0.14, 0.05, 0],
-    ['banks_street', ...(() => { const s = Math.max(40, (b2.s + b1.s) / 2), p = hq.at(s, -(hw + 3.8)), q = hq.at(Math.min(hq.len - 8, s + 36), 0); return [p.x, p.z, q.x, q.z]; })(), 0.08, 0.05, 0],
+    ['banks_street', ...(() => { const s = Math.max(40, (b2.s + b1.s) / 2), p = hq.at(s, 0), q = hq.at(Math.min(hq.len - 8, s + 40), 0); return [p.x, p.z, q.x, q.z]; })(), 0.22, 2.2, 1],
   );
   return out; })()"""
 async def main():

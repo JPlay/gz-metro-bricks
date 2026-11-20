@@ -919,13 +919,26 @@ export class FzRiverStreet extends XmStreet {
     const H = S.house, hy = H.h / 2;
     P.box(H.x, hy, H.z, H.w, H.h, H.d, hex(CONC), ryT, 0, 0, 1, NO);
     P.box(H.x, 0.25, H.z, H.w + 0.2, 0.5, H.d + 0.2, hex(BASE), ryT, 0, 0, 1, NO);
-    // barrel roof：沿 t 方向的半圆拱（几块盒子近似），深灰金属顶，和两岸黛瓦分开
-    const rise = 1.55;
-    for (const sd of [-1, 1]) {
-      const [rx, rz] = [H.x + t[0] * sd * H.w * 0.22, H.z + t[1] * sd * H.w * 0.22];
-      P.box(rx, H.h + rise * 0.45, rz, H.w * 0.58, rise * 0.75, H.d + 0.2, hex('#6A6E72'), ryT, sd * 0.48, 0, 1, NO);
+    // 筒顶：半圆拱在面河一侧（轴沿 n、拱在 t-y 面），沿 t 切成 12 片直立盒子，不绕欧拉角，深灰金属，和两岸黛瓦分开
+    const Rvault = H.d * 0.52, Nvault = 12, SHELL = hex('#6A6E72'), GABLE = hex('#5E6266');
+    const slice = 2 * Rvault / Nvault;
+    for (let i = 0; i < Nvault; i++) {
+      const off = -Rvault + slice * (i + 0.5);
+      const hFill = Math.sqrt(Math.max(0, Rvault * Rvault - off * off));
+      if (hFill < 0.06) continue;
+      const [rx, rz] = [H.x + t[0] * off, H.z + t[1] * off];
+      P.box(rx, H.h + hFill / 2, rz, H.w + 0.16, hFill, slice + 0.03, SHELL, ryT, 0, 0, 1, NO);
     }
-    P.box(H.x, H.h + rise * 0.88, H.z, 0.55, 0.38, H.d + 0.15, hex('#5A5E62'), ryT, 0, 0, 1, NO);
+    // 面河山墙描一圈深色外沿，半圆剪影更清楚
+    for (const en of [-1, 1]) {
+      const [ex0, ez0] = [H.x + n[0] * en * (H.w / 2 + 0.04), H.z + n[1] * en * (H.w / 2 + 0.04)];
+      for (let i = 0; i < Nvault; i++) {
+        const off = -Rvault + slice * (i + 0.5);
+        const hFill = Math.sqrt(Math.max(0, Rvault * Rvault - off * off));
+        if (hFill < 0.06) continue;
+        P.box(ex0 + t[0] * off, H.h + hFill / 2, ez0 + t[1] * off, 0.1, hFill, slice + 0.02, GABLE, ryT, 0, 0, 1, NO);
+      }
+    }
     // 两根螺杆泵筒（立在泵房靠水一侧，茶园独有）
     for (const se of [-1, 1]) {
       const [qx, qz] = [H.x + n[0] * S.houseSide * (-H.d / 2 - 0.9) + t[0] * se * 1.55, H.z + n[1] * S.houseSide * (-H.d / 2 - 0.9) + t[1] * se * 1.55];
@@ -1161,7 +1174,11 @@ export class FzRiverStreet extends XmStreet {
     const P = this.kit.solid, trunk = hex('#6B5A48'), G = ['#2F6B34', '#3A7A3C', '#2A5F30'], lean = up ? 0 : 1.6 * s;
     for (const a of [-0.7, 0.7]) { const c = Math.cos(a), sn = Math.sin(a), dx = fx * c - fz * sn, dz = fz * c + fx * sn; P.tube([x + fx * lean, 3.2 * s, z + fz * lean], [x + fx * lean + dx * 2.6 * s, 5.0 * s, z + fz * lean + dz * 2.6 * s], 0.42 * s, trunk, 4, false); }
     P.ellipsoid(x + fx * (lean + 2.4 * s) - fz * 1.4, 5.9 * s, z + fz * (lean + 2.4 * s) + fx * 1.4, 6.2 * s, 2.6 * s, 5.6 * s, hex(G[(x | 0) % 3 < 0 ? 0 : (x | 0) % 3]), 1);
-    for (let i = 0; i < 4; i++) { const r = (1.6 + i * 0.7) * s, sd = i % 2 ? 1 : -1, px = x + fx * (lean + r) + fz * sd * 1.2, pz = z + fz * (lean + r) - fx * sd * 1.2; P.tube([px, 4.6 * s, pz], [px, (up ? 2.6 + (i % 2) * 0.4 : 2.2 - (i % 2) * 0.9) * s, pz], 0.1 * s, hex('#7A6A56'), 3, false); }   // 垂到水面上方的气根
+    // 6A 北二环 / 北浪路边：气根从桥面上看是一排秃杆，近桥不挂（主干和树冠还在）。其它河段气根不动。
+    const nearA6Deck = (BRIDGES || []).some(b => b.a6 && Math.abs((x - b.x) * b.t[0] + (z - b.z) * b.t[1]) < b.w / 2 + 16 && Math.abs((x - b.x) * b.n[0] + (z - b.z) * b.n[1]) < b.half + 12);
+    if (!nearA6Deck) {
+      for (let i = 0; i < 4; i++) { const r = (1.6 + i * 0.7) * s, sd = i % 2 ? 1 : -1, px = x + fx * (lean + r) + fz * sd * 1.2, pz = z + fz * (lean + r) - fx * sd * 1.2; P.tube([px, 4.6 * s, pz], [px, (up ? 2.6 + (i % 2) * 0.4 : 2.2 - (i % 2) * 0.9) * s, pz], 0.1 * s, hex('#7A6A56'), 3, false); }   // 垂到水面上方的气根
+    }
   }
   treeBlobs() {
     FZR.trees.forEach(([x, z, fx, fz, s, kind, up], i) => {
@@ -1190,6 +1207,7 @@ export class FzRiverStreet extends XmStreet {
     for (const [id, r] of Object.entries(RIVERS)) for (const side of [-1, 1]) for (let s = 20; s < r.line.len - 10; s += 34) {
       const a = r.line.at(s, side * (r.hw + 5.2)); if (isWater(a.x, a.z) || BRIDGES.some(b => Math.hypot(b.x - a.x, b.z - a.z) < b.w / 2 + b.half)) continue;
       if (FZR.d2 && Math.hypot(a.x - FZR.d2.zzf.sign[0], a.z - FZR.d2.zzf.sign[1]) < 4.5) continue;   // 2D 朱紫坊石牌前不放路灯长椅
+      if (FZR.a6 && FZR.a6.gate) { const G = FZR.a6.gate, H = G.house; if (Math.hypot(a.x - G.x, a.z - G.z) < 22 || (H && Math.hypot(a.x - H.x, a.z - H.z) < 14)) continue; }   // 茶园闸正面不被路灯挡住
       const fx = -a.nx * side, fz = -a.nz * side;   // 朝河
       this.det(a.x, a.z, () => {
         D.lamp(this.kit, a.x, 0, a.z, yawOf(fx, fz));

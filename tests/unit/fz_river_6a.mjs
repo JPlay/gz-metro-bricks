@@ -102,6 +102,10 @@ console.log(`INFO hq ${RV.hq.line.len.toFixed(1)} m, gate (${A6.gate.x}, ${A6.ga
     /a6Sluice[\s\S]*const PIER = '#A39C8E'/.test(fsrc) && /a6Sluice[\s\S]*(barrel roof|筒顶)/.test(fsrc) && /螺杆泵/.test(fsrc) && G.bays === 1);
   const a6fn = fsrc.slice(fsrc.indexOf('  a6Sluice('), fsrc.indexOf('  a6Day('));
   ok('a6Sluice is not c2Sluice / a5Sluice / 九门 / 新港 / 江四 copy', /a6Sluice/.test(a6fn) && !/a5Sluice/.test(a6fn) && !/c2Sluice/.test(a6fn) && /筒顶泵房/.test(fsrc));
+  ok('pump-house roof is a multi-segment barrel vault (筒顶), not a 2-box pitched roof', /Nvault = 12/.test(a6fn) && /Rvault/.test(a6fn) && !/rise = 1\.55/.test(a6fn));
+  ok('banyan aerial roots are skipped near 6A bridge decks (秃杆 fix)', /nearA6Deck/.test(fsrc) && /近桥不挂/.test(fsrc));
+  ok('promenade lamps skip the 茶园闸 front so they do not block the weir / pump house', /茶园闸正面不被路灯挡住/.test(fsrc));
+
 }
 
 // 两岸旧街：kind=old，不是现代方楼
