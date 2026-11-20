@@ -17,7 +17,7 @@ SPOTS = """(async () => { const M = await import('/js/data/fz-river.js'); const 
   const out = [
     ['seam', C.seam.x, C.seam.z, C.seam.look[0], C.seam.look[2], C.seam.pitch || 0.10, C.seam.y || 2.4, 1],
     ['fufei', C.fufei.x, C.fufei.z, C.fufei.look[0], C.fufei.look[2], C.fufei.pitch || 0.12, C.fufei.y || 3.2, 1],
-    ['fufei_side', ...(() => { const p = side(ff, -(ff.w / 2 + 12), 0); return [...p, ff.x, ff.z]; })(), 0.10, 2.2, 1],
+    ['fufei_side', ...(() => { const p = side(ff, -(ff.w / 2 + 12), 1.5); const q = side(ff, -(ff.w / 2 - 0.5), 0); return [...p, ...q]; })(), 0.02, 0.85, 1],
     ['rail', C.rail.x, C.rail.z, C.rail.look[0], C.rail.look[2], C.rail.pitch || 0.16, C.rail.y || 2.2, 1],
     ['triple', C.triple.x, C.triple.z, C.triple.look[0], C.triple.look[2], C.triple.pitch || 0.28, C.triple.y || 8.5, 1],
     ['hujing_from_bank', ...(() => { const p = side(hj, -(hj.w / 2 + 14), 8); return [...p, hj.x, hj.z]; })(), 0.10, 1.8, 1],

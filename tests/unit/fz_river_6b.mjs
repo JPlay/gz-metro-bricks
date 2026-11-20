@@ -78,9 +78,11 @@ ok('unnamed footbridge is not built (no a6b foot kind; only hq3–hq7)', !R.BRID
   for (const b of [dj, hj, jc]) {
     ok(`${b.name}: spans water, both ends on land`, R.isWater(b.x, b.z) && [-1, 1].every(sg => R.isLand(b.x + b.n[0] * sg * (b.hw + 2.5), b.z + b.n[1] * sg * (b.hw + 2.5))));
   }
-  { // 福飞路 42 m 宽，桥头是车行道不是步道；河从梁下过，路外侧两岸是陆地
-    const ends = [-1, 1].every(sg => R.isLand(ff.x + ff.t[0] * sg * (ff.w / 2 + 2), ff.z + ff.t[1] * sg * (ff.w / 2 + 2)));
-    ok('福飞路: spans water, banks beyond the roadway are land', R.isWater(ff.x, ff.z) && ends);
+  { // 福飞路 42 m 宽沿河：桥下和桥外侧沿 t 是水（梁墩站在水里）；沿 n 的引路和岸是陆地
+    const mid = R.isWater(ff.x, ff.z);
+    const river = [-1, 1].every(sg => R.isWater(ff.x + ff.t[0] * sg * (ff.w / 2 + 8), ff.z + ff.t[1] * sg * (ff.w / 2 + 8)));
+    const apr = [-1, 1].every(sg => R.isLand(ff.x + ff.n[0] * sg * (ff.half + 10), ff.z + ff.n[1] * sg * (ff.half + 10)));
+    ok('福飞路: spans water, river continues past the fascia, approaches are land', mid && river && apr);
   }
 }
 

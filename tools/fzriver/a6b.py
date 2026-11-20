@@ -214,6 +214,12 @@ def build_west(g):
   _wC = _wN.buffer(5, quad_segs=6).buffer(-5, quad_segs=6)
   water = unary_union([_wN, _wC.difference(_wN).intersection(chanH.buffer(8))]).buffer(0).simplify(0.05)
   water = water.intersection(region.buffer(-0.05)).buffer(0)
+  # 福飞路桥面沿河 42 m，中线有弯，直线桥面会离开 10 m 水道。
+  # 在桥下和桥外侧各留一段直水道，让梁墩站在水里、侧视能看见跨径。
+  _bff = next(b for b in BRB if b.get('style') == 'fufei')
+  _ffw = rect(_bff['x'], _bff['z'], _bff['t'][0], _bff['t'][1],
+              -(_bff['w'] / 2 + 14.0), _bff['w'] / 2 + 14.0, -(HW1 + 0.4), HW1 + 0.4)
+  water = unary_union([water, _ffw]).buffer(0)
   if water.geom_type != 'Polygon': water = max(water.geoms, key=lambda q: q.area)
   water = Polygon(water.exterior, [i for i in water.interiors])
   land = region.difference(water).buffer(0)
@@ -539,9 +545,11 @@ def build_west(g):
   b_hj = next(b for b in BRB if b.get('style') == 'hujing')
   b_dj = next(b for b in BRB if b.get('style') == 'dajing')
   b_jc = next(b for b in BRB if b.get('style') == 'jiangcuo')
-  mid_s = (b_dj['s'] + b_jc['s']) / 2
-  camTriple = cam_at(b_jc['s'] - 8.0, -(HW1 + 55.0), 24.0, mid_s, 0.0, 0.45,
+  mid_s = (b_hj['s'] + b_dj['s'] + b_jc['s']) / 3
+  # 东岸高处、和目标同一 s，正对河看（不再沿房排斜看）。y=28 越过屋顶。
+  camTriple = cam_at(mid_s, +(HW1 + 48.0), 28.0, mid_s, 0.0, 0.44,
                      '湖景路 / 大井路 / 江厝路同机位并排，跨度栏杆高低可分，都比福飞路窄')
+  camTriple['look'][1] = 1.8
 
   bbox = list(unary_union([chanH.buffer(BAND_HQ + 40)] + list(g.get('PADS_B') or [])).bounds)
   A6BDATA = {
