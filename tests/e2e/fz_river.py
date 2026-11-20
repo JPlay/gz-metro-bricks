@@ -1456,11 +1456,20 @@ async def run_6b(pg):
     walk = ff.get('walk') or 3.5
     def xz(tu, nv):
         return (ff['x'] + ff['t'][0] * tu + ff['n'][0] * nv, ff['z'] + ff['t'][1] * tu + ff['n'][1] * nv)
-    # 先回到福飞路岸边再上人行道（不要从西头合拢外侧起走，避免被封口墙隔开）
-    pff = await bank(ff['s'] - ff['half'] - 4, SOUTH)
+    # 铁轨测试后人在西头某一侧岸。A* 栅格不过桥（colFlyRamp 不是 colDeck），
+    # 和 cross() 一样：先回到同一侧岸的人行道桥头，再 legs 走上桥面。
+    pos, origin = (await st(pg))['pos'], await W(pg, ff['x'], ff['z'])
+    cur_n = (pos[0] - origin[0]) * ff['n'][0] + (pos[2] - origin[1]) * ff['n'][1]
+    cur_t = (pos[0] - origin[0]) * ff['t'][0] + (pos[2] - origin[1]) * ff['t'][1]
+    ff_side = NORTH if cur_n > 0 else SOUTH
+    u = math.copysign(ff['w'] / 2 - walk / 2, cur_t if abs(cur_t) > 1 else 1)
+    off = ff['half'] + 3
+    pff = await bank(ff['s'] - ff['half'] - 4, ff_side)
     await go(pg, *pff, '岸上 → 福飞路再上人行道')
-    sidew = await W(pg, *xz(ff['w'] / 2 - walk / 2, 0))
-    okw = await go(pg, *sidew, '→ 福飞路人行道'); ok('kw:walk onto 福飞路 sidewalk', okw and await near(pg, *sidew, 2.8) and (await st(pg))['pos'][1] > 0.6, (await st(pg))['pos'])
+    start = await W(pg, *xz(u, ff_side * off))
+    sidew = await W(pg, *xz(u, 0))
+    okw = await go(pg, *start, '→ 福飞路人行道桥头') and await legs(pg, [sidew], True)
+    ok('kw:walk onto 福飞路 sidewalk', okw and await near(pg, *sidew, 2.8) and (await st(pg))['pos'][1] > 0.6, (await st(pg))['pos'])
     mid = await W(pg, *xz(0, 0))
     await legs(pg, [mid], False); await asyncio.sleep(0.5)
     s = await st(pg)
