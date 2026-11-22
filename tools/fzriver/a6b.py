@@ -495,18 +495,20 @@ def build_west(g):
   print('6B 福飞路街坊 houses', len(HOUSES) - nH2, 'trees', len(TREES) - nT2, 'total houses', len(HOUSES) - nH0)
 
   # 被新河道占到的旧楼 / 树（不含 6A / 6B 自己的）
-  _corr = unary_union([water.difference(water6).buffer(6.0).intersection(chanH.buffer(22)),
-                       LineString([hq.interpolate(min(hq.length, max(old_len, s))).coords[0]
-                                   for s in list(frange(old_len, hq.length, 2.0)) + [hq.length]]).buffer(HW1 + 8.0)]
-                      + [r['poly'].buffer(0.5) for r in ROADS_B])
+  # 只清西段新开的走廊。不要用整段 chanH / 全图 water：会误伤 6A 东口、晋安河岸上的旧树（tree 254）。
+  _west_ls = LineString([hq.interpolate(min(hq.length, max(old_len, s))).coords[0]
+                         for s in list(frange(old_len, hq.length, 2.0)) + [hq.length]])
+  _west = _west_ls.buffer(HW1 + 8.0)
+  _newW = water.difference(water6).buffer(6.0).intersection(_west)
+  _corr = unary_union([_newW, _west] + [r['poly'].buffer(0.5) for r in ROADS_B])
   GONEB_H, GONEB_T = [], []
   for i, h in enumerate(HOUSES):
     if h.get('gone') or h.get('a6') or h.get('a6b'): continue
-    if _hpoly0(h).intersects(_corr) or water.contains(Point(h['x'], h['z'])):
+    if _hpoly0(h).intersects(_corr):
       HOUSES[i]['gone'] = '6B'; GONEB_H.append(i)
   for i, t in enumerate(TREES):
     if t[5] in ('gone', 'hq'): continue
-    if _corr.contains(Point(t[0], t[1])) or water.contains(Point(t[0], t[1])):
+    if _corr.contains(Point(t[0], t[1])):
       TREES[i][5] = 'gone'; GONEB_T.append(i)
   print('6B gone houses', GONEB_H, 'trees', len(GONEB_T))
 
@@ -600,12 +602,12 @@ def build_west(g):
   camFufei = cam_at(bff['s'] - 2.0, -(bff['half'] + 22.0), 4.2, bff['s'], 0.0, 0.16, '福飞路明桥侧视：梁墩、人行道、宽于北二环')
   # 3. 南岸再退后：河缘上空朝北看两座铁路桥全长。河停在桥南，合拢墙封住。
   # cam_at 会把 s 夹到中线长度内，这里要退到合拢以南约 88 m，手动给坐标。
-  _cam_along = (WEST_CAP + RAIL_LIP) - 88.0
-  _cam_lat = -(HW1 - 0.4)
+  _cam_along = (WEST_CAP + RAIL_LIP) - 55.0
+  _cam_lat = 0.0
   _cxy = at_end(_cam_along, _cam_lat)
   _lxy = at_end((along_cf + along_hf) / 2.0, 0.0)
-  camRail = {'x': round(_cxy[0], 2), 'z': round(_cxy[1], 2), 'y': 9.2,
-             'look': [round(_lxy[0], 2), 8.0, round(_lxy[1], 2)], 'pitch': 0.06,
+  camRail = {'x': round(_cxy[0], 2), 'z': round(_cxy[1], 2), 'y': 16.0,
+             'look': [round(_lxy[0], 2), 8.0, round(_lxy[1], 2)], 'pitch': 0.04,
              'note': '南岸退后：河停在铁路桥南，昌福/合福全长剪影'}
   # 4. 湖景 / 大井 / 江厝 同机位并排：抬到屋面上空往下看，避免西岸房背挡住河
   b_hj = next(b for b in BRB if b.get('style') == 'hujing')

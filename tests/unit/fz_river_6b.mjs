@@ -124,8 +124,8 @@ ok('unnamed footbridge is not built (no a6b foot kind; only hq3–hq7)', !R.BRID
   ok('昌福 / 合福 are two distinct silhouettes (centerlines separated by more than half-widths)',
     Math.abs(a1 - a0) >= (rails[0].w + rails[1].w) / 2 + 3, { a0, a1, w: [rails[0].w, rails[1].w] });
   const cr = A6B.cams.rail, camAlong = (cr.x - end.x) * end.tx + (cr.z - end.z) * end.tz;
-  ok('rail camera is further back on the south bank (south of the cap, standoff ≥ 60 m)',
-    camAlong < -60, { camAlong, cam: [cr.x, cr.z, cr.y] });
+  ok('rail camera is further back on the south bank (south of the cap, standoff ≥ 50 m, elevated)',
+    camAlong < -50 && cr.y >= 14, { camAlong, cam: [cr.x, cr.z, cr.y] });
 }
 
 // 西头合拢：铁路桥南封闭
@@ -158,6 +158,11 @@ ok('unnamed footbridge is not built (no a6b foot kind; only hq3–hq7)', !R.BRID
   ok('g6day enable zone unions 6B (day-only)', /gn\.g6day/.test(ld) && /a6b && FZR\.a6b\.zone/.test(ld) && /!this\.nightLod/.test(ld));
   ok('west cap collision spans the banks (0.8 thick × 56 along n, not a 0.7 m post)',
   /西头合拢：一道挡住出界的碰撞/.test(fsrc) && /0\.8, 8, 56/.test(fsrc) && /name: 'colCap'/.test(fsrc));
+
+{ const goneT = (A6B.gone && A6B.gone.trees) || [];
+  const east = goneT.filter(i => { const t = F.trees[i]; if (!t) return false; const pr = RV.hq.line.project(t[0], t[1]); return pr.s < A6.hqLen - 8; });
+  ok('6B does not mark pre-join / east-mouth trees gone (晋安河 榕树 stays)', !east.length, east);
+}
 ok('isHq includes a6b bridges / zone; reflections stay nSeg=5, sc(WARM, 0.48), 0.62',
     /FZR\.a6b && \(FZR\.a6b\.bridges/.test(nsrc) && /nSeg = 5/.test(nsrc) && /sc\(WARM, 0\.48\)/.test(nsrc) && /hqStreak[\s\S]{0,500}0\.62/.test(nsrc));
 }
