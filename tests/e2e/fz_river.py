@@ -1478,6 +1478,26 @@ async def run_6b(pg):
     if OUT:
         C = A['cams']['fufei']; await look(pg, *(await W(pg, C['look'][0], C['look'][2])), 0.1); await shot(pg, 'kw_fufei')
 
+    # 低帧/大 dt：从福飞路西桥头（负 n 岸、人行道坡底，约街坐标 5573.8, 335.1）走上桥头并过河。
+    # 复现小美 11-22 夜里走查：setDtMax(0.25) 且约 4 fps 时一步楔进斜坡与桥头栏杆的缝。
+    walk = ff.get('walk') or 3.5
+    off_w = ff['half'] + 3 + (ff.get('rampL') or 0)
+    await pg.evaluate('__game.setDtMax(0.25)')
+    low_ok = True
+    for su in (1, -1):
+        u = su * (ff['w'] / 2 - walk / 2)
+        stt = await W(pg, *xz(u, -off_w))
+        midp = await W(pg, *xz(u, 0))
+        dst = await W(pg, *xz(u, off_w))
+        okc = await go(pg, *stt, f'低帧 → 福飞路西桥头人行道 u={su:+d}') and await legs(pg, [midp, dst], True)
+        arrived = okc and await near(pg, *dst, 2.8) and (await st(pg))['pos'][1] > -0.3
+        low_ok = low_ok and arrived
+        if not arrived:
+            ok(f'kw:lowfps 福飞路 west head sidewalk u={su:+d} across', False, (await st(pg))['pos'])
+            break
+    ok('kw:lowfps walk 福飞路 west head sidewalk across', low_ok, (await st(pg))['pos'])
+    await pg.evaluate(f"__game.setDtMax({float(os.environ.get('FZDT', '0.25'))})")
+
     # 东向回圈：短桥 + 大井 / 湖景 / 江厝 / 福飞 反向
     east_labs = ['east 北→南', 'east 南→北', 'east 北→南', 'east 南→北']
     # after sidewalk we are on 福飞; start return from short or 大井 depending on side

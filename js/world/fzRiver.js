@@ -371,7 +371,10 @@ export class FzRiverStreet extends XmStreet {
   }
   /** 桥面坡道碰撞体：沿 n 从 v0 到 v1，高度 y0 → y1 */
   ramp(b, v0, v1, y0, y1, u0, u1, th = 0.3, name = 'col') {
-    const F = this.bridgeFrame(b), L = Math.hypot(v1 - v0, y1 - y0), [cx, cz] = F.P((u0 + u1) / 2, (v0 + v1) / 2), ang = Math.atan2(y1 - y0, v1 - v0);
+    const F = this.bridgeFrame(b), dv = v1 - v0, dy = y1 - y0, L = Math.hypot(dv, dy), [cx, cz] = F.P((u0 + u1) / 2, (v0 + v1) / 2);
+    // atan2(dy, dv) 在 dv<0 时接近 ±π，cos 变号，nrm 把碰撞体抬离坡面，人会卡进坡脚/桥头栏杆缝（福飞路西桥头，小美 11-22）。
+    // 用 |dv| 保持 |ang|<π/2，再用 sign(dv) 决定俯仰方向，两端斜坡一致。
+    const ang = Math.atan2(dy, Math.abs(dv) || 1e-6) * Math.sign(dv || 1);
     const nrm = th / 2 / Math.cos(ang);
     return this.kit.col(cx, (y0 + y1) / 2 - nrm, cz, Math.abs(u1 - u0), th, L, { ry: F.ryN, rx: -ang, name });
   }
@@ -387,9 +390,10 @@ export class FzRiverStreet extends XmStreet {
       const F = this.bridgeFrame(b), half = b.half, w = b.w, rise = humpRise(b);
       if (!rise) {
         const [cx, cz] = F.P(0, 0), dY = (b.tall && b.deckY) ? b.deckY : 0, rampL = b.rampL || 0;
-        k.col(cx, dY - 0.2, cz, w, 0.4, 2 * half, { ry: F.ryN, name: 'colDeck' });
+        const lip = (dY && rampL) ? 0.8 : 0;
+        k.col(cx, dY - 0.2, cz, w, 0.4, 2 * half + 2 * lip, { ry: F.ryN, name: 'colDeck' });
         const pH = dY ? (b.barrier || 2.2) : (b.parapetH || (b.railStyle === 'pipe' ? 0.85 : 1.2));
-        for (const su of [-1, 1]) { const [px, pz] = F.P(su * (w / 2 - 0.15), 0); k.col(px, dY + pH / 2, pz, 0.3, pH, 2 * half - 0.2, { ry: F.ryN, name: 'colParapet' }); }
+        for (const su of [-1, 1]) { const [px, pz] = F.P(su * (w / 2 - 0.15), 0); k.col(px, dY + pH / 2, pz, 0.3, pH, 2 * half - 0.2 + 2 * lip, { ry: F.ryN, name: 'colParapet' }); }
         if (dY && rampL) for (const sv of [-1, 1]) {
           // colFlyRamp：不要叫 colDeck，否则 2D 导航把斜板投影当桥面，会从桥底下直线钻进去
           this.ramp(b, sv * half, sv * (half + rampL), dY, 0, -w / 2, w / 2, 0.3, 'colFlyRamp');
@@ -1104,18 +1108,27 @@ export class FzRiverStreet extends XmStreet {
     // 碰撞：两侧人行道可走，中央车道挡住。
     // 斜坡不能全宽都叫 colFlyRamp，否则 2D 导航把人行道和岸切开，走到桥头会 nopath。
     // 中央车行道斜板仍是 colFlyRamp（避免投影从桥底下钻）；人行道斜板用 colStair，两岸两侧接到岸上。
-    k.col(cx, dY - 0.2, cz, w, 0.4, 2 * half, { ry: F.ryN, name: 'colDeck' });
+    // 桥面和栏杆沿 n 伸出 0.8 m 压住斜坡顶端，避免斜板端面和桥头栏杆之间的缝把大步长楔住
+    const lip = rampL ? 0.8 : 0;
+    k.col(cx, dY - 0.2, cz, w, 0.4, 2 * half + 2 * lip, { ry: F.ryN, name: 'colDeck' });
     for (const su of [-1, 1]) {
       const [px, pz] = F.P(su * (w / 2 - 0.15), 0);
-      k.col(px, dY + 0.55, pz, 0.3, 1.1, 2 * half - 0.2, { ry: F.ryN, name: 'colParapet' });
+      k.col(px, dY + 0.55, pz, 0.3, 1.1, 2 * half - 0.2 + 2 * lip, { ry: F.ryN, name: 'colParapet' });
       const [ix, iz] = F.P(su * inner, 0);
-      k.col(ix, dY + 0.45, iz, 0.3, 0.9, 2 * half - 0.2, { ry: F.ryN, name: 'colFufeiInner' });
+      k.col(ix, dY + 0.45, iz, 0.3, 0.9, 2 * half - 0.2 + 2 * lip, { ry: F.ryN, name: 'colFufeiInner' });
     }
     if (rampL) for (const sv of [-1, 1]) {
       this.ramp(b, sv * half, sv * (half + rampL), dY, 0, -inner, inner, 0.3, 'colFlyRamp');
       for (const su of [-1, 1]) {
         this.ramp(b, sv * half, sv * (half + rampL), dY, 0, su * inner, su * (w / 2), 0.3, 'colStair');
         this.ramp(b, sv * half, sv * (half + rampL), dY + 0.55, 0.55, su * (w / 2 - 0.3), su * (w / 2), 0.4, 'colParapet');
+        // 人行道桥头搭板：同时压住坡顶和坡脚外侧，堵住斜坡与栏杆/岸地的夹缝
+        const [lx, lz] = F.P(su * (inner + walk / 2), sv * half);
+        k.col(lx, dY - 0.2, lz, walk, 0.4, 1.6, { ry: F.ryN, name: 'colDeckLip' });
+        const [fx, fz] = F.P(su * (inner + walk / 2), sv * (half + rampL));
+        k.col(fx, 0.15, fz, walk, 0.3, 1.2, { ry: F.ryN, name: 'colStairHead' });
+        const [rx, rz] = F.P(su * (w / 2 - 0.15), sv * half);
+        k.col(rx, dY + 0.55, rz, 0.35, 1.1, 0.5, { ry: F.ryN, name: 'colStairHeadRail' });
       }
     }
   }
