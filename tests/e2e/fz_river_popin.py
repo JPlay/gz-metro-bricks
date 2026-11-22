@@ -207,6 +207,22 @@ async def main():
                   __game.player.spawn(R.x+x, 1.6, R.z+z, Math.atan2(b.x-x, b.z-z)); __game.player.pitch=0.08; })()""",
             }
 
+        if os.environ.get('FZPOP') == 'yxwest':   # 7A：汇入口 / 机场高速桥下 / 涧田路涵洞口 / 命名西头牌；FZKIOSK=fzdm
+            LOCS = {
+              'seam': """(async () => { const S=__game.fzMetro.street, R=S.kit.root.position; const M = await import('/js/data/fz-river.js'); const C=M.FZR.a7a.cams.seam;
+                  const x=C.x, z=C.z, tx=C.look[0], tz=C.look[2];
+                  __game.player.spawn(R.x+x, C.y||1.6, R.z+z, Math.atan2(tx-x, tz-z)); __game.player.pitch=0.08; })()""",
+              'express': """(async () => { const S=__game.fzMetro.street, R=S.kit.root.position; const M = await import('/js/data/fz-river.js'); const C=M.FZR.a7a.cams.express;
+                  const x=C.x, z=C.z, tx=C.look[0], tz=C.look[2];
+                  __game.player.spawn(R.x+x, C.y||1.4, R.z+z, Math.atan2(tx-x, tz-z)); __game.player.pitch=-0.08; })()""",
+              'culvert': """(async () => { const S=__game.fzMetro.street, R=S.kit.root.position; const M = await import('/js/data/fz-river.js'); const C=M.FZR.a7a.cams.culvert;
+                  const x=C.x, z=C.z, tx=C.look[0], tz=C.look[2];
+                  __game.player.spawn(R.x+x, C.y||1.5, R.z+z, Math.atan2(tx-x, tz-z)); __game.player.pitch=0.04; })()""",
+              'tip': """(async () => { const S=__game.fzMetro.street, R=S.kit.root.position; const M = await import('/js/data/fz-river.js'); const C=M.FZR.a7a.cams.tip;
+                  const x=C.x, z=C.z, tx=C.look[0], tz=C.look[2];
+                  __game.player.spawn(R.x+x, C.y||1.6, R.z+z, Math.atan2(tx-x, tz-z)); __game.player.pitch=0.10; })()""",
+            }
+
         if os.environ.get('FZPOP') == 'yz':   # 5：瀛洲河口 + 三座桥 + 江四闸 / 闽江；FZKIOSK=fzgmg
             LOCS = {
               'yz_mouth': """(async () => { const S=__game.fzMetro.street, R=S.kit.root.position; const M = await import('/js/data/fz-river.js'); const Y = M.FZR.a4.yz;

@@ -42,7 +42,8 @@ E3B = any(x.startswith('h_') for x in STAGES)   # 3B 晋安河北段 → 琴亭�
 E4A = any(x.startswith('i_') for x in STAGES)   # 4A 光明港西段 + 新港闸（i_gm_west，只走路）
 E5 = any(x.startswith('j_') for x in STAGES)   # 5 瀛洲河 + 江四水闸（j_yz_south，只走路，两岸三桥双向圈）
 E6B = any(x.startswith('k_hq_west') for x in STAGES)   # 6B 湖前河西段（k_hq_west，只走路，西段两岸四桥双向圈）
-E6A = (not E6B) and any(x.startswith('k_') for x in STAGES)   # 6A 湖前河东段（k_hq_east，只走路，两岸两桥双向圈）
+E7A = any(x.startswith('m_yx') for x in STAGES)   # 7A 洋下河西段（m_yx_west，只走路：斗门 C → 命名西头 → 涵洞人行道 → 机场高速桥下）
+E6A = (not E6B) and (not E7A) and any(x.startswith('k_') for x in STAGES)   # 6A 湖前河东段（k_hq_east，只走路，两岸两桥双向圈）
 E2D = any(x.startswith('d_') for x in STAGES)   # 2D 安泰河东段 + 东街口 C 南后街 ⇄ 三坊七巷南口牌坊 + 津门桥 + 朱紫坊 + 琼东河口（d_walk / d_east）；d_dadao = 上下杭三捷河（达道 C 景点街）   # 2C 白马河下段（宁化 A、上海西码头、C 线、工业路 / 江滨西大道桥下步道、彬德水闸）   # 2B 东西河东段（水部 C、市民服务中心码头、桥下步道）   # 1B 东线（晋安河 + 光明港，B 线）
 BUDGET = {'draws': 50, 'tris': 90000}
 # 3C 夜景：FZQS='&t=night' 整套在夜里跑（同一预算 ≤ 90k / 50）；默认 '&t=day'（固定白天，不随跑测试时的本地时间变）
@@ -1228,6 +1229,130 @@ async def run_2d(pg):
         await hud_shore_red(pg, 'd_east:back')
 
 
+
+async def run_7a(pg):
+    """7A：斗门 C → 无名下游汇入口 → 走到命名西头「洋下河」牌 → 涵洞处走人行道过路 → 机场高速只走桥下 → 东头合拢走不过 → 低帧过一处涵洞人行道。只走路。"""
+    await pg.evaluate('window.__fzNavRes = 0.45')
+    ex, si = await station_to_exit(pg, 'fzdm', "x.attr === 'fzriver'", 'fzdm')
+    ok('fzdm:7A:net e, walk-only (routes B + D unchanged)', si and si.get('net') == 'e' and set((si.get('boats') or {}).keys()) == {'B', 'D'}, si and {'net': si.get('net'), 'boats': list((si.get('boats') or {}).keys())})
+    D = await mod(pg); await nav(pg); await asyncio.sleep(1)
+    A = await pg.evaluate("""(async () => { const M = await import('/js/data/fz-river.js'); const F = M.FZR, a7 = F.a7a, yx = M.RIVERS.yx, jn = M.RIVERS.jn;
+      return { hw: F.rivers.yx.hw, len: yx.line.len, jnHw: F.rivers.jn.hw, host: a7.host, cap: a7.cap || 2.4,
+        sign: a7.sign, cams: a7.cams, culverts: a7.culverts, express: a7.express,
+        tipS: a7.official && (a7.official.namedWestTip / 4) };
+    })()""")
+    hw, cs, E = A['hw'], A['culverts'], A['express']['main']
+    R['perf']['m:kiosk:fzdm'] = await sample4(pg, 'm:kiosk:fzdm')
+    # 斗门 C → 晋安河靠近汇入口（host.s 以南一点）
+    p0 = await rpt(pg, 'jn', A['host']['s'] - 25, A['jnHw'] + 2.6)
+    okw = await go(pg, *p0, '斗门 C → 晋安河汇入口南'); ok('m:walk fzdm C to 晋安河 seam approach', okw and await near(pg, *p0, 3.0), (await st(pg))['pos'])
+    cam = A['cams']['seam']
+    sp = await W(pg, cam['x'], cam['z'])
+    okw = await go(pg, *sp, '→ 汇入口机位'); ok('m:walk to seam camera', okw and await near(pg, *sp, 3.0), (await st(pg))['pos'])
+    if OUT:
+        await look(pg, *(await W(pg, cam['look'][0], cam['look'][2])), 0.06); await shot(pg, 'm_seam')
+    R['perf']['m:seam'] = await sample4(pg, 'm:seam')
+
+    async def ybank(s, side, off=None):
+        off = hw + 2.8 if off is None else off
+        return await rpt(pg, 'yx', s, side * off)
+
+    # 沿下游走到命名西头
+    tip_s = min(A['len'] - 8, max(20, (A.get('tipS') or 446)))
+    p = await ybank(tip_s, 1)
+    okw = await go(pg, *p, '沿无名下游 → 命名西头'); ok('m:walk downstream to named west tip', okw and await near(pg, *p, 3.5), (await st(pg))['pos'])
+    if OUT:
+        C = A['cams']['tip']; await look(pg, *(await W(pg, C['look'][0], C['look'][2])), 0.1); await shot(pg, 'm_tip_sign')
+    R['perf']['m:tip'] = await sample4(pg, 'm:tip')
+
+    # 涵洞：走上人行道过到对岸（六一北路、夏莲路、涧田路）
+    async def cross_culvert(c, from_side, label):
+        walk, along, rampL, w = c.get('walk') or 2.5, c['along'], c.get('rampL') or 6, c['w']
+        off = along / 2 + rampL + 2.5
+        def xz(tu, nv):
+            return (c['x'] + c['t'][0] * tu + c['n'][0] * nv, c['z'] + c['t'][1] * tu + c['n'][1] * nv)
+        # t 沿路跨河；n 沿路宽。人行道在 ±(w/2-walk/2) 的 n，坡底在 ±off 的 t。
+        u = from_side * (w / 2 - walk / 2)
+        start = await W(pg, *xz(-off, u) if False else xz(from_side * off if False else 0, 0))
+        # 从当前岸：沿 t 的一侧坡底，走人行道
+        # 用「沿路 t 的正负」作为两岸：先走到 +t 坡底再过到 -t
+        side_in = 1
+        pos, origin = (await st(pg))['pos'], await W(pg, c['x'], c['z'])
+        cur_t = (pos[0] - origin[0]) * c['t'][0] + (pos[2] - origin[1]) * c['t'][1]
+        side_in = 1 if cur_t >= 0 else -1
+        u = (1 if from_side >= 0 else -1) * (w / 2 - walk / 2)
+        start = await W(pg, *xz(side_in * off, u))
+        mid = await W(pg, *xz(0, u))
+        dest = await W(pg, *xz(-side_in * off, u))
+        okc = await go(pg, *start, f'→ {c.get("roadName") or c["id"]} 人行道坡底') and await legs(pg, [mid, dest], True)
+        arrived = okc and await near(pg, *dest, 3.0) and (await st(pg))['pos'][1] > -0.3
+        ok(f'm:cross culvert {c.get("roadName") or c["id"]} {label}', arrived, (await st(pg))['pos'])
+        return dest
+
+    picks = [c for c in cs if c.get('roadName') in ('六一北路', '夏莲路', '涧田路')]
+    if len(picks) < 3:
+        picks = [cs[1], cs[2], cs[-1]]
+    for i, c in enumerate(picks):
+        # 先走到该涵洞一岸
+        p = await ybank(c['s'] - 8 if c['s'] > 10 else c['s'] + 8, 1 if i % 2 == 0 else -1)
+        okw = await go(pg, *p, f'岸上 → {c.get("roadName") or c["id"]}'); ok(f'm:to culvert {c.get("roadName") or c["id"]}', okw and await near(pg, *p, 3.5), (await st(pg))['pos'])
+        await cross_culvert(c, 1 if i % 2 == 0 else -1, 'sidewalk')
+        if OUT and c.get('roadName') == '涧田路':
+            C = A['cams']['culvert']; await look(pg, *(await W(pg, C['look'][0], C['look'][2])), 0.1); await shot(pg, 'm_culvert_mouth')
+        R['perf'][f'm:{c["id"]}'] = await sample4(pg, f'm:{c["id"]}')
+
+    # 走不进涵洞管子（对着涧田路洞口中心走）
+    c7 = cs[-1]
+    tube = await W(pg, c7['x'], c7['z'])
+    await legs(pg, [tube], False); await asyncio.sleep(0.5)
+    s = await st(pg)
+    d = await pg.evaluate(f"""(() => {{ const R=__game.fzMetro.street.kit.root.position, p=__game.player.position; const dx=p.x-R.x-({c7['x']}), dz=p.z-R.z-({c7['z']}); return Math.hypot(dx,dz); }})()""")
+    ok('m:cannot walk into 涧田路 culvert tube', d > 2.0 or s['pos'][1] > 0.8, {'d': d, 'pos': s['pos']})
+
+    # 机场高速：沿河走桥下，上不去桥面
+    p = await ybank(E['s'], 1, hw + 3.2)
+    okw = await go(pg, *p, '→ 机场高速桥下'); ok('m:walk under airport expressway', okw and await near(pg, *p, 3.5) and (await st(pg))['pos'][1] < 3.0, (await st(pg))['pos'])
+    if OUT:
+        C = A['cams']['express']; await look(pg, *(await W(pg, C['look'][0], C['look'][2])), 0.1); await shot(pg, 'm_express_under')
+    R['perf']['m:express'] = await sample4(pg, 'm:express')
+    tgt = await W(pg, E['x'], E['z'])
+    await legs(pg, [tgt], False); await asyncio.sleep(0.5)
+    s = await st(pg)
+    ok('m:cannot walk onto airport expressway deck', s['pos'][1] < (E['deckY'] - 1.0), {'pos': s['pos'], 'deckY': E['deckY']})
+
+    # 不能走出东头合拢
+    end_s = A['len'] - 2
+    cap_bank = await ybank(end_s, 1)
+    okw = await go(pg, *cap_bank, '→ 东头岸边'); ok('m:walk to east cap bank', okw and await near(pg, *cap_bank, 3.5), (await st(pg))['pos'])
+    past = await pg.evaluate(f"""(async () => {{ const M = await import('/js/data/fz-river.js'); const e = M.RIVERS.yx.line.at(M.RIVERS.yx.line.len); const cap = {A['cap']} + 14;
+      return [e.x + e.tx * cap, e.z + e.tz * cap]; }})()""")
+    pastW = await W(pg, *past)
+    await legs(pg, [pastW], False); await asyncio.sleep(0.6)
+    s = await st(pg)
+    root = await pg.evaluate("(() => { const R=__game.fzMetro.street.kit.root.position, p=__game.player.position; return [p.x-R.x, p.z-R.z]; })()")
+    endL = await pg.evaluate("(async () => { const M = await import('/js/data/fz-river.js'); const e = M.RIVERS.yx.line.at(M.RIVERS.yx.line.len); return [e.x, e.z, e.tx, e.tz]; })()")
+    along = (root[0] - endL[0]) * endL[2] + (root[1] - endL[1]) * endL[3]
+    ok('m:cannot walk past east cap', along < (A['cap'] + 6) and s['pos'][1] > -0.3, {'along': along, 'pos': s['pos']})
+    R['perf']['m:cap'] = await sample4(pg, 'm:cap')
+
+    # 低帧：再过一次夏莲路涵洞人行道
+    c3 = next((c for c in cs if c.get('roadName') == '夏莲路'), cs[2])
+    await pg.evaluate('__game.setDtMax(0.25)')
+    p = await ybank(c3['s'] - 8, 1)
+    await go(pg, *p, '低帧 → 夏莲路岸')
+    # reuse cross
+    walk, along_c, rampL, w = c3.get('walk') or 2.5, c3['along'], c3.get('rampL') or 6, c3['w']
+    off = along_c / 2 + rampL + 2.5
+    def xz3(tu, nv):
+        return (c3['x'] + c3['t'][0] * tu + c3['n'][0] * nv, c3['z'] + c3['t'][1] * tu + c3['n'][1] * nv)
+    u = (w / 2 - walk / 2)
+    stt = await W(pg, *xz3(off, u)); midp = await W(pg, *xz3(0, u)); dst = await W(pg, *xz3(-off, u))
+    okc = await go(pg, *stt, '低帧 → 夏莲路人行道坡底') and await legs(pg, [midp, dst], True)
+    arrived = okc and await near(pg, *dst, 3.0) and (await st(pg))['pos'][1] > -0.3
+    ok('m:lowfps walk 夏莲路 culvert sidewalk across', arrived, (await st(pg))['pos'])
+    await pg.evaluate(f"__game.setDtMax({float(os.environ.get('FZDT', '0.25'))})")
+
+
 async def run_6a(pg):
     """6A：斗门 C 口 → 晋安河东岸到湖前东口 → 两岸可走，北二环 / 北浪路双向都过成圈 → 茶园水闸观景处（只看不过）→ 落水回岸。只走路。"""
     await pg.evaluate('window.__fzNavRes = 0.45')
@@ -1542,8 +1667,8 @@ async def main():
     if HALF: await _vp(pg, HALF_VP); log('viewport: walking / riding at', HALF_VP, '; shots + perf at', FULL_VP)
     await pg.evaluate("""(() => { const g=__game; g.east.ensure(); g.east.side='fz'; g.east.cur={st:g.station, loc:'fzmetro', area:'metro'}; g.station.kit.root.setEnabled(false); g.fzMetro.enterFromRailway(g.player); })()""")
     await asyncio.sleep(1.5)
-    if E1B or E2B or E2C or E2D or E3A or E3B or E4A or E5 or E6A or E6B:
-        await (run_6b(pg) if E6B else run_6a(pg) if E6A else run_5(pg) if E5 else run_4a(pg) if E4A else run_3b(pg) if E3B else run_3a(pg) if E3A else run_2d(pg) if E2D else run_2c(pg) if E2C else run_2b(pg) if E2B else run_1b(pg))
+    if E1B or E2B or E2C or E2D or E3A or E3B or E4A or E5 or E6A or E6B or E7A:
+        await (run_7a(pg) if E7A else run_6b(pg) if E6B else run_6a(pg) if E6A else run_5(pg) if E5 else run_4a(pg) if E4A else run_3b(pg) if E3B else run_3a(pg) if E3A else run_2d(pg) if E2D else run_2c(pg) if E2C else run_2b(pg) if E2B else run_1b(pg))
         R['perfWorst'] = {'tris': max(R['perf'].items(), key=lambda kv: kv[1]['tris']) if R['perf'] else None, 'draws': max(R['perf'].items(), key=lambda kv: kv[1]['draws']) if R['perf'] else None}
         ok('perf:budget', all(v['draws'] <= BUDGET['draws'] and v['tris'] <= BUDGET['tris'] for v in R['perf'].values()), R['perf'])
         R['errors'] = [l for l in errs(logs) if l[0] in ('error', 'pageerror')]; ok('noPageErrors', not R['errors'], R['errors'][:5])

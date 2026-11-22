@@ -106,7 +106,7 @@ export class FzRiverStreet extends XmStreet {
   river() {
     const k = this.kit;
     this.facades();
-    this.walls(); this.bridges(); this.piers(); if (FZR.c2) this.c2Static(); else this.sharedDecks(); if (FZR.a3) this.a3Static(); if (FZR.a4) this.a4Static(); if (FZR.a5) this.a5Static(); if (FZR.a6) this.a6Static(); if (FZR.a6b) this.a6bStatic(); if (FZR.b3) this.b3Static(); this.stepsDown(); this.unders(); this.roads(); this.houses(); this.trees(); this.promenade(); if (FZR.b3) this.lakeLamps(); if (FZR.sfqx) this.sanfang(); if (FZR.lakeBox) this.backdrops(); if (LOCK) this.lockStatic(); if (KIOSKS.fzxm_B) this.xihuPark();
+    this.walls(); this.bridges(); this.piers(); if (FZR.c2) this.c2Static(); else this.sharedDecks(); if (FZR.a3) this.a3Static(); if (FZR.a4) this.a4Static(); if (FZR.a5) this.a5Static(); if (FZR.a6) this.a6Static(); if (FZR.a6b) this.a6bStatic(); if (FZR.a7a) this.a7aStatic(); if (FZR.b3) this.b3Static(); this.stepsDown(); this.unders(); this.roads(); this.houses(); this.trees(); this.promenade(); if (FZR.b3) this.lakeLamps(); if (FZR.sfqx) this.sanfang(); if (FZR.lakeBox) this.backdrops(); if (LOCK) this.lockStatic(); if (KIOSKS.fzxm_B) this.xihuPark();
     k.group('g0');   // 上面直接画的东西（桥、码头、台阶、马路、牌坊…）常开：单独封一组，别被并进第一个细节格子
     if (this._nhjw || this._nhjH) {
       if (this._nhjw) { for (const t of this._nhjw) this.banyanNear(...t); this._nhjw = null; }
@@ -1172,6 +1172,135 @@ export class FzRiverStreet extends XmStreet {
     }
   }
   /** 2B 桥下步道（五一中路 / 八一七中路，北岸）：石阶下到 U.y → 桥底石板平台 → 石阶上来；外沿栏杆、两头阶顶挡板 */
+
+  /** 7A 洋下河：西头一块「洋下河」牌、涵洞路堤+洞口（走人行道过、走不进洞）、机场高速主桥与匝道两层（只走桥下）、东头合拢墙+远景。 */
+  a7aStatic() {
+    const A = FZR.a7a, k = this.kit, P = k.solid;
+    if (!A) return;
+    for (const S of A.signs || []) this.stoneSign(S.x, S.z, S.f[0], S.f[1], 3.6, 1.5, S.lines);
+    const Wc = ['#7E8C99', '#8796A3', '#76858F', '#8F9AA5'];
+    (A.far || []).forEach((q, i) => {
+      const [x, z, fx, fz] = q, ry = yawOf(fx, fz), h = 12 + (i * 7) % 14, w = 10 + (i % 3) * 2, d = 8 + (i % 2) * 1.5;
+      P.box(x, 0.4, z, w + 10, 0.8, d + 10, hex('#6E7A64'), ry, 0, 0, 1, NO);
+      P.box(x, 0.5, z, w + 0.9, 1.0, d + 0.9, hex('#4A545C'), ry, 0, 0, 1, NO);
+      P.box(x, 1.0 + h / 2, z, w, h, d, hex(Wc[i % 4]), ry, 0, 0, 1, NO);
+      P.box(x, 1.0 + h + 0.22, z, w + 0.45, 0.44, d + 0.45, hex('#3E484F'), ry, 0, 0, 1, NO);
+    });
+    if (A.capWall) {
+      const W = A.capWall, ry = yawOf(W.n[0], W.n[1]);
+      P.box(W.x, W.h / 2, W.z, W.thick, W.h, W.len, hex('#7A7568'), ry, 0, 0, 1, NO);
+      P.box(W.x, W.h + 0.16, W.z, W.thick + 0.3, 0.32, W.len + 0.4, hex('#6A655A'), ry, 0, 0, 1, NO);
+    }
+    const L = RIVERS.yx && RIVERS.yx.line;
+    if (L) {
+      const e = L.at(L.len), te = { x: e.tx, z: e.tz }, n = { x: te.z, z: -te.x };
+      k.col(e.x + te.x * ((A.cap || 2.4) + 0.4), 1.2, e.z + te.z * ((A.cap || 2.4) + 0.4), 0.8, 8, 56, { ry: yawOf(n.x, n.z), name: 'colCap' });
+    }
+    this.a7aCulverts();
+    this.a7aExpress();
+  }
+  /** 涵洞：路堤 + 看得见的洞口；两岸步道经斜坡上到路面，走人行道过到对岸；碰撞挡住涵洞管子。 */
+  a7aCulverts() {
+    const A = FZR.a7a, k = this.kit, C = k.g('paint@a7aCulv'), GR = k.g('granite');
+    const CONC = hex('#9A9385'), CAP = hex('#B5AE9F'), DARK = hex('#2C2B28'), EARTH = hex('#7A7568'), ASP = hex('#8E9094'), SW = hex('#ABA497');
+    const hw = (FZR.rivers.yx && FZR.rivers.yx.hw) || 5;
+    for (const c of (A.culverts || [])) {
+      const rt = c.t, rn = c.n, rT = c.riverT || rn;
+      const ryRoad = yawOf(rt[0], rt[1]), ryRiv = yawOf(rT[0], rT[1]);
+      const dY = c.deckY || 1.2, along = c.along || 17, cover = c.cover || 12, w = c.w, walk = c.walk || 2.5, rampL = c.rampL || 6;
+      const Ptn = (a, b) => [c.x + rt[0] * a + rT[0] * b, c.z + rt[1] * a + rT[1] * b];
+      // 路堤主体：沿河 cover 长、跨河 along 宽，顶到路面；河道开口约 2*hw
+      const open = 2 * hw + 0.3;
+      const side = (along - open) / 2;
+      // box + ryRoad：第 1 维沿路法向（约沿河），第 3 维沿路（跨河）。两侧填土沿河拉长，夹出涵洞口。
+      for (const sg of [-1, 1]) {
+        const th = Math.max(1.4, side);
+        const midA = sg * (open / 2 + th / 2);
+        const [ex, ez] = Ptn(midA, 0);
+        C.box(ex, dY / 2, ez, cover, dY, th, EARTH, ryRoad, 0, 0, 1, NO);
+        C.box(ex, dY + 0.04, ez, cover, 0.08, th, CONC, ryRoad, 0, 0, 1, NO);
+      }
+      // 过梁 + 洞口深色内壁（两端各一个看得见的嘴，朝沿河看）
+      for (const sv of [-1, 1]) {
+        const [lx, lz] = Ptn(0, sv * (cover / 2 - 0.35));
+        C.box(lx, dY - 0.22, lz, 0.7, 0.44, open + 0.8, CONC, ryRoad, 0, 0, 1, NO);
+        C.box(lx, (WY + dY - 0.4) / 2, lz, 0.16, dY - 0.4 - WY, open, DARK, ryRoad, 0, 0, 1, NO);
+        for (const sg of [-1, 1]) {
+          const [wx, wz] = Ptn(sg * (open / 2 + 0.2), sv * (cover / 2 - 0.2));
+          C.box(wx, dY / 2, wz, 1.2, dY, 0.4, CAP, ryRoad, 0, 0, 1, NO);
+        }
+      }
+      // 路面 + 两侧人行道（沿路跨河）
+      const [dx, dz] = Ptn(0, 0);
+      GR.box(dx, dY - 0.1, dz, w, 0.2, along, hex('#8F8A80'), ryRoad, 0, 0, 1, NO);
+      C.box(dx, dY + 0.02, dz, w - 2 * walk, 0.06, along, ASP, ryRoad, 0, 0, 1, NO);
+      for (const su of [-1, 1]) {
+        const [sx, sz] = [c.x + rn[0] * su * (w / 2 - walk / 2), c.z + rn[1] * su * (w / 2 - walk / 2)];
+        // 人行道沿路（t），宽 walk
+        GR.box(sx, dY + 0.04, sz, walk, 0.08, along, SW, ryRoad, 0, 0, 1, NO);
+        // 矮路缘
+        GR.box(c.x + rn[0] * su * (w / 2 - walk), dY + 0.12, c.z + rn[1] * su * (w / 2 - walk), 0.12, 0.16, along, CAP, ryRoad, 0, 0, 1, NO);
+      }
+      // 两岸斜坡：人行道从岸上到路面（colStair）；中央车道斜板 colFlyRamp，避免从路堤底下钻
+      for (const sv of [-1, 1]) {
+        const v0 = sv * (along / 2), v1 = sv * (along / 2 + rampL);
+        const midV = (v0 + v1) / 2, Len = Math.hypot(rampL, dY), ang = Math.atan2(0 - dY, v1 - v0);
+        const [rx, rz] = [c.x + rt[0] * midV, c.z + rt[1] * midV];
+        GR.box(rx, dY / 2, rz, w, 0.28, Len, hex('#8F8A80'), ryRoad, -ang, 0, 1, NO);
+        for (const su of [-1, 1]) {
+          const [sx, sz] = [rx + rn[0] * su * (w / 2 - walk / 2), rz + rn[1] * su * (w / 2 - walk / 2)];
+          GR.box(sx, dY / 2 + 0.04, sz, walk, 0.1, Len, SW, ryRoad, -ang, 0, 1, NO);
+          k.col(sx, dY / 2, sz, walk, 0.3, Len, { ry: ryRoad, rx: -ang, name: 'colStair' });
+        }
+        k.col(rx, dY / 2, rz, w - 2 * walk, 0.3, Len, { ry: ryRoad, rx: -ang, name: 'colFlyRamp' });
+      }
+      // 桥面可走：人行道 colDeck，中央车道挡住
+      k.col(dx, dY - 0.15, dz, w, 0.3, along + 0.4, { ry: ryRoad, name: 'colDeck' });
+      for (const su of [-1, 1]) {
+        const [ix, iz] = [c.x + rn[0] * su * (w / 2 - walk), c.z + rn[1] * su * (w / 2 - walk)];
+        k.col(ix, dY + 0.25, iz, 0.2, 0.5, along, { ry: ryRoad, name: 'colCurb' });
+      }
+      // 涵洞管子：人走不进去（不要叫 colDeck）
+      k.col(c.x, (WY + dY - 0.15) / 2, c.z, open - 0.2, dY - 0.3 - WY, cover - 0.6, { ry: ryRiv, name: 'colCulvertTube' });
+    }
+  }
+  /** 福州机场高速：主桥面和匝道两套网格（两层，不合一块厚板）；只走桥下，上不去桥面。 */
+  a7aExpress() {
+    const A = FZR.a7a, k = this.kit, E = A.express && A.express.main;
+    if (!E) return;
+    const drawDeck = (G, b, col, colDk, colBar) => {
+      const ry = yawOf(b.t[0], b.t[1]), dY = b.deckY, L = b.len, W = b.w, thick = b.thick || 1.2;
+      G.box(b.x, dY, b.z, W, thick, L, col, ry, 0, 0, 1, NO);
+      G.box(b.x, dY - thick / 2 - 0.18, b.z, W - 0.8, 0.28, L, colDk, ry, 0, 0, 1, NO);
+      // 两道纵梁，看得见梁底，不要并成一块厚板
+      for (const sg of [-0.28, 0.28]) {
+        G.box(b.x + b.n[0] * sg * W, dY - thick / 2 - 0.45, b.z + b.n[1] * sg * W, 0.7, 0.7, L, colDk, ry, 0, 0, 1, NO);
+      }
+      for (const sg of [-1, 1]) {
+        G.box(b.x + b.n[0] * sg * (W / 2 - 0.2), dY + 0.7, b.z + b.n[1] * sg * (W / 2 - 0.2), 0.28, 1.2, L, colBar, ry, 0, 0, 1, NO);
+      }
+      // 墩：立在近水处，让开两岸步道
+      const hw = (FZR.rivers.yx && FZR.rivers.yx.hw) || 5;
+      const nPier = b.piers || 6, pH = dY - thick / 2 - 0.5 - WY;
+      for (let j = 0; j < nPier; j++) {
+        const u = -L / 2 + (j + 0.5) * (L / nPier);
+        for (const sg of [-1, 1]) {
+          const px = b.x + b.t[0] * u + b.n[0] * sg * (hw - 0.6);
+          const pz = b.z + b.t[1] * u + b.n[1] * sg * (hw - 0.6);
+          G.box(px, WY + pH / 2, pz, 1.6, pH, 1.6, col, 0, 0, 0, 1, NO);
+          G.box(px, dY - thick / 2 - 0.7, pz, 2.2, 0.4, 2.2, colDk, ry, 0, 0, 1, NO);
+        }
+      }
+      // 整座桥面抬高碰撞：上不去（不要叫 colDeck，A* 不会把桥面当路）
+      k.col(b.x, dY + 1.2, b.z, W + 1.6, 4.0, L + 2, { ry, name: 'colExpress' });
+    };
+    const G0 = k.g('paint@a7aEx'), G1 = k.g('paint@a7aExRamp');
+    drawDeck(G0, E, hex('#6A6E72'), hex('#4E5256'), hex('#8A9198'));
+    for (const R of (A.express.ramps || [])) {
+      drawDeck(G1, { ...R, piers: 4 }, hex('#7A7368'), hex('#5A544C'), hex('#9A9385'));
+    }
+  }
+
   unders() {
     const k = this.kit, GR = k.g('granite');
     for (const U of this._c2pass ? (FZR.undersC || []).filter(U => c2Band(U.z) === this._c2band) : (FZR.unders || [])) {   // 2C：工业路 / 江滨西大道桥下步道（西岸）在 2C 分段里画
@@ -1204,6 +1333,7 @@ export class FzRiverStreet extends XmStreet {
     const k = this.kit, A = k.g('asphalt');
     for (const r of FZR.roads) {
       if (r.plaza) continue;
+      if (r.culvert || r.a7a) continue;   // 7A 涵洞路面在 a7aCulverts 里抬高画，这里不铺地面沥青、不挂路名牌
       const p = r.poly, cx = (p[0] + p[2] + p[4] + p[6]) / 4, cz = (p[1] + p[3] + p[5] + p[7]) / 4, L = Math.hypot(p[2] - p[0], p[3] - p[1]), W = Math.hypot(p[6] - p[0], p[7] - p[1]), ry = yawOf(r.dir[0], r.dir[1]);
       if (!this.c2ok(cz)) continue;
       if (r.id === 'nhj' || (r.a5 && r.name === '瀛洲桥')) { k.g('granite').box(cx, 0.012, cz, W, 0.02, L, hex('#ABA497'), ry, 0, 0, 1, NO); continue; }
