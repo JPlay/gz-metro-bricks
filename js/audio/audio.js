@@ -64,14 +64,26 @@ function emit(name, detail) { window.dispatchEvent(new CustomEvent(name, { detai
 function context() {
   if (ctx) return ctx;
   const C = window.AudioContext || window.webkitAudioContext;
-  if (!C) throw new Error('此浏览器不支持 Web Audio');
+  if (!C) { err('no Web Audio'); return null; }
   audioSession('playback');  // 先声明会话类型再建上下文（iOS 17+；否则默认 ambient 会被静音键静掉）
   // 不指定 sampleRate：iPhone 硬件常是 48k，强制 24k 在 WebKit 里会走重采样，路由 / 会话变化后可能 running 但无声
-  try { ctx = new C({ latencyHint: 'interactive' }); } catch (_) { ctx = new C(); }
+  // 无输出设备时 Chrome 会在控制台报 “AudioContext encountered an error from the audio device…”，
+  // 甚至在 new 成功之后从渲染线程打出（Xvfb / Playwright 常见）。不抛错；能静音槽就走静音槽。
+  const make = opts => { try { return opts ? new C(opts) : new C(); } catch (e) { err('create ' + (e && e.message || e)); return null; } };
+  const def = { latencyHint: 'interactive' }, none = { latencyHint: 'interactive', sinkId: { type: 'none' } };
+  ctx = navigator.webdriver ? (make(none) || make(def) || make()) : (make(def) || make(none) || make());
+  if (!ctx) return null;
+  const onDev = ev => {
+    try { ev && ev.preventDefault && ev.preventDefault(); ev && ev.stopImmediatePropagation && ev.stopImmediatePropagation(); } catch (_) {}
+    err('device');
+    if (ctx && ctx.setSinkId) ctx.setSinkId({ type: 'none' }).catch(e => err('sink ' + (e && e.message || e)));
+  };
+  try { ctx.addEventListener('error', onDev); } catch (_) {}
+  try { ctx.onerror = onDev; } catch (_) {}
   master = ctx.createGain(); master.gain.value = muted ? 0 : volume;
   compressor = ctx.createDynamicsCompressor();
   compressor.threshold.value = -8; compressor.knee.value = 6; compressor.ratio.value = 4; compressor.attack.value = 0.003; compressor.release.value = 0.18;
-  master.connect(compressor); compressor.connect(ctx.destination);
+  try { master.connect(compressor); compressor.connect(ctx.destination); } catch (e) { err('destination ' + (e && e.message || e)); }
   buses = { ambience: gainNode(master, mix.ambience), sfx: gainNode(master, mix.sfx), voice: gainNode(master, mix.voice), train: gainNode(master, mix.train), ui: gainNode(master, 0.5) };
   // 地铁声总闸：列车循环（低通 → 距离 → 地铁）、列车单次音效、站内音效、站台喇叭，都乘 env.metro
   metroTrain = gainNode(buses.train, env.metro); metroTrainSfx = gainNode(buses.train, env.metro); metroSfx = gainNode(buses.sfx, env.metro); paOut = gainNode(buses.voice, env.metro);

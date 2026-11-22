@@ -588,7 +588,7 @@ export class FzRiverStreet extends XmStreet {
         k.col(cx, (y0 + y1) / 2, cz, 0.8, y1 - y0, 7.4, { ry: F.ryT, name: 'colQuay' }); }
       // 台阶顶平台：台阶顶外侧（a < -10）原来是空的水面，上到台阶顶一步走过头就掉下去；补 1 m 花岗岩平台 + 外侧栏杆，上岸从平台转身进岸墙缺口
       { const y0 = WY - 0.4, y1 = -0.004, [cx, cz] = F.P(-10.5, 0.75);
-        GR.box(cx, (y0 + y1) / 2, cz, 1.5, y1 - y0, 1.0, hex('#A39C8E'), F.ryT, 0, 0, 1, NO); k.col(cx, (y0 + y1) / 2, cz, 1.5, y1 - y0, 1.0, { ry: F.ryT, name: 'colStairHead' });
+        GR.box(cx, (y0 + y1) / 2, cz, 1.5, y1 - y0, 1.0, hex('#A39C8E'), F.ryT, 0, 0, 1, NO); k.col(cx, (y0 + y1) / 2, cz, 1.5, y1 - y0, 1.0, { ry: F.ryT, name: 'colDeckFoot' });
         const [ex, ez] = F.P(-10.96, 0.75), [sx, sz] = F.P(-10.5, 1.44);
         k.col(ex, 0.6, ez, 1.5, 1.2, 0.08, { ry: F.ryT, name: 'colStairHeadRail' }); k.col(sx, 0.6, sz, 0.12, 1.2, 1.0, { ry: F.ryT, name: 'colStairHeadRail' });
         k.metal.box(ex, 0.95, ez, 1.5, 0.06, 0.06, hex('#4A5560'), F.ryT, 0, 0, 1, NO); k.metal.box(sx, 0.95, sz, 0.06, 0.06, 1.0, hex('#4A5560'), F.ryT, 0, 0, 1, NO);
@@ -1122,11 +1122,12 @@ export class FzRiverStreet extends XmStreet {
       for (const su of [-1, 1]) {
         this.ramp(b, sv * half, sv * (half + rampL), dY, 0, su * inner, su * (w / 2), 0.3, 'colStair');
         this.ramp(b, sv * half, sv * (half + rampL), dY + 0.55, 0.55, su * (w / 2 - 0.3), su * (w / 2), 0.4, 'colParapet');
-        // 人行道桥头搭板：同时压住坡顶和坡脚外侧，堵住斜坡与栏杆/岸地的夹缝
+        // 人行道桥头搭板：同时压住坡顶和坡脚外侧，堵住斜坡与栏杆/岸地的夹缝。
+        // 坡脚垫板必须叫 colDeck*（2D 导航 WALKN），不能叫 colStairHead，否则会被当成墙，岸上走不上人行道斜坡。
         const [lx, lz] = F.P(su * (inner + walk / 2), sv * half);
         k.col(lx, dY - 0.2, lz, walk, 0.4, 1.6, { ry: F.ryN, name: 'colDeckLip' });
         const [fx, fz] = F.P(su * (inner + walk / 2), sv * (half + rampL));
-        k.col(fx, 0.15, fz, walk, 0.3, 1.2, { ry: F.ryN, name: 'colStairHead' });
+        k.col(fx, 0.15, fz, walk, 0.3, 1.2, { ry: F.ryN, name: 'colDeckFoot' });
         const [rx, rz] = F.P(su * (w / 2 - 0.15), sv * half);
         k.col(rx, dY + 0.55, rz, 0.35, 1.1, 0.5, { ry: F.ryN, name: 'colStairHeadRail' });
       }
