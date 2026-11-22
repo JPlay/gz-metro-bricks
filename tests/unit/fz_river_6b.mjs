@@ -116,8 +116,16 @@ ok('unnamed footbridge is not built (no a6b foot kind; only hq3–hq7)', !R.BRID
   ok('rails are background-only: north of the west cap, river does not run under them',
     rails.every(r => {
       const along = (r.x - end.x) * end.tx + (r.z - end.z) * end.tz;
-      return along > -4 && !R.isWater(r.x, r.z);
-    }), rails.map(r => ({ name: r.name, x: r.x, z: r.z, water: R.isWater(r.x, r.z) })));
+      const dry = !R.isWater(r.x, r.z) && [-0.45, 0, 0.45].every(f => !R.isWater(r.x + r.t[0] * r.len * f, r.z + r.t[1] * r.len * f));
+      return along > (A6B.cap || 0) && r.len >= 80 && dry;
+    }), rails.map(r => ({ name: r.name, x: r.x, z: r.z, len: r.len, water: R.isWater(r.x, r.z) })));
+  const a0 = (rails[0].x - end.x) * end.tx + (rails[0].z - end.z) * end.tz;
+  const a1 = (rails[1].x - end.x) * end.tx + (rails[1].z - end.z) * end.tz;
+  ok('昌福 / 合福 are two distinct silhouettes (centerlines separated by more than half-widths)',
+    Math.abs(a1 - a0) >= (rails[0].w + rails[1].w) / 2 + 3, { a0, a1, w: [rails[0].w, rails[1].w] });
+  const cr = A6B.cams.rail, camAlong = (cr.x - end.x) * end.tx + (cr.z - end.z) * end.tz;
+  ok('rail camera is further back on the south bank (south of the cap, standoff ≥ 60 m)',
+    camAlong < -60, { camAlong, cam: [cr.x, cr.z, cr.y] });
 }
 
 // 西头合拢：铁路桥南封闭
@@ -125,7 +133,7 @@ ok('unnamed footbridge is not built (no a6b foot kind; only hq3–hq7)', !R.BRID
   const px = e.x + e.tx * (cap + 4), pz = e.z + e.tz * (cap + 4);
   ok('west cap: no walkable water past the new closed end (south of the rails)', !R.isWater(px, pz), { px, pz, end: [e.x, e.z], cap });
   ok('west cap collider is named colCap', /name: 'colCap'/.test(fsrc));
-  ok('west far buildings sit on a ground pad with a dark plinth', (A6B.far || []).length >= 3 && /A6B\.far|A = FZR\.a6b[\s\S]*#6E7A64/.test(fsrc));
+  ok('west far buildings sit on a ground pad with a dark plinth', (A6B.far || []).length >= 8 && /A6B\.far|A = FZR\.a6b[\s\S]*#6E7A64/.test(fsrc) && /railPad/.test(fsrc) && /capWall/.test(fsrc));
 }
 
 // 两岸可走、旧街房子 + 树、铺地色

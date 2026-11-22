@@ -18,12 +18,19 @@ SPOTS = """(async () => { const M = await import('/js/data/fz-river.js'); const 
     ['seam', C.seam.x, C.seam.z, C.seam.look[0], C.seam.look[2], C.seam.pitch || 0.10, C.seam.y || 2.4, 1],
     ['fufei', C.fufei.x, C.fufei.z, C.fufei.look[0], C.fufei.look[2], C.fufei.pitch || 0.12, C.fufei.y || 3.2, 1],
     ['fufei_side', ...(() => { const p = side(ff, -(ff.w / 2 + 12), 1.5); const q = side(ff, -(ff.w / 2 - 0.5), 0); return [...p, ...q]; })(), 0.02, 0.85, 1],
-    ['rail', C.rail.x, C.rail.z, C.rail.look[0], C.rail.look[2], C.rail.pitch || 0.16, C.rail.y || 2.2, 1],
-    ['triple', ...(() => { const hq = M.RIVERS.hq.line, p = hq.at(dj.s + 22, 3), q = hq.at(jc.s - 18, 0); return [p.x, p.z, q.x, q.z]; })(), 0.14, 15, 1],
-    ['hujing_from_bank', ...(() => { const p = side(hj, -(hj.w / 2 + 14), 8); return [...p, hj.x, hj.z]; })(), 0.10, 1.8, 1],
-    ['dajing_from_bank', ...(() => { const p = side(dj, -(dj.w / 2 + 20), 8); return [...p, dj.x, dj.z]; })(), 0.10, 1.8, 1],
-    ['jiangcuo_from_bank', ...(() => { const p = side(jc, -(jc.w / 2 + 16), 8); return [...p, jc.x, jc.z]; })(), 0.08, 1.6, 1],
-    ['short_from_bank', ...(() => { const p = side(sh, -(sh.w / 2 + 12), 8); return [...p, sh.x, sh.z]; })(), 0.08, 1.6, 1],
+    ['rail', C.rail.x, C.rail.z, C.rail.look[0], C.rail.look[2], C.rail.pitch || 0.06, C.rail.y || 9.2, 1],
+    // 大井/湖景/江厝/福飞：同一高度、同一后退距、河面上朝桥（沿河低机位），并排后福飞作宽度参照
+    ...(() => { const up = (b) => { const p = side(b, 0, -(b.half + 22)); return [...p, b.x, b.z]; }; return [
+      ['dajing_up', ...up(dj), 0.10, 2.4, 1],
+      ['hujing_up', ...up(hj), 0.10, 2.4, 1],
+      ['jiangcuo_up', ...up(jc), 0.10, 2.4, 1],
+      ['fufei_up', ...up(ff), 0.10, 2.4, 1],
+    ]; })(),
+    // 岸边特写：贴近近岸水面、沿河退后，避开人行道树干
+    ['hujing_from_bank', ...(() => { const p = side(hj, -(hj.hw - 0.6), -(hj.half + 12)); return [...p, hj.x, hj.z]; })(), 0.10, 1.8, 1],
+    ['dajing_from_bank', ...(() => { const p = side(dj, -(dj.hw - 0.6), -(dj.half + 12)); return [...p, dj.x, dj.z]; })(), 0.10, 1.8, 1],
+    ['jiangcuo_from_bank', ...(() => { const p = side(jc, -(jc.hw - 0.6), -(jc.half + 12)); return [...p, jc.x, jc.z]; })(), 0.10, 1.8, 1],
+    ['short_from_bank', ...(() => { const p = side(sh, -(sh.hw - 0.6), -(sh.half + 12)); return [...p, sh.x, sh.z]; })(), 0.10, 1.8, 1],
     ['beierhuan_ref', ...(() => { const p = [n2.x + n2.t[0] * -(n2.w / 2 + 20) + n2.n[0] * -9, n2.z + n2.t[1] * -(n2.w / 2 + 20) + n2.n[1] * -9]; return [...p, n2.x, n2.z]; })(), 0.08, 1.8, 1],
     ['banks_street', ...(() => { const hq = M.RIVERS.hq.line, s = (jc.s + hj.s) / 2, p = hq.at(s, 0), q = hq.at(s + 30, 0); return [p.x, p.z, q.x, q.z]; })(), 0.22, 2.2, 1],
   ];

@@ -984,13 +984,22 @@ export class FzRiverStreet extends XmStreet {
     for (const S of A.signs || []) this.stoneSign(S.x, S.z, S.f[0], S.f[1], 3.6, 1.5, S.lines);
     for (const S of A.plates || []) this.stoneSign(S.x, S.z, S.f[0], S.f[1], 3.2, 1.35, S.lines.filter(Boolean));
     const Wc = ['#7E8C99', '#8796A3', '#76858F', '#8F9AA5'];
+    if (A.railPad) {
+      const Rp = A.railPad, ry = yawOf(Rp.t[0], Rp.t[1]);
+      P.box(Rp.x, 0.32, Rp.z, Rp.w, 0.64, Rp.d, hex('#5C6758'), ry, 0, 0, 1, NO);
+    }
     (A.far || []).forEach((q, i) => {
-      const [x, z, fx, fz] = q, ry = yawOf(fx, fz), h = 8 + (i * 5) % 10, w = 10 + (i % 3) * 1.5, d = 7 + (i % 2) * 1.5;
+      const [x, z, fx, fz] = q, ry = yawOf(fx, fz), h = 14 + (i * 7) % 16, w = 11 + (i % 3) * 2, d = 8 + (i % 2) * 2;
       P.box(x, 0.4, z, w + 10, 0.8, d + 10, hex('#6E7A64'), ry, 0, 0, 1, NO);
       P.box(x, 0.5, z, w + 0.9, 1.0, d + 0.9, hex('#4A545C'), ry, 0, 0, 1, NO);
       P.box(x, 1.0 + h / 2, z, w, h, d, hex(Wc[i % 4]), ry, 0, 0, 1, NO);
       P.box(x, 1.0 + h + 0.22, z, w + 0.45, 0.44, d + 0.45, hex('#3E484F'), ry, 0, 0, 1, NO);
     });
+    if (A.capWall) {
+      const W = A.capWall, ry = yawOf(W.n[0], W.n[1]);
+      P.box(W.x, W.h / 2, W.z, W.thick, W.h, W.len, hex('#7A7568'), ry, 0, 0, 1, NO);
+      P.box(W.x, W.h + 0.16, W.z, W.thick + 0.3, 0.32, W.len + 0.4, hex('#6A655A'), ry, 0, 0, 1, NO);
+    }
     if (A.fufeiBlock && A.fufeiBlock.length >= 3) {
       const B_ = A.fufeiBlock, gx = B_.reduce((a, q) => a + q[0], 0) / B_.length, gz = B_.reduce((a, q) => a + q[1], 0) / B_.length;
       const la = Math.hypot(B_[1][0] - B_[0][0], B_[1][1] - B_[0][1]), lb = Math.hypot(B_[2][0] - B_[1][0], B_[2][1] - B_[1][1]);
@@ -1007,21 +1016,38 @@ export class FzRiverStreet extends XmStreet {
   a6bRails() {
     const A = FZR.a6b, k = this.kit, rails = (A && A.rails) || [];
     rails.forEach((R, i) => {
-      const G = k.g('paint@a6bRail' + i), ry = yawOf(R.t[0], R.t[1]), col = hex(i === 0 ? '#6A6660' : '#5C6268');
-      const L = R.len, W = R.w, yD = R.deckY, nPier = R.piers || 5, nMast = R.masts || 6;
-      G.box(R.x, yD, R.z, W, 1.1, L, col, ry, 0, 0, 1, NO);
-      G.box(R.x, yD - 0.85, R.z, W * 0.55, 0.7, L, col, ry, 0, 0, 1, NO);
-      G.box(R.x + R.n[0] * 1.8, yD + 0.6, R.z + R.n[1] * 1.8, 0.5, 0.2, L, col, ry, 0, 0, 1, NO);
-      G.box(R.x - R.n[0] * 1.8, yD + 0.6, R.z - R.n[1] * 1.8, 0.5, 0.2, L, col, ry, 0, 0, 1, NO);
+      // 昌福锈褐钢、合福冷灰蓝钢：和路桥花岗岩/沥青分开，两道自己也要能分。
+      const G = k.g('paint@a6bRail' + i), ry = yawOf(R.t[0], R.t[1]);
+      const col = hex(i === 0 ? '#6B4E3D' : '#3D4A55');
+      const colDk = hex(i === 0 ? '#4A352C' : '#2C353C');
+      const colLt = hex(i === 0 ? '#7A5A48' : '#4E5C68');
+      const L = R.len, W = R.w, yD = R.deckY, nPier = R.piers || 9, nMast = R.masts || 8;
+      G.box(R.x, yD, R.z, W, 0.7, L, col, ry, 0, 0, 1, NO);
+      G.box(R.x, yD + 0.42, R.z, W - 0.8, 0.16, L, colDk, ry, 0, 0, 1, NO);
+      for (const sg of [-0.34, 0, 0.34]) {
+        const gx = R.x + R.n[0] * sg * W, gz = R.z + R.n[1] * sg * W;
+        G.box(gx, yD - 1.35, gz, 0.28, 2.0, L, colDk, ry, 0, 0, 1, NO);
+        G.box(gx, yD - 0.4, gz, 0.72, 0.18, L, col, ry, 0, 0, 1, NO);
+        G.box(gx, yD - 2.3, gz, 0.72, 0.18, L, col, ry, 0, 0, 1, NO);
+      }
+      for (const sg of [-1, 1]) {
+        G.box(R.x + R.n[0] * sg * (W / 2 - 0.18), yD + 0.9, R.z + R.n[1] * sg * (W / 2 - 0.18), 0.22, 1.1, L, colLt, ry, 0, 0, 1, NO);
+      }
       for (let j = 0; j < nPier; j++) {
         const u = -L / 2 + (j + 0.5) * (L / nPier), px = R.x + R.t[0] * u, pz = R.z + R.t[1] * u;
-        G.box(px, (WY + yD - 0.5) / 2, pz, 1.6, yD - 0.5 - WY, 1.6, col, 0, 0, 0, 1, NO);
+        const pH = yD - 0.5 - WY;
+        G.box(px, WY + pH / 2, pz, 2.0, pH, 2.0, col, 0, 0, 0, 1, NO);
+        G.box(px, yD - 2.55, pz, W * 0.85, 0.45, 2.6, colDk, ry, 0, 0, 1, NO);
       }
       for (let j = 0; j < nMast; j++) {
-        const u = -L / 2 + 2 + j * ((L - 4) / Math.max(1, nMast - 1));
-        const px = R.x + R.t[0] * u + R.n[0] * (W / 2 + 0.4), pz = R.z + R.t[1] * u + R.n[1] * (W / 2 + 0.4);
-        G.box(px, yD + 3.2, pz, 0.28, 5.6, 0.28, col, 0, 0, 0, 1, NO);
-        G.box(px - R.n[0] * 2.2, yD + 5.7, pz - R.n[1] * 2.2, 0.16, 0.16, W + 1.6, col, ry, 0, 0, 1, NO);
+        const u = -L / 2 + 3 + j * ((L - 6) / Math.max(1, nMast - 1));
+        const mx = R.x + R.t[0] * u, mz = R.z + R.t[1] * u;
+        for (const sg of [-1, 1]) {
+          const px = mx + R.n[0] * sg * (W / 2 + 0.15), pz = mz + R.n[1] * sg * (W / 2 + 0.15);
+          G.box(px, yD + 3.4, pz, 0.26, 6.0, 0.26, colDk, 0, 0, 0, 1, NO);
+        }
+        G.box(mx, yD + 6.3, mz, W + 0.7, 0.16, 0.16, colLt, ry, 0, 0, 1, NO);
+        G.box(mx, yD + 5.5, mz, W * 0.7, 0.08, 0.08, colLt, ry, 0, 0, 1, NO);
       }
       k.col(R.x, yD + 1.6, R.z, W + 2, 6, L + 2, { ry, name: 'colRail' });
     });

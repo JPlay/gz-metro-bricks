@@ -97,11 +97,80 @@ def build_west(g):
     right.append((p.x + n[0] * h, p.y + n[1] * h))
     s += 0.8
   te = _tan(hq, hq.length)
-  for i in range(1, 9):
-    u = i / 8.0
-    p = (hq.coords[-1][0] + te[0] * CAP * u, hq.coords[-1][1] + te[1] * CAP * u)
-    h = HW1 * (1.0 - u) * (1.0 - u)
-    n = (te[1], -te[0])
+  west_end = hq.coords[-1]
+  ne = (te[1], -te[0])
+
+  # 官方 s=0 在铁路桥南。水面在桥南封闭，桥下和北面不再铺水。
+  # 昌福 / 合福用 OSM 走向，但拉成互相平行的长高架（1:4 原文过短且几乎叠在一起，剪影分不开）。
+  WEST_CAP = 2.4
+  RAIL_LEN, RAIL_GAP, RAIL_LIP = 100.0, 6.0, 1.2
+  _headings = []
+  _ids = {}
+  for wid, rec in (raw.get('rails') or {}).items():
+    pts = [(p[0] / 4.0 + OFF[0] + SHIFT[0], p[1] / 4.0 + OFF[1] + SHIFT[1]) for p in rec['coords']]
+    tR = (pts[-1][0] - pts[0][0], pts[-1][1] - pts[0][1])
+    Lr = math.hypot(*tR) or 1
+    tR = (tR[0] / Lr, tR[1] / Lr)
+    if tR[0] * ne[0] + tR[1] * ne[1] < 0:
+      tR = (-tR[0], -tR[1])
+    _headings.append(tR)
+    _ids[rec['name']] = int(wid) if str(wid).isdigit() else wid
+  tRail = (sum(h[0] for h in _headings), sum(h[1] for h in _headings)) if _headings else ne
+  Lt = math.hypot(*tRail) or 1
+  tRail = (tRail[0] / Lt, tRail[1] / Lt)
+  if tRail[0] * ne[0] + tRail[1] * ne[1] < 0:
+    tRail = (-tRail[0], -tRail[1])
+  nRail = (tRail[1], -tRail[0])
+  if nRail[0] * te[0] + nRail[1] * te[1] < 0:
+    tRail = (-tRail[0], -tRail[1])
+    nRail = (tRail[1], -tRail[0])
+
+  def at_end(along, lat=0.0):
+    return (west_end[0] + te[0] * along + ne[0] * lat,
+            west_end[1] + te[1] * along + ne[1] * lat)
+
+  w_cf, w_hf = 10.0, 11.0
+  along_cf = WEST_CAP + RAIL_LIP + w_cf / 2.0
+  along_hf = along_cf + w_cf / 2.0 + RAIL_GAP + w_hf / 2.0
+  rails = []
+  for name, wid, along, w, deckY in (
+      ('昌福线', _ids.get('昌福线', 209804022), along_cf, w_cf, 7.2),
+      ('合福高速线', _ids.get('合福高速线', 775888932), along_hf, w_hf, 8.8),
+  ):
+    mid = at_end(along, 0.0)
+    rails.append({
+      'id': wid, 'name': name,
+      'x': round(mid[0], 2), 'z': round(mid[1], 2),
+      't': [round(tRail[0], 4), round(tRail[1], 4)],
+      'n': [round(nRail[0], 4), round(nRail[1], 4)],
+      'len': round(RAIL_LEN, 2), 'deckY': deckY, 'w': w,
+      'piers': 9, 'masts': 8, 'along': round(along, 2),
+    })
+    print('6B rail', name, 'mid', (round(mid[0], 2), round(mid[1], 2)), 'len', RAIL_LEN,
+          'along', round(along, 2), 'dist end', round(math.hypot(mid[0] - west_end[0], mid[1] - west_end[1]), 2))
+
+  pad_along0, pad_along1 = WEST_CAP - 0.3, along_hf + w_hf / 2.0 + 42.0
+  rail_pad_poly = rect(west_end[0], west_end[1], te[0], te[1], pad_along0, pad_along1, -(RAIL_LEN / 2 + 10), RAIL_LEN / 2 + 10)
+  pad_c = at_end((pad_along0 + pad_along1) / 2.0, 0.0)
+  railPad = {
+    'x': round(pad_c[0], 2), 'z': round(pad_c[1], 2),
+    't': [round(tRail[0], 4), round(tRail[1], 4)],
+    'w': round(pad_along1 - pad_along0, 2), 'd': round(RAIL_LEN + 20, 2),
+  }
+  wall_p = at_end(WEST_CAP, 0.0)
+  capWall = {
+    'x': round(wall_p[0], 2), 'z': round(wall_p[1], 2),
+    'n': [round(ne[0], 4), round(ne[1], 4)],
+    't': [round(te[0], 4), round(te[1], 4)],
+    'thick': 1.4, 'h': 4.4, 'len': 24.0,
+  }
+
+  # 钝收口：水面全宽走到合拢墙，不再伸到铁路桥下。
+  for i in range(1, 6):
+    u = i / 5.0
+    p = (west_end[0] + te[0] * WEST_CAP * u, west_end[1] + te[1] * WEST_CAP * u)
+    h = HW1
+    n = ne
     left.append((p[0] - n[0] * h, p[1] - n[1] * h))
     right.append((p[0] + n[0] * h, p[1] + n[1] * h))
   chanH = Polygon(left + right[::-1]).buffer(0).simplify(0.06)
@@ -198,6 +267,7 @@ def build_west(g):
         # 沿河、桥宽以外的岸地（镜头东侧那块白地）
         b0, b1 = sg * (HW1 + 2.0), sg * (HW1 + 22.0)
         PADS.append(rect(b['x'], b['z'], b['t'][0] * us, b['t'][1] * us, b['w'] / 2 + 0.5, b['w'] / 2 + 36.0, min(b0, b1), max(b0, b1)))
+  PADS.append(rail_pad_poly)
   g['BRB'] = BRB
   g['ROADS'] = g['ROADS'] + ROADS_B
   g['ROADS_B'] = ROADS_B
@@ -221,6 +291,15 @@ def build_west(g):
               -(_bff['w'] / 2 + 14.0), _bff['w'] / 2 + 14.0, -(HW1 + 0.4), HW1 + 0.4)
   water = unary_union([water, _ffw]).buffer(0)
   if water.geom_type != 'Polygon': water = max(water.geoms, key=lambda q: q.area)
+  water = Polygon(water.exterior, [i for i in water.interiors])
+  # 再切一次：合拢墙以北（含铁路桥下）不得留水面
+  # 只切铁路走廊这一小段，切太大（曾 ±220×240）会碰到东北边的琴亭湖 / 晋安河源头。
+  _cut = rect(west_end[0], west_end[1], te[0], te[1],
+              WEST_CAP - 0.05, along_hf + w_hf / 2.0 + 50.0,
+              -(RAIL_LEN / 2 + 12), RAIL_LEN / 2 + 12)
+  water = water.difference(_cut).buffer(0)
+  if water.geom_type != 'Polygon':
+    water = max(water.geoms, key=lambda q: q.area)
   water = Polygon(water.exterior, [i for i in water.interiors])
   land = region.difference(water).buffer(0)
   for K_ in g['KIOSK'].values():
@@ -481,43 +560,24 @@ def build_west(g):
     g['A6DATA']['far'] = []
     g['FAR6'] = []
 
-  # 铁路背景：官方西头北侧，昌福 / 合福各一道。河停在桥南，不上铁轨。
-  rails = []
-  ne = (te[1], -te[0])
-  west_end = hq.coords[-1]
-  for wid, rec in (raw.get('rails') or {}).items():
-    pts = [(p[0] / 4.0 + OFF[0] + SHIFT[0], p[1] / 4.0 + OFF[1] + SHIFT[1]) for p in rec['coords']]
-    lsR = LineString(pts)
-    mid = lsR.interpolate(lsR.length / 2)
-    tR = (pts[-1][0] - pts[0][0], pts[-1][1] - pts[0][1])
-    Lr = math.hypot(*tR) or 1
-    tR = (tR[0] / Lr, tR[1] / Lr)
-    nR = (tR[1], -tR[0])
-    # 确保在河的北侧（西头切向大致向北/西，铁路在中线「后面」）
-    rails.append({
-      'id': int(wid) if str(wid).isdigit() else wid,
-      'name': rec['name'],
-      'x': round(mid.x, 2), 'z': round(mid.y, 2),
-      't': [round(tR[0], 4), round(tR[1], 4)],
-      'n': [round(nR[0], 4), round(nR[1], 4)],
-      'len': round(lsR.length, 2),
-      'deckY': 8.5 if rec['name'].startswith('合福') else 7.2,
-      'w': 11.0 if rec['name'].startswith('合福') else 10.0,
-      'piers': 5,
-      'masts': 6,
-    })
-    print('6B rail', rec['name'], 'mid', (round(mid.x, 2), round(mid.y, 2)), 'len', round(lsR.length, 2),
-          'dist end', round(math.hypot(mid.x - west_end[0], mid.y - west_end[1]), 2))
-    # 铁轨碰撞：一道不可走的长盒子
-    # （可视网格在 JS 里合成 1 个 draw）
-
-  # 西头铁路后面少量远景，挡住天空缝（不进河道）
+  # 铁路背景已在水面之前算好（rails / railPad / capWall）。这里只补桥北远景和树。
+  # 铁轨碰撞在 JS 里 colRail；可视网格各 1 个 draw。
   far = []
-  capP = (west_end[0] + te[0] * (CAP + 18), west_end[1] + te[1] * (CAP + 18))
-  for off in range(-36, 40, 14):
-    q = (capP[0] + ne[0] * off, capP[1] + ne[1] * off)
-    if not region.contains(Point(*q)):
-      far.append([round(q[0], 2), round(q[1], 2), round(-te[0], 4), round(-te[1], 4)])
+  for along in (along_hf + w_hf / 2 + 10, along_hf + w_hf / 2 + 22, along_hf + w_hf / 2 + 36):
+    for off in range(-46, 50, 12):
+      q = at_end(along, off)
+      if region.contains(Point(*q)) and not water.contains(Point(*q)):
+        far.append([round(q[0], 2), round(q[1], 2), round(-te[0], 4), round(-te[1], 4)])
+  # 桥北再补一排榕树，挡住空铺地（不插在两道铁路之间，以免挡住合福剪影）
+  for along in (along_hf + w_hf / 2 + 7, along_hf + w_hf / 2 + 16, along_hf + w_hf / 2 + 28):
+    for off in range(-int(RAIL_LEN / 2) + 8, int(RAIL_LEN / 2) - 6, 9):
+      q = at_end(along, off)
+      P_ = Point(*q)
+      if region.contains(P_) and not water.buffer(0.8).contains(P_) and all(
+          math.hypot(q[0] - t[0], q[1] - t[1]) > 4.0 for t in TREES if t[5] != 'gone'):
+        TREES.append([round(q[0], 2), round(q[1], 2), round(-te[0], 3), round(-te[1], 3),
+                      round(0.95 + (abs(off) % 5) * 0.04, 2), 'hq', 1])
+  print('6B far', len(far), 'rail-back trees added, cap', WEST_CAP)
 
   loops = []
   for b in BRB:
@@ -538,9 +598,15 @@ def build_west(g):
   camSeam = cam_at(old_len - 8.0, -(HW1 + 6.5), 2.4, old_len + 28.0, 0.0, 0.10, '北浪路以西接缝，合拢已打开，河继续走')
   # 2. 福飞路 3/4 侧视：再退远一点、抬高，避开岸上房子，看见梁、墩、人行道
   camFufei = cam_at(bff['s'] - 2.0, -(bff['half'] + 22.0), 4.2, bff['s'], 0.0, 0.16, '福飞路明桥侧视：梁墩、人行道、宽于北二环')
-  # 3. 西头铁路走廊：河面上悬停朝北看（两岸房子贴岸，站岸上会撞墙），河停在桥南
-  camRail = cam_at(hq.length - 6.0, 0.0, 3.5, hq.length, 0.0, 0.22, '西头铁路走廊：河停在桥南，昌福/合福两道剪影')
-  camRail['look'][1] = 7.2
+  # 3. 南岸再退后：河缘上空朝北看两座铁路桥全长。河停在桥南，合拢墙封住。
+  # cam_at 会把 s 夹到中线长度内，这里要退到合拢以南约 88 m，手动给坐标。
+  _cam_along = (WEST_CAP + RAIL_LIP) - 88.0
+  _cam_lat = -(HW1 - 0.4)
+  _cxy = at_end(_cam_along, _cam_lat)
+  _lxy = at_end((along_cf + along_hf) / 2.0, 0.0)
+  camRail = {'x': round(_cxy[0], 2), 'z': round(_cxy[1], 2), 'y': 9.2,
+             'look': [round(_lxy[0], 2), 8.0, round(_lxy[1], 2)], 'pitch': 0.06,
+             'note': '南岸退后：河停在铁路桥南，昌福/合福全长剪影'}
   # 4. 湖景 / 大井 / 江厝 同机位并排：抬到屋面上空往下看，避免西岸房背挡住河
   b_hj = next(b for b in BRB if b.get('style') == 'hujing')
   b_dj = next(b for b in BRB if b.get('style') == 'dajing')
@@ -553,14 +619,14 @@ def build_west(g):
   bbox = list(unary_union([chanH.buffer(BAND_HQ + 40)] + list(g.get('PADS_B') or [])).bounds)
   A6BDATA = {
     'hqLen': round(hq.length, 2), 'oldLen': round(old_len, 2), 'westLen': round(hq.length - old_len, 2),
-    'hw1': HW1, 'cap': CAP, 'off': [round(OFF[0], 4), round(OFF[1], 4)],
+    'hw1': HW1, 'cap': WEST_CAP, 'off': [round(OFF[0], 4), round(OFF[1], 4)],
     'shift': [round(SHIFT[0], 4), round(SHIFT[1], 4)],
     'official': {'start': 0.0, 'end': 1516.22, 'real': 1516.22, 'game': round((hq.length - old_len), 2)},
     'bridges': [b['id'] for b in BRB],
     'byStyle': {st: next(b['id'] for b in BRB if b.get('style') == st)
                 for st in ('fufei', 'jiangcuo', 'hujing', 'dajing', 'short')},
     'signs': SIGNSB, 'plates': plates, 'lamps': lamps,
-    'rails': rails, 'far': far,
+    'rails': rails, 'far': far, 'railPad': railPad, 'capWall': capWall,
     'gone': {'houses': GONEB_H, 'trees': GONEB_T},
     'loop': loops,
     'cams': {'seam': camSeam, 'fufei': camFufei, 'rail': camRail, 'triple': camTriple},
