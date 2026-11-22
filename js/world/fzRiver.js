@@ -1075,7 +1075,9 @@ export class FzRiverStreet extends XmStreet {
     }
     // 日间灯柱（光晕在 fzNightLights）
     for (const Lmp of (FZR.a6b.lamps || [])) { const su = Lmp.side || 1, nn = Lmp.n || b.n; D.lamp(k, Lmp.x, dY, Lmp.z, yawOf(-su * nn[0], -su * nn[1])); }
-    // 碰撞：两侧人行道可走，中央车道挡住
+    // 碰撞：两侧人行道可走，中央车道挡住。
+    // 斜坡不能全宽都叫 colFlyRamp，否则 2D 导航把人行道和岸切开，走到桥头会 nopath。
+    // 中央车行道斜板仍是 colFlyRamp（避免投影从桥底下钻）；人行道斜板用 colStair，两岸两侧接到岸上。
     k.col(cx, dY - 0.2, cz, w, 0.4, 2 * half, { ry: F.ryN, name: 'colDeck' });
     for (const su of [-1, 1]) {
       const [px, pz] = F.P(su * (w / 2 - 0.15), 0);
@@ -1083,7 +1085,13 @@ export class FzRiverStreet extends XmStreet {
       const [ix, iz] = F.P(su * inner, 0);
       k.col(ix, dY + 0.45, iz, 0.3, 0.9, 2 * half - 0.2, { ry: F.ryN, name: 'colFufeiInner' });
     }
-    if (rampL) for (const sv of [-1, 1]) this.ramp(b, sv * half, sv * (half + rampL), dY, 0, -w / 2, w / 2, 0.3, 'colFlyRamp');
+    if (rampL) for (const sv of [-1, 1]) {
+      this.ramp(b, sv * half, sv * (half + rampL), dY, 0, -inner, inner, 0.3, 'colFlyRamp');
+      for (const su of [-1, 1]) {
+        this.ramp(b, sv * half, sv * (half + rampL), dY, 0, su * inner, su * (w / 2), 0.3, 'colStair');
+        this.ramp(b, sv * half, sv * (half + rampL), dY + 0.55, 0.55, su * (w / 2 - 0.3), su * (w / 2), 0.4, 'colParapet');
+      }
+    }
   }
 
   /** 2C 白天才画的一组（g2day）：白马河下段水面亮纹（同 3B / 4A 的短条）。夜里关掉，夜 draw ≤ 昼 */

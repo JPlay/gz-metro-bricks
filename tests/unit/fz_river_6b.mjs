@@ -102,6 +102,10 @@ ok('unnamed footbridge is not built (no a6b foot kind; only hq3–hq7)', !R.BRID
     && !/new B\.PointLight/.test(src) && !/new BABYLON\.PointLight/.test(src) && !/ShadowGenerator/.test(src) && !/SpotLight/.test(src));
   ok('福飞路 center is a road (people use sidewalks); style is fufei and skipped in default a3Deck / colDeck',
     ff && ff.style === 'fufei' && /style !== 'fufei'/.test(fsrc) && /style === 'fufei'\) continue/.test(fsrc));
+  const fufeiSrc = fsrc.slice(fsrc.indexOf('  fufei(b) {'), fsrc.indexOf('  c2Day() {'));
+  ok('福飞路 sidewalk ramps are walkable colStair connecting bank to deck; roadway ramps stay colFlyRamp',
+    /人行道斜板用 colStair/.test(fufeiSrc) && /su \* inner, su \* \(w \/ 2\), 0\.3, 'colStair'/.test(fufeiSrc)
+    && /-inner, inner, 0\.3, 'colFlyRamp'/.test(fufeiSrc) && !/-w \/ 2, w \/ 2, 0\.3, 'colFlyRamp'/.test(fufeiSrc));
 }
 
 // 铁路背景各 1 draw，梁/墩/接触网杆，上不去，河停在桥南
