@@ -205,10 +205,11 @@ export class FzRiverStreet extends XmStreet {
       const bz = FZR.b3 && FZR.b3.zone, inBZ = (x, z) => !!bz && bz.some(r => x > r[0] && x < r[2] && z > r[1] && z < r[3]) && !inQ(x, z);
       const a5z = FZR.a5 && FZR.a5.zone, inA5Z = (x, z) => !!a5z && x > a5z[0] && x < a5z[2] && z > a5z[1] && z < a5z[3];
       const a6z = (FZR.a6b && FZR.a6b.zone) || (FZR.a6 && FZR.a6.zone), inA6Z = (x, z) => !!a6z && x > a6z[0] && x < a6z[2] && z > a6z[1] && z < a6z[3] && !inQ(x, z);
+      const a7z = FZR.a7a && FZR.a7a.zone, inA7Z = (x, z) => !!a7z && x > a7z[0] && x < a7z[2] && z > a7z[1] && z < a7z[3];
       let skirt = FZR.skirt;
-      if (bz || az) {   // 3B / 5：可走范围外一圈用岸地同款铺地（pave 桶 + PAVEC），不要发白的空地
+      if (bz || az || a7z) {   // 3B / 5 / 7A：可走范围外一圈用岸地同款铺地（pave 桶 + PAVEC），不要发白的空地
         const P = FZR.skirt.p, I = FZR.skirt.i, Ia = [], Ib = [];
-        const hitP = (x, z) => inBZ(x, z) || inA5Z(x, z) || inA6Z(x, z);
+        const hitP = (x, z) => inBZ(x, z) || inA5Z(x, z) || inA6Z(x, z) || inA7Z(x, z);
         for (let j = 0; j < I.length; j += 3) { const hit = [I[j], I[j + 1], I[j + 2]].some(q => hitP(P[q * 2], P[q * 2 + 1])) || hitP((P[I[j] * 2] + P[I[j + 1] * 2] + P[I[j + 2] * 2]) / 3, (P[I[j] * 2 + 1] + P[I[j + 1] * 2 + 1] + P[I[j + 2] * 2 + 1]) / 3); (hit ? Ib : Ia).push(I[j], I[j + 1], I[j + 2]); }
         skirt = { p: P, i: Ia }; add(PV, [{ p: P, i: Ib }], -0.01, PAVEC);
       }
@@ -1177,7 +1178,16 @@ export class FzRiverStreet extends XmStreet {
   a7aStatic() {
     const A = FZR.a7a, k = this.kit, P = k.solid;
     if (!A) return;
-    for (const S of A.signs || []) this.stoneSign(S.x, S.z, S.f[0], S.f[1], 3.6, 1.5, S.lines);
+    for (const S of A.signs || []) {
+      // 7A 自绘石牌：盒仍 yawOf(fx,fz)；字贴角度与 stoneSign 相同（atan2(fx,-fz)），但探出 10 cm，避免 1 cm 交图 z-fight。
+      const fx = S.f[0], fz = S.f[1], w = 3.6, h = 1.5, ry = yawOf(fx, fz);
+      k.g('granite').box(S.x, h / 2, S.z, w, h, 0.6, hex('#7E786C'), ry, 0, 0, 1, NO);
+      k.col(S.x, h / 2, S.z, w, h, 0.6, { ry, name: 'colSign' });
+      const At = this.atlas;
+      const uv = At.draw(w * 0.94, h * 0.8, textPaint(S.lines, { bg: '#7E786C', fg: '#F2E2B0' }));
+      At.quad(S.x + fx * 0.40, h * 0.5, S.z + fz * 0.40, w * 0.94, h * 0.8, Math.atan2(fx, -fz), uv);
+      At.quad(S.x - fx * 0.40, h * 0.5, S.z - fz * 0.40, w * 0.94, h * 0.8, Math.atan2(-fx, fz), uv);
+    }
     const Wc = ['#7E8C99', '#8796A3', '#76858F', '#8F9AA5'];
     (A.far || []).forEach((q, i) => {
       const [x, z, fx, fz] = q, ry = yawOf(fx, fz), h = 12 + (i * 7) % 14, w = 10 + (i % 3) * 2, d = 8 + (i % 2) * 1.5;
@@ -1220,14 +1230,23 @@ export class FzRiverStreet extends XmStreet {
         C.box(ex, dY / 2, ez, cover, dY, th, EARTH, ryRoad, 0, 0, 1, NO);
         C.box(ex, dY + 0.04, ez, cover, 0.08, th, CONC, ryRoad, 0, 0, 1, NO);
       }
-      // 过梁 + 洞口深色内壁（两端各一个看得见的嘴，朝沿河看）
+      // 端墙 + 洞口：路堤端面是混凝土墙，中间挖出看得见的深色涵洞嘴，两侧翼墙和填土斜坡
       for (const sv of [-1, 1]) {
-        const [lx, lz] = Ptn(0, sv * (cover / 2 - 0.35));
-        C.box(lx, dY - 0.22, lz, 0.7, 0.44, open + 0.8, CONC, ryRoad, 0, 0, 1, NO);
-        C.box(lx, (WY + dY - 0.4) / 2, lz, 0.16, dY - 0.4 - WY, open, DARK, ryRoad, 0, 0, 1, NO);
+        const [hx, hz] = Ptn(0, sv * (cover / 2 + 0.15));
+        // 端墙（左右两块，中间留洞）
         for (const sg of [-1, 1]) {
-          const [wx, wz] = Ptn(sg * (open / 2 + 0.2), sv * (cover / 2 - 0.2));
-          C.box(wx, dY / 2, wz, 1.2, dY, 0.4, CAP, ryRoad, 0, 0, 1, NO);
+          const [wx, wz] = Ptn(sg * (open / 2 + Math.max(1.0, side) / 2 + 0.15), sv * (cover / 2 + 0.15));
+          C.box(wx, dY / 2, wz, 0.7, dY, Math.max(1.6, side + 0.4), CONC, ryRoad, 0, 0, 1, NO);
+        }
+        // 过梁
+        C.box(hx, dY - 0.28, hz, 0.7, 0.56, open + 0.6, CAP, ryRoad, 0, 0, 1, NO);
+        // 洞口深色内壁（退后一点，看起来是洞）
+        const [ix, iz] = Ptn(0, sv * (cover / 2 - 0.55));
+        C.box(ix, (WY + dY - 0.5) / 2, iz, 1.0, dY - 0.5 - WY, open - 0.2, DARK, ryRoad, 0, 0, 1, NO);
+        // 翼墙 / 填土斜坡（洞口外侧）
+        for (const sg of [-1, 1]) {
+          const [sx, sz] = Ptn(sg * (open / 2 + 1.6), sv * (cover / 2 + 1.4));
+          C.box(sx, dY * 0.45, sz, 2.2, dY * 0.9, 2.4, EARTH, ryRoad, 0, 0, 1, NO);
         }
       }
       // 路面 + 两侧人行道（沿路跨河）
@@ -1270,11 +1289,11 @@ export class FzRiverStreet extends XmStreet {
     if (!E) return;
     const drawDeck = (G, b, col, colDk, colBar) => {
       const ry = yawOf(b.t[0], b.t[1]), dY = b.deckY, L = b.len, W = b.w, thick = b.thick || 1.2;
-      G.box(b.x, dY, b.z, W, thick, L, col, ry, 0, 0, 1, NO);
-      G.box(b.x, dY - thick / 2 - 0.18, b.z, W - 0.8, 0.28, L, colDk, ry, 0, 0, 1, NO);
-      // 两道纵梁，看得见梁底，不要并成一块厚板
-      for (const sg of [-0.28, 0.28]) {
-        G.box(b.x + b.n[0] * sg * W, dY - thick / 2 - 0.45, b.z + b.n[1] * sg * W, 0.7, 0.7, L, colDk, ry, 0, 0, 1, NO);
+      G.box(b.x, dY, b.z, W, Math.min(thick, 0.9), L, col, ry, 0, 0, 1, NO);
+      G.box(b.x, dY - 0.7, b.z, W - 1.2, 0.22, L, colDk, ry, 0, 0, 1, NO);
+      // 两道纵梁下挂，和桥面分开，不要并成一块厚板
+      for (const sg of [-0.32, 0.32]) {
+        G.box(b.x + b.n[0] * sg * W, dY - 1.15, b.z + b.n[1] * sg * W, 0.55, 1.1, L, colDk, ry, 0, 0, 1, NO);
       }
       for (const sg of [-1, 1]) {
         G.box(b.x + b.n[0] * sg * (W / 2 - 0.2), dY + 0.7, b.z + b.n[1] * sg * (W / 2 - 0.2), 0.28, 1.2, L, colBar, ry, 0, 0, 1, NO);

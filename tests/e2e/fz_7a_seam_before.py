@@ -8,7 +8,7 @@ from perfhud import perf
 BASE = sys.argv[1]; OUT = sys.argv[2].rstrip('/'); os.makedirs(OUT, exist_ok=True)
 QS = os.environ.get('FZQS', '&t=day'); TAG = 'night' if 't=night' in QS else 'day'
 # 与 7A a7a.cams.seam 同一机位
-X, Z, Y, TX, TZ, PITCH = 368.81, 426.45, 1.6, 372.15, 421.23, 0.08
+X, Z, Y, TX, TZ, PITCH = 327.69, 439.96, 1.8, 376.15, 421.39, 0.08
 async def main():
   R = {'tag': TAG, 'spots': {}, 'shots': []}
   async with async_playwright() as p:

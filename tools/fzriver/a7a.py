@@ -344,10 +344,18 @@ def build_yx(g):
       'layer': 'ramp',
     }))
   cand.sort(key=lambda q: q[0])
-  for i, (_, rec) in enumerate(cand[:4], 1):
+  kept = []
+  for d_yx, rec in cand:
+    if d_yx > 22:
+      continue
+    rec['len'] = min(rec['len'], 40.0)
+    kept.append(rec)
+    if len(kept) >= 2:
+      break
+  for i, rec in enumerate(kept, 1):
     rec['id'] = 'yx_exr' + str(i)
     express_ramps.append(rec)
-  print('7A express ramps', len(express_ramps), 'of', len(cand))
+  print('7A express ramps', len(express_ramps), 'of', len(cand), 'kept near main')
 
   # 高速不进 BR 当可过路桥（只走桥下）。记录在 a7a 里。
   under = []
@@ -369,10 +377,12 @@ def build_yx(g):
     _soffit_row(Rmp, 'ramp')
 
   # 命名西头路牌（全河唯一一块洋下河牌）
+  # 岸上再退到 HW+5.8，好让交图机位站在岸道正对牌面约 4 m，不必下到河里隔墙看牌顶。
   tip_real = raw['named_west_tip_s']
   gp_tip = game_of_official(tip_real)
   tip_s_g = yx.project(Point(*gp_tip))
-  (tx, tz), tt, tn = at_yx(tip_s_g, HW_YX + 3.2)
+  _sign_lat = HW_YX + 5.8
+  (tx, tz), tt, tn = at_yx(tip_s_g, _sign_lat)
   # 牌子朝向河
   sign = {
     'id': 'yxh_w',
@@ -380,11 +390,11 @@ def build_yx(g):
     'f': [round(-tn[0], 4), round(-tn[1], 4)],
     'lines': ['洋下河', 'Yangxia River'],
   }
-  # 若落水则对岸再试
+  # 若落水则对岸再试（该侧 offset 为 -n，朝河的 f 为 +n）
   if chanY.buffer(0.5).contains(Point(sign['x'], sign['z'])):
-    (tx, tz), tt, tn = at_yx(tip_s_g, -(HW_YX + 3.2))
+    (tx, tz), tt, tn = at_yx(tip_s_g, -_sign_lat)
     sign['x'], sign['z'] = round(tx, 2), round(tz, 2)
-    sign['f'] = [round(-tn[0], 4), round(-tn[1], 4)] if False else [round(tn[0], 4), round(tn[1], 4)]
+    sign['f'] = [round(tn[0], 4), round(tn[1], 4)]
 
   # 可走范围
   regY = unary_union([ext(yx).buffer(HW_YX + BAND_YX, cap_style='flat', quad_segs=6),
@@ -491,7 +501,7 @@ def build_yx(g):
     HOUSES.append(rec)
     return True
 
-  s = 18.0
+  s = 28.0
   while s < yx.length - 8:
     if any(abs(c['s'] - s) < c['along'] / 2 + 3 for c in culverts) or (express_main and abs(express_main['s'] - s) < 16):
       s += 2
@@ -503,7 +513,7 @@ def build_yx(g):
         placed = True
     s += (w_ + R7.uniform(1.0, 2.4)) if placed else 2.4
   nH1 = len(HOUSES)
-  s = 22.0
+  s = 32.0
   while s < yx.length - 10:
     if any(abs(c['s'] - s) < c['along'] / 2 + 2 for c in culverts):
       s += 3
@@ -516,18 +526,18 @@ def build_yx(g):
 
   treeOcc = unary_union(occ_geoms)
   nT0 = len(TREES)
-  s = 16.0
+  s = 30.0
   while s < yx.length - 6:
-    if any(abs(c['s'] - s) < c['along'] / 2 + 4 for c in culverts) or (express_main and abs(express_main['s'] - s) < 14):
+    if any(abs(c['s'] - s) < c['along'] / 2 + 6 for c in culverts) or (express_main and abs(express_main['s'] - s) < 18):
       s += 3
       continue
     for side in (-1, 1):
-      (x, z), tdir, nn = at_yx(s, side * (HW_YX + 1.7))
+      (x, z), tdir, nn = at_yx(s, side * (HW_YX + 3.8))
       P_ = Point(x, z)
       if region.contains(P_) and not water.buffer(0.8).contains(P_) and not treeOcc.contains(P_) and all(math.hypot(x - t[0], z - t[1]) > 4.2 for t in TREES if t[5] != 'gone'):
         TREES.append([round(x, 2), round(z, 2), round(-nn[0] * side, 3), round(-nn[1] * side, 3), round(R7.uniform(0.85, 1.15), 2), 'yx', 1])
         treeOcc = treeOcc.union(P_.buffer(3.2))
-    s += R7.uniform(5.2, 7.6)
+    s += R7.uniform(6.4, 8.8)
   print('7A trees', len(TREES) - nT0)
 
   # 被新河道 / 涵洞路面真正压到的旧楼 / 树才撤；已建晋安河岸上的楼，除非压进新水面或 7A 路面，一律保留
@@ -553,36 +563,80 @@ def build_yx(g):
   g['HOUSES'], g['TREES'] = HOUSES, TREES
   g['ROADS'] = g['ROADS'] + ROADS7
 
-  # 机位
-  # (a) 晋安河已建段同一机位：站在对岸看汇入口（与 6A camMouth 家族相同，位置在 host 上）
-  (ex0, ez0), et0, en0 = at_s(host, host_s, -(g['HW'][host] + 2.8))
-  look0 = (Y0[0] + T0[0] * 18, Y0[1] + T0[1] * 18)
-  camSeam = {'x': round(ex0, 2), 'z': round(ez0, 2), 'y': 1.6,
+  # 机位（自审：不进房子、前景无树干、汇入口前后同机位能看出开口）
+  # (a) 站在已建晋安河西岸、汇入口以北约 28 m，朝东看 7A 开口（两岸开河后此点仍是岸）
+  (ex0, ez0), et0, en0 = at_s(host, max(0.0, host_s - 28.0), (g['HW'][host] + 4.2))
+  look0 = (Y0[0] + T0[0] * 22, Y0[1] + T0[1] * 22)
+  camSeam = {'x': round(ex0, 2), 'z': round(ez0, 2), 'y': 1.8,
              'look': [round(look0[0], 2), 1.2, round(look0[1], 2)],
-             'note': '已建晋安河对岸同机位，朝汇入口看 7A 开口'}
-  camEx = None
+             'pitch': 0.08,
+             'note': '已建晋安河西岸同机位，朝汇入口看 7A 开口'}
+  # (b) 机场高速桥下：站在主桥南沿外侧河道中线，朝北看进梁底（要看见梁底灯带，不要只看见一条黑边）
+  camEx = camExSide = None
   if express_main:
     E = express_main
-    camEx = {'x': round(E['x'] + E['n'][0] * (HW_YX + 6), 2),
-             'z': round(E['z'] + E['n'][1] * (HW_YX + 6), 2),
-             'y': 1.4,
-             'look': [E['x'], 3.2, E['z']],
+    (ux, uz), et, en = at_yx(max(0.0, E['s'] - 10.0), 0.0)
+    camEx = {'x': round(ux, 2), 'z': round(uz, 2), 'y': 1.55,
+             'look': [round(E['x'], 2), 5.3, round(E['z'], 2)],
+             'pitch': 0.14,
              'note': '机场高速桥下'}
-  # 涵洞口：取涧田路那座（最后一座，s 最大的命名西段涵洞）或最后一座
+    # 再退远、略抬高：躲开近处房子墙，看匝道（低 5.4）在前、主桥（高 6.8）在后两层
+    sx = E['x'] + E['t'][0] * 40 + E['n'][0] * 22
+    sz = E['z'] + E['t'][1] * 40 + E['n'][1] * 22
+    camExSide = {'x': round(sx, 2), 'z': round(sz, 2), 'y': 8.8,
+                 'look': [round((E['x'] + 641.18) / 2, 2), 6.2, round((E['z'] + 755.64) / 2, 2)],
+                 'pitch': 0.12,
+                 'note': '机场高速主桥与匝道两层'}
+  # (c) 涧田路涵洞口：站在南洞口外河道中线（朝汇入口、远离合拢墙），正对洞口
   c_j = max(culverts, key=lambda c: c['s']) if culverts else None
   camCul = None
   if c_j:
-    camCul = {'x': round(c_j['x'] + c_j['riverT'][0] * (-c_j['along'] / 2 - 8) + c_j['n'][0] * 6, 2),
-              'z': round(c_j['z'] + c_j['riverT'][1] * (-c_j['along'] / 2 - 8) + c_j['n'][1] * 6, 2),
-              'y': 1.5,
-              'look': [c_j['x'], 0.6, c_j['z']],
+    rT = c_j['riverT']
+    cover = c_j.get('cover') or c_j['along']
+    back = 16.0
+    cx = c_j['x'] - rT[0] * (cover / 2 + back)
+    cz = c_j['z'] - rT[1] * (cover / 2 + back)
+    lx = c_j['x'] - rT[0] * (cover / 2 - 0.6)
+    lz = c_j['z'] - rT[1] * (cover / 2 - 0.6)
+    camCul = {'x': round(cx, 2), 'z': round(cz, 2), 'y': 1.55,
+              'look': [round(lx, 2), 1.0, round(lz, 2)],
+              'pitch': 0.06,
               'note': '涧田路涵洞口'}
-  camTip = {'x': round(sign['x'] + sign['f'][0] * -8, 2),
-            'z': round(sign['z'] + sign['f'][1] * -8, 2),
-            'y': 1.6,
-            'look': [sign['x'], 1.2, sign['z']],
+  # (d) 命名西头牌：站在岸道上、牌子朝河正面约 4.2 m，脚在铺装上。眼 = 脚 + EYE(1.38)。
+  fx, fz = sign['f']
+  _cd = 3.6
+  camTip = {'x': round(sign['x'] + fx * _cd, 2),
+            'z': round(sign['z'] + fz * _cd, 2),
+            'y': 0.55,
+            'look': [sign['x'], 0.75, sign['z']],
+            'pitch': 0.14,
             'note': '命名西头「洋下河」牌'}
 
+  # 交图机位周围不留树干 / 不把楼贴在镜头前
+  cams_xz = [(camSeam['x'], camSeam['z'])]
+  if camEx: cams_xz.append((camEx['x'], camEx['z']))
+  if camExSide: cams_xz.append((camExSide['x'], camExSide['z']))
+  if camCul: cams_xz.append((camCul['x'], camCul['z']))
+  cams_xz.append((camTip['x'], camTip['z']))
+  for i, tr in enumerate(TREES):
+    if tr[5] in ('gone',): continue
+    if any(math.hypot(tr[0] - cx, tr[1] - cz) < 9.0 for cx, cz in cams_xz):
+      TREES[i][5] = 'gone'
+    elif math.hypot(tr[0] - sign['x'], tr[1] - sign['z']) < 8.0:
+      TREES[i][5] = 'gone'
+  print('7A trees after cam keep-out', sum(1 for tr in TREES if tr[5] == 'yx'))
+  def _hpoly_chk(h):
+    cx, cz, w_, d_, tx, tz, fx, fz = h['x'], h['z'], h['w'], h['d'], h['t'][0], h['t'][1], h['f'][0], h['f'][1]
+    return Polygon([(cx + tx * a + (-fx) * b, cz + tz * a + (-fz) * b)
+                    for a, b in [(-w_ / 2, -d_ / 2), (w_ / 2, -d_ / 2), (w_ / 2, d_ / 2), (-w_ / 2, d_ / 2)]])
+  for _nm, _cam in [('seam', camSeam), ('express', camEx), ('expressSide', camExSide), ('culvert', camCul), ('tip', camTip)]:
+    if not _cam: continue
+    Pcam = Point(_cam['x'], _cam['z'])
+    hit = [h for h in HOUSES if not h.get('gone') and _hpoly_chk(h).contains(Pcam)]
+    if hit:
+      print('WARN cam inside house', _nm, (_cam['x'], _cam['z']), [(h['x'], h['z'], h.get('river')) for h in hit])
+    else:
+      print('7A cam clear', _nm, (_cam['x'], _cam['z']))
   bbox = list(chanY.buffer(BAND_YX + 40).bounds)
   A7ADATA = {
     'yxLen': round(yx.length, 2),
@@ -595,7 +649,7 @@ def build_yx(g):
     'express': {'main': express_main, 'ramps': express_ramps, 'under': under},
     'far': far, 'capWall': capWall,
     'gone': {'houses': GONE_H, 'trees': GONE_T},
-    'cams': {'seam': camSeam, 'express': camEx, 'culvert': camCul, 'tip': camTip},
+    'cams': {'seam': camSeam, 'express': camEx, 'expressSide': camExSide, 'culvert': camCul, 'tip': camTip},
     'zone': [round(v, 1) for v in bbox],
     'jaJnSha1': JA_JN_SHA1,
     'note': '7A：无名下游+命名西头+涧田路涵洞以东合拢；hw=5；牌只在命名西头；涵洞路堤可走人行道；机场高速只走桥下、主桥与匝道两层',

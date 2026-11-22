@@ -263,9 +263,14 @@ export class FzNight {
     }
     // 7A 机场高速桥下：梁底暖光带并进同一张 fzNightLights，夜里桥下不要一片漆黑（不加点光源）
     for (const U of (FZR.a7a && FZR.a7a.express && FZR.a7a.express.under) || []) {
-      const t = U.t, [x, z] = [U.x, U.z], sof = (U.soffit != null) ? U.soffit : ((U.deckY || 6.8) - 1.2);
-      flat(x, sof + 0.04, z, t[0], t[1], (U.w || 16) / 2 - 1.4, 0.22, RG.line, sc(WARM, 0.88));
-      flat(x, 0.045, z, t[0], t[1], 1.6, 1.6, RG.pool, sc(WARM, 0.32));
+      const t = U.t, nU = U.n || [-t[1], t[0]], [x, z] = [U.x, U.z], sof = (U.soffit != null) ? U.soffit : ((U.deckY || 6.8) - 1.2);
+      // 梁底两道加宽暖光带（沿桥宽），夜里桥下要读得出空间，不要一片漆黑
+      flat(x, sof + 0.05, z, t[0], t[1], (U.w || 16) / 2 - 1.0, 0.45, RG.line, sc(WARM, 1.05));
+      for (const sg of [-0.32, 0.32]) {
+        const bx = x + nU[0] * sg * (U.w || 16), bz = z + nU[1] * sg * (U.w || 16);
+        flat(bx, sof + 0.05, bz, t[0], t[1], 5.5, 0.28, RG.line, sc(WARM, 0.95));
+      }
+      flat(x, 0.045, z, t[0], t[1], 2.2, 2.2, RG.pool, sc(WARM, 0.42));
     }
     // 台阶：每级踏步边沿一道暗暖光线（stairAlong 建的时候登记）
     for (const st of (S._stairs ? S._stairs.values() : [])) {

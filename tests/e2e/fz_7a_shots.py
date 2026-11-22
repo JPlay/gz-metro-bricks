@@ -10,26 +10,17 @@ QS = os.environ.get('FZQS', '&t=day'); TAG = 'night' if 't=night' in QS else 'da
 SPOTS = """(async () => { const M = await import('/js/data/fz-river.js'); const F = M.FZR, A = F.a7a;
   if (!A) return [];
   const C = A.cams, yx = M.RIVERS.yx && M.RIVERS.yx.line;
-  const E = A.express && A.express.main;
-  const c7 = (A.culverts || [])[(A.culverts || []).length - 1];
+  const cam = (name, c, pitchDef, yDef) => [name, c.x, c.z, c.look[0], c.look[2], (c.pitch != null ? c.pitch : pitchDef), c.y || yDef, 1];
   const out = [
-    ['seam', C.seam.x, C.seam.z, C.seam.look[0], C.seam.look[2], 0.08, C.seam.y || 1.6, 1],
-    ['express_under', C.express.x, C.express.z, C.express.look[0], C.express.look[2], -0.08, C.express.y || 1.4, 1],
-    ['culvert_mouth', C.culvert.x, C.culvert.z, C.culvert.look[0], C.culvert.look[2], 0.04, C.culvert.y || 1.5, 1],
-    ['tip_sign', C.tip.x, C.tip.z, C.tip.look[0], C.tip.look[2], 0.10, C.tip.y || 1.6, 1],
+    cam('seam', C.seam, 0.08, 1.8),
+    cam('express_under', C.express, -0.12, 1.5),
+    cam('culvert_mouth', C.culvert, 0.04, 1.55),
+    cam('tip_sign', C.tip, 0.08, 1.65),
   ];
-  if (E) {
-    const p = [E.x + E.t[0] * -(E.w / 2 + 18) + E.n[0] * 6, E.z + E.t[1] * -(E.w / 2 + 18) + E.n[1] * 6];
-    out.push(['express_side', p[0], p[1], E.x, E.z, 0.06, 1.8, 1]);
-  }
-  if (c7) {
-    const rT = c7.riverT || c7.n;
-    const p = [c7.x - rT[0] * (c7.cover / 2 + 10) + c7.t[0] * 6, c7.z - rT[1] * (c7.cover / 2 + 10) + c7.t[1] * 6];
-    out.push(['culvert_front', p[0], p[1], c7.x, c7.z, 0.02, 1.4, 1]);
-  }
+  if (C.expressSide) out.push(cam('express_side', C.expressSide, 0.10, 2.2));
   if (yx) {
-    const s = Math.min(yx.len - 20, 200), p = yx.at(s, 8), q = yx.at(s + 30, 0);
-    out.push(['banks_street', p.x, p.z, q.x, q.z, 0.18, 2.0, 1]);
+    const s = Math.min(yx.len - 20, 220), p = yx.at(s, 6.0), q = yx.at(s + 28, 6.0);
+    out.push(['banks_street', p.x, p.z, q.x, q.z, 0.16, 1.8, 1]);
   }
   return out; })()"""
 
