@@ -165,7 +165,7 @@ export class FzNight {
         // 贴图 v（高斯那一向）= t：离桥越远越淡；沿 n 铺满水面宽。贴着闸的桥（新港闸西沿就是六一中路）不要把倒影铺进闸前水面，否则正看闸时像河道中间掉了一根橙管
         const nearSluice = [FZR.c2 && FZR.c2.sluice, FZR.a3 && FZR.a3.gate, FZR.a4 && FZR.a4.gate, FZR.a5 && FZR.a5.gate, FZR.a6 && FZR.a6.gate].some(g => g && Math.hypot(cx - g.x, cz - g.z) < (g.hw || 20) + 10);
         if (hw > 1 && isWater(cx, cz) && !nearSluice) {
-          const Z6 = FZR.a6 && FZR.a6.zone, isHq = FZR.a6 && ((FZR.a6.bridges || []).includes(b.id) || (Z6 && cx > Z6[0] && cx < Z6[2] && cz > Z6[1] && cz < Z6[3]));
+          const Z6 = (FZR.a6b && FZR.a6b.zone) || (FZR.a6 && FZR.a6.zone), isHq = !!(FZR.a6 || FZR.a6b) && (((FZR.a6 && (FZR.a6.bridges || []).includes(b.id)) || (FZR.a6b && (FZR.a6b.bridges || []).includes(b.id)) || (Z6 && cx > Z6[0] && cx < Z6[2] && cz > Z6[1] && cz < Z6[3])));
           const Z5 = FZR.a5 && FZR.a5.zone, isYz = FZR.a5 && ((FZR.a5.bridges || []).includes(b.id) || (Z5 && cx > Z5[0] && cx < Z5[2] && cz > Z5[1] && cz < Z5[3]));
           if (isHq || isYz) {   // 6A / 5：倒影分段断开，不要一整根原木。6A 加厚略提亮（仍细、暗、断）；⑤ 保持原亮度
             const nSeg = 5, span = hw * 0.82, gap = 0.55, segL = (2 * span - (nSeg - 1) * gap) / nSeg;
@@ -251,6 +251,15 @@ export class FzNight {
       const hx = x + fx * 1.75, hz = z + fz * 1.75;
       halo(hx, 6.95, hz, 0.9, sc(WARM, 0.7));
       flat(hx - fx * 0.4, 0.045, hz - fz * 0.4, fx, fz, 3.2, 3.2, RG.pool, sc(WARM, 0.42));
+    }
+    // 6B 福飞路人行道路灯：并进同一张 fzNightLights（灯头光晕 + 桥面光圈；不加点光源）
+    if (FZR.a6b && FZR.a6b.lamps) {
+      const dY = 1.4;
+      for (const L of FZR.a6b.lamps) {
+        const su = L.side || 1, fx = -su * L.n[0], fz = -su * L.n[1], hx = L.x + fx * 1.75, hz = L.z + fz * 1.75;
+        halo(hx, dY + 6.95, hz, 0.9, sc(WARM, 0.7));
+        flat(hx - fx * 0.4, dY + 0.045, hz - fz * 0.4, fx, fz, 3.2, 3.2, RG.pool, sc(WARM, 0.42));
+      }
     }
     // 台阶：每级踏步边沿一道暗暖光线（stairAlong 建的时候登记）
     for (const st of (S._stairs ? S._stairs.values() : [])) {
