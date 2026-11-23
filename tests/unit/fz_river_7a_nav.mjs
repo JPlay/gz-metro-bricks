@@ -54,8 +54,10 @@ function fillSeg(ax, az, bx, bz, halfW, arr, pad) {
 const hw = A7.hw, bankOff = hw + 2.8;
 for (const w of F.wall) {
   if (w[4] !== 0) continue;
-  const L = Math.hypot(w[2] - w[0], w[3] - w[1]); if (L < 0.05) continue;
-  fillSeg(w[0], w[1], w[2], w[3], 0.15, block, CLR);
+  const [ax, az, bx, bz, flag, sg] = w;
+  const L = Math.hypot(bx - ax, bz - az); if (L < 0.05) continue;
+  const dx = (bx - ax) / L, dz = (bz - az) / L, rx = dz * sg, rz = -dx * sg; // r 朝水；碰撞向岸移 0.12
+  fillBox((ax + bx) / 2 - rx * 0.12, (az + bz) / 2 - rz * 0.12, dx, dz, L, 0.3, block, CLR);
 }
 for (const h of (F.houses || [])) {
   if (h.gone) continue;
@@ -72,17 +74,18 @@ for (const t of (F.trees || [])) {
 
 for (const c of A7.culverts) {
   const rt = c.t, rn = c.n, along = c.along, w = c.w, walkW = c.walk || 2.5, rampL = c.rampL || 6;
-  const ZW = Math.min(3.0, Math.max(2.4, along * 0.18)), bankT = hw + 2.8;
+  const ZW = Math.min(3.0, Math.max(2.4, along * 0.18)), bankT = hw + 2.8, dY = c.deckY || 1.2;
   for (const su of [-1, 1]) {
     fillBox(c.x + rn[0] * su * (w / 2 - walkW / 2), c.z + rn[1] * su * (w / 2 - walkW / 2), rt[0], rt[1], along + 0.4, walkW, walk, 0.06);
   }
   for (const sv of [-1, 1]) {
-    const tInner = along / 2 - ZW, tOuter = Math.max(along / 2 + rampL * 0.5, bankT + ZW);
+    const tInner = along / 2 - ZW, tOuter = along / 2 + 0.3;
     const tuCol = sv * (tInner + tOuter) / 2, tLen = tOuter - tInner;
-    fillBox(c.x + rt[0] * tuCol, c.z + rt[1] * tuCol, rt[0], rt[1], tLen, w + 1.2, walk, 0.06);
-    const v0 = along / 2, v1 = along / 2 + rampL, Len = Math.hypot(rampL, c.deckY || 1.2);
+    fillBox(c.x + rt[0] * tuCol, c.z + rt[1] * tuCol, rt[0], rt[1], tLen, w, walk, 0.06);
+    const tuVis = sv * (along / 2 - ZW / 2);
+    const v0 = along / 2, v1 = along / 2 + rampL, Len = Math.hypot(rampL, dY);
     const midV = sv * (v0 + v1) / 2;
-    fillBox(c.x + rt[0] * midV + rn[0] * sv * 0, c.z + rt[1] * midV, rt[0], rt[1], Len, walkW, walk, 0.06); // stair footprint approx
+    fillBox(c.x + rt[0] * midV, c.z + rt[1] * midV, rt[0], rt[1], Len, walkW, walk, 0.06); // t-axis sidewalk ramp
     const tLo = v0, tHi = v1, gap0 = bankT - ZW / 2 - 0.2, gap1 = bankT + ZW / 2 + 0.2;
     const segs = [];
     if (tLo < gap0) segs.push([tLo, Math.min(gap0, tHi)]);
@@ -92,13 +95,14 @@ for (const c of A7.culverts) {
       const mid = sv * (a + b) / 2, slen = (b - a) * (Len / rampL);
       fillBox(c.x + rt[0] * mid, c.z + rt[1] * mid, rt[0], rt[1], slen, w - 2 * walkW, block, CLR);
     }
+    for (const su of [-1, 1]) {
+      const nHi = su * (w / 2 - walkW / 2), nLo = su * (w / 2 + 3.2), nMid = (nHi + nLo) / 2;
+      const run = Math.abs(nLo - nHi), sLen = Math.hypot(run, dY);
+      fillBox(c.x + rt[0] * tuVis + rn[0] * nMid, c.z + rt[1] * tuVis + rn[1] * nMid, rn[0], rn[1], sLen, ZW + 0.6, walk, 0.06);
+      fillBox(c.x + rt[0] * tuVis + rn[0] * nLo, c.z + rt[1] * tuVis + rn[1] * nLo, rn[0], rn[1], 2.4, ZW + 1.2, walk, 0.06);
+    }
   }
-  const rT = c.riverT || rn;
-  for (const sg of [-1, 1]) {
-    const px = c.x + rT[1] * sg * bankT, pz = c.z + (-rT[0]) * sg * bankT;
-    fillBox(px, pz, rT[0], rT[1], 4.2, ZW + 2.5, walk, 0.06);
-  }
-  const midLen = Math.max(1.0, along - 2 * ZW - 1.0);
+  const midLen = Math.max(1.0, along - 2 * ZW - 2 * CLR - 1.2);
   fillBox(c.x, c.z, rt[0], rt[1], midLen, w - 2 * walkW, block, CLR);
   for (const su of [-1, 1]) {
     fillBox(c.x + rn[0] * su * (w / 2 - walkW), c.z + rn[1] * su * (w / 2 - walkW), rt[0], rt[1], midLen, 0.2, block, CLR);
@@ -146,10 +150,15 @@ ok('seam camera snaps onto the nav grid', startSeam >= 0, A7.cams.seam);
 const seen = floodFrom([sA, sB]);
 // 汇入口同岸（+lat / 机位）应能走到 seam；洋下河路点在另一岸经涵洞/岸道连通，两岸起步都应算「斗门 C 岸」。
 ok('C +lat bank reaches seam camera', startSeam >= 0 && !!seen[startSeam]);
-function reach(x, z, label) {
+function snapDist(x, z, k) {
+  if (k < 0) return 99;
+  return Math.hypot(cx(k % NX) - x, cz((k / NX) | 0) - z);
+}
+function reach(x, z, label, maxSnap = 1.2) {
   const k = snap(x, z);
-  const r = k >= 0 && !!seen[k];
-  ok(`nav reaches ${label}`, r, { x: +x.toFixed(2), z: +z.toFixed(2), snap: k });
+  const d = snapDist(x, z, k);
+  const r = k >= 0 && !!seen[k] && d <= maxSnap;
+  ok(`nav reaches ${label}`, r, { x: +x.toFixed(2), z: +z.toFixed(2), snap: k, d: +d.toFixed(2) });
   return r;
 }
 
@@ -194,6 +203,20 @@ for (const side of [1, -1]) {
   const p = RV.yx.line.at(RV.yx.line.len - 2, bankOff);
   reach(p.x, p.z, 'east cap bank');
 }
+
+// 沿岸步道密采样：snap 必须近，避免路点落到孤立垫板上算通过，而真实走线在夏莲路被抬高 colDeck 挡住
+let bankGaps = 0;
+for (const side of [1, -1]) {
+  for (let s = 20; s <= tipS; s += 2) {
+    const p = RV.yx.line.at(s, side * bankOff);
+    const k = snap(p.x, p.z), d = snapDist(p.x, p.z, k);
+    if (!(k >= 0 && seen[k] && d <= 0.9)) {
+      bankGaps++;
+      if (bankGaps <= 8) ok(`nav along-bank s=${s} side=${side}`, false, { x: +p.x.toFixed(2), z: +p.z.toFixed(2), d: +d.toFixed(2), snap: k });
+    }
+  }
+}
+ok(`along-bank s=20…tip both sides have no gaps (gapCount=${bankGaps})`, bankGaps === 0, { bankGaps });
 
 if (fails.length) { console.log('FAILED', fails.length, fails.join(', ')); process.exit(1); }
 console.log('All 7A nav-connectivity checks passed');
