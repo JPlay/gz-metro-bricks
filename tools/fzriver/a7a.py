@@ -422,7 +422,8 @@ def build_yx(g):
 
   # 涵洞是跨河公路：岸墙必须按桥洞留口（flag=1）。否则 flag=0 实墙（再加导航 0.38 m 外扩）会切断斑马线和沿岸步道。
   for c in culverts:
-    ext_t = c['along'] / 2 + c['rampL'] + 0.8
+    # e2e 人行道坡底在 along/2+rampL+2.5：口要盖到坡底，否则 flag=0 墙顶在引坡脚，夏莲/涧田沿路爬不上。
+    ext_t = c['along'] / 2 + c['rampL'] + 3.3
     ext_n = c['w'] / 2 + 0.4
     g['GAPS'].append(rect(c['x'], c['z'], c['t'][0], c['t'][1], -ext_t, ext_t, -ext_n, ext_n))
 

@@ -1904,4 +1904,5 @@ async def main():
   print(json.dumps(R, ensure_ascii=False, indent=1, default=str))
   print('FZ_RIVER', 'PASS' if good else 'FAIL', [k for k, v in R['checks'].items() if not v], flush=True)
   if not good: sys.exit(1)
-asyncio.run(main())
+if __name__ == '__main__':
+    asyncio.run(main())

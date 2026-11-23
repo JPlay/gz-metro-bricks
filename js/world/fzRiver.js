@@ -1283,10 +1283,14 @@ export class FzRiverStreet extends XmStreet {
         const midV = (v0 + v1) / 2, Len = Math.hypot(rampL, dY), ang = Math.atan2(0 - dY, v1 - v0);
         const [rx, rz] = [c.x + rt[0] * midV, c.z + rt[1] * midV];
         GR.box(rx, dY / 2, rz, w, 0.28, Len, hex('#8F8A80'), ryRoad, -ang, 0, 1, NO);
+        // 人行道斜坡拉到 e2e 坡底（along/2+rampL+2.5）再多 0.3：人站在坡面上往上走，不要去撞 0.3 厚板的端面（r2 夏莲踏板 y=0.15 仍卡死）。
+        const runW = rampL + 2.8, v1w = sv * (along / 2 + runW);
+        const midW = (v0 + v1w) / 2, LenW = Math.hypot(runW, dY), angW = Math.atan2(0 - dY, v1w - v0);
+        const [rxw, rzw] = [c.x + rt[0] * midW, c.z + rt[1] * midW];
         for (const su of [-1, 1]) {
-          const [sx, sz] = [rx + rn[0] * su * (w / 2 - walk / 2), rz + rn[1] * su * (w / 2 - walk / 2)];
-          GR.box(sx, dY / 2 + 0.04, sz, walk, 0.1, Len, SW, ryRoad, -ang, 0, 1, NO);
-          k.col(sx, dY / 2, sz, walk, 0.3, Len, { ry: ryRoad, rx: -ang, name: 'colStair' });
+          const [sx, sz] = [rxw + rn[0] * su * (w / 2 - walk / 2), rzw + rn[1] * su * (w / 2 - walk / 2)];
+          GR.box(sx, dY / 2 + 0.04, sz, walk, 0.1, LenW, SW, ryRoad, -angW, 0, 1, NO);
+          k.col(sx, dY / 2, sz, walk, 0.3, LenW, { ry: ryRoad, rx: -angW, name: 'colStair' });
         }
         const tLo = Math.min(Math.abs(v0), Math.abs(v1)), tHi = Math.max(Math.abs(v0), Math.abs(v1));
         const gap0 = bankT - ZW / 2 - 0.2, gap1 = bankT + ZW / 2 + 0.2;
@@ -1299,6 +1303,10 @@ export class FzRiverStreet extends XmStreet {
           const [fx, fz] = [c.x + rt[0] * mid, c.z + rt[1] * mid];
           k.col(fx, dY / 2, fz, w - 2 * walk, 0.3, slen, { ry: ryRoad, rx: -ang, name: 'colFlyRamp' });
         }
+        // 沿路引坡坡底 y=0 踏板：e2e 坡底在 along/2+rampL+2.5。没有踏板且 GAPS 只到 +0.8 时，夏莲/涧田从坡底沿人行道爬不上。
+        const tFoot = sv * (along / 2 + rampL + 1.4);
+        const [px, pz] = [c.x + rt[0] * tFoot, c.z + rt[1] * tFoot];
+        k.col(px, 0.0, pz, w + 0.4, 0.3, 3.2, { ry: ryRoad, name: 'colDeck' });
       }
       // 桥面可走：只给人行道 colDeck；中央车道 colCulvertLane 挡住（不要叫 colDeck，否则车道变成导航孤岛）。
       // 每一岸留一条斑马线宽的可走横带，把两侧人行道连起来。高出台的 colDeck 只铺在路面上：
@@ -1323,16 +1331,25 @@ export class FzRiverStreet extends XmStreet {
         const [cxz, czz] = [c.x + rt[0] * tuCol, c.z + rt[1] * tuCol];
         k.col(cxz, dY - 0.15, czz, w, 0.3, tLen, { ry: ryRoad, name: 'colDeck' });
       }
-      // 路肩长斜坡：沿整条路两侧从岸上 y=0 爬到人行道。只在斑马两端做台阶会漏（斜交时岸道在 t≈5 擦过路沿，官方 e2e 在 yx_c5 卡死）。
+      // 路肩斜坡分两截，不要把 y=1.2 的路肩高沿（n=人行道中线）拉到沿路引坡上：
+      // 通长 shT=along+2*rampL+1 会在 |t|≈15、n≈4.25 立住端面，e2e 从坡底沿人行道爬夏莲/涧田会卡死（r3 卡在 y=0.42）。
+      // ① 只贴路面两侧（along+1，|t|略过沿/2）：沿河岸走上人行道（yx_c5 擦边）。
+      // ② 靠岸外侧翼坡（n 从路沿外到 nLo，不占人行道）：盖住引坡段 t≈-10 的六一斜交岸道。
+      const shTRoad = along + 1.0, shTWing = along + 2 * rampL + 1.0;
       for (const su of [-1, 1]) {
         const nHi = su * (w / 2 - walk / 2), nLo = su * (w / 2 + 5.0);
         const nMid = (nHi + nLo) / 2, run = Math.abs(nLo - nHi);
         const Len = Math.hypot(run, dY), ang = Math.atan2(0 - dY, nLo - nHi);
         const [sx, sz] = [c.x + rn[0] * nMid, c.z + rn[1] * nMid];
-        GR.box(sx, dY / 2, sz, along + 1.0, 0.16, Len, hex('#8F8A80'), ryN, -ang, 0, 1, NO);
-        k.col(sx, dY / 2, sz, along + 1.0, 0.3, Len, { ry: ryN, rx: -ang, name: 'colStair' });
+        GR.box(sx, dY / 2, sz, shTRoad, 0.16, Len, hex('#8F8A80'), ryN, -ang, 0, 1, NO);
+        k.col(sx, dY / 2, sz, shTRoad, 0.3, Len, { ry: ryN, rx: -ang, name: 'colStair' });
+        const nHiW = su * (w / 2 + 0.2), nMidW = (nHiW + nLo) / 2, runWsh = Math.abs(nLo - nHiW);
+        const LenWsh = Math.hypot(runWsh, dY), angWsh = Math.atan2(0 - dY, nLo - nHiW);
+        const [wx, wz] = [c.x + rn[0] * nMidW, c.z + rn[1] * nMidW];
+        GR.box(wx, dY / 2, wz, shTWing, 0.16, LenWsh, hex('#8F8A80'), ryN, -angWsh, 0, 1, NO);
+        k.col(wx, dY / 2, wz, shTWing, 0.3, LenWsh, { ry: ryN, rx: -angWsh, name: 'colStair' });
         const [fx, fz] = [c.x + rn[0] * nLo, c.z + rn[1] * nLo];
-        k.col(fx, 0.0, fz, along + 1.2, 0.3, 2.8, { ry: ryN, name: 'colDeck' });
+        k.col(fx, 0.0, fz, shTWing + 0.2, 0.3, 2.8, { ry: ryN, name: 'colDeck' });
       }
       const midLen = Math.max(1.0, along - 2 * ZW - 2 * 0.38 - 1.2);
       k.col(dx, dY - 0.15, dz, w - 2 * walk, 0.3, midLen, { ry: ryRoad, name: 'colCulvertLane' });

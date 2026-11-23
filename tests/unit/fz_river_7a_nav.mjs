@@ -85,7 +85,10 @@ for (const c of A7.culverts) {
     const tuVis = sv * (along / 2 - ZW / 2);
     const v0 = along / 2, v1 = along / 2 + rampL, Len = Math.hypot(rampL, dY);
     const midV = sv * (v0 + v1) / 2;
-    fillBox(c.x + rt[0] * midV, c.z + rt[1] * midV, rt[0], rt[1], Len, walkW, walk, 0.06); // t-axis sidewalk ramp
+    const runW = rampL + 2.8, LenW = Math.hypot(runW, dY), midW = sv * (along / 2 + runW / 2);
+    fillBox(c.x + rt[0] * midW, c.z + rt[1] * midW, rt[0], rt[1], LenW, walkW, walk, 0.06); // t-axis sidewalk ramp extended to e2e 坡底
+    const tFoot = sv * (along / 2 + rampL + 1.4);
+    fillBox(c.x + rt[0] * tFoot, c.z + rt[1] * tFoot, rt[0], rt[1], 3.2, w + 0.4, walk, 0.06);
     const tLo = v0, tHi = v1, gap0 = bankT - ZW / 2 - 0.2, gap1 = bankT + ZW / 2 + 0.2;
     const segs = [];
     if (tLo < gap0) segs.push([tLo, Math.min(gap0, tHi)]);
@@ -99,8 +102,11 @@ for (const c of A7.culverts) {
   for (const su of [-1, 1]) {
     const nHi = su * (w / 2 - walkW / 2), nLo = su * (w / 2 + 5.0), nMid = (nHi + nLo) / 2;
     const run = Math.abs(nLo - nHi), sLen = Math.hypot(run, dY);
-    fillBox(c.x + rn[0] * nMid, c.z + rn[1] * nMid, rn[0], rn[1], sLen, along + 1.0, walk, 0.06);
-    fillBox(c.x + rn[0] * nLo, c.z + rn[1] * nLo, rn[0], rn[1], 2.8, along + 1.2, walk, 0.06);
+    const shTRoad = along + 1.0, shTWing = along + 2 * rampL + 1.0;
+    fillBox(c.x + rn[0] * nMid, c.z + rn[1] * nMid, rn[0], rn[1], sLen, shTRoad, walk, 0.06);
+    const nHiW = su * (w / 2 + 0.2), nMidW = (nHiW + nLo) / 2, runWsh = Math.abs(nLo - nHiW);
+    fillBox(c.x + rn[0] * nMidW, c.z + rn[1] * nMidW, rn[0], rn[1], Math.hypot(runWsh, dY), shTWing, walk, 0.06);
+    fillBox(c.x + rn[0] * nLo, c.z + rn[1] * nLo, rn[0], rn[1], 2.8, shTWing + 0.2, walk, 0.06);
   }
   const midLen = Math.max(1.0, along - 2 * ZW - 2 * CLR - 1.2);
   fillBox(c.x, c.z, rt[0], rt[1], midLen, w - 2 * walkW, block, CLR);
