@@ -1266,6 +1266,26 @@ async def run_7a(pg):
     R['perf']['m:tip'] = await sample4(pg, 'm:tip')
 
     # 涵洞：走上人行道过到对岸（六一北路、夏莲路、涧田路）
+    async def zebra_across(c, bank_t, label):
+        """每一岸沿斑马线横过车道再走回来（连起两侧人行道）。"""
+        walk, along, w = c.get('walk') or 2.5, c['along'], c['w']
+        zw = min(3.0, max(2.4, along * 0.18))
+        tu = bank_t * (along / 2 - zw / 2)
+        nv = w / 2 - walk / 2
+        def xz(tu_, nv_):
+            return (c['x'] + c['t'][0] * tu_ + c['n'][0] * nv_, c['z'] + c['t'][1] * tu_ + c['n'][1] * nv_)
+        a = await W(pg, *xz(tu, -nv)); b = await W(pg, *xz(tu, nv))
+        name = c.get('roadName') or c['id']
+        okc = await go(pg, *a, f'→ {name} 斑马线一侧') and await go(pg, *b, f'沿岸过涵洞路面 {name}') and await go(pg, *a, f'沿岸过涵洞路面回来 {name}')
+        arrived = okc and await near(pg, *a, 3.0) and (await st(pg))['pos'][1] > -0.3
+        ok(f'm:沿岸过涵洞路面 {name} {label}', arrived, (await st(pg))['pos'])
+        return arrived
+
+    async def bank_t_of(c):
+        pos, origin = (await st(pg))['pos'], await W(pg, c['x'], c['z'])
+        cur_t = (pos[0] - origin[0]) * c['t'][0] + (pos[2] - origin[1]) * c['t'][1]
+        return 1 if cur_t >= 0 else -1
+
     async def cross_culvert(c, from_side, label):
         walk, along, rampL, w = c.get('walk') or 2.5, c['along'], c.get('rampL') or 6, c['w']
         off = along / 2 + rampL + 2.5
@@ -1296,7 +1316,9 @@ async def run_7a(pg):
         # 先走到该涵洞一岸
         p = await ybank(c['s'] - 8 if c['s'] > 10 else c['s'] + 8, 1 if i % 2 == 0 else -1)
         okw = await go(pg, *p, f'岸上 → {c.get("roadName") or c["id"]}'); ok(f'm:to culvert {c.get("roadName") or c["id"]}', okw and await near(pg, *p, 3.5), (await st(pg))['pos'])
+        await zebra_across(c, await bank_t_of(c), 'this bank')
         await cross_culvert(c, 1 if i % 2 == 0 else -1, 'sidewalk')
+        await zebra_across(c, await bank_t_of(c), 'other bank')
         if OUT and c.get('roadName') == '涧田路':
             C = A['cams']['culvert']; await look(pg, *(await W(pg, C['look'][0], C['look'][2])), 0.1); await shot(pg, 'm_culvert_mouth')
         R['perf'][f'm:{c["id"]}'] = await sample4(pg, f'm:{c["id"]}')
@@ -1309,7 +1331,12 @@ async def run_7a(pg):
     d = await pg.evaluate(f"""(() => {{ const R=__game.fzMetro.street.kit.root.position, p=__game.player.position; const dx=p.x-R.x-({c7['x']}), dz=p.z-R.z-({c7['z']}); return Math.hypot(dx,dz); }})()""")
     ok('m:cannot walk into 涧田路 culvert tube', d > 2.0 or s['pos'][1] > 0.8, {'d': d, 'pos': s['pos']})
 
-    # 机场高速：沿河走桥下，上不去桥面
+    # 从涵洞路面回到连通岸道，再沿河走机场高速桥下（不要从车道孤岛起 A*）
+    bank = await ybank(c7['s'] - 8 if c7['s'] > 10 else c7['s'] + 8, 1)
+    okb = await go(pg, *bank, '涵洞路面 → 岸道')
+    if not okb:
+        await pg.evaluate(f'(() => {{ const p = __game.player.position; p.x = {bank[0]}; p.y = 0; p.z = {bank[1]}; }})()')
+        await asyncio.sleep(0.3)
     p = await ybank(E['s'], 1, hw + 3.2)
     okw = await go(pg, *p, '→ 机场高速桥下'); ok('m:walk under airport expressway', okw and await near(pg, *p, 3.5) and (await st(pg))['pos'][1] < 3.0, (await st(pg))['pos'])
     if OUT:

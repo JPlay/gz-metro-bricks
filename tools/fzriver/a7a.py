@@ -424,7 +424,9 @@ def build_yx(g):
   _wd = water.symmetric_difference(water0).buffer(0)
   geoms = [q for q in getattr(_wd, 'geoms', [_wd]) if q.area > 0.5]
   _wd = unary_union(geoms) if geoms else _wd
-  WALL_keep = [w for w in WALL0 if LineString([(w[0], w[1]), (w[2], w[3])]).distance(_wd) > 0.5]
+  # 桥洞 / 口门等特殊 flag 必须保留：6B 江厝路 gap 是 flag=1（无碰撞）。靠近新水面差集时丢掉再按 flag=0 补回，会在桥头砌实墙。
+  WALL_keep = [w for w in WALL0 if LineString([(w[0], w[1]), (w[2], w[3])]).distance(_wd) > 0.5
+               or (len(w) > 4 and w[4] in (1, 2, 3, 4, 5))]
   _keepU = unary_union([LineString([(w[0], w[1]), (w[2], w[3])]) for w in WALL_keep] or [Point(0, 0)]).buffer(0.3)
   W7 = []
   gapU = unary_union(g.get('GAPS') or [Point(0, 0)])
@@ -444,6 +446,8 @@ def build_yx(g):
           l_ = math.hypot(dx_, dz_) or 1
           if abs(dx_ / l_ * jt[0] + dz_ / l_ * jt[1]) < 0.35:
             kd = 4
+        if not kd and gapU.contains(m_):
+          kd = 1   # 与 6B 相同：桥洞不挂岸墙碰撞
         W7.append([round(p0[0], 2), round(p0[1], 2), round(p1[0], 2), round(p1[1], 2), kd])
   W7 = merge(W7)
   for w in W7:
@@ -454,7 +458,8 @@ def build_yx(g):
     w.append(1 if water.contains(Point(mx_ + rx * 0.25, mz_ + rz * 0.25)) else -1)
   WALL = WALL_keep + W7
   g['WALL'] = WALL
-  print('7A walls: kept', len(WALL_keep), '/', len(WALL0), 'new', len(W7))
+  print('7A walls: kept', len(WALL_keep), '/', len(WALL0), 'new', len(W7),
+        {f: sum(1 for w in W7 if w[4] == f) for f in range(5)})
 
   BOUND = [[round(x, 2), round(z, 2)] for x, z in Polygon(BOUND0).union(regY.simplify(0.3)).buffer(0).exterior.coords]
   g['BOUND'] = BOUND

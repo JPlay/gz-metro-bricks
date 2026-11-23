@@ -76,6 +76,8 @@ ok('7A data present (a7a: yxLen / 7 culverts / express / cap / 4 cams / 1 sign)'
   ok('7 culverts (6 OSM downstream + 涧田路), all have deck, cover, ramps', cs.length === 7 && cs.every(c => c.deckY >= 1 && c.cover >= 8 && c.rampL >= 5 && c.walk >= 2));
   ok('last culvert is 涧田路 (way 687591877)', last && last.way === 687591877 && last.roadName === '涧田路', last);
   ok('runtime builds visible mouths, sidewalk ramps, and colCulvertTube (not colDeck)', /colCulvertTube/.test(fsrc) && /a7aCulverts/.test(fsrc) && /DARK/.test(fsrc));
+  ok('culvert carriageway is colCulvertLane; sidewalks and a zebra-width bank strip are colDeck',
+    /colCulvertLane/.test(fsrc) && /const ZW/.test(fsrc) && /F4F1EA/.test(fsrc) && /a7aCulverts[\s\S]*colDeck/.test(fsrc));
   ok('roads() skips 7A culvert asphalt and road-name signs', /r\.culvert \|\| r\.a7a/.test(fsrc));
 }
 
@@ -103,6 +105,16 @@ ok('no new kiosk / station; boats still only B and D; 6A/6B data still present',
   ok('four handoff cameras: seam / express / culvert / tip', ['seam', 'express', 'culvert', 'tip'].every(n => C[n] && C[n].look && C[n].look.length >= 3));
   ok('tip camera note mentions 洋下河 sign', /洋下河/.test(C.tip.note || ''));
   ok('express camera note mentions 机场高速', /机场高速/.test(C.express.note || ''));
+}
+
+// g7day：只白天、人在 a7a.zone 才开，夜里关掉以抵消 fzNightLights 那一个 draw
+{ const ld = fsrc.slice(fsrc.indexOf('  lodNow(force) {'), fsrc.indexOf('  refreshTilesIfTurned() {'));
+  ok('g7day is day-only (off when nightLod)', /gn\.g7day/.test(ld) && /!this\.nightLod/.test(ld) && /a7aDay\(/.test(fsrc) && /k\.group\('g7day'\)/.test(fsrc));
+}
+
+// 7A 重做岸墙不得把 6B 江厝路桥洞（flag=1，无碰撞）改成实墙 flag=0
+{ const w = (F.wall || []).find(q => q[0] === -50.57 && q[1] === 746.3 && q[2] === -48.08 && q[3] === 760.26);
+  ok('江厝路 west gap wall keeps flag 1 (no collider, same as prod d26fb85)', !!(w && w[4] === 1), w);
 }
 
 if (fails.length) { console.log('FAILED', fails.length, fails.join(', ')); process.exit(1); }

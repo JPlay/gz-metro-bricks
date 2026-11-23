@@ -133,6 +133,8 @@ export class FzRiverStreet extends XmStreet {
     if (FZR.a5) { this.a5Day(); k.group('g5day'); }
     // 6A：湖前河水面亮纹单独一组 g6day：只白天、人在东段一带才开；夜里整组关，夜 draw ≤ 昼
     if (FZR.a6) { this.a6Day(); k.group('g6day'); }
+    // 7A：洋下河水面亮纹单独一组 g7day：只白天、人在洋下河一带才开；夜里整组关，夜 draw ≤ 昼
+    if (FZR.a7a) { this.a7aDay(); k.group('g7day'); }
     // 3B：晋安河北段 / 凤坂河 / 琴亭湖水面亮纹单独一组 g3bday：只白天、人在 3B 一带才开（夜里关掉腾出夜灯那一个 draw —— 3B 一带夜里 draw 不超过白天）
     if (FZR.b3) { this.b3Day(); k.group('g3bday'); }
     // 2C：白马河下段水面亮纹单独一组 g2day：只白天、人在 2C / 彬德一带才开；夜里整组关，腾出夜灯那一个 draw（4A 给三座水闸加檐下/墩帽灯带后，彬德观景处夜 21 > 昼 20）
@@ -166,6 +168,7 @@ export class FzRiverStreet extends XmStreet {
     if (this.kit.groupNodes && this.kit.groupNodes.g4day) for (const m of this.kit.groupNodes.g4day.getChildMeshes()) { m.metadata = Object.assign({}, m.metadata, { noTileCull: true }); m.alwaysSelectAsActiveMesh = true; }
     if (this.kit.groupNodes && this.kit.groupNodes.g5day) for (const m of this.kit.groupNodes.g5day.getChildMeshes()) { m.metadata = Object.assign({}, m.metadata, { noTileCull: true }); m.alwaysSelectAsActiveMesh = true; }
     if (this.kit.groupNodes && this.kit.groupNodes.g6day) for (const m of this.kit.groupNodes.g6day.getChildMeshes()) { m.metadata = Object.assign({}, m.metadata, { noTileCull: true }); m.alwaysSelectAsActiveMesh = true; }
+    if (this.kit.groupNodes && this.kit.groupNodes.g7day) for (const m of this.kit.groupNodes.g7day.getChildMeshes()) { m.metadata = Object.assign({}, m.metadata, { noTileCull: true }); m.alwaysSelectAsActiveMesh = true; }
     if (this.kit.groupNodes && this.kit.groupNodes.g2day) for (const m of this.kit.groupNodes.g2day.getChildMeshes()) { m.metadata = Object.assign({}, m.metadata, { noTileCull: true }); m.alwaysSelectAsActiveMesh = true; }
     for (const m of this.kit.meshes || []) if (m.name && /paint@a6bRail/.test(m.name)) { m.metadata = Object.assign({}, m.metadata, { noTileCull: true, a6bRail: true }); m.alwaysSelectAsActiveMesh = true; }
     this.tileCull = installTileCull(this);   // 常开大网格按视锥换索引（不加 draw）
@@ -980,6 +983,17 @@ export class FzRiverStreet extends XmStreet {
       WA.box(a.x, WY + 0.004, a.z, 0.25, 0.004, 4.5, C, yawOf(a.tx, a.tz), 0, 0, 1, NO);
     }
   }
+  /** 7A 白天才画（g7day）：洋下河水面亮纹。夜里关掉，夜 draw ≤ 昼 */
+  a7aDay() {
+    const k = this.kit, WA = k.g('paint@sea'), C = hex('#8FC0C8'), r = RIVERS.yx;
+    if (!r) return;
+    let j = 0;
+    for (let s = 6; s < r.line.len - 6; s += 12) {
+      const a = r.line.at(s, ((j++ * 37) % 11 - 5) / 6 * r.hw * 0.6);
+      if (!isWater(a.x, a.z)) continue;
+      WA.box(a.x, WY + 0.004, a.z, 0.25, 0.004, 4.2, C, yawOf(a.tx, a.tz), 0, 0, 1, NO);
+    }
+  }
 
 
   /** 6B 常开：铁路背景各 1 个 draw（梁/墩/接触网杆剪影）、路名牌、西头远景、福飞路中央禁走 */
@@ -1273,11 +1287,28 @@ export class FzRiverStreet extends XmStreet {
         }
         k.col(rx, dY / 2, rz, w - 2 * walk, 0.3, Len, { ry: ryRoad, rx: -ang, name: 'colFlyRamp' });
       }
-      // 桥面可走：人行道 colDeck，中央车道挡住
-      k.col(dx, dY - 0.15, dz, w, 0.3, along + 0.4, { ry: ryRoad, name: 'colDeck' });
+      // 桥面可走：只给人行道 colDeck；中央车道 colCulvertLane 挡住（不要叫 colDeck，否则车道变成导航孤岛）。
+      // 每一岸留一条斑马线宽的可走横带，把两侧人行道连起来，岸道可以过马路。
+      const ZW = Math.min(3.0, Math.max(2.4, along * 0.18));
+      for (const su of [-1, 1]) {
+        const [sx, sz] = [c.x + rn[0] * su * (w / 2 - walk / 2), c.z + rn[1] * su * (w / 2 - walk / 2)];
+        k.col(sx, dY - 0.15, sz, walk, 0.3, along + 0.4, { ry: ryRoad, name: 'colDeck' });
+      }
+      for (const sv of [-1, 1]) {
+        const tu = sv * (along / 2 - ZW / 2);
+        const [zx, zz] = [c.x + rt[0] * tu, c.z + rt[1] * tu];
+        // 可见斑马线：白条刷在已有 granite 桶上，不另开材质/draw
+        const stripe = 0.4, gap = 0.4;
+        for (let u = -ZW / 2 + stripe / 2; u <= ZW / 2 - stripe / 2 + 0.01; u += stripe + gap) {
+          GR.box(zx + rt[0] * u, dY + 0.055, zz + rt[1] * u, w - 2 * walk, 0.04, stripe, hex('#F4F1EA'), ryRoad, 0, 0, 1, NO);
+        }
+        k.col(zx, dY - 0.15, zz, w, 0.3, ZW + 0.15, { ry: ryRoad, name: 'colDeck' });
+      }
+      const midLen = Math.max(1.0, along - 2 * ZW - 0.1);
+      k.col(dx, dY - 0.15, dz, w - 2 * walk, 0.3, midLen, { ry: ryRoad, name: 'colCulvertLane' });
       for (const su of [-1, 1]) {
         const [ix, iz] = [c.x + rn[0] * su * (w / 2 - walk), c.z + rn[1] * su * (w / 2 - walk)];
-        k.col(ix, dY + 0.25, iz, 0.2, 0.5, along, { ry: ryRoad, name: 'colCurb' });
+        k.col(ix, dY + 0.25, iz, 0.2, 0.5, midLen, { ry: ryRoad, name: 'colCurb' });
       }
       // 涵洞管子：人走不进去（不要叫 colDeck）
       k.col(c.x, (WY + dY - 0.15) / 2, c.z, open - 0.2, dY - 0.3 - WY, cover - 0.6, { ry: ryRiv, name: 'colCulvertTube' });
@@ -1301,11 +1332,15 @@ export class FzRiverStreet extends XmStreet {
       // 墩：立在近水处，让开两岸步道
       const hw = (FZR.rivers.yx && FZR.rivers.yx.hw) || 5;
       const nPier = b.piers || 6, pH = dY - thick / 2 - 0.5 - WY;
+      const En = (A.express && A.express.main) || b;
       for (let j = 0; j < nPier; j++) {
         const u = -L / 2 + (j + 0.5) * (L / nPier);
         for (const sg of [-1, 1]) {
           const px = b.x + b.t[0] * u + b.n[0] * sg * (hw - 0.6);
           const pz = b.z + b.t[1] * u + b.n[1] * sg * (hw - 0.6);
+          // 匝道朝向不一定跨河：只把墩立在主桥横向近水处，让开两岸步道
+          const lat = (px - En.x) * En.n[0] + (pz - En.z) * En.n[1];
+          if (Math.abs(lat) > hw - 0.3) continue;
           G.box(px, WY + pH / 2, pz, 1.6, pH, 1.6, col, 0, 0, 0, 1, NO);
           G.box(px, dY - thick / 2 - 0.7, pz, 2.2, 0.4, 2.2, colDk, ry, 0, 0, 1, NO);
         }
@@ -1680,6 +1715,7 @@ export class FzRiverStreet extends XmStreet {
     if (gn.g4day) { const on = !this.nightLod && p.x < FZR.a4.x0 + 80 && p.z < -640; if (force || gn.g4day.isEnabled(false) !== on) gn.g4day.setEnabled(on); }   // 4A 白天组：只白天 + 人在河口以西一带
     if (gn.g5day) { const Z = FZR.a5.zone, on = !this.nightLod && p.x > Z[0] && p.x < Z[2] && p.z > Z[1] && p.z < Z[3]; if (force || gn.g5day.isEnabled(false) !== on) gn.g5day.setEnabled(on); }   // 5 白天组：只白天 + 人在瀛洲河一带
     if (gn.g6day) { const Z = (FZR.a6b && FZR.a6b.zone) || FZR.a6.zone, on = !this.nightLod && p.x > Z[0] - 40 && p.x < Z[2] + 40 && p.z > Z[1] - 40 && p.z < Z[3] + 40; if (force || gn.g6day.isEnabled(false) !== on) gn.g6day.setEnabled(on); }   // 6A/6B 白天组：只白天 + 人在湖前一带
+    if (gn.g7day) { const Z = FZR.a7a.zone, on = !this.nightLod && p.x > Z[0] - 20 && p.x < Z[2] + 20 && p.z > Z[1] - 40 && p.z < Z[3] + 40; if (force || gn.g7day.isEnabled(false) !== on) gn.g7day.setEnabled(on); }   // 7A 白天组：只白天 + 人在洋下河一带
     if (gn.g2day) { const on = !this.nightLod && p.z < FZR.c2.z0 + 80; if (force || gn.g2day.isEnabled(false) !== on) gn.g2day.setEnabled(on); }   // 2C 白天组：只白天 + 人在白马河下段 / 彬德一带
     if (this.tileCull) this.tileCull.update(this.scene.activeCamera, { px: this.wx(p.x), pz: this.wz(p.z), detR: (NL ? NL.near : NEAR) + CELL * 0.7, detOn: !corrP });
   }
