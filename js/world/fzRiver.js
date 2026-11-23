@@ -1274,7 +1274,10 @@ export class FzRiverStreet extends XmStreet {
         // 矮路缘
         GR.box(c.x + rn[0] * su * (w / 2 - walk), dY + 0.12, c.z + rn[1] * su * (w / 2 - walk), 0.12, 0.16, along, CAP, ryRoad, 0, 0, 1, NO);
       }
-      // 两岸斜坡：人行道从岸上到路面（colStair）；中央车道斜板 colFlyRamp，避免从路堤底下钻
+      const ZW = Math.min(3.0, Math.max(2.4, along * 0.18));
+      const bankT = hw + 2.8;
+      // 两岸斜坡：人行道从岸上到路面（colStair）；中央车道斜板 colFlyRamp，避免从路堤底下钻。
+      // 斜板在岸道（hw+2.8）处留出斑马宽缺口，否则 2D 导航里 blocker 会压过斑马/岸道。
       for (const sv of [-1, 1]) {
         const v0 = sv * (along / 2), v1 = sv * (along / 2 + rampL);
         const midV = (v0 + v1) / 2, Len = Math.hypot(rampL, dY), ang = Math.atan2(0 - dY, v1 - v0);
@@ -1285,26 +1288,44 @@ export class FzRiverStreet extends XmStreet {
           GR.box(sx, dY / 2 + 0.04, sz, walk, 0.1, Len, SW, ryRoad, -ang, 0, 1, NO);
           k.col(sx, dY / 2, sz, walk, 0.3, Len, { ry: ryRoad, rx: -ang, name: 'colStair' });
         }
-        k.col(rx, dY / 2, rz, w - 2 * walk, 0.3, Len, { ry: ryRoad, rx: -ang, name: 'colFlyRamp' });
+        const tLo = Math.min(Math.abs(v0), Math.abs(v1)), tHi = Math.max(Math.abs(v0), Math.abs(v1));
+        const gap0 = bankT - ZW / 2 - 0.2, gap1 = bankT + ZW / 2 + 0.2;
+        const segs = [];
+        if (tLo < gap0) segs.push([tLo, Math.min(gap0, tHi)]);
+        if (tHi > gap1) segs.push([Math.max(gap1, tLo), tHi]);
+        for (const [a, b] of segs) {
+          if (b - a < 0.4) continue;
+          const mid = sv * (a + b) / 2, slen = (b - a) * (Len / rampL);
+          const [fx, fz] = [c.x + rt[0] * mid, c.z + rt[1] * mid];
+          k.col(fx, dY / 2, fz, w - 2 * walk, 0.3, slen, { ry: ryRoad, rx: -ang, name: 'colFlyRamp' });
+        }
       }
       // 桥面可走：只给人行道 colDeck；中央车道 colCulvertLane 挡住（不要叫 colDeck，否则车道变成导航孤岛）。
-      // 每一岸留一条斑马线宽的可走横带，把两侧人行道连起来，岸道可以过马路。
-      const ZW = Math.min(3.0, Math.max(2.4, along * 0.18));
+      // 每一岸留一条斑马线宽的可走横带，把两侧人行道连起来，并延伸到岸道（hw+2.8），沿岸可以过马路。
       for (const su of [-1, 1]) {
         const [sx, sz] = [c.x + rn[0] * su * (w / 2 - walk / 2), c.z + rn[1] * su * (w / 2 - walk / 2)];
         k.col(sx, dY - 0.15, sz, walk, 0.3, along + 0.4, { ry: ryRoad, name: 'colDeck' });
       }
       for (const sv of [-1, 1]) {
-        const tu = sv * (along / 2 - ZW / 2);
-        const [zx, zz] = [c.x + rt[0] * tu, c.z + rt[1] * tu];
+        const tuVis = sv * (along / 2 - ZW / 2);
+        const [zx, zz] = [c.x + rt[0] * tuVis, c.z + rt[1] * tuVis];
         // 可见斑马线：白条刷在已有 granite 桶上，不另开材质/draw
         const stripe = 0.4, gap = 0.4;
         for (let u = -ZW / 2 + stripe / 2; u <= ZW / 2 - stripe / 2 + 0.01; u += stripe + gap) {
           GR.box(zx + rt[0] * u, dY + 0.055, zz + rt[1] * u, w - 2 * walk, 0.04, stripe, hex('#F4F1EA'), ryRoad, 0, 0, 1, NO);
         }
-        k.col(zx, dY - 0.15, zz, w, 0.3, ZW + 0.15, { ry: ryRoad, name: 'colDeck' });
+        // 碰撞带：从路面斑马内侧延伸过岸道，略宽于路面，跟岸上 land 重叠
+        const tInner = along / 2 - ZW, tOuter = Math.max(along / 2 + rampL * 0.5, bankT + ZW);
+        const tuCol = sv * (tInner + tOuter) / 2, tLen = tOuter - tInner;
+        const [cxz, czz] = [c.x + rt[0] * tuCol, c.z + rt[1] * tuCol];
+        k.col(cxz, dY - 0.15, czz, w + 1.2, 0.3, tLen, { ry: ryRoad, name: 'colDeck' });
       }
-      const midLen = Math.max(1.0, along - 2 * ZW - 0.1);
+      // 再在真实岸道（沿河法向 hw+2.8）垫一块 colDeck，斜交的路（如晋安北路）斑马在路坐标里对不齐岸
+      for (const sg of [-1, 1]) {
+        const px = c.x + rT[1] * sg * bankT, pz = c.z + (-rT[0]) * sg * bankT;
+        k.col(px, dY - 0.15, pz, ZW + 2.5, 0.3, 4.2, { ry: yawOf(rT[0], rT[1]), name: 'colDeck' });
+      }
+      const midLen = Math.max(1.0, along - 2 * ZW - 1.0);
       k.col(dx, dY - 0.15, dz, w - 2 * walk, 0.3, midLen, { ry: ryRoad, name: 'colCulvertLane' });
       for (const su of [-1, 1]) {
         const [ix, iz] = [c.x + rn[0] * su * (w / 2 - walk), c.z + rn[1] * su * (w / 2 - walk)];

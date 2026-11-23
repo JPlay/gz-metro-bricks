@@ -420,6 +420,12 @@ def build_yx(g):
         'water', _keep_old(WATER, water, water0, WATER0), '/', len(WATER))
   g['LAND'], g['WATER'] = LAND, WATER
 
+  # 涵洞是跨河公路：岸墙必须按桥洞留口（flag=1）。否则 flag=0 实墙（再加导航 0.38 m 外扩）会切断斑马线和沿岸步道。
+  for c in culverts:
+    ext_t = c['along'] / 2 + c['rampL'] + 0.8
+    ext_n = c['w'] / 2 + 0.4
+    g['GAPS'].append(rect(c['x'], c['z'], c['t'][0], c['t'][1], -ext_t, ext_t, -ext_n, ext_n))
+
   # 岸墙
   _wd = water.symmetric_difference(water0).buffer(0)
   geoms = [q for q in getattr(_wd, 'geoms', [_wd]) if q.area > 0.5]
