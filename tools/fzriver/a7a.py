@@ -446,16 +446,43 @@ def build_yx(g):
         m_ = Point((p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2)
         if _keepU.contains(m_):
           continue
-        # 汇入口沿晋安河切向的口门
+        # 汇入口靠水面并集自然开口。不要用 flag 4（2C 口门：挂 colCap、语义不是岸墙），以免接缝处漏缝或挡路。
         kd = 0
-        if math.hypot((p0[0] + p1[0]) / 2 - Y0[0], (p0[1] + p1[1]) / 2 - Y0[1]) < 18:
-          dx_, dz_ = p1[0] - p0[0], p1[1] - p0[1]
-          l_ = math.hypot(dx_, dz_) or 1
-          if abs(dx_ / l_ * jt[0] + dz_ / l_ * jt[1]) < 0.35:
-            kd = 4
-        if not kd and gapU.contains(m_):
+        if gapU.contains(m_):
           kd = 1   # 与 6B 相同：桥洞不挂岸墙碰撞
         W7.append([round(p0[0], 2), round(p0[1], 2), round(p1[0], 2), round(p1[1], 2), kd])
+  W7 = merge(W7)
+  # 补接缝附近 0.2–2 m 的岸墙缝：丢旧墙再补新墙时对不齐会漏出一道亮蓝水缝（日夜都看得见）。
+  # 只补岸上短缝，不把汇入口（跨水面的口）砌死。
+  def _stitch_walls(walls, water, near_pt, rad=36.0):
+    ends = []
+    for i, w in enumerate(walls):
+      mx, mz = (w[0] + w[2]) / 2, (w[1] + w[3]) / 2
+      if math.hypot(mx - near_pt[0], mz - near_pt[1]) > rad:
+        continue
+      ends.append((w[0], w[1], i))
+      ends.append((w[2], w[3], i))
+    used, extra = set(), []
+    for a, (x, z, iw) in enumerate(ends):
+      if a in used:
+        continue
+      best = None
+      for b, (x2, z2, jw) in enumerate(ends):
+        if b == a or b in used or jw == iw:
+          continue
+        d = math.hypot(x2 - x, z2 - z)
+        if 0.2 <= d <= 2.0 and (best is None or d < best[0]):
+          best = (d, b, x2, z2)
+      if not best:
+        continue
+      _, b, x2, z2 = best
+      mid = Point((x + x2) / 2, (z + z2) / 2)
+      if water.buffer(-0.6).contains(mid):
+        continue
+      extra.append([round(x, 2), round(z, 2), round(x2, 2), round(z2, 2), 0])
+      used.add(a); used.add(b)
+    return extra
+  W7 += _stitch_walls(WALL_keep + W7, water, Y0)
   W7 = merge(W7)
   for w in W7:
     L_ = math.dist(w[:2], w[2:4]) or 1
@@ -482,9 +509,15 @@ def build_yx(g):
   occ_geoms = [r['poly'].buffer(0.4) for r in ROADS7] + [Point(sign['x'], sign['z']).buffer(5),
                                                          Point(*Y0).buffer(16),
                                                          Point(*west_end).buffer(10)]
+  # 高速主桥 + 匝道完整足迹（长×宽 + 缓冲）。旧写法把轴写反且只占 16 m，7A 房子会种进桥面/匝道。
+  _ex_geoms = []
   if express_main:
     E = express_main
-    occ_geoms.append(rect(E['x'], E['z'], E['t'][0], E['t'][1], -E['w'] / 2, E['w'] / 2, -8, 8).buffer(1.0))
+    _ex_geoms.append(rect(E['x'], E['z'], E['t'][0], E['t'][1], -E['len'] / 2, E['len'] / 2, -E['w'] / 2, E['w'] / 2).buffer(4.0))
+  for Rmp in express_ramps:
+    _ex_geoms.append(rect(Rmp['x'], Rmp['z'], Rmp['t'][0], Rmp['t'][1], -Rmp['len'] / 2, Rmp['len'] / 2, -Rmp['w'] / 2, Rmp['w'] / 2).buffer(4.0))
+  occ_geoms.extend(_ex_geoms)
+  _exU = unary_union(_ex_geoms) if _ex_geoms else Point(0, 0)
   HOUSES, TREES = g['HOUSES'], g['TREES']
 
   def _hpoly0(h):
@@ -557,12 +590,14 @@ def build_yx(g):
   _roadU = unary_union([r['poly'] for r in ROADS7] or [Point(0, 0)])
   GONE_H, GONE_T = [], []
   for i, h in enumerate(HOUSES):
-    if h.get('gone') or h.get('a7a') or h.get('a6') or h.get('a6b'):
+    if h.get('gone') or h.get('a6') or h.get('a6b'):
       continue
+    # 含 7A 自己种的房：必须给机场高速主桥/匝道让位（拆掉足迹内及擦到屋顶的）。
     poly = _hpoly0(h)
     aw = poly.intersection(_newW).area if not _newW.is_empty else 0.0
     ar = poly.intersection(_roadU).area
-    if aw > 4.0 or ar > 6.0:
+    axp = 0.0 if (_exU.is_empty or _exU.geom_type == 'Point') else poly.intersection(_exU).area
+    if aw > 4.0 or ar > 6.0 or axp > 0.2:
       HOUSES[i]['gone'] = '7A'; GONE_H.append(i)
   for i, t in enumerate(TREES):
     if t[5] in ('gone', 'yx', 'hq'):

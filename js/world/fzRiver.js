@@ -1236,60 +1236,133 @@ export class FzRiverStreet extends XmStreet {
       // 路堤主体：沿河 cover 长、跨河 along 宽，顶到路面；河道开口约 2*hw
       const open = 2 * hw + 0.3;
       const side = (along - open) / 2;
-      // box + ryRoad：第 1 维沿路法向（约沿河），第 3 维沿路（跨河）。两侧填土沿河拉长，夹出涵洞口。
+      const yxP0 = (FZR.rivers.yx && FZR.rivers.yx.p) || [];
+      const Y0x = yxP0[0], Y0z = yxP0[1];
+      // 路堤用河向盒：第 1 维跨河、第 3 维沿河。靠河面跟实际岸墙齐平（墙可能比 ±hw 更靠岸），不要探出墙面悬在水上。
+      const rN = [rT[1], -rT[0]]; // ryRiv 第 1 维（跨河）
+      // 洞口处旗 0/4 岸墙与沿河面 b=±cover/2 的交点；只向陆地对齐（|a|≥hw），绝不跟进水里的斜墙。
+      const wallLat = (sv, sg) => {
+        const b0 = sv * (cover / 2);
+        let bestAbs = null;
+        for (const w of (FZR.wall || [])) {
+          const flag = w[4];
+          if (flag !== 0 && flag !== 4) continue;
+          const a0 = (w[0] - c.x) * rN[0] + (w[1] - c.z) * rN[1];
+          const b0w = (w[0] - c.x) * rT[0] + (w[1] - c.z) * rT[1];
+          const a1 = (w[2] - c.x) * rN[0] + (w[3] - c.z) * rN[1];
+          const b1w = (w[2] - c.x) * rT[0] + (w[3] - c.z) * rT[1];
+          if (Math.abs(b1w - b0w) < 1e-6) continue;
+          if ((b0w - b0) * (b1w - b0) > 0) continue;
+          const t = (b0 - b0w) / (b1w - b0w);
+          if (t < 0 || t > 1) continue;
+          const a = a0 + t * (a1 - a0);
+          if (a * sg <= 0) continue;
+          const aa = Math.abs(a);
+          if (aa < hw - 0.05 || aa > hw + 4) continue;
+          if (bestAbs == null || aa < bestAbs) bestAbs = aa;
+        }
+        return sg * (bestAbs == null ? hw : Math.max(hw, bestAbs));
+      };
+      const latBank = (sg) => sg * Math.max(Math.abs(wallLat(-1, sg)), Math.abs(wallLat(1, sg)));
       for (const sg of [-1, 1]) {
         const th = Math.max(1.4, side);
-        const midA = sg * (open / 2 + th / 2);
-        const [ex, ez] = Ptn(midA, 0);
-        C.box(ex, dY / 2, ez, cover, dY, th, EARTH, ryRoad, 0, 0, 1, NO);
-        C.box(ex, dY + 0.04, ez, cover, 0.08, th, CONC, ryRoad, 0, 0, 1, NO);
+        const inner = latBank(sg);
+        const midA = inner + sg * (th / 2);
+        const ex = c.x + rN[0] * midA, ez = c.z + rN[1] * midA;
+        const fillLen = Math.max(2.0, cover - 0.08);
+        C.box(ex, dY / 2, ez, th, dY, fillLen, EARTH, ryRiv, 0, 0, 1, NO);
+        C.box(ex, dY + 0.04, ez, th, 0.08, fillLen, CONC, ryRiv, 0, 0, 1, NO);
       }
-      // 端墙 + 洞口：路堤端面是混凝土墙，中间挖出看得见的深色涵洞嘴，两侧翼墙和填土斜坡
+      // 端墙 + 过梁 + 翼墙：前面收到 cover/2 以内，靠水面贴实际岸墙，落在陆地上。
+      const mouthT = 0.7, faceRecess = mouthT / 2 + 0.04;
       for (const sv of [-1, 1]) {
-        const [hx, hz] = Ptn(0, sv * (cover / 2 + 0.15));
-        // 端墙（左右两块，中间留洞）
+        const face = sv * (cover / 2 - faceRecess);
+        const latL = wallLat(sv, -1), latR = wallLat(sv, 1);
+        const ewW = Math.max(1.6, side + 0.4);
         for (const sg of [-1, 1]) {
-          const [wx, wz] = Ptn(sg * (open / 2 + Math.max(1.0, side) / 2 + 0.15), sv * (cover / 2 + 0.15));
-          C.box(wx, dY / 2, wz, 0.7, dY, Math.max(1.6, side + 0.4), CONC, ryRoad, 0, 0, 1, NO);
+          const inner = sg < 0 ? latL : latR;
+          const mid = inner + sg * (ewW / 2);
+          const wx = c.x + rN[0] * mid + rT[0] * face, wz = c.z + rN[1] * mid + rT[1] * face;
+          C.box(wx, dY / 2, wz, ewW, dY, mouthT, CONC, ryRiv, 0, 0, 1, NO);
         }
-        // 过梁
-        C.box(hx, dY - 0.28, hz, 0.7, 0.56, open + 0.6, CAP, ryRoad, 0, 0, 1, NO);
-        // 洞口深色内壁（退后一点，看起来是洞）
-        const [ix, iz] = Ptn(0, sv * (cover / 2 - 0.55));
-        C.box(ix, (WY + dY - 0.5) / 2, iz, 1.0, dY - 0.5 - WY, open - 0.2, DARK, ryRoad, 0, 0, 1, NO);
-        // 翼墙 / 填土斜坡（洞口外侧）
+        const lintelW = latR - latL, midA = (latL + latR) / 2;
+        const hx = c.x + rN[0] * midA + rT[0] * face, hz = c.z + rN[1] * midA + rT[1] * face;
+        C.box(hx, dY - 0.28, hz, lintelW, 0.56, mouthT, CAP, ryRiv, 0, 0, 1, NO);
+        const wingN = 2.0, wingT = 2.2;
         for (const sg of [-1, 1]) {
-          const [sx, sz] = Ptn(sg * (open / 2 + 1.6), sv * (cover / 2 + 1.4));
-          C.box(sx, dY * 0.45, sz, 2.2, dY * 0.9, 2.4, EARTH, ryRoad, 0, 0, 1, NO);
+          const inner = sg < 0 ? latL : latR;
+          const lat = inner + sg * (wingN / 2);
+          const alongRiv = sv * (cover / 2 - wingT / 2 - 0.04);
+          const sx = c.x + rN[0] * lat + rT[0] * alongRiv, sz = c.z + rN[1] * lat + rT[1] * alongRiv;
+          C.box(sx, dY * 0.45, sz, wingN, dY * 0.9, wingT, EARTH, ryRiv, 0, 0, 1, NO);
         }
+      }
+      // 涵洞管内：暗灰内壁（两侧 + 顶）和水面，不要洞口一块纯黑平板。用 culvert 同一 paint 桶，不加 draw。
+      // 接缝口晋安北路（s≈7）的管子西口就是晋安河：不画内壁/管内水面，免得在接缝镜头里变成两块悬空黑墩。
+      if (!(c.s < 20)) {
+        const INNER = hex('#4A4944'), TUBEW = hex('#2E6A7A');
+        const tubeLen = Math.max(2.8, cover - 0.8), wallT = 0.22;
+        for (const sg of [-1, 1]) {
+          const [wx, wz] = Ptn(sg * (open / 2 - wallT / 2 - 0.04), 0);
+          C.box(wx, (WY + dY - 0.32) / 2, wz, wallT, dY - 0.32 - WY, tubeLen, INNER, ryRiv, 0, 0, 1, NO);
+        }
+        C.box(c.x, dY - 0.36, c.z, open - 0.28, 0.14, tubeLen, INNER, ryRiv, 0, 0, 1, NO);
+        C.box(c.x, WY + 0.03, c.z, open - 0.45, 0.05, tubeLen, TUBEW, ryRiv, 0, 0, 1, NO);
       }
       // 路面 + 两侧人行道（沿路跨河）
       const [dx, dz] = Ptn(0, 0);
-      GR.box(dx, dY - 0.1, dz, w, 0.2, along, hex('#8F8A80'), ryRoad, 0, 0, 1, NO);
-      C.box(dx, dY + 0.02, dz, w - 2 * walk, 0.06, along, ASP, ryRoad, 0, 0, 1, NO);
+      // 接缝口晋安北路 cover < 路宽：可见路面/路沿不要沿河探出路堤端，悬在晋安河上。碰撞仍用 w。
+      const visW = (c.s < 20 && w > cover) ? cover : w;
+      let visAlong = along, visDx = dx, visDz = dz;
+      if (c.s < 20 && Y0x != null) {
+        const closerNeg = Math.hypot(c.x - rt[0] * (along / 2) - Y0x, c.z - rt[1] * (along / 2) - Y0z)
+          < Math.hypot(c.x + rt[0] * (along / 2) - Y0x, c.z + rt[1] * (along / 2) - Y0z);
+        const cut = 3.2, dir = closerNeg ? 1 : -1;
+        visAlong = Math.max(6, along - cut);
+        visDx = dx + rt[0] * dir * (cut / 2);
+        visDz = dz + rt[1] * dir * (cut / 2);
+      }
+      GR.box(visDx, dY - 0.1, visDz, visW, 0.2, visAlong, hex('#8F8A80'), ryRoad, 0, 0, 1, NO);
+      C.box(visDx, dY + 0.02, visDz, Math.max(1, visW - 2 * walk), 0.06, visAlong, ASP, ryRoad, 0, 0, 1, NO);
       for (const su of [-1, 1]) {
-        const [sx, sz] = [c.x + rn[0] * su * (w / 2 - walk / 2), c.z + rn[1] * su * (w / 2 - walk / 2)];
+        const [sx, sz] = [visDx + rn[0] * su * (visW / 2 - walk / 2), visDz + rn[1] * su * (visW / 2 - walk / 2)];
         // 人行道沿路（t），宽 walk
-        GR.box(sx, dY + 0.04, sz, walk, 0.08, along, SW, ryRoad, 0, 0, 1, NO);
+        GR.box(sx, dY + 0.04, sz, walk, 0.08, visAlong, SW, ryRoad, 0, 0, 1, NO);
         // 矮路缘
-        GR.box(c.x + rn[0] * su * (w / 2 - walk), dY + 0.12, c.z + rn[1] * su * (w / 2 - walk), 0.12, 0.16, along, CAP, ryRoad, 0, 0, 1, NO);
+        GR.box(visDx + rn[0] * su * (visW / 2 - walk), dY + 0.12, visDz + rn[1] * su * (visW / 2 - walk), 0.12, 0.16, visAlong, CAP, ryRoad, 0, 0, 1, NO);
       }
       const ZW = Math.min(3.0, Math.max(2.4, along * 0.18));
       const bankT = hw + 2.8;
       // 两岸斜坡：人行道从岸上到路面（colStair）；中央车道斜板 colFlyRamp，避免从路堤底下钻。
       // 斜板在岸道（hw+2.8）处留出斑马宽缺口，否则 2D 导航里 blocker 会压过斑马/岸道。
+      const seamSide = (sv) => {
+        if (!(c.s < 20) || Y0x == null) return false;
+        const v0 = sv * (along / 2), v1 = sv * (along / 2 + rampL);
+        let minS = Infinity;
+        for (const u of [v0, v1]) {
+          for (const su of [-1, 1]) {
+            const x = c.x + rt[0] * u + rn[0] * su * (w / 2);
+            const z = c.z + rt[1] * u + rn[1] * su * (w / 2);
+            const sAlong = (x - Y0x) * rT[0] + (z - Y0z) * rT[1];
+            if (sAlong < minS) minS = sAlong;
+          }
+        }
+        // 斜交时端点中距 Y0 可能比中心还远，旧判定会把西口引坡漏画成第二块错位桥面。改看沿河 s。
+        return minS < (c.s - cover / 2 + 0.3);
+      };
       for (const sv of [-1, 1]) {
         const v0 = sv * (along / 2), v1 = sv * (along / 2 + rampL);
         const midV = (v0 + v1) / 2, Len = Math.hypot(rampL, dY), ang = Math.atan2(0 - dY, v1 - v0);
         const [rx, rz] = [c.x + rt[0] * midV, c.z + rt[1] * midV];
-        GR.box(rx, dY / 2, rz, w, 0.28, Len, hex('#8F8A80'), ryRoad, -ang, 0, 1, NO);
+        // 接缝侧可见引坡不要伸进晋安河（会和路堤桥面错位叠成两块桥）。碰撞仍画。
+        if (!seamSide(sv)) GR.box(rx, dY / 2, rz, w, 0.28, Len, hex('#8F8A80'), ryRoad, -ang, 0, 1, NO);
         // 人行道斜坡拉到 e2e 坡底（along/2+rampL+2.5）再多 0.3：人站在坡面上往上走，不要去撞 0.3 厚板的端面（r2 夏莲踏板 y=0.15 仍卡死）。
         const runW = rampL + 2.8, v1w = sv * (along / 2 + runW);
         const midW = (v0 + v1w) / 2, LenW = Math.hypot(runW, dY), angW = Math.atan2(0 - dY, v1w - v0);
         const [rxw, rzw] = [c.x + rt[0] * midW, c.z + rt[1] * midW];
         for (const su of [-1, 1]) {
           const [sx, sz] = [rxw + rn[0] * su * (w / 2 - walk / 2), rzw + rn[1] * su * (w / 2 - walk / 2)];
-          GR.box(sx, dY / 2 + 0.04, sz, walk, 0.1, LenW, SW, ryRoad, -angW, 0, 1, NO);
+          if (!seamSide(sv)) GR.box(sx, dY / 2 + 0.04, sz, walk, 0.1, LenW, SW, ryRoad, -angW, 0, 1, NO);
           k.col(sx, dY / 2, sz, walk, 0.3, LenW, { ry: ryRoad, rx: -angW, name: 'colStair' });
         }
         const tLo = Math.min(Math.abs(v0), Math.abs(v1)), tHi = Math.max(Math.abs(v0), Math.abs(v1));
@@ -1336,17 +1409,20 @@ export class FzRiverStreet extends XmStreet {
       // ① 只贴路面两侧（along+1，|t|略过沿/2）：沿河岸走上人行道（yx_c5 擦边）。
       // ② 靠岸外侧翼坡（n 从路沿外到 nLo，不占人行道）：盖住引坡段 t≈-10 的六一斜交岸道。
       const shTRoad = along + 1.0, shTWing = along + 2 * rampL + 1.0;
+      // 接缝口的晋安北路（s≈7）：可见路肩不要沿路伸进晋安河（会变成两块错位叠着的桥面，下面黑盒子像悬空墩）。碰撞仍用全程，保持可走。
+      const shTRoadVis = (c.s < 20) ? Math.min(shTRoad, along * 0.9) : shTRoad;
+      const shTWingVis = (c.s < 20) ? Math.min(shTWing, along + 0.6) : shTWing;
       for (const su of [-1, 1]) {
         const nHi = su * (w / 2 - walk / 2), nLo = su * (w / 2 + 5.0);
         const nMid = (nHi + nLo) / 2, run = Math.abs(nLo - nHi);
         const Len = Math.hypot(run, dY), ang = Math.atan2(0 - dY, nLo - nHi);
         const [sx, sz] = [c.x + rn[0] * nMid, c.z + rn[1] * nMid];
-        GR.box(sx, dY / 2, sz, shTRoad, 0.16, Len, hex('#8F8A80'), ryN, -ang, 0, 1, NO);
+        if (!(c.s < 20)) GR.box(sx, dY / 2, sz, shTRoadVis, 0.16, Len, hex('#8F8A80'), ryN, -ang, 0, 1, NO);
         k.col(sx, dY / 2, sz, shTRoad, 0.3, Len, { ry: ryN, rx: -ang, name: 'colStair' });
         const nHiW = su * (w / 2 + 0.2), nMidW = (nHiW + nLo) / 2, runWsh = Math.abs(nLo - nHiW);
         const LenWsh = Math.hypot(runWsh, dY), angWsh = Math.atan2(0 - dY, nLo - nHiW);
         const [wx, wz] = [c.x + rn[0] * nMidW, c.z + rn[1] * nMidW];
-        GR.box(wx, dY / 2, wz, shTWing, 0.16, LenWsh, hex('#8F8A80'), ryN, -angWsh, 0, 1, NO);
+        if (!(c.s < 20)) GR.box(wx, dY / 2, wz, shTWingVis, 0.16, LenWsh, hex('#8F8A80'), ryN, -angWsh, 0, 1, NO);
         k.col(wx, dY / 2, wz, shTWing, 0.3, LenWsh, { ry: ryN, rx: -angWsh, name: 'colStair' });
         const [fx, fz] = [c.x + rn[0] * nLo, c.z + rn[1] * nLo];
         k.col(fx, 0.0, fz, shTWing + 0.2, 0.3, 2.8, { ry: ryN, name: 'colDeck' });
