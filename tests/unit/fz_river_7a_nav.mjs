@@ -95,12 +95,12 @@ for (const c of A7.culverts) {
       const mid = sv * (a + b) / 2, slen = (b - a) * (Len / rampL);
       fillBox(c.x + rt[0] * mid, c.z + rt[1] * mid, rt[0], rt[1], slen, w - 2 * walkW, block, CLR);
     }
-    for (const su of [-1, 1]) {
-      const nHi = su * (w / 2 - walkW / 2), nLo = su * (w / 2 + 3.2), nMid = (nHi + nLo) / 2;
-      const run = Math.abs(nLo - nHi), sLen = Math.hypot(run, dY);
-      fillBox(c.x + rt[0] * tuVis + rn[0] * nMid, c.z + rt[1] * tuVis + rn[1] * nMid, rn[0], rn[1], sLen, ZW + 0.6, walk, 0.06);
-      fillBox(c.x + rt[0] * tuVis + rn[0] * nLo, c.z + rt[1] * tuVis + rn[1] * nLo, rn[0], rn[1], 2.4, ZW + 1.2, walk, 0.06);
-    }
+  }
+  for (const su of [-1, 1]) {
+    const nHi = su * (w / 2 - walkW / 2), nLo = su * (w / 2 + 5.0), nMid = (nHi + nLo) / 2;
+    const run = Math.abs(nLo - nHi), sLen = Math.hypot(run, dY);
+    fillBox(c.x + rn[0] * nMid, c.z + rn[1] * nMid, rn[0], rn[1], sLen, along + 1.0, walk, 0.06);
+    fillBox(c.x + rn[0] * nLo, c.z + rn[1] * nLo, rn[0], rn[1], 2.8, along + 1.2, walk, 0.06);
   }
   const midLen = Math.max(1.0, along - 2 * ZW - 2 * CLR - 1.2);
   fillBox(c.x, c.z, rt[0], rt[1], midLen, w - 2 * walkW, block, CLR);

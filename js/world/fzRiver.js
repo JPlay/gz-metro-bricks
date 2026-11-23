@@ -1322,17 +1322,17 @@ export class FzRiverStreet extends XmStreet {
         const tuCol = sv * (tInner + tOuter) / 2, tLen = tOuter - tInner;
         const [cxz, czz] = [c.x + rt[0] * tuCol, c.z + rt[1] * tuCol];
         k.col(cxz, dY - 0.15, czz, w, 0.3, tLen, { ry: ryRoad, name: 'colDeck' });
-        // 每一岸一条斜坡：从路外 y=0 爬到人行道 y=dY，踩在斑马 t 上，接通沿岸步道
-        for (const su of [-1, 1]) {
-          const nHi = su * (w / 2 - walk / 2), nLo = su * (w / 2 + 3.2);
-          const nMid = (nHi + nLo) / 2, run = Math.abs(nLo - nHi);
-          const Len = Math.hypot(run, dY), ang = Math.atan2(0 - dY, nLo - nHi);
-          const [sx, sz] = [c.x + rt[0] * tuVis + rn[0] * nMid, c.z + rt[1] * tuVis + rn[1] * nMid];
-          GR.box(sx, dY / 2, sz, ZW + 0.6, 0.16, Len, hex('#8F8A80'), ryN, -ang, 0, 1, NO);
-          k.col(sx, dY / 2, sz, ZW + 0.6, 0.3, Len, { ry: ryN, rx: -ang, name: 'colStair' });
-          const [fx, fz] = [c.x + rt[0] * tuVis + rn[0] * nLo, c.z + rt[1] * tuVis + rn[1] * nLo];
-          k.col(fx, 0.0, fz, ZW + 1.2, 0.3, 2.4, { ry: ryN, name: 'colDeck' });
-        }
+      }
+      // 路肩长斜坡：沿整条路两侧从岸上 y=0 爬到人行道。只在斑马两端做台阶会漏（斜交时岸道在 t≈5 擦过路沿，官方 e2e 在 yx_c5 卡死）。
+      for (const su of [-1, 1]) {
+        const nHi = su * (w / 2 - walk / 2), nLo = su * (w / 2 + 5.0);
+        const nMid = (nHi + nLo) / 2, run = Math.abs(nLo - nHi);
+        const Len = Math.hypot(run, dY), ang = Math.atan2(0 - dY, nLo - nHi);
+        const [sx, sz] = [c.x + rn[0] * nMid, c.z + rn[1] * nMid];
+        GR.box(sx, dY / 2, sz, along + 1.0, 0.16, Len, hex('#8F8A80'), ryN, -ang, 0, 1, NO);
+        k.col(sx, dY / 2, sz, along + 1.0, 0.3, Len, { ry: ryN, rx: -ang, name: 'colStair' });
+        const [fx, fz] = [c.x + rn[0] * nLo, c.z + rn[1] * nLo];
+        k.col(fx, 0.0, fz, along + 1.2, 0.3, 2.8, { ry: ryN, name: 'colDeck' });
       }
       const midLen = Math.max(1.0, along - 2 * ZW - 2 * 0.38 - 1.2);
       k.col(dx, dY - 0.15, dz, w - 2 * walk, 0.3, midLen, { ry: ryRoad, name: 'colCulvertLane' });
