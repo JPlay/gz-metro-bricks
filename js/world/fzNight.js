@@ -151,21 +151,29 @@ export class FzNight {
       if (isWater(p0[0], p0[1]) && isWater(p1[0], p1[1])) flat((p0[0] + p1[0]) / 2, levelAt(p0[0], p0[1]) + 0.02, (p0[1] + p1[1]) / 2, -fx, -fz, 0.8, L / 2, RG.streak, sc(WARM, 0.85));
       n.lamp++;
     }
-    // 7B：涧田湖步道路灯并进 fzNightLights。朝向用湖心（数据里的 tx,tz 是沿环切向），倒影细、暗、断开，不要一根亮橙条
+    // 7B：涧田湖步道路灯并进 fzNightLights。切向旋 90° 指向湖心（数据 tx,tz 是沿环切向），沿法向探到水面再铺短倒影：细、暗、断开，不要一根亮橙条
     for (const Lmp of (FZR.a7b && FZR.a7b.lamps) || []) {
-      const [x, z] = Lmp;
-      const c = (FZR.a7b.lake && FZR.a7b.lake.c) || [x, z];
+      const [x, z] = Lmp, c = (FZR.a7b.lake && FZR.a7b.lake.c) || [x, z];
       let fx = c[0] - x, fz = c[1] - z, fl = Math.hypot(fx, fz) || 1; fx /= fl; fz /= fl;
+      if (Lmp.length >= 4) {
+        const tx = Lmp[2], tz = Lmp[3], nx = -tz, nz = tx;
+        if (nx * fx + nz * fz >= 0) { fx = nx; fz = nz; } else { fx = -nx; fz = -nz; }
+        const nl = Math.hypot(fx, fz) || 1; fx /= nl; fz /= nl;
+      }
       const hx = x + fx * 1.2, hz = z + fz * 1.2;
       halo(hx, 6.95, hz, 0.9, sc(WARM, 0.7));
       flat(hx - fx * 0.4, 0.045, hz - fz * 0.4, fx, fz, 3.2, 3.2, RG.pool, sc(WARM, 0.42));
-      const nSeg = 3, gap = 0.85, Lref = 5.4, segL = (Lref - (nSeg - 1) * gap) / nSeg, pBase = 10.2;
-      for (let k = 0; k < nSeg; k++) {
-        const a = pBase + k * (segL + gap), b = a + segL;
-        const x0 = x + fx * a, z0 = z + fz * a, x1 = x + fx * b, z1 = z + fz * b;
-        if (!isWater(x0, z0) || !isWater(x1, z1)) continue;
-        const ll = Math.hypot(x1 - x0, z1 - z0) || 1;
-        flat((x0 + x1) / 2, levelAt(x0, z0) + 0.02, (z0 + z1) / 2, (x1 - x0) / ll, (z1 - z0) / ll, 0.16, ll / 2, RG.streak, sc(WARM, 0.22));
+      let start = 0;
+      for (let d = 4; d <= 16; d += 0.35) { if (isWater(x + fx * d, z + fz * d)) { start = d + 0.25; break; } }
+      if (start) {
+        const nSeg = 3, gap = 0.85, segL = 1.55;
+        for (let k = 0; k < nSeg; k++) {
+          const a = start + k * (segL + gap), b = a + segL;
+          const x0 = x + fx * a, z0 = z + fz * a, x1 = x + fx * b, z1 = z + fz * b;
+          if (!isWater(x0, z0) || !isWater(x1, z1)) continue;
+          const ll = Math.hypot(x1 - x0, z1 - z0) || 1;
+          flat((x0 + x1) / 2, levelAt(x0, z0) + 0.025, (z0 + z1) / 2, (x1 - x0) / ll, (z1 - z0) / ll, 0.20, ll / 2, RG.streak, sc(WARM, 0.36));
+        }
       }
       n.lamp++;
     }
