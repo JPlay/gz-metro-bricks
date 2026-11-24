@@ -362,12 +362,23 @@ def build_east(g):
   def _wmid(w):
     return Point((w[0] + w[2]) / 2, (w[1] + w[3]) / 2)
   cap_pt = Point(old_cap['x'], old_cap['z']) if old_cap else Point(*eog)
+  # 只丢掉挡在出水口 / 新水面上的 7B 墙。不要按距旧合拢点 14 m 一刀切，
+  # 否则湖东岸未改的墙被拆掉，接缝处缺 8 m 岸墙、透过岸唇看到天。
+  cap_seg = None
+  if old_cap and old_cap.get('len') is not None:
+    hx, hz = float(old_cap['x']), float(old_cap['z'])
+    tn = old_cap.get('t') or [1.0, 0.0]
+    half = float(old_cap['len']) / 2.0
+    cap_seg = LineString([
+      (hx - tn[0] * half, hz - tn[1] * half),
+      (hx + tn[0] * half, hz + tn[1] * half),
+    ])
   WALL_keep = []
   for w in WALL0:
     seg = LineString([(w[0], w[1]), (w[2], w[3])])
-    if cap_pt.distance(seg) < 14.0:
+    if cap_seg is not None and seg.distance(cap_seg) <= 0.8:
       continue
-    if (not _wd.is_empty) and seg.distance(_wd) <= 0.5 and cap_pt.distance(seg) < 28.0:
+    if (not _wd.is_empty) and seg.distance(_wd) <= 0.8 and cap_pt.distance(seg) < 40.0:
       continue
     WALL_keep.append(w)
 
@@ -538,18 +549,50 @@ def build_east(g):
     gaps7c.append(gap)
     b['foot'] = Polygon(corners(b['w'] / 2, b['half']))
   # 只挖 7C 东段桥下，不要用全局 GAPS（会误拆 7A/7B 岸墙）。
+  # 不要整段丢掉：merge 后一条岸墙可能几十米，碰到桥洞就整段消失，
+  # 相机沿岸沟看会透过缺墙看到天，像第二层浅色水面。同 7A/6B：桥洞段保留墙面（flag=1，无碰撞、无栏杆），其余仍 flag=0。
   gapU = unary_union(gaps7c) if gaps7c else Point(0, 0)
   if not gapU.is_empty:
     punched = []
     n_gap = 0
+    gapBuf = gapU.buffer(0.15)
+    def _line_parts(geom):
+      if geom is None or geom.is_empty:
+        return []
+      if geom.geom_type == 'LineString':
+        return [geom]
+      if geom.geom_type == 'MultiLineString':
+        return list(geom.geoms)
+      if geom.geom_type == 'GeometryCollection':
+        out = []
+        for q in geom.geoms:
+          out.extend(_line_parts(q))
+        return out
+      return []
+    def _emit(parts, flag, sg, acc):
+      for part in parts:
+        if part.is_empty or part.length < 0.3:
+          continue
+        (x0, z0) = part.coords[0]
+        (x1, z1) = part.coords[-1]
+        acc.append([round(x0, 2), round(z0, 2), round(x1, 2), round(z1, 2), flag, sg])
     for w in g['WALL']:
       seg = LineString([(w[0], w[1]), (w[2], w[3])])
-      if gapU.buffer(0.15).intersects(seg):
-        n_gap += 1
+      flag0 = w[4] if len(w) > 4 else 0
+      sg = w[5] if len(w) > 5 else 1
+      if not gapBuf.intersects(seg):
+        punched.append(w)
         continue
-      punched.append(w)
+      n_gap += 1
+      # 2/3/4/5 是口门、湖碰、矮挡等特殊段，不在 7C 桥洞改 flag
+      if flag0 in (2, 3, 4, 5):
+        punched.append(w)
+        continue
+      _emit(_line_parts(seg.difference(gapBuf)), flag0, sg, punched)
+      _emit(_line_parts(seg.intersection(gapBuf)), 1, sg, punched)
     g['WALL'] = punched
-    print('7C walls punched under 7C bridge gaps', n_gap, 'remaining', len(punched))
+    print('7C walls split at 7C bridge gaps', n_gap, 'remaining', len(punched),
+          'flag1', sum(1 for w in punched if len(w) > 4 and w[4] == 1))
 
   ROADS_C = []
   for b in BRC:
@@ -1843,6 +1886,22 @@ def build_east(g):
     if _wall_fills(c['x'], c['z'], look) or _close_house(c['x'], c['z'], 3.2):
       print('WARN cam south still blocked after nudge, retrying')
       _retry_south()
+  # 小美已接受 0d2900e 的 8 个机位（cap / anon9 / anon38 已按 HOLD 挪过）。
+  # 岸墙补洞会改变 _wall_fills，不得把机位再搜一遍。
+  _CAMS_LOCK = {
+    'mouth': {'x': 863.87, 'y': 1.55, 'z': 1132.66, 'look': [846.42, 0.28, 1133.41], 'pitch': 0.2, 'note': '涧田湖东口看出水，沿东段'},
+    'jianshan': {'x': 895.61, 'y': 1.55, 'z': 1152.44, 'look': [869.52, 0.55, 1152.17], 'pitch': 0.14, 'note': '涧山巷'},
+    'anon38': {'x': 953.42, 'y': 1.55, 'z': 1194.56, 'look': [934.79, 0.55, 1184.87], 'pitch': 0.14, 'note': '无名 38 m 跨'},
+    'anon9': {'x': 985.15, 'y': 1.55, 'z': 1187.08, 'look': [964.63, 0.55, 1193.46], 'pitch': 0.14, 'note': '无名 9 m 跨'},
+    'anon17': {'x': 1089.64, 'y': 1.55, 'z': 1206.62, 'look': [1108.07, 0.55, 1225.62], 'pitch': 0.14, 'note': '无名 17 m 跨'},
+    'south': {'x': 1012.52, 'y': 1.55, 'z': 1206.66, 'look': [984.17, 1.2, 1205.81], 'pitch': 0.1, 'note': '东段南岸街景'},
+    'cap': {'x': 1126.32, 'y': 1.55, 'z': 1223.39, 'look': [1124.27, 0.4, 1232.18], 'pitch': 0.18, 'note': '命名东头合拢'},
+    'joint': {'x': 850.55, 'y': 1.55, 'z': 1152.38, 'look': [869.53, 0.4, 1140.21], 'pitch': 0.16, 'note': '7B/7C 涧田湖东口接缝'},
+  }
+  for _nm, _c in _CAMS_LOCK.items():
+    cams[_nm] = dict(_c)
+  print('7C cams locked to 0d2900e', {k: (round(v['x'], 2), round(v['z'], 2)) for k, v in cams.items()})
+
   # 重选后再清一次前景
   for _nm in ('mouth', 'cap', 'south'):
     if _nm in cams:
