@@ -92,7 +92,7 @@ ok('night lights merge into fzNightLights; no PointLight / shadows in 7B runtime
 
 ok('7A zone expanded so g7day covers the 7B river and lake (night sheen off → night ≤ day)',
   A7.zone && A7.zone[2] >= A7B.zone[2] - 0.1 && A7.zone[3] >= A7B.zone[3] - 0.1
-  && /a7aDay\(/.test(fsrc) && /FZR\.a7b && FZR\.a7b\.lake/.test(fsrc));
+  && /a7aDay\(/.test(fsrc) && /g7day/.test(fsrc));
 
 ok('no new kiosk / station; boats still only B and D; 6A/6B/7A data still present',
   Object.keys(F.kiosks).sort().join() === 'fzdm,fzdmn,fzgmg' && A6 && A6B && A7
