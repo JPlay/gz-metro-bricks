@@ -1512,14 +1512,38 @@ export class FzRiverStreet extends XmStreet {
     if (!A) return;
     for (const S of A.plates || []) this.stoneSign(S.x, S.z, S.f[0], S.f[1], 3.2, 1.35, S.lines.filter(Boolean));
     const Wc = ['#7E8C99', '#8796A3', '#76858F', '#8F9AA5'];
+    const PV = k.g('pave'), PAVEC = hex('#CFC9BD'), TILE = hex('#A39C8E');
+    const LB = (A.lake && A.lake.band) || 9;
     (A.far || []).forEach((q, i) => {
       const [x, z, fx, fz] = q, ry = yawOf(fx, fz), h = 12 + (i * 7) % 14, w = 10 + (i % 3) * 2, d = 8 + (i % 2) * 1.5;
-      // 楼脚垫用岸地铺地色并朝湖接到步道，不要 #6E7A64 草绿条（loop_2 左侧远景楼脚）
-      P.box(x + fx * 5, 0.16, z + fz * 5, w + 12, 0.32, d + 16, hex('#C8C2B6'), ry, 0, 0, 1, NO);
+      // 楼脚垫用铺地材质（不要 solid 高光发白），朝湖一侧停在步道外沿，不要盖住合拢墙前 / 环湖步道
+      let reach = 0;
+      for (let t = 0.5; t <= 40; t += 0.5) { if (isWater(x + fx * t, z + fz * t)) { reach = t; break; } }
+      const stop = reach ? Math.max(1.6, reach - LB - 0.7) : 5;
+      PV.box(x + fx * (stop / 2), 0.16, z + fz * (stop / 2), w + 8, 0.32, stop, PAVEC, ry, 0, 0, 1, NO);
       P.box(x, 0.5, z, w + 0.9, 1.0, d + 0.9, hex('#4A545C'), ry, 0, 0, 1, NO);
       P.box(x, 1.0 + h / 2, z, w, h, d, hex(Wc[i % 4]), ry, 0, 0, 1, NO);
       P.box(x, 1.0 + h + 0.22, z, w + 0.45, 0.44, d + 0.45, hex('#3E484F'), ry, 0, 0, 1, NO);
     });
+    // 环湖步道（含合拢墙前、对岸）盖一层和广场同款的花岗暖灰铺地，远看不要接近纯白
+    if (A.lake && A.lake.ring) {
+      const ring = A.lake.ring, c = A.lake.c, W = A.capWall, nR = ring.length / 2;
+      for (let i = 0; i < nR; i++) {
+        const ax = ring[2 * i], az = ring[2 * i + 1], bx = ring[2 * ((i + 1) % nR)], bz = ring[2 * ((i + 1) % nR) + 1];
+        const len = Math.hypot(bx - ax, bz - az); if (len < 0.35) continue;
+        const tx = (bx - ax) / len, tz = (bz - az) / len, mx = (ax + bx) / 2, mz = (az + bz) / 2;
+        let nx = tz, nz = -tx;
+        if ((c[0] - mx) * nx + (c[1] - mz) * nz > 0) { nx = -nx; nz = -nz; }
+        const cx = mx + nx * (LB * 0.48), cz = mz + nz * (LB * 0.48);
+        if (W) {
+          const nLake = (W.n[0] * (c[0] - W.x) + W.n[1] * (c[1] - W.z)) >= 0 ? 1 : -1;
+          const side = (cx - W.x) * W.n[0] + (cz - W.z) * W.n[1];
+          const along = (cx - W.x) * W.t[0] + (cz - W.z) * W.t[1];
+          if (side * nLake < -0.2 && Math.abs(along) < W.len / 2 + 3) continue;
+        }
+        GR.box(cx, 0.035, cz, LB - 0.7, 0.07, len + 0.2, TILE, yawOf(tx, tz), 0, 0, 1, NO);
+      }
+    }
     if (A.capWall) {
       const W = A.capWall, ry = yawOf(W.n[0], W.n[1]);
       // 花岗石缝合拢墙（不再是一块素褐板）：横缝分 4 皮，竖缝错缝

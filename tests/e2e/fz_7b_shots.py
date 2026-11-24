@@ -20,7 +20,13 @@ SPOTS = """(async () => { const M = await import('/js/data/fz-river.js'); const 
   (A.loop || []).forEach((p, i) => {
     if (i % 2) return;
     if (!c) return;
-    out.push(['loop_' + i, p[0], p[1], c[0], c[1], 0.05, 1.55, 1]);
+    let px = p[0], pz = p[1];
+    if (i === 2) {   // loop_2 原机位正对一盏路灯：沿步道切向挪开约 4 m，仍朝湖心
+      const dx = c[0] - px, dz = c[1] - pz, L = Math.hypot(dx, dz) || 1;
+      const sx = dz / L, sz = -dx / L;
+      px -= sx * 4.0; pz -= sz * 4.0;
+    }
+    out.push(['loop_' + i, px, pz, c[0], c[1], 0.05, 1.55, 1]);
   });
   if (yx && A.yxLen7a) {
     const s = Math.min(yx.len - 12, A.yxLen7a + 80), p = yx.at(s, 6.0), q = yx.at(s + 24, 6.0);
