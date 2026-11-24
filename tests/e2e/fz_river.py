@@ -1280,11 +1280,16 @@ async def run_7c(pg):
 
     async def walk_bank(side, tag):
         seq = brs if side > 0 else list(reversed(brs))
+        labels = [(b.get('name') or b.get('style') or b.get('id')) for b in seq]
         for b in seq:
             bp = await ybank(b['s'] - (b.get('w') or 8) / 2 - 5, side)
             label = b.get('name') or b.get('style') or b.get('id')
             okw = await go(pg, *bp, f'→ {label} 岸 {tag}')
-            ok(f'o:{tag} to {label} bank', okw and await near(pg, *bp, 4.5), (await st(pg))['pos'])
+            # yx7 and yx8 are both named 涧山巷; a shared key would collapse two bank arrivals in R['checks']
+            key = f'o:{tag} to {label} bank'
+            if labels.count(label) > 1:
+                key = f'o:{tag} to {label} bank ({b.get("id")})'
+            ok(key, okw and await near(pg, *bp, 4.5), (await st(pg))['pos'])
         endp = await ybank(A['yxLen'] - 8, side)
         okw = await go(pg, *endp, f'→ 东头岸 {tag}')
         ok(f'o:{tag} to cap-side bank', okw and await near(pg, *endp, 4.5), (await st(pg))['pos'])
