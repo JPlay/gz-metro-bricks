@@ -185,7 +185,7 @@ export class FzNight {
       let fx = fx0, fz = fz0, fl = Math.hypot(fx, fz) || 1; fx /= fl; fz /= fl;
       const hx = x + fx * 1.2, hz = z + fz * 1.2;
       halo(hx, 6.95, hz, 1.15, sc(WARM, 0.85));
-      flat(hx - fx * 0.4, 0.045, hz - fz * 0.4, fx, fz, 3.4, 3.4, RG.pool, sc(WARM, 0.5));
+      flat(hx - fx * 0.4, 0.045, hz - fz * 0.4, fx, fz, 1.8, 1.8, RG.pool, sc(WARM, 0.34));
       let start = 0;
       for (let d = 0.8; d <= 16; d += 0.2) { if (isWater(x + fx * d, z + fz * d)) { start = d + 0.08; break; } }
       if (start) {
