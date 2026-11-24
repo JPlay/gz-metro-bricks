@@ -972,6 +972,15 @@ def build_east(g):
         return True
     return False
 
+  def _close_house(x, z, d=5.8):
+    cp = Point(x, z)
+    for h in HOUSES:
+      if h.get('gone'):
+        continue
+      if _hpoly0(h).distance(cp) < d:
+        return True
+    return False
+
   cams = {}
 
   # 东口：站在涧山巷下游的岸边步道（不要站在桥面/引路上），沿河道朝出水口看，水面占画面 1/3 以上
@@ -1030,7 +1039,7 @@ def build_east(g):
             cp = Point(mx, mz)
             if (not region.contains(cp)) or water.buffer(0.6).contains(cp) or _on_road_or_deck(mx, mz):
               continue
-            if any((not h.get('gone')) and _hpoly0(h).distance(cp) < 2.4 for h in HOUSES):
+            if _close_house(mx, mz, 5.8):
               continue
             wd = cp.distance(water)
             if not (3.4 <= wd <= 9.5):
@@ -1122,12 +1131,12 @@ def build_east(g):
       for bank in (HW_YX + 6.0, HW_YX + 7.0, HW_YX + 5.2, HW_YX + 8.0, HW_YX + 9.0, HW_YX + 4.6):
         x = b['x'] + nx * side * bank + tx * along
         z = b['z'] + nz * side * bank + tz * along
-        if not _cam_ok_land(x, z) or _on_road_or_deck(x, z):
+        if not _cam_ok_land(x, z) or _on_road_or_deck(x, z) or _close_house(x, z, 5.8):
           continue
         if b.get('foot') is not None and b['foot'].buffer(1.2).contains(Point(x, z)):
           continue
         wd = Point(x, z).distance(water)
-        if wd < 3.0 or wd > 12.0:
+        if wd < 3.2 or wd > 8.5:
           continue
         look = (b['x'] - nx * side * 1.2 + tx * along * 0.12,
                 b['z'] - nz * side * 1.2 + tz * along * 0.12)
@@ -1180,7 +1189,7 @@ def build_east(g):
         (sx, sz), tdir, nn = at_yx(s_try, side * off)
         if not _cam_ok(sx, sz) or _on_road_or_deck(sx, sz):
           continue
-        if any((not h.get('gone')) and _hpoly0(h).distance(Point(sx, sz)) < 5.2 for h in HOUSES):
+        if _close_house(sx, sz, 5.8):
           continue
         wd = Point(sx, sz).distance(water)
         if not (4.0 <= wd <= 10.5):
@@ -1236,7 +1245,7 @@ def build_east(g):
           (sx, sz), tdir, nn = at_yx(s_try, side * off)
           if not _cam_ok(sx, sz) or _on_road_or_deck(sx, sz):
             continue
-          if any((not h.get('gone')) and _hpoly0(h).distance(Point(sx, sz)) < 3.2 for h in HOUSES):
+          if _close_house(sx, sz, 5.8):
             continue
           wd = Point(sx, sz).distance(water)
           if not (4.0 <= wd <= 11.0):
@@ -1264,9 +1273,7 @@ def build_east(g):
         lat = sgn * lat_abs
         cx = wall_p[0] - te[0] * back + ne[0] * lat
         cz = wall_p[1] - te[1] * back + ne[1] * lat
-        if _under_ramp(cx, cz) or not _cam_ok(cx, cz) or _on_road_or_deck(cx, cz):
-          continue
-        if _look_over_deck(cx, cz, look_c0, 8.0):
+        if _under_ramp(cx, cz) or not _cam_ok(cx, cz) or _on_road_or_deck(cx, cz) or _close_house(cx, cz, 5.8):
           continue
         if not _clear_front_soft(cx, cz, look_c0):
           continue
@@ -1290,10 +1297,10 @@ def build_east(g):
           lat = sgn * lat_abs
           cx = wall_p[0] - te[0] * back + ne[0] * lat
           cz = wall_p[1] - te[1] * back + ne[1] * lat
-          if _under_ramp(cx, cz) or not _cam_ok(cx, cz) or _on_road_or_deck(cx, cz):
+          if _under_ramp(cx, cz) or not _cam_ok(cx, cz) or _on_road_or_deck(cx, cz) or _close_house(cx, cz, 5.8):
             continue
           wd = Point(cx, cz).distance(water)
-          if wd < 3.2 or wd > 11.0:
+          if wd < 3.6 or wd > 9.0:
             continue
           cams['cap'] = cam_at(cx, cz, look_c0, pitch=0.16, look_y=0.42, note='命名东头合拢')
           placed_c = True
@@ -1346,6 +1353,82 @@ def build_east(g):
     cams['joint'] = cam_at(lakeMouthBank[0], lakeMouthBank[1], look_j, pitch=0.16, look_y=0.40,
                            note='7B/7C 涧田湖东口接缝')
     print('WARN cam joint not clear', lakeMouthBank)
+
+
+  def _recover(name, look, pitch, look_y, note, samples):
+    if name in cams:
+      return
+    for dmin in (5.8, 4.6, 3.4):
+      for item in samples:
+        x, z = item[0], item[1]
+        extra = item[2] if len(item) > 2 else {}
+        if _on_road_or_deck(x, z) or _under_ramp(x, z):
+          continue
+        cp = Point(x, z)
+        if (not region.contains(cp)) or water.buffer(0.6).contains(cp):
+          continue
+        if _close_house(x, z, dmin):
+          continue
+        wd = cp.distance(water)
+        if wd < 3.4 or wd > 10.0:
+          continue
+        cams[name] = cam_at(x, z, look, pitch=pitch, look_y=look_y, note=note)
+        print('7C cam', name, 'recover dmin', dmin, 'dWater', round(wd, 1), (round(x, 2), round(z, 2)))
+        return
+    print('WARN cam', name, 'recover failed')
+
+  if 'mouth' not in cams:
+    samples = []
+    for ds in range(18, 70, 2):
+      for side in (-1, 1):
+        for off in (HW_YX + 5.4, HW_YX + 6.6, HW_YX + 7.8, HW_YX + 4.8):
+          (x, z), _, _ = at_yx(s_east0 + ds, side * off)
+          samples.append((x, z))
+    (lx, lz), _, _ = at_yx(s_east0 + 6.0, 0.0)
+    _recover('mouth', (lx, lz), 0.18, 0.38, '涧田湖东口看出水，沿东段', samples)
+
+  if 'cap' not in cams:
+    look_c0 = (wall_p[0] - te[0] * 8.0, wall_p[1] - te[1] * 8.0)
+    samples = []
+    for back in range(38, 64, 2):
+      for lat_abs in (HW_YX + 5.4, HW_YX + 6.6, HW_YX + 8.0, HW_YX + 4.8):
+        for sgn in (-1, 1):
+          samples.append((wall_p[0] - te[0] * back + ne[0] * sgn * lat_abs,
+                           wall_p[1] - te[1] * back + ne[1] * sgn * lat_abs))
+    _recover('cap', look_c0, 0.16, 0.42, '命名东头合拢', samples)
+
+  if 'south' not in cams:
+    samples = []
+    looks = []
+    mid_s = (s_east0 + yx.length) / 2
+    for s_try in [1298.0, mid_s] + [mid_s + d for d in (24, -24, 48, -48, 72, -72, 96)]:
+      if s_try < s_east0 + 24 or s_try > yx.length - 40:
+        continue
+      for side in (-1, 1):
+        for off in (HW_YX + 7.5, HW_YX + 6.5, HW_YX + 8.5, HW_YX + 5.8):
+          (sx, sz), tdir, nn = at_yx(s_try, side * off)
+          look = (sx + tdir[0] * 26.0 - nn[0] * side * 3.0, sz + tdir[1] * 26.0 - nn[1] * side * 3.0)
+          samples.append((sx, sz, {'look': look}))
+    # recover uses a single look; do a custom scan
+    placed_s = False
+    for dmin in (5.8, 4.6, 3.4):
+      for sx, sz, extra in samples:
+        if _on_road_or_deck(sx, sz):
+          continue
+        cp = Point(sx, sz)
+        if (not region.contains(cp)) or water.buffer(0.6).contains(cp) or _close_house(sx, sz, dmin):
+          continue
+        wd = cp.distance(water)
+        if not (4.0 <= wd <= 11.0):
+          continue
+        cams['south'] = cam_at(sx, sz, extra['look'], pitch=0.10, note='东段南岸街景')
+        print('7C cam south recover dmin', dmin, 'dWater', round(wd, 1), (round(sx, 2), round(sz, 2)))
+        placed_s = True
+        break
+      if placed_s:
+        break
+    if not placed_s:
+      print('WARN cam south recover failed')
 
   def _hpoly_chk(h):
     return _hpoly0(h)
