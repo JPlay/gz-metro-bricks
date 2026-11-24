@@ -161,18 +161,19 @@ export class FzNight {
         const nl = Math.hypot(fx, fz) || 1; fx /= nl; fz /= nl;
       }
       const hx = x + fx * 1.2, hz = z + fz * 1.2;
-      halo(hx, 6.95, hz, 0.9, sc(WARM, 0.7));
-      flat(hx - fx * 0.4, 0.045, hz - fz * 0.4, fx, fz, 3.2, 3.2, RG.pool, sc(WARM, 0.42));
+      halo(hx, 6.95, hz, 1.15, sc(WARM, 0.85));   // 岸上灯头要看得清（4A 标准：倒影细、暗、断开，但灯本身明显）
+      flat(hx - fx * 0.4, 0.045, hz - fz * 0.4, fx, fz, 3.4, 3.4, RG.pool, sc(WARM, 0.5));
       let start = 0;
-      for (let d = 4; d <= 16; d += 0.35) { if (isWater(x + fx * d, z + fz * d)) { start = d + 0.25; break; } }
+      for (let d = 4; d <= 16; d += 0.35) { if (isWater(x + fx * d, z + fz * d)) { start = d + 0.2; break; } }
       if (start) {
-        const nSeg = 3, gap = 0.85, segL = 1.55;
+        const nSeg = 4, gap = 0.7, segL = 1.7;
         for (let k = 0; k < nSeg; k++) {
           const a = start + k * (segL + gap), b = a + segL;
           const x0 = x + fx * a, z0 = z + fz * a, x1 = x + fx * b, z1 = z + fz * b;
           if (!isWater(x0, z0) || !isWater(x1, z1)) continue;
           const ll = Math.hypot(x1 - x0, z1 - z0) || 1;
-          flat((x0 + x1) / 2, levelAt(x0, z0) + 0.025, (z0 + z1) / 2, (x1 - x0) / ll, (z1 - z0) / ll, 0.20, ll / 2, RG.streak, sc(WARM, 0.36));
+          const dim = 0.52 * (1 - k * 0.12);
+          flat((x0 + x1) / 2, levelAt(x0, z0) + 0.025, (z0 + z1) / 2, (x1 - x0) / ll, (z1 - z0) / ll, 0.26, ll / 2, RG.streak, sc(WARM, dim));
         }
       }
       n.lamp++;

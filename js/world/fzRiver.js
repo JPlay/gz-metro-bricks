@@ -993,18 +993,7 @@ export class FzRiverStreet extends XmStreet {
       if (!isWater(a.x, a.z)) continue;
       WA.box(a.x, WY + 0.004, a.z, 0.25, 0.004, 4.2, C, yawOf(a.tx, a.tz), 0, 0, 1, NO);
     }
-    const L = FZR.a7b && FZR.a7b.lake;
-    if (L && L.ring && L.ring.length >= 6) {
-      const [cx, cz] = L.c;
-      for (let i = 0; i < L.ring.length; i += 6) {
-        const x = L.ring[i], z = L.ring[i + 1];
-        const vx = cx - x, vz = cz - z, d = Math.hypot(vx, vz) || 1;
-        const px = x + vx / d * 8, pz = z + vz / d * 8;
-        if (!isWater(px, pz)) continue;
-        // 湖面倒影：细、短、断开，不要一根亮橙条
-        WA.box(px, WY + 0.004, pz, 0.22, 0.004, 3.4, C, Math.atan2(vx, vz) + ((i * 13) % 7 - 3) * 0.08, 0, 0, 1, NO);
-      }
-    }
+    // 涧田湖不再沿岸铺一圈白天亮纹：那圈浅青会叠在深色水面上，像两层水面。湖面只保留河网统一的 #2F6670。
   }
 
 
@@ -1532,8 +1521,19 @@ export class FzRiverStreet extends XmStreet {
     });
     if (A.capWall) {
       const W = A.capWall, ry = yawOf(W.n[0], W.n[1]);
-      P.box(W.x, W.h / 2, W.z, W.thick, W.h, W.len, hex('#7A7568'), ry, 0, 0, 1, NO);
-      P.box(W.x, W.h + 0.16, W.z, W.thick + 0.3, 0.32, W.len + 0.4, hex('#6A655A'), ry, 0, 0, 1, NO);
+      // 花岗石缝合拢墙（不再是一块素褐板）：横缝分 4 皮，竖缝错缝
+      const GR = k.g('granite'), face = hex('#8A8376'), joint = hex('#5C574E'), cope = hex('#9A9385');
+      GR.box(W.x, W.h / 2, W.z, W.thick, W.h, W.len, face, ry, 0, 0, 1, NO);
+      GR.box(W.x, W.h + 0.16, W.z, W.thick + 0.3, 0.32, W.len + 0.4, cope, ry, 0, 0, 1, NO);
+      const courses = 4, js = 2.3, fx = W.t[0], fz = W.t[1], nx = W.n[0], nz = W.n[1];
+      const ox = fx * (W.thick / 2 + 0.02), oz = fz * (W.thick / 2 + 0.02);
+      for (let i = 1; i < courses; i++) GR.box(W.x + ox, i * W.h / courses, W.z + oz, 0.05, 0.06, W.len - 0.15, joint, ry, 0, 0, 1, NO);
+      for (let c = 0; c < courses; c++) {
+        const y0 = c * W.h / courses, y1 = (c + 1) * W.h / courses, mid = (y0 + y1) / 2, hh = (y1 - y0) - 0.08, off0 = (c % 2 ? js / 2 : 0);
+        for (let u = -W.len / 2 + off0 + js; u < W.len / 2 - 0.3; u += js) {
+          GR.box(W.x + ox + nx * u, mid, W.z + oz + nz * u, 0.05, hh, 0.06, joint, ry, 0, 0, 1, NO);
+        }
+      }
       k.col(W.x + W.t[0] * 0.4, 1.2, W.z + W.t[1] * 0.4, 0.8, 8, 56, { ry, name: 'colCap' });
     }
     for (const pl of A.plazas || []) {

@@ -8,7 +8,7 @@ from a6 import (_tan, _dedupe, _resample, _smooth_radius)
 from a7a import _chaikin_safe, CAP, HW_YX, BAND_YX, JA_JN_SHA1, _P
 
 LB = 9.0          # 环湖步道宽（游戏米）
-HOUSE_BAND = 16.0  # 环湖步道外的民房带（计入 region，否则房子落在裙板上）
+HOUSE_BAND = 22.0  # 环湖步道外的民房带（加宽以便第二圈房子和远景楼落在 region 里，不要露出空铺地）
 HOLD = 8.0
 
 
@@ -151,6 +151,18 @@ def build_lake(g):
   for off in range(-48, 52, 12):
     q = (capP[0] + ne[0] * off, capP[1] + ne[1] * off)
     far.append([round(q[0], 2), round(q[1], 2), round(-te[0], 4), round(-te[1], 4)])
+  # 环湖一圈远景楼，挡住空铺地和天际线（合拢 / 7C 口除外）
+  cFar = lakeG.centroid
+  ringFar = lakeG.buffer(LB + HOUSE_BAND + 4, quad_segs=6).exterior
+  fl, fll = 0.0, ringFar.length
+  while fl < fll - 1:
+    p = ringFar.interpolate(fl)
+    fl += 10.5
+    if math.hypot(p.x - eog[0], p.y - eog[1]) < 22:
+      continue
+    fx, fz = p.x - cFar.x, p.y - cFar.y
+    Lf = math.hypot(fx, fz) or 1
+    far.append([round(p.x, 2), round(p.y, 2), round(-fx / Lf, 4), round(-fz / Lf, 4)])
 
   # 拆 7A 合拢墙 / 远景（开河）
   old_cap = A7.get('capWall') or {}
@@ -231,7 +243,13 @@ def build_lake(g):
     for a, b in zip(coords, coords[1:]):
       if math.hypot(b[0] - a[0], b[1] - a[1]) < 0.4:
         continue
-      W7.append([round(a[0], 2), round(a[1], 2), round(b[0], 2), round(b[1], 2), 0, flag])
+      mx, mz = (a[0] + b[0]) / 2, (a[1] + b[1]) / 2
+      dx, dz = b[0] - a[0], b[1] - a[1]
+      Ls = math.hypot(dx, dz) or 1
+      # w[5] 必须是 ±1（朝水）。为 0 时压顶条石骑在水线上，入湖口像砖墩伸进湖里。
+      n1x, n1z = dz / Ls, -dx / Ls
+      sg = 1 if water.contains(Point(mx + n1x * 0.5, mz + n1z * 0.5)) else -1
+      W7.append([round(a[0], 2), round(a[1], 2), round(b[0], 2), round(b[1], 2), 0, sg])
 
   _wparts = [water] if water.geom_type == 'Polygon' else list(water.geoms)
   for part in _wparts:
@@ -426,10 +444,36 @@ def build_lake(g):
     cx, cz = p.x + fx * (d_ / 2 + 0.6), p.y + fz * (d_ / 2 + 0.6)
     poly = Polygon([(cx + tdir[0] * a + fx * b, cz + tdir[1] * a + fz * b)
                     for a, b in [(-w_ / 2, -d_ / 2), (w_ / 2, -d_ / 2), (w_ / 2, d_ / 2), (-w_ / 2, d_ / 2)]])
-    hs += R7.uniform(12, 17)
+    hs += R7.uniform(8, 11)
     if not region.buffer(-0.05).contains(poly) or poly.intersects(occ) or poly.intersects(water.buffer(1.0)):
       continue
     if math.hypot(cx - eog[0], cz - eog[1]) < 18:
+      continue
+    occ = occ.union(poly.buffer(0.25))
+    HOUSES.append({'x': round(cx, 2), 'z': round(cz, 2), 'w': round(w_, 2), 'd': round(d_, 2),
+                   't': [round(tdir[0], 4), round(tdir[1], 4)], 'f': [round(-fx, 4), round(-fz, 4)],
+                   'river': 'yx', 'h': h_, 'kind': 'old', 'ry': round(math.atan2(tdir[0], tdir[1]), 4),
+                   'back': True, 'a7b': True, 'lod': 2})
+  # 再向外一圈，把北岸 / 广场外的空铺地填上
+  ringH2 = lakeG.buffer(LB + 8.5, quad_segs=6).exterior
+  hs2, sh2 = 4.0, ringH2.length
+  while hs2 < sh2 - 1:
+    p = ringH2.interpolate(hs2)
+    q = ringH2.interpolate((hs2 + 2) % sh2)
+    tdir = (q.x - p.x, q.y - p.y)
+    L = math.hypot(*tdir) or 1
+    tdir = (tdir[0] / L, tdir[1] / L)
+    fx, fz = p.x - cL.x, p.y - cL.y
+    Lf = math.hypot(fx, fz) or 1
+    fx, fz = fx / Lf, fz / Lf
+    w_, d_, h_ = R7.uniform(7.0, 9.0), R7.uniform(5.6, 7.2), R7.uniform(8, 12)
+    cx, cz = p.x + fx * (d_ / 2 + 0.5), p.y + fz * (d_ / 2 + 0.5)
+    poly = Polygon([(cx + tdir[0] * a + fx * b, cz + tdir[1] * a + fz * b)
+                    for a, b in [(-w_ / 2, -d_ / 2), (w_ / 2, -d_ / 2), (w_ / 2, d_ / 2), (-w_ / 2, d_ / 2)]])
+    hs2 += R7.uniform(9, 13)
+    if not region.buffer(-0.05).contains(poly) or poly.intersects(occ) or poly.intersects(water.buffer(1.0)):
+      continue
+    if math.hypot(cx - eog[0], cz - eog[1]) < 20:
       continue
     occ = occ.union(poly.buffer(0.25))
     HOUSES.append({'x': round(cx, 2), 'z': round(cz, 2), 'w': round(w_, 2), 'd': round(d_, 2),
@@ -460,7 +504,7 @@ def build_lake(g):
     fx, fz = fx / L, fz / L
     x, z = p.x, p.y
     P_ = Point(x, z)
-    ts += 7.2
+    ts += 5.4
     if not region.contains(P_) or water.buffer(0.8).contains(P_):
       continue
     if math.hypot(x - eog[0], z - eog[1]) < 12:
@@ -469,6 +513,27 @@ def build_lake(g):
       continue
     TREES.append([round(x, 2), round(z, 2), round(fx, 3), round(fz, 3),
                   round(R7.uniform(0.8, 1.15), 2), 'yx', 1])
+  # 合拢墙前一排树（靠湖一侧，像 6B）；合拢处 region 较窄，多试几个退距
+  ncapT = 0
+  for off in range(-10, 12, 5):
+    placed = False
+    for back in (3.0, 4.4, 6.0, 7.5):
+      q = (wall_p[0] - te[0] * back + ne[0] * off, wall_p[1] - te[1] * back + ne[1] * off)
+      P_ = Point(*q)
+      if water.buffer(0.6).contains(P_):
+        continue
+      if not (region.contains(P_) or (hasattr(g.get('land'), 'contains') and g['land'].contains(P_))):
+        # land may not be assigned yet in some paths; region is the walkable envelope
+        if not region.buffer(1.0).contains(P_):
+          continue
+      if any(math.hypot(q[0] - t[0], q[1] - t[1]) < 3.4 for t in TREES if t[5] != 'gone'):
+        continue
+      TREES.append([round(q[0], 2), round(q[1], 2), round(-te[0], 3), round(-te[1], 3),
+                    round(0.95 + (abs(off) % 4) * 0.04, 2), 'yx', 1])
+      ncapT += 1
+      placed = True
+      break
+  print('7B cap trees', ncapT)
   print('7B trees', len(TREES) - nT0)
 
   # 新水面 / 路面压到的旧楼树撤掉（不含 7A/6B 标记的，除非压进新水面）
@@ -537,6 +602,22 @@ def build_lake(g):
       continue
     if any(math.hypot(tr[0] - cx, tr[1] - cz) < 8.5 for cx, cz in cams_xz):
       TREES[i][5] = 'gone'
+      continue
+    # 西园路等第一人称机位：视线锥里 2–20 m、横向 3.4 m 内的树干会挡画面。合拢墙前那排树要入画，不算。
+    if math.hypot(tr[0] - wall_p[0], tr[1] - wall_p[1]) < 10:
+      continue
+    for nm, c in cams.items():
+      if nm not in ('xuan', 'xiyuan', 'anon', 'mouth'):
+        continue
+      lx = c['look'][0] - c['x']; lz = c['look'][2] - c['z']
+      Ln = math.hypot(lx, lz) or 1
+      lx, lz = lx / Ln, lz / Ln
+      dx, dz = tr[0] - c['x'], tr[1] - c['z']
+      along = dx * lx + dz * lz
+      side = dx * lz - dz * lx
+      if 1.5 <= along <= 20.0 and abs(side) <= 3.4:
+        TREES[i][5] = 'gone'
+        break
 
   def _hpoly_chk(h):
     cx, cz, w_, d_, tx, tz, fx, fz = h['x'], h['z'], h['w'], h['d'], h['t'][0], h['t'][1], h['f'][0], h['f'][1]
