@@ -234,9 +234,9 @@ export class FzRiverStreet extends XmStreet {
     // 2C：白马河加长了 —— 1A / 2B 那段的亮纹照旧（同一个计数器、同样的位置），2C 下段另起一个计数器接着画
     let i = 0; const ext = [];
     for (const [id, r] of Object.entries(RIVERS)) { if (FZR.b3 && (id === 'jn' || id === 'fb')) continue; if (FZR.a4 && id === 'gw') continue; if (FZR.a5 && id === 'yz') continue;   // 3B / 4A 亮纹在各自白天组（夜里关掉，draw ≤ 昼）
-      const end = id === 'bm' && FZR.c2 ? FZR.c2.bmALen : id === 'gm' && FZR.a3 ? FZR.a3.gmALen : r.line.len; let s = 6;
+      const end = id === 'bm' && FZR.c2 ? FZR.c2.bmALen : id === 'gm' && FZR.a3 ? FZR.a3.gmALen : (id === 'yx' && FZR.a7c && FZR.a7c.sEast0 != null ? FZR.a7c.sEast0 : r.line.len); let s = 6;
       for (; s < end - 6; s += 13) { const a = r.line.at(s, ((i++ * 37) % 11 - 5) / 6 * r.hw * 0.6); if (inChamber(a.x, a.z)) continue; WA.box(a.x, levelAt(a.x, a.z) + 0.004, a.z, 0.25, 0.004, 4.5, hex('#8FC0C8'), yawOf(a.tx, a.tz), 0, 0, 1, NO); }
-      if (end < r.line.len && !(id === 'gm' && FZR.a3)) ext.push([r, s]); }
+      if (end < r.line.len && !(id === 'gm' && FZR.a3) && !(id === 'yx' && FZR.a7c)) ext.push([r, s]); }
     let j = 0; for (const [r, s0] of ext) for (let s = s0; s < r.line.len - 6; s += 13) { const a = r.line.at(s, ((j++ * 37) % 11 - 5) / 6 * r.hw * 0.6); WA.box(a.x, WY + 0.004, a.z, 0.25, 0.004, 4.5, hex('#8FC0C8'), yawOf(a.tx, a.tz), 0, 0, 1, NO); }
   }
   /* ---------- 2A 西湖船闸（小美：深灰钢人字闸门，顶上走道 + 栏杆，门缝两边红白警示条；闸室墙上水位刻度线；不写字、不画箭头）---------- */
@@ -1009,7 +1009,9 @@ export class FzRiverStreet extends XmStreet {
     const k = this.kit, WA = k.g('paint@sea'), C = hex('#8FC0C8'), r = RIVERS.yx;
     if (!r) return;
     let j = 0;
-    for (let s = 6; s < r.line.len - 6; s += 12) {
+    // 7C 东段不再铺白天浅青亮纹（同 7B 涧田湖：浅青叠在 #2F6670 上像两层水面）。只保留 7A/7B 段。
+    const end = (FZR.a7c && FZR.a7c.sEast0 != null) ? FZR.a7c.sEast0 : r.line.len;
+    for (let s = 6; s < end - 6; s += 12) {
       const a = r.line.at(s, ((j++ * 37) % 11 - 5) / 6 * r.hw * 0.6);
       if (!isWater(a.x, a.z)) continue;
       WA.box(a.x, WY + 0.004, a.z, 0.25, 0.004, 4.2, C, yawOf(a.tx, a.tz), 0, 0, 1, NO);
