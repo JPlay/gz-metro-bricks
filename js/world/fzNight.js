@@ -164,7 +164,7 @@ export class FzNight {
       halo(hx, 6.95, hz, 1.15, sc(WARM, 0.85));   // 岸上灯头要看得清（4A 标准：倒影细、暗、断开，但灯本身明显）
       flat(hx - fx * 0.4, 0.045, hz - fz * 0.4, fx, fz, 3.4, 3.4, RG.pool, sc(WARM, 0.5));
       let start = 0;
-      for (let d = 4; d <= 16; d += 0.35) { if (isWater(x + fx * d, z + fz * d)) { start = d + 0.2; break; } }
+      for (let d = 1.6; d <= 16; d += 0.3) { if (isWater(x + fx * d, z + fz * d)) { start = d + 0.15; break; } }
       if (start) {
         const nSeg = 4, gap = 0.7, segL = 1.7;
         for (let k = 0; k < nSeg; k++) {

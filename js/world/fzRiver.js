@@ -1206,7 +1206,8 @@ export class FzRiverStreet extends XmStreet {
     const Wc = ['#7E8C99', '#8796A3', '#76858F', '#8F9AA5'];
     (A.far || []).forEach((q, i) => {
       const [x, z, fx, fz] = q, ry = yawOf(fx, fz), h = 12 + (i * 7) % 14, w = 10 + (i % 3) * 2, d = 8 + (i % 2) * 1.5;
-      P.box(x, 0.4, z, w + 10, 0.8, d + 10, hex('#6E7A64'), ry, 0, 0, 1, NO);
+      // 楼脚垫用岸地铺地色并朝湖接上步道，不要 #6E7A64 草绿条（loop_2 左侧远景楼脚会像一块草地边）
+      P.box(x + fx * 5, 0.16, z + fz * 5, w + 12, 0.32, d + 16, hex('#C8C2B6'), ry, 0, 0, 1, NO);
       P.box(x, 0.5, z, w + 0.9, 1.0, d + 0.9, hex('#4A545C'), ry, 0, 0, 1, NO);
       P.box(x, 1.0 + h / 2, z, w, h, d, hex(Wc[i % 4]), ry, 0, 0, 1, NO);
       P.box(x, 1.0 + h + 0.22, z, w + 0.45, 0.44, d + 0.45, hex('#3E484F'), ry, 0, 0, 1, NO);

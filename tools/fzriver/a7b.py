@@ -240,9 +240,21 @@ def build_lake(g):
 
   W7 = []
   def _add_ring(coords, flag=0):
-    for a, b in zip(coords, coords[1:]):
-      if math.hypot(b[0] - a[0], b[1] - a[1]) < 0.4:
-        continue
+    # 过短边并到下一顶点，不要直接跳过，否则岸墙段对不齐，入湖口会出现竖缝
+    pts = [(float(p[0]), float(p[1])) for p in coords]
+    if len(pts) < 2:
+      return
+    cleaned = [pts[0]]
+    for q in pts[1:]:
+      if math.hypot(q[0] - cleaned[-1][0], q[1] - cleaned[-1][1]) >= 0.45:
+        cleaned.append(q)
+    if len(cleaned) < 2:
+      return
+    if math.hypot(cleaned[-1][0] - cleaned[0][0], cleaned[-1][1] - cleaned[0][1]) < 0.45:
+      cleaned[-1] = cleaned[0]
+    elif math.hypot(pts[0][0] - pts[-1][0], pts[0][1] - pts[-1][1]) < 1e-6:
+      cleaned.append(cleaned[0])
+    for a, b in zip(cleaned, cleaned[1:]):
       mx, mz = (a[0] + b[0]) / 2, (a[1] + b[1]) / 2
       dx, dz = b[0] - a[0], b[1] - a[1]
       Ls = math.hypot(dx, dz) or 1
@@ -263,6 +275,49 @@ def build_lake(g):
     if (not _wd.is_empty and _wd.buffer(1.2).intersects(LineString([(w[0], w[1]), (w[2], w[3])]))) or lakeG.exterior.distance(mid) < 1.2:
       W7n.append(w)
   W7 = merge(W7n) if W7n else []
+  def _stitch(W, tol=0.45):
+    n = 0
+    coords = []
+    for w in W:
+      coords.append([w[0], w[1]])
+      coords.append([w[2], w[3]])
+    N = len(coords)
+    parent = list(range(N))
+    def find(a):
+      while parent[a] != a:
+        parent[a] = parent[parent[a]]
+        a = parent[a]
+      return a
+    def union(a, b):
+      ra, rb = find(a), find(b)
+      if ra != rb:
+        parent[rb] = ra
+    for a in range(N):
+      for b in range(a + 1, N):
+        if a // 2 == b // 2:
+          continue
+        if math.hypot(coords[a][0] - coords[b][0], coords[a][1] - coords[b][1]) < tol:
+          union(a, b)
+    clusters = {}
+    for a in range(N):
+      clusters.setdefault(find(a), []).append(a)
+    for mems in clusters.values():
+      if len(mems) < 2:
+        continue
+      sx = round(sum(coords[k][0] for k in mems) / len(mems), 2)
+      sz = round(sum(coords[k][1] for k in mems) / len(mems), 2)
+      for k in mems:
+        i, e = k // 2, k % 2
+        ox, oz = (W[i][0], W[i][1]) if e == 0 else (W[i][2], W[i][3])
+        if abs(ox - sx) > 1e-6 or abs(oz - sz) > 1e-6:
+          n += 1
+        if e == 0:
+          W[i][0], W[i][1] = sx, sz
+        else:
+          W[i][2], W[i][3] = sx, sz
+    return n
+  nstitch = _stitch(W7)
+  print('7B wall stitch endpoints', nstitch)
   # 东头合拢墙写入岸墙，供 2D nav / 碰撞与 6B 一样拦住 7C
   halfL = capWall['len'] / 2
   W7.append([
@@ -634,17 +689,19 @@ def build_lake(g):
     else:
       print('7B cam clear', _nm, (_cam['x'], _cam['z']))
 
-  # 环湖灯位（并进细节格子，不新加 draw）
+  # 环湖灯位：贴驳岸步道（不要放在民房带里），间距加密，loop_2 / plaza_north 对岸也能看见断开的倒影
   lamps = []
-  ringLamp = lakeG.buffer(LB + 0.8, quad_segs=6).exterior
+  ringLamp = lakeG.buffer(2.2, quad_segs=8).exterior
   ls, ll = 0.0, ringLamp.length
   while ls < ll - 1:
     p = ringLamp.interpolate(ls)
     q = ringLamp.interpolate((ls + 2) % ll)
     tdir = (q.x - p.x, q.y - p.y)
     L = math.hypot(*tdir) or 1
-    lamps.append([round(p.x, 2), round(p.y, 2), round(tdir[0] / L, 3), round(tdir[1] / L, 3)])
-    ls += 22.0
+    if math.hypot(p.x - eog[0], p.y - eog[1]) >= 8 and region.contains(p) and not water.buffer(0.4).contains(p):
+      lamps.append([round(p.x, 2), round(p.y, 2), round(tdir[0] / L, 3), round(tdir[1] / L, 3)])
+    ls += 13.0
+  print('7B lamps', len(lamps))
 
   # 环湖步道采样（e2e / nav 双向走线，避开出水口合拢）
   loop = []
