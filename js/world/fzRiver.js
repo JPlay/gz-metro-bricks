@@ -1525,7 +1525,8 @@ export class FzRiverStreet extends XmStreet {
       P.box(x, 1.0 + h / 2, z, w, h, d, hex(Wc[i % 4]), ry, 0, 0, 1, NO);
       P.box(x, 1.0 + h + 0.22, z, w + 0.45, 0.44, d + 0.45, hex('#3E484F'), ry, 0, 0, 1, NO);
     });
-    // 环湖步道（含合拢墙前、对岸）盖一层和广场同款的花岗暖灰铺地，远看不要接近纯白
+    // 环湖步道（含合拢墙前、对岸）盖一层和广场同款的花岗暖灰铺地，远看不要接近纯白。
+    // 法向以 isWater 为准（入湖口凹岸不能用“背离湖心”，否则会把铺地铺进水面）。
     if (A.lake && A.lake.ring) {
       const ring = A.lake.ring, c = A.lake.c, W = A.capWall, nR = ring.length / 2;
       for (let i = 0; i < nR; i++) {
@@ -1533,8 +1534,12 @@ export class FzRiverStreet extends XmStreet {
         const len = Math.hypot(bx - ax, bz - az); if (len < 0.35) continue;
         const tx = (bx - ax) / len, tz = (bz - az) / len, mx = (ax + bx) / 2, mz = (az + bz) / 2;
         let nx = tz, nz = -tx;
-        if ((c[0] - mx) * nx + (c[1] - mz) * nz > 0) { nx = -nx; nz = -nz; }
+        const test = 1.2, wA = isWater(mx + nx * test, mz + nz * test), wB = isWater(mx - nx * test, mz - nz * test);
+        if (wA && wB) continue;
+        if (wA && !wB) { nx = -nx; nz = -nz; }
+        else if (!wA && !wB && (c[0] - mx) * nx + (c[1] - mz) * nz > 0) { nx = -nx; nz = -nz; }
         const cx = mx + nx * (LB * 0.48), cz = mz + nz * (LB * 0.48);
+        if (isWater(cx, cz) || isWater(mx + nx * 2.2, mz + nz * 2.2)) continue;
         if (W) {
           const nLake = (W.n[0] * (c[0] - W.x) + W.n[1] * (c[1] - W.z)) >= 0 ? 1 : -1;
           const side = (cx - W.x) * W.n[0] + (cz - W.z) * W.n[1];
