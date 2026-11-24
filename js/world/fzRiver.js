@@ -1539,7 +1539,7 @@ export class FzRiverStreet extends XmStreet {
     for (const pl of A.plazas || []) {
       const ry = yawOf(pl.f[0], pl.f[1]);
       GR.box(pl.x, 0.04, pl.z, pl.w, 0.08, pl.d, hex('#A39C8E'), ry, 0, 0, 1, NO);
-      k.col(pl.x, 0.04, pl.z, pl.w, 0.08, pl.d, { ry, name: 'colPlaza' });
+      k.col(pl.x, 0.04, pl.z, pl.w, 0.08, pl.d, { ry, name: 'colLanding' });   // 广场铺地可走（勿用 colPlaza：e2e 导航会当成墙，环湖 pt9↔pt10 只能绕湖）
     }
   }
   /** 7B：环湖路灯/长椅进细节格子，不加 draw。 */
