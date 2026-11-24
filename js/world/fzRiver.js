@@ -1647,7 +1647,6 @@ export class FzRiverStreet extends XmStreet {
       k.col(W.x + W.t[0] * 0.4, 1.2, W.z + W.t[1] * 0.4, 0.8, 8, 56, { ry, name: 'colCap' });
       // 合拢两岸铺地改成暖灰 #A39C8E（同别处花岗铺），盖住近白人字铺；不要铺到水面上
       const hw = (A.hw || 5) + 0.4, back = 32, padW = 16;
-      const fx = W.t[0], fz = W.t[1], nx = W.n[0], nz = W.n[1];
       for (const sg of [-1, 1]) {
         const lat = sg * (hw + 2 + padW / 2);
         const cx = W.x - fx * (back / 2 + 0.8) + nx * lat, cz = W.z - fz * (back / 2 + 0.8) + nz * lat;
