@@ -106,7 +106,7 @@ export class FzRiverStreet extends XmStreet {
   river() {
     const k = this.kit;
     this.facades();
-    this.walls(); this.bridges(); this.piers(); if (FZR.c2) this.c2Static(); else this.sharedDecks(); if (FZR.a3) this.a3Static(); if (FZR.a4) this.a4Static(); if (FZR.a5) this.a5Static(); if (FZR.a6) this.a6Static(); if (FZR.a6b) this.a6bStatic(); if (FZR.a7a) this.a7aStatic(); if (FZR.b3) this.b3Static(); this.stepsDown(); this.unders(); this.roads(); this.houses(); this.trees(); this.promenade(); if (FZR.b3) this.lakeLamps(); if (FZR.sfqx) this.sanfang(); if (FZR.lakeBox) this.backdrops(); if (LOCK) this.lockStatic(); if (KIOSKS.fzxm_B) this.xihuPark();
+    this.walls(); this.bridges(); this.piers(); if (FZR.c2) this.c2Static(); else this.sharedDecks(); if (FZR.a3) this.a3Static(); if (FZR.a4) this.a4Static(); if (FZR.a5) this.a5Static(); if (FZR.a6) this.a6Static(); if (FZR.a6b) this.a6bStatic(); if (FZR.a7a) this.a7aStatic(); if (FZR.a7b) this.a7bStatic(); if (FZR.b3) this.b3Static(); this.stepsDown(); this.unders(); this.roads(); this.houses(); this.trees(); this.promenade(); if (FZR.b3) this.lakeLamps(); if (FZR.a7b) this.a7bLamps(); if (FZR.sfqx) this.sanfang(); if (FZR.lakeBox) this.backdrops(); if (LOCK) this.lockStatic(); if (KIOSKS.fzxm_B) this.xihuPark();
     k.group('g0');   // 上面直接画的东西（桥、码头、台阶、马路、牌坊…）常开：单独封一组，别被并进第一个细节格子
     if (this._nhjw || this._nhjH) {
       if (this._nhjw) { for (const t of this._nhjw) this.banyanNear(...t); this._nhjw = null; }
@@ -993,6 +993,7 @@ export class FzRiverStreet extends XmStreet {
       if (!isWater(a.x, a.z)) continue;
       WA.box(a.x, WY + 0.004, a.z, 0.25, 0.004, 4.2, C, yawOf(a.tx, a.tz), 0, 0, 1, NO);
     }
+    // 涧田湖不再沿岸铺一圈白天亮纹：那圈浅青会叠在深色水面上，像两层水面。湖面只保留河网统一的 #2F6670。
   }
 
 
@@ -1216,7 +1217,7 @@ export class FzRiverStreet extends XmStreet {
       P.box(W.x, W.h + 0.16, W.z, W.thick + 0.3, 0.32, W.len + 0.4, hex('#6A655A'), ry, 0, 0, 1, NO);
     }
     const L = RIVERS.yx && RIVERS.yx.line;
-    if (L) {
+    if (L && A.capWall) {
       const e = L.at(L.len), te = { x: e.tx, z: e.tz }, n = { x: te.z, z: -te.x };
       k.col(e.x + te.x * ((A.cap || 2.4) + 0.4), 1.2, e.z + te.z * ((A.cap || 2.4) + 0.4), 0.8, 8, 56, { ry: yawOf(n.x, n.z), name: 'colCap' });
     }
@@ -1504,6 +1505,86 @@ export class FzRiverStreet extends XmStreet {
     k.col(mx, 0.6, mz, 0.3, 1.2, L, { ry, name: 'colWalkRail' });
     GR.box(mx, 0.74, mz, 0.16, 0.1, L, hex('#B5AE9F'), ry, 0, 0, 1, NO);
     for (let i = 0; i <= n; i++) { const t = i / n; GR.box(ax + (bx - ax) * t, 0.38, az + (bz - az) * t, 0.2, 0.72, 0.2, hex('#A8A193'), ry, 0, 0, 1, NO); }
+  }
+  /** 7B：东头合拢墙 + 远景、涧田湖广场块、西园/玄南岭路名牌。colCap 在出水口，不在 yx 河尾。 */
+  a7bStatic() {
+    const A = FZR.a7b, k = this.kit, P = k.solid, GR = k.g('granite');
+    if (!A) return;
+    for (const S of A.plates || []) this.stoneSign(S.x, S.z, S.f[0], S.f[1], 3.2, 1.35, S.lines.filter(Boolean));
+    const Wc = ['#7E8C99', '#8796A3', '#76858F', '#8F9AA5'];
+    const PV = k.g('pave'), PAVEC = hex('#CFC9BD'), TILE = hex('#A39C8E');
+    const LB = (A.lake && A.lake.band) || 9;
+    (A.far || []).forEach((q, i) => {
+      const [x, z, fx, fz] = q, ry = yawOf(fx, fz), h = 12 + (i * 7) % 14, w = 10 + (i % 3) * 2, d = 8 + (i % 2) * 1.5;
+      // 楼脚垫用铺地材质（不要 solid 高光发白），朝湖一侧停在步道外沿，不要盖住合拢墙前 / 环湖步道
+      let reach = 0;
+      for (let t = 0.5; t <= 40; t += 0.5) { if (isWater(x + fx * t, z + fz * t)) { reach = t; break; } }
+      const stop = reach ? Math.max(1.6, reach - LB - 0.7) : 5;
+      PV.box(x + fx * (stop / 2), 0.16, z + fz * (stop / 2), w + 8, 0.32, stop, PAVEC, ry, 0, 0, 1, NO);
+      P.box(x, 0.5, z, w + 0.9, 1.0, d + 0.9, hex('#4A545C'), ry, 0, 0, 1, NO);
+      P.box(x, 1.0 + h / 2, z, w, h, d, hex(Wc[i % 4]), ry, 0, 0, 1, NO);
+      P.box(x, 1.0 + h + 0.22, z, w + 0.45, 0.44, d + 0.45, hex('#3E484F'), ry, 0, 0, 1, NO);
+    });
+    // 环湖步道（含合拢墙前、对岸）盖一层和广场同款的花岗暖灰铺地，远看不要接近纯白。
+    // 法向以 isWater 为准（入湖口凹岸不能用“背离湖心”，否则会把铺地铺进水面）。
+    if (A.lake && A.lake.ring) {
+      const ring = A.lake.ring, c = A.lake.c, W = A.capWall, nR = ring.length / 2;
+      for (let i = 0; i < nR; i++) {
+        const ax = ring[2 * i], az = ring[2 * i + 1], bx = ring[2 * ((i + 1) % nR)], bz = ring[2 * ((i + 1) % nR) + 1];
+        const len = Math.hypot(bx - ax, bz - az); if (len < 0.35) continue;
+        const tx = (bx - ax) / len, tz = (bz - az) / len, mx = (ax + bx) / 2, mz = (az + bz) / 2;
+        let nx = tz, nz = -tx;
+        const test = 1.2, wA = isWater(mx + nx * test, mz + nz * test), wB = isWater(mx - nx * test, mz - nz * test);
+        if (wA && wB) continue;
+        if (wA && !wB) { nx = -nx; nz = -nz; }
+        else if (!wA && !wB && (c[0] - mx) * nx + (c[1] - mz) * nz > 0) { nx = -nx; nz = -nz; }
+        const cx = mx + nx * (LB * 0.48), cz = mz + nz * (LB * 0.48);
+        if (isWater(cx, cz) || isWater(mx + nx * 2.2, mz + nz * 2.2)) continue;
+        if (W) {
+          const nLake = (W.n[0] * (c[0] - W.x) + W.n[1] * (c[1] - W.z)) >= 0 ? 1 : -1;
+          const side = (cx - W.x) * W.n[0] + (cz - W.z) * W.n[1];
+          const along = (cx - W.x) * W.t[0] + (cz - W.z) * W.t[1];
+          if (side * nLake < -0.2 && Math.abs(along) < W.len / 2 + 3) continue;
+        }
+        GR.box(cx, 0.035, cz, LB - 0.7, 0.07, len + 0.2, TILE, yawOf(tx, tz), 0, 0, 1, NO);
+      }
+    }
+    if (A.capWall) {
+      const W = A.capWall, ry = yawOf(W.n[0], W.n[1]);
+      // 花岗石缝合拢墙（不再是一块素褐板）：横缝分 4 皮，竖缝错缝
+      const GR = k.g('granite'), face = hex('#8A8376'), joint = hex('#5C574E'), cope = hex('#9A9385');
+      GR.box(W.x, W.h / 2, W.z, W.thick, W.h, W.len, face, ry, 0, 0, 1, NO);
+      GR.box(W.x, W.h + 0.16, W.z, W.thick + 0.3, 0.32, W.len + 0.4, cope, ry, 0, 0, 1, NO);
+      const courses = 4, js = 2.3, fx = W.t[0], fz = W.t[1], nx = W.n[0], nz = W.n[1];
+      const ox = fx * (W.thick / 2 + 0.02), oz = fz * (W.thick / 2 + 0.02);
+      for (let i = 1; i < courses; i++) GR.box(W.x + ox, i * W.h / courses, W.z + oz, 0.05, 0.06, W.len - 0.15, joint, ry, 0, 0, 1, NO);
+      for (let c = 0; c < courses; c++) {
+        const y0 = c * W.h / courses, y1 = (c + 1) * W.h / courses, mid = (y0 + y1) / 2, hh = (y1 - y0) - 0.08, off0 = (c % 2 ? js / 2 : 0);
+        for (let u = -W.len / 2 + off0 + js; u < W.len / 2 - 0.3; u += js) {
+          GR.box(W.x + ox + nx * u, mid, W.z + oz + nz * u, 0.05, hh, 0.06, joint, ry, 0, 0, 1, NO);
+        }
+      }
+      k.col(W.x + W.t[0] * 0.4, 1.2, W.z + W.t[1] * 0.4, 0.8, 8, 56, { ry, name: 'colCap' });
+    }
+    for (const pl of A.plazas || []) {
+      const ry = yawOf(pl.f[0], pl.f[1]);
+      GR.box(pl.x, 0.04, pl.z, pl.w, 0.08, pl.d, hex('#A39C8E'), ry, 0, 0, 1, NO);
+      k.col(pl.x, 0.04, pl.z, pl.w, 0.08, pl.d, { ry, name: 'colLanding' });   // 广场铺地可走（勿用 colPlaza：e2e 导航会当成墙，环湖 pt9↔pt10 只能绕湖）
+    }
+  }
+  /** 7B：环湖路灯/长椅进细节格子，不加 draw。 */
+  a7bLamps() {
+    const A = FZR.a7b, k = this.kit;
+    if (!A || !A.lamps) return;
+    for (const L of A.lamps) {
+      const [x, z, tx, tz] = L;
+      this.det(x, z, () => {
+        const ry = yawOf(tx, tz);
+        k.metal.box(x, 1.55, z, 0.08, 3.1, 0.08, hex('#4A5560'), 0, 0, 0, 1, NO);
+        k.g('granite').box(x, 0.12, z, 0.28, 0.24, 0.28, hex('#8E887C'), 0, 0, 0, 1, NO);
+        k.solid.box(x + tx * 0.12, 3.05, z + tz * 0.12, 0.28, 0.08, 0.18, hex('#E8D9A8'), ry, 0, 0, 1, NO);
+      });
+    }
   }
   /* ---------- 路 / 广场 ---------- */
   roads() {
