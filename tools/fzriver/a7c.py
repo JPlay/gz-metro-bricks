@@ -647,8 +647,8 @@ def build_east(g):
   for off in range(-20, 22, 5):
     q = (wall_p[0] - te[0] * 4.5 + ne[0] * off, wall_p[1] - te[1] * 4.5 + ne[1] * off)
     if region.contains(Point(*q)) and not water.buffer(1.0).contains(Point(*q)):
-      # 合拢机位附近不要树干（capBank 稍后才定，先避开墙前中线 8 m）
-      if abs(off) < 8:
+      # 合拢机位在墙前两岸步道（|lat| ≈ 7–10 m），这里不要树干
+      if abs(off) < 12:
         continue
       TREES.append([round(q[0], 2), round(q[1], 2), round(-te[0], 3), round(-te[1], 3),
                     0.95, 'yx', 1])
@@ -1058,6 +1058,24 @@ def build_east(g):
         return True
     return False
 
+  def _road_in_fg(x, z, look, near=8.0, half=5.5):
+    """近景（含画面右下/左下）有大块沥青就拒，不只测视线中线。"""
+    if _road_in_look(x, z, look, near=near):
+      return True
+    lx, lz = look[0] - x, look[1] - z
+    L = math.hypot(lx, lz) or 1
+    ux, uz = lx / L, lz / L
+    wedge = Polygon([
+      (x + ux * 0.4 - uz * half, z + uz * 0.4 + ux * half),
+      (x + ux * 0.4 + uz * half, z + uz * 0.4 - ux * half),
+      (x + ux * near + uz * (half + 1.0), z + uz * near - ux * (half + 1.0)),
+      (x + ux * near - uz * (half + 1.0), z + uz * near + ux * (half + 1.0)),
+    ])
+    for r in ROADS_C:
+      if r['poly'].intersects(wedge):
+        return True
+    return False
+
   def _side_wall_close(x, z, look, d=5.0):
     """身侧 5 m 内、又不在背后的房墙会占半幅。"""
     lx, lz = look[0] - x, look[1] - z
@@ -1229,8 +1247,19 @@ def build_east(g):
               continue
             if (not use_soft) and not _clear_front_soft(x, z, look, near=3.6):
               continue
+            # anon9 近景沥青、anon38 正中灯杆：只约束这两处，涧山巷/17 m 桥机位保持原搜法
+            if b.get('style') in ('anon9', 'anon38'):
+              if _road_in_fg(x, z, look, near=8.0):
+                continue
+              if _lamp_midfront(x, z, look, near=14.0, lat_max=3.0):
+                continue
             # 偏向沿河下游一侧，避免涧山巷机位退回湖口和 joint 叠在一起
             score = max(0.0, 8.0 - abs(wd - 5.6)) + (1.0 if use_soft else 0.0) + (2.4 if along > 0 else 0.0)
+            if b.get('style') == 'anon17':
+              # 17 m 桥机位站在桥西（沿河上游），把合拢墙跟前让给 cap；不要沿 +t 走到墙前
+              if along > 0 or math.hypot(x - wall_p[0], z - wall_p[1]) < 24.0:
+                continue
+              score = max(0.0, 8.0 - abs(wd - 5.6)) + (1.0 if use_soft else 0.0) + (2.4 if along < 0 else 0.0)
             rec = (score, x, z, look, wd, side, along, bank)
             if best is None or rec[0] > best[0]:
               best = rec
@@ -1280,6 +1309,11 @@ def build_east(g):
           continue
         look = (b['x'] - nx * side * 1.2 + tx * along * 0.12,
                 b['z'] - nz * side * 1.2 + tz * along * 0.12)
+        if b.get('style') in ('anon9', 'anon38') and (
+            _road_in_fg(x, z, look, near=8.0) or _lamp_midfront(x, z, look, near=14.0, lat_max=3.0)):
+          continue
+        if b.get('style') == 'anon17' and (along > 0 or math.hypot(x - wall_p[0], z - wall_p[1]) < 24.0):
+          continue
         print('7C cam', note, 'bare leftover dWater', round(wd, 1),
               'along', round(along, 1), 'side', side, 'bank', bank, (round(x, 2), round(z, 2)))
         return cam_at(x, z, look, pitch=0.14, look_y=0.55, note=note)
@@ -1371,11 +1405,11 @@ def build_east(g):
   else:
     print('WARN cam south no scored spot, will nudge scenery and retry')
 
-  # 合拢机位：站在 17 m 桥上游的岸边步道，沿河道看水面接到合拢墙，墙后是远景。
+  # 合拢机位：站在合拢墙跟前的岸边步道，看水面接到墙、墙后是远景；17 m 桥不得在中景。
   placed_c = False
   best_c = None
-  cap_offs = (HW_YX + 2.0, HW_YX + 2.6, HW_YX + 3.2, HW_YX + 3.6, HW_YX + 3.8, HW_YX + 1.6)
-  cap_looks = [(wall_p[0] - te[0] * d, wall_p[1] - te[1] * d) for d in (12.0, 16.0, 10.0, 20.0, 8.0)]
+  cap_offs = (HW_YX + 2.0, HW_YX + 2.6, HW_YX + 3.2, HW_YX + 3.6, HW_YX + 3.8, HW_YX + 1.6, HW_YX + 4.4)
+  cap_looks = [(wall_p[0] + te[0] * d, wall_p[1] + te[1] * d) for d in (0.0, 2.0, 4.0, -2.0, -4.0)]
 
   n_shove_c = 0
   for h in HOUSES:
@@ -1384,7 +1418,7 @@ def build_east(g):
     hx, hz = h['x'], h['z']
     back_h = (wall_p[0] - hx) * te[0] + (wall_p[1] - hz) * te[1]
     lat_h = (hx - wall_p[0]) * ne[0] + (hz - wall_p[1]) * ne[1]
-    if not (30 <= back_h <= 56 and 6.0 <= abs(lat_h) <= 16.0):
+    if not (6 <= back_h <= 22 and 6.0 <= abs(lat_h) <= 16.0):
       continue
     ox, oz = h['x'], h['z']
     w_, d_ = h['w'], h['d']
@@ -1405,32 +1439,38 @@ def build_east(g):
   if n_shove_c:
     print('7C shoved cap-promenade houses', n_shove_c)
 
-  def _score_cap(cx, cz, back, lat, look):
+  def _score_cap(cx, cz, back, lat, look, dbg=False):
     if _under_ramp(cx, cz) or not _stand_ok(cx, cz):
+      return None
+    # 必须朝合拢墙看（沿 te），不要朝回 17 m 桥
+    lx, lz = look[0] - cx, look[1] - cz
+    if lx * te[0] + lz * te[1] <= 0.5:
       return None
     if _side_wall_close(cx, cz, look, 5.0):
       return None
-    if _look_over_deck(cx, cz, look, near=22.0):
+    # 视线到墙这一段里不要掠过 17 m 桥面
+    if _look_over_deck(cx, cz, look, near=max(8.0, back + 2.0)):
       return None
-    if _road_in_look(cx, cz, look, near=12.0):
+    if _road_in_look(cx, cz, look, near=min(12.0, max(6.0, back))):
       return None
-    if not _clear_front_soft(cx, cz, look, near=8.0):
-      return None
+    # 近处树/灯稍后会挪走，这里不因它们丢掉墙前站位
     if _wall_fills(cx, cz, look):
       return None
     wd = Point(cx, cz).distance(water)
     if not (3.0 <= wd <= 6.8):
       return None
-    wr = _ray_over_water(cx, cz, look, span=22.0)
-    if wr < 8.0:
+    wr = _ray_over_water(cx, cz, look, span=min(14.0, max(8.0, back + 1.0)))
+    if wr < 5.0:
       return None
     dR = _ramp_poly().distance(Point(cx, cz)) if ramp else 30.0
+    # 越靠近合拢墙越好；远离 17 m 桥（约 18 m）
     score = (max(0.0, 8.0 - abs(wd - 4.2)) + wr * 0.5
-             + (3.0 if 36 <= back <= 52 else 0)
-             + min(4.0, dR * 0.12))
+             + (6.0 if 6 <= back <= 14 else 3.0 if 14 < back <= 18 else 0)
+             + min(4.0, dR * 0.12)
+             + max(0.0, 16.0 - back) * 0.25)
     return (score, cx, cz, back, lat, wd, look, dR)
 
-  for back in (40, 44, 36, 48, 32, 52, 56, 60):
+  for back in (8, 10, 12, 14, 6, 16, 18, 20):
     for lat_abs in cap_offs:
       for sgn in (1, -1):
         lat = sgn * lat_abs
@@ -1525,12 +1565,12 @@ def build_east(g):
 
   if 'cap' not in cams:
     samples = []
-    for back in range(28, 64, 2):
+    for back in range(6, 22, 2):
       for lat_abs in (HW_YX + 2.0, HW_YX + 2.8, HW_YX + 3.6, HW_YX + 4.4):
         for sgn in (-1, 1):
           samples.append((wall_p[0] - te[0] * back + ne[0] * sgn * lat_abs,
                            wall_p[1] - te[1] * back + ne[1] * sgn * lat_abs))
-    _recover('cap', look_c0, 0.20, 0.40, '命名东头合拢', samples)
+    _recover('cap', look_c0, 0.18, 0.40, '命名东头合拢', samples)
 
   if 'south' not in cams:
     samples = []
@@ -1690,6 +1730,8 @@ def build_east(g):
       _shove_fillers(_nm)
   _relocate_cam_lamps("mouth")
   _relocate_cam_lamps("cap")
+  _relocate_cam_lamps("anon9")
+  _relocate_cam_lamps("anon38")
 
   def _retry_mouth():
     best = None
@@ -1726,7 +1768,7 @@ def build_east(g):
 
   def _retry_cap():
     best = None
-    for back in (40, 36, 44, 32, 48, 28, 52, 24, 56):
+    for back in (8, 10, 12, 14, 6, 16, 18, 20, 22):
       for lat_abs in cap_offs:
         for sgn in (1, -1):
           lat = sgn * lat_abs
@@ -1807,6 +1849,8 @@ def build_east(g):
       _shove_fillers(_nm)
   _relocate_cam_lamps("mouth")
   _relocate_cam_lamps("cap")
+  _relocate_cam_lamps("anon9")
+  _relocate_cam_lamps("anon38")
 
   def _hpoly_chk(h):
     return _hpoly0(h)
