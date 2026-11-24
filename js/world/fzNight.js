@@ -124,14 +124,15 @@ export class FzNight {
       flat(hx - dx * 0.4, 0.045, hz - dz * 0.4, dx, dz, 3.8, 3.8, RG.pool, sc(WARM, 0.42));
       const Z = FZR.a5 && FZR.a5.zone, p0 = r.line.at(s, side * (r.hw - 0.9));
       const yzStreak = r.id === 'yz' || (Z && p0.x > Z[0] && p0.x < Z[2] && p0.z > Z[1] && p0.z < Z[3]);
+      const yx7bStreak = r.id === 'yx' && s > ((FZR.a7a && FZR.a7a.yxLen7a) || 0);   // 7B 河段：倒影也要细、暗、断开，不要实心亮橙条
       const hqStreak = r === RIVERS.hq;
-      const L = Math.min(yzStreak ? 3.4 : 7.5, r.hw * 0.95), p1 = r.line.at(s, side * (r.hw - 0.9 - L));   // 3C 返工：离岸墙 0.9 m 起（贴墙那段从岸上 / 桥上被岸墙挡住），宽 0.8 m
+      const L = Math.min((yzStreak || yx7bStreak) ? 3.4 : 7.5, r.hw * 0.95), p1 = r.line.at(s, side * (r.hw - 0.9 - L));   // 3C 返工：离岸墙 0.9 m 起（贴墙那段从岸上 / 桥上被岸墙挡住），宽 0.8 m
       if (isWater(p0.x, p0.z) && isWater(p1.x, p1.z)) {
         if (hqStreak) {   // 6A：倒影仍分段断开（不是一根原木）；加厚略提亮（参照 4A 058067c 檐带），从河面上看得见
           const lv = levelAt(p0.x, p0.z), ax = (p0.x - p1.x) / L, az = (p0.z - p1.z) / L;
           const nSeg = 5, span = L * 0.92, gap = 0.45, segL = (span - (nSeg - 1) * gap) / nSeg, mx = (p0.x + p1.x) / 2, mz = (p0.z + p1.z) / 2;
           for (let k = 0; k < nSeg; k++) { const d = -span / 2 + k * (segL + gap) + segL / 2; flat(mx + ax * d, lv + 0.025, mz + az * d, ax, az, 0.62, segL / 2, RG.streak, sc(WARM, 0.48)); }
-        } else if (yzStreak) {   // 5：沿驳岸的倒影改细、改暗、分成短段，避免河口夜图像一根原木（汇入口可能算在 gw/gm 上）
+        } else if (yzStreak || yx7bStreak) {   // 5 / 7B 河段：沿驳岸的倒影改细、改暗、分成短段，避免夜图像一根原木
           const nSeg = 3, gap = 0.7, segL = (L - (nSeg - 1) * gap) / nSeg;
           for (let k = 0; k < nSeg; k++) {
             const a = k * (segL + gap), b = a + segL, qa = r.line.at(s, side * (r.hw - 0.9 - a)), qb = r.line.at(s, side * (r.hw - 0.9 - b));
@@ -150,14 +151,39 @@ export class FzNight {
       if (isWater(p0[0], p0[1]) && isWater(p1[0], p1[1])) flat((p0[0] + p1[0]) / 2, levelAt(p0[0], p0[1]) + 0.02, (p0[1] + p1[1]) / 2, -fx, -fz, 0.8, L / 2, RG.streak, sc(WARM, 0.85));
       n.lamp++;
     }
+    // 7B：涧田湖步道路灯并进 fzNightLights。朝向用湖心（数据里的 tx,tz 是沿环切向），倒影细、暗、断开，不要一根亮橙条
+    for (const Lmp of (FZR.a7b && FZR.a7b.lamps) || []) {
+      const [x, z] = Lmp;
+      const c = (FZR.a7b.lake && FZR.a7b.lake.c) || [x, z];
+      let fx = c[0] - x, fz = c[1] - z, fl = Math.hypot(fx, fz) || 1; fx /= fl; fz /= fl;
+      const hx = x + fx * 1.2, hz = z + fz * 1.2;
+      halo(hx, 6.95, hz, 0.9, sc(WARM, 0.7));
+      flat(hx - fx * 0.4, 0.045, hz - fz * 0.4, fx, fz, 3.2, 3.2, RG.pool, sc(WARM, 0.42));
+      const nSeg = 3, gap = 0.85, Lref = 5.4, segL = (Lref - (nSeg - 1) * gap) / nSeg, pBase = 10.2;
+      for (let k = 0; k < nSeg; k++) {
+        const a = pBase + k * (segL + gap), b = a + segL;
+        const x0 = x + fx * a, z0 = z + fz * a, x1 = x + fx * b, z1 = z + fz * b;
+        if (!isWater(x0, z0) || !isWater(x1, z1)) continue;
+        const ll = Math.hypot(x1 - x0, z1 - z0) || 1;
+        flat((x0 + x1) / 2, levelAt(x0, z0) + 0.02, (z0 + z1) / 2, (x1 - x0) / ll, (z1 - z0) / ll, 0.16, ll / 2, RG.streak, sc(WARM, 0.22));
+      }
+      n.lamp++;
+    }
     // 桥：栏板外侧一道暖光带（跟着拱桥桥面起伏）+ 水面上同色的淡倒影
     for (const b of BRIDGES) {
       if (b.kind === 'bingde' || b.kind === 'covered') continue;
       const rise = humpRise(b), flatB = !rise && b.kind !== 'sarch', uo = flatB ? b.w / 2 : b.w / 2 - 0.03, t = b.t, nn = b.n;
+      const isYx = !!(FZR.a7b && (FZR.a7b.bridges || []).includes(b.id));
       const top = v => flatB ? ((b.deckY || 0) + (b.tall ? (b.barrier || 2.2) * 0.7 : 1.0)) : deckAt(b, v) + 0.84, Pt = (u, v) => [b.x + t[0] * u + nn[0] * v, b.z + t[1] * u + nn[1] * v];
       const seg = flatB ? 1 : 10, v0 = -b.half + 0.25, v1 = b.half - 0.25;
       for (const su of [-1, 1]) {
-        for (let i = 0; i < seg; i++) {
+        if (isYx) {   // 7B 双幅桥：栏板暖光改成短段、略暗，避免岸边看去像 3–4 根实心亮橙条
+          const nSeg = 5, gap = 0.7, span = v1 - v0, segL = (span - (nSeg - 1) * gap) / nSeg;
+          for (let i = 0; i < nSeg; i++) {
+            const va = v0 + i * (segL + gap), vb = va + segL, [xa, za] = Pt(su * (uo + 0.025), va), [xb, zb] = Pt(su * (uo + 0.025), vb), ya = top(va) - 0.07, yb = top(vb) - 0.07;
+            quad((xa + xb) / 2, (ya + yb) / 2, (za + zb) / 2, [(xb - xa) / 2, (yb - ya) / 2, (zb - za) / 2], [0, 0.06, 0], RG.line, sc(WARM, 0.48));
+          }
+        } else for (let i = 0; i < seg; i++) {
           const va = v0 + (v1 - v0) * i / seg, vb = v0 + (v1 - v0) * (i + 1) / seg, [xa, za] = Pt(su * (uo + 0.025), va), [xb, zb] = Pt(su * (uo + 0.025), vb), ya = top(va) - 0.07, yb = top(vb) - 0.07;
           quad((xa + xb) / 2, (ya + yb) / 2, (za + zb) / 2, [(xb - xa) / 2, (yb - ya) / 2, (zb - za) / 2], [0, 0.075, 0], RG.line, sc(WARM, 0.95));
         }
@@ -167,11 +193,12 @@ export class FzNight {
         if (hw > 1 && isWater(cx, cz) && !nearSluice) {
           const Z6 = (FZR.a6b && FZR.a6b.zone) || (FZR.a6 && FZR.a6.zone), isHq = !!(FZR.a6 || FZR.a6b) && (((FZR.a6 && (FZR.a6.bridges || []).includes(b.id)) || (FZR.a6b && (FZR.a6b.bridges || []).includes(b.id)) || (Z6 && cx > Z6[0] && cx < Z6[2] && cz > Z6[1] && cz < Z6[3])));
           const Z5 = FZR.a5 && FZR.a5.zone, isYz = FZR.a5 && ((FZR.a5.bridges || []).includes(b.id) || (Z5 && cx > Z5[0] && cx < Z5[2] && cz > Z5[1] && cz < Z5[3]));
-          if (isHq || isYz) {   // 6A / 5：倒影分段断开，不要一整根原木。6A 加厚略提亮（仍细、暗、断）；⑤ 保持原亮度
+          if (isHq || isYz || isYx) {   // 6A / 5 / 7B：倒影分段断开，不要一整根原木。7B 与 ⑤ 一样细、暗
             const nSeg = 5, span = hw * 0.82, gap = 0.55, segL = (2 * span - (nSeg - 1) * gap) / nSeg;
+            const thick = isHq ? 0.62 : 0.36, warm = isHq ? 0.48 : (isYx ? 0.22 : 0.16), yoff = isHq ? 0.025 : 0.02;
             for (let k = 0; k < nSeg; k++) {
               const vv = -span + k * (segL + gap) + segL / 2, [x, z] = Pt(su * (uo + 1.0), vv);
-              if (isWater(x, z)) flat(x, levelAt(x, z) + (isHq ? 0.025 : 0.02), z, t[0], t[1], segL / 2, isHq ? 0.62 : 0.36, RG.streak, isHq ? sc(WARM, 0.48) : sc(WARM, 0.16));
+              if (isWater(x, z)) flat(x, levelAt(x, z) + yoff, z, t[0], t[1], segL / 2, thick, RG.streak, sc(WARM, warm));
             }
           } else flat(cx, levelAt(cx, cz) + 0.02, cz, t[0], t[1], hw, 1.1, RG.line, sc(WARM, 0.34));
         }
