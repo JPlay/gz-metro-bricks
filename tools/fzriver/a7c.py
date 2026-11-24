@@ -923,42 +923,7 @@ def build_east(g):
         return True
     return False
 
-  cams = {}
-
-  # 东口：站在岸边步道、贴近水面，朝出水口/河道中线看，水面要占画面 1/3 以上
-  placed_m = False
-  best_m = None
-  for ds in (12, 16, 10, 18, 8, 22, 6, 20, 14):
-    for side in (-1, 1):
-      for off in (HW_YX + 5.4, HW_YX + 6.2, HW_YX + 4.8, HW_YX + 7.0, HW_YX + 8.0):
-        (mx, mz), tdir, nn = at_yx(s_east0 + ds, side * off)
-        (lx, lz), _, _ = at_yx(s_east0 + 4.0, 0.0)
-        look_m = (lx, lz)
-        if not _cam_ok(mx, mz):
-          continue
-        wd = Point(mx, mz).distance(water)
-        if not (3.2 <= wd <= 8.0):
-          continue
-        if not _clear_front(mx, mz, look_m):
-          continue
-        score = max(0.0, 7.0 - abs(wd - 5.0)) + (1.5 if 8 <= ds <= 18 else 0)
-        rec = (score, mx, mz, look_m, wd, ds, side, off)
-        if best_m is None or rec[0] > best_m[0]:
-          best_m = rec
-  if best_m:
-    cams['mouth'] = cam_at(best_m[1], best_m[2], best_m[3], pitch=0.16,
-                           look_y=0.40, note='涧田湖东口看出水，沿东段')
-    placed_m = True
-    print('7C cam mouth s', round(s_east0 + best_m[5], 1), 'side', best_m[6],
-          'off', best_m[7], 'dWater', round(best_m[4], 1), 'score', round(best_m[0], 1))
-  if not placed_m:
-    (mx, mz), _, _ = at_yx(s_east0 + 12, -(HW_YX + 5.4))
-    (lx, lz), _, _ = at_yx(s_east0 + 4.0, 0.0)
-    cams['mouth'] = cam_at(mx, mz, (lx, lz), pitch=0.16, look_y=0.40,
-                           note='涧田湖东口看出水，沿东段')
-    print('WARN cam mouth fallback', (round(mx, 2), round(mz, 2)))
-
-  def _clear_front_soft(x, z, look, near=5.0):
+  def _clear_front_soft(x, z, look, near=10.0):
     """桥/合拢机位：只拦贴在眼前的牌、灯、树干、房墙，两侧沿街房子可以入画。"""
     lx, lz = look[0] - x, look[1] - z
     L = math.hypot(lx, lz) or 1
@@ -972,21 +937,116 @@ def build_east(g):
       if math.hypot(P['x'] - x, P['z'] - z) < 5.0 or in_near(P['x'], P['z'], 6.0):
         return False
     for lam in lamps:
-      if in_near(lam[0], lam[1], 3.6) or math.hypot(lam[0] - x, lam[1] - z) < 2.6:
+      if in_near(lam[0], lam[1], 6.0) or math.hypot(lam[0] - x, lam[1] - z) < 3.0:
         return False
     for tr in TREES:
       if len(tr) > 5 and tr[5] == 'gone':
         continue
-      if in_near(tr[0], tr[1], 3.6) or math.hypot(tr[0] - x, tr[1] - z) < 3.0:
+      if in_near(tr[0], tr[1], 10.0) or math.hypot(tr[0] - x, tr[1] - z) < 5.0:
         return False
-    ray = LineString([(x + ux * 0.6, z + uz * 0.6), (x + ux * 6.0, z + uz * 6.0)]).buffer(0.8)
+    ray = LineString([(x + ux * 0.6, z + uz * 0.6), (x + ux * 8.0, z + uz * 8.0)]).buffer(1.0)
     for h in HOUSES:
       if h.get('gone'):
         continue
       poly = _hpoly0(h)
-      if poly.distance(Point(x, z)) < 2.4 or poly.intersects(ray):
+      if poly.distance(Point(x, z)) < 4.0 or poly.intersects(ray):
         return False
     return True
+
+  def _on_road_or_deck(x, z):
+    pt = Point(x, z)
+    for r in ROADS_C:
+      if r['poly'].buffer(1.0).contains(pt):
+        return True
+    for br in BRC:
+      if br.get('foot') is not None and br['foot'].buffer(1.0).contains(pt):
+        return True
+    return False
+
+  def _look_over_deck(x, z, look, near=9.0):
+    lx, lz = look[0] - x, look[1] - z
+    L = math.hypot(lx, lz) or 1
+    ray = LineString([(x + lx / L * 0.8, z + lz / L * 0.8), (x + lx / L * near, z + lz / L * near)])
+    for br in BRC:
+      if br.get('foot') is not None and br['foot'].intersects(ray):
+        return True
+    return False
+
+  cams = {}
+
+  # 东口：站在涧山巷下游的岸边步道（不要站在桥面/引路上），沿河道朝出水口看，水面占画面 1/3 以上
+  placed_m = False
+  best_m = None
+  (lx, lz), _, _ = at_yx(s_east0 + 6.0, 0.0)
+  look_m = (lx, lz)
+  for ds in (28, 32, 24, 36, 22, 40, 20, 18, 44, 16):
+    for side in (-1, 1):
+      for off in (HW_YX + 5.6, HW_YX + 6.4, HW_YX + 4.8, HW_YX + 7.2, HW_YX + 8.0):
+        (mx, mz), tdir, nn = at_yx(s_east0 + ds, side * off)
+        if not _cam_ok(mx, mz) or _on_road_or_deck(mx, mz):
+          continue
+        wd = Point(mx, mz).distance(water)
+        if not (3.6 <= wd <= 8.0):
+          continue
+        if not _clear_front_soft(mx, mz, look_m, near=7.0):
+          continue
+        score = max(0.0, 7.0 - abs(wd - 5.2)) + (2.0 if ds >= 22 else 0)
+        rec = (score, mx, mz, look_m, wd, ds, side, off)
+        if best_m is None or rec[0] > best_m[0]:
+          best_m = rec
+  if best_m:
+    cams['mouth'] = cam_at(best_m[1], best_m[2], best_m[3], pitch=0.18,
+                           look_y=0.38, note='涧田湖东口看出水，沿东段')
+    placed_m = True
+    print('7C cam mouth s', round(s_east0 + best_m[5], 1), 'side', best_m[6],
+          'off', best_m[7], 'dWater', round(best_m[4], 1), 'score', round(best_m[0], 1))
+  if not placed_m:
+    print('WARN cam mouth no scored spot, scanning leftovers')
+    for ds in (30, 34, 26, 38, 22, 42, 18):
+      for side in (-1, 1):
+        for off in (HW_YX + 5.6, HW_YX + 6.8, HW_YX + 4.8, HW_YX + 8.0):
+          (mx, mz), _, _ = at_yx(s_east0 + ds, side * off)
+          if not _cam_ok(mx, mz) or _on_road_or_deck(mx, mz):
+            continue
+          wd = Point(mx, mz).distance(water)
+          if wd < 3.4 or wd > 9.0:
+            continue
+          cams['mouth'] = cam_at(mx, mz, look_m, pitch=0.18, look_y=0.38,
+                                 note='涧田湖东口看出水，沿东段')
+          placed_m = True
+          print('7C cam mouth leftover s', round(s_east0 + ds, 1), 'side', side,
+                'off', off, 'dWater', round(wd, 1))
+          break
+        if placed_m:
+          break
+      if placed_m:
+        break
+    if not placed_m:
+      print('WARN cam mouth leftover empty, last-resort land scan')
+      for ds in range(18, 64, 2):
+        for side in (-1, 1):
+          for off in (HW_YX + 5.2, HW_YX + 6.4, HW_YX + 7.6, HW_YX + 4.6, HW_YX + 8.4):
+            (mx, mz), _, _ = at_yx(s_east0 + ds, side * off)
+            cp = Point(mx, mz)
+            if (not region.contains(cp)) or water.buffer(0.6).contains(cp) or _on_road_or_deck(mx, mz):
+              continue
+            if any((not h.get('gone')) and _hpoly0(h).distance(cp) < 2.4 for h in HOUSES):
+              continue
+            wd = cp.distance(water)
+            if not (3.4 <= wd <= 9.5):
+              continue
+            cams['mouth'] = cam_at(mx, mz, look_m, pitch=0.18, look_y=0.38,
+                                   note='涧田湖东口看出水，沿东段')
+            placed_m = True
+            print('7C cam mouth last-resort s', round(s_east0 + ds, 1), 'side', side,
+                  'off', off, 'dWater', round(wd, 1))
+            break
+          if placed_m:
+            break
+        if placed_m:
+          break
+      if not placed_m:
+        print('WARN cam mouth could not place')
 
   def _place_bridge_cam(b, note):
     """站在岸边步道斜看桥身和水面，不要站在桥面/引路上朝沥青看。"""
@@ -1009,7 +1069,7 @@ def build_east(g):
             z = b['z'] + nz * side * bank + tz * along
             look = (b['x'] - nx * side * 1.2 + tx * along * 0.12,
                     b['z'] - nz * side * 1.2 + tz * along * 0.12)
-            if not _cam_ok(x, z):
+            if not _cam_ok(x, z) or _on_road_or_deck(x, z):
               continue
             if b.get('foot') is not None and b['foot'].buffer(1.4).contains(Point(x, z)):
               continue
@@ -1062,7 +1122,7 @@ def build_east(g):
       for bank in (HW_YX + 6.0, HW_YX + 7.0, HW_YX + 5.2, HW_YX + 8.0, HW_YX + 9.0, HW_YX + 4.6):
         x = b['x'] + nx * side * bank + tx * along
         z = b['z'] + nz * side * bank + tz * along
-        if not _cam_ok_land(x, z):
+        if not _cam_ok_land(x, z) or _on_road_or_deck(x, z):
           continue
         if b.get('foot') is not None and b['foot'].buffer(1.2).contains(Point(x, z)):
           continue
@@ -1111,14 +1171,16 @@ def build_east(g):
   mid_s = (s_east0 + yx.length) / 2
   found_s = None
   best_s = None
-  s_tries = [mid_s + d for d in (0, -16, 16, -32, 32, -48, 48, -64, 64, 12, -12, 24, -24, 40, -40, 80, -80)]
+  s_tries = [1298.0, mid_s] + [mid_s + d for d in (0, -16, 16, -32, 32, -48, 48, -64, 64, 12, -12, 24, -24, 40, -40, 80, -80)]
   for s_try in s_tries:
     if s_try < s_east0 + 24 or s_try > yx.length - 40:
       continue
     for side in (-1, 1):
       for off in (HW_YX + 6.5, HW_YX + 7.5, HW_YX + 8.5, HW_YX + 9.5, HW_YX + 5.8):
         (sx, sz), tdir, nn = at_yx(s_try, side * off)
-        if not _cam_ok(sx, sz):
+        if not _cam_ok(sx, sz) or _on_road_or_deck(sx, sz):
+          continue
+        if any((not h.get('gone')) and _hpoly0(h).distance(Point(sx, sz)) < 5.2 for h in HOUSES):
           continue
         wd = Point(sx, sz).distance(water)
         if not (4.0 <= wd <= 10.5):
@@ -1164,55 +1226,76 @@ def build_east(g):
     print('7C cam south at s', round(found_s[4], 1), 'side', found_s[5], 'off', found_s[6],
           'dWater', round(found_s[7], 1), 'nSideH', found_s[8], 'score', round(found_s[0], 1))
   else:
-    (sx, sz), tdir, nn = at_yx(mid_s, -(HW_YX + 7.5))
-    look = (sx + tdir[0] * 26.0 + nn[0] * 3.0, sz + tdir[1] * 26.0 + nn[1] * 3.0)
-    cams['south'] = cam_at(sx, sz, look, pitch=0.10, note='东段南岸街景')
-    print('WARN cam south fallback', (round(sx, 2), round(sz, 2)), 'best', None if not best_s else best_s[0])
+    print('WARN cam south no scored spot, scanning leftovers')
+    placed_s = False
+    for s_try in [1298.0, mid_s] + [mid_s + d for d in (20, -20, 40, -40, 60, -60, 80, -80)]:
+      if s_try < s_east0 + 24 or s_try > yx.length - 40:
+        continue
+      for side in (-1, 1):
+        for off in (HW_YX + 7.5, HW_YX + 6.5, HW_YX + 8.5, HW_YX + 5.8):
+          (sx, sz), tdir, nn = at_yx(s_try, side * off)
+          if not _cam_ok(sx, sz) or _on_road_or_deck(sx, sz):
+            continue
+          if any((not h.get('gone')) and _hpoly0(h).distance(Point(sx, sz)) < 3.2 for h in HOUSES):
+            continue
+          wd = Point(sx, sz).distance(water)
+          if not (4.0 <= wd <= 11.0):
+            continue
+          look = (sx + tdir[0] * 26.0 - nn[0] * side * 3.0, sz + tdir[1] * 26.0 - nn[1] * side * 3.0)
+          cams['south'] = cam_at(sx, sz, look, pitch=0.10, note='东段南岸街景')
+          placed_s = True
+          print('7C cam south leftover s', round(s_try, 1), 'side', side, 'off', off, 'dWater', round(wd, 1))
+          break
+        if placed_s:
+          break
+      if placed_s:
+        break
+    if not placed_s:
+      print('WARN cam south could not place')
 
 
-  # 合拢机位：站在岸边步道沿河道看，水面接到合拢墙，墙后是远景楼。不要只对着墙和铺地。
-  # 匝道悬挑伸进河道约 12 m：只要人没站在板下，远看墙前的一段悬挑按远景处理，不再一票否决。
+  # 合拢机位：站在岸边步道沿河道看，水面接到合拢墙，墙后是远景楼。不要对着引路沥青，也不要站在匝道下。
   placed_c = False
   best_c = None
-  look_c0 = (wall_p[0] - te[0] * 0.6, wall_p[1] - te[1] * 0.6)
-  for back in (24, 26, 22, 28, 20, 30, 18, 32, 16):
-    for lat_abs in (HW_YX + 6.2, HW_YX + 5.4, HW_YX + 7.2, HW_YX + 8.4, HW_YX + 9.6, HW_YX + 4.8, HW_YX + 11.0):
+  look_c0 = (wall_p[0] - te[0] * 8.0, wall_p[1] - te[1] * 8.0)
+  for back in (42, 46, 38, 50, 34, 54, 30, 58, 26):
+    for lat_abs in (HW_YX + 6.0, HW_YX + 5.2, HW_YX + 7.0, HW_YX + 8.2, HW_YX + 4.8):
       for sgn in (1, -1):
         lat = sgn * lat_abs
         cx = wall_p[0] - te[0] * back + ne[0] * lat
         cz = wall_p[1] - te[1] * back + ne[1] * lat
-        if _under_ramp(cx, cz):
+        if _under_ramp(cx, cz) or not _cam_ok(cx, cz) or _on_road_or_deck(cx, cz):
           continue
-        if not _cam_ok(cx, cz):
+        if _look_over_deck(cx, cz, look_c0, 8.0):
           continue
-        if not _clear_front_soft(cx, cz, look_c0, near=5.5):
+        if not _clear_front_soft(cx, cz, look_c0):
           continue
         wd = Point(cx, cz).distance(water)
-        if not (3.2 <= wd <= 11.0):
+        if not (3.6 <= wd <= 10.0):
           continue
-        score = max(0.0, 8.0 - abs(wd - 5.5)) + max(0.0, 6.0 - abs(lat_abs - (HW_YX + 6.2))) * 0.4
+        score = max(0.0, 8.0 - abs(wd - 5.4)) + (1.5 if back >= 36 else 0)
         rec = (score, cx, cz, back, lat, wd)
         if best_c is None or rec[0] > best_c[0]:
           best_c = rec
   if best_c:
-    cams['cap'] = cam_at(best_c[1], best_c[2], look_c0, pitch=0.12, look_y=0.50, note='命名东头合拢')
+    cams['cap'] = cam_at(best_c[1], best_c[2], look_c0, pitch=0.16, look_y=0.42, note='命名东头合拢')
     placed_c = True
     print('7C cam cap back', best_c[3], 'lat', round(best_c[4], 1), 'dWater', round(best_c[5], 1),
           'dRamp', round(_ramp_poly().distance(Point(best_c[1], best_c[2])), 1), 'score', round(best_c[0], 1))
   if not placed_c:
     print('WARN cam cap no candidate, scanning leftovers')
-    for back in range(16, 36, 2):
-      for lat_abs in (HW_YX + 6.2, HW_YX + 8.0, HW_YX + 10.0, HW_YX + 5.0, HW_YX + 12.0):
+    for back in range(28, 62, 2):
+      for lat_abs in (HW_YX + 6.0, HW_YX + 7.5, HW_YX + 5.0, HW_YX + 9.0):
         for sgn in (1, -1):
           lat = sgn * lat_abs
           cx = wall_p[0] - te[0] * back + ne[0] * lat
           cz = wall_p[1] - te[1] * back + ne[1] * lat
-          if _under_ramp(cx, cz) or not _cam_ok(cx, cz):
+          if _under_ramp(cx, cz) or not _cam_ok(cx, cz) or _on_road_or_deck(cx, cz):
             continue
           wd = Point(cx, cz).distance(water)
-          if wd < 3.0 or wd > 12.0:
+          if wd < 3.2 or wd > 11.0:
             continue
-          cams['cap'] = cam_at(cx, cz, look_c0, pitch=0.12, look_y=0.50, note='命名东头合拢')
+          cams['cap'] = cam_at(cx, cz, look_c0, pitch=0.16, look_y=0.42, note='命名东头合拢')
           placed_c = True
           print('7C cam cap leftover back', back, 'lat', round(lat, 1), 'dWater', round(wd, 1))
           break
@@ -1280,16 +1363,29 @@ def build_east(g):
       if math.hypot(t[0] - _cam['x'], t[1] - _cam['z']) < 3.2:
         print('WARN cam near trunk', _nm, (_cam['x'], _cam['z']), t[:2])
     print('7C cam clear', _nm, (_cam['x'], _cam['z']))
-  # 机位 4 m 内的树干挪走（规则：前景无树干）
+  # 机位近处和视线锥里的树干挪走（规则：前景无树干）
   nDrop = 0
   for t in TREES:
-    if t[5] == 'gone':
+    if len(t) < 6 or t[5] == 'gone':
       continue
+    drop = False
     for _cam in cams.values():
-      if math.hypot(t[0] - _cam['x'], t[1] - _cam['z']) < 4.0:
-        t[5] = 'gone'
-        nDrop += 1
+      dx, dz = t[0] - _cam['x'], t[1] - _cam['z']
+      if math.hypot(dx, dz) < 5.5:
+        drop = True
         break
+      look = _cam['look']
+      lx, lz = look[0] - _cam['x'], look[2] - _cam['z']
+      L = math.hypot(lx, lz) or 1
+      ux, uz = lx / L, lz / L
+      along = dx * ux + dz * uz
+      lat = abs(dx * uz - dz * ux)
+      if 0.2 < along < 12.0 and lat < 3.4:
+        drop = True
+        break
+    if drop:
+      t[5] = 'gone'
+      nDrop += 1
   if nDrop:
     print('7C dropped trees near cams', nDrop)
 
