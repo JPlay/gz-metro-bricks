@@ -106,7 +106,7 @@ export class FzRiverStreet extends XmStreet {
   river() {
     const k = this.kit;
     this.facades();
-    this.walls(); this.bridges(); this.piers(); if (FZR.c2) this.c2Static(); else this.sharedDecks(); if (FZR.a3) this.a3Static(); if (FZR.a4) this.a4Static(); if (FZR.a5) this.a5Static(); if (FZR.a6) this.a6Static(); if (FZR.a6b) this.a6bStatic(); if (FZR.a7a) this.a7aStatic(); if (FZR.b3) this.b3Static(); this.stepsDown(); this.unders(); this.roads(); this.houses(); this.trees(); this.promenade(); if (FZR.b3) this.lakeLamps(); if (FZR.sfqx) this.sanfang(); if (FZR.lakeBox) this.backdrops(); if (LOCK) this.lockStatic(); if (KIOSKS.fzxm_B) this.xihuPark();
+    this.walls(); this.bridges(); this.piers(); if (FZR.c2) this.c2Static(); else this.sharedDecks(); if (FZR.a3) this.a3Static(); if (FZR.a4) this.a4Static(); if (FZR.a5) this.a5Static(); if (FZR.a6) this.a6Static(); if (FZR.a6b) this.a6bStatic(); if (FZR.a7a) this.a7aStatic(); if (FZR.a7b) this.a7bStatic(); if (FZR.b3) this.b3Static(); this.stepsDown(); this.unders(); this.roads(); this.houses(); this.trees(); this.promenade(); if (FZR.b3) this.lakeLamps(); if (FZR.a7b) this.a7bLamps(); if (FZR.sfqx) this.sanfang(); if (FZR.lakeBox) this.backdrops(); if (LOCK) this.lockStatic(); if (KIOSKS.fzxm_B) this.xihuPark();
     k.group('g0');   // 上面直接画的东西（桥、码头、台阶、马路、牌坊…）常开：单独封一组，别被并进第一个细节格子
     if (this._nhjw || this._nhjH) {
       if (this._nhjw) { for (const t of this._nhjw) this.banyanNear(...t); this._nhjw = null; }
@@ -993,6 +993,18 @@ export class FzRiverStreet extends XmStreet {
       if (!isWater(a.x, a.z)) continue;
       WA.box(a.x, WY + 0.004, a.z, 0.25, 0.004, 4.2, C, yawOf(a.tx, a.tz), 0, 0, 1, NO);
     }
+    const L = FZR.a7b && FZR.a7b.lake;
+    if (L && L.ring && L.ring.length >= 6) {
+      const [cx, cz] = L.c;
+      for (let i = 0; i < L.ring.length; i += 6) {
+        const x = L.ring[i], z = L.ring[i + 1];
+        const vx = cx - x, vz = cz - z, d = Math.hypot(vx, vz) || 1;
+        const px = x + vx / d * 8, pz = z + vz / d * 8;
+        if (!isWater(px, pz)) continue;
+        // 湖面倒影：细、短、断开，不要一根亮橙条
+        WA.box(px, WY + 0.004, pz, 0.22, 0.004, 3.4, C, Math.atan2(vx, vz) + ((i * 13) % 7 - 3) * 0.08, 0, 0, 1, NO);
+      }
+    }
   }
 
 
@@ -1216,7 +1228,7 @@ export class FzRiverStreet extends XmStreet {
       P.box(W.x, W.h + 0.16, W.z, W.thick + 0.3, 0.32, W.len + 0.4, hex('#6A655A'), ry, 0, 0, 1, NO);
     }
     const L = RIVERS.yx && RIVERS.yx.line;
-    if (L) {
+    if (L && A.capWall) {
       const e = L.at(L.len), te = { x: e.tx, z: e.tz }, n = { x: te.z, z: -te.x };
       k.col(e.x + te.x * ((A.cap || 2.4) + 0.4), 1.2, e.z + te.z * ((A.cap || 2.4) + 0.4), 0.8, 8, 56, { ry: yawOf(n.x, n.z), name: 'colCap' });
     }
@@ -1504,6 +1516,45 @@ export class FzRiverStreet extends XmStreet {
     k.col(mx, 0.6, mz, 0.3, 1.2, L, { ry, name: 'colWalkRail' });
     GR.box(mx, 0.74, mz, 0.16, 0.1, L, hex('#B5AE9F'), ry, 0, 0, 1, NO);
     for (let i = 0; i <= n; i++) { const t = i / n; GR.box(ax + (bx - ax) * t, 0.38, az + (bz - az) * t, 0.2, 0.72, 0.2, hex('#A8A193'), ry, 0, 0, 1, NO); }
+  }
+  /** 7B：东头合拢墙 + 远景、涧田湖广场块、西园/玄南岭路名牌。colCap 在出水口，不在 yx 河尾。 */
+  a7bStatic() {
+    const A = FZR.a7b, k = this.kit, P = k.solid, GR = k.g('granite');
+    if (!A) return;
+    for (const S of A.plates || []) this.stoneSign(S.x, S.z, S.f[0], S.f[1], 3.2, 1.35, S.lines.filter(Boolean));
+    const Wc = ['#7E8C99', '#8796A3', '#76858F', '#8F9AA5'];
+    (A.far || []).forEach((q, i) => {
+      const [x, z, fx, fz] = q, ry = yawOf(fx, fz), h = 12 + (i * 7) % 14, w = 10 + (i % 3) * 2, d = 8 + (i % 2) * 1.5;
+      P.box(x, 0.4, z, w + 10, 0.8, d + 10, hex('#6E7A64'), ry, 0, 0, 1, NO);
+      P.box(x, 0.5, z, w + 0.9, 1.0, d + 0.9, hex('#4A545C'), ry, 0, 0, 1, NO);
+      P.box(x, 1.0 + h / 2, z, w, h, d, hex(Wc[i % 4]), ry, 0, 0, 1, NO);
+      P.box(x, 1.0 + h + 0.22, z, w + 0.45, 0.44, d + 0.45, hex('#3E484F'), ry, 0, 0, 1, NO);
+    });
+    if (A.capWall) {
+      const W = A.capWall, ry = yawOf(W.n[0], W.n[1]);
+      P.box(W.x, W.h / 2, W.z, W.thick, W.h, W.len, hex('#7A7568'), ry, 0, 0, 1, NO);
+      P.box(W.x, W.h + 0.16, W.z, W.thick + 0.3, 0.32, W.len + 0.4, hex('#6A655A'), ry, 0, 0, 1, NO);
+      k.col(W.x + W.t[0] * 0.4, 1.2, W.z + W.t[1] * 0.4, 0.8, 8, 56, { ry, name: 'colCap' });
+    }
+    for (const pl of A.plazas || []) {
+      const ry = yawOf(pl.f[0], pl.f[1]);
+      GR.box(pl.x, 0.04, pl.z, pl.w, 0.08, pl.d, hex('#A39C8E'), ry, 0, 0, 1, NO);
+      k.col(pl.x, 0.04, pl.z, pl.w, 0.08, pl.d, { ry, name: 'colPlaza' });
+    }
+  }
+  /** 7B：环湖路灯/长椅进细节格子，不加 draw。 */
+  a7bLamps() {
+    const A = FZR.a7b, k = this.kit;
+    if (!A || !A.lamps) return;
+    for (const L of A.lamps) {
+      const [x, z, tx, tz] = L;
+      this.det(x, z, () => {
+        const ry = yawOf(tx, tz);
+        k.metal.box(x, 1.55, z, 0.08, 3.1, 0.08, hex('#4A5560'), 0, 0, 0, 1, NO);
+        k.g('granite').box(x, 0.12, z, 0.28, 0.24, 0.28, hex('#8E887C'), 0, 0, 0, 1, NO);
+        k.solid.box(x + tx * 0.12, 3.05, z + tz * 0.12, 0.28, 0.08, 0.18, hex('#E8D9A8'), ry, 0, 0, 1, NO);
+      });
+    }
   }
   /* ---------- 路 / 广场 ---------- */
   roads() {

@@ -206,8 +206,13 @@ for (const side of [1, -1]) {
   reach(p.x, p.z, `expressway underside side=${side}`);
 }
 {
-  const p = RV.yx.line.at(RV.yx.line.len - 2, bankOff);
-  reach(p.x, p.z, 'east cap bank');
+  const end7a = (A7.yxLen7a != null ? A7.yxLen7a : RV.yx.line.len);
+  const p = RV.yx.line.at(end7a - 2, bankOff);
+  reach(p.x, p.z, '7A east end bank');
+  if (F.a7b) {
+    const q = RV.yx.line.at(Math.min(RV.yx.line.len - 2, end7a + 12), bankOff);
+    reach(q.x, q.z, 'join open into 7B');
+  }
 }
 
 // 沿岸步道密采样：snap 必须近，避免路点落到孤立垫板上算通过，而真实走线在夏莲路被抬高 colDeck 挡住

@@ -10,7 +10,7 @@ const nsrc = fs.readFileSync(new URL('../../js/world/fzNight.js', import.meta.ur
 const src = fsrc + nsrc;
 
 ok('7A data present (a7a: yxLen / 7 culverts / express / cap / 4 cams / 1 sign)',
-  !!(A7 && A7.yxLen > 520 && A7.yxLen < 560 && (A7.culverts || []).length === 7 && A7.express && A7.express.main && A7.capWall && A7.cams && A7.cams.seam && A7.cams.express && A7.cams.culvert && A7.cams.tip && (A7.signs || []).length === 1));
+  !!(A7 && A7.yxLen > 520 && A7.yxLen < 560 && (A7.culverts || []).length === 7 && A7.express && A7.express.main && (F.a7b ? (A7.openedTo7b && !A7.capWall) : A7.capWall) && A7.cams && A7.cams.seam && A7.cams.express && A7.cams.culvert && A7.cams.tip && (A7.signs || []).length === 1));
 
 // 已建晋安河中线 / 既有桥不得改（与 main d26fb85 逐点对照）
 { const ja = F.rivers.ja.p, jn = F.rivers.jn.p;
@@ -93,7 +93,9 @@ ok('7A data present (a7a: yxLen / 7 culverts / express / cap / 4 cams / 1 sign)'
 }
 
 // 东头合拢像 6B：墙 + 远景
-ok('east end is sealed like 6B (capWall + far backdrop + colCap)', !!(A7.capWall && (A7.far || []).length >= 3) && /colCap/.test(fsrc) && A7.cap === 2.4);
+ok('east end is sealed like 6B (capWall + far backdrop + colCap)', F.a7b
+  ? (!A7.capWall && (A7.cap === 0 || A7.cap === undefined) && A7.openedTo7b && F.a7b.capWall && (F.a7b.far || []).length >= 3 && /colCap/.test(fsrc))
+  : (!!(A7.capWall && (A7.far || []).length >= 3) && /colCap/.test(fsrc) && A7.cap === 2.4));
 
 // 不新建出口、不开船、不延长 B/D
 ok('no new kiosk / station; boats still only B and D; 6A/6B data still present',
