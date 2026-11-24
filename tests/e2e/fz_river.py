@@ -1290,14 +1290,15 @@ async def run_7b(pg):
     A = await pg.evaluate("""(async () => { const M = await import('/js/data/fz-river.js'); const F = M.FZR, a7 = F.a7a, b7 = F.a7b, yx = M.RIVERS.yx, jn = M.RIVERS.jn;
       const br = (F.bridges || []).filter(x => x.a7b || (b7.bridges || []).includes(x.id));
       return { hw: F.rivers.yx.hw, len7a: a7.yxLen7a || a7.yxLen, len: yx.line.len, jnHw: F.rivers.jn.hw,
-        host: a7.host, cap: b7.cap || 2.4, opened: !!a7.openedTo7b,
+        host: a7.host, cap: b7.cap || 2.4, opened: !!a7.openedTo7b, openedTo7c: !!(b7 && b7.openedTo7c),
         cams: Object.assign({}, a7.cams || {}, b7.cams || {}),
         culverts: a7.culverts, express: a7.express, loop: b7.loop, capBank: b7.capBank, capPast: b7.capPast,
+        lakeMouthBank: b7.lakeMouthBank, mouthOpen: b7.mouthOpen,
         plazas: b7.plazas, plates: b7.plates, byStyle: b7.byStyle, outlet: b7.outlet, capWall: b7.capWall,
         lake: b7.lake, bridges: br };
     })()""")
     hw = A['hw']
-    ok('n:7B data (opened, lake, loop, cap, 6 decks)', bool(A.get('opened') and A.get('lake') and len(A.get('loop') or []) >= 8 and A.get('capWall') and len(A.get('bridges') or []) >= 6), { 'opened': A.get('opened'), 'loop': len(A.get('loop') or []), 'bridges': len(A.get('bridges') or []) })
+    ok('n:7B data (opened, lake, loop, cap or openedTo7c, 6 decks)', bool(A.get('opened') and A.get('lake') and len(A.get('loop') or []) >= 8 and (A.get('capWall') or A.get('openedTo7c')) and len(A.get('bridges') or []) >= 6), { 'opened': A.get('opened'), 'openedTo7c': A.get('openedTo7c'), 'loop': len(A.get('loop') or []), 'bridges': len(A.get('bridges') or []) })
     R['perf']['n:kiosk:fzdm'] = await sample4(pg, 'n:kiosk:fzdm')
 
     async def ybank(s, side, off=None):
@@ -1359,21 +1360,34 @@ async def run_7b(pg):
     ok('n:lake loop counter-clockwise', await walk_loop(list(reversed(loop)), 'loop_ccw'))
     R['perf']['n:loop_ccw'] = await sample4(pg, 'n:loop_ccw')
 
-    # 东头合拢：走到岸边，走不过墙外
-    cb = A['capBank']; cp = A['capPast']
+    # 东口：7C 打开后，走当初被出水口淹没的点（loop pt5、湖侧岸、7C 侧岸穿过出水口）。
+    # 未打开时仍走到 7B 合拢岸，确认走不过墙外。
+    cb = A['lakeMouthBank'] or A['capBank']
     cbp = await W(pg, cb[0], cb[1])
-    okw = await go(pg, *cbp, '→ 湖东北合拢岸边'); ok('n:walk to east cap bank', okw and await near(pg, *cbp, 4.0), (await st(pg))['pos'])
+    okw = await go(pg, *cbp, '→ 湖东北出水口岸边'); ok('n:walk to east cap bank', okw and await near(pg, *cbp, 4.0), (await st(pg))['pos'])
     R['perf']['n:cap'] = await sample4(pg, 'n:cap')
     if OUT and A['cams'].get('cap'):
         C = A['cams']['cap']; await look(pg, *(await W(pg, C['look'][0], C['look'][2])), 0.08); await shot(pg, 'n_cap')
-    pastW = await W(pg, cp[0], cp[1])
-    await legs(pg, [pastW], False); await asyncio.sleep(0.6)
-    s = await st(pg)
-    root = await pg.evaluate("(() => { const R=__game.fzMetro.street.kit.root.position, p=__game.player.position; return [p.x-R.x, p.z-R.z]; })()")
-    Wl = A['capWall']
-    # 沿出水方向（t 指向 7C）的投影：人不应走过合拢墙
-    along = (root[0] - Wl['x']) * Wl['t'][0] + (root[1] - Wl['z']) * Wl['t'][1]
-    ok('n:cannot walk past east cap', along < (A['cap'] + 6) and s['pos'][1] > -0.3, {'along': along, 'pos': s['pos'], 'cap': A['cap']})
+    if A.get('openedTo7c'):
+        loop = A['loop'] or []
+        if len(loop) > 5:
+            p5 = await W(pg, loop[5][0], loop[5][1])
+            okw = await go(pg, *p5, '→ 环湖 pt5（出水口旁）'); ok('n:walk lake loop pt5 at open outlet', okw and await near(pg, *p5, 4.5), (await st(pg))['pos'])
+        mo = A.get('mouthOpen')
+        ok('n:7C mouthOpen is recorded for the open-outlet walk', bool(mo and len(mo) >= 2), mo)
+        if mo:
+            mow = await W(pg, mo[0], mo[1])
+            okw = await go(pg, *mow, '→ 7C 东口岸（穿过打开的出水口）'); ok('n:walk through outlet to 7C-side bank', okw and await near(pg, *mow, 4.5), (await st(pg))['pos'])
+            R['perf']['n:mouthOpen'] = await sample4(pg, 'n:mouthOpen')
+    else:
+        cp = A['capPast']
+        pastW = await W(pg, cp[0], cp[1])
+        await legs(pg, [pastW], False); await asyncio.sleep(0.6)
+        s = await st(pg)
+        root = await pg.evaluate("(() => { const R=__game.fzMetro.street.kit.root.position, p=__game.player.position; return [p.x-R.x, p.z-R.z]; })()")
+        Wl = A['capWall']
+        along = (root[0] - Wl['x']) * Wl['t'][0] + (root[1] - Wl['z']) * Wl['t'][1]
+        ok('n:cannot walk past east cap', along < (A['cap'] + 6) and s['pos'][1] > -0.3, {'along': along, 'pos': s['pos'], 'cap': A['cap']})
 
 
 async def run_7a(pg):

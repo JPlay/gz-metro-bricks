@@ -10,10 +10,10 @@ const nsrc = fs.readFileSync(new URL('../../js/world/fzNight.js', import.meta.ur
 const asrc = fs.readFileSync(new URL('../../tools/fzriver/a7c.py', import.meta.url), 'utf8');
 
 ok('7C data present (a7c: yxLen / sEast0 / 5 decks / cap / plates / cams / lamps)',
-  !!(A7C && A7C.yxLen > 1200 && A7C.yxLen < 1450 && A7C.yxLen7b > 880 && A7C.yxLen7b < 980
+  !!(A7C && A7C.yxLen > 1200 && A7C.yxLen < 1600 && A7C.yxLen7b > 880 && A7C.yxLen7b < 980
     && A7C.sEast0 > A7C.yxLen7b + 40 && (A7C.bridges || []).length === 5
     && A7C.capWall && (A7C.far || []).length >= 6
-    && A7C.capBank && A7C.capPast && A7C.tip
+    && A7C.capBank && A7C.capPast && A7C.tip && A7C.mouthOpen && A7C.lakeMouthBank
     && (A7C.plates || []).length === 1 && A7C.cams && A7C.cams.mouth && A7C.cams.cap && A7C.cams.jianshan
     && (A7C.lamps || []).length >= 16));
 
@@ -31,6 +31,39 @@ ok('ja/jn sha unchanged', A7C.jaJnSha1 === '6eb7a2870782e8dbc9bd3d1ed20a63b42c4a
     { start: [st.x, st.z], mid7b: [mid7b.x, mid7b.z], line: RV.yx.line.len, yxLen: A7C.yxLen });
   ok('yx line length matches 7C yxLen (7B + lake crossing + east reach)',
     Math.abs(RV.yx.line.len - A7C.yxLen) < 0.3 && RV.yx.line.len > A7C.yxLen7b + 250);
+}
+
+
+// 新中线（含东口弯）minR ≥ 25 m 游戏单位：6 m 窗口硬检查；顶点半径一并记录。
+{ const L = RV.yx.line, c = F.rivers.yx.p, pts = [], lock0 = A7C.yxLen7b, lock1 = L.len;
+  for (let i = 0; i < c.length; i += 2) pts.push([c[i], c[i + 1]]);
+  let r1 = 1e9, acc = 0;
+  for (let i = 1; i < pts.length - 1; i++) {
+    const [a, b, d] = [pts[i - 1], pts[i], pts[i + 1]];
+    const A = Math.hypot(b[0] - a[0], b[1] - a[1]), Bq = Math.hypot(d[0] - b[0], d[1] - b[1]), C = Math.hypot(d[0] - a[0], d[1] - a[1]);
+    const s = (A + Bq + C) / 2, ar = Math.sqrt(Math.max(0, s * (s - A) * (s - Bq) * (s - C)));
+    if (ar > 1e-6 && acc + A >= lock0 && acc + A <= lock1) r1 = Math.min(r1, A * Bq * C / (4 * ar));
+    acc += A;
+  }
+  const windowMin = (s0, s1) => {
+    let r2 = 1e9, at = s0;
+    for (let s = s0; s <= s1 - 6; s += 0.5) {
+      const a = L.at(s), b = L.at(Math.min(s1, s + 6));
+      let d = Math.atan2(b.tx, b.tz) - Math.atan2(a.tx, a.tz);
+      d -= 2 * Math.PI * Math.round(d / (2 * Math.PI));
+      const r = 6 / Math.max(1e-9, Math.abs(d));
+      if (r < r2) { r2 = r; at = s; }
+    }
+    return { r2, at };
+  };
+  const all = windowMin(lock0, lock1);
+  const mouth = windowMin(Math.max(lock0, A7C.sEast0 - 40), Math.min(lock1, A7C.sEast0 + 40));
+  // 硬检查用 6 m 窗口（与 7A 相同度量、也是东口弯的设计口径）。2 m 折线的顶点外接圆在密采样圆弧上会略偏紧，只作记录。
+  ok(`7C new centerline / east-mouth minR ≥ 25 m (6 m window ${all.r2.toFixed(2)} at s=${all.at.toFixed(1)}; east-mouth ${mouth.r2.toFixed(2)}; vertices ${r1 === 1e9 ? 'n/a' : r1.toFixed(2)})`,
+    all.r2 >= 25 && mouth.r2 >= 25,
+    { r1, r2: all.r2, at: all.at, mouthR: mouth.r2, mouthAt: mouth.at, recorded: A7C.minR, minRMouth: A7C.minRMouth, sEast0: A7C.sEast0, yxLen7b: lock0 });
+  ok('A7C records the measured minR (≥ 25, within 1 m of the 6 m window)',
+    typeof A7C.minR === 'number' && A7C.minR >= 25 && Math.abs(A7C.minR - all.r2) < 1.0, { recorded: A7C.minR, r2: all.r2 });
 }
 
 ok('hw = 5 on the east reach; official east length is about 1204 m (game ~300)',
@@ -86,7 +119,7 @@ ok('night lights merge into fzNightLights; no PointLight / shadows in 7C runtime
 
 { const C = A7C.cams;
   ok('handoff cameras cover mouth / 涧山巷 / unnamed decks / cap, first-person eye height',
-    C.mouth && C.jianshan && C.anon38 && C.anon9 && C.anon17 && C.cap && C.south
+    C.mouth && C.jianshan && C.anon38 && C.anon9 && C.anon17 && C.cap && C.south && C.joint
     && C.mouth.y >= 1.4 && C.mouth.y <= 1.7 && C.cap.y >= 1.4 && C.cap.y <= 1.7);
 }
 

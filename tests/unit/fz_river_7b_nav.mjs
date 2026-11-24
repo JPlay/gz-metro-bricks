@@ -149,15 +149,21 @@ ok(`lake loop waypoints all reachable from the 7A join (gapCount=${loopFail})`, 
 }
 
 reach(A7B.capBank[0], A7B.capBank[1], 'east cap bank', 1.6);
-{ const [x, z] = A7B.capPast;
+if (F.a7c) {
+  const bank = A7B.lakeMouthBank || A7B.capBank;
+  reach(bank[0], bank[1], 'lake-side mouth bank', 1.6);
+  const open = A7B.mouthOpen || F.a7c.mouthOpen;
+  ok('7C mouthOpen is recorded', !!(open && open.length >= 2), { open });
+  if (open) reach(open[0], open[1], '7C-side bank through the open outlet (mouthOpen)', 1.8);
+  // The spots that broke after the outlet opened must stay on land and in the walk.
+  const pt5 = (A7B.loop || [])[5];
+  if (pt5) reach(pt5[0], pt5[1], 'lake loop pt5 (outlet-side, must stay land)', 1.6);
+} else {
+  const [x, z] = A7B.capPast;
   const k = snap(x, z);
   const d = snapDist(x, z, k);
   const reachable = k >= 0 && seen[k] && d <= 2.5;
-  if (F.a7c) {
-    ok('7B outlet is open toward 7C (capPast is in the walkable component)', reachable, { x, z, snap: k, d: +d.toFixed(2), seen: !!(k >= 0 && seen[k]) });
-  } else {
-    ok('cannot walk past east cap (7C side is not in the walkable component)', !reachable, { x, z, snap: k, d: +d.toFixed(2), seen: !!(k >= 0 && seen[k]) });
-  }
+  ok('cannot walk past east cap (7C side is not in the walkable component)', !reachable, { x, z, snap: k, d: +d.toFixed(2), seen: !!(k >= 0 && seen[k]) });
 }
 
 let bankGaps = 0;

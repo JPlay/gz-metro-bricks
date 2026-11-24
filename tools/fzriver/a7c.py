@@ -8,6 +8,168 @@ from a6 import (_tan, _dedupe, _resample, _smooth_radius, _bez)
 from a7a import _chaikin_safe, CAP, HW_YX, BAND_YX, JA_JN_SHA1
 
 HOLD = 8.0
+# 湖面交叉只作里程。西口到东口 te0 线侧向约 53 m，湖面长轴宽度也差不多，
+# 在湖内用短 S 弯做不到 minR≥25，所以用 R=28 的 RSR（先右再右，贴湖西/南绕行，再沿 te0 进东口）。
+# 水面不沿这段中线拉伸，只从 s_east0 起用小胶囊接上东段。
+LAKE_R = 28.0
+LAKE_HOLD = 10.0
+LAKE_APPR = 32.0
+
+
+def _arc_pts(C, a0, dtheta, rad, step=1.5):
+  n = max(2, int(abs(dtheta) * rad / step))
+  return [(C[0] + math.cos(a0 + dtheta * i / n) * rad,
+           C[1] + math.sin(a0 + dtheta * i / n) * rad) for i in range(1, n + 1)]
+
+
+def _minr_window(ls, s0, s1, ds=6.0, step=0.5):
+  """6 m 窗口最小曲率半径（游戏单位）。"""
+  worst, at, pt = 1e9, s0, None
+  s = max(0.0, s0)
+  end = min(ls.length, s1)
+  while s <= end - ds:
+    a = ls.interpolate(s)
+    ta, tb = _tan(ls, s), _tan(ls, s + ds)
+    d = math.atan2(tb[1], tb[0]) - math.atan2(ta[1], ta[0])
+    d -= 2 * math.pi * round(d / (2 * math.pi))
+    r = ds / max(1e-9, abs(d))
+    if r < worst:
+      worst, at, pt = r, s, (a.x, a.y)
+    s += step
+  return worst, pt, at
+
+
+def _lake_crossing(p0, T0, eog, te0, R=LAKE_R, hold=LAKE_HOLD, appr=LAKE_APPR):
+  """西口锁点 C1 接到东口 te0 长接近段：RSR，半径 R，持平 hold，接近 appr。"""
+  def add(A, B, s=1.0):
+    return (A[0] + s * B[0], A[1] + s * B[1])
+  def nrm(v):
+    L = math.hypot(*v) or 1
+    return (v[0] / L, v[1] / L)
+  def left(T):
+    return (-T[1], T[0])
+  def ang_at(C, P):
+    return math.atan2(P[1] - C[1], P[0] - C[0])
+  def cw_delta(a0, a1):
+    d = (a1 - a0 + math.pi * 3) % (2 * math.pi) - math.pi
+    if d > 0:
+      d -= 2 * math.pi
+    return d
+
+  Ph = add(p0, T0, hold)
+  Ap = add(eog, te0, -appr)
+  Cs = add(Ph, left(T0), -R)
+  Ce = add(Ap, left(te0), -R)
+  H = nrm((Ce[0] - Cs[0], Ce[1] - Cs[1]))
+  Pts = add(Cs, left(H), R)
+  Pte = add(Ce, left(H), R)
+  a0s = ang_at(Cs, Ph)
+  d1 = cw_delta(a0s, ang_at(Cs, Pts))
+  a0e = ang_at(Ce, Pte)
+  d2 = cw_delta(a0e, ang_at(Ce, Ap))
+
+  pts = [p0]
+  n_h = max(1, int(hold / 2))
+  for i in range(1, n_h + 1):
+    pts.append(add(p0, T0, hold * i / n_h))
+  pts += _arc_pts(Cs, a0s, d1, R)
+  if math.hypot(pts[-1][0] - Pts[0], pts[-1][1] - Pts[1]) > 0.2:
+    pts.append(Pts)
+  slen = math.hypot(Pte[0] - Pts[0], Pte[1] - Pts[1])
+  n_s = max(1, int(slen / 2))
+  for i in range(1, n_s + 1):
+    t = i / n_s
+    pts.append((Pts[0] + t * (Pte[0] - Pts[0]), Pts[1] + t * (Pte[1] - Pts[1])))
+  pts += _arc_pts(Ce, a0e, d2, R)
+  if math.hypot(pts[-1][0] - Ap[0], pts[-1][1] - Ap[1]) > 0.2:
+    pts.append(Ap)
+  n_a = max(1, int(appr / 2))
+  for i in range(1, n_a + 1):
+    pts.append(add(Ap, te0, appr * i / n_a))
+  return _dedupe(pts, 0.4)
+
+
+
+def _fillet_radius(ls, rmin=26.5, lock=0.0, step=1.5):
+  """把 lock 之后、航向变化会使 6 m 窗口半径小于 rmin 的折角换成圆弧。"""
+  pts = [tuple(q) for q in ls.coords]
+  acc = [0.0]
+  for i in range(1, len(pts)):
+    acc.append(acc[-1] + math.dist(pts[i - 1], pts[i]))
+  turn_lim = 6.0 / rmin
+  out = [pts[0]]
+  for i in range(1, len(pts) - 1):
+    a, b, c = pts[i - 1], pts[i], pts[i + 1]
+    va = (a[0] - b[0], a[1] - b[1])
+    vc = (c[0] - b[0], c[1] - b[1])
+    La, Lc = math.hypot(*va) or 1.0, math.hypot(*vc) or 1.0
+    ua, uc = (va[0] / La, va[1] / La), (vc[0] / Lc, vc[1] / Lc)
+    dot = max(-1.0, min(1.0, ua[0] * uc[0] + ua[1] * uc[1]))
+    turn = math.pi - math.acos(dot)
+    if acc[i] < lock or turn <= turn_lim or La < 0.8 or Lc < 0.8:
+      if math.dist(out[-1], b) > 0.25:
+        out.append(b)
+      continue
+    T = rmin * math.tan(turn / 2.0)
+    T = min(T, La * 0.45, Lc * 0.45)
+    if T < 0.5:
+      if math.dist(out[-1], b) > 0.25:
+        out.append(b)
+      continue
+    R = T / math.tan(turn / 2.0)
+    T_in = (-ua[0], -ua[1])
+    T_out = uc
+    cross = T_in[0] * T_out[1] - T_in[1] * T_out[0]
+    sgn = 1.0 if cross >= 0 else -1.0
+    P1 = (b[0] + ua[0] * T, b[1] + ua[1] * T)
+    P2 = (b[0] + uc[0] * T, b[1] + uc[1] * T)
+    left_in = (-T_in[1], T_in[0])
+    Ctr = (P1[0] + sgn * R * left_in[0], P1[1] + sgn * R * left_in[1])
+    a0 = math.atan2(P1[1] - Ctr[1], P1[0] - Ctr[0])
+    a1 = math.atan2(P2[1] - Ctr[1], P2[0] - Ctr[0])
+    da = (a1 - a0 + math.pi * 3) % (2 * math.pi) - math.pi
+    if sgn > 0 and da < 0: da += 2 * math.pi
+    if sgn < 0 and da > 0: da -= 2 * math.pi
+    if math.dist(out[-1], P1) > 0.35:
+      out.append(P1)
+    n = max(2, int(abs(da) * R / step))
+    for k in range(1, n + 1):
+      ang = a0 + da * k / n
+      out.append((Ctr[0] + math.cos(ang) * R, Ctr[1] + math.sin(ang) * R))
+  out.append(pts[-1])
+  return LineString(_dedupe(out, 0.3))
+
+
+def _widen_east(ls, lock, rmin=28.0, simp=8.0, keep0=12.0):
+  """东段 OSM 折角在 6 m 窗口下紧于 25 m：先简化再按 rmin 倒圆，前 keep0 m 原样以保住东口 C1。"""
+  pts = [tuple(q) for q in ls.coords]
+  acc, k = 0.0, 0
+  for i in range(1, len(pts)):
+    acc += math.dist(pts[i - 1], pts[i])
+    if acc >= lock:
+      k = i
+      break
+  if k <= 0 or k >= len(pts) - 2:
+    return ls
+  head, tail = pts[:k + 1], pts[k:]
+  tline = LineString(tail)
+  pre = [tail[0]]
+  acc, idx = 0.0, 0
+  for i in range(1, len(tail)):
+    acc += math.dist(tail[i - 1], tail[i])
+    if acc < keep0:
+      pre.append(tail[i])
+      idx = i
+    else:
+      break
+  mid_start = list(tline.interpolate(min(keep0, tline.length)).coords)[0]
+  if keep0 > 0 and math.dist(pre[-1], mid_start) > 0.2:
+    pre.append(mid_start)
+  mid = ([mid_start] if keep0 > 0 else list(tail[:1])) + list(tail[idx + 1:])
+  ms = LineString(mid).simplify(simp, preserve_topology=False)
+  ms = _fillet_radius(ms, rmin, lock=0.0, step=1.5)
+  ts = _resample(LineString(_dedupe((pre[:-1] if keep0 else []) + list(ms.coords), 0.3)), 2.0)
+  return LineString(_dedupe(head[:-1] + list(ts.coords), 0.3))
 
 
 def build_east(g):
@@ -46,48 +208,13 @@ def build_east(g):
   te0 = (raw['start_dir'][0], raw['start_dir'][1])
   Lt0 = math.hypot(*te0) or 1
   te0 = (te0[0] / Lt0, te0[1] / Lt0)
-  # 沿 7B 切向先走 24 m（足够让锁点处的夹角为 180°），再以 R=28 圆弧转向东口。
-  hold = [(p0[0] + T0[0] * s, p0[1] + T0[1] * s) for s in [i * 2.0 for i in range(1, 13)]]  # 2..24
-  P0 = hold[-1]
-  Pin = (eog[0] - te0[0] * 14.0, eog[1] - te0[1] * 14.0)
-  # 圆弧：从 T0 转到朝向 Pin
-  def _arc(P, T, Q, R=28.0, step=2.0):
-    vx, vz = Q[0] - P[0], Q[1] - P[1]
-    cross = T[0] * vz - T[1] * vx
-    sgn = 1.0 if cross >= 0 else -1.0
-    cx, cz = P[0] - sgn * T[1] * R, P[1] + sgn * T[0] * R
-    a0 = math.atan2(P[1] - cz, P[0] - cx)
-    # 终点：半径上最接近 Q 且转角与 sgn 同向的点（转角不超过 120°）
-    aQ = math.atan2(Q[1] - cz, Q[0] - cx)
-    da = (aQ - a0 + math.pi * 3) % (2 * math.pi) - math.pi  # [-pi,pi]
-    if sgn > 0 and da < 0: da += 2 * math.pi
-    if sgn < 0 and da > 0: da -= 2 * math.pi
-    da = max(-math.pi * 2 / 3, min(math.pi * 2 / 3, da))
-    n = max(4, int(abs(da) * R / step))
-    pts = []
-    for i in range(1, n + 1):
-      a = a0 + da * i / n
-      pts.append((cx + math.cos(a) * R, cz + math.sin(a) * R))
-    return pts
-  arc = _arc(P0, T0, Pin, 28.0, 2.0)
-  Pend = arc[-1] if arc else P0
-  # Pend 再到 Pin：短贝塞尔，切向沿圆弧终点
-  if arc and len(arc) >= 2:
-    Te = (arc[-1][0] - arc[-2][0], arc[-1][1] - arc[-2][1])
-    Le = math.hypot(*Te) or 1
-    Te = (Te[0] / Le, Te[1] / Le)
-  else:
-    Te = T0
-  C = 12.0
-  P1e = (Pend[0] + Te[0] * C, Pend[1] + Te[1] * C)
-  P2e = (Pin[0] - te0[0] * C, Pin[1] - te0[1] * C)
-  blend_e = [_bez(Pend, P1e, P2e, Pin, i / 10.0) for i in range(1, 11)]
-  lake_path = _dedupe([p0] + hold + arc + blend_e + [Pin, eog], 0.4)
+  # 持平 10 m 锁住 T0，再 R=28 RSR 接到 te0 长接近段（32 m）进东口。
+  lake_path = _lake_crossing(p0, T0, eog, te0)
 
-  s_tgt = min(36.0, max(18.0, Losm.length * 0.05))
+  s_tgt = min(48.0, max(28.0, Losm.length * 0.06))
   P3 = (Losm.interpolate(s_tgt).x, Losm.interpolate(s_tgt).y)
   T3 = _tan(Losm, s_tgt)
-  C = 12.0
+  C = 24.0
   P1 = (eog[0] + te0[0] * C, eog[1] + te0[1] * C)
   P2 = (P3[0] - T3[0] * C, P3[1] - T3[1] * C)
   blend = [_bez(eog, P1, P2, P3, i / 12.0) for i in range(1, 13)]
@@ -99,16 +226,18 @@ def build_east(g):
   ext = LineString(_dedupe([pref[-1]] + lake_path[1:] + blend + rest, 0.3))
   ext = _resample(ext, 2.0)
   yx = LineString(_dedupe(pref + list(ext.coords)[1:], 0.3))
-  # 只轻轻修延伸段；锁点附近 20 m 内的密持平点不要被拉弯
-  yx = _smooth_radius(yx, 26.0, lock=len7b + 20.0, iters=500)
-  r0, pmin, smin = minRat(yx)
-  print('7C yx minR', round(r0, 2), 'at', tuple(round(v, 2) for v in pmin), 's', round(smin, 1),
-        'len', round(yx.length, 2), 'end', tuple(round(v, 2) for v in yx.coords[-1]))
-  if r0 < 25.9:
-    # 只再修更远的弯，仍然躲开锁点
-    yx = _smooth_radius(yx, 26.5, lock=len7b + 20.0, iters=800)
-    r0, pmin, smin = minRat(yx)
-    print('7C yx minR pass2', round(r0, 2), 's', round(smin, 1))
+  # 湖面 RSR 已经是精确 R=28，不要再 _smooth_radius 锁点后 20 m（会把圆弧拉尖）。
+  # 若东段 OSM 接头不够圆，只修 s_east0 之后。
+  s_east0_guess = yx.project(Point(*eog))
+  r_new, p_new, s_new = _minr_window(yx, len7b, yx.length)
+  print('7C yx minR new', round(r_new, 2), 'at', tuple(round(v, 2) for v in (p_new or (0, 0))),
+        's', round(s_new, 1), 'len', round(yx.length, 2), 'end', tuple(round(v, 2) for v in yx.coords[-1]))
+  if r_new < 25.9:
+    yx = _widen_east(yx, lock=max(s_east0_guess + 8.0, len7b + 20.0), rmin=28.0, simp=8.0, keep0=12.0)
+    r_new, p_new, s_new = _minr_window(yx, len7b, yx.length)
+    print('7C yx minR after widen-east', round(r_new, 2), 'at', tuple(round(v, 2) for v in (p_new or (0, 0))),
+          's', round(s_new, 1), 'len', round(yx.length, 2))
+  r0, pmin, smin = r_new, p_new, s_new
 
   max_pref = 0.0
   for i, p in enumerate(pref):
@@ -152,7 +281,7 @@ def build_east(g):
   A7B['note'] = (A7B.get('note') or '') + '；7C 已拆湖东北合拢，yx 延伸至命名东头。'
 
   # ---- 东段水面：从东口起（含一小段伸进湖，盖掉旧合拢）到命名东头 ----
-  left, right, s = [], [], max(0.0, s_east0 - 6.0)
+  left, right, s = [], [], max(0.0, s_east0 - 2.0)
   while s <= yx.length + 1e-6:
     ss = min(s, yx.length)
     p = yx.interpolate(ss); t = _tan(yx, ss); n = (t[1], -t[0])
@@ -162,8 +291,12 @@ def build_east(g):
   chanC = Polygon(left + right[::-1]).buffer(0).simplify(0.06)
   if chanC.geom_type != 'Polygon':
     chanC = max(chanC.geoms, key=lambda q: q.area)
-  mouth = Point(*eog).buffer(HW_YX + 6.0)
-  chanC = unary_union([chanC, mouth]).buffer(0.25).buffer(-0.12)
+  # 小胶囊沿 te0 伸进湖 3 m，盖掉旧合拢缝；不要用 HW_YX+6 圆盘（会淹东北岸与 loop pt5）。
+  mouth = LineString([
+    (eog[0] - te0[0] * 3.0, eog[1] - te0[1] * 3.0),
+    (eog[0] + te0[0] * 2.0, eog[1] + te0[1] * 2.0),
+  ]).buffer(HW_YX + 0.6, cap_style='flat')
+  chanC = unary_union([chanC, mouth]).buffer(0.12).buffer(-0.06)
   if chanC.geom_type == 'MultiPolygon':
     chanC = unary_union([p for p in chanC.geoms if p.area > 8])
   g['chanC'] = chanC
@@ -388,12 +521,29 @@ def build_east(g):
     print('7C bridge', b['id'], '(unnamed)', spec['style'], 's', round(b['s'], 1),
           'w', round(b['w'], 1), 'official', rec['official_s'], 'span', rec['span'])
 
+  gaps7c = []
   for b in BRC:
     def corners(au, cv, bb=b):
       return [(bb['x'] + bb['t'][0] * a + bb['n'][0] * c, bb['z'] + bb['t'][1] * a + bb['n'][1] * c)
               for a, c in [(-au, -cv), (au, -cv), (au, cv), (-au, cv)]]
-    g['GAPS'].append(Polygon(corners(b['w'] / 2 - 0.05, b['half'] + 0.5)))
+    # 缺口要比 deck half 再伸出到岸边步道（hw+2.8），否则岸墙卡在桥头，两岸不通。
+    gap = Polygon(corners(b['w'] / 2 - 0.05, max(b['half'] + 1.6, HW_YX + 3.2)))
+    g['GAPS'].append(gap)
+    gaps7c.append(gap)
     b['foot'] = Polygon(corners(b['w'] / 2, b['half']))
+  # 只挖 7C 东段桥下，不要用全局 GAPS（会误拆 7A/7B 岸墙）。
+  gapU = unary_union(gaps7c) if gaps7c else Point(0, 0)
+  if not gapU.is_empty:
+    punched = []
+    n_gap = 0
+    for w in g['WALL']:
+      seg = LineString([(w[0], w[1]), (w[2], w[3])])
+      if gapU.buffer(0.15).intersects(seg):
+        n_gap += 1
+        continue
+      punched.append(w)
+    g['WALL'] = punched
+    print('7C walls punched under 7C bridge gaps', n_gap, 'remaining', len(punched))
 
   ROADS_C = []
   for b in BRC:
@@ -537,6 +687,52 @@ def build_east(g):
         break
   capPast = [round(wall_p[0] + te[0] * 14.0, 2), round(wall_p[1] + te[1] * 14.0, 2)]
 
+  def _on_land(q, pad=0.5):
+    P = Point(q[0], q[1])
+    return region.contains(P) and not water.buffer(pad).contains(P)
+
+  def _nudge_land(q, prefer=(0, 0)):
+    if _on_land(q):
+      return [round(q[0], 2), round(q[1], 2)]
+    for rad in (1, 2, 3, 4, 5, 6, 8, 10, 12):
+      for k in range(16):
+        a = k * math.pi / 8
+        cand = (q[0] + prefer[0] * rad * 0.55 + rad * math.cos(a) * 0.85,
+                q[1] + prefer[1] * rad * 0.55 + rad * math.sin(a) * 0.85)
+        if _on_land(cand):
+          return [round(cand[0], 2), round(cand[1], 2)]
+    return [round(q[0], 2), round(q[1], 2)]
+
+  # 湖东北岸（出水口北侧步道）：7B 旧 capBank 距出水口约 3 m，开出口后落在河道里，要挪到岸上。
+  left_te = (-te0[1], te0[0])
+  lakeMouthBank = _nudge_land(
+    (eog[0] - te0[0] * 4.0 + left_te[0] * 8.2, eog[1] - te0[1] * 4.0 + left_te[1] * 8.2),
+    left_te)
+  A7B['capBank'] = lakeMouthBank
+  A7B['lakeMouthBank'] = lakeMouthBank
+  new_loop = []
+  for pt in (A7B.get('loop') or []):
+    if water.buffer(0.4).contains(Point(pt[0], pt[1])):
+      vx, vz = pt[0] - eog[0], pt[1] - eog[1]
+      # 靠北岸的点（pt5）沿 left_te 推到步道上，不要沿河道中线挪。
+      side = left_te if (vx * left_te[0] + vz * left_te[1]) >= 0 else (-left_te[0], -left_te[1])
+      new_loop.append(_nudge_land(pt, side))
+    else:
+      new_loop.append(list(pt))
+  A7B['loop'] = new_loop
+  mouthOpen = None
+  for side, ds in ((-1, 8), (1, 8), (-1, 12), (1, 12), (-1, 6), (1, 6), (-1, 16), (1, 16)):
+    (qx, qz), _, _ = at_yx(s_east0 + ds, side * (HW_YX + 2.8))
+    if _on_land((qx, qz)):
+      mouthOpen = [round(qx, 2), round(qz, 2)]
+      break
+  if mouthOpen is None:
+    (qx, qz), _, _ = at_yx(s_east0 + 8, -(HW_YX + 2.8))
+    mouthOpen = _nudge_land((qx, qz), left_te)
+  A7B['mouthOpen'] = mouthOpen
+  print('7C lakeMouthBank', lakeMouthBank, 'mouthOpen', mouthOpen,
+        'loop-in-water', sum(1 for pt in new_loop if not _on_land(pt, 0.4)))
+
   def cam_at(x, z, look, y=1.55, pitch=0.08, note=''):
     return {'x': round(x, 2), 'y': y, 'z': round(z, 2),
             'look': [round(look[0], 2), 1.2, round(look[1], 2)], 'pitch': pitch, 'note': note}
@@ -561,11 +757,78 @@ def build_east(g):
     elif b.get('style') == 'anon17':
       cams['anon17'] = cam_at(b['x'] + b['n'][0] * (b['half'] + 6), b['z'] + b['n'][1] * (b['half'] + 6),
                               (b['x'], b['z']), note='无名 17 m 跨')
-  (sx, sz), _, _ = at_yx((s_east0 + yx.length) / 2, -(HW_YX + 5))
-  midp = yx.interpolate((s_east0 + yx.length) / 2)
-  cams['south'] = cam_at(sx, sz, (midp.x, midp.y), note='东段南岸街景')
+  def _cam_ok(x, z):
+    cp = Point(x, z)
+    if (not region.contains(cp)) or water.buffer(0.6).contains(cp):
+      return False
+    for h in HOUSES:
+      if h.get('gone') or h.get('kind') != 'old':
+        continue
+      if _hpoly0(h).buffer(0.8).contains(cp):
+        return False
+    for tr in TREES:
+      if tr[5] == 'gone':
+        continue
+      if math.hypot(tr[0] - x, tr[1] - z) < 3.5:
+        return False
+    return True
+
+  mid_s = (s_east0 + yx.length) / 2
+  found_s = None
+  for s_try in [mid_s, mid_s - 20, mid_s + 20, mid_s - 40, mid_s + 40, mid_s - 60, mid_s + 60]:
+    if s_try < s_east0 + 10 or s_try > yx.length - 15:
+      continue
+    midp = yx.interpolate(s_try)
+    for side in (-1, 1):
+      for off in (HW_YX + 5, HW_YX + 7, HW_YX + 9, HW_YX + 4, HW_YX + 11, HW_YX + 13, HW_YX + 3.5):
+        (sx, sz), _, _ = at_yx(s_try, side * off)
+        if _cam_ok(sx, sz):
+          found_s = (sx, sz, midp)
+          break
+      if found_s:
+        break
+    if found_s:
+      break
+  if found_s:
+    cams['south'] = cam_at(found_s[0], found_s[1], (found_s[2].x, found_s[2].y), note='东段南岸街景')
+  else:
+    (sx, sz), _, _ = at_yx(mid_s, -(HW_YX + 5))
+    midp = yx.interpolate(mid_s)
+    cams['south'] = cam_at(sx, sz, (midp.x, midp.y), note='东段南岸街景')
+    print('WARN cam south fallback', (round(sx, 2), round(sz, 2)))
   cams['cap'] = cam_at(capBank[0] - te[0] * 4.0 + ne[0] * 1.2, capBank[1] - te[1] * 4.0 + ne[1] * 1.2,
                        (wall_p[0], wall_p[1]), note='命名东头合拢')
+  # 7B/7C 接缝：站在湖东北岸，沿 te0 看出水口
+  jx, jz = lakeMouthBank
+  look_j = (eog[0] + te0[0] * 18, eog[1] + te0[1] * 18)
+  placed_j = False
+  for back in (0, 1, 2, 3, 4, 5):
+    cand = (jx + left_te[0] * back * 0.8 - te0[0] * back * 0.2,
+            jz + left_te[1] * back * 0.8 - te0[1] * back * 0.2)
+    if _cam_ok(*cand):
+      jx, jz = cand
+      placed_j = True
+      break
+  cams['joint'] = cam_at(jx, jz, look_j, note='7B/7C 涧田湖东口接缝')
+  if not placed_j:
+    print('WARN cam joint not clear', (jx, jz))
+  # 东口机位若进房/进水，沿岸再找
+  if not _cam_ok(cams['mouth']['x'], cams['mouth']['z']):
+    placed_m = False
+    for ds in (0, 2, 4, 6, -2):
+      for side in (-1, 1):
+        for off in (HW_YX + 4.5, HW_YX + 6, HW_YX + 8, HW_YX + 3.5, HW_YX + 10):
+          (mx, mz), _, _ = at_yx(max(s_east0 + ds, s_east0), side * off)
+          if _cam_ok(mx, mz):
+            cams['mouth'] = cam_at(mx, mz, look_m, note='涧田湖东口看出水，沿东段')
+            placed_m = True
+            break
+        if placed_m:
+          break
+      if placed_m:
+        break
+    if not placed_m:
+      print('WARN cam mouth still not clear', (cams['mouth']['x'], cams['mouth']['z']))
 
   def _hpoly_chk(h):
     return _hpoly0(h)
@@ -622,6 +885,11 @@ def build_east(g):
     'ramp': ramp,
     'lamps': lamps,
     'capBank': capBank, 'capPast': capPast,
+    'mouthOpen': mouthOpen, 'lakeMouthBank': lakeMouthBank,
+    'minR': round(r0, 2),
+    'minRAt': [round(pmin[0], 2), round(pmin[1], 2)] if pmin else None,
+    'minRS': round(smin, 2),
+    'minRMouth': round(_minr_window(yx, s_east0 - 40, s_east0 + 40)[0], 2),
     'cams': cams,
     'zone': zone7c,
     'gone': {'houses': GONE_H, 'trees': GONE_T},
@@ -630,4 +898,5 @@ def build_east(g):
   }
   g['A7CDATA'] = A7CDATA
   print('7C zone', A7CDATA['zone'], 'yxLen', A7CDATA['yxLen'], 'added', A7CDATA['official']['game'],
-        'bridges', A7CDATA['bridges'], 'houses', len(HOUSES) - nH0, 'lamps', len(lamps))
+        'bridges', A7CDATA['bridges'], 'houses', len(HOUSES) - nH0, 'lamps', len(lamps),
+        'minR', A7CDATA['minR'], 'minRMouth', A7CDATA['minRMouth'], 'sEast0', A7CDATA['sEast0'])
