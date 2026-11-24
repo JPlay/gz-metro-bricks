@@ -43,6 +43,7 @@ E4A = any(x.startswith('i_') for x in STAGES)   # 4A 光明港西段 + 新港闸
 E5 = any(x.startswith('j_') for x in STAGES)   # 5 瀛洲河 + 江四水闸（j_yz_south，只走路，两岸三桥双向圈）
 E6B = any(x.startswith('k_hq_west') for x in STAGES)   # 6B 湖前河西段（k_hq_west，只走路，西段两岸四桥双向圈）
 E7B = any(x.startswith('n_yx') for x in STAGES)   # 7B 洋下河至涧田湖（n_yx_lake：7A 东头接上、环湖双向、东头合拢走不过）
+E7C = any(x.startswith('o_yx') for x in STAGES)   # 7C 洋下河东段（o_yx_east：湖东口接上、两岸、涧山巷+无名桥、命名东头合拢走不过）
 E7A = any(x.startswith('m_yx') for x in STAGES)   # 7A 洋下河西段（m_yx_west，只走路：斗门 C → 命名西头 → 涵洞人行道 → 机场高速桥下）
 E6A = (not E6B) and (not E7A) and any(x.startswith('k_') for x in STAGES)   # 6A 湖前河东段（k_hq_east，只走路，两岸两桥双向圈）
 E2D = any(x.startswith('d_') for x in STAGES)   # 2D 安泰河东段 + 东街口 C 南后街 ⇄ 三坊七巷南口牌坊 + 津门桥 + 朱紫坊 + 琼东河口（d_walk / d_east）；d_dadao = 上下杭三捷河（达道 C 景点街）   # 2C 白马河下段（宁化 A、上海西码头、C 线、工业路 / 江滨西大道桥下步道、彬德水闸）   # 2B 东西河东段（水部 C、市民服务中心码头、桥下步道）   # 1B 东线（晋安河 + 光明港，B 线）
@@ -1231,6 +1232,55 @@ async def run_2d(pg):
 
 
 
+
+async def run_7c(pg):
+    """7C：斗门 C 入网 → 走到涧田湖东口接上 → 东段两岸 + 涧山巷/无名桥来回 → 命名东头合拢走不过。只走路。"""
+    A = await pg.evaluate("""(async () => { const M = await import('/js/data/fz-river.js'); const F = M.FZR, a7 = F.a7a, b7 = F.a7b, c7 = F.a7c, yx = M.RIVERS.yx;
+      const br = (F.bridges || []).filter(x => x.a7c || (c7 && (c7.bridges || []).includes(x.id)));
+      return {
+        opened7b: !!a7.openedTo7b, opened7c: !!(b7 && b7.openedTo7c),
+        yxLen7b: c7 && c7.yxLen7b, yxLen: c7 && c7.yxLen, sEast0: c7 && c7.sEast0,
+        cap: (c7 && c7.cap) || 2.4, hw: (c7 && c7.hw) || 5,
+        bridges: br, plates: c7 && c7.plates, byStyle: c7 && c7.byStyle,
+        capBank: c7 && c7.capBank, capPast: c7 && c7.capPast, capWall: c7 && c7.capWall,
+        cams: c7 && c7.cams, outlet: c7 && c7.outlet, tip: c7 && c7.tip, ramp: c7 && c7.ramp
+      }; })()""")
+    ok('o:7C data (openedTo7c, 5 decks, cap, 涧山巷 plate)', bool(A.get('opened7c') and A.get('capWall') and len(A.get('bridges') or []) >= 5 and A.get('sEast0') and (A.get('plates') or [])), {k: (len(A[k]) if isinstance(A.get(k), list) else A.get(k)) for k in ('opened7c','sEast0','bridges','plates')})
+    # Walk from the east mouth along one bank to the cap, then the other bank back, cross 涧山巷.
+    async def W(pg, x, z):
+        return await pg.evaluate("""([x,z]) => { const S=__game.fzMetro.street, R=S.kit.root.position; return [R.x+x, 1.55, R.z+z]; }""", [x, z])
+    s0 = A['sEast0']
+    # bank point helper via yx.line.at in page
+    async def ybank(s, side):
+        xz = await pg.evaluate("""(({s, side, hw}) => { const M = window.__fzR || null; return null; })""", {'s':s,'side':side,'hw':A['hw']})
+        p = await pg.evaluate("""(async ({s, side, hw}) => { const M = await import('/js/data/fz-river.js'); const p = M.RIVERS.yx.line.at(s, side * (hw + 2.8)); return [p.x, p.z]; })""", {'s': s, 'side': side, 'hw': A['hw']})
+        return await W(pg, p[0], p[1])
+    # Enter at east mouth (after 7B loop users already can reach the outlet)
+    start = await ybank(s0 + 6, 1)
+    okw = await go(pg, *start, '→ 涧田湖东口东岸'); ok('o:walk to east mouth bank', okw and await near(pg, *start, 4.0), (await st(pg))['pos'])
+    R['perf']['o:mouth'] = await sample4(pg, 'o:mouth')
+    # 涧山巷
+    jian = [b for b in (A['bridges'] or []) if b.get('style') == 'jianshan']
+    if jian:
+        b = jian[0]
+        deck = await W(pg, b['x'], b['z'])
+        okw = await go(pg, *deck, '→ 涧山巷桥面'); ok('o:walk onto 涧山巷', okw and await near(pg, *deck, 4.0), (await st(pg))['pos'])
+        R['perf']['o:jianshan'] = await sample4(pg, 'o:jianshan')
+    # cap bank
+    cb = A['capBank']; cbp = await W(pg, cb[0], cb[1])
+    okw = await go(pg, *cbp, '→ 命名东头合拢岸边'); ok('o:walk to east cap bank', okw and await near(pg, *cbp, 4.0), (await st(pg))['pos'])
+    R['perf']['o:cap'] = await sample4(pg, 'o:cap')
+    if OUT and (A.get('cams') or {}).get('cap'):
+        C = A['cams']['cap']; await look(pg, *(await W(pg, C['look'][0], C['look'][2])), 0.08); await shot(pg, 'o_cap')
+    cp = A['capPast']; pastW = await W(pg, cp[0], cp[1])
+    await legs(pg, [pastW], False); await asyncio.sleep(0.6)
+    s = await st(pg); Wl = A['capWall']
+    along = (s['pos'][0] - Wl['x']) * Wl['t'][0] + (s['pos'][2] - Wl['z']) * Wl['t'][1] if Wl else 99
+    # st() pos is world; capWall is local river coords. Use river-space via evaluate.
+    along = await pg.evaluate("""(async (W) => { const S=__game.fzMetro.street, R=S.kit.root.position, p=__game.player.position;
+      return (p.x - R.x - W.x) * W.t[0] + (p.z - R.z - W.z) * W.t[1]; })""", Wl)
+    ok('o:cannot walk past named east cap', along < (A['cap'] + 6) and s['pos'][1] > -0.3, {'along': along, 'pos': s['pos'], 'cap': A['cap']})
+
 async def run_7b(pg):
     """7B：斗门 C 入网 → 走到 7A 东头接上 → 西段主河三座桥 → 涧田湖环湖双向 → 东头合拢走不过。只走路。"""
     await pg.evaluate('window.__fzNavRes = 0.45')
@@ -1796,7 +1846,7 @@ async def main():
     await pg.evaluate("""(() => { const g=__game; g.east.ensure(); g.east.side='fz'; g.east.cur={st:g.station, loc:'fzmetro', area:'metro'}; g.station.kit.root.setEnabled(false); g.fzMetro.enterFromRailway(g.player); })()""")
     await asyncio.sleep(1.5)
     if E1B or E2B or E2C or E2D or E3A or E3B or E4A or E5 or E6A or E6B or E7A or E7B:
-        await (run_7b(pg) if E7B else run_7a(pg) if E7A else run_6b(pg) if E6B else run_6a(pg) if E6A else run_5(pg) if E5 else run_4a(pg) if E4A else run_3b(pg) if E3B else run_3a(pg) if E3A else run_2d(pg) if E2D else run_2c(pg) if E2C else run_2b(pg) if E2B else run_1b(pg))
+        await (run_7c(pg) if E7C else run_7b(pg) if E7B else run_7a(pg) if E7A else run_6b(pg) if E6B else run_6a(pg) if E6A else run_5(pg) if E5 else run_4a(pg) if E4A else run_3b(pg) if E3B else run_3a(pg) if E3A else run_2d(pg) if E2D else run_2c(pg) if E2C else run_2b(pg) if E2B else run_1b(pg))
         R['perfWorst'] = {'tris': max(R['perf'].items(), key=lambda kv: kv[1]['tris']) if R['perf'] else None, 'draws': max(R['perf'].items(), key=lambda kv: kv[1]['draws']) if R['perf'] else None}
         ok('perf:budget', all(v['draws'] <= BUDGET['draws'] and v['tris'] <= BUDGET['tris'] for v in R['perf'].values()), R['perf'])
         R['errors'] = [l for l in errs(logs) if l[0] in ('error', 'pageerror')]; ok('noPageErrors', not R['errors'], R['errors'][:5])

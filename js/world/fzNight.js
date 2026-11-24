@@ -179,11 +179,33 @@ export class FzNight {
       }
       n.lamp++;
     }
+    // 7C：东段岸灯并进 fzNightLights。数据 fx,fz 已朝水面。倒影同 4A/7B：细、暗、断开，贴岸短条，不要一根亮橙条
+    for (const Lmp of (FZR.a7c && FZR.a7c.lamps) || []) {
+      const [x, z, fx0, fz0] = Lmp;
+      let fx = fx0, fz = fz0, fl = Math.hypot(fx, fz) || 1; fx /= fl; fz /= fl;
+      const hx = x + fx * 1.2, hz = z + fz * 1.2;
+      halo(hx, 6.95, hz, 1.15, sc(WARM, 0.85));
+      flat(hx - fx * 0.4, 0.045, hz - fz * 0.4, fx, fz, 3.4, 3.4, RG.pool, sc(WARM, 0.5));
+      let start = 0;
+      for (let d = 0.8; d <= 16; d += 0.2) { if (isWater(x + fx * d, z + fz * d)) { start = d + 0.08; break; } }
+      if (start) {
+        const nSeg = 3, gap = 0.55, segL = 1.15;
+        for (let k = 0; k < nSeg; k++) {
+          const a = start + k * (segL + gap), b = a + segL;
+          const x0 = x + fx * a, z0 = z + fz * a, x1 = x + fx * b, z1 = z + fz * b;
+          if (!isWater(x0, z0) || !isWater(x1, z1)) continue;
+          const ll = Math.hypot(x1 - x0, z1 - z0) || 1;
+          const dim = 0.82 * (1 - k * 0.16);
+          flat((x0 + x1) / 2, levelAt(x0, z0) + 0.025, (z0 + z1) / 2, (x1 - x0) / ll, (z1 - z0) / ll, 0.40, ll / 2, RG.streak, sc(WARM, dim));
+        }
+      }
+      n.lamp++;
+    }
     // 桥：栏板外侧一道暖光带（跟着拱桥桥面起伏）+ 水面上同色的淡倒影
     for (const b of BRIDGES) {
       if (b.kind === 'bingde' || b.kind === 'covered') continue;
       const rise = humpRise(b), flatB = !rise && b.kind !== 'sarch', uo = flatB ? b.w / 2 : b.w / 2 - 0.03, t = b.t, nn = b.n;
-      const isYx = !!(FZR.a7b && (FZR.a7b.bridges || []).includes(b.id));
+      const isYx = !!((FZR.a7b && (FZR.a7b.bridges || []).includes(b.id)) || (FZR.a7c && (FZR.a7c.bridges || []).includes(b.id)));
       const top = v => flatB ? ((b.deckY || 0) + (b.tall ? (b.barrier || 2.2) * 0.7 : 1.0)) : deckAt(b, v) + 0.84, Pt = (u, v) => [b.x + t[0] * u + nn[0] * v, b.z + t[1] * u + nn[1] * v];
       const seg = flatB ? 1 : 10, v0 = -b.half + 0.25, v1 = b.half - 0.25;
       for (const su of [-1, 1]) {

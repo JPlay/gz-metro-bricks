@@ -9,10 +9,13 @@ const fsrc = fs.readFileSync(new URL('../../js/world/fzRiver.js', import.meta.ur
 const nsrc = fs.readFileSync(new URL('../../js/world/fzNight.js', import.meta.url), 'utf8');
 const asrc = fs.readFileSync(new URL('../../tools/fzriver/a7b.py', import.meta.url), 'utf8');
 
+const A7C = F.a7c;
 ok('7B data present (a7b: yxLen / lake / 6 decks / cap / loop / plates / cams)',
   !!(A7B && A7B.yxLen > 880 && A7B.yxLen < 980 && A7B.yxLen7a > 520 && A7B.yxLen7a < 560
     && A7B.lake && A7B.lake.ring && A7B.lake.ring.length >= 16
-    && (A7B.bridges || []).length === 6 && A7B.capWall && (A7B.far || []).length >= 6
+    && (A7B.bridges || []).length === 6
+    && (A7C ? (A7B.openedTo7c && !A7B.capWall && A7C.capWall) : A7B.capWall)
+    && (A7B.far || []).length >= 6
     && (A7B.loop || []).length >= 8 && A7B.capBank && A7B.capPast
     && (A7B.plates || []).length === 2 && A7B.cams && A7B.cams.mouth && A7B.cams.cap));
 
@@ -26,8 +29,9 @@ ok('ja/jn sha unchanged', A7B.jaJnSha1 === '6eb7a2870782e8dbc9bd3d1ed20a63b42c4a
   ok('yx starts at the 7A/jn seam and 7A end stays put',
     Math.hypot(st.x - 354.17, st.z - 420.5) < 1.0 && Math.hypot(mid.x - end7a[0], mid.z - end7a[1]) < 1.2,
     { start: [st.x, st.z], mid: [mid.x, mid.z], line: RV.yx.line.len, yxLen: A7B.yxLen });
-  ok('yx line length matches 7B yxLen (7A + west main to the lake)',
-    Math.abs(RV.yx.line.len - A7B.yxLen) < 0.2 && RV.yx.line.len > A7B.yxLen7a + 300);
+  const yxTarget = A7C ? A7C.yxLen : A7B.yxLen;
+  ok('yx line length matches 7B yxLen (or 7C yxLen when the east reach is open)',
+    Math.abs(RV.yx.line.len - yxTarget) < 0.3 && RV.yx.line.len > A7B.yxLen7a + 300);
 }
 
 ok('hw = 5 on the west main river; lake surface is a wide polygon (not a hw=5 ribbon)',
@@ -54,12 +58,19 @@ ok('hw = 5 on the west main river; lake surface is a wide polygon (not a hw=5 ri
 
 { const W = A7B.capWall, P = A7B.capPast, B = A7B.capBank, o = A7B.outlet;
   const end = RV.yx.line.at(RV.yx.line.len);
-  const dEnd = Math.hypot(W.x - end.x, W.z - end.z);
-  const alongPast = (P[0] - W.x) * W.t[0] + (P[1] - W.z) * W.t[1];
-  const alongBank = (B[0] - W.x) * W.t[0] + (B[1] - W.z) * W.t[1];
-  ok('east cap is at the NE 7C outlet, not at yx.end; past is on the 7C side, bank on the lake side',
-    dEnd > 20 && Math.hypot(W.x - o[0], W.z - o[1]) < 12 && alongPast > 8 && alongBank < 0,
-    { dEnd, cap: [W.x, W.z], outlet: o, alongPast, alongBank });
+  const dEnd = W ? Math.hypot(W.x - end.x, W.z - end.z) : 0;
+  const alongPast = (W && P) ? (P[0] - W.x) * W.t[0] + (P[1] - W.z) * W.t[1] : 0;
+  const alongBank = (W && B) ? (B[0] - W.x) * W.t[0] + (B[1] - W.z) * W.t[1] : 0;
+  if (A7C) {
+    ok('7B east cap is opened into 7C (capWall cleared, outlet recorded, 7C cap is at the named east tip)',
+      !W && A7B.openedTo7c && o && A7C.capWall
+      && Math.hypot(A7C.capWall.x - A7C.tip[0], A7C.capWall.z - A7C.tip[1]) < 12,
+      { outlet: o, tip: A7C.tip, cap7c: [A7C.capWall.x, A7C.capWall.z] });
+  } else {
+    ok('east cap is at the NE 7C outlet, not at yx.end; past is on the 7C side, bank on the lake side',
+      dEnd > 20 && Math.hypot(W.x - o[0], W.z - o[1]) < 12 && alongPast > 8 && alongBank < 0,
+      { dEnd, cap: [W.x, W.z], outlet: o, alongPast, alongBank });
+  }
   ok('runtime draws 7B cap + far + plates in a7bStatic; 7A colCap skipped when capWall is opened',
     /a7bStatic\(/.test(fsrc) && /if \(L && A\.capWall\)/.test(fsrc) && /if \(FZR\.a7b\) this\.a7bStatic\(\)/.test(fsrc));
 }

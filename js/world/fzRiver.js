@@ -106,7 +106,7 @@ export class FzRiverStreet extends XmStreet {
   river() {
     const k = this.kit;
     this.facades();
-    this.walls(); this.bridges(); this.piers(); if (FZR.c2) this.c2Static(); else this.sharedDecks(); if (FZR.a3) this.a3Static(); if (FZR.a4) this.a4Static(); if (FZR.a5) this.a5Static(); if (FZR.a6) this.a6Static(); if (FZR.a6b) this.a6bStatic(); if (FZR.a7a) this.a7aStatic(); if (FZR.a7b) this.a7bStatic(); if (FZR.b3) this.b3Static(); this.stepsDown(); this.unders(); this.roads(); this.houses(); this.trees(); this.promenade(); if (FZR.b3) this.lakeLamps(); if (FZR.a7b) this.a7bLamps(); if (FZR.sfqx) this.sanfang(); if (FZR.lakeBox) this.backdrops(); if (LOCK) this.lockStatic(); if (KIOSKS.fzxm_B) this.xihuPark();
+    this.walls(); this.bridges(); this.piers(); if (FZR.c2) this.c2Static(); else this.sharedDecks(); if (FZR.a3) this.a3Static(); if (FZR.a4) this.a4Static(); if (FZR.a5) this.a5Static(); if (FZR.a6) this.a6Static(); if (FZR.a6b) this.a6bStatic(); if (FZR.a7a) this.a7aStatic(); if (FZR.a7b) this.a7bStatic(); if (FZR.a7c) this.a7cStatic(); if (FZR.b3) this.b3Static(); this.stepsDown(); this.unders(); this.roads(); this.houses(); this.trees(); this.promenade(); if (FZR.b3) this.lakeLamps(); if (FZR.a7b) this.a7bLamps(); if (FZR.a7c) this.a7cLamps(); if (FZR.sfqx) this.sanfang(); if (FZR.lakeBox) this.backdrops(); if (LOCK) this.lockStatic(); if (KIOSKS.fzxm_B) this.xihuPark();
     k.group('g0');   // 上面直接画的东西（桥、码头、台阶、马路、牌坊…）常开：单独封一组，别被并进第一个细节格子
     if (this._nhjw || this._nhjH) {
       if (this._nhjw) { for (const t of this._nhjw) this.banyanNear(...t); this._nhjw = null; }
@@ -1575,6 +1575,60 @@ export class FzRiverStreet extends XmStreet {
   /** 7B：环湖路灯/长椅进细节格子，不加 draw。 */
   a7bLamps() {
     const A = FZR.a7b, k = this.kit;
+    if (!A || !A.lamps) return;
+    for (const L of A.lamps) {
+      const [x, z, tx, tz] = L;
+      this.det(x, z, () => {
+        const ry = yawOf(tx, tz);
+        k.metal.box(x, 1.55, z, 0.08, 3.1, 0.08, hex('#4A5560'), 0, 0, 0, 1, NO);
+        k.g('granite').box(x, 0.12, z, 0.28, 0.24, 0.28, hex('#8E887C'), 0, 0, 0, 1, NO);
+        k.solid.box(x + tx * 0.12, 3.05, z + tz * 0.12, 0.28, 0.08, 0.18, hex('#E8D9A8'), ry, 0, 0, 1, NO);
+      });
+    }
+  }
+  /** 7C：命名东头合拢墙 + 远景、涧山巷路名牌、东头匝道板。colCap 在命名东头。 */
+  a7cStatic() {
+    const A = FZR.a7c, k = this.kit, P = k.solid, GR = k.g('granite');
+    if (!A) return;
+    for (const S of A.plates || []) this.stoneSign(S.x, S.z, S.f[0], S.f[1], 3.0, 1.25, S.lines.filter(Boolean));
+    const Wc = ['#7E8C99', '#8796A3', '#76858F', '#8F9AA5'];
+    const PV = k.g('pave'), PAVEC = hex('#CFC9BD'), TILE = hex('#A39C8E');
+    (A.far || []).forEach((q, i) => {
+      const [x, z, fx, fz] = q, ry = yawOf(fx, fz), h = 12 + (i * 7) % 14, w = 10 + (i % 3) * 2, d = 8 + (i % 2) * 1.5;
+      let reach = 0;
+      for (let t = 0.5; t <= 40; t += 0.5) { if (isWater(x + fx * t, z + fz * t)) { reach = t; break; } }
+      const stop = reach ? Math.max(1.6, reach - 9 - 0.7) : 5;
+      PV.box(x + fx * (stop / 2), 0.16, z + fz * (stop / 2), w + 8, 0.32, stop, PAVEC, ry, 0, 0, 1, NO);
+      P.box(x, 0.5, z, w + 0.9, 1.0, d + 0.9, hex('#4A545C'), ry, 0, 0, 1, NO);
+      P.box(x, 1.0 + h / 2, z, w, h, d, hex(Wc[i % 4]), ry, 0, 0, 1, NO);
+      P.box(x, 1.0 + h + 0.22, z, w + 0.45, 0.44, d + 0.45, hex('#3E484F'), ry, 0, 0, 1, NO);
+    });
+    if (A.ramp) {
+      const R = A.ramp, ry = yawOf(R.f[0], R.f[1]);
+      // 东头 trunk_link：赭色高架匝道板，尺度和市内次干桥分开，人走不上去
+      P.box(R.x, R.y, R.z, R.w, R.thick, R.len, hex('#8B5A3C'), ry, 0, 0, 1, NO);
+      P.box(R.x, R.y + R.thick / 2 + 0.35, R.z, 0.18, 0.7, R.len - 0.4, hex('#6E4630'), ry, 0, 0, 1, NO);
+    }
+    if (A.capWall) {
+      const W = A.capWall, ry = yawOf(W.n[0], W.n[1]);
+      const face = hex('#8A8376'), joint = hex('#5C574E'), cope = hex('#9A9385');
+      GR.box(W.x, W.h / 2, W.z, W.thick, W.h, W.len, face, ry, 0, 0, 1, NO);
+      GR.box(W.x, W.h + 0.16, W.z, W.thick + 0.3, 0.32, W.len + 0.4, cope, ry, 0, 0, 1, NO);
+      const courses = 4, js = 2.3, fx = W.t[0], fz = W.t[1], nx = W.n[0], nz = W.n[1];
+      const ox = fx * (W.thick / 2 + 0.02), oz = fz * (W.thick / 2 + 0.02);
+      for (let i = 1; i < courses; i++) GR.box(W.x + ox, i * W.h / courses, W.z + oz, 0.05, 0.06, W.len - 0.15, joint, ry, 0, 0, 1, NO);
+      for (let c = 0; c < courses; c++) {
+        const y0 = c * W.h / courses, y1 = (c + 1) * W.h / courses, mid = (y0 + y1) / 2, hh = (y1 - y0) - 0.08, off0 = (c % 2 ? js / 2 : 0);
+        for (let u = -W.len / 2 + off0 + js; u < W.len / 2 - 0.3; u += js) {
+          GR.box(W.x + ox + nx * u, mid, W.z + oz + nz * u, 0.05, hh, 0.06, joint, ry, 0, 0, 1, NO);
+        }
+      }
+      k.col(W.x + W.t[0] * 0.4, 1.2, W.z + W.t[1] * 0.4, 0.8, 8, 56, { ry, name: 'colCap' });
+    }
+  }
+  /** 7C：东段岸灯进细节格子，不加 draw。 */
+  a7cLamps() {
+    const A = FZR.a7c, k = this.kit;
     if (!A || !A.lamps) return;
     for (const L of A.lamps) {
       const [x, z, tx, tz] = L;
