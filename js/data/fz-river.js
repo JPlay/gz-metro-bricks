@@ -165,6 +165,21 @@ function inCells(T, px, pz) {
 /** 水面（河道 + 西湖一角），不含台阶 / 浮码头 */
 export const isWater = (x, z) => inCells(FZR.water, x, z) && !FZR.dry.some(d => inPoly(x, z, d));
 export const isLand = (x, z) => inCells(FZR.land, x, z);
+/** 陆面高度（8A 湖岸矮驳岸草坡格子自带每点 y，其余陆面 0）；不在陆上返回 null */
+export function landY(px, pz) {
+  const c = FZR.land[Math.floor(px / FZR.cell) + ',' + Math.floor(pz / FZR.cell)]; if (!c) return null;
+  const P = c.p, I = c.i, Y = c.y;
+  for (let k = 0; k < I.length; k += 3) {
+    const a = I[k], b = I[k + 1], d = I[k + 2], ax = P[2 * a], az = P[2 * a + 1], bx = P[2 * b], bz = P[2 * b + 1], dx = P[2 * d], dz = P[2 * d + 1];
+    if (!inTri(px, pz, ax, az, bx, bz, dx, dz)) continue;
+    if (!Y) return 0;
+    const den = (bz - dz) * (ax - dx) + (dx - bx) * (az - dz) || 1e-9, l1 = ((bz - dz) * (px - dx) + (dx - bx) * (pz - dz)) / den, l2 = ((dz - az) * (px - dx) + (ax - dx) * (pz - dz)) / den;
+    return l1 * Y[a] + l2 * Y[b] + (1 - l1 - l2) * Y[d];
+  }
+  return null;
+}
+/** 平的岸地（步道层，不在 8A 草坡上）：落水救回只放这种地方 */
+export const isFlatLand = (x, z) => { const y = landY(x, z); return y !== null && y > -0.05; };
 export const isDry = (x, z) => FZR.dry.some(d => inPoly(x, z, d));
 
 /** 落水后的上岸点：最近一段有栏杆缺口 / 岸线，往岸上退 1.8 m（面朝河） */
@@ -175,7 +190,10 @@ export function shoreFor(px, pz) {
     const [ax, az, bx, bz] = w, dx = bx - ax, dz = bz - az, L2 = dx * dx + dz * dz || 1, u = Math.max(0, Math.min(1, ((px - ax) * dx + (pz - az) * dz) / L2));
     const qx = ax + dx * u, qz = az + dz * u, d = Math.hypot(px - qx, pz - qz);
     if (!best || d < best.d) { const L = Math.sqrt(L2), rx = dz / L, rz = -dx / L, sg = w[5], c = { d, x: qx - rx * sg * 1.8, z: qz - rz * sg * 1.8, yaw: Math.atan2(rx * sg, rz * sg) };
-      if (w[4] === 7) { c.x = qx - rx * sg * 6.8; c.z = qz - rz * sg * 6.8; }   // 矮驳岸：退到草坡顶（步道层）
+      if (w[4] === 7) {   // 矮驳岸：退到草坡顶（步道层）；窄岬角上 6.8 m 还在坡上就再往里找平地
+        for (let t = 6.8; t <= 16; t += 0.6) { c.x = qx - rx * sg * t; c.z = qz - rz * sg * t; if (isFlatLand(c.x, c.z)) break; }
+        if (!isFlatLand(c.x, c.z)) { if (!any || d < any.d) any = c; continue; }
+      }
       if (isLand(c.x, c.z)) best = c; else if (!any || d < any.d) any = c; }   // 退 1.8 m 要落在岸地上（2A 闸坝拐角：最近那段墙退出去还在水上）
   }
   return best || any;

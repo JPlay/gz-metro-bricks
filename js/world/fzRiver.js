@@ -13,7 +13,7 @@ import { XmStreet, textPaint, FONT, FONT_EN, facadePaint } from './xmStreet.js';
 import { hex, mix, Geo } from '../core/geo.js';
 import { bucketMat } from './kit.js';
 import * as D from './decor.js';
-import { FZR, WY, RIVERS, BRIDGES, PIERS, KIOSKS, isWater, isLand, isDry, inPoly, shoreFor, soffitAt, deckAt, humpRise, pierNext, ROUTE, STOPS, nextStop, useNet, netOfKiosk, levelAt, inChamber, LOCK, LOCK_STATE, ROUTES, routesOfPier, hudLine } from '../data/fz-river.js';
+import { FZR, WY, RIVERS, BRIDGES, PIERS, KIOSKS, isWater, isLand, isFlatLand, isDry, inPoly, shoreFor, soffitAt, deckAt, humpRise, pierNext, ROUTE, STOPS, nextStop, useNet, netOfKiosk, levelAt, inChamber, LOCK, LOCK_STATE, ROUTES, routesOfPier, hudLine } from '../data/fz-river.js';
 import { FzBoat } from '../game/fzBoat.js';
 import { Haze, RIVER_HAZE } from '../game/haze.js';
 import { installTileCull } from './tileCull.js';
@@ -187,7 +187,7 @@ export class FzRiverStreet extends XmStreet {
   /* ---------- 地面 / 水面（三角网，碰撞体按 60 m 格子分开） ---------- */
   groundAndWater() {
     const k = this.kit, PV = k.g('pave'), WA = k.g('paint@sea');
-    const GRASS = hex('#79A85A'), SKIRTC = hex('#BDB7AA'), PAVEC = hex('#CFC9BD'), GRASS8 = hex('#6F9A4E');   // 2A：西湖公园一带的岸地 / 外圈画成草地（小美：站在牌楼、码头、栈道、柳堤看不到白边）
+    const GRASS = hex('#79A85A'), SKIRTC = hex('#BDB7AA'), PAVEC = hex('#CFC9BD'), G8T = hex('#79A85A'), G8B = hex('#5E8A47');   // 2A：西湖公园一带的岸地 / 外圈画成草地（小美：站在牌楼、码头、栈道、柳堤看不到白边）
     const add = (G, T, y, col) => {   // y：数 或 (x, z) => y（2A：湖 + 闸上游水面高 0.5 m）
       for (const c of Object.values(T)) {
         const P = c.p, I = c.i, base = G.p.length / 3;
@@ -200,8 +200,9 @@ export class FzRiverStreet extends XmStreet {
             const A = [P[a * 2], Y[a], P[a * 2 + 1]], Bv = [P[b * 2], Y[b], P[b * 2 + 1]], Dv = [P[d * 2], Y[d], P[d * 2 + 1]];
             const ux = Bv[0] - A[0], uy = Bv[1] - A[1], uz = Bv[2] - A[2], vx = Dv[0] - A[0], vy = Dv[1] - A[1], vz = Dv[2] - A[2];
             let nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx; const nl = Math.hypot(nx, ny, nz) || 1; nx /= nl; ny /= nl; nz /= nl; if (ny < 0) { nx = -nx; ny = -ny; nz = -nz; }
-            const s0 = S.p.length / 3;
-            for (const V of [A, Bv, Dv]) S.push(V[0], V[1], V[2], nx, ny, nz, GRASS8);
+            { nx *= 0.45; nz *= 0.45; const l2 = Math.hypot(nx, ny, nz) || 1; nx /= l2; ny /= l2; nz /= l2; }   // 面法线压向上：仍是平涂分面，但朝阳那几面不发荧光
+            const s0 = S.p.length / 3, yc = (A[1] + Bv[1] + Dv[1]) / 3, tt = Math.min(1, Math.max(0, -yc / 2)), gc = G8T.map((v, q) => v + (G8B[q] - v) * tt);   // 同 3B 琴亭湖草坡：坡顶 #79A85A → 坡脚 #5E8A47（每面一色）
+            for (const V of [A, Bv, Dv]) S.push(V[0], V[1], V[2], nx, ny, nz, gc);
             S.i.push(s0, s0 + 1, s0 + 2);
           }
           continue;
@@ -2065,9 +2066,8 @@ export class FzRiverStreet extends XmStreet {
             const a = rp[i], b = rp[i + 1], L = Math.hypot(b[0] - a[0], b[1] - a[1]); if (L < 0.02) continue;
             const ry = yawOf(b[0] - a[0], b[1] - a[1]), mx = (a[0] + b[0]) / 2, mz = (a[1] + b[1]) / 2;
             Mt.box(mx, top + railH, mz, 0.05, 0.05, L + 0.04, RAIL, ry, 0, 0, 1, NO);          // 扶手
-            Mt.box(mx, top + railH * 0.45, mz, 0.03, 0.03, L + 0.03, RAIL, ry, 0, 0, 1, NO);   // 中横杆
             k.col(mx, top + 0.6, mz, 0.1, 1.2, L + 0.1, { ry, name: 'colParapet' });
-            while (nextPost <= acc2 + L + 1e-3) { const u = (nextPost - acc2) / L; Mt.box(a[0] + (b[0] - a[0]) * u, top + railH / 2, a[1] + (b[1] - a[1]) * u, 0.05, railH, 0.05, RAIL, 0, 0, 0, 1, NO); nextPost += 1.8; }
+            while (nextPost <= acc2 + L + 1e-3) { const u = (nextPost - acc2) / L; Mt.box(a[0] + (b[0] - a[0]) * u, top + railH / 2, a[1] + (b[1] - a[1]) * u, 0.05, railH, 0.05, RAIL, 0, 0, 0, 1, NO); nextPost += 1.2; }
             acc2 += L;
           }
           { const e = rp[rp.length - 1]; Mt.box(e[0], top + railH / 2, e[1], 0.05, railH, 0.05, RAIL, 0, 0, 0, 1, NO); }
@@ -2243,10 +2243,11 @@ export class FzRiverStreet extends XmStreet {
     if (gn.g6day) { const Z = (FZR.a6b && FZR.a6b.zone) || FZR.a6.zone, on = !this.nightLod && p.x > Z[0] - 40 && p.x < Z[2] + 40 && p.z > Z[1] - 40 && p.z < Z[3] + 40; if (force || gn.g6day.isEnabled(false) !== on) gn.g6day.setEnabled(on); }   // 6A/6B 白天组：只白天 + 人在湖前一带
     if (gn.g7day) { const Z = FZR.a7a.zone, on = !this.nightLod && p.x > Z[0] - 20 && p.x < Z[2] + 20 && p.z > Z[1] - 40 && p.z < Z[3] + 40; if (force || gn.g7day.isEnabled(false) !== on) gn.g7day.setEnabled(on); }   // 7A 白天组：只白天 + 人在洋下河一带
     if (gn.g2day) { const on = !this.nightLod && p.z < FZR.c2.z0 + 80; if (force || gn.g2day.isEnabled(false) !== on) gn.g2day.setEnabled(on); }   // 2C 白天组：只白天 + 人在白马河下段 / 彬德一带
-    if (FZR.a8a && FZR.a8a.clip) {   // 8A 南半湖夜里：贴地假 AO（shade）月光下本就看不出，关掉抵夜灯网格那一 draw（夜 ≤ 白天）；离开 8A / 白天原样
+    if (FZR.a8a && FZR.a8a.clip) {   // 8A 南半湖夜里：贴地假 AO（shade）月光下本就看不出，关掉抵夜灯网格那一 draw；6B 那两张远栏杆也关（入湖口一带每个朝向夜 ≤ 白天）；离开 8A / 白天原样
       const C = FZR.a8a.clip, off = !!NL && p.x > C[0] && p.x < C[2] && p.z > C[1] && p.z < C[3];
       if (!this._shadeM) this._shadeM = this.scene.meshes.filter(m => m.name === 'shade' && m.parent && /^fzStreet/.test(m.parent.name));
-      if (force || this._shadeOff !== off) { this._shadeOff = off; for (const m of this._shadeM) m.isVisible = !off; }
+      if (!this._a6bM) this._a6bM = (this.kit.meshes || []).filter(m => m.metadata && m.metadata.a6bRail);   // 6B 栏杆两张（常驻激活，离 8A 九百多米，夜里本来就看不见）
+      if (force || this._shadeOff !== off) { this._shadeOff = off; for (const m of this._shadeM) m.isVisible = !off; for (const m of this._a6bM) m.isVisible = !off; }
     }
     if (this.tileCull) this.tileCull.update(this.scene.activeCamera, { px: this.wx(p.x), pz: this.wz(p.z), detR: this.nearR(p, NL) + CELL * 0.7, detOn: !corrP });
   }
@@ -2283,7 +2284,7 @@ export class FzRiverStreet extends XmStreet {
   /** 落水判定（js/game/water.js 用）：在河道 / 湖面里（不在台阶、浮码头、船上）→ 水面高度 + 上岸点 */
   /** 「回到岸上」能记作安全点的位置：岸地（不含台阶 / 桥面 / 浮码头 / 船） */
   onAnyBoat(x, z) { return !!this.boats && Object.values(this.boats).some(b => b.contains(x, z)); }
-  safeAt(p) { const w = this.toW(p); return isLand(w.x, w.z) && !this.onAnyBoat(w.x, w.z); }
+  safeAt(p) { const w = this.toW(p); return isFlatLand(w.x, w.z) && !this.onAnyBoat(w.x, w.z); }   // 8A 草坡上不记“上次站稳的岸”，救回落在平步道上
   waterAt(p) {
     const w = this.toW(p);
     if (!isWater(w.x, w.z) && !inChamber(w.x, w.z)) return null;

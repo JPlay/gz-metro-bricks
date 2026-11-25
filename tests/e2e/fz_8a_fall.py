@@ -41,7 +41,8 @@ async def main():
       return await pg.evaluate("""(async () => { const M = await import('/js/data/fz-river.js'); const S=__game.fzMetro.street, R=S.kit.root.position, p=__game.player.position, b=document.getElementById('bShore');
         const x=p.x-R.x, z=p.z-R.z; return {x:+x.toFixed(2), y:+p.y.toFixed(2), z:+z.toFixed(2), btn: b ? !b.hidden : null, land: M.isLand(x,z), water: M.isWater(x,z)}; })()""")
     cases = [('north', (1050, 0.05, -13.0), (1050, -1.6, -19.6), (1050, -2.0, -24.0)),
-             ('tip', (962, 0.05, -72.0), (955.8, -0.9, -68.6), (951.0, -2.0, -61.5)),
+             ('tip', (967.0, 0.05, -75.5), (957.5, -1.6, -70.0), (951.0, -2.0, -61.5)),
+             ('tipjump', (967.0, 0.05, -75.5), (960.0, 0.05, -71.0), (951.0, -2.0, -61.5)),
              ('west', (915.2, 0.05, -45.0), (921.6, -1.6, -45.0), (926.5, -2.0, -45.0))]
     ok = True
     for name, prom, bank, wet in cases:
@@ -53,7 +54,7 @@ async def main():
       if os.environ.get('FZPICK'):
         pk = await pg.evaluate(f"(() => {{ const S=__game.fzMetro.street, R=S.kit.root.position, B=BABYLON; const out=[]; for (const [dx,dz] of [[0,0],[0.3,0],[-0.3,0],[0,0.3],[0,-0.3]]) {{ const o=new B.Vector3(R.x+{wet[0]}+dx, 5, R.z+{wet[2]}+dz); const hs=__game.scene.multiPickWithRay(new B.Ray(o,new B.Vector3(0,-1,0),12), m=>true)||[]; out.push(hs.slice(0,6).map(h=>h.pickedMesh.name+'@'+h.pickedPoint.y.toFixed(2)+(h.pickedMesh.isPickable?'':'(np)')+(h.pickedMesh.checkCollisions?'C':'')).join(' ')); }} return out; }})()")
         print('PICK', name, pk, flush=True)
-      good = bool(s2['btn']) and s3['land'] and s3['y'] > -2.2 and not s3['water']   # 回到陆面（草坡上也算）
+      good = bool(s2['btn']) and s3['land'] and s3['y'] > -0.15 and not s3['water']   # 回到平步道（不是草坡）
       ok = ok and good
       print('FALL', name, 'prom', s0, 'bank', s1, 'wet', s2, 'after', s3, 'OK' if good else 'FAIL', flush=True)
       R['cases'].append([name, s0, s1, s2, s3, good])

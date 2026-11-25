@@ -18,6 +18,8 @@ SPOTS = """(async () => {
   return out;
 })()"""
 
+MESHJS = "__game.scene.getActiveMeshes().data.slice(0, __game.scene.getActiveMeshes().length).map(m => { let q = m.parent, ch = []; while (q) { ch.push(q.name); q = q.parent; } const c = m.getBoundingInfo().boundingBox.centerWorld, e = m.getBoundingInfo().boundingBox.extendSizeWorld; return m.name + '|' + (m.material ? m.material.name : '') + '|' + m.getTotalIndices()/3 + '|' + ch.join('<') + '|' + [c.x, c.z, e.x, e.z].map(v => v.toFixed(0)).join(','); })"
+
 async def main():
   R = {'tag': TAG, 'spots': {}, 'shots': []}
   async with async_playwright() as p:
@@ -42,8 +44,8 @@ async def main():
     # 以数据机位为底，微调：入湖口沿渠看水面，3号退开让中英全文入画
     C = None
     spots = [
-      # 正式机位（小美 20:06 重取，与 a8a.py cams 同值）：入湖口站半岛尖西沿矮驳岸下沿朝南偏西看渠口；3号在根部东南岸角朝西北看弯形栈桥
-      ['inlet', 955.8, -68.6, 947.0, -100.0, 0.07, 1.70, 0],
+      # 正式机位（小美 20:06 重取，与 a8a.py cams 同值）：入湖口站半岛尖西南沿矮驳岸草带朝南看渠口（渠道 + 湖面都入画）；3号在根部东南岸角朝西北看弯形栈桥
+      ['inlet', 961.0, -74.5, 959.0, -100.0, 0.07, 1.70, 0],
       ['pier3', 1107.6, -76.5, 1093.3, -62.5, 0.06, 1.70, 1],
     ]
     if os.environ.get('FZCAMS'): spots = json.loads(os.environ['FZCAMS'])
@@ -60,11 +62,17 @@ async def main():
                         + " })()")
       await asyncio.sleep(3.0); fn = f'{OUT}/{name}_{TAG}.jpg'
       if await safe_shot(pg, path=fn, type='jpeg', quality=80): R['shots'].append(fn)
+      if os.environ.get('FZPICKXY'):
+        pk = await pg.evaluate("(pts) => { const sc=__game.scene, eng=sc.getEngine(), W=eng.getRenderingCanvas().clientWidth, H=eng.getRenderingCanvas().clientHeight, R=__game.fzMetro.street.kit.root.position; return pts.map(([u,v]) => { const h=sc.pick(u*W, v*H, m => m.isVisible && m.isEnabled()); return h && h.hit ? [u, v, h.pickedMesh.name, h.pickedMesh.parent ? h.pickedMesh.parent.name : '', +(h.pickedPoint.x-R.x).toFixed(1), +h.pickedPoint.y.toFixed(1), +(h.pickedPoint.z-R.z).toFixed(1)] : [u, v, null]; }); }", json.loads(os.environ['FZPICKXY']))
+        print('PICK', name, pk, flush=True)
       if os.environ.get('FZMESH'):
-        R.setdefault('meshes', {})[name] = await pg.evaluate("__game.scene.getActiveMeshes().data.slice(0, __game.scene.getActiveMeshes().length).map(m => { let q = m.parent, ch = []; while (q) { ch.push(q.name); q = q.parent; } const c = m.getBoundingInfo().boundingBox.centerWorld, e = m.getBoundingInfo().boundingBox.extendSizeWorld; return m.name + '|' + (m.material ? m.material.name : '') + '|' + m.getTotalIndices()/3 + '|' + ch.join('<') + '|' + [c.x, c.z, e.x, e.z].map(v => v.toFixed(0)).join(','); })")
+        R.setdefault('meshes', {})[name] = await pg.evaluate(MESHJS)
+      if False: await pg.evaluate("__game.scene.getActiveMeshes().data.slice(0, __game.scene.getActiveMeshes().length).map(m => { let q = m.parent, ch = []; while (q) { ch.push(q.name); q = q.parent; } const c = m.getBoundingInfo().boundingBox.centerWorld, e = m.getBoundingInfo().boundingBox.extendSizeWorld; return m.name + '|' + (m.material ? m.material.name : '') + '|' + m.getTotalIndices()/3 + '|' + ch.join('<') + '|' + [c.x, c.z, e.x, e.z].map(v => v.toFixed(0)).join(','); })")
       view = await perf(pg, 3, 0.3); yaw0 = await pg.evaluate('__game.player.yaw'); rows = []
       for k in range(4):
-        await pg.evaluate(f"__game.player.yaw = {k} * Math.PI / 2; __game.player.pitch = 0.08"); rows.append(await perf(pg, 3, 0.3))
+        await pg.evaluate(f"__game.player.yaw = {k} * Math.PI / 2; __game.player.pitch = 0.08"); await asyncio.sleep(1.0); rows.append(await perf(pg, 3, 0.3))
+        if os.environ.get('FZMESH'):
+          R.setdefault('meshes', {})[f'{name}_y{k}'] = await pg.evaluate(MESHJS)
       pos = await pg.evaluate('(() => { const S=__game.fzMetro.street, R=S.kit.root.position, p=__game.player.position; return [+(p.x-R.x).toFixed(2), +p.y.toFixed(2), +(p.z-R.z).toFixed(2)]; })()')
       g7 = await pg.evaluate('(() => { const n = __game.fzMetro.street.kit.groupNodes.g7day; return n ? n.isEnabled(false) : null; })()')
       R['spots'][name] = {'view': view, 'yaw0': yaw0, 'yaws': rows, 'pos': pos, 'g7day': g7,
