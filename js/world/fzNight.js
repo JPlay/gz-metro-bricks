@@ -203,7 +203,7 @@ export class FzNight {
       }
       n.lamp++;
     }
-    // 8A：南半湖 / 入湖渠 / 3号码头岸灯并进 fzNightLights。倒影同 4A/7B：细、暗、断开，贴岸短条，不要一根亮橙条。不加 PointLight。
+    // 8A：南半湖 / 入湖渠 / 3号码头岸灯并进 fzNightLights。倒影同 4A/7B：细、暗、断开，贴岸短条，不要一根亮橙条。不加点光源。
     for (const Lmp of (FZR.a8a && FZR.a8a.lamps) || []) {
       const [x, z, fx0, fz0] = Lmp;
       let fx = fx0, fz = fz0, fl = Math.hypot(fx, fz) || 1; fx /= fl; fz /= fl;

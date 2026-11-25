@@ -265,12 +265,16 @@ def build_south(g):
   def _wmid(w):
     return Point((w[0] + w[2]) / 2, (w[1] + w[3]) / 2)
   WALL_keep = []
+  _special = []
   for w in WALL0:
     seg = LineString([(w[0], w[1]), (w[2], w[3])])
     # 打开 3B 北头 flag 2 封口
     if len(w) > 4 and w[4] == 2 and math.hypot(_wmid(w).x - fx0, _wmid(w).y - fz0) < HW['fb'] + 8:
       continue
     if (not _wd.is_empty) and seg.distance(_wd) <= 0.5:
+      # 回归 7A：8A 区外的桥洞 / 口门特殊 flag（如 6B 江厝路 gap flag 1）不能被水面细碎差集顺手丢掉再按 flag 0 补成实墙
+      if len(w) > 4 and w[4] in (1, 4, 5) and not (X_WEST - 60 < _wmid(w).x < X_EAST + 60 and Z_SOUTH - 60 < _wmid(w).y < Z_NORTH + 60):
+        WALL_keep.append(w); _special.append(seg)
       continue
     WALL_keep.append(w)
 
@@ -308,6 +312,20 @@ def build_south(g):
     if not _wd.is_empty and _wd.buffer(1.2).intersects(seg):
       W8n.append(w)
   W8 = merge(W8n) if W8n else []
+  if _special:   # 新补的墙让开保留下来的特殊段（只留差集部分，不重叠也不留缝）
+    _spU = unary_union(_special).buffer(0.3)
+    _W8s = []
+    for w in W8:
+      seg = LineString([(w[0], w[1]), (w[2], w[3])])
+      if not seg.intersects(_spU):
+        _W8s.append(w); continue
+      rest = seg.difference(_spU)
+      for q in getattr(rest, 'geoms', [rest]):
+        if q.is_empty or q.length < 0.3: continue
+        c = list(q.coords)
+        _W8s.append([round(c[0][0], 2), round(c[0][1], 2), round(c[-1][0], 2), round(c[-1][1], 2)] + list(w[4:]))
+    print('8A kept special-flag walls outside 8A', len(_special), 'new walls', len(W8), '->', len(_W8s))
+    W8 = _W8s
   # 码头舌 + 入口湾的旧墙和新墙都去掉，避免 3 m 石坑；栈桥用实体基座封住
   drop_zone = None
   if len(pier_game) >= 4:
