@@ -5,7 +5,7 @@ const fails = [];
 function ok(n, v, info) { console.log(`${v ? 'PASS' : 'FAIL'} ${n}${!v && info !== undefined ? ' ' + JSON.stringify(info) : ''}`); if (!v) fails.push(n); }
 R.useNet('e');
 const F = R.FZR, A7 = F.a7a, A7B = F.a7b, RV = R.RIVERS;
-ok('a7b present for nav', !!(A7B && A7 && A7.openedTo7b && A7B.loop && A7B.capWall));
+ok('a7b present for nav', !!(A7B && A7 && A7.openedTo7b && A7B.loop && (F.a7c ? A7B.openedTo7c : A7B.capWall)));
 
 const RES = 0.45, CLR = 0.38;
 const x0 = 580, z0 = 750, x1 = 950, z1 = 1220;
@@ -149,16 +149,27 @@ ok(`lake loop waypoints all reachable from the 7A join (gapCount=${loopFail})`, 
 }
 
 reach(A7B.capBank[0], A7B.capBank[1], 'east cap bank', 1.6);
-{ const [x, z] = A7B.capPast;
+if (F.a7c) {
+  const bank = A7B.lakeMouthBank || A7B.capBank;
+  reach(bank[0], bank[1], 'lake-side mouth bank', 1.6);
+  const open = A7B.mouthOpen || F.a7c.mouthOpen;
+  ok('7C mouthOpen is recorded', !!(open && open.length >= 2), { open });
+  if (open) reach(open[0], open[1], '7C-side bank through the open outlet (mouthOpen)', 1.8);
+  // The spots that broke after the outlet opened must stay on land and in the walk.
+  const pt5 = (A7B.loop || [])[5];
+  if (pt5) reach(pt5[0], pt5[1], 'lake loop pt5 (outlet-side, must stay land)', 1.6);
+} else {
+  const [x, z] = A7B.capPast;
   const k = snap(x, z);
   const d = snapDist(x, z, k);
-  const blocked = k < 0 || !seen[k] || d > 2.5;
-  ok('cannot walk past east cap (7C side is not in the walkable component)', blocked, { x, z, snap: k, d: +d.toFixed(2), seen: !!(k >= 0 && seen[k]) });
+  const reachable = k >= 0 && seen[k] && d <= 2.5;
+  ok('cannot walk past east cap (7C side is not in the walkable component)', !reachable, { x, z, snap: k, d: +d.toFixed(2), seen: !!(k >= 0 && seen[k]) });
 }
 
 let bankGaps = 0;
 for (const side of [1, -1]) {
-  for (let s = end7a + 8; s <= RV.yx.line.len - 10; s += 4) {
+  const end7b = A7B.yxLen7b || A7B.yxLen;
+  for (let s = end7a + 8; s <= end7b - 10; s += 4) {
     const p = RV.yx.line.at(s, side * bankOff);
     const k = snap(p.x, p.z), d = snapDist(p.x, p.z, k);
     if (!(k >= 0 && seen[k] && d <= 1.1)) {

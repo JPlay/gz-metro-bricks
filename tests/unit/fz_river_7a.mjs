@@ -34,25 +34,26 @@ ok('7A data present (a7a: yxLen / 7 culverts / express / cap / 4 cams / 1 sign)'
   ok('named west tip and 涧田路 culvert s are recorded', O.namedWestTip === 1788.16 && Array.isArray(O.culvert) && Math.abs(O.culvert[0] - 2055.79) < 0.02 && Math.abs(O.culvert[1] - 2146.84) < 0.02, O);
 }
 
-// 弯半径 ≥ 25 m
-{ const L = RV.yx.line, c = F.rivers.yx.p, pts = [];
+// 弯半径 ≥ 25 m（只量冻结的 7A 前缀；7B/7C 延伸段各自测）
+{ const L = RV.yx.line, c = F.rivers.yx.p, pts = [], lock = A7.yxLen;
   for (let i = 0; i < c.length; i += 2) pts.push([c[i], c[i + 1]]);
-  let r1 = 1e9;
+  let r1 = 1e9, acc = 0;
   for (let i = 1; i < pts.length - 1; i++) {
     const [a, b, d] = [pts[i - 1], pts[i], pts[i + 1]];
     const A = Math.hypot(b[0] - a[0], b[1] - a[1]), Bq = Math.hypot(d[0] - b[0], d[1] - b[1]), C = Math.hypot(d[0] - a[0], d[1] - a[1]);
     const s = (A + Bq + C) / 2, ar = Math.sqrt(Math.max(0, s * (s - A) * (s - Bq) * (s - C)));
-    if (ar > 1e-6) r1 = Math.min(r1, A * Bq * C / (4 * ar));
+    if (ar > 1e-6 && acc + A <= lock) r1 = Math.min(r1, A * Bq * C / (4 * ar));
+    acc += A;
   }
   let r2 = 1e9, at = 0;
-  for (let s = 0; s <= L.len - 6; s += 1) {
-    const a = L.at(s), b = L.at(Math.min(L.len, s + 6));
+  for (let s = 0; s <= lock - 6; s += 1) {
+    const a = L.at(s), b = L.at(Math.min(lock, s + 6));
     let d = Math.atan2(b.tx, b.tz) - Math.atan2(a.tx, a.tz);
     d -= 2 * Math.PI * Math.round(d / (2 * Math.PI));
     const r = 6 / Math.max(1e-9, Math.abs(d));
     if (r < r2) { r2 = r; at = s; }
   }
-  ok(`yx min bend radius ≥ 25 m (vertices ${r1 === 1e9 ? 'n/a' : r1.toFixed(1)}, 6 m window ${r2.toFixed(1)})`, (r1 === 1e9 || r1 >= 25) && r2 >= 25, { r1, r2, at });
+  ok(`yx min bend radius ≥ 25 m (vertices ${r1 === 1e9 ? 'n/a' : r1.toFixed(1)}, 6 m window ${r2.toFixed(1)})`, (r1 === 1e9 || r1 >= 25) && r2 >= 25, { r1, r2, at, lock });
 }
 
 // 汇入口贴在 jn，整段平移；起点在已建中线上
@@ -93,7 +94,9 @@ ok('7A data present (a7a: yxLen / 7 culverts / express / cap / 4 cams / 1 sign)'
 }
 
 // 东头合拢像 6B：墙 + 远景
-ok('east end is sealed like 6B (capWall + far backdrop + colCap)', F.a7b
+ok('east end is sealed like 6B (capWall + far backdrop + colCap)', F.a7c
+  ? (!A7.capWall && A7.openedTo7b && F.a7b && F.a7b.openedTo7c && !F.a7b.capWall && F.a7c.capWall && (F.a7c.far || []).length >= 3 && /colCap/.test(fsrc))
+  : F.a7b
   ? (!A7.capWall && (A7.cap === 0 || A7.cap === undefined) && A7.openedTo7b && F.a7b.capWall && (F.a7b.far || []).length >= 3 && /colCap/.test(fsrc))
   : (!!(A7.capWall && (A7.far || []).length >= 3) && /colCap/.test(fsrc) && A7.cap === 2.4));
 
