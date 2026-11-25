@@ -10,6 +10,8 @@ TAPJ, TAPB = 5.0, 3.0           # 入湖口 / 水湾接头渐变长度（5 m 内
 CH = LineString([(996, -124), (988, -110), (978, -100), (970, -93), (964, -86)]).buffer(6.5, cap_style=2)
 CANAL = box(960, -260, 1040, -106)
 PIERZ = box(1084, -80, 1112, -40)
+# 3号码头岸侧入口（牌 + 引桥落岸）保持步道层：坡在这一圈外 3 m 内收回 0
+KEEP = unary_union([Point(1104.6, -69.6).buffer(2.2), LineString([(1098.4, -72.1), (1103.4, -70.0)]).buffer(2.0)])
 
 def smooth(t):
   t = max(0.0, min(1.0, t)); return t * t * (3 - 2 * t)
@@ -33,17 +35,21 @@ def build(g, ctx):
         w[4] = 3; ncap += 1
   print('8A cap walls -> flag3', ncap)
   lake_w = []
+  railed = set()
   for w in WALL:
-    if w[4] != 0: continue
     mx, mz = (w[0] + w[2]) / 2, (w[1] + w[3]) / 2
-    if not clip.contains(Point(mx, mz)): continue
     m = Point(mx, mz)
-    if CH.contains(m) or CANAL.contains(m) or PIERZ.contains(m): continue
+    inP = PIERZ.contains(m)
+    # 小美（b6d2e59 复核 A）：3号水湾的 3 m 岸墙也降成矮驳岸 + 草带；原来有石栏的（flag 0 / 6）矮石栏跟着降到驳岸顶，看不见的挡墙保留
+    if not (w[4] == 0 or (inP and w[4] == 6)): continue
+    if not clip.contains(m): continue
+    if CH.contains(m) or CANAL.contains(m): continue
     if mz < -110: continue
     L = math.hypot(w[2] - w[0], w[3] - w[1]) or 1
     nx, nz = (w[3] - w[1]) / L, -(w[2] - w[0]) / L
     if not (water.contains(Point(mx + nx * 0.6, mz + nz * 0.6)) or water.contains(Point(mx - nx * 0.6, mz - nz * 0.6))): continue
     lake_w.append(w)
+    if inP: railed.add(id(w))
   ends = {}
   for w in lake_w:
     for p in ((w[0], w[1]), (w[2], w[3])):
@@ -60,7 +66,7 @@ def build(g, ctx):
     p = Point(x, z); f = 1.0
     if Jg is not None: f = min(f, Jg.distance(p) / TAPJ)
     if NL is not None: f = min(f, NL.distance(p) / 4.0)
-    f = min(f, bnd.distance(p) / TAPB)
+    f = min(f, bnd.distance(p) / TAPB, KEEP.distance(p) / 3.0)
     return max(0.0, f)
   def Y(x, z):
     d = S.distance(Point(x, z))
@@ -68,7 +74,7 @@ def build(g, ctx):
     base = -DROP if d <= D[1] else -DROP * (1 - smooth((d - D[1]) / (D[-1] - D[1])))
     y = base * taper(x, z)
     return 0.0 if y > -0.004 else round(y, 3)
-  for w in lake_w: w[4] = 7
+  for w in lake_w: w[4] = 8 if id(w) in railed else 7   # 8 = 矮驳岸 + 驳岸顶矮石栏 + 看不见的挡墙（3号水湾）
   Bk = [None] + [S.buffer(d, quad_segs=3).simplify(0.12).buffer(0) for d in D[1:]]
   band = land.intersection(Bk[-1]).buffer(0)
   land_main = land.difference(Bk[-1]).buffer(0)
@@ -111,6 +117,6 @@ def build(g, ctx):
   low = []
   for w in lake_w:
     ya = round(-DROP * taper(w[0], w[1]), 3); yb = round(-DROP * taper(w[2], w[3]), 3)
-    low.append([w[0], w[1], w[2], w[3], ya, yb, w[5] if len(w) > 5 else 1])
-  print('8A low bank: lake walls', len(lake_w), 'junctions', len(J), 'band area', round(band.area, 1), 'cell tris', nt)
+    low.append([w[0], w[1], w[2], w[3], ya, yb, w[5] if len(w) > 5 else 1, 1 if w[4] == 8 else 0])
+  print('8A low bank: lake walls', len(lake_w), 'railed(bay)', len(railed), 'junctions', len(J), 'band area', round(band.area, 1), 'cell tris', nt)
   return {'band': band, 'Y': Y, 'low': low, 'S': S, 'drop': DROP, 'D': D[-1]}

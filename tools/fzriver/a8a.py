@@ -817,6 +817,7 @@ def build_south(g):
     return None
   _np = 0
   for L_ in lamps:
+    if not land.contains(Point(L_[0], L_[1])): continue   # 栈桥上的灯（水面上）不动
     if _Y(L_[0], L_[1]) != 0.0 or _band.contains(Point(L_[0], L_[1])):
       q = _push_out(L_[0], L_[1], L_[2], L_[3])
       if q: L_[0], L_[1] = round(q[0], 2), round(q[1], 2); _np += 1
@@ -827,6 +828,7 @@ def build_south(g):
     if t_[5] != 'gone' and _band.buffer(0.5).contains(Point(t_[0], t_[1])):
       TREES[i][5] = 'gone'
   _hb = [h for h in HOUSES if not h.get('gone') and _band.contains(Point(h['x'], h['z']))]
+  print('8A bank: pier sign Y', _Y(1104.6, -69.6), 'cam_p3 Y', _Y(cam_p3[0], cam_p3[1]))
   print('8A bank: lamps pushed', _np, 'houses on band', len(_hb), 'sign', lake_sign['x'], lake_sign['z'])
   # 远景楼前、对岸一排树（遮楼脚；只占既有 solid 合批，不加 draw）
   trees8 = []

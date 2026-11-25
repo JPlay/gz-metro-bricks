@@ -222,14 +222,14 @@ export class FzNight {
         }
       }
       if (start) {
-        const nSeg = 3, gap = 0.5, segL = 1.25;
+        const nSeg = 3, gap = 0.55, segL = 1.15;   // 小美（b6d2e59 B3）：照 4A 岸灯倒影标准——细、暗、断开
         for (let k = 0; k < nSeg; k++) {
           const a = start + k * (segL + gap), b = a + segL;
           const x0 = x + fx * a, z0 = z + fz * a, x1 = x + fx * b, z1 = z + fz * b;
           if (!isWater(x0, z0) || !isWater(x1, z1)) continue;
           const ll = Math.hypot(x1 - x0, z1 - z0) || 1;
-          const dim = 0.92 * (1 - k * 0.18);
-          flat((x0 + x1) / 2, levelAt(x0, z0) + 0.025, (z0 + z1) / 2, (x1 - x0) / ll, (z1 - z0) / ll, 0.48, ll / 2, RG.streak, sc(WARM, dim));
+          const dim = 0.82 * (1 - k * 0.16);
+          flat((x0 + x1) / 2, levelAt(x0, z0) + 0.025, (z0 + z1) / 2, (x1 - x0) / ll, (z1 - z0) / ll, 0.40, ll / 2, RG.streak, sc(WARM, dim));
         }
       }
       n.lamp++;
@@ -287,7 +287,7 @@ export class FzNight {
         const x0 = x + fx * a, z0 = z + fz * a, x1 = x + fx * b, z1 = z + fz * b;
         if (!isWater((x0 + x1) / 2, (z0 + z1) / 2)) continue;
         const ll = Math.hypot(x1 - x0, z1 - z0) || 1;
-        flat((x0 + x1) / 2, levelAt(x0, z0) + 0.04, (z0 + z1) / 2, (x1 - x0) / ll, (z1 - z0) / ll, 0.70, ll / 2, RG.streak, sc(WARM, 1.05 * (1 - k * 0.18)));
+        flat((x0 + x1) / 2, levelAt(x0, z0) + 0.04, (z0 + z1) / 2, (x1 - x0) / ll, (z1 - z0) / ll, 0.40, ll / 2, RG.streak, sc(WARM, 0.82 * (1 - k * 0.16)));   // 4A 标准：细、暗
       }
     }
     // 8A：取景机位的灯倒影。镜面点在灯→机位地面线上、离机位 d·e/(e+h)（e 眼高、h 灯头高，都从水面量）；
@@ -300,13 +300,14 @@ export class FzNight {
         const d = Math.hypot(x - cx, z - cz); if (d < 6 || d > maxd) continue;
         let ang = Math.atan2(z - cz, x - cx) - la; ang = Math.atan2(Math.sin(ang), Math.cos(ang)); if (Math.abs(ang) > half * Math.PI / 180) continue;
         const ux = (x - cx) / d, uz = (z - cz) / d, tm = d * eye / (eye + h);   // 机位 → 灯
-        const t0 = tm * 0.78, t1 = Math.min(d - 0.6, tm * 1.85), nSeg = 4, gap = (t1 - t0) * 0.07, segL = (t1 - t0 - 3 * gap) / nSeg, w = 0.11 + 0.0065 * tm;
+        // 小美（b6d2e59 B3）：右下那串像一节节橙块——改细（宽约减半）、改暗、节间缝拉大，同 4A 标准「细、暗、断开」
+        const t0 = tm * 0.85, t1 = Math.min(d - 0.6, tm * 1.6), nSeg = 4, gap = (t1 - t0) * 0.12, segL = (t1 - t0 - 3 * gap) / nSeg, w = 0.05 + 0.003 * tm;
         for (let k = 0; k < nSeg; k++) {
           const a = t0 + k * (segL + gap), b = a + segL;
           const x0 = cx + ux * a, z0 = cz + uz * a, x1 = cx + ux * b, z1 = cz + uz * b;
           if (!isWater(x0, z0) || !isWater(x1, z1) || !isWater((x0 + x1) / 2, (z0 + z1) / 2)) continue;
           const kd = Math.abs((a + b) / 2 - tm) / (t1 - t0);
-          flat((x0 + x1) / 2, levelAt(x0, z0) + 0.03, (z0 + z1) / 2, ux, uz, w, segL / 2, RG.streak, sc(WARM, 0.82 * (1 - kd * 0.8)));
+          flat((x0 + x1) / 2, levelAt(x0, z0) + 0.03, (z0 + z1) / 2, ux, uz, w, segL / 2, RG.streak, sc(WARM, 0.5 * (1 - kd * 0.8)));
         }
       }
     }

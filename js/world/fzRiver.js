@@ -187,7 +187,7 @@ export class FzRiverStreet extends XmStreet {
   /* ---------- 地面 / 水面（三角网，碰撞体按 60 m 格子分开） ---------- */
   groundAndWater() {
     const k = this.kit, PV = k.g('pave'), WA = k.g('paint@sea');
-    const GRASS = hex('#79A85A'), SKIRTC = hex('#BDB7AA'), PAVEC = hex('#CFC9BD'), G8T = hex('#79A85A'), G8B = hex('#5E8A47');   // 2A：西湖公园一带的岸地 / 外圈画成草地（小美：站在牌楼、码头、栈道、柳堤看不到白边）
+    const GRASS = hex('#79A85A'), SKIRTC = hex('#BDB7AA'), PAVEC = hex('#CFC9BD'), G8T = hex('#6E9157'), G8B = hex('#567646'), GRASS8F = hex('#6E9157');   // 8A 草：比 3B 原色降亮 10%、降饱和 20%（实拍后与琴亭湖草对齐，见 shots8a/handoff/grass_compare.jpg）   // 2A：西湖公园一带的岸地 / 外圈画成草地（小美：站在牌楼、码头、栈道、柳堤看不到白边）
     const add = (G, T, y, col) => {   // y：数 或 (x, z) => y（2A：湖 + 闸上游水面高 0.5 m）
       for (const c of Object.values(T)) {
         const P = c.p, I = c.i, base = G.p.length / 3;
@@ -201,7 +201,7 @@ export class FzRiverStreet extends XmStreet {
             const ux = Bv[0] - A[0], uy = Bv[1] - A[1], uz = Bv[2] - A[2], vx = Dv[0] - A[0], vy = Dv[1] - A[1], vz = Dv[2] - A[2];
             let nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx; const nl = Math.hypot(nx, ny, nz) || 1; nx /= nl; ny /= nl; nz /= nl; if (ny < 0) { nx = -nx; ny = -ny; nz = -nz; }
             { nx *= 0.45; nz *= 0.45; const l2 = Math.hypot(nx, ny, nz) || 1; nx /= l2; ny /= l2; nz /= l2; }   // 面法线压向上：仍是平涂分面，但朝阳那几面不发荧光
-            const s0 = S.p.length / 3, yc = (A[1] + Bv[1] + Dv[1]) / 3, tt = Math.min(1, Math.max(0, -yc / 2)), gc = G8T.map((v, q) => v + (G8B[q] - v) * tt);   // 同 3B 琴亭湖草坡：坡顶 #79A85A → 坡脚 #5E8A47（每面一色）
+            const s0 = S.p.length / 3, yc = (A[1] + Bv[1] + Dv[1]) / 3, tt = Math.min(1, Math.max(0, -yc / 2)), gc = G8T.map((v, q) => v + (G8B[q] - v) * tt);   // 坡顶 G8T → 坡脚 G8B（每面一色）
             for (const V of [A, Bv, Dv]) S.push(V[0], V[1], V[2], nx, ny, nz, gc);
             S.i.push(s0, s0 + 1, s0 + 2);
           }
@@ -237,7 +237,7 @@ export class FzRiverStreet extends XmStreet {
         skirt = { p: P, i: Ia }; add(PV, [{ p: P, i: Ib }], -0.01, PAVEC);
       }
       const c8b = FZR.a8a && FZR.a8a.clip, in8b = (x, z) => !!c8b && x > c8b[0] - 70 && x < c8b[2] + 70 && z > c8b[1] - 20 && z < c8b[3] + 70;
-      add(k.solid, [skirt], -0.01, (KIOSKS.fzxm_B || pk || FZR.c2 || qp || c8b) ? ((x, z) => in8b(x, z) || ((KIOSKS.fzxm_B && x > -620 && x < -190 && z > 60 && z < 600) || inPk(x, z) || z < c2z || inD2(x, z) || inQ(x, z)) ? GRASS : SKIRTC) : SKIRTC); }
+      add(k.solid, [skirt], -0.01, (KIOSKS.fzxm_B || pk || FZR.c2 || qp || c8b) ? ((x, z) => in8b(x, z) ? GRASS8F : ((KIOSKS.fzxm_B && x > -620 && x < -190 && z > 60 && z < 600) || inPk(x, z) || z < c2z || inD2(x, z) || inQ(x, z)) ? GRASS : SKIRTC) : SKIRTC); }
     if (FZR.d2) add(WA, [FZR.d2.mouth.water], WY, hex('#2F6670'));   // 2D 琼东河口远景水面：和内河同高、同色（小美 2D ⑥：看不出接缝） add(WA, [FZR.lakeFar], (LOCK ? WY + LOCK.rise : WY) - 0.03, hex('#2F6670'));
     for (const [x0, z0, x1, z1] of FZR.lakeShore) { const L = Math.hypot(x1 - x0, z1 - z0); k.g('granite').box((x0 + x1) / 2, (WY - 0.2) / 2, (z0 + z1) / 2, 0.5, -WY + 0.2, L + 0.3, hex('#8E887C'), yawOf(x1 - x0, z1 - z0), 0, 0, 1, NO); }
     // 碰撞：每格一个不可见网格
@@ -338,7 +338,7 @@ export class FzRiverStreet extends XmStreet {
   wallFaces() {
     const GR = this.kit.g('granite'), col = hex(WALLC), dark = hex('#6E685C');
     for (const w of FZR.wall) {
-      if (w[4] === 3 || w[4] === 5 || w[4] === 7) continue;   // 7 = 8A 湖岸矮驳岸（a8aStatic 画）；5 = 2D 琼东河口矮挡墙（walls 里画），不画整面岸墙
+      if (w[4] === 3 || w[4] === 5 || w[4] === 7 || w[4] === 8) continue;   // 7 = 8A 湖岸矮驳岸（a8aStatic 画）；5 = 2D 琼东河口矮挡墙（walls 里画），不画整面岸墙
       const mx = (w[0] + w[2]) / 2, mz = (w[1] + w[3]) / 2;
       if (this._d2epass && inD2E(mx, mz)) continue;   // 已进细节格子，避免 400 m 岸墙合成一个包围盒
       if (!this.c2ok(mz, mx)) continue;
@@ -377,6 +377,8 @@ export class FzRiverStreet extends XmStreet {
           GR.box(mx - rx * 0.12, 0.62, mz - rz * 0.12, 0.14, 0.08, L, hex('#B5AE9F'), ry, 0, 0, 1, NO);
           for (let i = 0; i <= n; i++) { const t = i / n; GR.box(ax + (bx - ax) * t - rx * 0.12, 0.31, az + (bz - az) * t - rz * 0.12, 0.16, 0.6, 0.16, hex('#A8A193'), ry, 0, 0, 1, NO); }
         });
+      } else if (flag === 8) {   // 8A 3号水湾矮驳岸：矮石栏在 a8aStatic 跟驳岸顶走；这里只留看不见的高挡墙
+        k.col(mx - rx * 0.2, 0.5, mz - rz * 0.2, 0.4, 8, L, { ry, name: 'colLake' });
       } else if (flag === 7) {   // 8A 湖岸矮驳岸：不立栏、不挡（可以走下草坡到水边；落水照旧「回到岸上」）
       } else if (flag === 2) {   // 河道尽头：暗洞（河继续往外流）+ 挡墙
         k.col(mx - rx * 0.3, 1, mz - rz * 0.3, 0.6, 8, L, { ry, name: 'colCap' });
@@ -1984,7 +1986,7 @@ export class FzRiverStreet extends XmStreet {
     }
     // 小美 ①：过了入湖口的湖岸 = 矮驳岸（顶高出水面约 1 m，两头渐变回步道层）：墙面 + 深色压顶条石（不要白边）
     { const RC = hex(WALLC), CP = hex('#7D776B'), CPF = hex('#6A645A');
-      for (const [ax0, az0, bx0, bz0, ya0, yb0, sg] of A.lowWalls || []) {
+      for (const [ax0, az0, bx0, bz0, ya0, yb0, sg, railed] of A.lowWalls || []) {
         let ax = ax0, az = az0, bx = bx0, bz = bz0, ya = ya0, yb = yb0; if (sg > 0) { [ax, az, bx, bz] = [bx, bz, ax, az]; [ya, yb] = [yb, ya]; }   // 法线朝水
         const L = Math.hypot(bx - ax, bz - az); if (L < 0.05) continue;
         const dx = (bx - ax) / L, dz = (bz - az) / L, lx = dz * sg, lz = -dx * sg;   // l = 朝岸上
@@ -1992,6 +1994,14 @@ export class FzRiverStreet extends XmStreet {
         const e = 0.02, wq = 0.42;   // 压顶：顶面 + 朝水一条立边
         GR.quad([ax - lx * wq - dx * e, ya + 0.08, az - lz * wq - dz * e], [bx - lx * wq + dx * e, yb + 0.08, bz - lz * wq + dz * e], [bx + lx * 0.04 + dx * e, yb + 0.08, bz + lz * 0.04 + dz * e], [ax + lx * 0.04 - dx * e, ya + 0.08, az + lz * 0.04 - dz * e], CP);
         GR.quad([ax + lx * 0.04 - dx * e, ya + 0.08, az + lz * 0.04 - dz * e], [bx + lx * 0.04 + dx * e, yb + 0.08, bz + lz * 0.04 + dz * e], [bx + lx * 0.04, yb - 0.08, bz + lz * 0.04], [ax + lx * 0.04, ya - 0.08, az + lz * 0.04], CPF);
+        if (railed) {   // 小美 A：3号水湾矮石栏跟着降到驳岸压顶上（同 flag 6 那套条石，进细节格子 granite 同批，不加 draw）
+          const mx = (ax + bx) / 2, mz = (az + bz) / 2, ox = -lx * 0.2, oz = -lz * 0.2, ym = (ya + yb) / 2 + 0.08, ry = yawOf(dx, dz), n = Math.max(1, Math.round(L / 2.3));
+          this.det(mx, mz, () => {
+            const G2 = k.g('granite');
+            G2.box(mx + ox, ym + 0.62, mz + oz, 0.14, 0.08, L, hex('#B5AE9F'), ry, 0, 0, 1, NO);
+            for (let i = 0; i <= n; i++) { const t = i / n, yp = ya + (yb - ya) * t + 0.08; G2.box(ax + (bx - ax) * t + ox, (yp + ym + 0.62) / 2, az + (bz - az) * t + oz, 0.16, ym + 0.62 - yp, 0.16, hex('#A8A193'), ry, 0, 0, 1, NO); }
+          });
+        }
       }
     }
     // 8A 临时合拢墙：墙身沿 t 方向（以前按 n 转了 90°，墙横插进湖心、下面还悬空），墙脚落到水下

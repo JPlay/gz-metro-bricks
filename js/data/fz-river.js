@@ -186,11 +186,11 @@ export const isDry = (x, z) => FZR.dry.some(d => inPoly(x, z, d));
 export function shoreFor(px, pz) {
   let best = null, any = null;
   for (const w of FZR.wall) {
-    if (w[4] > 1 && w[4] !== 6 && w[4] !== 7) continue;   // 6 / 7 = 8A 水湾石栏 / 湖岸矮驳岸
+    if (w[4] > 1 && w[4] !== 6 && w[4] !== 7 && w[4] !== 8) continue;   // 6 / 7 / 8 = 8A 水湾石栏 / 湖岸矮驳岸 / 水湾矮驳岸+石栏
     const [ax, az, bx, bz] = w, dx = bx - ax, dz = bz - az, L2 = dx * dx + dz * dz || 1, u = Math.max(0, Math.min(1, ((px - ax) * dx + (pz - az) * dz) / L2));
     const qx = ax + dx * u, qz = az + dz * u, d = Math.hypot(px - qx, pz - qz);
     if (!best || d < best.d) { const L = Math.sqrt(L2), rx = dz / L, rz = -dx / L, sg = w[5], c = { d, x: qx - rx * sg * 1.8, z: qz - rz * sg * 1.8, yaw: Math.atan2(rx * sg, rz * sg) };
-      if (w[4] === 7) {   // 矮驳岸：退到草坡顶（步道层）；窄岬角上 6.8 m 还在坡上就再往里找平地
+      if (w[4] === 7 || w[4] === 8) {   // 矮驳岸：退到草坡顶（步道层）；窄岬角上 6.8 m 还在坡上就再往里找平地
         for (let t = 6.8; t <= 16; t += 0.6) { c.x = qx - rx * sg * t; c.z = qz - rz * sg * t; if (isFlatLand(c.x, c.z)) break; }
         if (!isFlatLand(c.x, c.z)) {   // 窄岬角：法线方向穿过去又是水，就在岸点周围一圈圈找最近的平地
           let f = null;
