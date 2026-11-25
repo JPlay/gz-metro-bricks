@@ -2165,7 +2165,19 @@ export class FzRiverStreet extends XmStreet {
     if (gn.g6day) { const Z = (FZR.a6b && FZR.a6b.zone) || FZR.a6.zone, on = !this.nightLod && p.x > Z[0] - 40 && p.x < Z[2] + 40 && p.z > Z[1] - 40 && p.z < Z[3] + 40; if (force || gn.g6day.isEnabled(false) !== on) gn.g6day.setEnabled(on); }   // 6A/6B 白天组：只白天 + 人在湖前一带
     if (gn.g7day) { const Z = FZR.a7a.zone, on = !this.nightLod && p.x > Z[0] - 20 && p.x < Z[2] + 20 && p.z > Z[1] - 40 && p.z < Z[3] + 40; if (force || gn.g7day.isEnabled(false) !== on) gn.g7day.setEnabled(on); }   // 7A 白天组：只白天 + 人在洋下河一带
     if (gn.g2day) { const on = !this.nightLod && p.z < FZR.c2.z0 + 80; if (force || gn.g2day.isEnabled(false) !== on) gn.g2day.setEnabled(on); }   // 2C 白天组：只白天 + 人在白马河下段 / 彬德一带
-    if (this.tileCull) this.tileCull.update(this.scene.activeCamera, { px: this.wx(p.x), pz: this.wz(p.z), detR: (NL ? NL.near : NEAR) + CELL * 0.7, detOn: !corrP });
+    if (FZR.a8a && FZR.a8a.clip) {   // 8A 南半湖夜里：贴地假 AO（shade）月光下本就看不出，关掉抵夜灯网格那一 draw（夜 ≤ 白天）；离开 8A / 白天原样
+      const C = FZR.a8a.clip, off = !!NL && p.x > C[0] && p.x < C[2] && p.z > C[1] && p.z < C[3];
+      if (!this._shadeM) this._shadeM = this.scene.meshes.filter(m => m.name === 'shade' && m.parent && /^fzStreet/.test(m.parent.name));
+      if (force || this._shadeOff !== off) { this._shadeOff = off; for (const m of this._shadeM) m.isVisible = !off; }
+    }
+    if (this.tileCull) this.tileCull.update(this.scene.activeCamera, { px: this.wx(p.x), pz: this.wz(p.z), detR: this.nearR(p, NL) + CELL * 0.7, detOn: !corrP });
+  }
+  /** 细节格子裁剪半径：8A 南半湖夜里再收一档（入湖渠口夜灯网格多一 draw，靠远处细节格子提早关抵掉，保持夜 ≤ 白天） */
+  nearR(p, NL) {
+    if (!NL) return NEAR;
+    const C = FZR.a8a && FZR.a8a.clip;
+    if (C && p.x > C[0] && p.x < C[2] && p.z > C[1] && p.z < C[3]) return Math.min(NL.near, (FZR.a8a.nightNear || 64));
+    return NL.near;
   }
   refreshTilesIfTurned() {
     const tc = this.tileCull, cam = this.scene && this.scene.activeCamera; if (!tc || !cam) return;
@@ -2173,7 +2185,7 @@ export class FzRiverStreet extends XmStreet {
     const px = this.wx(p.x), pz = this.wz(p.z);
     if (!tc.shouldRefresh(cam, px, pz)) return;
     const corrP = this.inCorr(p, -9), NL = this.nightLod ? NIGHT.lod : null;
-    tc.update(cam, { px, pz, detR: (NL ? NL.near : NEAR) + CELL * 0.7, detOn: !corrP, force: true });
+    tc.update(cam, { px, pz, detR: this.nearR(p, NL) + CELL * 0.7, detOn: !corrP, force: true });
   }
   tick(dt) {
     // 船按真实时间走（上限 0.25 s/帧，每帧最多挪 0.9 m；人坐在船上跟着走，不会“跳”）；街区其余逻辑仍用 0.1 s 上限

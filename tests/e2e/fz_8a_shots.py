@@ -60,6 +60,8 @@ async def main():
                         + " })()")
       await asyncio.sleep(3.0); fn = f'{OUT}/{name}_{TAG}.jpg'
       if await safe_shot(pg, path=fn, type='jpeg', quality=80): R['shots'].append(fn)
+      if os.environ.get('FZMESH'):
+        R.setdefault('meshes', {})[name] = await pg.evaluate("__game.scene.getActiveMeshes().data.slice(0, __game.scene.getActiveMeshes().length).map(m => { let q = m.parent, ch = []; while (q) { ch.push(q.name); q = q.parent; } const c = m.getBoundingInfo().boundingBox.centerWorld, e = m.getBoundingInfo().boundingBox.extendSizeWorld; return m.name + '|' + (m.material ? m.material.name : '') + '|' + m.getTotalIndices()/3 + '|' + ch.join('<') + '|' + [c.x, c.z, e.x, e.z].map(v => v.toFixed(0)).join(','); })")
       view = await perf(pg, 3, 0.3); yaw0 = await pg.evaluate('__game.player.yaw'); rows = []
       for k in range(4):
         await pg.evaluate(f"__game.player.yaw = {k} * Math.PI / 2; __game.player.pitch = 0.08"); rows.append(await perf(pg, 3, 0.3))

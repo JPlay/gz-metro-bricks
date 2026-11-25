@@ -15,6 +15,7 @@ import { Render } from '../core/render.js';
 import { bucketMat } from './kit.js';
 import { FZR, RIVERS, BRIDGES, PIERS, KIOSKS, isWater, levelAt, deckAt, humpRise } from '../data/fz-river.js';
 const B = window.BABYLON;
+const WYn = -3;   // 河面高（fz-river WY）
 const yawOf = (fx, fz) => Math.atan2(fx, fz);
 const hex3 = s => [1, 3, 5].map(i => parseInt(s.slice(i, i + 2), 16) / 255);
 const WARM = hex3(NIGHT.warm), LANTERN = hex3('#FF8A4A');
@@ -115,12 +116,13 @@ export class FzNight {
     const flat = (cx, cy, cz, ax, az, hu, hv, rg, col) => quad(cx, cy, cz, [az * hu, 0, -ax * hu], [ax * hv, 0, az * hv], rg, col);   // 水平：v 沿 (ax, az)
     const halo = (x, y, z, r, col) => { quad(x, y, z, [r, 0, 0], [0, r, 0], RG.halo, col); quad(x, y, z, [0, 0, r], [0, r, 0], RG.halo, col); };
     const n = { lamp: 0, bridge: 0, stair: 0, pier: 0, lantern: 0 };
+    const LP = [];   // 灯头水平位置：8A 取景机位的倒影要用
     // 路灯（和 fzRiver.js promenade 同一套位置 / 过滤）
     for (const [, r] of Object.entries(RIVERS)) for (const side of [-1, 1]) for (let s = 20; s < r.line.len - 10; s += 34) {
       const a = r.line.at(s, side * (r.hw + 5.2)); if (isWater(a.x, a.z) || BRIDGES.some(b => Math.hypot(b.x - a.x, b.z - a.z) < b.w / 2 + b.half)) continue;
       if (FZR.d2 && Math.hypot(a.x - FZR.d2.zzf.sign[0], a.z - FZR.d2.zzf.sign[1]) < 4.5) continue;
       const fx = -a.nx * side, fz = -a.nz * side, f = yawOf(fx, fz), dx = Math.sin(f), dz = Math.cos(f), hx = a.x + dx * 1.75, hz = a.z + dz * 1.75;
-      halo(hx, 6.95, hz, 0.9, sc(WARM, 0.7));
+      halo(hx, 6.95, hz, 0.9, sc(WARM, 0.7)); LP.push([hx, hz, 6.95]);
       flat(hx - dx * 0.4, 0.045, hz - dz * 0.4, dx, dz, 3.8, 3.8, RG.pool, sc(WARM, 0.42));
       const Z = FZR.a5 && FZR.a5.zone, p0 = r.line.at(s, side * (r.hw - 0.9));
       const yzStreak = r.id === 'yz' || (Z && p0.x > Z[0] && p0.x < Z[2] && p0.z > Z[1] && p0.z < Z[3]);
@@ -146,7 +148,7 @@ export class FzNight {
     }
     // 3B：琴亭湖步道路灯（和 fzRiver.js lakeLamps 同一套位置）：灯头光晕 + 地面光圈 + 湖面一条短倒影
     for (const [x, z, fx, fz] of (FZR.b3 && FZR.b3.lamps) || []) {
-      const hx = x + fx * 1.75, hz = z + fz * 1.75; halo(hx, 6.95, hz, 0.9, sc(WARM, 0.7)); flat(hx - fx * 0.4, 0.045, hz - fz * 0.4, fx, fz, 3.8, 3.8, RG.pool, sc(WARM, 0.42));
+      const hx = x + fx * 1.75, hz = z + fz * 1.75; halo(hx, 6.95, hz, 0.9, sc(WARM, 0.7)); LP.push([hx, hz, 6.95]); flat(hx - fx * 0.4, 0.045, hz - fz * 0.4, fx, fz, 3.8, 3.8, RG.pool, sc(WARM, 0.42));
       const L = 7.5, p0 = [x + fx * 6.1, z + fz * 6.1], p1 = [p0[0] + fx * L, p0[1] + fz * L];
       if (isWater(p0[0], p0[1]) && isWater(p1[0], p1[1])) flat((p0[0] + p1[0]) / 2, levelAt(p0[0], p0[1]) + 0.02, (p0[1] + p1[1]) / 2, -fx, -fz, 0.8, L / 2, RG.streak, sc(WARM, 0.85));
       n.lamp++;
@@ -206,7 +208,7 @@ export class FzNight {
       const [x, z, fx0, fz0] = Lmp;
       let fx = fx0, fz = fz0, fl = Math.hypot(fx, fz) || 1; fx /= fl; fz /= fl;
       const hx = x + fx * 0.12, hz = z + fz * 0.12;   // 8A 灯杆 3.1 m、灯帽 y≈3.05（不要用 4A 7 m 杆的光晕高度，否则光晕飘在灯上方）
-      halo(hx, 3.0, hz, 0.62, sc(WARM, 0.8));
+      halo(hx, 3.0, hz, 0.62, sc(WARM, 0.8)); LP.push([hx, hz, 3.0]);
       flat(hx, 0.05, hz, fx, fz, 1.5, 1.5, RG.pool, sc(WARM, 0.30));
       let start = 0;
       for (let d = 0.8; d <= 16; d += 0.2) { if (isWater(x + fx * d, z + fz * d)) { start = d + 0.08; break; } }
@@ -286,6 +288,26 @@ export class FzNight {
         if (!isWater((x0 + x1) / 2, (z0 + z1) / 2)) continue;
         const ll = Math.hypot(x1 - x0, z1 - z0) || 1;
         flat((x0 + x1) / 2, levelAt(x0, z0) + 0.04, (z0 + z1) / 2, (x1 - x0) / ll, (z1 - z0) / ll, 0.70, ll / 2, RG.streak, sc(WARM, 1.05 * (1 - k * 0.18)));
+      }
+    }
+    // 8A：取景机位的灯倒影。镜面点在灯→机位地面线上、离机位 d·e/(e+h)（e 眼高、h 灯头高，都从水面量）；
+    // 水波把它拉成一条朝灯方向的竖向光柱：在镜面点前后铺 3 段细、暗、断开的短条（只落水面）。画面上正落在灯的正下方。
+    // 全部进同一个 lights 网格，不加 draw，不加点光。
+    for (const SC of (FZR.a8a && FZR.a8a.streakCams) || []) {
+      const [cx, cz, lx, lz, maxd, half] = SC, eye = (SC[7] || 1.7) - WYn, la = Math.atan2(lz - cz, lx - cx);
+      for (const L of LP.concat(SC[6] || [])) {
+        const x = L[0], z = L[1], h = (L[2] == null ? 1.3 : L[2]) - WYn;
+        const d = Math.hypot(x - cx, z - cz); if (d < 6 || d > maxd) continue;
+        let ang = Math.atan2(z - cz, x - cx) - la; ang = Math.atan2(Math.sin(ang), Math.cos(ang)); if (Math.abs(ang) > half * Math.PI / 180) continue;
+        const ux = (x - cx) / d, uz = (z - cz) / d, tm = d * eye / (eye + h);   // 机位 → 灯
+        const t0 = tm * 0.78, t1 = Math.min(d - 0.6, tm * 1.85), nSeg = 4, gap = (t1 - t0) * 0.07, segL = (t1 - t0 - 3 * gap) / nSeg, w = 0.13 + 0.0075 * tm;
+        for (let k = 0; k < nSeg; k++) {
+          const a = t0 + k * (segL + gap), b = a + segL;
+          const x0 = cx + ux * a, z0 = cz + uz * a, x1 = cx + ux * b, z1 = cz + uz * b;
+          if (!isWater(x0, z0) || !isWater(x1, z1) || !isWater((x0 + x1) / 2, (z0 + z1) / 2)) continue;
+          const kd = Math.abs((a + b) / 2 - tm) / (t1 - t0);
+          flat((x0 + x1) / 2, levelAt(x0, z0) + 0.03, (z0 + z1) / 2, ux, uz, w, segL / 2, RG.streak, sc(WARM, 1.0 * (1 - kd * 0.8)));
+        }
       }
     }
     // 桥：栏板外侧一道暖光带（跟着拱桥桥面起伏）+ 水面上同色的淡倒影

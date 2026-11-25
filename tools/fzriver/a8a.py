@@ -717,6 +717,21 @@ def build_south(g):
     q = Point(lx, lz)
     if land.contains(q) and 1.0 < water.distance(q) < 10.0:
       priority.append([lx, lz, fx_, fz_])
+  # 入湖口两个岬角尖上各一盏（离取景点近，夜里镜面倒影正落在两岬之间的开阔水面上）
+  for tx_, tz_ in ((958.5, -67.6), (953.4, -84.2)):
+    best_ = None
+    for ix_ in range(-12, 13):
+      for iz_ in range(-12, 13):
+        q = Point(tx_ + ix_ * 0.25, tz_ + iz_ * 0.25)
+        if land.contains(q) and 1.1 < water.distance(q) < 1.6:
+          dd_ = math.hypot(q.x - tx_, q.y - tz_)
+          if best_ is None or dd_ < best_[0]:
+            best_ = (dd_, q.x, q.y)
+    if best_:
+      fx_, fz_ = 940.6 - best_[1], -60.3 - best_[2]
+      Lf = math.hypot(fx_, fz_) or 1
+      priority.append([round(best_[1], 2), round(best_[2], 2), round(fx_ / Lf, 4), round(fz_ / Lf, 4)])
+      print('8A inlet tip lamp', priority[-1])
   # 3号码头栈桥上的细杆灯：倒影朝岸上取景点方向拖（倒影总是落在灯与看的人之间）
   # 灯杆立在栈桥东（水湾）侧栏杆线上，不挡走道
   _pl = []
@@ -764,25 +779,29 @@ def build_south(g):
     'pitch': 0.06, 'y': 1.70,
   }
 
-  # 夜倒影：按取景机位算灯的镜像落点（眼高 4.7 m、灯帽 6.05 m 高于水面），落点在开阔水面上才铺一条
-  # 朝机位方向、细、暗、断开的倒影；被栈桥/岸挡住的不铺（不硬造）
-  _deck = LineString(spine_pts + [tuple(pier3['gang'])]).buffer(1.8)
-  def _refl(C, hc=4.7, maxd=48.0, extra=()):
+  # 夜倒影：灯在水面上的倒影总落在灯与看的人之间。对每个取景机位视野内的灯，从灯脚朝机位方向、
+  # 在第一段开阔水面上铺一条细、暗、断开的短倒影（fzNight 里从灯脚沿方向找水面）；栈桥灯从桥沿外起。
+  def _refl(C, look, maxd=46.0, half=34.0, extra=()):
     rows = []
-    src = [(L[0], L[1], 6.05) for L in lamps] + list(extra)
-    for lx, lz, hl in src:
+    la = math.atan2(look[1] - C[1], look[0] - C[0])
+    src = [(L[0], L[1]) for L in lamps] + list(extra)
+    for lx, lz in src:
       d = math.hypot(lx - C[0], lz - C[1])
       if d < 5.0 or d > maxd:
         continue
-      f = hc / (hc + hl)
-      rx, rz = C[0] + (lx - C[0]) * f, C[1] + (lz - C[1]) * f
-      R = Point(rx, rz)
-      if not water.buffer(-0.6).contains(R) or _deck.contains(R):
+      a = math.degrees(math.atan2(lz - C[1], lx - C[0]) - la)
+      a = (a + 180) % 360 - 180
+      if abs(a) > half:
         continue
-      ux, uz = (C[0] - rx) / (d * (1 - f)), (C[1] - rz) / (d * (1 - f))
-      rows.append([round(rx - ux * 2.2, 2), round(rz - uz * 2.2, 2), round(ux, 4), round(uz, 4)])
+      ux, uz = (C[0] - lx) / d, (C[1] - lz) / d
+      ox, oz = lx, lz
+      if water.contains(Point(lx, lz)):   # 栈桥上的灯：从桥沿外 0.35 m 起
+        ox, oz = lx + ux * 0.35, lz + uz * 0.35
+      rows.append([round(ox, 2), round(oz, 2), round(ux, 4), round(uz, 4)])
     return rows
-  REFL = _refl(cam_p3, extra=[(sign_p[0], sign_p[1], 4.3)]) + _refl((cam_inlet['x'], cam_inlet['z']), hc=1.7 + (cam_inlet.get('y', 1.7) - 1.7) + 3.0)
+  REFL = []
+  STREAK_CAMS = [[cam_p3[0], cam_p3[1], cam_pier['look'][0], cam_pier['look'][2], 110.0, 38.0, [], cam_pier['y']],
+                 [cam_inlet['x'], cam_inlet['z'], cam_inlet['look'][0], cam_inlet['look'][2], 110.0, 40.0, [], cam_inlet['y']]]
   print('8A night reflection rows', len(REFL))
   # 消失落在新水面上的旧树（下标 gone，不删）
   GONE_T = []
@@ -825,6 +844,7 @@ def build_south(g):
     },
     # 夜倒影锚点：渠中线/入湖口 + 3号牌朝向水面（细、暗、断开，无点光）
     'nightStreaks': REFL,
+    'streakCams': STREAK_CAMS,
 
     'island8b': '西侧游憩岛按 PLAN-8 属 8B（西岸到东二环），8A 不建岛、桥、亭；岛心小塘亦不做。',
     'chaxiang8b': '茶香路桥进 8B，有名双幅路桥，规格同福新东路西幅河道桥；8A 不建。',
