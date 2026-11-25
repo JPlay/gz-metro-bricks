@@ -234,7 +234,6 @@ export class FzNight {
     }
     // 8A 3号码头牌 / 晋安湖牌：细、暗、断开的水面倒影（无点光）
     const a8aMarks = [];
-    if (FZR.a8a && FZR.a8a.pier3 && FZR.a8a.pier3.sign) a8aMarks.push(FZR.a8a.pier3.sign);
     for (const S of (FZR.a8a && FZR.a8a.plates) || []) a8aMarks.push(S);
     for (const S of a8aMarks) {
       const x = S.x, z = S.z; let fx = S.f[0], fz = S.f[1];
@@ -261,10 +260,7 @@ export class FzNight {
     }
     // 8A 入湖渠 / 牌前：再铺一组固定的细暗断开倒影，避免机位上看不见
     const extra8 = ((FZR.a8a && FZR.a8a.nightStreaks) || []).slice();
-    if (FZR.a8a && FZR.a8a.pier3 && FZR.a8a.pier3.sign) {
-      const S = FZR.a8a.pier3.sign;
-      extra8.push([S.x, S.z, S.f[0], S.f[1]]);
-    }
+    // 牌 / 灯的倒影落点由 a8a.py 按取景机位算好（nightStreaks），这里不再按牌朝向乱找水面
     for (const row of extra8) {
       let x = row[0], z = row[1], fx = row[2], fz = row[3];
       const fl = Math.hypot(fx, fz) || 1; fx /= fl; fz /= fl;

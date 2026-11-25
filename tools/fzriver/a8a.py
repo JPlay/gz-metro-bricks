@@ -725,6 +725,7 @@ def build_south(g):
     tx_, tz_ = b_[0] - a_[0], b_[1] - a_[1]; Lt = math.hypot(tx_, tz_) or 1; tx_, tz_ = tx_ / Lt, tz_ / Lt
     c_ = spine_pts[k_]
     _pl.append([round(c_[0] - tz_ * 1.44, 2), round(c_[1] + tx_ * 1.44, 2)])
+  _pl.append([1098.3, -73.75])   # 根部宽头南沿（湖侧）一盏
   pier3['lamps'] = _pl
   for lx, lz in pier3['lamps']:
     fx_, fz_ = cam_p3[0] - lx, cam_p3[1] - lz
@@ -748,18 +749,41 @@ def build_south(g):
   # 入湖口：从湖侧/西汊北岸向东南看，渠口入湖与半岛同时入画（不要站在路面或对着桥栏墙）
   # 锁定正式走查机位（截图脚本会再写一遍同值）。
   # 入湖口在西汊水面上方悬停，才能同时看见渠口入湖和半岛，不要被陆面/路缘拽回岸上。
+  # 入湖口（11-25 重取）：站在入湖口外西湾水面上方、顺渠轴线朝东南看：近处是放宽的湖面，
+  # 左边半岛尖，右边分流陆北头，中间渠口收窄、渠水一直伸到福新东路桥。眼高同岸上行人（离水 4.7 m）。
   cam_inlet = {
-    'x': 960.0, 'z': -98.0,
-    'look': [1015.0, 0.6, -72.0],
-    'pitch': 0.08, 'y': 1.80,
+    'x': 940.6, 'z': -60.3,
+    'look': [978.0, 0.0, -102.0],
+    'pitch': 0.08, 'y': 1.70,
     'hover': 1,
   }
+  # 3号码头（11-25 重取）：站在码头根部东南的岸角上朝西北，引桥+岸侧牌在右前，弯形栈桥向北伸进开阔湖面
   cam_pier = {
-    'x': 1112.0, 'z': -80.0,
-    'look': [1088.0, -1.6, -64.0],
-    'pitch': 0.14, 'y': 1.70,
+    'x': cam_p3[0], 'z': cam_p3[1],
+    'look': [1093.3, 0.0, -62.5],
+    'pitch': 0.06, 'y': 1.70,
   }
 
+  # 夜倒影：按取景机位算灯的镜像落点（眼高 4.7 m、灯帽 6.05 m 高于水面），落点在开阔水面上才铺一条
+  # 朝机位方向、细、暗、断开的倒影；被栈桥/岸挡住的不铺（不硬造）
+  _deck = LineString(spine_pts + [tuple(pier3['gang'])]).buffer(1.8)
+  def _refl(C, hc=4.7, maxd=48.0, extra=()):
+    rows = []
+    src = [(L[0], L[1], 6.05) for L in lamps] + list(extra)
+    for lx, lz, hl in src:
+      d = math.hypot(lx - C[0], lz - C[1])
+      if d < 5.0 or d > maxd:
+        continue
+      f = hc / (hc + hl)
+      rx, rz = C[0] + (lx - C[0]) * f, C[1] + (lz - C[1]) * f
+      R = Point(rx, rz)
+      if not water.buffer(-0.6).contains(R) or _deck.contains(R):
+        continue
+      ux, uz = (C[0] - rx) / (d * (1 - f)), (C[1] - rz) / (d * (1 - f))
+      rows.append([round(rx - ux * 2.2, 2), round(rz - uz * 2.2, 2), round(ux, 4), round(uz, 4)])
+    return rows
+  REFL = _refl(cam_p3, extra=[(sign_p[0], sign_p[1], 4.3)]) + _refl((cam_inlet['x'], cam_inlet['z']), hc=1.7 + (cam_inlet.get('y', 1.7) - 1.7) + 3.0)
+  print('8A night reflection rows', len(REFL))
   # 消失落在新水面上的旧树（下标 gone，不删）
   GONE_T = []
   for i, t_ in enumerate(TREES):
@@ -800,12 +824,7 @@ def build_south(g):
       'pier3': cam_pier,
     },
     # 夜倒影锚点：渠中线/入湖口 + 3号牌朝向水面（细、暗、断开，无点光）
-    'nightStreaks': [
-      [992.0, -128.0, 0.0, 1.0], [992.0, -118.0, 0.0, 1.0], [990.0, -110.0, 0.2, 0.98],
-      [998.0, -100.0, 0.55, 0.84], [1008.0, -92.0, 0.4, 0.92],
-      [972.0, -90.0, 0.5, 0.87], [980.0, -85.0, 0.55, 0.83], [1000.0, -80.0, 0.35, 0.94],
-      [1012.0, -75.0, 0.2, 0.98], [990.0, -78.0, 0.5, 0.87], [968.0, -92.0, 0.7, 0.71],
-    ],
+    'nightStreaks': REFL,
 
     'island8b': '西侧游憩岛按 PLAN-8 属 8B（西岸到东二环），8A 不建岛、桥、亭；岛心小塘亦不做。',
     'chaxiang8b': '茶香路桥进 8B，有名双幅路桥，规格同福新东路西幅河道桥；8A 不建。',
