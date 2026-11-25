@@ -11,6 +11,8 @@ CH = LineString([(996, -124), (988, -110), (978, -100), (970, -93), (964, -86)])
 CANAL = box(960, -260, 1040, -106)
 PIERZ = box(1084, -80, 1112, -40)
 # 3号码头岸侧入口（牌 + 引桥落岸）保持步道层：坡在这一圈外 3 m 内收回 0
+# 小美 22:54：3号水湾（牌 / 引桥 / 栈桥根部一带）坡带一律铺地砖 #A39C8E 直落到驳岸压顶，不画草（b6d2e59 已过的画面除了岸线都不变）
+PAVEZ = box(1084, -80, 1122, -40)
 KEEP = unary_union([Point(1104.6, -69.6).buffer(2.2), LineString([(1098.4, -72.1), (1103.4, -70.0)]).buffer(2.0)])
 
 def smooth(t):
@@ -90,28 +92,34 @@ def build(g, ctx):
     for jz in range(math.floor(bz0 / CELL), math.floor(bz1 / CELL) + 1):
       cb = box(i * CELL, jz * CELL, (i + 1) * CELL, (jz + 1) * CELL)
       if not cb.intersects(band): continue
-      tris = []
+      tris = []; tpv = []
       for ri, poly in enumerate([land_main] + rings):
         part = poly.intersection(cb)
         if part.is_empty: continue
         # 坡带按 GS 米网格切小块再三角化，让顶点密到能跟上 Y() 的非线性（防止长三角线性插值出台阶/竖条）
         subs = [part] if ri == 0 else [part.intersection(box(x0, z0, x0 + GS, z0 + GS))
                 for x0 in frange(i * CELL, (i + 1) * CELL, GS) for z0 in frange(jz * CELL, (jz + 1) * CELL, GS)]
-        for sp in subs:
-          if sp.is_empty: continue
-          gs = [sp] if sp.geom_type == 'Polygon' else [q for q in getattr(sp, 'geoms', []) if q.geom_type == 'Polygon']
-          for q in gs:
-            if q.area < 0.01: continue
-            tris += [ccw_up(c) for c in tri(q) if abs((c[1][0]-c[0][0])*(c[2][1]-c[0][1])-(c[2][0]-c[0][0])*(c[1][1]-c[0][1])) > 2e-3]
-      V = {}; P = []; I = []
-      for c in tris:
+        for sp0 in subs:
+          if sp0.is_empty: continue
+          for pv, sp in ((0, sp0),) if ri == 0 else ((1, sp0.intersection(PAVEZ)), (0, sp0.difference(PAVEZ))):
+            if sp.is_empty: continue
+            gs = [sp] if sp.geom_type == 'Polygon' else [q for q in getattr(sp, 'geoms', []) if q.geom_type == 'Polygon']
+            for q in gs:
+              if q.area < 0.01: continue
+              for c in tri(q):
+                if abs((c[1][0]-c[0][0])*(c[2][1]-c[0][1])-(c[2][0]-c[0][0])*(c[1][1]-c[0][1])) > 2e-3:
+                  tris.append(ccw_up(c)); tpv.append(pv)
+      V = {}; P = []; I = []; PV = []
+      for c, pv in zip(tris, tpv):
         ks = [(round(x, 2), round(z, 2)) for x, z in c]
         if len(set(ks)) < 3: continue
         for key in ks:
           if key not in V: V[key] = len(P); P.append(key)
           I.append(V[key])
+        PV.append(pv)
       ys = [Y(x, z) for x, z in P]
       LAND[f'{i},{jz}'] = {'p': [v for xz in P for v in xz], 'i': I, 'y': ys}
+      if any(PV): LAND[f'{i},{jz}']['pv'] = PV   # 1 = 坡上也铺地砖（3号水湾）
       nt += len(I) // 3
   # 驳岸墙两端顶高（JS 画墙面 / 压顶用）
   low = []

@@ -196,11 +196,11 @@ export class FzRiverStreet extends XmStreet {
           for (let j = 0; j < P.length; j += 2) G.push(P[j], Y[j / 2], P[j + 1], 0, 1, 0, typeof col === 'function' ? col(P[j], P[j + 1]) : col);
           for (let j = 0; j < I.length; j += 3) {
             const a = I[j], b = I[j + 1], d = I[j + 2];
-            if (Y[a] > -0.05 && Y[b] > -0.05 && Y[d] > -0.05) { G.i.push(base2 + a, base2 + b, base2 + d); continue; }
+            if ((Y[a] > -0.05 && Y[b] > -0.05 && Y[d] > -0.05) || (c.pv && c.pv[j / 3])) { G.i.push(base2 + a, base2 + b, base2 + d); continue; }   // pv：3号水湾坡上铺地砖直落压顶
             const A = [P[a * 2], Y[a], P[a * 2 + 1]], Bv = [P[b * 2], Y[b], P[b * 2 + 1]], Dv = [P[d * 2], Y[d], P[d * 2 + 1]];
             const ux = Bv[0] - A[0], uy = Bv[1] - A[1], uz = Bv[2] - A[2], vx = Dv[0] - A[0], vy = Dv[1] - A[1], vz = Dv[2] - A[2];
             let nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx; const nl = Math.hypot(nx, ny, nz) || 1; nx /= nl; ny /= nl; nz /= nl; if (ny < 0) { nx = -nx; ny = -ny; nz = -nz; }
-            { nx *= 0.45; nz *= 0.45; const l2 = Math.hypot(nx, ny, nz) || 1; nx /= l2; ny /= l2; nz /= l2; }   // 面法线压向上：仍是平涂分面，但朝阳那几面不发荧光
+            { nx *= 0.2; nz *= 0.2; const l2 = Math.hypot(nx, ny, nz) || 1; nx /= l2; ny /= l2; nz /= l2; }   // 面法线压向上：仍是平涂分面，但朝阳那几面不发荧光
             const s0 = S.p.length / 3, yc = (A[1] + Bv[1] + Dv[1]) / 3, tt = Math.min(1, Math.max(0, -yc / 2)), gc = G8T.map((v, q) => v + (G8B[q] - v) * tt);   // 坡顶 G8T → 坡脚 G8B（每面一色）
             for (const V of [A, Bv, Dv]) S.push(V[0], V[1], V[2], nx, ny, nz, gc);
             S.i.push(s0, s0 + 1, s0 + 2);
@@ -1937,13 +1937,18 @@ export class FzRiverStreet extends XmStreet {
     const LB = (A.lake && A.lake.band) || 6.5;
     // 小美 ②：远景楼往后推、压低，换成本代码库里的暖色带窗福州楼（mod 立面贴图进图集，同一 draw；夜里约 30% 窗亮）
     const WARM = ['#E3D9C6', '#D9CBB0', '#E6D5BC', '#D4C3A6'];
-    (A.far || []).forEach((q, i) => {
+    // 22:54 ②：相邻远景楼宽度互相插进去（米色楼身斜插到隔壁立面前，像一块块三角楔子）——按最近邻间距收窄，太近的后一栋不画
+    const FARQ = A.far || [], farNN = FARQ.map((q, i) => { let m = 1e9; FARQ.forEach((r, j) => { if (j !== i) m = Math.min(m, Math.hypot(r[0] - q[0], r[1] - q[1])); }); return m; });
+    FARQ.forEach((q, i) => {
+      if (farNN[i] < 11 && FARQ.some((r, j) => j < i && Math.hypot(r[0] - q[0], r[1] - q[1]) < 11)) return;
       const [x, z, fx, fz] = q, ry = yawOf(fx, fz), tx = fz, tz = -fx;
-      const fl = 4, h = fl * 3 + ((i * 5) % 3) * 0.4, w = 14 + (i % 3) * 3, d = 9 + (i % 2) * 1.5;
+      const fl = 4, h = fl * 3 + ((i * 5) % 3) * 0.4, w = Math.min(14 + (i % 3) * 3, farNN[i] < 11 ? 14 : farNN[i] - 3), d = 9 + (i % 2) * 1.5;
       P.box(x, h / 2, z, w, h, d, hex(WARM[i % 4]), ry, 0, 0, 1, NO);
-      P.box(x, h + 0.25, z, w + 0.3, 0.5, d + 0.3, hex('#8C7A66'), ry, 0, 0, 1, NO);   // 檐口压顶（暖灰，不是白边）
-      A8F(x + fx * (d / 2 + 0.03), h / 2, z + fz * (d / 2 + 0.03), w, h, Math.atan2(fx, -fz), this.fac['m' + fl + (i % 2)]);
-      for (const se of [-1, 1]) A8F(x + tx * se * (w / 2 + 0.03), h / 2, z + tz * se * (w / 2 + 0.03), d, h, Math.atan2(tx * se, -tz * se), this.fac['m' + fl + ((i + 1) % 2)]);
+      P.box(x, h + 0.25, z, w + 0.6, 0.5, d + 0.6, hex('#8C7A66'), ry, 0, 0, 1, NO);   // 檐口压顶（暖灰，不是白边）
+      // 22:54 ②：远景楼离机位 60~120 m，立面贴图只离楼身 3 cm 会深度打架（米色楼身锯齿状斜插到窗立面前，像三角楔子）→ 外移 18 cm，楼身略缩不露缝
+      const fo8 = 0.18;
+      A8F(x + fx * (d / 2 + fo8), h / 2, z + fz * (d / 2 + fo8), w + 2 * fo8, h, Math.atan2(fx, -fz), this.fac['m' + fl + (i % 2)]);
+      for (const se of [-1, 1]) A8F(x + tx * se * (w / 2 + fo8), h / 2, z + tz * se * (w / 2 + fo8), d + 2 * fo8, h, Math.atan2(tx * se, -tz * se), this.fac['m' + fl + ((i + 1) % 2)]);
     });
     // 对岸 / 远景楼前一排树（遮楼脚；进 kit.solid 合批，不加 draw）
     (A.trees8 || []).forEach(([x, z, fx, fz, sc], i) => this.treeBlobAt(x, z, fx, fz, sc, 'a8', 1, i));
