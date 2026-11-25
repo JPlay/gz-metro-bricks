@@ -171,10 +171,11 @@ export const isDry = (x, z) => FZR.dry.some(d => inPoly(x, z, d));
 export function shoreFor(px, pz) {
   let best = null, any = null;
   for (const w of FZR.wall) {
-    if (w[4] > 1) continue;
+    if (w[4] > 1 && w[4] !== 6 && w[4] !== 7) continue;   // 6 / 7 = 8A 水湾石栏 / 湖岸矮驳岸
     const [ax, az, bx, bz] = w, dx = bx - ax, dz = bz - az, L2 = dx * dx + dz * dz || 1, u = Math.max(0, Math.min(1, ((px - ax) * dx + (pz - az) * dz) / L2));
     const qx = ax + dx * u, qz = az + dz * u, d = Math.hypot(px - qx, pz - qz);
     if (!best || d < best.d) { const L = Math.sqrt(L2), rx = dz / L, rz = -dx / L, sg = w[5], c = { d, x: qx - rx * sg * 1.8, z: qz - rz * sg * 1.8, yaw: Math.atan2(rx * sg, rz * sg) };
+      if (w[4] === 7) { c.x = qx - rx * sg * 6.8; c.z = qz - rz * sg * 6.8; }   // 矮驳岸：退到草坡顶（步道层）
       if (isLand(c.x, c.z)) best = c; else if (!any || d < any.d) any = c; }   // 退 1.8 m 要落在岸地上（2A 闸坝拐角：最近那段墙退出去还在水上）
   }
   return best || any;

@@ -345,8 +345,8 @@ def build_south(g):
   _nb = 0
   for w in W8 + WALL_keep:
     if w[4] == 0 and _bayE.intersects(LineString([(w[0], w[1]), (w[2], w[3])])) and _bayE.contains(Point((w[0] + w[2]) / 2, (w[1] + w[3]) / 2)):
-      w[4] = 3; _nb += 1
-  print('8A bay east walls flag3', _nb)
+      w[4] = 6; _nb += 1
+  print('8A bay east walls flag6 (rail + blocker)', _nb)
 
   # ---- 临时合拢墙：西裁（通西汊）与北裁（通北半湖）----
   caps = []
@@ -661,16 +661,16 @@ def build_south(g):
   far = []
   cLk = ring_src.centroid
   try:
-    ringFar = ring_src.buffer(LB + HOUSE_BAND + 3, quad_segs=5).exterior
+    ringFar = ring_src.buffer(LB + HOUSE_BAND + 17, quad_segs=5).exterior   # 小美 ②：远景楼往后推 14 m
   except Exception:
     ringFar = None
   if ringFar is not None:
     fl, fll = 0.0, ringFar.length
     while fl < fll - 1:
       p = ringFar.interpolate(fl)
-      fl += 14.0
-      near_cap = any(math.hypot(p.x - C['x'], p.y - C['z']) < 16 for C in caps)
-      if near_cap or not box(X_WEST - 4, Z_SOUTH, X_EAST + 16, Z_NORTH + 6).contains(p):
+      fl += 17.0
+      near_cap = False
+      if near_cap or not box(X_WEST - 30, Z_SOUTH, X_EAST + 30, Z_NORTH + 30).contains(p):
         continue
       if water.buffer(2.0).contains(p):
         continue
@@ -803,6 +803,51 @@ def build_south(g):
   STREAK_CAMS = [[cam_p3[0], cam_p3[1], cam_pier['look'][0], cam_pier['look'][2], 110.0, 38.0, [], cam_pier['y']],
                  [cam_inlet['x'], cam_inlet['z'], cam_inlet['look'][0], cam_inlet['look'][2], 110.0, 40.0, [], cam_inlet['y']]]
   print('8A night reflection rows', len(REFL))
+  # ---- 小美 ①：湖岸矮驳岸 + 草带缓坡 ----
+  import a8a_bank
+  BK = a8a_bank.build(g, {'water': water, 'land': land, 'region': region, 'WALL': g['WALL'], 'clip': box(X_WEST - 4, Z_SOUTH, X_EAST + 4, Z_NORTH + 12), 'caps': caps})
+  _Y, _band = BK['Y'], BK['band']
+  def _push_out(x, z, fx, fz):
+    for t in [i * 0.25 for i in range(0, 48)]:
+      qx, qz = x - fx * t, z - fz * t
+      if _Y(qx, qz) == 0.0 and land.contains(Point(qx, qz)) and water.distance(Point(qx, qz)) > 1.0:
+        return qx, qz
+    return None
+  _np = 0
+  for L_ in lamps:
+    if _Y(L_[0], L_[1]) != 0.0 or _band.contains(Point(L_[0], L_[1])):
+      q = _push_out(L_[0], L_[1], L_[2], L_[3])
+      if q: L_[0], L_[1] = round(q[0], 2), round(q[1], 2); _np += 1
+  if _Y(lake_sign['x'], lake_sign['z']) != 0.0:
+    q = _push_out(lake_sign['x'], lake_sign['z'], lake_sign['f'][0], lake_sign['f'][1])
+    if q: lake_sign['x'], lake_sign['z'] = round(q[0], 2), round(q[1], 2)
+  for i, t_ in enumerate(TREES):
+    if t_[5] != 'gone' and _band.buffer(0.5).contains(Point(t_[0], t_[1])):
+      TREES[i][5] = 'gone'
+  _hb = [h for h in HOUSES if not h.get('gone') and _band.contains(Point(h['x'], h['z']))]
+  print('8A bank: lamps pushed', _np, 'houses on band', len(_hb), 'sign', lake_sign['x'], lake_sign['z'])
+  # 远景楼前、对岸一排树（遮楼脚；只占既有 solid 合批，不加 draw）
+  trees8 = []
+  _cams = [(cam_inlet['x'], cam_inlet['z']), (cam_p3[0], cam_p3[1])]
+  _avoid = [Point(1104.6, -69.6).buffer(12), Point(lake_sign['x'], lake_sign['z']).buffer(6)]
+  try:
+    _tr = ring_src.buffer(LB + HOUSE_BAND + 6.5, quad_segs=5).exterior
+  except Exception:
+    _tr = None
+  if _tr is not None:
+    tl = 0.0
+    while tl < _tr.length - 1:
+      p = _tr.interpolate(tl); tl += 7.0
+      if not box(X_WEST - 30, Z_SOUTH, X_EAST + 30, Z_NORTH + 30).contains(p): continue
+      if water.buffer(4.0).contains(p): continue
+      if any(math.hypot(p.x - c[0], p.y - c[1]) < 22 for c in _cams): continue
+      if any(a_.contains(p) for a_ in _avoid): continue
+      if any(math.hypot(p.x - L_[0], p.y - L_[1]) < 3.5 for L_ in lamps): continue
+      if p.y < -120 and 955 < p.x < 1040: continue   # 渠段两岸不种（福新东路 / 渠岸另有布置）
+      fx_, fz_ = cLk.x - p.x, cLk.y - p.y; Lf = math.hypot(fx_, fz_) or 1
+      k_ = len(trees8)
+      trees8.append([round(p.x, 2), round(p.y, 2), round(fx_ / Lf, 3), round(fz_ / Lf, 3), round(0.78 + (k_ * 7 % 5) * 0.06, 2)])
+  print('8A tree belt', len(trees8))
   # 消失落在新水面上的旧树（下标 gone，不删）
   GONE_T = []
   for i, t_ in enumerate(TREES):
@@ -822,6 +867,10 @@ def build_south(g):
     'caps': caps,
     'capWall': caps[0] if caps else None,
     'far': far,
+    'lowWalls': BK['low'],
+    'bankDrop': BK['drop'],
+    'bankD': BK['D'],
+    'trees8': trees8,
     'lamps': lamps,
     'loop': loop,
     'lake': {
