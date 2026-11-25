@@ -223,14 +223,18 @@ def build_south(g):
     pier_entrance = max(pier_game, key=lambda q: q[0] - q[1])
     pier_over = Polygon(pier_game).buffer(0.2)
     if pier_over.is_valid and not pier_over.is_empty:
-      abut = Point(pier_entrance[0], pier_entrance[1]).buffer(3.0)
-      over = pier_over.difference(abut).buffer(0)
-      if not over.is_empty:
-        water = unary_union([water, over]).buffer(0)
-        pier_over_water = pier_over  # 含入口陆台一周，避免台阶陷进驳岸石坑
+      # 不再把栈桥轮廓打进水面（会在铺地里开槽、出水色坑）。低甲板铺在已有开阔湖面上。
+      pier_over_water = None
+  # 牌子旁岸湾 + 码头东侧细槽填回陆地，铺地里不要留下能掉下去的水坑
+  notch = box(1093.6, -82.0, 1113.0, -54.5).buffer(0.35)
+  water = water.difference(notch).buffer(0)
   if water.geom_type == 'MultiPolygon':
     water = unary_union([p for p in water.geoms if p.area > 8])
   land = region.difference(water).buffer(0)
+  # 填口边缘若留下既不是水也不是陆的细缝，并进陆地，避免掉进去爬不出来
+  seam = box(1092.5, -83.0, 1114.0, -53.5).difference(water).intersection(region)
+  if not seam.is_empty:
+    land = unary_union([land, seam]).buffer(0)
   if land.geom_type == 'MultiPolygon':
     land = unary_union([p for p in land.geoms if p.area > 4])
   g['water'], g['land'], g['region'] = water, land, region
@@ -296,19 +300,29 @@ def build_south(g):
     if not _wd.is_empty and _wd.buffer(1.2).intersects(seg):
       W8n.append(w)
   W8 = merge(W8n) if W8n else []
-  # 码头开洞轮廓不要再砌 3 m 驳岸，否则台阶陷进石坑、近水面栈桥被挡住
-  if pier_over_water is not None and not pier_over_water.is_empty:
-    drop_zone = pier_over_water.buffer(3.2)
-    before = len(W8)
-    kept = []
-    for w in W8:
-      seg = LineString([(w[0], w[1]), (w[2], w[3])])
-      mid = Point((w[0] + w[2]) / 2, (w[1] + w[3]) / 2)
-      if drop_zone.contains(mid) or drop_zone.intersects(seg):
-        continue
-      kept.append(w)
-    W8 = kept
-    print('8A dropped pier-hole walls', before - len(W8), 'remain', len(W8))
+  # 码头舌 + 入口湾的旧墙和新墙都去掉，避免 3 m 石坑；栈桥用实体基座封住
+  drop_zone = None
+  if len(pier_game) >= 4:
+    zs = [Polygon(pier_game).buffer(5.0)]
+    if pier_entrance is not None:
+      zs.append(Point(pier_entrance[0], pier_entrance[1]).buffer(8.0))
+    if pier_over_water is not None and not pier_over_water.is_empty:
+      zs.append(pier_over_water.buffer(5.0))
+    zs.append(box(1096.0, -80.8, 1112.5, -67.2).buffer(2.0))
+    drop_zone = unary_union(zs)
+    def _drop(walls):
+      kept = []
+      for w in walls:
+        seg = LineString([(w[0], w[1]), (w[2], w[3])])
+        mid = Point((w[0] + w[2]) / 2, (w[1] + w[3]) / 2)
+        if drop_zone.contains(mid) or drop_zone.intersects(seg):
+          continue
+        kept.append(w)
+      return kept
+    before = len(W8) + len(WALL_keep)
+    W8 = _drop(W8)
+    WALL_keep = _drop(WALL_keep)
+    print('8A dropped pier-hole walls', before - len(W8) - len(WALL_keep), 'remain new', len(W8), 'keep', len(WALL_keep))
   print('8A new walls before caps', len(W8))
 
   # ---- 临时合拢墙：西裁（通西汊）与北裁（通北半湖）----
@@ -544,7 +558,7 @@ def build_south(g):
     'entrance': [round(entrance[0], 2), round(entrance[1], 2)],
     'width': 3.4,
     'deckY': -2.52,
-    'stairLen': 4.2,
+    'stairLen': 3.4,
     'sign': {
       'x': round(sign_p[0], 2), 'z': round(sign_p[1], 2),
       'f': [round(fx_s, 4), round(fz_s, 4)],
@@ -653,12 +667,21 @@ def build_south(g):
           Lf = math.hypot(fx_, fz_) or 1
           lamps.append([round(q.x, 2), round(q.y, 2), round(fx_ / Lf, 4), round(fz_ / Lf, 4)])
       s += 18.0
-  # 3号码头入口岸上补一盏，夜倒影对着栈桥和湖面
+  # 入湖口渠岸 + 3号牌侧的灯放在最前，避免被 42 盏上限裁掉
+  priority = []
+  for lx, lz, fx_, fz_ in (
+      (970.0, -120.0, 1.0, 0.0), (970.0, -110.0, 1.0, 0.15),
+      (1005.0, -122.0, -1.0, 0.0), (1005.0, -110.0, -0.85, 0.5),
+      (1008.0, -100.0, -0.3, 0.95),
+  ):
+    q = Point(lx, lz)
+    if land.contains(q) and 1.0 < water.distance(q) < 10.0:
+      priority.append([lx, lz, fx_, fz_])
   if land.contains(Point(sign_p[0] - fx_s * 1.2, sign_p[1] - fz_s * 1.2)):
     lx, lz = sign_p[0] - fx_s * 1.2 + fz_s * 1.0, sign_p[1] - fz_s * 1.2 - fx_s * 1.0
     if land.contains(Point(lx, lz)):
-      lamps.append([round(lx, 2), round(lz, 2), round(fx_s, 4), round(fz_s, 4)])
-  lamps = lamps[:36]
+      priority.append([round(lx, 2), round(lz, 2), round(fx_s, 4), round(fz_s, 4)])
+  lamps = (priority + lamps)[:42]
 
   # 南岸环湖走点（e2e / 取景）
   loop = []
@@ -674,9 +697,9 @@ def build_south(g):
   # 锁定正式走查机位（截图脚本会再写一遍同值）。
   # 入湖口在西汊水面上方悬停，才能同时看见渠口入湖和半岛，不要被陆面/路缘拽回岸上。
   cam_inlet = {
-    'x': 950.0, 'z': -88.0,
-    'look': [995.0, 0.6, -110.0],
-    'pitch': 0.12, 'y': 5.5,
+    'x': 960.0, 'z': -98.0,
+    'look': [1015.0, 0.6, -72.0],
+    'pitch': 0.08, 'y': 1.80,
     'hover': 1,
   }
   cam_pier = {
@@ -724,6 +747,16 @@ def build_south(g):
       'inlet': cam_inlet,
       'pier3': cam_pier,
     },
+    # 夜倒影锚点：渠中线/入湖口 + 3号牌朝向水面（细、暗、断开，无点光）
+    'nightStreaks': [
+      [992.0, -128.0, 0.0, 1.0], [992.0, -118.0, 0.0, 1.0], [990.0, -110.0, 0.2, 0.98],
+      [998.0, -100.0, 0.55, 0.84], [1008.0, -92.0, 0.4, 0.92],
+      [972.0, -90.0, 0.5, 0.87], [980.0, -85.0, 0.55, 0.83], [1000.0, -80.0, 0.35, 0.94],
+      [1012.0, -75.0, 0.2, 0.98], [990.0, -78.0, 0.5, 0.87], [968.0, -92.0, 0.7, 0.71],
+      [1094.0, -68.0, -0.4, 0.92], [1092.0, -62.0, -0.2, 0.98],
+      [1092.0, -70.0, -0.2, 0.98], [1091.0, -64.0, -0.15, 0.99], [1092.5, -72.0, -0.3, 0.95],
+    ],
+
     'island8b': '西侧游憩岛按 PLAN-8 属 8B（西岸到东二环），8A 不建岛、桥、亭；岛心小塘亦不做。',
     'chaxiang8b': '茶香路桥进 8B，有名双幅路桥，规格同福新东路西幅河道桥；8A 不建。',
     'huahe': '化工路顶左化工河出范围，8A 不铺水。',

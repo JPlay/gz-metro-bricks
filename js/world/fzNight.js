@@ -259,6 +259,40 @@ export class FzNight {
         flat((x0 + x1) / 2, levelAt(x0, z0) + 0.025, (z0 + z1) / 2, (x1 - x0) / ll, (z1 - z0) / ll, 0.42, ll / 2, RG.streak, sc(WARM, 0.78 * (1 - k * 0.2)));
       }
     }
+    // 8A 入湖渠 / 牌前：再铺一组固定的细暗断开倒影，避免机位上看不见
+    const extra8 = ((FZR.a8a && FZR.a8a.nightStreaks) || []).slice();
+    if (FZR.a8a && FZR.a8a.pier3 && FZR.a8a.pier3.sign) {
+      const S = FZR.a8a.pier3.sign;
+      extra8.push([S.x, S.z, S.f[0], S.f[1]]);
+    }
+    extra8.push([1092.0, -70.0, 0.15, 0.99], [1091.0, -64.0, 0.0, 1.0], [1092.5, -72.0, 0.2, 0.98], [1086.0, -68.0, 0.4, 0.92], [1084.0, -72.0, 0.55, 0.83], [1088.0, -66.0, 0.2, 0.98]);
+    for (const row of extra8) {
+      let x = row[0], z = row[1], fx = row[2], fz = row[3];
+      const fl = Math.hypot(fx, fz) || 1; fx /= fl; fz /= fl;
+      let start = 0;
+      if (isWater(x, z)) start = 0.15;
+      else {
+        for (let d = 0.4; d <= 26; d += 0.2) { if (isWater(x + fx * d, z + fz * d)) { start = d + 0.06; break; } }
+        if (!start) {
+          let best = 99;
+          for (let a = 0; a < 8; a++) {
+            const tx = Math.cos(a * Math.PI / 4), tz = Math.sin(a * Math.PI / 4);
+            for (let d = 0.4; d <= 24; d += 0.4) {
+              if (isWater(x + tx * d, z + tz * d) && d < best) { best = d; fx = tx; fz = tz; start = d + 0.06; break; }
+            }
+          }
+        }
+      }
+      if (!start && !isWater(x, z)) continue;
+      const nSeg = 3, gap = 0.45, segL = 1.2;
+      for (let k = 0; k < nSeg; k++) {
+        const a = start + k * (segL + gap), b = a + segL;
+        const x0 = x + fx * a, z0 = z + fz * a, x1 = x + fx * b, z1 = z + fz * b;
+        if (!isWater((x0 + x1) / 2, (z0 + z1) / 2)) continue;
+        const ll = Math.hypot(x1 - x0, z1 - z0) || 1;
+        flat((x0 + x1) / 2, levelAt(x0, z0) + 0.04, (z0 + z1) / 2, (x1 - x0) / ll, (z1 - z0) / ll, 0.70, ll / 2, RG.streak, sc(WARM, 1.05 * (1 - k * 0.18)));
+      }
+    }
     // 桥：栏板外侧一道暖光带（跟着拱桥桥面起伏）+ 水面上同色的淡倒影
     for (const b of BRIDGES) {
       if (b.kind === 'bingde' || b.kind === 'covered') continue;
