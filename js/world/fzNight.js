@@ -300,13 +300,13 @@ export class FzNight {
         const d = Math.hypot(x - cx, z - cz); if (d < 6 || d > maxd) continue;
         let ang = Math.atan2(z - cz, x - cx) - la; ang = Math.atan2(Math.sin(ang), Math.cos(ang)); if (Math.abs(ang) > half * Math.PI / 180) continue;
         const ux = (x - cx) / d, uz = (z - cz) / d, tm = d * eye / (eye + h);   // 机位 → 灯
-        const t0 = tm * 0.78, t1 = Math.min(d - 0.6, tm * 1.85), nSeg = 4, gap = (t1 - t0) * 0.07, segL = (t1 - t0 - 3 * gap) / nSeg, w = 0.13 + 0.0075 * tm;
+        const t0 = tm * 0.78, t1 = Math.min(d - 0.6, tm * 1.85), nSeg = 4, gap = (t1 - t0) * 0.07, segL = (t1 - t0 - 3 * gap) / nSeg, w = 0.11 + 0.0065 * tm;
         for (let k = 0; k < nSeg; k++) {
           const a = t0 + k * (segL + gap), b = a + segL;
           const x0 = cx + ux * a, z0 = cz + uz * a, x1 = cx + ux * b, z1 = cz + uz * b;
           if (!isWater(x0, z0) || !isWater(x1, z1) || !isWater((x0 + x1) / 2, (z0 + z1) / 2)) continue;
           const kd = Math.abs((a + b) / 2 - tm) / (t1 - t0);
-          flat((x0 + x1) / 2, levelAt(x0, z0) + 0.03, (z0 + z1) / 2, ux, uz, w, segL / 2, RG.streak, sc(WARM, 1.0 * (1 - kd * 0.8)));
+          flat((x0 + x1) / 2, levelAt(x0, z0) + 0.03, (z0 + z1) / 2, ux, uz, w, segL / 2, RG.streak, sc(WARM, 0.82 * (1 - kd * 0.8)));
         }
       }
     }
