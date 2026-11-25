@@ -222,14 +222,16 @@ export class FzNight {
         }
       }
       if (start) {
-        const nSeg = 3, gap = 0.55, segL = 1.15;   // 小美（b6d2e59 B3）：照 4A 岸灯倒影标准——细、暗、断开
+        // 小美（e5364e0 B3）：正对机位时 0.8 m 宽的条叠成「一串橙块 / 圣诞树」。照 058067c（墩帽长条改约 1 m 短段，正看成一排亮点）：
+        // 宽 0.8 → 0.3 m、亮度 0.82 → 0.7 递减、段长 1.15 → 0.6、缝 0.55 → 0.75——细、暗、断开，正看是一列细碎亮点
+        const nSeg = 3, gap = 0.75, segL = 0.6;
         for (let k = 0; k < nSeg; k++) {
           const a = start + k * (segL + gap), b = a + segL;
           const x0 = x + fx * a, z0 = z + fz * a, x1 = x + fx * b, z1 = z + fz * b;
           if (!isWater(x0, z0) || !isWater(x1, z1)) continue;
           const ll = Math.hypot(x1 - x0, z1 - z0) || 1;
-          const dim = 0.82 * (1 - k * 0.16);
-          flat((x0 + x1) / 2, levelAt(x0, z0) + 0.025, (z0 + z1) / 2, (x1 - x0) / ll, (z1 - z0) / ll, 0.40, ll / 2, RG.streak, sc(WARM, dim));
+          const dim = 0.7 * (1 - k * 0.2);
+          flat((x0 + x1) / 2, levelAt(x0, z0) + 0.025, (z0 + z1) / 2, (x1 - x0) / ll, (z1 - z0) / ll, 0.15, ll / 2, RG.streak, sc(WARM, dim));
         }
       }
       n.lamp++;
@@ -257,7 +259,7 @@ export class FzNight {
         const x0 = x + fx * a, z0 = z + fz * a, x1 = x + fx * b, z1 = z + fz * b;
         if (!isWater(x0, z0) || !isWater(x1, z1)) continue;
         const ll = Math.hypot(x1 - x0, z1 - z0) || 1;
-        flat((x0 + x1) / 2, levelAt(x0, z0) + 0.025, (z0 + z1) / 2, (x1 - x0) / ll, (z1 - z0) / ll, 0.42, ll / 2, RG.streak, sc(WARM, 0.78 * (1 - k * 0.2)));
+        flat((x0 + x1) / 2, levelAt(x0, z0) + 0.025, (z0 + z1) / 2, (x1 - x0) / ll, (z1 - z0) / ll, 0.14, ll / 2, RG.streak, sc(WARM, 0.5 * (1 - k * 0.2)));
       }
     }
     // 8A 入湖渠 / 牌前：再铺一组固定的细暗断开倒影，避免机位上看不见
@@ -281,13 +283,13 @@ export class FzNight {
         }
       }
       if (!start && !isWater(x, z)) continue;
-      const nSeg = 3, gap = 0.45, segL = 1.2;
+      const nSeg = 3, gap = 0.75, segL = 0.6;   // 同上：细、暗、断开（058067c 短段思路）
       for (let k = 0; k < nSeg; k++) {
         const a = start + k * (segL + gap), b = a + segL;
         const x0 = x + fx * a, z0 = z + fz * a, x1 = x + fx * b, z1 = z + fz * b;
         if (!isWater((x0 + x1) / 2, (z0 + z1) / 2)) continue;
         const ll = Math.hypot(x1 - x0, z1 - z0) || 1;
-        flat((x0 + x1) / 2, levelAt(x0, z0) + 0.04, (z0 + z1) / 2, (x1 - x0) / ll, (z1 - z0) / ll, 0.40, ll / 2, RG.streak, sc(WARM, 0.82 * (1 - k * 0.16)));   // 4A 标准：细、暗
+        flat((x0 + x1) / 2, levelAt(x0, z0) + 0.04, (z0 + z1) / 2, (x1 - x0) / ll, (z1 - z0) / ll, 0.15, ll / 2, RG.streak, sc(WARM, 0.7 * (1 - k * 0.2)));   // 4A 标准：细、暗
       }
     }
     // 8A：取景机位的灯倒影。镜面点在灯→机位地面线上、离机位 d·e/(e+h)（e 眼高、h 灯头高，都从水面量）；
