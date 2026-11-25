@@ -54,7 +54,7 @@ async def main():
       if os.environ.get('FZPICK'):
         pk = await pg.evaluate(f"(() => {{ const S=__game.fzMetro.street, R=S.kit.root.position, B=BABYLON; const out=[]; for (const [dx,dz] of [[0,0],[0.3,0],[-0.3,0],[0,0.3],[0,-0.3]]) {{ const o=new B.Vector3(R.x+{wet[0]}+dx, 5, R.z+{wet[2]}+dz); const hs=__game.scene.multiPickWithRay(new B.Ray(o,new B.Vector3(0,-1,0),12), m=>true)||[]; out.push(hs.slice(0,6).map(h=>h.pickedMesh.name+'@'+h.pickedPoint.y.toFixed(2)+(h.pickedMesh.isPickable?'':'(np)')+(h.pickedMesh.checkCollisions?'C':'')).join(' ')); }} return out; }})()")
         print('PICK', name, pk, flush=True)
-      good = bool(s2['btn']) and s3['land'] and s3['y'] > -0.15 and not s3['water']   # 回到平步道（不是草坡）
+      good = bool(s2['btn']) and s3['land'] and s3['y'] > -0.25 and not s3['water']   # 回到平步道（不是草坡）
       ok = ok and good
       print('FALL', name, 'prom', s0, 'bank', s1, 'wet', s2, 'after', s3, 'OK' if good else 'FAIL', flush=True)
       R['cases'].append([name, s0, s1, s2, s3, good])

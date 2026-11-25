@@ -179,7 +179,7 @@ export function landY(px, pz) {
   return null;
 }
 /** 平的岸地（步道层，不在 8A 草坡上）：落水救回只放这种地方 */
-export const isFlatLand = (x, z) => { const y = landY(x, z); return y !== null && y > -0.05; };
+export const isFlatLand = (x, z) => { const y = landY(x, z); return y !== null && y > -0.2; };   // 草坡外缘 smoothstep 尾巴 < 20 cm，算平
 export const isDry = (x, z) => FZR.dry.some(d => inPoly(x, z, d));
 
 /** 落水后的上岸点：最近一段有栏杆缺口 / 岸线，往岸上退 1.8 m（面朝河） */
@@ -192,7 +192,12 @@ export function shoreFor(px, pz) {
     if (!best || d < best.d) { const L = Math.sqrt(L2), rx = dz / L, rz = -dx / L, sg = w[5], c = { d, x: qx - rx * sg * 1.8, z: qz - rz * sg * 1.8, yaw: Math.atan2(rx * sg, rz * sg) };
       if (w[4] === 7) {   // 矮驳岸：退到草坡顶（步道层）；窄岬角上 6.8 m 还在坡上就再往里找平地
         for (let t = 6.8; t <= 16; t += 0.6) { c.x = qx - rx * sg * t; c.z = qz - rz * sg * t; if (isFlatLand(c.x, c.z)) break; }
-        if (!isFlatLand(c.x, c.z)) { if (!any || d < any.d) any = c; continue; }
+        if (!isFlatLand(c.x, c.z)) {   // 窄岬角：法线方向穿过去又是水，就在岸点周围一圈圈找最近的平地
+          let f = null;
+          for (let r = 2; r <= 20 && !f; r += 1) for (let a = 0; a < 24; a++) { const x = qx + r * Math.cos(a * Math.PI / 12), z = qz + r * Math.sin(a * Math.PI / 12); if (isFlatLand(x, z)) { f = [x, z]; break; } }
+          if (!f) { if (!any || d < any.d) any = c; continue; }
+          c.x = f[0]; c.z = f[1]; c.yaw = Math.atan2(qx - f[0], qz - f[1]);
+        }
       }
       if (isLand(c.x, c.z)) best = c; else if (!any || d < any.d) any = c; }   // 退 1.8 m 要落在岸地上（2A 闸坝拐角：最近那段墙退出去还在水上）
   }
