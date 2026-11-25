@@ -1950,119 +1950,78 @@ export class FzRiverStreet extends XmStreet {
         // 8A 地面已是 #A39C8E，不再叠一层会打架的碎砖
       }
     }
+    // 8A 临时合拢墙：墙身沿 t 方向（以前按 n 转了 90°，墙横插进湖心、下面还悬空），墙脚落到水下
     for (const W of (A.caps || (A.capWall ? [A.capWall] : []))) {
-      const ry = yawOf(W.n[0], W.n[1]);
+      const ry = yawOf(W.t[0], W.t[1]);
       const face = hex('#8A8376'), joint = hex('#5C574E'), cope = hex('#9A9385');
-      GR.box(W.x, W.h / 2, W.z, W.thick, W.h, W.len, face, ry, 0, 0, 1, NO);
-      GR.box(W.x, W.h + 0.16, W.z, W.thick + 0.3, 0.32, W.len + 0.4, cope, ry, 0, 0, 1, NO);
-      const courses = 4, js = 2.3, fx = W.t[0], fz = W.t[1], nx = W.n[0], nz = W.n[1];
-      const ox = fx * (W.thick / 2 + 0.02), oz = fz * (W.thick / 2 + 0.02);
-      for (let i = 1; i < courses; i++) GR.box(W.x + ox, i * W.h / courses, W.z + oz, 0.05, 0.06, W.len - 0.15, joint, ry, 0, 0, 1, NO);
-      for (let c = 0; c < courses; c++) {
-        const y0 = c * W.h / courses, y1 = (c + 1) * W.h / courses, mid = (y0 + y1) / 2, hh = (y1 - y0) - 0.08, off0 = (c % 2 ? js / 2 : 0);
-        for (let u = -W.len / 2 + off0 + js; u < W.len / 2 - 0.3; u += js) {
-          GR.box(W.x + ox + nx * u, mid, W.z + oz + nz * u, 0.05, hh, 0.06, joint, ry, 0, 0, 1, NO);
-        }
-      }
-      k.col(W.x + W.t[0] * 0.4, 1.2, W.z + W.t[1] * 0.4, 0.8, 8, Math.max(24, W.len + 4), { ry, name: 'colCap' });
+      const Ht = Math.min(W.h, 0.9), y0 = WY - 0.3, hh = Ht - y0;   // 湖面上只露一道齐腰矮墙（以前 2.4 m 像一道坝）
+      GR.box(W.x, y0 + hh / 2, W.z, W.thick, hh, W.len, face, ry, 0, 0, 1, NO);
+      GR.box(W.x, Ht + 0.16, W.z, W.thick + 0.3, 0.32, W.len + 0.4, cope, ry, 0, 0, 1, NO);
+      const c = A.lake && A.lake.c, sgn = c && ((c[0] - W.x) * W.n[0] + (c[1] - W.z) * W.n[1]) < 0 ? -1 : 1;
+      const ox = W.n[0] * sgn * (W.thick / 2 + 0.02), oz = W.n[1] * sgn * (W.thick / 2 + 0.02);
+      for (let i = 1; i < 4; i++) GR.box(W.x + ox, y0 + i * hh / 4, W.z + oz, 0.05, 0.06, W.len - 0.15, joint, ry, 0, 0, 1, NO);
+      k.col(W.x, 1.2, W.z, 0.8, 8, W.len + 4, { ry, name: 'colCap' });
     }
-    // 3号码头：近水面一条连续弯甲板，岸边一小跑石阶；实体基座封住阶下，看不见水坑也掉不下去
+    // 3号码头（小美 11-25：栈桥是主体）：按影像弯形栈桥架在水面上，桥面与岸齐平（#A39C8E），细钢栏、细桩落水；
+    // 东南根部一段引桥跨岸墙接岸，岸侧入口立牌。桥面 y=0 不会触发落水；桩下、栈桥与东岸之间是一弯开阔水湾。
     const J = A.pier3;
-    if (J && ((J.spine && J.spine.length >= 4) || (J.ring && J.ring.length >= 8))) {
-      let spine = J.spine;
-      if (!spine || spine.length < 4) {
-        const pts = [];
-        for (let i = 0; i < J.ring.length; i += 2) pts.push([J.ring[i], J.ring[i + 1]]);
-        const byZ = pts.slice().sort((a, b) => a[1] - b[1]);
-        const mid = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
-        const south = mid(byZ[0], byZ[1]), north = mid(byZ[byZ.length - 1], byZ[byZ.length - 2]);
-        spine = [south[0], south[1], mid(south, north)[0], mid(south, north)[1], north[0], north[1]];
-      }
+    if (J && J.spine && J.spine.length >= 4) {
       const sp = [];
-      for (let i = 0; i < spine.length; i += 2) sp.push([spine[i], spine[i + 1]]);
-      const acc = [0];
-      for (let i = 0; i < sp.length - 1; i++) acc.push(acc[i] + Math.hypot(sp[i + 1][0] - sp[i][0], sp[i + 1][1] - sp[i][1]));
-      const total = acc[acc.length - 1] || 1;
-      const Wd = J.width || 3.4, deckY = Math.max(J.deckY != null ? J.deckY : WY + 0.48, WY + 0.62), stairLen = J.stairLen || 3.4;
-      const TH = 0.16, railH = 0.70, STONE = hex('#8E887C');
-      const at = s => {
-        const ss = Math.max(0, Math.min(total, s));
-        let i = 0; while (i < acc.length - 2 && acc[i + 1] < ss) i++;
-        const a = sp[i], b = sp[i + 1], seg = acc[i + 1] - acc[i] || 1, u = (ss - acc[i]) / seg;
-        const tx = (b[0] - a[0]) / seg, tz = (b[1] - a[1]) / seg;
-        return { x: a[0] + (b[0] - a[0]) * u, z: a[1] + (b[1] - a[1]) * u, tx, tz };
+      for (let i = 0; i < J.spine.length; i += 2) sp.push([J.spine[i], J.spine[i + 1]]);
+      if (J.gang) sp.push([J.gang[0], J.gang[1]]);   // 根部顺势折向东北接岸（引桥同宽同栏，岸头敞开）
+      const Mt = k.metal, RAIL = hex('#4F5861'), PILE = hex('#6E6A62'), FASCIA = hex('#8C8578');
+      const top = J.deckTop != null ? J.deckTop : 0.03, TH = 0.22, railH = 1.05;
+      const deckRun = (pts, Wd, openEnd) => {
+        const acc = [0];
+        for (let i = 0; i < pts.length - 1; i++) acc.push(acc[i] + Math.hypot(pts[i + 1][0] - pts[i][0], pts[i + 1][1] - pts[i][1]));
+        const total = acc[acc.length - 1] || 1;
+        const at = s => {
+          const ss = Math.max(0, Math.min(total, s));
+          let i = 0; while (i < acc.length - 2 && acc[i + 1] < ss) i++;
+          const a = pts[i], b = pts[i + 1], seg = acc[i + 1] - acc[i] || 1, u = (ss - acc[i]) / seg;
+          return { x: a[0] + (b[0] - a[0]) * u, z: a[1] + (b[1] - a[1]) * u, tx: (b[0] - a[0]) / seg, tz: (b[1] - a[1]) / seg };
+        };
+        const N = Math.max(2, Math.ceil(total / 1.1));
+        for (let i = 0; i < N; i++) {
+          const s0 = total * i / N, s1 = total * (i + 1) / N, Q = at((s0 + s1) / 2), len = s1 - s0 + 0.06, ry = yawOf(Q.tx, Q.tz);
+          GR.box(Q.x, top - TH / 2, Q.z, Wd, TH, len, TILE, ry, 0, 0, 1, NO);                 // 桥面
+          GR.box(Q.x, top - TH - 0.16, Q.z, Wd - 0.5, 0.32, len, FASCIA, ry, 0, 0, 1, NO);   // 桥面下纵梁（暗一点，侧面看得出桥面薄）
+          k.col(Q.x, top - TH / 2, Q.z, Wd, TH + 0.06, len, { ry, name: 'colDeck' });
+          for (const su of [-1, 1]) {
+            const ox = Q.tz * su * (Wd / 2 - 0.06), oz = -Q.tx * su * (Wd / 2 - 0.06);
+            {
+              Mt.box(Q.x + ox, top + railH, Q.z + oz, 0.05, 0.05, len, RAIL, ry, 0, 0, 1, NO);          // 扶手
+              Mt.box(Q.x + ox, top + railH * 0.45, Q.z + oz, 0.03, 0.03, len, RAIL, ry, 0, 0, 1, NO);   // 中横杆
+              k.col(Q.x + ox, top + 0.6, Q.z + oz, 0.1, 1.2, len, { ry, name: 'colParapet' });
+            }
+          }
+        }
+        // 立杆每 1.8 m；桩每 3.6 m 落到水下
+        for (let s = 0; s <= total + 0.01; s += total / Math.max(1, Math.round(total / 1.8))) {
+          const Q = at(s), j = Math.round(s / (total / Math.max(1, Math.round(total / 1.8))));
+          for (const su of [-1, 1]) {
+            const ox = Q.tz * su * (Wd / 2 - 0.06), oz = -Q.tx * su * (Wd / 2 - 0.06);
+            Mt.box(Q.x + ox, top + railH / 2, Q.z + oz, 0.05, railH, 0.05, RAIL, 0, 0, 0, 1, NO);
+            if (j % 2 === 0 && isWater(Q.x, Q.z)) { const ix = Q.tz * su * (Wd / 2 - 0.35), iz = -Q.tx * su * (Wd / 2 - 0.35); P.cyl(Q.x + ix, (top - TH + WY - 0.4) / 2, Q.z + iz, 0.11, (top - TH) - (WY - 0.4), PILE, 6); }
+          }
+        }
+        return { at, total };
       };
-      let sWater = 0;
-      for (let s = 0; s < total; s += 0.2) {
-        const Q = at(s);
-        if (typeof isWater === 'function' && isWater(Q.x, Q.z)) { sWater = s; break; }
-      }
-      const sStair0 = Math.max(0.25, (sWater || 0.8) - 0.45);
-      const steps = 6, sDeck0 = sStair0 + stairLen + 0.04;
-      // 岸上入口小平台（与铺地齐平）
-      const P0 = at(Math.max(0.1, sStair0 - 0.5));
-      GR.box(P0.x, 0.05, P0.z, Wd + 0.4, 0.10, 1.5, TILE, yawOf(P0.tx, P0.tz), 0, 0, 1, NO);
-      k.col(P0.x, 0.05, P0.z, Wd + 0.4, 0.12, 1.5, { ry: yawOf(P0.tx, P0.tz), name: 'colDeckFoot' });
-      const S0 = at(sStair0), S1 = at(sStair0 + stairLen);
-      const slen = Math.hypot(S1.x - S0.x, S1.z - S0.z) || 1;
-      const txs = (S1.x - S0.x) / slen, tzs = (S1.z - S0.z) / slen;
-      const ryS = yawOf(txs, tzs);
-      const midX = (S0.x + S1.x) / 2, midZ = (S0.z + S1.z) / 2;
-      // 阶下实心基座：从水面填到阶底，封死落水坑
-      GR.box(midX, (deckY + WY) / 2 - 0.02, midZ, Wd + 0.28, (deckY - WY) + 0.12, slen + 0.35, STONE, ryS, 0, 0, 1, NO);
-      // 阶下碰撞体（视觉上不再立一块 3 m 石墩）
-      k.col(midX, (deckY + WY) / 2, midZ, Wd + 0.3, (deckY - WY) + 0.4, slen + 0.5, { ry: ryS, name: 'colStairWell' });
-      // 两侧矮石帮（贴踏步，不要两片 3 m 立板）
-      for (const su of [-1, 1]) {
-        const x0 = S0.x + S0.tz * su * (Wd / 2 + 0.05), z0 = S0.z - S0.tx * su * (Wd / 2 + 0.05);
-        const x1 = S1.x + S1.tz * su * (Wd / 2 + 0.05), z1 = S1.z - S1.tx * su * (Wd / 2 + 0.05);
-        GR.box((x0 + x1) / 2, (0.12 + deckY) / 2 + 0.18, (z0 + z1) / 2, 0.14, 0.36, slen + 0.08, STONE, ryS, 0, 0, 1, NO);
-      }
-      // 6 级整齐踏步，由岸面降到甲板
-      for (let i = 0; i < steps; i++) {
-        const A_ = at(sStair0 + stairLen * (i + 0.5) / steps);
-        const yy = 0.05 + (deckY - 0.05) * (i + 0.55) / steps;
-        const sl = Math.max(0.46, stairLen / steps);
-        const ry = yawOf(A_.tx, A_.tz);
-        GR.box(A_.x, yy - 0.05, A_.z, Wd, 0.10, sl * 0.95, TILE, ry, 0, 0, 1, NO);
-        k.col(A_.x, yy - 0.04, A_.z, Wd, 0.14, sl, { ry, name: 'colStair' });
-      }
-      // 一条连续轻甲板 + 同宽低基座（不要一节节方盒子）
-      const Mt = k.metal;
-      const stepS = 0.62, foundH = Math.max(0.36, deckY - WY);
-      for (let s = sDeck0; s < total - 0.04; s += stepS) {
-        const s1 = Math.min(total, s + stepS + 0.14);
-        const A_ = at((s + s1) / 2), len = s1 - s;
-        if (len < 0.18) continue;
-        const ry = yawOf(A_.tx, A_.tz);
-        GR.box(A_.x, (deckY + WY) / 2, A_.z, Wd + 0.16, foundH, len, STONE, ry, 0, 0, 1, NO);
-        GR.box(A_.x, deckY - TH / 2, A_.z, Wd, TH, len, TILE, ry, 0, 0, 1, NO);
-        k.col(A_.x, deckY - TH / 2, A_.z, Wd, TH + 0.04, len, { ry, name: 'colDeck' });
-        k.col(A_.x, (deckY + WY) / 2, A_.z, Wd + 0.1, foundH, len, { ry, name: 'colPierBody' });
-        for (const su of [-1, 1]) {
-          const rx = A_.x + A_.tz * su * (Wd / 2 - 0.08), rz = A_.z - A_.tx * su * (Wd / 2 - 0.08);
-          Mt.box(rx, deckY + railH, rz, 0.04, 0.04, len, hex('#5A636C'), ry, 0, 0, 1, NO);
-          Mt.box(rx, deckY + railH * 0.5, rz, 0.035, 0.035, len, hex('#5A636C'), ry, 0, 0, 1, NO);
-          k.col(rx, deckY + railH * 0.55, rz, 0.08, railH + 0.1, len, { ry, name: 'colParapet' });
-        }
-      }
-      for (let s = sDeck0; s <= total + 0.01; s += 1.5) {
-        const A_ = at(Math.min(total, s));
-        for (const su of [-1, 1]) {
-          const px = A_.x + A_.tz * su * (Wd / 2 - 0.08), pz = A_.z - A_.tx * su * (Wd / 2 - 0.08);
-          Mt.box(px, deckY + railH * 0.5, pz, 0.04, railH, 0.04, hex('#5A636C'), 0, 0, 0, 1, NO);
-          if (su === 1 && Math.round(s / 1.5) % 2 === 0) P.cyl(px, (deckY + (WY - 0.15)) / 2, pz, 0.09, deckY - (WY - 0.15), hex('#6B5A48'), 6);
-        }
-      }
+      const R = deckRun(sp, J.width || 3.0, false);
+      // 北尖封一道横栏
+      { const Q = R.at(0), ry = yawOf(-Q.tz, Q.tx), Wd = J.width || 3.0;
+        Mt.box(Q.x, top + railH, Q.z, 0.05, 0.05, Wd - 0.1, RAIL, ry, 0, 0, 1, NO);
+        Mt.box(Q.x, top + railH * 0.45, Q.z, 0.03, 0.03, Wd - 0.1, RAIL, ry, 0, 0, 1, NO);
+        k.col(Q.x, top + 0.6, Q.z, 0.1, 1.2, Wd, { ry, name: 'colParapet' }); }
     }
   }
   /** 8A 3号码头：矮石座 + 薄双面牌，立在岸侧入口陆地上，不是整块石塔 */
   a8aPierPlate(S) {
     const k = this.kit, A = this.atlas, x = S.x, z = S.z, fx = S.f[0], fz = S.f[1], ry = yawOf(fx, fz);
     const lines = S.lines || ['晋安湖3号码头', "Jin'an Lake Pier 3"];
-    const w = 2.35, h = 0.95, yPlate = 1.15;
+    const w = 2.7, h = 1.08, yPlate = 1.3;
     k.g('granite').box(x, 0.10, z, 0.46, 0.20, 0.46, hex('#8E887C'), 0, 0, 0, 1, NO);
-    k.g('granite').box(x, 0.48, z, 0.16, 0.72, 0.16, hex('#7E786C'), 0, 0, 0, 1, NO);
+    k.g('granite').box(x, 0.42, z, 0.16, 0.5, 0.16, hex('#7E786C'), 0, 0, 0, 1, NO);
     k.solid.box(x, yPlate, z, w, h, 0.08, hex('#6E675B'), ry, 0, 0, 1, NO);
     k.col(x, 0.7, z, 0.5, 1.4, 0.5, { ry, name: 'colSign' });
     const uv = A.draw(w * 0.96, h * 0.88, textPaint(lines, { bg: '#6E675B', fg: '#F2E2B0' }));

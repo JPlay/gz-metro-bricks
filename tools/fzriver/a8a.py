@@ -226,15 +226,23 @@ def build_south(g):
       # 不再把栈桥轮廓打进水面（会在铺地里开槽、出水色坑）。低甲板铺在已有开阔湖面上。
       pier_over_water = None
   # 牌子旁岸湾 + 码头东侧细槽填回陆地，铺地里不要留下能掉下去的水坑
-  notch = box(1093.6, -82.0, 1113.0, -54.5).buffer(0.35)
-  water = water.difference(notch).buffer(0)
+  # 3号码头：保留影像上栈桥与东岸之间的弯形水湾（不再填成陆地）；栈桥本身架在水面上
+  # 入湖口 / 半岛尖 / 分流陆北头：描岸 mask 的锯齿和 1–3 m 的豁口在 3 m 驳岸上很扎眼，局部开闭运算收顺（不动渠宽）
+  _mb = box(934.0, -96.0, 1000.0, -52.0)
+  _sm = water.buffer(2.2, join_style=1).buffer(-4.4, join_style=1).buffer(2.2, join_style=1).simplify(0.25).intersection(_mb)
+  water = unary_union([water.difference(_mb), _sm]).buffer(0.08, join_style=2).buffer(-0.08, join_style=2)   # 合缝，不留零宽陆条
+  if water.geom_type == 'MultiPolygon':
+    water = unary_union([p for p in water.geoms if p.area > 8])
+  # 影像：弯形栈桥与东岸之间是一弯水湾，栈桥只在东南根部用一小段引桥接岸。
+  # 描岸 mask 把栈桥画成陆地、水湾只剩 2 m 细槽，这里按影像重画：栈桥下与水湾都是水，东岸收成一条顺弧。
+  PIER_BAY = Polygon([(1086.0, -53.0), (1097.6, -53.0), (1098.9, -57.5), (1099.3, -63.5),
+                      (1099.9, -68.6), (1100.7, -72.8), (1086.0, -72.8)])
+  water = water.difference(box(1100.9, -72.4, 1114.0, -50.5)).buffer(0)
+  water = unary_union([water, PIER_BAY, box(1096.0, -74.6, 1100.9, -72.4)]).buffer(0)
   if water.geom_type == 'MultiPolygon':
     water = unary_union([p for p in water.geoms if p.area > 8])
   land = region.difference(water).buffer(0)
   # 填口边缘若留下既不是水也不是陆的细缝，并进陆地，避免掉进去爬不出来
-  seam = box(1092.5, -83.0, 1114.0, -53.5).difference(water).intersection(region)
-  if not seam.is_empty:
-    land = unary_union([land, seam]).buffer(0)
   if land.geom_type == 'MultiPolygon':
     land = unary_union([p for p in land.geoms if p.area > 4])
   g['water'], g['land'], g['region'] = water, land, region
@@ -308,8 +316,7 @@ def build_south(g):
       zs.append(Point(pier_entrance[0], pier_entrance[1]).buffer(8.0))
     if pier_over_water is not None and not pier_over_water.is_empty:
       zs.append(pier_over_water.buffer(5.0))
-    zs.append(box(1096.0, -80.8, 1112.5, -67.2).buffer(2.0))
-    drop_zone = unary_union(zs)
+    drop_zone = Point(0, 0).buffer(0.01)   # 水湾按影像砌岸墙，不再整片拆墙
     def _drop(walls):
       kept = []
       for w in walls:
@@ -324,6 +331,22 @@ def build_south(g):
     WALL_keep = _drop(WALL_keep)
     print('8A dropped pier-hole walls', before - len(W8) - len(WALL_keep), 'remain new', len(W8), 'keep', len(WALL_keep))
   print('8A new walls before caps', len(W8))
+  # 3号码头引桥跨过东岸墙：桥下那几段墙不立岸栏（flag 1），引桥面直通岸上
+  GANG = (1098.4, -72.1, 1103.4, -70.0, 2.6)
+  _gl = LineString([GANG[:2], GANG[2:4]]).buffer(GANG[4] / 2 + 0.5, cap_style=2)
+  _ng = 0
+  for w in W8 + WALL_keep:
+    if _gl.intersects(LineString([(w[0], w[1]), (w[2], w[3])])):
+      w[4] = 1; _ng += 1
+  print('8A gangway walls flag1', _ng)
+  # 3号水湾东岸按影像是缓坡草岸、没有石栏：只留看不见的挡墙（flag 3），取景前景不再有一排栏杆
+  _bayE = unary_union([box(1099.0, -72.3, 1101.8, -52.0), box(1099.0, -52.0, 1107.5, -42.5),
+                       box(1100.5, -73.2, 1106.8, -71.9), box(1104.0, -84.0, 1109.0, -72.0)])
+  _nb = 0
+  for w in W8 + WALL_keep:
+    if w[4] == 0 and _bayE.intersects(LineString([(w[0], w[1]), (w[2], w[3])])) and _bayE.contains(Point((w[0] + w[2]) / 2, (w[1] + w[3]) / 2)):
+      w[4] = 3; _nb += 1
+  print('8A bay east walls flag3', _nb)
 
   # ---- 临时合拢墙：西裁（通西汊）与北裁（通北半湖）----
   caps = []
@@ -551,14 +574,31 @@ def build_south(g):
         break
   if sign_p is None:
     sign_p = (1107.2, -71.0)
+  # 栈桥中线按影像重描：北尖 → 中段贴湖外弧 → 东南根部（宽头），根部一段引桥向东北接岸
+  ctrl = [(1091.3, -55.4), (1090.6, -59.8), (1090.9, -63.6), (1092.1, -66.9),
+          (1094.2, -69.6), (1096.8, -71.6), (1098.9, -72.4)]
+  pts = ctrl
+  for _ in range(3):   # Chaikin 收顺
+    q = [pts[0]]
+    for a_, b_ in zip(pts, pts[1:]):
+      q.append((0.75 * a_[0] + 0.25 * b_[0], 0.75 * a_[1] + 0.25 * b_[1]))
+      q.append((0.25 * a_[0] + 0.75 * b_[0], 0.25 * a_[1] + 0.75 * b_[1]))
+    q.append(pts[-1]); pts = q
+  spine_pts = pts
+  sign_p = (1104.6, -69.6)
+  cam_p3 = (1107.6, -76.5)
+  fx_s, fz_s = cam_p3[0] - sign_p[0], cam_p3[1] - sign_p[1]
+  Lf = math.hypot(fx_s, fz_s) or 1
+  fx_s, fz_s = fx_s / Lf, fz_s / Lf
   pier3 = {
     'c': [round(pier3c[0], 2), round(pier3c[1], 2)],
     'ring': [round(v, 2) for p in pier_game for v in p],
     'spine': [round(v, 2) for p in spine_pts for v in p],
-    'entrance': [round(entrance[0], 2), round(entrance[1], 2)],
-    'width': 3.4,
-    'deckY': -2.52,
-    'stairLen': 3.4,
+    'entrance': [1101.7, -70.9],
+    'gang': [1101.7, -70.9],
+    'width': 3.0,
+    'deckTop': 0.03,
+    'lamps': [[1090.9, -60.5], [1092.6, -67.6], [1097.4, -71.8]],
     'sign': {
       'x': round(sign_p[0], 2), 'z': round(sign_p[1], 2),
       'f': [round(fx_s, 4), round(fz_s, 4)],
@@ -677,10 +717,22 @@ def build_south(g):
     q = Point(lx, lz)
     if land.contains(q) and 1.0 < water.distance(q) < 10.0:
       priority.append([lx, lz, fx_, fz_])
-  if land.contains(Point(sign_p[0] - fx_s * 1.2, sign_p[1] - fz_s * 1.2)):
-    lx, lz = sign_p[0] - fx_s * 1.2 + fz_s * 1.0, sign_p[1] - fz_s * 1.2 - fx_s * 1.0
-    if land.contains(Point(lx, lz)):
-      priority.append([round(lx, 2), round(lz, 2), round(fx_s, 4), round(fz_s, 4)])
+  # 3号码头栈桥上的细杆灯：倒影朝岸上取景点方向拖（倒影总是落在灯与看的人之间）
+  # 灯杆立在栈桥东（水湾）侧栏杆线上，不挡走道
+  _pl = []
+  for k_ in (len(spine_pts) // 5, len(spine_pts) // 2, (len(spine_pts) * 4) // 5):
+    a_, b_ = spine_pts[max(0, k_ - 1)], spine_pts[min(len(spine_pts) - 1, k_ + 1)]
+    tx_, tz_ = b_[0] - a_[0], b_[1] - a_[1]; Lt = math.hypot(tx_, tz_) or 1; tx_, tz_ = tx_ / Lt, tz_ / Lt
+    c_ = spine_pts[k_]
+    _pl.append([round(c_[0] - tz_ * 1.44, 2), round(c_[1] + tx_ * 1.44, 2)])
+  pier3['lamps'] = _pl
+  for lx, lz in pier3['lamps']:
+    fx_, fz_ = cam_p3[0] - lx, cam_p3[1] - lz
+    Lf = math.hypot(fx_, fz_) or 1
+    priority.append([lx, lz, round(fx_ / Lf, 4), round(fz_ / Lf, 4)])
+  # 引桥岸头一盏
+  # 环湖自动灯不要落进 3号水湾东岸取景前景（贴相机）
+  lamps = [L for L in lamps if math.hypot(L[0] - cam_p3[0], L[1] - cam_p3[1]) > 6.0]
   lamps = (priority + lamps)[:42]
 
   # 南岸环湖走点（e2e / 取景）
@@ -753,8 +805,6 @@ def build_south(g):
       [998.0, -100.0, 0.55, 0.84], [1008.0, -92.0, 0.4, 0.92],
       [972.0, -90.0, 0.5, 0.87], [980.0, -85.0, 0.55, 0.83], [1000.0, -80.0, 0.35, 0.94],
       [1012.0, -75.0, 0.2, 0.98], [990.0, -78.0, 0.5, 0.87], [968.0, -92.0, 0.7, 0.71],
-      [1094.0, -68.0, -0.4, 0.92], [1092.0, -62.0, -0.2, 0.98],
-      [1092.0, -70.0, -0.2, 0.98], [1091.0, -64.0, -0.15, 0.99], [1092.5, -72.0, -0.3, 0.95],
     ],
 
     'island8b': '西侧游憩岛按 PLAN-8 属 8B（西岸到东二环），8A 不建岛、桥、亭；岛心小塘亦不做。',

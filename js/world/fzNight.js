@@ -205,9 +205,9 @@ export class FzNight {
     for (const Lmp of (FZR.a8a && FZR.a8a.lamps) || []) {
       const [x, z, fx0, fz0] = Lmp;
       let fx = fx0, fz = fz0, fl = Math.hypot(fx, fz) || 1; fx /= fl; fz /= fl;
-      const hx = x + fx * 1.2, hz = z + fz * 1.2;
-      halo(hx, 6.95, hz, 1.05, sc(WARM, 0.8));
-      flat(hx - fx * 0.4, 0.045, hz - fz * 0.4, fx, fz, 1.7, 1.7, RG.pool, sc(WARM, 0.32));
+      const hx = x + fx * 0.12, hz = z + fz * 0.12;   // 8A 灯杆 3.1 m、灯帽 y≈3.05（不要用 4A 7 m 杆的光晕高度，否则光晕飘在灯上方）
+      halo(hx, 3.0, hz, 0.62, sc(WARM, 0.8));
+      flat(hx, 0.05, hz, fx, fz, 1.5, 1.5, RG.pool, sc(WARM, 0.30));
       let start = 0;
       for (let d = 0.8; d <= 16; d += 0.2) { if (isWater(x + fx * d, z + fz * d)) { start = d + 0.08; break; } }
       if (!start) {   // 灯朝向若背水，改向最近水面补短倒影
@@ -265,7 +265,6 @@ export class FzNight {
       const S = FZR.a8a.pier3.sign;
       extra8.push([S.x, S.z, S.f[0], S.f[1]]);
     }
-    extra8.push([1092.0, -70.0, 0.15, 0.99], [1091.0, -64.0, 0.0, 1.0], [1092.5, -72.0, 0.2, 0.98], [1086.0, -68.0, 0.4, 0.92], [1084.0, -72.0, 0.55, 0.83], [1088.0, -66.0, 0.2, 0.98]);
     for (const row of extra8) {
       let x = row[0], z = row[1], fx = row[2], fz = row[3];
       const fl = Math.hypot(fx, fz) || 1; fx /= fl; fz /= fl;

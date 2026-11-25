@@ -46,6 +46,7 @@ async def main():
       ['inlet', 960.0, -98.0, 1015.0, -72.0, 0.08, 1.80, 1],
       ['pier3', 1112.0, -80.0, 1088.0, -64.0, 0.14, 1.70, 1],
     ]
+    if os.environ.get('FZCAMS'): spots = json.loads(os.environ['FZCAMS'])
     print('spots', spots, flush=True)
     ONLY = set(filter(None, os.environ.get('FZSPOTS', '').split(',')))
     for spot in spots:
