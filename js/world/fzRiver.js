@@ -201,7 +201,7 @@ export class FzRiverStreet extends XmStreet {
             const ux = Bv[0] - A[0], uy = Bv[1] - A[1], uz = Bv[2] - A[2], vx = Dv[0] - A[0], vy = Dv[1] - A[1], vz = Dv[2] - A[2];
             let nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx; const nl = Math.hypot(nx, ny, nz) || 1; nx /= nl; ny /= nl; nz /= nl; if (ny < 0) { nx = -nx; ny = -ny; nz = -nz; }
             { nx *= 0.2; nz *= 0.2; const l2 = Math.hypot(nx, ny, nz) || 1; nx /= l2; ny /= l2; nz /= l2; }   // 面法线压向上：仍是平涂分面，但朝阳那几面不发荧光
-            const s0 = S.p.length / 3, yc = (A[1] + Bv[1] + Dv[1]) / 3, tt = Math.min(1, Math.max(0, -yc / 2)), gc = G8T.map((v, q) => v + (G8B[q] - v) * tt);   // 坡顶 G8T → 坡脚 G8B（每面一色）
+            const s0 = S.p.length / 3, yc = (A[1] + Bv[1] + Dv[1]) / 3, tt = 0.35 * Math.min(1, Math.max(0, -yc / 2)), gc = G8T.map((v, q) => v + (G8B[q] - v) * tt);   // 坡顶 G8T → 坡脚 G8B（每面一色）
             for (const V of [A, Bv, Dv]) S.push(V[0], V[1], V[2], nx, ny, nz, gc);
             S.i.push(s0, s0 + 1, s0 + 2);
           }
