@@ -187,7 +187,7 @@ export class FzRiverStreet extends XmStreet {
   /* ---------- 地面 / 水面（三角网，碰撞体按 60 m 格子分开） ---------- */
   groundAndWater() {
     const k = this.kit, PV = k.g('pave'), WA = k.g('paint@sea');
-    const GRASS = hex('#79A85A'), SKIRTC = hex('#BDB7AA'), PAVEC = hex('#CFC9BD'), G8T = hex('#6E9157'), G8B = hex('#567646'), GRASS8F = hex('#6E9157');   // 8A 草：比 3B 原色降亮 10%、降饱和 20%（实拍后与琴亭湖草对齐，见 shots8a/handoff/grass_compare.jpg）   // 2A：西湖公园一带的岸地 / 外圈画成草地（小美：站在牌楼、码头、栈道、柳堤看不到白边）
+    const GRASS = hex('#79A85A'), SKIRTC = hex('#BDB7AA'), PAVEC = hex('#CFC9BD'), G8T = hex('#739B52'), G8B = hex('#577E42'), GRASS8F = hex('#739B52');   // 8A 草：比 3B 原色降亮 10%、降饱和 20%（实拍后与琴亭湖草对齐，见 shots8a/handoff/grass_compare.jpg）   // 2A：西湖公园一带的岸地 / 外圈画成草地（小美：站在牌楼、码头、栈道、柳堤看不到白边）
     const add = (G, T, y, col) => {   // y：数 或 (x, z) => y（2A：湖 + 闸上游水面高 0.5 m）
       for (const c of Object.values(T)) {
         const P = c.p, I = c.i, base = G.p.length / 3;
@@ -1989,13 +1989,14 @@ export class FzRiverStreet extends XmStreet {
       for (const [ax0, az0, bx0, bz0, ya0, yb0, sg, railed] of A.lowWalls || []) {
         let ax = ax0, az = az0, bx = bx0, bz = bz0, ya = ya0, yb = yb0; if (sg > 0) { [ax, az, bx, bz] = [bx, bz, ax, az]; [ya, yb] = [yb, ya]; }   // 法线朝水
         const L = Math.hypot(bx - ax, bz - az); if (L < 0.05) continue;
-        const dx = (bx - ax) / L, dz = (bz - az) / L, lx = dz * sg, lz = -dx * sg;   // l = 朝岸上
-        GR.quad([ax, ya + 0.02, az], [bx, yb + 0.02, bz], [bx, WY - 0.4, bz], [ax, WY - 0.4, az], RC);
-        const e = 0.02, wq = 0.42;   // 压顶：顶面 + 朝水一条立边
-        GR.quad([ax - lx * wq - dx * e, ya + 0.08, az - lz * wq - dz * e], [bx - lx * wq + dx * e, yb + 0.08, bz - lz * wq + dz * e], [bx + lx * 0.04 + dx * e, yb + 0.08, bz + lz * 0.04 + dz * e], [ax + lx * 0.04 - dx * e, ya + 0.08, az + lz * 0.04 - dz * e], CP);
-        GR.quad([ax + lx * 0.04 - dx * e, ya + 0.08, az + lz * 0.04 - dz * e], [bx + lx * 0.04 + dx * e, yb + 0.08, bz + lz * 0.04 + dz * e], [bx + lx * 0.04, yb - 0.08, bz + lz * 0.04], [ax + lx * 0.04, ya - 0.08, az + lz * 0.04], CPF);
+        const dx = (bx - ax) / L, dz = (bz - az) / L, lx = dz * sg, lz = -dx * sg;   // l = 朝岸上（数据里 sg=1，已核：+l 一侧是草带，-l 一侧是水）
+        const fo = -0.035, e = 0.02, wo = -0.06, wi = 0.40;   // 墙面朝水外移 3.5 cm（防和草皮裙边共面闪绿线）；压顶 = 朝水挑出 6 cm + 往岸上压 40 cm，朝水一条立边
+        const fe = 0.05;   // 墙面两头各伸 5 cm，外移后转角不留缝
+        GR.quad([ax + lx * fo - dx * fe, ya + 0.02, az + lz * fo - dz * fe], [bx + lx * fo + dx * fe, yb + 0.02, bz + lz * fo + dz * fe], [bx + lx * fo + dx * fe, WY - 0.4, bz + lz * fo + dz * fe], [ax + lx * fo - dx * fe, WY - 0.4, az + lz * fo - dz * fe], RC);
+        GR.quad([ax + lx * wo - dx * e, ya + 0.08, az + lz * wo - dz * e], [bx + lx * wo + dx * e, yb + 0.08, bz + lz * wo + dz * e], [bx + lx * wi + dx * e, yb + 0.08, bz + lz * wi + dz * e], [ax + lx * wi - dx * e, ya + 0.08, az + lz * wi - dz * e], CP);
+        GR.quad([ax + lx * wo - dx * e, ya + 0.08, az + lz * wo - dz * e], [bx + lx * wo + dx * e, yb + 0.08, bz + lz * wo + dz * e], [bx + lx * wo, yb - 0.10, bz + lz * wo], [ax + lx * wo, ya - 0.10, az + lz * wo], CPF);
         if (railed) {   // 小美 A：3号水湾矮石栏跟着降到驳岸压顶上（同 flag 6 那套条石，进细节格子 granite 同批，不加 draw）
-          const mx = (ax + bx) / 2, mz = (az + bz) / 2, ox = -lx * 0.2, oz = -lz * 0.2, ym = (ya + yb) / 2 + 0.08, ry = yawOf(dx, dz), n = Math.max(1, Math.round(L / 2.3));
+          const mx = (ax + bx) / 2, mz = (az + bz) / 2, ox = lx * 0.2, oz = lz * 0.2, ym = (ya + yb) / 2 + 0.08, ry = yawOf(dx, dz), n = Math.max(1, Math.round(L / 2.3));
           this.det(mx, mz, () => {
             const G2 = k.g('granite');
             G2.box(mx + ox, ym + 0.62, mz + oz, 0.14, 0.08, L, hex('#B5AE9F'), ry, 0, 0, 1, NO);

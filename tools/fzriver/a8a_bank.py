@@ -115,8 +115,14 @@ def build(g, ctx):
       nt += len(I) // 3
   # 驳岸墙两端顶高（JS 画墙面 / 压顶用）
   low = []
+  # 渐变段按 ≤2 m 切开，墙顶跟着 taper 的非线性走，和草带边一致（否则长段线性墙顶和草带对不上，墙面上露出一道绿线）
   for w in lake_w:
-    ya = round(-DROP * taper(w[0], w[1]), 3); yb = round(-DROP * taper(w[2], w[3]), 3)
-    low.append([w[0], w[1], w[2], w[3], ya, yb, w[5] if len(w) > 5 else 1, 1 if w[4] == 8 else 0])
-  print('8A low bank: lake walls', len(lake_w), 'railed(bay)', len(railed), 'junctions', len(J), 'band area', round(band.area, 1), 'cell tris', nt)
+    L = math.hypot(w[2] - w[0], w[3] - w[1]); sg = w[5] if len(w) > 5 else 1; rl = 1 if w[4] == 8 else 0
+    hy = lambda t: round(-DROP * taper(w[0] + (w[2] - w[0]) * t, w[1] + (w[3] - w[1]) * t), 3)
+    ya, yb, ym = hy(0), hy(1), hy(0.5)
+    n = 1 if (abs(ya - yb) < 0.05 and abs(ym - (ya + yb) / 2) < 0.05) else max(1, math.ceil(L / 2.0))
+    for k in range(n):
+      t0, t1 = k / n, (k + 1) / n
+      low.append([round(w[0] + (w[2] - w[0]) * t0, 3), round(w[1] + (w[3] - w[1]) * t0, 3), round(w[0] + (w[2] - w[0]) * t1, 3), round(w[1] + (w[3] - w[1]) * t1, 3), hy(t0), hy(t1), sg, rl])
+  print('8A low bank: lake walls', len(lake_w), 'rows', len(low), 'railed(bay)', len(railed), 'junctions', len(J), 'band area', round(band.area, 1), 'cell tris', nt)
   return {'band': band, 'Y': Y, 'low': low, 'S': S, 'drop': DROP, 'D': D[-1]}
