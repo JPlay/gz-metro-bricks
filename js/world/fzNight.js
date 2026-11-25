@@ -201,6 +201,64 @@ export class FzNight {
       }
       n.lamp++;
     }
+    // 8A：南半湖 / 入湖渠 / 3号码头岸灯并进 fzNightLights。倒影同 4A/7B：细、暗、断开，贴岸短条，不要一根亮橙条。不加 PointLight。
+    for (const Lmp of (FZR.a8a && FZR.a8a.lamps) || []) {
+      const [x, z, fx0, fz0] = Lmp;
+      let fx = fx0, fz = fz0, fl = Math.hypot(fx, fz) || 1; fx /= fl; fz /= fl;
+      const hx = x + fx * 1.2, hz = z + fz * 1.2;
+      halo(hx, 6.95, hz, 1.05, sc(WARM, 0.8));
+      flat(hx - fx * 0.4, 0.045, hz - fz * 0.4, fx, fz, 1.7, 1.7, RG.pool, sc(WARM, 0.32));
+      let start = 0;
+      for (let d = 0.8; d <= 16; d += 0.2) { if (isWater(x + fx * d, z + fz * d)) { start = d + 0.08; break; } }
+      if (!start) {   // 灯朝向若背水，改向最近水面补短倒影
+        let best = 99;
+        for (let a = 0; a < 8; a++) {
+          const tx = Math.cos(a * Math.PI / 4), tz = Math.sin(a * Math.PI / 4);
+          for (let d = 0.8; d <= 14; d += 0.4) {
+            if (isWater(x + tx * d, z + tz * d) && d < best) { best = d; fx = tx; fz = tz; start = d + 0.08; break; }
+          }
+        }
+      }
+      if (start) {
+        const nSeg = 3, gap = 0.5, segL = 1.25;
+        for (let k = 0; k < nSeg; k++) {
+          const a = start + k * (segL + gap), b = a + segL;
+          const x0 = x + fx * a, z0 = z + fz * a, x1 = x + fx * b, z1 = z + fz * b;
+          if (!isWater(x0, z0) || !isWater(x1, z1)) continue;
+          const ll = Math.hypot(x1 - x0, z1 - z0) || 1;
+          const dim = 0.92 * (1 - k * 0.18);
+          flat((x0 + x1) / 2, levelAt(x0, z0) + 0.025, (z0 + z1) / 2, (x1 - x0) / ll, (z1 - z0) / ll, 0.48, ll / 2, RG.streak, sc(WARM, dim));
+        }
+      }
+      n.lamp++;
+    }
+    // 8A 3号码头牌 / 晋安湖牌：细、暗、断开的水面倒影（无点光）
+    const a8aMarks = [];
+    if (FZR.a8a && FZR.a8a.pier3 && FZR.a8a.pier3.sign) a8aMarks.push(FZR.a8a.pier3.sign);
+    for (const S of (FZR.a8a && FZR.a8a.plates) || []) a8aMarks.push(S);
+    for (const S of a8aMarks) {
+      const x = S.x, z = S.z; let fx = S.f[0], fz = S.f[1];
+      let start = 0;
+      for (let d = 0.6; d <= 14; d += 0.2) { if (isWater(x + fx * d, z + fz * d)) { start = d + 0.08; break; } }
+      if (!start) {
+        let best = 99;
+        for (let a = 0; a < 8; a++) {
+          const tx = Math.cos(a * Math.PI / 4), tz = Math.sin(a * Math.PI / 4);
+          for (let d = 0.6; d <= 14; d += 0.4) {
+            if (isWater(x + tx * d, z + tz * d) && d < best) { best = d; fx = tx; fz = tz; start = d + 0.08; break; }
+          }
+        }
+      }
+      if (!start) continue;
+      const nSeg = 2, gap = 0.55, segL = 1.05;
+      for (let k = 0; k < nSeg; k++) {
+        const a = start + k * (segL + gap), b = a + segL;
+        const x0 = x + fx * a, z0 = z + fz * a, x1 = x + fx * b, z1 = z + fz * b;
+        if (!isWater(x0, z0) || !isWater(x1, z1)) continue;
+        const ll = Math.hypot(x1 - x0, z1 - z0) || 1;
+        flat((x0 + x1) / 2, levelAt(x0, z0) + 0.025, (z0 + z1) / 2, (x1 - x0) / ll, (z1 - z0) / ll, 0.42, ll / 2, RG.streak, sc(WARM, 0.78 * (1 - k * 0.2)));
+      }
+    }
     // 桥：栏板外侧一道暖光带（跟着拱桥桥面起伏）+ 水面上同色的淡倒影
     for (const b of BRIDGES) {
       if (b.kind === 'bingde' || b.kind === 'covered') continue;
