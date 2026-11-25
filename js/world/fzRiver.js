@@ -106,7 +106,7 @@ export class FzRiverStreet extends XmStreet {
   river() {
     const k = this.kit;
     this.facades();
-    this.walls(); this.bridges(); this.piers(); if (FZR.c2) this.c2Static(); else this.sharedDecks(); if (FZR.a3) this.a3Static(); if (FZR.a4) this.a4Static(); if (FZR.a5) this.a5Static(); if (FZR.a6) this.a6Static(); if (FZR.a6b) this.a6bStatic(); if (FZR.a7a) this.a7aStatic(); if (FZR.a7b) this.a7bStatic(); if (FZR.a7c) this.a7cStatic(); if (FZR.b3) this.b3Static(); this.stepsDown(); this.unders(); this.roads(); this.houses(); this.trees(); this.promenade(); if (FZR.b3) this.lakeLamps(); if (FZR.a7b) this.a7bLamps(); if (FZR.a7c) this.a7cLamps(); if (FZR.sfqx) this.sanfang(); if (FZR.lakeBox) this.backdrops(); if (LOCK) this.lockStatic(); if (KIOSKS.fzxm_B) this.xihuPark();
+    this.walls(); this.bridges(); this.piers(); if (FZR.c2) this.c2Static(); else this.sharedDecks(); if (FZR.a3) this.a3Static(); if (FZR.a4) this.a4Static(); if (FZR.a5) this.a5Static(); if (FZR.a6) this.a6Static(); if (FZR.a6b) this.a6bStatic(); if (FZR.a7a) this.a7aStatic(); if (FZR.a7b) this.a7bStatic(); if (FZR.a7c) this.a7cStatic(); if (FZR.a8a) this.a8aStatic(); if (FZR.b3) this.b3Static(); this.stepsDown(); this.unders(); this.roads(); this.houses(); this.trees(); this.promenade(); if (FZR.b3) this.lakeLamps(); if (FZR.a7b) this.a7bLamps(); if (FZR.a7c) this.a7cLamps(); if (FZR.a8a) this.a8aLamps(); if (FZR.sfqx) this.sanfang(); if (FZR.lakeBox) this.backdrops(); if (LOCK) this.lockStatic(); if (KIOSKS.fzxm_B) this.xihuPark();
     k.group('g0');   // 上面直接画的东西（桥、码头、台阶、马路、牌坊…）常开：单独封一组，别被并进第一个细节格子
     if (this._nhjw || this._nhjH) {
       if (this._nhjw) { for (const t of this._nhjw) this.banyanNear(...t); this._nhjw = null; }
@@ -434,7 +434,7 @@ export class FzRiverStreet extends XmStreet {
         if (b.style === 'fufei') { this.fufei(b); if (b.plate) { const uv = A.draw(1.8, 0.45, textPaint([b.plate], { bg: '#6E675B', fg: '#F2E2B0' }), 70); for (const su of [-1, 1]) { const [qx, qz] = F.P(su * (w / 2 + 0.02), 0); A.quad(qx, (b.deckY || 0) + 0.45, qz, 1.8, 0.45, Math.atan2(b.t[0] * su, -b.t[1] * su), uv); } } continue; }
         const [cx, cz] = F.P(0, 0), road = b.kind === 'road';
         GR.box(cx, dY - 0.2, cz, w, 0.4, 2 * half, hex(road ? '#9C978C' : '#A39C8E'), F.ryN, 0, 0, 1, NO);
-        if (road && ((FZR.a3 && (FZR.a3.bridges || []).includes(b.id)) || (FZR.a4 && (FZR.a4.bridges || []).includes(b.id)) || (FZR.a5 && (FZR.a5.bridges || []).includes(b.id) && b.kind === 'road') || (FZR.a6 && (FZR.a6.bridges || []).includes(b.id)) || (FZR.a6b && (FZR.a6b.bridges || []).includes(b.id) && b.style !== 'fufei') || b.a4 || b.a5 || b.a6 || b.a6b || b.a7c || b.b3 || (FZR.b3 && FZR.b3.grey && FZR.b3.grey.bridges.includes(b.id)))) this.a3Deck(b, F, w, half);   // 3B 路桥同款（小美 3A：不用 asphalt 桶）   // 小美 11-17：3A 路桥桥面 = 深灰沥青 + 标线（原 asphalt 材质反天光，白天像一块深蓝的洞）
+        if (road && ((FZR.a3 && (FZR.a3.bridges || []).includes(b.id)) || (FZR.a4 && (FZR.a4.bridges || []).includes(b.id)) || (FZR.a5 && (FZR.a5.bridges || []).includes(b.id) && b.kind === 'road') || (FZR.a6 && (FZR.a6.bridges || []).includes(b.id)) || (FZR.a6b && (FZR.a6b.bridges || []).includes(b.id) && b.style !== 'fufei') || b.a4 || b.a5 || b.a6 || b.a6b || b.a7c || b.a8a || b.b3 || (FZR.b3 && FZR.b3.grey && FZR.b3.grey.bridges.includes(b.id)))) this.a3Deck(b, F, w, half);   // 3B 路桥同款（小美 3A：不用 asphalt 桶）   // 小美 11-17：3A 路桥桥面 = 深灰沥青 + 标线（原 asphalt 材质反天光，白天像一块深蓝的洞）
         else if (road) k.g('asphalt').box(cx, 0.008, cz, w - 1.6, 0.012, 2 * half, hex('#7E8084'), F.ryN, 0, 0, 1, NO);
         // 桥墩：贴岸墙的两块（不进水道中间，船好过）
         const U = [...(FZR.unders || []), ...(FZR.undersC || [])].find(u => u.bridge === b.id);
@@ -475,6 +475,12 @@ export class FzRiverStreet extends XmStreet {
           } else if (b.railStyle === 'jianshan') {   // 涧山巷：最矮石栏，双幅短巷桥
             const H = b.parapetH || 0.68;
             GR.box(px, H / 2, pz, 0.22, H, 2 * half - 0.2, hex('#B1AA9C'), F.ryN, 0, 0, 1, NO);
+          } else if (b.railStyle === 'fuxin') {   // 8A 福新东路西幅：更宽主干，梁和墩看得见，和福马路分开
+            const H = b.parapetH || 1.25;
+            GR.box(px, (dY || 0) + H / 2, pz, 0.32, H, 2 * half - 0.2, hex('#A8A193'), F.ryN, 0, 0, 1, NO);
+            for (let v = -half + 0.5; v <= half - 0.3; v += 3.6) { const [qx, qz] = F.P(su * (w / 2 - 0.15), v); GR.box(qx, (dY || 0) + H + 0.12, qz, 0.42, 0.24, 0.42, hex('#B9B2A2'), 0, 0, 0, 1, NO); }
+            const [gx, gz] = F.P(su * (w / 2 - 0.22), 0);
+            GR.box(gx, (dY || 0) - 0.62, gz, 0.42, 0.85, 2 * half - 0.3, hex('#7A7468'), F.ryN, 0, 0, 1, NO);
           } else {
             GR.box(px, 0.5, pz, 0.3, 1.0, 2 * half - 0.2, hex('#B1AA9C'), F.ryN, 0, 0, 1, NO);
             // 5 河口近景：镜头贴着六一中路东栏外棱掠射。granite（env=0.12，F0=0）在掠射角 Schlick 仍会拉出天光，
@@ -1882,7 +1888,114 @@ export class FzRiverStreet extends XmStreet {
     if (!FZR.d2) { const bx = S.x + dx * 6, bz = S.z + dz * 6; P.box(bx, 3, bz, 12, 6, 0.4, hex('#F1EEE6'), ry); k.col(bx, 3, bz, 12, 6, 0.6, { ry, name: 'colBack' }); }
     for (const sd of [-1, 1]) for (let i = 0; i < 3; i++) P.ellipsoid(S.x + dx * (1 + i * 1.6) + tx * sd * 3.2, 3.2, S.z + dz * (1 + i * 1.6) + tz * sd * 3.2, 0.5, 0.6, 0.5, hex('#D7262E'), 1);
   }
-  /** 石牌（灰石块 + 两面刻字，同 fzAttr.stone）：正面朝 (fx, fz) */
+  /** 8A：南半湖合拢墙 + 远景、环湖步道 #A39C8E、3号码头栈桥与牌、晋安湖名牌。 */
+  a8aStatic() {
+    const A = FZR.a8a, k = this.kit, P = k.solid, GR = k.g('granite');
+    if (!A) return;
+    for (const S of A.plates || []) this.stoneSign(S.x, S.z, S.f[0], S.f[1], S.lines && S.lines[0] && S.lines[0].length > 6 ? 4.3 : 3.4, S.lines && S.lines[0] && S.lines[0].length > 6 ? 1.65 : 1.45, S.lines.filter(Boolean));
+    const Wc = ['#7E8C99', '#8796A3', '#76858F', '#8F9AA5'];
+    const PV = k.g('pave'), PAVEC = hex('#CFC9BD'), TILE = hex('#A39C8E');
+    const LB = (A.lake && A.lake.band) || 6.5;
+    (A.far || []).forEach((q, i) => {
+      const [x, z, fx, fz] = q, ry = yawOf(fx, fz), h = 11 + (i * 7) % 12, w = 9 + (i % 3) * 2, d = 7.5 + (i % 2) * 1.4;
+      let reach = 0;
+      for (let t = 0.5; t <= 36; t += 0.5) { if (isWater(x + fx * t, z + fz * t)) { reach = t; break; } }
+      const stop = reach ? Math.max(1.6, reach - LB - 0.7) : 5;
+      PV.box(x + fx * (stop / 2), 0.16, z + fz * (stop / 2), w + 8, 0.32, stop, PAVEC, ry, 0, 0, 1, NO);
+      P.box(x, 0.5, z, w + 0.9, 1.0, d + 0.9, hex('#4A545C'), ry, 0, 0, 1, NO);
+      P.box(x, 1.0 + h / 2, z, w, h, d, hex(Wc[i % 4]), ry, 0, 0, 1, NO);
+      P.box(x, 1.0 + h + 0.22, z, w + 0.45, 0.44, d + 0.45, hex('#3E484F'), ry, 0, 0, 1, NO);
+    });
+    if (A.lake && A.lake.ring) {
+      const ring = A.lake.ring, c = A.lake.c, nR = ring.length / 2;
+      const caps = A.caps || (A.capWall ? [A.capWall] : []);
+      for (let i = 0; i < nR; i++) {
+        const ax = ring[2 * i], az = ring[2 * i + 1], bx = ring[2 * ((i + 1) % nR)], bz = ring[2 * ((i + 1) % nR) + 1];
+        const len = Math.hypot(bx - ax, bz - az); if (len < 0.35 || len > 12) continue;
+        const tx = (bx - ax) / len, tz = (bz - az) / len, mx = (ax + bx) / 2, mz = (az + bz) / 2;
+        let nx = tz, nz = -tx;
+        const test = 1.2, wA = isWater(mx + nx * test, mz + nz * test), wB = isWater(mx - nx * test, mz - nz * test);
+        if (wA && wB) continue;
+        if (wA && !wB) { nx = -nx; nz = -nz; }
+        else if (!wA && !wB && c && (c[0] - mx) * nx + (c[1] - mz) * nz > 0) { nx = -nx; nz = -nz; }
+        const cx = mx + nx * (LB * 0.48), cz = mz + nz * (LB * 0.48);
+        if (isWater(cx, cz) || isWater(mx + nx * 2.2, mz + nz * 2.2)) continue;
+        let skip = false;
+        for (const W of caps) {
+          const nLake = (W.n[0] * ((c ? c[0] : mx) - W.x) + W.n[1] * ((c ? c[1] : mz) - W.z)) >= 0 ? 1 : -1;
+          const side = (cx - W.x) * W.n[0] + (cz - W.z) * W.n[1];
+          const along = (cx - W.x) * W.t[0] + (cz - W.z) * W.t[1];
+          if (side * nLake < -0.2 && Math.abs(along) < W.len / 2 + 3) { skip = true; break; }
+        }
+        if (skip) continue;
+        GR.box(cx, 0.035, cz, LB - 0.7, 0.07, len + 0.2, TILE, yawOf(tx, tz), 0, 0, 1, NO);
+      }
+    }
+    for (const W of (A.caps || (A.capWall ? [A.capWall] : []))) {
+      const ry = yawOf(W.n[0], W.n[1]);
+      const face = hex('#8A8376'), joint = hex('#5C574E'), cope = hex('#9A9385');
+      GR.box(W.x, W.h / 2, W.z, W.thick, W.h, W.len, face, ry, 0, 0, 1, NO);
+      GR.box(W.x, W.h + 0.16, W.z, W.thick + 0.3, 0.32, W.len + 0.4, cope, ry, 0, 0, 1, NO);
+      const courses = 4, js = 2.3, fx = W.t[0], fz = W.t[1], nx = W.n[0], nz = W.n[1];
+      const ox = fx * (W.thick / 2 + 0.02), oz = fz * (W.thick / 2 + 0.02);
+      for (let i = 1; i < courses; i++) GR.box(W.x + ox, i * W.h / courses, W.z + oz, 0.05, 0.06, W.len - 0.15, joint, ry, 0, 0, 1, NO);
+      for (let c = 0; c < courses; c++) {
+        const y0 = c * W.h / courses, y1 = (c + 1) * W.h / courses, mid = (y0 + y1) / 2, hh = (y1 - y0) - 0.08, off0 = (c % 2 ? js / 2 : 0);
+        for (let u = -W.len / 2 + off0 + js; u < W.len / 2 - 0.3; u += js) {
+          GR.box(W.x + ox + nx * u, mid, W.z + oz + nz * u, 0.05, hh, 0.06, joint, ry, 0, 0, 1, NO);
+        }
+      }
+      k.col(W.x + W.t[0] * 0.4, 1.2, W.z + W.t[1] * 0.4, 0.8, 8, Math.max(24, W.len + 4), { ry, name: 'colCap' });
+    }
+    // 3号码头：沿中线铺一条可走弯形甲板 #A39C8E（不要按多边形每条边叠箱子），两侧栏杆，无船
+    const J = A.pier3;
+    if (J && J.ring && J.ring.length >= 8) {
+      const pts = [];
+      for (let i = 0; i < J.ring.length; i += 2) pts.push([J.ring[i], J.ring[i + 1]]);
+      // 中线：入口中点 → 中段 → 北尖（由轮廓估算，避免交叉栏杆）
+      const mid = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+      let spine = J.spine;
+      if (!spine || spine.length < 4) {
+        // 入口取最南的两点中点，北尖取最北两点中点
+        const byZ = pts.slice().sort((a, b) => a[1] - b[1]);
+        const south = mid(byZ[0], byZ[1]);
+        const north = mid(byZ[byZ.length - 1], byZ[byZ.length - 2]);
+        const mid1 = mid(south, north);
+        spine = [south[0], south[1], mid1[0], mid1[1], north[0], north[1]];
+      }
+      const sp = [];
+      for (let i = 0; i < spine.length; i += 2) sp.push([spine[i], spine[i + 1]]);
+      const Wd = 4.4;
+      for (let i = 0; i < sp.length - 1; i++) {
+        const a = sp[i], b = sp[i + 1];
+        const len = Math.hypot(b[0] - a[0], b[1] - a[1]); if (len < 0.3) continue;
+        const tx = (b[0] - a[0]) / len, tz = (b[1] - a[1]) / len, mx = (a[0] + b[0]) / 2, mz = (a[1] + b[1]) / 2;
+        const ry = yawOf(tx, tz);
+        GR.box(mx, 0.14, mz, Wd, 0.28, len + 0.2, TILE, ry, 0, 0, 1, NO);
+        k.col(mx, 0.14, mz, Wd, 0.28, len + 0.2, { ry, name: 'colDeck' });
+        for (const su of [-1, 1]) {
+          const rx = mx + tz * su * (Wd / 2 - 0.12), rz = mz - tx * su * (Wd / 2 - 0.12);
+          GR.box(rx, 0.62, rz, 0.12, 0.96, len + 0.12, hex('#B1AA9C'), ry, 0, 0, 1, NO);
+          k.col(rx, 0.62, rz, 0.12, 0.96, len + 0.12, { ry, name: 'colParapet' });
+        }
+      }
+    }
+  }
+  /** 8A：南岸路灯进细节格子，不加 draw。 */
+  a8aLamps() {
+    const A = FZR.a8a, k = this.kit;
+    if (!A || !A.lamps) return;
+    for (const L of A.lamps) {
+      const [x, z, tx, tz] = L;
+      this.det(x, z, () => {
+        const ry = yawOf(tx, tz);
+        k.metal.box(x, 1.55, z, 0.08, 3.1, 0.08, hex('#4A5560'), 0, 0, 0, 1, NO);
+        k.g('granite').box(x, 0.12, z, 0.28, 0.24, 0.28, hex('#8E887C'), 0, 0, 0, 1, NO);
+        k.solid.box(x + tx * 0.12, 3.05, z + tz * 0.12, 0.28, 0.08, 0.18, hex('#E8D9A8'), ry, 0, 0, 1, NO);
+      });
+    }
+  }
+    /** 石牌（灰石块 + 两面刻字，同 fzAttr.stone）：正面朝 (fx, fz) */
   stoneSign(x, z, fx, fz, w, h, lines, bg = '#7E786C') {
     const k = this.kit, A = this.atlas, ry = yawOf(fx, fz);
     k.g('granite').box(x, h / 2, z, w, h, 0.6, hex(bg), ry, 0, 0, 1, NO); k.col(x, h / 2, z, w, h, 0.6, { ry, name: 'colSign' });

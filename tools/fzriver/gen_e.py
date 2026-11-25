@@ -866,6 +866,7 @@ A6B = A6 and os.environ.get('FZR_6B', '1') != '0'
 A7A = A6B and os.environ.get('FZR_7A', '1') != '0'
 A7B = A7A and os.environ.get('FZR_7B', '1') != '0'
 A7C = A7B and os.environ.get('FZR_7C', '1') != '0'
+A8A = A7C and os.environ.get('FZR_8A', '1') != '0'
 if A4:
   water3B, region3B, land3B = water, region, land
   LAND3B, WATER3B, WALL3B, BOUND3B = LAND, WATER, WALL, BOUND
@@ -1173,6 +1174,9 @@ if A7B:
 if A7C:
   import a7c
   a7c.build_east(globals())
+if A8A:
+  import a8a
+  a8a.build_south(globals())
 
 def r2(v): return round(v, 2)
 DATA = {
@@ -1196,6 +1200,7 @@ if A6B: DATA['a6b'] = A6BDATA
 if A7A: DATA['a7a'] = A7ADATA
 if A7B: DATA['a7b'] = A7BDATA
 if A7C: DATA['a7c'] = A7CDATA
+if A8A: DATA['a8a'] = A8ADATA
 js = ('// 自动生成：tools/fzriver/gen_e.py（OSM 晋安河 1:4 + 光明港 1:5 → 游戏坐标；x 东、z 北，原点 = 东街口站 / 3）。不要手改。\n'
       'export const FZR_E = ' + json.dumps(DATA, ensure_ascii=False, separators=(',', ':')) + ';\n')
 open(OUT, 'w').write(js); print('wrote', OUT, len(js))
