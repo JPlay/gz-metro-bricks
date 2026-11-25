@@ -1936,7 +1936,7 @@ export class FzRiverStreet extends XmStreet {
     const WARM = ['#E3D9C6', '#D9CBB0', '#E6D5BC', '#D4C3A6'];
     (A.far || []).forEach((q, i) => {
       const [x, z, fx, fz] = q, ry = yawOf(fx, fz), tx = fz, tz = -fx;
-      const fl = 4 + (i * 3) % 2, h = fl * 3 + ((i * 5) % 3) * 0.6, w = 14 + (i % 3) * 3, d = 9 + (i % 2) * 1.5;
+      const fl = 4, h = fl * 3 + ((i * 5) % 3) * 0.4, w = 14 + (i % 3) * 3, d = 9 + (i % 2) * 1.5;
       P.box(x, h / 2, z, w, h, d, hex(WARM[i % 4]), ry, 0, 0, 1, NO);
       P.box(x, h + 0.25, z, w + 0.3, 0.5, d + 0.3, hex('#8C7A66'), ry, 0, 0, 1, NO);   // 檐口压顶（暖灰，不是白边）
       A8F(x + fx * (d / 2 + 0.03), h / 2, z + fz * (d / 2 + 0.03), w, h, Math.atan2(fx, -fz), this.fac['m' + fl + (i % 2)]);

@@ -661,7 +661,7 @@ def build_south(g):
   far = []
   cLk = ring_src.centroid
   try:
-    ringFar = ring_src.buffer(LB + HOUSE_BAND + 17, quad_segs=5).exterior   # 小美 ②：远景楼往后推 14 m
+    ringFar = ring_src.buffer(LB + HOUSE_BAND + 26, quad_segs=5).exterior   # 小美 ②：远景楼往后推 23 m，统一 4 层
   except Exception:
     ringFar = None
   if ringFar is not None:
@@ -670,7 +670,7 @@ def build_south(g):
       p = ringFar.interpolate(fl)
       fl += 17.0
       near_cap = False
-      if near_cap or not box(X_WEST - 30, Z_SOUTH, X_EAST + 30, Z_NORTH + 30).contains(p):
+      if near_cap or not box(X_WEST - 40, Z_SOUTH, X_EAST + 40, Z_NORTH + 40).contains(p):
         continue
       if water.buffer(2.0).contains(p):
         continue
@@ -728,7 +728,7 @@ def build_south(g):
           if best_ is None or dd_ < best_[0]:
             best_ = (dd_, q.x, q.y)
     if best_:
-      fx_, fz_ = 940.6 - best_[1], -60.3 - best_[2]
+      fx_, fz_ = 955.8 - best_[1], -68.6 - best_[2]
       Lf = math.hypot(fx_, fz_) or 1
       priority.append([round(best_[1], 2), round(best_[2], 2), round(fx_ / Lf, 4), round(fz_ / Lf, 4)])
       print('8A inlet tip lamp', priority[-1])
@@ -766,11 +766,13 @@ def build_south(g):
   # 入湖口在西汊水面上方悬停，才能同时看见渠口入湖和半岛，不要被陆面/路缘拽回岸上。
   # 入湖口（11-25 重取）：站在入湖口外西湾水面上方、顺渠轴线朝东南看：近处是放宽的湖面，
   # 左边半岛尖，右边分流陆北头，中间渠口收窄、渠水一直伸到福新东路桥。眼高同岸上行人（离水 4.7 m）。
+  # 入湖口（小美 20:06 重取）：玩家走得到的半岛尖西沿矮驳岸草坡下沿，朝南偏西看渠口：
+  # 左边渠段高墙+石栏到口门后降成湖岸矮驳岸，右边分流陆北尖，前景是开阔湖面。
   cam_inlet = {
-    'x': 940.6, 'z': -60.3,
-    'look': [978.0, 0.0, -102.0],
-    'pitch': 0.08, 'y': 1.70,
-    'hover': 1,
+    'x': 955.8, 'z': -68.6,
+    'look': [947.0, 0.0, -100.0],
+    'pitch': 0.07, 'y': 1.70,
+    'hover': 0,
   }
   # 3号码头（11-25 重取）：站在码头根部东南的岸角上朝西北，引桥+岸侧牌在右前，弯形栈桥向北伸进开阔湖面
   cam_pier = {
@@ -838,7 +840,7 @@ def build_south(g):
     tl = 0.0
     while tl < _tr.length - 1:
       p = _tr.interpolate(tl); tl += 7.0
-      if not box(X_WEST - 30, Z_SOUTH, X_EAST + 30, Z_NORTH + 30).contains(p): continue
+      if not box(X_WEST - 40, Z_SOUTH, X_EAST + 40, Z_NORTH + 40).contains(p): continue
       if water.buffer(4.0).contains(p): continue
       if any(math.hypot(p.x - c[0], p.y - c[1]) < 22 for c in _cams): continue
       if any(a_.contains(p) for a_ in _avoid): continue

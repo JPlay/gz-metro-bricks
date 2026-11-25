@@ -6,13 +6,19 @@ from shapely.ops import unary_union
 
 DROP = 2.0                      # 驳岸顶 = 水面 + 1.0（WY=-3 → y=-2.0）
 D = [0.0, 1.1, 2.3, 3.5, 4.7, 6.0]   # 等距线（离湖岸 m）：0~1.1 草带平台，1.1~6 缓坡回到 0
-TAPJ, TAPB = 10.0, 3.0         # 入湖口 / 水湾接头渐变长度；可走范围边界渐变
-CH = LineString([(996, -124), (988, -110), (978, -100), (970, -93), (964, -86), (960.5, -81)]).buffer(6.5, cap_style=2)
+TAPJ, TAPB = 5.0, 3.0           # 入湖口 / 水湾接头渐变长度（5 m 内降到矮驳岸）；可走范围边界渐变
+CH = LineString([(996, -124), (988, -110), (978, -100), (970, -93), (964, -86)]).buffer(6.5, cap_style=2)
 CANAL = box(960, -260, 1040, -106)
 PIERZ = box(1084, -80, 1112, -40)
 
 def smooth(t):
   t = max(0.0, min(1.0, t)); return t * t * (3 - 2 * t)
+
+GS = 2.0
+def frange(a, b, st):
+  v = a
+  while v < b - 1e-6:
+    yield v; v += st
 
 def build(g, ctx):
   water, land, region, WALL = ctx['water'], ctx['land'], ctx['region'], ctx['WALL']
@@ -79,17 +85,23 @@ def build(g, ctx):
       cb = box(i * CELL, jz * CELL, (i + 1) * CELL, (jz + 1) * CELL)
       if not cb.intersects(band): continue
       tris = []
-      for poly in [land_main] + rings:
+      for ri, poly in enumerate([land_main] + rings):
         part = poly.intersection(cb)
         if part.is_empty: continue
-        gs = [part] if part.geom_type == 'Polygon' else [q for q in getattr(part, 'geoms', []) if q.geom_type == 'Polygon']
-        for q in gs:
-          if q.area < 0.02: continue
-          tris += [ccw_up(c) for c in tri(q)]
+        # 坡带按 GS 米网格切小块再三角化，让顶点密到能跟上 Y() 的非线性（防止长三角线性插值出台阶/竖条）
+        subs = [part] if ri == 0 else [part.intersection(box(x0, z0, x0 + GS, z0 + GS))
+                for x0 in frange(i * CELL, (i + 1) * CELL, GS) for z0 in frange(jz * CELL, (jz + 1) * CELL, GS)]
+        for sp in subs:
+          if sp.is_empty: continue
+          gs = [sp] if sp.geom_type == 'Polygon' else [q for q in getattr(sp, 'geoms', []) if q.geom_type == 'Polygon']
+          for q in gs:
+            if q.area < 0.01: continue
+            tris += [ccw_up(c) for c in tri(q) if abs((c[1][0]-c[0][0])*(c[2][1]-c[0][1])-(c[2][0]-c[0][0])*(c[1][1]-c[0][1])) > 2e-3]
       V = {}; P = []; I = []
       for c in tris:
-        for x, z in c:
-          key = (round(x, 2), round(z, 2))
+        ks = [(round(x, 2), round(z, 2)) for x, z in c]
+        if len(set(ks)) < 3: continue
+        for key in ks:
           if key not in V: V[key] = len(P); P.append(key)
           I.append(V[key])
       ys = [Y(x, z) for x, z in P]
