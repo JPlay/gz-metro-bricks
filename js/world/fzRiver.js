@@ -1987,21 +1987,47 @@ export class FzRiverStreet extends XmStreet {
           GR.box(Q.x, top - TH / 2, Q.z, Wd, TH, len, TILE, ry, 0, 0, 1, NO);                 // 桥面
           GR.box(Q.x, top - TH - 0.16, Q.z, Wd - 0.5, 0.32, len, FASCIA, ry, 0, 0, 1, NO);   // 桥面下纵梁（暗一点，侧面看得出桥面薄）
           k.col(Q.x, top - TH / 2, Q.z, Wd, TH + 0.06, len, { ry, name: 'colDeck' });
-          for (const su of [-1, 1]) {
-            const ox = Q.tz * su * (Wd / 2 - 0.06), oz = -Q.tx * su * (Wd / 2 - 0.06);
-            {
-              Mt.box(Q.x + ox, top + railH, Q.z + oz, 0.05, 0.05, len, RAIL, ry, 0, 0, 1, NO);          // 扶手
-              Mt.box(Q.x + ox, top + railH * 0.45, Q.z + oz, 0.03, 0.03, len, RAIL, ry, 0, 0, 1, NO);   // 中横杆
-              k.col(Q.x + ox, top + 0.6, Q.z + oz, 0.1, 1.2, len, { ry, name: 'colParapet' });
-            }
-          }
         }
-        // 立杆每 1.8 m；桩每 3.6 m 落到水下
+        // 急弯处补一块方形桥面，盖住两段桥面外侧之间的三角缺口
+        for (let i = 1; i < pts.length - 1; i++) {
+          const p = pts[i], t0 = [p[0] - pts[i - 1][0], p[1] - pts[i - 1][1]], t1 = [pts[i + 1][0] - p[0], pts[i + 1][1] - p[1]];
+          const l0 = Math.hypot(t0[0], t0[1]) || 1, l1 = Math.hypot(t1[0], t1[1]) || 1; if ((t0[0] * t1[0] + t0[1] * t1[1]) / (l0 * l1) > 0.94) continue;
+          const ry = yawOf(t0[0] / l0 + t1[0] / l1, t0[1] / l0 + t1[1] / l1);
+          GR.box(p[0], top - TH / 2 - 0.012, p[1], Wd, TH, Wd, TILE, ry, 0, 0, 1, NO);
+          GR.box(p[0], top - TH - 0.16, p[1], Wd - 0.5, 0.32, Wd - 0.5, FASCIA, ry, 0, 0, 1, NO);
+          k.col(p[0], top - TH / 2, p[1], Wd, TH + 0.06, Wd, { ry, name: 'colDeck' });
+        }
+        // 栏杆：按两侧偏移折线画（内侧折角取斜接点、外侧取倒角），急弯处栏杆不会戳进桥面 / 横穿走道
+        const dR = Wd / 2 - 0.06;
+        for (const su of [-1, 1]) {
+          const rp = [];
+          for (let i = 0; i < pts.length; i++) {
+            const pa = pts[Math.max(0, i - 1)], pb = pts[Math.min(pts.length - 1, i + 1)], p = pts[i];
+            const t0 = i > 0 ? [p[0] - pa[0], p[1] - pa[1]] : [pb[0] - p[0], pb[1] - p[1]], t1 = i < pts.length - 1 ? [pb[0] - p[0], pb[1] - p[1]] : t0;
+            const l0 = Math.hypot(t0[0], t0[1]) || 1, l1 = Math.hypot(t1[0], t1[1]) || 1;
+            const n0 = [t0[1] / l0 * su, -t0[0] / l0 * su], n1 = [t1[1] / l1 * su, -t1[0] / l1 * su];
+            const cosT = (t0[0] * t1[0] + t0[1] * t1[1]) / (l0 * l1);
+            if (cosT > 0.94) { const m = [n0[0] + n1[0], n0[1] + n1[1]], ml = Math.hypot(m[0], m[1]) || 1; rp.push([p[0] + m[0] / ml * dR, p[1] + m[1] / ml * dR]); continue; }
+            const inner = n0[0] * t1[0] + n0[1] * t1[1] > 0;
+            if (inner) { const m = [n0[0] + n1[0], n0[1] + n1[1]], ml = Math.hypot(m[0], m[1]) || 1, c = Math.max(0.2, Math.sqrt((1 + cosT) / 2)); rp.push([p[0] + m[0] / ml * dR / c, p[1] + m[1] / ml * dR / c]); }
+            else { rp.push([p[0] + n0[0] * dR, p[1] + n0[1] * dR]); rp.push([p[0] + n1[0] * dR, p[1] + n1[1] * dR]); }
+          }
+          let acc2 = 0, nextPost = 0;
+          for (let i = 0; i < rp.length - 1; i++) {
+            const a = rp[i], b = rp[i + 1], L = Math.hypot(b[0] - a[0], b[1] - a[1]); if (L < 0.02) continue;
+            const ry = yawOf(b[0] - a[0], b[1] - a[1]), mx = (a[0] + b[0]) / 2, mz = (a[1] + b[1]) / 2;
+            Mt.box(mx, top + railH, mz, 0.05, 0.05, L + 0.04, RAIL, ry, 0, 0, 1, NO);          // 扶手
+            Mt.box(mx, top + railH * 0.45, mz, 0.03, 0.03, L + 0.03, RAIL, ry, 0, 0, 1, NO);   // 中横杆
+            k.col(mx, top + 0.6, mz, 0.1, 1.2, L + 0.1, { ry, name: 'colParapet' });
+            while (nextPost <= acc2 + L + 1e-3) { const u = (nextPost - acc2) / L; Mt.box(a[0] + (b[0] - a[0]) * u, top + railH / 2, a[1] + (b[1] - a[1]) * u, 0.05, railH, 0.05, RAIL, 0, 0, 0, 1, NO); nextPost += 1.8; }
+            acc2 += L;
+          }
+          { const e = rp[rp.length - 1]; Mt.box(e[0], top + railH / 2, e[1], 0.05, railH, 0.05, RAIL, 0, 0, 0, 1, NO); }
+        }
+        // 桩每 3.6 m 落到水下
         for (let s = 0; s <= total + 0.01; s += total / Math.max(1, Math.round(total / 1.8))) {
           const Q = at(s), j = Math.round(s / (total / Math.max(1, Math.round(total / 1.8))));
           for (const su of [-1, 1]) {
-            const ox = Q.tz * su * (Wd / 2 - 0.06), oz = -Q.tx * su * (Wd / 2 - 0.06);
-            Mt.box(Q.x + ox, top + railH / 2, Q.z + oz, 0.05, railH, 0.05, RAIL, 0, 0, 0, 1, NO);
             if (j % 2 === 0 && isWater(Q.x, Q.z)) { const ix = Q.tz * su * (Wd / 2 - 0.35), iz = -Q.tx * su * (Wd / 2 - 0.35); P.cyl(Q.x + ix, (top - TH + WY - 0.4) / 2, Q.z + iz, 0.11, (top - TH) - (WY - 0.4), PILE, 6); }
           }
         }
